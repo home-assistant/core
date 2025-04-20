@@ -5853,14 +5853,16 @@ async def test_stop_action_subscript(
     )
 
 
+@pytest.mark.parametrize(("var", "response"), [(1, "If: Then"), (2, "Testing 123")])
 @pytest.mark.parametrize(
-    ("var", "response"),
-    [(1, "If: Then"), (2, "Testing 123")],
+    ("script_mode", "max_runs"), [("single", 1), ("parallel", 2), ("queued", 2)]
 )
 async def test_stop_action_response_variables(
     hass: HomeAssistant,
     var: int,
     response: str,
+    script_mode,
+    max_runs,
 ) -> None:
     """Test setting stop response_variable in a subscript."""
     sequence = cv.SCRIPT_SCHEMA(
@@ -5879,7 +5881,14 @@ async def test_stop_action_response_variables(
             {"stop": "In the name of love", "response_variable": "output"},
         ]
     )
-    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "Test Name",
+        "test_domain",
+        script_mode=script_mode,
+        max_runs=max_runs,
+    )
 
     run_vars = MappingProxyType({"var": var})
     result = await script_obj.async_run(run_vars, context=Context())
@@ -6649,3 +6658,41 @@ async def test_calling_service_backwards_compatible(
             ],
         }
     )
+
+
+async def test_enabled_sequence_in_parallel(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test to ensure sequence inside parallel follows enabled tag."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "parallel": [
+                {
+                    "sequence": [{"event": event, "event_data": {"value": "disabled"}}],
+                    "enabled": "false",
+                },
+                {
+                    "sequence": [{"event": event, "event_data": {"value": "enabled"}}],
+                    "enabled": "true",
+                },
+            ]
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["value"] == "enabled"
+
+    expected_trace = {
+        "0": [{"result": {"enabled": False}}],
+        "0/parallel/1/sequence/0": [
+            {"result": {"event": "test_event", "event_data": {"value": "enabled"}}}
+        ],
+    }
+    assert_action_trace(expected_trace)

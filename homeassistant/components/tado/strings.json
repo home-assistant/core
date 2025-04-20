@@ -16,6 +16,10 @@
         "title": "Authenticate with Tado",
         "description": "You need to reauthenticate with Tado. Press `Submit` to start the authentication process."
       },
+      "homekit": {
+        "title": "Authenticate with Tado",
+        "description": "Your device has been discovered and needs to authenticate with Tado. Press `Submit` to start the authentication process."
+      },
       "timeout": {
         "description": "The authentication process timed out. Please try again."
       }
@@ -49,7 +53,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "Auto"
+              "auto": "[%key:common::state::auto%]"
             }
           }
         }
@@ -135,7 +139,7 @@
       "description": "Adds a meter reading to Tado Energy IQ.",
       "fields": {
         "config_entry": {
-          "name": "Config Entry",
+          "name": "Config entry",
           "description": "Config entry to add meter reading to."
         },
         "reading": {
