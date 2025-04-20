@@ -628,7 +628,14 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
 
-    def _async_value_from_stream(self, value) -> None:
+        if self.entity_description.streaming_listener is not None:
+            self.async_on_remove(
+                self.entity_description.streaming_listener(
+                    self.vehicle.stream_vehicle, self._async_value_from_stream
+                )
+            )
+
+    def _async_value_from_stream(self, value: StateType) -> None:
         """Update the value of the entity."""
         self._attr_native_value = value
         self.async_write_ha_state()
