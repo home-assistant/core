@@ -57,6 +57,7 @@ ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
 _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
+DEFAULT_NAME = "ESPHome"
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -189,12 +190,14 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @property
     def _name(self) -> str:
-        return self.__name or "ESPHome"
+        return self.__name or DEFAULT_NAME
 
     @_name.setter
     def _name(self, value: str) -> None:
         self.__name = value
-        self.context["title_placeholders"] = {"name": self._name}
+        self.context["title_placeholders"] = {
+            "name": self._async_get_human_readable_name()
+        }
 
     async def _async_try_fetch_device_info(self) -> ConfigFlowResult:
         """Try to fetch device info and return any errors."""
@@ -579,16 +582,18 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             entry = self._reauth_entry
         elif self.source == SOURCE_RECONFIGURE:
             entry = self._reconfig_entry
-        names: list[str] = []
-        for part in (
-            entry.title if entry else None,
-            self._device_name or (entry.data.get(CONF_DEVICE_NAME) if entry else None),
-            self._name,
+        friendly_name = self._name
+        device_name = self._device_name
+        if (
+            device_name
+            and friendly_name in (DEFAULT_NAME, device_name)
+            and entry
+            and entry.title != friendly_name
         ):
-            if not part or part in names:
-                continue
-            names.append(part)
-        return " - ".join(names)
+            friendly_name = entry.title
+        if not device_name or friendly_name == device_name:
+            return friendly_name
+        return f"{friendly_name} ({device_name})"
 
     async def async_step_authenticate(
         self, user_input: dict[str, Any] | None = None, error: str | None = None

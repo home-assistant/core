@@ -816,7 +816,7 @@ async def test_reauth_initiation(hass: HomeAssistant, mock_client) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {
-        "name": "Mock Title - test",
+        "name": "Mock Title (test)",
     }
 
 
@@ -1021,7 +1021,7 @@ async def test_reauth_fixed_via_dashboard_at_confirm(
     assert result["type"] is FlowResultType.FORM, result
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {
-        "name": "Mock Title - test",
+        "name": "Mock Title (test)",
     }
 
     mock_dashboard["configured"].append(
@@ -1069,7 +1069,7 @@ async def test_reauth_confirm_invalid(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {
-        "name": "Mock Title - test",
+        "name": "Mock Title (test)",
     }
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
@@ -1110,7 +1110,7 @@ async def test_reauth_confirm_invalid_with_unique_id(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {
-        "name": "Mock Title - test",
+        "name": "Mock Title (test)",
     }
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
@@ -1150,7 +1150,7 @@ async def test_reauth_encryption_key_removed(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_encryption_removed_confirm"
     assert result["description_placeholders"] == {
-        "name": "Mock Title - test",
+        "name": "Mock Title (test)",
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -1936,14 +1936,14 @@ async def test_reconfig_success_noise_psk_changes(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
-    assert result["description_placeholders"] == {"name": "Mock Title - test - ESPHome"}
+    assert result["description_placeholders"] == {"name": "Mock Title (test)"}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
-    assert result["description_placeholders"] == {"name": "Mock Title - test"}
+    assert result["description_placeholders"] == {"name": "Mock Title (test)"}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
