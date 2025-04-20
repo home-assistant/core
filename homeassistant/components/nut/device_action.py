@@ -27,9 +27,7 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Network UPS Tools (NUT) devices."""
-    if (
-        runtime_data := _get_runtime_data_from_device_id(hass, device_id, False)
-    ) is None:
+    if (runtime_data := _get_runtime_data_from_device_id(hass, device_id)) is None:
         return []
     base_action = {
         CONF_DEVICE_ID: device_id,
@@ -53,7 +51,9 @@ async def async_call_action_from_config(
     command_name = _get_command_name(device_action_name)
     device_id: str = config[CONF_DEVICE_ID]
 
-    runtime_data = _get_runtime_data_from_device_id(hass, device_id, True)
+    runtime_data = _get_runtime_data_from_device_id_exception_on_failure(
+        hass, device_id
+    )
 
     if runtime_data:
         await runtime_data.data.async_run_command(command_name)
@@ -68,18 +68,12 @@ def _get_command_name(device_action_name: str) -> str:
 
 
 def _get_runtime_data_from_device_id(
-    hass: HomeAssistant, device_id: str, allow_exceptions: bool
+    hass: HomeAssistant,
+    device_id: str,
 ) -> NutRuntimeData | None:
+    """Find the runtime data for device ID and return None on error."""
     device_registry = dr.async_get(hass)
     if (device := device_registry.async_get(device_id)) is None:
-        if allow_exceptions:
-            raise InvalidDeviceAutomationConfig(
-                translation_domain=DOMAIN,
-                translation_key="device_not_found",
-                translation_placeholders={
-                    "device_id": device_id,
-                },
-            )
         return None
 
     for config_entry_id in device.config_entries:
@@ -93,13 +87,39 @@ def _get_runtime_data_from_device_id(
         ):
             return entry.runtime_data
 
-    if allow_exceptions:
+    return None
+
+
+def _get_runtime_data_from_device_id_exception_on_failure(
+    hass: HomeAssistant,
+    device_id: str,
+) -> NutRuntimeData | None:
+    """Find the runtime data for device ID and raise exception on error."""
+    device_registry = dr.async_get(hass)
+    if (device := device_registry.async_get(device_id)) is None:
         raise InvalidDeviceAutomationConfig(
             translation_domain=DOMAIN,
-            translation_key="config_invalid",
+            translation_key="device_not_found",
             translation_placeholders={
                 "device_id": device_id,
             },
         )
 
-    return None
+    for config_entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(config_entry_id)
+        if (
+            entry
+            and entry.domain == DOMAIN
+            and entry.state is ConfigEntryState.LOADED
+            and hasattr(entry, "runtime_data")
+            and isinstance(entry.runtime_data, NutRuntimeData)
+        ):
+            return entry.runtime_data
+
+    raise InvalidDeviceAutomationConfig(
+        translation_domain=DOMAIN,
+        translation_key="config_invalid",
+        translation_placeholders={
+            "device_id": device_id,
+        },
+    )
