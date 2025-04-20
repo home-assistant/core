@@ -1,4 +1,98 @@
 # serializer version: 1
+# name: test_entity_registry[button.dining_room_two_door_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.dining_room_two_door_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': '1234567_12_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[button.dining_room_two_door_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dining Room Two Door Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dining_room_two_door_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_registry[button.doorbell_other_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.doorbell_other_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': '1234567_7_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[button.doorbell_other_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Doorbell  Other Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.doorbell_other_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_entity_registry[button.fire_bypass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -29,7 +123,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'bypass',
-    'unique_id': '123456_2_bypass',
+    'unique_id': '1234567_3_bypass',
     'unit_of_measurement': None,
   })
 # ---
@@ -40,6 +134,100 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.fire_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_registry[button.front_door_door_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.front_door_door_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': '1234567_26_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[button.front_door_door_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Front Door  Door Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.front_door_door_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_registry[button.garage_side_other_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.garage_side_other_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': '1234567_25_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[button.garage_side_other_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garage Side  Other Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.garage_side_other_bypass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -76,7 +264,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'bypass',
-    'unique_id': '123456_3_bypass',
+    'unique_id': '1234567_4_bypass',
     'unit_of_measurement': None,
   })
 # ---
@@ -93,7 +281,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entity_registry[button.motion_bypass-entry]
+# name: test_entity_registry[button.living_room_two_window_bypass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -106,7 +294,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.motion_bypass',
+    'entity_id': 'button.living_room_two_window_bypass',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -123,17 +311,252 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'bypass',
-    'unique_id': '123456_4_bypass',
+    'unique_id': '1234567_15_bypass',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_registry[button.motion_bypass-state]
+# name: test_entity_registry[button.living_room_two_window_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Motion Bypass',
+      'friendly_name': 'Living Room Two Window Bypass',
     }),
     'context': <ANY>,
-    'entity_id': 'button.motion_bypass',
+    'entity_id': 'button.living_room_two_window_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_registry[button.living_room_window_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.living_room_window_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': '1234567_14_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[button.living_room_window_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living Room  Window Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.living_room_window_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_registry[button.master_bedroom_door_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.master_bedroom_door_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': '1234567_10_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[button.master_bedroom_door_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Master Bedroom  Door Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.master_bedroom_door_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_registry[button.office_back_door_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.office_back_door_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': '1234567_9_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[button.office_back_door_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Office Back Door Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.office_back_door_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_registry[button.office_side_door_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.office_side_door_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': '1234567_8_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[button.office_side_door_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Office Side Door Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.office_side_door_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_registry[button.patio_door_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.patio_door_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': '1234567_13_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[button.patio_door_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Patio  Door Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.patio_door_bypass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -170,7 +593,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'bypass',
-    'unique_id': '123456_1_bypass',
+    'unique_id': '1234567_2_bypass',
     'unit_of_measurement': None,
   })
 # ---
@@ -181,6 +604,53 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.security_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_registry[button.temperature_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.temperature_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': '1234567_6_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[button.temperature_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Temperature Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.temperature_bypass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -217,7 +687,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'bypass_all',
-    'unique_id': '123456_bypass_all',
+    'unique_id': '1234567_bypass_all',
     'unit_of_measurement': None,
   })
 # ---
@@ -264,7 +734,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'clear_bypass',
-    'unique_id': '123456_clear_bypass',
+    'unique_id': '1234567_clear_bypass',
     'unit_of_measurement': None,
   })
 # ---
@@ -275,6 +745,53 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.test_clear_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_registry[button.unknown_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.unknown_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'totalconnect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass',
+    'unique_id': '1234567_5_bypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[button.unknown_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Unknown Bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.unknown_bypass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
