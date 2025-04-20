@@ -13,7 +13,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from tests.common import MockConfigEntry, load_json_array_fixture
 
 MOCK_TEST_CONFIG = {
-    CONF_URL: "https://127.0.0.1:9000",
+    CONF_URL: "https://127.0.0.1:9000/",
     CONF_API_KEY: "test_api_key",
     CONF_VERIFY_SSL: True,
 }

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyportainer.models.docker import DockerContainer
 
@@ -14,9 +14,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import PortainerConfigEntry
 from .coordinator import PortainerCoordinator
@@ -32,7 +31,6 @@ class PortainerBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class to hold Portainer binary sensor description."""
 
     state_fn: Callable[[Any], bool | None]
-    attributes_fn: Callable[[Any], dict[Any, StateType]] | None = None
 
 
 CONTAINER_SENSORS: tuple[PortainerBinarySensorEntityDescription, ...] = (
@@ -116,7 +114,9 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        assert self.device_id
+        if TYPE_CHECKING:
+            assert self.device_id
+
         return (
             self.entity_description.state_fn(device_info)
             if (device_info := self.coordinator.endpoints.get(self.device_id))
@@ -142,20 +142,19 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
 
         self._attr_unique_id = f"{entity_description.key}_{device_info.id}"
 
-    @callback
-    def _handle_coordinator_update(self):
-        """Handle updated data from the coordinator."""
-        try:
-            self._device_info = self.coordinator.endpoints[self.endpoint_id].containers[
-                self.device_id
-            ]
-        except (KeyError, IndexError):
-            return
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        if TYPE_CHECKING:
+            assert self.device_id
+            assert self.endpoint_id
 
-        self._attr_is_on = self.entity_description.state_fn(self._device_info)
-        if self.entity_description.attributes_fn is not None:
-            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
-                self._device_info
+        return (
+            self.entity_description.state_fn(device_info)
+            if (
+                device_info := self.coordinator.endpoints[
+                    self.endpoint_id
+                ].containers.get(self.device_id)
             )
-
-        super()._handle_coordinator_update()
+            else None
+        )

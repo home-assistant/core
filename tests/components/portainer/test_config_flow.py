@@ -20,7 +20,7 @@ from .conftest import MOCK_TEST_CONFIG
 from tests.common import MockConfigEntry
 
 MOCK_USER_SETUP = {
-    CONF_URL: "https://127.0.0.1:9000",
+    CONF_URL: "https://127.0.0.1:9000/",
     CONF_API_KEY: "test_api_key",
     CONF_VERIFY_SSL: True,
 }
@@ -45,7 +45,7 @@ async def test_form(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "https://127.0.0.1:9000"
+    assert result["title"] == "https://127.0.0.1:9000/"
     assert result["data"] == MOCK_TEST_CONFIG
 
 
@@ -110,7 +110,7 @@ async def test_form_exceptions(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "https://127.0.0.1:9000"
+    assert result["title"] == "https://127.0.0.1:9000/"
     assert result["data"] == MOCK_TEST_CONFIG
 
 
@@ -123,7 +123,7 @@ async def test_duplicate_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_URL: "https://127.0.0.1:9000",
+            CONF_URL: "https://127.0.0.1:9000/",
             CONF_API_KEY: "test_api_key",
         },
         unique_id="127.0.0.1",

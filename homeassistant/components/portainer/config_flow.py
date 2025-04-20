@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from urllib.parse import urlparse
 
 from aiohttp import CookieJar
 from pyportainer import (
@@ -14,6 +13,7 @@ from pyportainer import (
     PortainerTimeoutError,
 )
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -35,13 +35,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
+    url = URL(data[CONF_URL]).human_repr()
     session = async_create_clientsession(
         hass,
         data[CONF_VERIFY_SSL],
         cookie_jar=CookieJar(unsafe=True),
     )
     client = Portainer(
-        api_url=data[CONF_URL],
+        api_url=url,
         api_key=data[CONF_API_KEY],
         session=session,
     )
@@ -55,7 +56,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     except PortainerTimeoutError as err:
         raise PortainerTimeout from err
 
-    _LOGGER.debug("Connected to Portainer API: %s", data[CONF_URL])
+    _LOGGER.debug("Connected to Portainer API: %s", url)
 
     portainer_data: list[dict[str, Any]] = []
 
@@ -74,8 +75,8 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
         )
 
     return {
-        "title": data[CONF_URL],
-        "unique_id": urlparse(data[CONF_URL]).hostname,
+        "title": url,
+        "unique_id": URL(data[CONF_URL]).host,
         "portainer": portainer_data,
     }
 
