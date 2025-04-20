@@ -27,6 +27,7 @@ from .helpers import (
     DATA_LOGGER,
     LoggerDomainConfig,
     LoggerSettings,
+    _clear_logger_overwrites,  # noqa: F401
     set_default_log_level,
     set_log_levels,
 )

@@ -75,6 +75,12 @@ def _chattiest_log_level(level1: int, level2: int) -> int:
     return min(level1, level2)
 
 
+@callback
+def _clear_logger_overwrites(hass: HomeAssistant) -> None:
+    """Clear logger overwrites. Used for testing."""
+    hass.data[DATA_LOGGER].overrides.clear()
+
+
 async def get_integration_loggers(hass: HomeAssistant, domain: str) -> set[str]:
     """Get loggers for an integration."""
     loggers: set[str] = {f"homeassistant.components.{domain}"}
