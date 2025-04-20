@@ -68,6 +68,9 @@
     "repeat_set": {
       "service": "mdi:repeat"
     },
+    "search_media": {
+      "service": "mdi:text-search"
+    },
     "select_sound_mode": {
       "service": "mdi:surround-sound"
     },

@@ -520,6 +520,15 @@ class ESPHomeManager:
         if device_info.name:
             reconnect_logic.name = device_info.name
 
+        if not device_info.friendly_name:
+            _LOGGER.info(
+                "No `friendly_name` set in the `esphome:` section of the "
+                "YAML config for device '%s' (MAC: %s); It's recommended "
+                "to add one for easier identification and better alignment "
+                "with Home Assistant naming conventions",
+                device_info.name,
+                device_mac,
+            )
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
 
         entry_data.async_update_device_state()
@@ -756,7 +765,7 @@ def _async_setup_device_registry(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=entry_data.friendly_name,
+        name=entry_data.friendly_name or entry_data.name,
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
