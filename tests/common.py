@@ -46,7 +46,11 @@ from homeassistant.components import device_automation, persistent_notification 
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
-from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
+from homeassistant.components.logger import (
+    DOMAIN as LOGGER_DOMAIN,
+    SERVICE_SET_LEVEL,
+    _clear_logger_overwrites,
+)
 from homeassistant.config import IntegrationConfigInfo, async_process_component_config
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -1708,7 +1712,7 @@ async def async_call_logger_set_level(
         )
         await hass.async_block_till_done()
         yield
-        hass.data[LOGGER_DOMAIN].overrides.clear()
+        _clear_logger_overwrites(hass)
 
 
 def import_and_test_deprecated_constant_enum(
