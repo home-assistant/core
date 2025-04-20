@@ -40,7 +40,7 @@
     },
     "error": {
       "model_not_supported": "This model is not supported, please select a different model",
-      "web_search_not_supported": "Web search is only supported for gpt-4o and gpt-4o-mini models"
+      "web_search_not_supported": "Web search is not supported by this model"
     }
   },
   "selector": {
