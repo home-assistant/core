@@ -145,6 +145,9 @@ async def test_user_sets_unique_id(
 
     assert discovery_result["type"] is FlowResultType.FORM
     assert discovery_result["step_id"] == "discovery_confirm"
+    assert discovery_result["description_placeholders"] == {
+        "name": "test8266",
+    }
 
     discovery_result = await hass.config_entries.flow.async_configure(
         discovery_result["flow_id"],
@@ -224,6 +227,9 @@ async def test_user_causes_zeroconf_to_abort(
 
     assert discovery_result["type"] is FlowResultType.FORM
     assert discovery_result["step_id"] == "discovery_confirm"
+    assert discovery_result["description_placeholders"] == {
+        "name": "test8266",
+    }
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -675,6 +681,7 @@ async def test_discovery_duplicate_data(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"] == {"name": "test"}
 
     result = await hass.config_entries.flow.async_init(
         "esphome", data=service_info, context={"source": config_entries.SOURCE_ZEROCONF}
@@ -1357,6 +1364,7 @@ async def test_zeroconf_encryption_key_via_dashboard(
 
     assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "discovery_confirm"
+    assert flow["description_placeholders"] == {"name": "test8266"}
 
     mock_dashboard["configured"].append(
         {
@@ -1424,6 +1432,7 @@ async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
 
     assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "discovery_confirm"
+    assert flow["description_placeholders"] == {"name": "test8266"}
 
     mock_dashboard["configured"].append(
         {
@@ -1489,6 +1498,7 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
 
     assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "discovery_confirm"
+    assert flow["description_placeholders"] == {"name": "test8266"}
 
     await dashboard.async_get_dashboard(hass).async_refresh()
 

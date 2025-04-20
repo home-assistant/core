@@ -257,7 +257,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._async_try_fetch_device_info()
         return self.async_show_form(
-            step_id="discovery_confirm", description_placeholders={"name": self._name}
+            step_id="discovery_confirm",
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
 
     async def async_step_zeroconf(
