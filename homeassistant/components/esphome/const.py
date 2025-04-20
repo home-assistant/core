@@ -1,5 +1,7 @@
 """ESPHome constants."""
 
+from typing import Final
+
 from awesomeversion import AwesomeVersion
 
 DOMAIN = "esphome"
@@ -13,6 +15,7 @@ CONF_BLUETOOTH_MAC_ADDRESS = "bluetooth_mac_address"
 DEFAULT_ALLOW_SERVICE_CALLS = True
 DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False
 
+DEFAULT_PORT: Final = 6053
 
 STABLE_BLE_VERSION_STR = "2025.2.2"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)

@@ -20,6 +20,9 @@
         "title": "Choose the NUT server UPS to monitor",
         "data": {
           "alias": "NUT server UPS name"
+        },
+        "data_description": {
+          "alias": "The UPS name configured on the NUT server."
         }
       },
       "reauth_confirm": {
@@ -27,6 +30,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::nut::config::step::user::data_description::username%]",
+          "password": "[%key:component::nut::config::step::user::data_description::password%]"
         }
       },
       "reconfigure": {
@@ -48,6 +55,9 @@
         "title": "[%key:component::nut::config::step::ups::title%]",
         "data": {
           "alias": "[%key:component::nut::config::step::ups::data::alias%]"
+        },
+        "data_description": {
+          "alias": "[%key:component::nut::config::step::ups::data_description::alias%]"
         }
       }
     },
