@@ -449,7 +449,7 @@
           "168h": "168h"
         }
       },
-      "blanket_level": {
+      "electric_blanket_level": {
         "state": {
           "level_1": "Low",
           "level_2": "Level 2",
@@ -863,6 +863,21 @@
       },
       "sterilization": {
         "name": "Sterilization"
+      },
+      "side_a_power": {
+        "name": "Side A Power"
+      },
+      "side_b_power": {
+        "name": "Side B Power"
+      },
+      "preheat": {
+        "name": "Preheat"
+      },
+      "side_a_preheat": {
+        "name": "Side A Preheat"
+      },
+      "side_b_preheat": {
+        "name": "Side B Preheat"
       }
     }
   }

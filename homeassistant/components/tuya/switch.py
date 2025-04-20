@@ -733,40 +733,40 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/categorydr?id=Kaiuz22dyc66p
     "dr": (
         SwitchEntityDescription(
-            key=DPCode.SWITCH,
-            name="Power",
+            key=DPCode.SWITCH,  # Unified Switch (overrides Side A & B)
             icon="mdi:power",
             device_class=SwitchDeviceClass.SWITCH,
+            translation_key="power",
         ),
         SwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            name="Side A Power",
+            key=DPCode.SWITCH_1,  # Switch for Side A
             icon="mdi:alpha-a",
             device_class=SwitchDeviceClass.SWITCH,
+            translation_key="side_a_power",
         ),
         SwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            name="Side B Power",
+            key=DPCode.SWITCH_2,  # Switch for Side A
             icon="mdi:alpha-b",
             device_class=SwitchDeviceClass.SWITCH,
+            translation_key="side_b_power",
         ),
         SwitchEntityDescription(
-            key=DPCode.PREHEAT,
-            name="Preheat",
+            key=DPCode.PREHEAT,  # Unified Preheat (overrides Side A & B)
             icon="mdi:radiator",
             device_class=SwitchDeviceClass.SWITCH,
+            translation_key="preheat",
         ),
         SwitchEntityDescription(
-            key=DPCode.PREHEAT_1,
-            name="Side A Preheat",
+            key=DPCode.PREHEAT_1,  # Switch for Side A
             icon="mdi:radiator",
             device_class=SwitchDeviceClass.SWITCH,
+            translation_key="side_a_preheat",
         ),
         SwitchEntityDescription(
-            key=DPCode.PREHEAT_2,
-            name="Side B Preheat",
+            key=DPCode.PREHEAT_2,  # Switch for Side B
             icon="mdi:radiator",
             device_class=SwitchDeviceClass.SWITCH,
+            translation_key="side_b_preheat",
         ),
     ),
 }
