@@ -51,7 +51,7 @@ def get_hebrew_date(hass: HomeAssistant) -> HebrewDate:
     sunset = dt_util.as_local(event_date)
     _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
     if now > sunset:
-        now = today + datetime.timedelta(days=1)
+        now = now + datetime.timedelta(days=1)
         _LOGGER.debug("Date after sunset: %s", now)
     return HebrewDate.from_gdate(now)
 
