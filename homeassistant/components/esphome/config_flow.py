@@ -118,8 +118,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host = entry_data[CONF_HOST]
         self._port = entry_data[CONF_PORT]
         self._password = entry_data[CONF_PASSWORD]
-        self._name = self._reauth_entry.title
         self._device_name = entry_data.get(CONF_DEVICE_NAME)
+        self._name = self._reauth_entry.title
 
         # Device without encryption allows fetching device info. We can then check
         # if the device is no longer using a password. If we did try with a password,
@@ -278,8 +278,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # Hostname is format: livingroom.local.
         device_name = discovery_info.hostname.removesuffix(".local.")
 
-        self._name = discovery_info.properties.get("friendly_name", device_name)
         self._device_name = device_name
+        self._name = discovery_info.properties.get("friendly_name", device_name)
         self._host = discovery_info.host
         self._port = discovery_info.port
         self._noise_required = bool(discovery_info.properties.get("api_encryption"))
@@ -648,9 +648,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return "connection_error"
         finally:
             await cli.disconnect(force=True)
-        self._name = self._device_info.friendly_name or self._device_info.name
-        self._device_name = self._device_info.name
         self._device_mac = format_mac(self._device_info.mac_address)
+        self._device_name = self._device_info.name
+        self._name = self._device_info.friendly_name or self._device_info.name
         return None
 
     async def fetch_device_info(self) -> str | None:
