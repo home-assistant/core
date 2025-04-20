@@ -5994,7 +5994,7 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
-    "sleep_as_android": {
+    "sleep": {
       "name": "Sleep as Android",
       "integration_type": "hub",
       "config_flow": true,
