@@ -34,9 +34,9 @@
       }
     },
     "error": {
-      "invalid_username": "Failed to sign into Hive. Your email address is not recognised.",
-      "invalid_password": "Failed to sign into Hive. Incorrect password, please try again.",
-      "invalid_code": "Failed to sign into Hive. Your two-factor authentication code was incorrect.",
+      "invalid_username": "Failed to sign in to Hive. Your email address is not recognised.",
+      "invalid_password": "Failed to sign in to Hive. Incorrect password, please try again.",
+      "invalid_code": "Failed to sign in to Hive. Your two-factor authentication code was incorrect.",
       "no_internet_available": "An Internet connection is required to connect to Hive.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -105,7 +105,7 @@
     "sensor": {
       "heating": {
         "state": {
-          "manual": "Manual",
+          "manual": "[%key:common::state::manual%]",
           "off": "[%key:common::state::off%]",
           "schedule": "Schedule"
         }
