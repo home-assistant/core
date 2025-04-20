@@ -975,7 +975,7 @@ async def test_start_from_history_then_watch_state_changes_sliding(
 ) -> None:
     """Test we startup from history and switch to watching state changes.
 
-    With a sliding window, and history_stats does not requery the recorder.
+    With a sliding window, history_stats does not requery the recorder.
     """
     await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
@@ -1477,10 +1477,6 @@ async def test_measure_from_end_going_backwards(
 
     past_next_update = start_time + timedelta(minutes=30)
     with (
-        patch(
-            "homeassistant.components.recorder.history.state_changes_during_period",
-            _fake_states,
-        ),
         freeze_time(past_next_update),
     ):
         async_fire_time_changed(hass, past_next_update)
@@ -1641,23 +1637,7 @@ async def test_state_change_during_window_rollover(
     # and will see that the sensor is ON starting from midnight.
     t3 = t2 + timedelta(minutes=1)
 
-    def _fake_states_t3(*args, **kwargs):
-        return {
-            "binary_sensor.state": [
-                ha.State(
-                    "binary_sensor.state",
-                    "on",
-                    last_changed=t3.replace(hour=0, minute=0, second=0, microsecond=0),
-                    last_updated=t3.replace(hour=0, minute=0, second=0, microsecond=0),
-                ),
-            ]
-        }
-
     with (
-        patch(
-            "homeassistant.components.recorder.history.state_changes_during_period",
-            _fake_states_t3,
-        ),
         freeze_time(t3),
     ):
         # The sensor turns off around this time, before the sensor does its normal polled update.
