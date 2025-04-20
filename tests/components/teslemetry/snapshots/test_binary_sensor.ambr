@@ -3290,5 +3290,11 @@
   'off'
 # ---
 # name: test_binary_sensors_streaming[binary_sensor.test_front_passenger_window-state]
+  'off'
+# ---
+# name: test_binary_sensors_streaming[binary_sensor.test_rear_driver_window-state]
+  'off'
+# ---
+# name: test_binary_sensors_streaming[binary_sensor.test_rear_passenger_window-state]
   'on'
 # ---
