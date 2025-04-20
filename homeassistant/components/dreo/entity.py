@@ -1,6 +1,5 @@
 """Dreo device base entity."""
 
-from collections.abc import Callable
 from functools import partial
 from typing import Any
 
@@ -59,52 +58,34 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
             hw_version=device.get("mcuFirmwareVersion"),
         )
 
-    @property
-    def available(self) -> bool:
-        """Return device availability."""
-        return self.coordinator.data.get("available", False)
-
-    async def _try_command(
-        self, translation_key: str, func: Callable, *args: Any, **kwargs: Any
-    ) -> bool:
-        """Call a device command handling error messages.
+    async def async_send_command_and_update(
+        self, translation_key: str, **kwargs: Any
+    ) -> None:
+        """Call a device command handling error messages and update entity state.
 
         Args:
             translation_key: Translation key for error message
-            func: Function to call
-            args: Arguments for the function
-            kwargs: Keyword arguments for the function
+            kwargs: Keyword arguments for the update_status function
 
         Returns:
-            True if command succeeded, False otherwise
+            None
 
         """
         try:
             await self.coordinator.hass.async_add_executor_job(
-                partial(func, *args, **kwargs)
+                partial(
+                    self.coordinator.client.update_status, self._device_id, **kwargs
+                )
             )
-            await self.coordinator.async_request_refresh()
+            # Force immediate refresh of device state
+            # The coordinator will automatically update all registered entities
+            await self.coordinator.async_refresh()
         except (
             HsCloudException,
             HsCloudBusinessException,
             HsCloudAccessDeniedException,
             HsCloudFlowControlException,
         ) as ex:
-            if self.available:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key=translation_key
-                ) from ex
-            return False
-        else:
-            return True
-
-    async def _send_command_and_update(
-        self, translation_key: str, **kwargs: Any
-    ) -> None:
-        """Call a hscloud device command, handle errors, and update entity state."""
-        await self._try_command(
-            translation_key,
-            self.coordinator.client.update_status,
-            self._device_id,
-            **kwargs,
-        )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key=translation_key
+            ) from ex

@@ -18,14 +18,24 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVA
 from homeassistant.core import HomeAssistant
 
 pytestmark = pytest.mark.usefixtures(
-    "mock_dreo_client", "mock_dreo_devices", "mock_fan_device_data"
+    "mock_dreo_client", "mock_dreo_devices", "mock_fan_device_data", "mock_coordinator"
 )
 
 
 async def test_fan_state(
-    hass: HomeAssistant, setup_integration, mock_fan_entity
+    hass: HomeAssistant, setup_integration, mock_fan_entity, mock_coordinator
 ) -> None:
     """Test the creation and state of the fan."""
+    await hass.async_block_till_done()
+
+    # Set coordinator data
+    mock_coordinator.data["is_on"] = True
+    mock_coordinator.data["mode"] = "auto"
+    mock_coordinator.data["speed"] = 100
+    mock_coordinator.data["oscillate"] = True
+
+    # Update entity state
+    mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test_fan")
@@ -37,15 +47,20 @@ async def test_fan_state(
 
 
 async def test_turn_on(
-    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
+    hass: HomeAssistant,
+    setup_integration,
+    mock_dreo_client,
+    mock_fan_entity,
+    mock_coordinator,
 ) -> None:
     """Test turning on the fan."""
     # Turn off the fan first
-    mock_fan_entity._attr_percentage = 0
-    mock_fan_entity._attr_preset_mode = None
-    mock_fan_entity._attr_oscillating = None
-    mock_fan_entity._attr_state = None
-    await mock_fan_entity.async_update_ha_state()
+    mock_coordinator.data["is_on"] = False
+    mock_coordinator.data["mode"] = None
+    mock_coordinator.data["speed"] = 0
+    mock_coordinator.data["oscillate"] = None
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify initial state is off
     state = hass.states.get("fan.test_fan")
@@ -69,17 +84,20 @@ async def test_turn_on(
         {ATTR_ENTITY_ID: ["fan.test_fan"]},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     # Verify client was called correctly
     mock_dreo_client.update_status.assert_called_once_with(
         "test-device-id", power_switch=True
     )
 
-    # Update fan entity with the "response" from the API
-    mock_fan_entity._attr_percentage = 100
-    mock_fan_entity._attr_preset_mode = "auto"
-    mock_fan_entity._attr_state = STATE_ON
-    await mock_fan_entity.async_update_ha_state()
+    # Update coordinator data with the "response" from the API
+    mock_coordinator.data["is_on"] = True
+    mock_coordinator.data["mode"] = "auto"
+    mock_coordinator.data["speed"] = 100
+    mock_coordinator.data["oscillate"] = False
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify the state after turning on
     state = hass.states.get("fan.test_fan")
@@ -90,14 +108,20 @@ async def test_turn_on(
 
 
 async def test_turn_off(
-    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
+    hass: HomeAssistant,
+    setup_integration,
+    mock_dreo_client,
+    mock_fan_entity,
+    mock_coordinator,
 ) -> None:
     """Test turning off the fan."""
     # Ensure fan is on first
-    mock_fan_entity._attr_percentage = 100
-    mock_fan_entity._attr_preset_mode = "auto"
-    mock_fan_entity._attr_state = STATE_ON
-    await mock_fan_entity.async_update_ha_state()
+    mock_coordinator.data["is_on"] = True
+    mock_coordinator.data["mode"] = "auto"
+    mock_coordinator.data["speed"] = 100
+    mock_coordinator.data["oscillate"] = True
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify initial state is on
     state = hass.states.get("fan.test_fan")
@@ -120,17 +144,20 @@ async def test_turn_off(
         {ATTR_ENTITY_ID: ["fan.test_fan"]},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     # Verify client was called correctly
     mock_dreo_client.update_status.assert_called_once_with(
         "test-device-id", power_switch=False
     )
 
-    # Update fan entity with the "response" from the API
-    mock_fan_entity._attr_percentage = 0
-    mock_fan_entity._attr_preset_mode = None
-    mock_fan_entity._attr_state = STATE_OFF
-    await mock_fan_entity.async_update_ha_state()
+    # Update coordinator data with the "response" from the API
+    mock_coordinator.data["is_on"] = False
+    mock_coordinator.data["mode"] = None
+    mock_coordinator.data["speed"] = 0
+    mock_coordinator.data["oscillate"] = None
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify the state after turning off
     state = hass.states.get("fan.test_fan")
@@ -140,14 +167,20 @@ async def test_turn_off(
 
 
 async def test_set_percentage(
-    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
+    hass: HomeAssistant,
+    setup_integration,
+    mock_dreo_client,
+    mock_fan_entity,
+    mock_coordinator,
 ) -> None:
     """Test setting the fan speed percentage."""
     # Ensure fan is on with initial settings
-    mock_fan_entity._attr_percentage = 100
-    mock_fan_entity._attr_preset_mode = "auto"
-    mock_fan_entity._attr_state = STATE_ON
-    await mock_fan_entity.async_update_ha_state()
+    mock_coordinator.data["is_on"] = True
+    mock_coordinator.data["mode"] = "auto"
+    mock_coordinator.data["speed"] = 100
+    mock_coordinator.data["oscillate"] = True
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify initial state
     state = hass.states.get("fan.test_fan")
@@ -174,13 +207,15 @@ async def test_set_percentage(
         {ATTR_ENTITY_ID: ["fan.test_fan"], ATTR_PERCENTAGE: 50},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     # Verify client was called correctly
     mock_dreo_client.update_status.assert_called_once_with("test-device-id", speed=2)
 
-    # Update fan entity with the "response" from the API
-    mock_fan_entity._attr_percentage = 50
-    await mock_fan_entity.async_update_ha_state()
+    # Update coordinator data with the "response" from the API
+    mock_coordinator.data["speed"] = 50
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify the state after setting percentage
     state = hass.states.get("fan.test_fan")
@@ -190,14 +225,20 @@ async def test_set_percentage(
 
 
 async def test_set_preset_mode(
-    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
+    hass: HomeAssistant,
+    setup_integration,
+    mock_dreo_client,
+    mock_fan_entity,
+    mock_coordinator,
 ) -> None:
     """Test setting the fan preset mode."""
     # Ensure fan is on with initial settings
-    mock_fan_entity._attr_percentage = 100
-    mock_fan_entity._attr_preset_mode = "auto"
-    mock_fan_entity._attr_state = STATE_ON
-    await mock_fan_entity.async_update_ha_state()
+    mock_coordinator.data["is_on"] = True
+    mock_coordinator.data["mode"] = "auto"
+    mock_coordinator.data["speed"] = 100
+    mock_coordinator.data["oscillate"] = True
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify initial state
     state = hass.states.get("fan.test_fan")
@@ -223,15 +264,17 @@ async def test_set_preset_mode(
         {ATTR_ENTITY_ID: ["fan.test_fan"], ATTR_PRESET_MODE: "normal"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     # Verify client was called correctly
     mock_dreo_client.update_status.assert_called_once_with(
         "test-device-id", mode="normal"
     )
 
-    # Update fan entity with the "response" from the API
-    mock_fan_entity._attr_preset_mode = "normal"
-    await mock_fan_entity.async_update_ha_state()
+    # Update coordinator data with the "response" from the API
+    mock_coordinator.data["mode"] = "normal"
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify the state after setting preset mode
     state = hass.states.get("fan.test_fan")
@@ -241,15 +284,20 @@ async def test_set_preset_mode(
 
 
 async def test_set_oscillate(
-    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
+    hass: HomeAssistant,
+    setup_integration,
+    mock_dreo_client,
+    mock_fan_entity,
+    mock_coordinator,
 ) -> None:
     """Test setting the fan oscillation."""
     # Ensure fan is on with oscillation enabled
-    mock_fan_entity._attr_percentage = 100
-    mock_fan_entity._attr_preset_mode = "auto"
-    mock_fan_entity._attr_oscillating = True
-    mock_fan_entity._attr_state = STATE_ON
-    await mock_fan_entity.async_update_ha_state()
+    mock_coordinator.data["is_on"] = True
+    mock_coordinator.data["mode"] = "auto"
+    mock_coordinator.data["speed"] = 100
+    mock_coordinator.data["oscillate"] = True
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify initial state
     state = hass.states.get("fan.test_fan")
@@ -275,15 +323,17 @@ async def test_set_oscillate(
         {ATTR_ENTITY_ID: ["fan.test_fan"], ATTR_OSCILLATING: False},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     # Verify client was called correctly
     mock_dreo_client.update_status.assert_called_once_with(
         "test-device-id", oscillate=False
     )
 
-    # Update fan entity with the "response" from the API
-    mock_fan_entity._attr_oscillating = False
-    await mock_fan_entity.async_update_ha_state()
+    # Update coordinator data with the "response" from the API
+    mock_coordinator.data["oscillate"] = False
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify the state after setting oscillation
     state = hass.states.get("fan.test_fan")
@@ -293,12 +343,17 @@ async def test_set_oscillate(
 
 
 async def test_fan_unavailable(
-    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
+    hass: HomeAssistant,
+    setup_integration,
+    mock_dreo_client,
+    mock_fan_entity,
+    mock_coordinator,
 ) -> None:
     """Test handling of an unavailable fan."""
     # Make fan unavailable
-    mock_fan_entity._attr_available = False
-    await mock_fan_entity.async_update_ha_state()
+    mock_coordinator.data["available"] = False
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify state is unavailable
     state = hass.states.get("fan.test_fan")
@@ -306,9 +361,10 @@ async def test_fan_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
     # Set back to available and verify state changes
-    mock_fan_entity._attr_available = True
-    mock_fan_entity._attr_state = STATE_ON
-    await mock_fan_entity.async_update_ha_state()
+    mock_coordinator.data["available"] = True
+    mock_coordinator.data["is_on"] = True
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     state = hass.states.get("fan.test_fan")
     assert state is not None
@@ -316,14 +372,20 @@ async def test_fan_unavailable(
 
 
 async def test_client_error(
-    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
+    hass: HomeAssistant,
+    setup_integration,
+    mock_dreo_client,
+    mock_fan_entity,
+    mock_coordinator,
 ) -> None:
     """Test handling of client errors."""
     # Ensure fan is off initially
-    mock_fan_entity._attr_percentage = 0
-    mock_fan_entity._attr_preset_mode = None
-    mock_fan_entity._attr_state = STATE_OFF
-    await mock_fan_entity.async_update_ha_state()
+    mock_coordinator.data["is_on"] = False
+    mock_coordinator.data["mode"] = None
+    mock_coordinator.data["speed"] = 0
+    mock_coordinator.data["oscillate"] = None
+    mock_fan_entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Verify initial state
     state = hass.states.get("fan.test_fan")
@@ -341,6 +403,7 @@ async def test_client_error(
             {ATTR_ENTITY_ID: ["fan.test_fan"]},
             blocking=True,
         )
+    await hass.async_block_till_done()
 
     # Verify client was called
     mock_dreo_client.update_status.assert_called_once_with(

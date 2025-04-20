@@ -12,37 +12,106 @@ from hscloud.hscloudexception import HsCloudException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.percentage import ranged_value_to_percentage
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 
-class DreoBaseDeviceData(TypedDict):
+class DreoGenericDeviceData(TypedDict):
     """Base data for all Dreo devices."""
 
     available: bool
     is_on: bool
 
 
-class DreoFanDeviceData(DreoBaseDeviceData):
+class DreoFanDeviceData(DreoGenericDeviceData):
     """Data specific to Dreo fan devices."""
 
-    mode: NotRequired[str | None]
-    oscillate: NotRequired[bool | None]
-    speed: NotRequired[int | None]
+    mode: NotRequired[str]
+    oscillate: NotRequired[bool]
+    speed: NotRequired[int]
 
 
-# Use pipe syntax for type annotations
-DreoDeviceDataType = DreoFanDeviceData
+# Add other device type in the future
+# class DreoHeaterDeviceData(DreoBaseDeviceData):
+#     """Data specific to Dreo heater devices."""
+#     temperature: NotRequired[float | None]
+#     mode: NotRequired[str | None]
+DreoDeviceData = DreoFanDeviceData | DreoGenericDeviceData
 
 
-class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceDataType]):
+class DeviceDataFactory:
+    """Factory to create device data based on device type."""
+
+    @staticmethod
+    def create_data(
+        coordinator: DreoDataUpdateCoordinator,
+        base_data: DreoGenericDeviceData,
+        status: dict[str, Any],
+    ) -> DreoDeviceData:
+        """Create appropriate device data based on device type."""
+        if (
+            coordinator.device_type == FAN_DEVICE.get("type")
+            and coordinator.device_model
+        ):
+            return FanDataStrategy.process_data(
+                coordinator.device_model, base_data, status
+            )
+        return DreoFanDeviceData(**base_data)
+
+
+class FanDataStrategy:
+    """Strategy for processing fan device data."""
+
+    @staticmethod
+    def process_data(
+        device_model: str, base_data: DreoGenericDeviceData, status: dict[str, Any]
+    ) -> DreoFanDeviceData:
+        """Process fan device specific data."""
+        # Initialize with required fields
+        fan_data = DreoFanDeviceData(
+            available=base_data["available"],
+            is_on=base_data["is_on"],
+        )
+
+        # Convert mode to string
+        if "mode" in status:
+            fan_data["mode"] = str(status.get("mode", ""))
+
+        # Convert oscillate to boolean
+        if "oscillate" in status:
+            fan_data["oscillate"] = bool(status.get("oscillate", False))
+
+        # Convert speed to integer
+        if "speed" in status and status.get("speed") is not None:
+            speed_range = (
+                FAN_DEVICE.get("config", {}).get(device_model, {}).get("speed_range")
+            )
+            if speed_range:
+                # Direct conversion to integer
+                speed_value = float(status.get("speed", 0))
+                fan_data["speed"] = int(
+                    ranged_value_to_percentage(speed_range, speed_value)
+                )
+
+        return fan_data
+
+
+# Use generic device data type
+class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData]):
     """Class to manage fetching Dreo data."""
 
-    def __init__(self, hass: HomeAssistant, client: HsCloud, device_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: HsCloud,
+        device_id: str,
+        model: str | None = None,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -52,74 +121,33 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceDataType]):
         )
         self.client = client
         self.device_id = device_id
-        self.device_model: str | None = None
-        self.device_type: str | None = None
-        # Initialize with a fan device data structure with required fields
-        self.data: DreoFanDeviceData = {"available": False, "is_on": False}
+        self.device_model = model
+        self.device_type = DEVICE_TYPE.get(model) if model else None
+        # Initialize with generic device data type
+        self.data = DreoGenericDeviceData(available=False, is_on=False)
 
-    def _get_device_type(self) -> str | None:
-        """Determine device type based on model."""
-        if not self.device_model:
-            return None
-        return DEVICE_TYPE.get(self.device_model)
+    async def _async_update_data(self) -> DreoDeviceData:
+        """Get device status from Dreo API and process it."""
 
-    async def _async_update_data(self) -> DreoDeviceDataType:
-        """Update data via library."""
-        # Create fan data structure with minimum required fields
-        fan_data: DreoFanDeviceData = {"available": False, "is_on": False}
+        # Create base data structure
+        base_data = DreoGenericDeviceData(available=False, is_on=False)
 
         try:
             # Get device status
-            status = await self._async_get_status()
-
-            if status is None:
-                return fan_data
-
-            # Update device model and type information
-            if not self.device_model and "model" in status:
-                self.device_model = status.get("model")
-                self.device_type = self._get_device_type()
-
-            # Set common properties
-            fan_data["available"] = status.get("connected", False)
-            fan_data["is_on"] = status.get("power_switch", False)
-
-            # Fill specific properties based on device type
-            device_type = self.device_type or self._get_device_type()
-
-            if device_type == FAN_DEVICE.get("type"):
-                # Fan device data
-                if "mode" in status:
-                    fan_data["mode"] = status.get("mode")
-
-                if "oscillate" in status:
-                    fan_data["oscillate"] = status.get("oscillate")
-
-                if "speed" in status:
-                    fan_data["speed"] = status.get("speed")
-
-                return fan_data
-
-        except HsCloudException as error:
-            raise UpdateFailed(f"Error communicating with Dreo API: {error}") from error
-        except Exception as error:  # pylint: disable=broad-except
-            # We need to catch all exceptions to ensure the coordinator doesn't break
-            # This is intentional to handle any unforeseen errors from the API
-            raise UpdateFailed(f"Unexpected error: {error}") from error
-
-        # Return fan data if device type cannot be determined or other issues occur
-        return fan_data
-
-    async def _async_get_status(self) -> dict[str, Any] | None:
-        """Get device status with error handling."""
-        try:
-            return await self.hass.async_add_executor_job(
+            status = await self.hass.async_add_executor_job(
                 self.client.get_status, self.device_id
             )
+
+            if status is None:
+                return base_data
+
+            # Set common properties
+            base_data["available"] = status.get("connected", False)
+            base_data["is_on"] = status.get("power_switch", False)
+
+            # Get device type and use factory to create appropriate data
+            return DeviceDataFactory.create_data(self, base_data, status)
         except HsCloudException as error:
-            _LOGGER.error("Error getting device status: %s", error)
-            return None
-        # Catch specific exceptions instead of a blind Exception
-        except (ConnectionError, TimeoutError, ValueError) as error:
-            _LOGGER.error("Unexpected error getting device status: %s", error)
-            return None
+            raise UpdateFailed(f"Error communicating with Dreo API: {error}") from error
+        except Exception as error:
+            raise UpdateFailed(f"Unexpected error: {error}") from error
