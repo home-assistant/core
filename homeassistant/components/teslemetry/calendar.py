@@ -355,7 +355,8 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         """Return the next upcoming event."""
 
         now = dt_util.now()
-        for season, season_data in self.seasons.items():
+        season = None
+        for season_name, season_data in self.seasons.items():
             if not season_data:
                 continue
 
@@ -371,43 +372,49 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
                 season_data["toDay"],
                 tzinfo=now.tzinfo,
             ) + timedelta(days=1)
-            if end <= now or start >= now:
-                continue
-            for name in season_data["tou_periods"]:
-                for period in season_data["tou_periods"][name]["periods"]:
-                    day = now.weekday()
-                    if day < period.get("fromDayOfWeek", 0) or day > period.get(
-                        "toDayOfWeek", 6
-                    ):
-                        continue
-                    start_time = datetime(
-                        now.year,
-                        now.month,
-                        now.day,
-                        period.get("from_hour", 0) % 24,
-                        period.get("from_minute", 0) % 60,
-                        tzinfo=now.tzinfo,
+
+            if end <= now <= start:
+                season = season_name
+                break
+
+        if not season:
+            return None
+
+        for name in self.seasons[season]["tou_periods"]:
+            for period in self.seasons[season]["tou_periods"][name]["periods"]:
+                day = now.weekday()
+                if day < period.get("fromDayOfWeek", 0) or day > period.get(
+                    "toDayOfWeek", 6
+                ):
+                    continue
+                start_time = datetime(
+                    now.year,
+                    now.month,
+                    now.day,
+                    period.get("from_hour", 0) % 24,
+                    period.get("from_minute", 0) % 60,
+                    tzinfo=now.tzinfo,
+                )
+                end_time = datetime(
+                    now.year,
+                    now.month,
+                    now.day,
+                    period.get("to_hour", 0) % 24,
+                    period.get("to_minute", 0) % 60,
+                    tzinfo=now.tzinfo,
+                )
+                if end_time < start_time:
+                    end_time += timedelta(days=1)
+                if start_time < now < end_time:
+                    price = self.charges.get(season, self.charges["ALL"])["rates"].get(
+                        name, self.charges["ALL"]["rates"]["ALL"]
                     )
-                    end_time = datetime(
-                        now.year,
-                        now.month,
-                        now.day,
-                        period.get("to_hour", 0) % 24,
-                        period.get("to_minute", 0) % 60,
-                        tzinfo=now.tzinfo,
+                    return CalendarEvent(
+                        start=start_time,
+                        end=end_time,
+                        summary=f"{price}/kWh",
+                        description=f"Seasons: {season}\nPeriod: {name}\nPrice: {price}/kWh",
                     )
-                    if end_time < start_time:
-                        end_time += timedelta(days=1)
-                    if start_time < now < end_time:
-                        price = self.charges.get(season, self.charges["ALL"])[
-                            "rates"
-                        ].get(name, self.charges["ALL"]["rates"]["ALL"])
-                        return CalendarEvent(
-                            start=start_time,
-                            end=end_time,
-                            summary=f"{price}/kWh",
-                            description=f"Seasons: {season}\nPeriod: {name}\nPrice: {price}/kWh",
-                        )
         return None
 
     async def async_get_events(
