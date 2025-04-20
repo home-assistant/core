@@ -27,6 +27,7 @@ from .const import (
     ATTR_RETRY,
     ATTR_SOUND,
     ATTR_TIMESTAMP,
+    ATTR_TTL,
     ATTR_URL,
     ATTR_URL_TITLE,
     CONF_USER_KEY,
@@ -74,6 +75,7 @@ class PushoverNotificationService(BaseNotificationService):
         expire = data.get(ATTR_EXPIRE)
         callback_url = data.get(ATTR_CALLBACK_URL)
         timestamp = data.get(ATTR_TIMESTAMP)
+        ttl = data.get(ATTR_TTL)
         sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
 
@@ -108,6 +110,7 @@ class PushoverNotificationService(BaseNotificationService):
                 priority,
                 retry,
                 expire,
+                ttl,
                 callback_url,
                 timestamp,
                 sound,
