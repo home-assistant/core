@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
- from .const import (
+from .const import (
      ATTR_ATTACHMENT,
      ATTR_URL,
      ATTR_URL_TITLE,
@@ -74,10 +74,12 @@ class PushoverNotificationService(BaseNotificationService):
         priority = data.get(ATTR_PRIORITY)
         retry = data.get(ATTR_RETRY)
         expire = data.get(ATTR_EXPIRE)
+        ttl = data.get(ATTR_TTL)
         callback_url = data.get(ATTR_CALLBACK_URL)
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
+
 
         # Check for attachment
         if (image := data.get(ATTR_ATTACHMENT)) is not None:
