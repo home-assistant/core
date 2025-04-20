@@ -1,10 +1,16 @@
 count_omer:
   fields:
     date:
-      required: true
+      required: false
       example: "2025-04-14"
       selector:
         date:
+    is_after_sunset:
+      required: false
+      example: false
+      default: false
+      selector:
+        boolean:
     nusach:
       required: true
       example: "sfarad"
@@ -18,7 +24,7 @@ count_omer:
             - "adot_mizrah"
             - "italian"
     language:
-      required: true
+      required: false
       default: "he"
       example: "he"
       selector:
