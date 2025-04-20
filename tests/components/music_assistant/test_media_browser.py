@@ -27,7 +27,7 @@ from .common import setup_integration_from_fixtures
         (LIBRARY_PLAYLISTS, MediaType.PLAYLIST, "library://playlist/40"),
         (LIBRARY_ARTISTS, MediaType.ARTIST, "library://artist/127"),
         (LIBRARY_ALBUMS, MediaType.ALBUM, "library://album/396"),
-        (LIBRARY_TRACKS, MediaType.TRACK, "library://track/486"),
+        (LIBRARY_TRACKS, MediaType.TRACK, "library://track/456"),
         (LIBRARY_RADIO, DOMAIN, "library://radio/1"),
         (LIBRARY_PODCASTS, MediaType.PODCAST, "library://podcast/6"),
         (LIBRARY_AUDIOBOOKS, DOMAIN, "library://audiobook/1"),
