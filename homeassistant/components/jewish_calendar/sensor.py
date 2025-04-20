@@ -196,6 +196,14 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         super().__init__(config_entry, description)
         self._attrs: dict[str, str] = {}
 
+        # Initialize options for enum device class sensors
+        if description.key == "weekly_portion":
+            self._attr_options = [str(p) for p in Parasha]
+        elif description.key == "holiday":
+            self._attr_options = HolidayDatabase(self._diaspora).get_all_names(
+                self._language
+            )
+
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
@@ -216,9 +224,6 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             }
             return str(self.values.after_shkia_date.hdate)
         if self.entity_description.key == "weekly_portion":
-            for p in Parasha:
-                p.set_language(self._language)
-            self._attr_options = [str(p) for p in Parasha]
             # Compute the weekly portion based on the upcoming shabbat.
             return str(self.values.after_tzais_date.upcoming_shabbat.parasha)
         if self.entity_description.key == "holiday":
@@ -228,7 +233,6 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
                 dict.fromkeys(_holiday.type.name for _holiday in _holidays)
             )
             self._attrs = {"id": _id, "type": _type}
-            self._attr_options = HolidayDatabase(self._diaspora).get_all_names()
             return ", ".join(str(holiday) for holiday in _holidays) if _holidays else ""
         if self.entity_description.key == "omer_count":
             if self.values.after_shkia_date.omer:
