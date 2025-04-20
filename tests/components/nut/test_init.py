@@ -222,14 +222,22 @@ async def test_auth_fails(
     assert flows[0]["context"]["source"] == "reauth"
 
 
-async def test_serial_number(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "serial_number",
+    [
+        "A00000000000",
+    ],
+)
+async def test_serial_number(
+    hass: HomeAssistant,
+    serial_number: str,
+) -> None:
     """Test for serial number set on device."""
-    mock_serial_number = "A00000000000"
     await async_init_integration(
         hass,
         username="someuser",
         password="somepassword",
-        list_vars={"ups.serial": mock_serial_number},
+        list_vars={"ups.serial": serial_number},
         list_ups={"ups1": "UPS 1"},
         list_commands_return_value=[],
     )
@@ -238,24 +246,32 @@ async def test_serial_number(hass: HomeAssistant) -> None:
     assert device_registry is not None
 
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_serial_number)}
+        identifiers={(DOMAIN, serial_number)}
     )
 
     assert device_entry is not None
-    assert device_entry.serial_number == mock_serial_number
+    assert device_entry.serial_number == serial_number
 
 
-async def test_device_location(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("serial_number", "device_location"),
+    [
+        ("A00000000000", "XYZ Location"),
+    ],
+)
+async def test_device_location(
+    hass: HomeAssistant,
+    serial_number: str,
+    device_location: str,
+) -> None:
     """Test for suggested location on device."""
-    mock_serial_number = "A00000000000"
-    mock_device_location = "XYZ Location"
     await async_init_integration(
         hass,
         username="someuser",
         password="somepassword",
         list_vars={
-            "ups.serial": mock_serial_number,
-            "device.location": mock_device_location,
+            "ups.serial": serial_number,
+            "device.location": device_location,
         },
         list_ups={"ups1": "UPS 1"},
         list_commands_return_value=[],
@@ -265,11 +281,11 @@ async def test_device_location(hass: HomeAssistant) -> None:
     assert device_registry is not None
 
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_serial_number)}
+        identifiers={(DOMAIN, serial_number)}
     )
 
     assert device_entry is not None
-    assert device_entry.suggested_area == mock_device_location
+    assert device_entry.suggested_area == device_location
 
 
 async def test_update_options(hass: HomeAssistant) -> None:
