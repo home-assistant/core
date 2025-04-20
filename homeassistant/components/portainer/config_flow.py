@@ -110,7 +110,11 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=api["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
         )
 
 
