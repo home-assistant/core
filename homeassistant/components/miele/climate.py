@@ -22,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DEVICE_TYPE_TAGS, DOMAIN, MieleAppliance
+from .const import DEVICE_TYPE_TAGS, DISABLED_TEMP_ENTITIES, DOMAIN, MieleAppliance
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
 
@@ -35,7 +35,7 @@ class MieleClimateDescription(ClimateEntityDescription):
 
     value_fn: Callable[[MieleDevice], StateType]
     target_fn: Callable[[MieleDevice], StateType]
-    zone: int = 0
+    zone: int = 1
 
 
 @dataclass
@@ -65,7 +65,7 @@ CLIMATE_TYPES: Final[tuple[MieleClimateDefinition, ...]] = (
                 int, value.state_target_temperature[0].temperature
             )
             / 100.0,
-            zone=0,
+            zone=1,
         ),
     ),
     MieleClimateDefinition(
@@ -86,8 +86,8 @@ CLIMATE_TYPES: Final[tuple[MieleClimateDefinition, ...]] = (
                 int, value.state_target_temperature[1].temperature
             )
             / 100.0,
-            name="Zone 2",
-            zone=1,
+            translation_key="zone_2",
+            zone=2,
         ),
     ),
     MieleClimateDefinition(
@@ -108,8 +108,8 @@ CLIMATE_TYPES: Final[tuple[MieleClimateDefinition, ...]] = (
                 int, value.state_target_temperature[2].temperature
             )
             / 100.0,
-            name="Zone 3",
-            zone=2,
+            translation_key="zone_3",
+            zone=3,
         ),
     ),
 )
@@ -129,7 +129,7 @@ async def async_setup_entry(
         for definition in CLIMATE_TYPES
         if (
             device.device_type in definition.types
-            and (definition.description.value_fn(device) != -32768 / 100.0)
+            and (definition.description.value_fn(device) not in DISABLED_TEMP_ENTITIES)
         )
     )
 
@@ -138,6 +138,17 @@ class MieleClimate(MieleEntity, ClimateEntity):
     """Representation of a climate entity."""
 
     entity_description: MieleClimateDescription
+    _attr_precision = 1.0
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step = 1.0
+    _attr_hvac_modes = [HVACMode.COOL]
+    _attr_hvac_mode = HVACMode.COOL
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return cast(float, self.entity_description.value_fn(self.device))
 
     def __init__(
         self,
@@ -148,61 +159,48 @@ class MieleClimate(MieleEntity, ClimateEntity):
         """Initialize the climate entity."""
         super().__init__(coordinator, device_id, description)
         self.api = coordinator.api
+        t_key = self.entity_description.translation_key
         if (
             self.device.device_type == MieleAppliance.FRIDGE_FREEZER
-            and self.entity_description.zone == 0
+            and self.entity_description.zone == 1
         ):
-            name = DEVICE_TYPE_TAGS[MieleAppliance.FRIDGE]
+            t_key = DEVICE_TYPE_TAGS[MieleAppliance.FRIDGE]
         elif (
             self.device.device_type == MieleAppliance.FRIDGE_FREEZER
-            and self.entity_description.zone == 1
+            and self.entity_description.zone == 2
         ):
-            name = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
+            t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
         elif (
             self.device.device_type == MieleAppliance.FRIDGE
-            and self.entity_description.zone == 0
+            and self.entity_description.zone == 1
         ):
-            name = DEVICE_TYPE_TAGS[MieleAppliance.FRIDGE]
+            t_key = DEVICE_TYPE_TAGS[MieleAppliance.FRIDGE]
         elif (
             self.device.device_type == MieleAppliance.FREEZER
-            and self.entity_description.zone == 0
+            and self.entity_description.zone == 1
         ):
-            name = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
-        elif (
-            self.device.device_type == MieleAppliance.WINE_CABINET_FREEZER
-            and self.entity_description.zone == 0
-        ):
-            name = DEVICE_TYPE_TAGS[MieleAppliance.WINE_CABINET]
+            t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
         elif (
             self.device.device_type == MieleAppliance.WINE_CABINET_FREEZER
             and self.entity_description.zone == 1
         ):
-            name = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
-        else:
-            name = cast(str, self.entity_description.name)
-        self._attr_translation_key = name
+            t_key = DEVICE_TYPE_TAGS[MieleAppliance.WINE_CABINET]
+        elif (
+            self.device.device_type == MieleAppliance.WINE_CABINET_FREEZER
+            and self.entity_description.zone == 2
+        ):
+            t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
 
-        zone = (
-            ""
-            if self.entity_description.zone == 0
-            else f"{self.entity_description.zone}"
+        self._attr_translation_key = t_key
+        self._attr_unique_id = (
+            f"{device_id}-{description.key}-{self.entity_description.zone}"
         )
-        self._attr_unique_id = f"{device_id}-{description.key}-{zone}"
-        self._attr_precision = 1.0
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_target_temperature_step = 1.0
-        self._attr_hvac_modes = [HVACMode.COOL]
-        self._attr_hvac_mode = HVACMode.COOL
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-
-    @property
-    def current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        return cast(float, self.entity_description.value_fn(self.device))
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
+        if self.entity_description.target_fn(self.device) is None:
+            return None
         return cast(float, self.entity_description.target_fn(self.device))
 
     @property
@@ -211,7 +209,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
         return cast(
             float,
             self.coordinator.data.actions[self._device_id]
-            .target_temperature[self.entity_description.zone]
+            .target_temperature[self.entity_description.zone - 1]
             .max,
         )
 
@@ -221,7 +219,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
         return cast(
             float,
             self.coordinator.data.actions[self._device_id]
-            .target_temperature[self.entity_description.zone]
+            .target_temperature[self.entity_description.zone - 1]
             .min,
         )
 
@@ -231,7 +229,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
             return
         try:
             await self.api.set_target_temperature(
-                self._device_id, temperature, self.entity_description.zone + 1
+                self._device_id, temperature, self.entity_description.zone
             )
         except aiohttp.ClientError as err:
             raise HomeAssistantError(

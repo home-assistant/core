@@ -36,7 +36,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': 'freezer',
-    'unique_id': 'Dummy_Appliance_1-thermostat-',
+    'unique_id': 'Dummy_Appliance_1-thermostat-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -99,7 +99,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': 'refrigerator',
-    'unique_id': 'Dummy_Appliance_2-thermostat-',
+    'unique_id': 'Dummy_Appliance_2-thermostat-1',
     'unit_of_measurement': None,
   })
 # ---

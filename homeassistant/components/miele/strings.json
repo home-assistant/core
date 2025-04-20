@@ -123,6 +123,12 @@
       },
       "wine_cabinet": {
         "name": "[%key:component::miele::device::wine_cabinet::name%]"
+      },
+      "zone_2": {
+        "name": "Zone 2"
+      },
+      "zone_3": {
+        "name": "Zone 3"
       }
     },
     "sensor": {
