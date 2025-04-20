@@ -105,8 +105,6 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 _LOGGER.debug("Erwin title: %s", api["title"])
-                await self.async_set_unique_id(api["unique_id"])
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=api["title"], data=user_input)
 
         return self.async_show_form(
