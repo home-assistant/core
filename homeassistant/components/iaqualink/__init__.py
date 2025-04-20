@@ -17,7 +17,7 @@ from iaqualink.device import (
     AqualinkSwitch,
     AqualinkThermostat,
 )
-from iaqualink.exception import AqualinkServiceException
+from iaqualink.exception import AqualinkServiceException, AqualinkSystemOfflineException
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -93,11 +93,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for system in systems:
         try:
             devices = await system.get_devices()
+        except AqualinkSystemOfflineException:
+            _LOGGER.warning("System %s is offline", system.serial)
+            continue
         except AqualinkServiceException as svc_exception:
-            await aqualink.close()
-            raise ConfigEntryNotReady(
-                f"Error while attempting to retrieve devices list: {svc_exception}"
-            ) from svc_exception
+            # We're going to assume this is a transient issue that will resolve itself in a subsequent call to system.get_devices().
+            # This is a non-fatal error, so we log it and continue.
+            _LOGGER.error(
+                "Error while attempting to retrieve devices list: %s", svc_exception
+            )
+            continue
 
         for dev in devices.values():
             if isinstance(dev, AqualinkThermostat):
