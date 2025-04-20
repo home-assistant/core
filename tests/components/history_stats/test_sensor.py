@@ -1009,21 +1009,25 @@ async def test_start_from_history_then_watch_state_changes_sliding(
                     {
                         "platform": "history_stats",
                         "entity_id": "binary_sensor.state",
-                        "name": "sensor1",
+                        "name": f"sensor{i}",
                         "state": "on",
                         "end": "{{ utcnow() }}",
                         "duration": {"hours": 1},
-                        "type": "time",
+                        "type": sensor_type,
                     }
+                    for i, sensor_type in enumerate(["time", "ratio", "count"])
                 ]
             },
         )
         await hass.async_block_till_done()
 
-        await async_update_entity(hass, "sensor.sensor1")
+        for i in range(3):
+            await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
+    assert hass.states.get("sensor.sensor0").state == "0.0"
     assert hass.states.get("sensor.sensor1").state == "0.0"
+    assert hass.states.get("sensor.sensor2").state == "0"
 
     with freeze_time(time):
         hass.states.async_set("binary_sensor.state", "on")
@@ -1031,13 +1035,19 @@ async def test_start_from_history_then_watch_state_changes_sliding(
         async_fire_time_changed(hass, time)
         await hass.async_block_till_done()
 
+    assert hass.states.get("sensor.sensor0").state == "0.0"
+    assert hass.states.get("sensor.sensor1").state == "0.0"
+    assert hass.states.get("sensor.sensor2").state == "1"
+
     # After sensor has been on for 15 minutes, check state
     time += timedelta(minutes=15)  # 00:15
     with freeze_time(time):
         async_fire_time_changed(hass, time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.25"
+    assert hass.states.get("sensor.sensor0").state == "0.25"
+    assert hass.states.get("sensor.sensor1").state == "25.0"
+    assert hass.states.get("sensor.sensor2").state == "1"
 
     with freeze_time(time):
         hass.states.async_set("binary_sensor.state", "off")
@@ -1051,7 +1061,9 @@ async def test_start_from_history_then_watch_state_changes_sliding(
         async_fire_time_changed(hass, time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.25"
+    assert hass.states.get("sensor.sensor0").state == "0.25"
+    assert hass.states.get("sensor.sensor1").state == "25.0"
+    assert hass.states.get("sensor.sensor2").state == "1"
 
     time += timedelta(minutes=20)  # 01:05
 
@@ -1060,7 +1072,9 @@ async def test_start_from_history_then_watch_state_changes_sliding(
         await hass.async_block_till_done()
 
     # Sliding window will have started to erase the initial on period, so now it will only be on for 10 minutes
-    assert hass.states.get("sensor.sensor1").state == "0.17"
+    assert hass.states.get("sensor.sensor0").state == "0.17"
+    assert hass.states.get("sensor.sensor1").state == "16.7"
+    assert hass.states.get("sensor.sensor2").state == "1"
 
     time += timedelta(minutes=5)  # 01:10
 
@@ -1069,7 +1083,9 @@ async def test_start_from_history_then_watch_state_changes_sliding(
         await hass.async_block_till_done()
 
     # Sliding window will continue to erase the initial on period, so now it will only be on for 5 minutes
-    assert hass.states.get("sensor.sensor1").state == "0.08"
+    assert hass.states.get("sensor.sensor0").state == "0.08"
+    assert hass.states.get("sensor.sensor1").state == "8.3"
+    assert hass.states.get("sensor.sensor2").state == "1"
 
     time += timedelta(minutes=10)  # 01:20
 
@@ -1077,7 +1093,9 @@ async def test_start_from_history_then_watch_state_changes_sliding(
         async_fire_time_changed(hass, time)
         await hass.async_block_till_done()
 
+    assert hass.states.get("sensor.sensor0").state == "0.0"
     assert hass.states.get("sensor.sensor1").state == "0.0"
+    assert hass.states.get("sensor.sensor2").state == "0"
 
 
 async def test_does_not_work_into_the_future(
