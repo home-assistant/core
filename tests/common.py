@@ -46,6 +46,7 @@ from homeassistant.components import device_automation, persistent_notification 
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
+from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
 from homeassistant.config import IntegrationConfigInfo, async_process_component_config
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -1686,6 +1687,28 @@ def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> 
     else:
         state = CloudConnectionState.CLOUD_DISCONNECTED
     async_dispatcher_send(hass, SIGNAL_CLOUD_CONNECTION_STATE, state)
+
+
+@asynccontextmanager
+async def async_call_logger_set_level(
+    logger: str,
+    level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "FATAL", "CRITICAL"],
+    *,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> AsyncGenerator[None]:
+    """Context manager to reset loggers after logger.set_level call."""
+    assert LOGGER_DOMAIN in hass.data, "'logger' integration not setup"
+    with caplog.at_level(logging.NOTSET, logger):
+        await hass.services.async_call(
+            LOGGER_DOMAIN,
+            SERVICE_SET_LEVEL,
+            {logger: level},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        yield
+        hass.data[LOGGER_DOMAIN].overrides.clear()
 
 
 def import_and_test_deprecated_constant_enum(
