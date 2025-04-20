@@ -27,6 +27,7 @@ from homeassistant.components.esphome.const import (
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -48,6 +49,17 @@ def mock_setup_entry():
     """Mock setting up a config entry."""
     with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
         yield
+
+
+def get_flow_context(hass: HomeAssistant, result: ConfigFlowResult) -> dict[str, Any]:
+    """Get the flow context from the result of async_init or async_configure."""
+    flow = next(
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+
+    return flow["context"]
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -592,12 +604,18 @@ async def test_discovery_initiation(
         port=6053,
         properties={
             "mac": "1122334455aa",
+            "friendly_name": "The Test",
         },
         type="mock_type",
     )
     flow = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
+    assert get_flow_context(hass, flow) == {
+        "source": config_entries.SOURCE_ZEROCONF,
+        "title_placeholders": {"name": "The Test (test)"},
+        "unique_id": "11:22:33:44:55:aa",
+    }
 
     result = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}
