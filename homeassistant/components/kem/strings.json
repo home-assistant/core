@@ -89,7 +89,7 @@
       "generator_load": {
         "name": "Generator load"
       },
-      "generator_load_percentage": {
+      "generator_load_percent": {
         "name": "Generator load percentage"
       }
     }
