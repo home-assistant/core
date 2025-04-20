@@ -108,6 +108,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "battery.capacity": SensorEntityDescription(
         key="battery.capacity",
         translation_key="battery_capacity",
+        native_unit_of_measurement="Ah",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

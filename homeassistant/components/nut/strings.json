@@ -132,10 +132,7 @@
         }
       },
       "battery_alarm_threshold": { "name": "Battery alarm threshold" },
-      "battery_capacity": {
-        "name": "Battery capacity",
-        "unit_of_measurement": "Ah"
-      },
+      "battery_capacity": { "name": "Battery capacity" },
       "battery_charge": { "name": "Battery charge" },
       "battery_charge_low": { "name": "Low battery setpoint" },
       "battery_charge_restart": { "name": "Minimum battery to start" },
