@@ -729,6 +729,46 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
+    # Electric Blanket
+    # https://developer.tuya.com/en/docs/iot/categorydr?id=Kaiuz22dyc66p
+    "dr": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Power",
+            icon="mdi:power",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Side A Power",
+            icon="mdi:alpha-a",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Side B Power",
+            icon="mdi:alpha-b",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT,
+            name="Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT_1,
+            name="Side A Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT_2,
+            name="Side B Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+    ),
 }
 
 # Socket (duplicate of `pc`)

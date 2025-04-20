@@ -316,6 +316,28 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Electric Blanket
+    # https://developer.tuya.com/en/docs/iot/categorydr?id=Kaiuz22dyc66p
+    "dr": (
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            icon="mdi:thermometer-lines",
+            translation_key="blanket_level",
+            # entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LEVEL_1,
+            icon="mdi:thermometer-lines",
+            translation_key="blanket_level",
+            # entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LEVEL_2,
+            icon="mdi:thermometer-lines",
+            translation_key="blanket_level",
+            # entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
