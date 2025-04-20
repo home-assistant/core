@@ -85,7 +85,8 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
-            assert endpoint.id
+            if TYPE_CHECKING:
+                assert endpoint.id
             try:
                 containers = await self.portainer.get_containers(endpoint.id)
             except PortainerConnectionError as err:
