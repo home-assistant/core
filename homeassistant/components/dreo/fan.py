@@ -180,7 +180,7 @@ class DreoFan(DreoEntity, FanEntity):
         await self.async_execute_fan_common_command(ERROR_SET_SPEED_FAILED, speed=speed)
 
     async def async_oscillate(self, oscillating: bool) -> None:
-        """Set the Oscillate of fan."""
+        """Set the oscillation of fan."""
         await self.async_execute_fan_common_command(
             ERROR_SET_OSCILLATE_FAILED, oscillate=oscillating
         )
