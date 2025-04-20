@@ -26,7 +26,6 @@ from .const import (
     FEED_ID,
     FEED_NAME,
     FEED_TAG,
-    LOGGER,
     SYNC_MODE,
     SYNC_MODE_AUTO,
     SYNC_MODE_MANUAL,

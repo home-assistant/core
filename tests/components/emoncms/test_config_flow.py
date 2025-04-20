@@ -10,19 +10,13 @@ from homeassistant.components.emoncms.const import (
     SYNC_MODE,
     SYNC_MODE_AUTO,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
-from .conftest import (
-    EMONCMS_FAILURE,
-    FLOW_RESULT,
-    FLOW_RESULT_SINGLE_FEED,
-    SENSOR_NAME,
-    YAML,
-)
+from .conftest import EMONCMS_FAILURE, FLOW_RESULT, SENSOR_NAME
 
 from tests.common import MockConfigEntry
 
