@@ -969,11 +969,14 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     assert hass.states.get("sensor.sensor4").state == "87.5"
 
 
-async def test_async_start_from_history_and_switch_to_watching_state_changes_sliding_window(
+async def test_start_from_history_then_watch_state_changes_sliding(
     recorder_mock: Recorder,
     hass: HomeAssistant,
 ) -> None:
-    """Test we startup from history and switch to watching state changes, with a sliding window, and history_stats does not requery the recorder."""
+    """Test we startup from history and switch to watching state changes.
+
+    With a sliding window, and history_stats does not requery the recorder.
+    """
     await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
