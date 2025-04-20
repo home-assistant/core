@@ -740,13 +740,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,  # Switch for Side A
-            icon="mdi:alpha-a",
+            icon="mdi:power",
             device_class=SwitchDeviceClass.SWITCH,
             translation_key="side_a_power",
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_2,  # Switch for Side A
-            icon="mdi:alpha-b",
+            icon="mdi:power",
             device_class=SwitchDeviceClass.SWITCH,
             translation_key="side_b_power",
         ),

@@ -450,8 +450,9 @@
         }
       },
       "electric_blanket_level": {
+        "name": "Heating Level – Both Sides",
         "state": {
-          "level_1": "Low",
+          "level_1": "[%key:common::state::low%]",
           "level_2": "Level 2",
           "level_3": "Level 3",
           "level_4": "Level 4",
@@ -460,7 +461,37 @@
           "level_7": "Level 7",
           "level_8": "Level 8",
           "level_9": "Level 9",
-          "level_10": "High"
+          "level_10": "[%key:common::state::high%]"
+        }
+      },
+      "electric_blanket_level_side_a": {
+        "name": "Heating Level – Side A",
+        "state": {
+          "level_1": "[%key:common::state::low%]",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9",
+          "level_10": "[%key:common::state::high%]"
+        }
+      },
+      "electric_blanket_level_side_b": {
+        "name": "Heating Level – Side B",
+        "state": {
+          "level_1": "[%key:common::state::low%]",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9",
+          "level_10": "[%key:common::state::high%]"
         }
       }
     },
