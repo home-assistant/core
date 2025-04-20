@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "The URL of your Portainer instance. For example: https://127.0.0.1:9000",
+          "port": "The port number of your Portainer instance",
+          "api_key": "The API key for authenticating with Portainer",
+          "verify_ssl": "Verify the SSL certificate of the Portainer instance"
+        },
+        "description": "You can retrieve your `API Key ` from the Portainer UI. Go to `My Account` > `Access Tokens` and create a new API key"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "type": {
+        "name": "Type"
+      },
+      "status": {
+        "name": "Status"
+      }
+    },
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    }
+  }
+}
