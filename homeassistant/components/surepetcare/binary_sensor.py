@@ -114,7 +114,6 @@ class Pet(SurePetcareBinarySensor):
         else:
             self._attr_extra_state_attributes = {}
 
-
 class DeviceConnectivity(SurePetcareBinarySensor):
     """Sure Petcare Device."""
 
@@ -133,9 +132,13 @@ class DeviceConnectivity(SurePetcareBinarySensor):
 
     @callback
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
-        state = surepy_entity.raw_data()["status"]
-        self._attr_is_on = bool(state)
-        if state:
+        try:
+            state = surepy_entity.raw_data()["status"]
+            online = state["online"]
+        except KeyError:
+            online = False
+        self._attr_is_on = bool(online)
+        if online:
             self._attr_extra_state_attributes = {
                 "device_rssi": f"{state['signal']['device_rssi']:.2f}",
                 "hub_rssi": f"{state['signal']['hub_rssi']:.2f}",
