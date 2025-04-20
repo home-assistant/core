@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
-from eheimdigital.types import EheimDeviceType
+from eheimdigital.types import EheimDeviceType, EheimDigitalClientError, LightMode
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -24,6 +24,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.color import value_to_brightness
 
@@ -128,6 +129,18 @@ async def test_turn_off(
     )
     await hass.async_block_till_done()
 
+    classic_led_ctrl_mock.turn_off.side_effect = EheimDigitalClientError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_0"},
+            blocking=True,
+        )
+
+    classic_led_ctrl_mock.turn_off.side_effect = None
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
@@ -168,6 +181,21 @@ async def test_turn_on_brightness(
         "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
     )
     await hass.async_block_till_done()
+
+    classic_led_ctrl_mock.turn_on.side_effect = EheimDigitalClientError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_0",
+                ATTR_BRIGHTNESS: dim_input,
+            },
+            blocking=True,
+        )
+
+    classic_led_ctrl_mock.turn_on.side_effect = None
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
