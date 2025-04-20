@@ -9,8 +9,9 @@ from total_connect_client import TotalConnectClient
 
 @pytest.fixture
 def mock_client() -> Generator[TotalConnectClient]:
-    """Mock a TotalConnectClient."""
+    """Mock a TotalConnectClient for config flow testing."""
     with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient"
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient",
+        autospec=True,
     ) as client_mock:
         yield client_mock
