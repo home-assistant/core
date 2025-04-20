@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from total_connect_client import TotalConnectClient
 from total_connect_client.exceptions import AuthenticationError
 
 from homeassistant.components.totalconnect.const import (
@@ -33,13 +34,12 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_user_show_locations(hass: HomeAssistant) -> None:
+async def test_user_show_locations(
+    hass: HomeAssistant, mock_client: TotalConnectClient
+) -> None:
     """Test user locations form."""
     # user/pass provided, so check if valid then ask for usercodes on locations form
     with (
-        patch(
-            "homeassistant.components.totalconnect.config_flow.TotalConnectClient",
-        ) as mock_client,
         patch(
             "homeassistant.components.totalconnect.async_setup_entry", return_value=True
         ),
@@ -71,7 +71,9 @@ async def test_user_show_locations(hass: HomeAssistant) -> None:
         assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
+async def test_abort_if_already_setup(
+    hass: HomeAssistant, mock_client: TotalConnectClient
+) -> None:
     """Test abort if the account is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -80,34 +82,32 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     # Should fail, same USERNAME (flow)
-    with patch("homeassistant.components.totalconnect.config_flow.TotalConnectClient"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONFIG_DATA,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=CONFIG_DATA,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_login_failed(hass: HomeAssistant) -> None:
+async def test_login_failed(
+    hass: HomeAssistant, mock_client: TotalConnectClient
+) -> None:
     """Test when we have errors during login."""
-    with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient"
-    ) as client_mock:
-        client_mock.side_effect = AuthenticationError()
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONFIG_DATA,
-        )
+    mock_client.side_effect = AuthenticationError()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=CONFIG_DATA,
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_reauth(hass: HomeAssistant) -> None:
+async def test_reauth(hass: HomeAssistant, mock_client: TotalConnectClient) -> None:
     """Test reauth."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -122,14 +122,11 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.totalconnect.config_flow.TotalConnectClient"
-        ) as client_mock,
-        patch(
             "homeassistant.components.totalconnect.async_setup_entry", return_value=True
         ),
     ):
         # first test with an invalid password
-        client_mock.side_effect = AuthenticationError()
+        mock_client.side_effect = AuthenticationError()
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "password"}
@@ -139,7 +136,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         assert result["errors"] == {"base": "invalid_auth"}
 
         # now test with the password valid
-        client_mock.side_effect = None
+        mock_client.side_effect = None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "password"}
@@ -151,15 +148,14 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.async_entries()) == 1
 
 
-async def test_no_locations(hass: HomeAssistant) -> None:
+async def test_no_locations(
+    hass: HomeAssistant, mock_client: TotalConnectClient
+) -> None:
     """Test with no user locations."""
     with (
         patch(
             "homeassistant.components.totalconnect.async_setup_entry", return_value=True
         ),
-        patch(
-            "homeassistant.components.totalconnect.config_flow.TotalConnectClient",
-        ) as mock_client,
     ):
         mock_client.return_value.get_number_locations.return_value = 0
 
