@@ -10,7 +10,11 @@
       "mqtt_missing_api": "Missing API port in MQTT properties.",
       "mqtt_missing_ip": "Missing IP address in MQTT properties.",
       "mqtt_missing_payload": "Missing MQTT Payload.",
-      "name_conflict_migrated": "The configuration for `{name}` has been migrated to a new device with MAC address `{mac}` from `{existing_mac}`."
+      "name_conflict_migrated": "The configuration for `{name}` has been migrated to a new device with MAC address `{mac}` from `{existing_mac}`.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "reauth_unique_id_changed": "**Re-authentication of `{name}` was aborted** because the address `{host}` points to a different device: `{unexpected_device_name}` (MAC: `{unexpected_mac}`) instead of the expected one (MAC: `{expected_mac}`).",
+      "reconfigure_name_conflict": "**Reconfiguration of `{name}` was aborted** because the address `{host}` points to a device named `{name}` (MAC: `{expected_mac}`), which is already in use by another configuration entry: `{existing_title}`.",
+      "reconfigure_unique_id_changed": "**Reconfiguration of `{name}` was aborted** because the address `{host}` points to a different device: `{unexpected_device_name}` (MAC: `{unexpected_mac}`) instead of the expected one (MAC: `{expected_mac}`)."
     },
     "error": {
       "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address",

@@ -49,6 +49,7 @@ from .const import CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
+BT_MODEL_PREFIXES = ("MICRA", "MINI", "GS3")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +106,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._config = data
                 if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data=data
+                        self._get_reauth_entry(), data_updates=data
                     )
                 if self._discovered:
                     if self._discovered[CONF_MACHINE] not in self._things:
@@ -169,10 +170,15 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 if self.source == SOURCE_RECONFIGURE:
                     for service_info in async_discovered_service_info(self.hass):
-                        self._discovered[service_info.name] = service_info.address
+                        if service_info.name.startswith(BT_MODEL_PREFIXES):
+                            self._discovered[service_info.name] = service_info.address
 
                     if self._discovered:
                         return await self.async_step_bluetooth_selection()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data_updates=self._config,
+                    )
 
                 return self.async_create_entry(
                     title=selected_device.name,
@@ -217,8 +223,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),
-                data={
-                    **self._config,
+                data_updates={
                     CONF_MAC: user_input[CONF_MAC],
                 },
             )
