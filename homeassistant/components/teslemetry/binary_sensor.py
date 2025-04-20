@@ -367,6 +367,34 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         streaming_firmware="2024.44.32",
         entity_registry_enabled_default=False,
     ),
+    TeslemetryBinarySensorEntityDescription(
+        key="charge_enable_request",
+        streaming_listener=lambda x, y: x.listen_ChargeEnableRequest(y),
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="defrost_for_preconditioning",
+        streaming_listener=lambda x, y: x.listen_DefrostForPreconditioning(y),
+        entity_registry_enabled_default=False,
+        streaming_firmware="2024.44.25",
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="lights_high_beams",
+        streaming_listener=lambda x, y: x.listen_LightsHighBeams(y),
+        entity_registry_enabled_default=False,
+        streaming_firmware="2025.2.6",
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="seat_vent_enabled",
+        streaming_listener=lambda x, y: x.listen_SeatVentEnabled(y),
+        entity_registry_enabled_default=False,
+        streaming_firmware="2025.2.6",
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="speed_limit_mode",
+        streaming_listener=lambda x, y: x.listen_SpeedLimitMode(y),
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
