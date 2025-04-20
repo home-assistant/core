@@ -111,7 +111,9 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
-            await self.executor.async_execute_command("setOnOff", "off")
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_ON_OFF, OverkizCommandParam.OFF
+            )
         else:
             await self.executor.async_execute_command(
                 OverkizCommand.SET_ACTIVE_MODE, HVAC_MODES_TO_OVERKIZ[hvac_mode]
