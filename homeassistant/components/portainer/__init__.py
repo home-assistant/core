@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     )
 
     try:
-        endpoints = await client.get_endpoints()
+        await client.get_endpoints()
     except PortainerAuthenticationError as err:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
@@ -56,9 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
             translation_key="timeout_connect",
         ) from err
 
-    _LOGGER.debug("Connected to Portainer API: %s", entry.data[CONF_URL])
-
-    assert endpoints
 
     coordinator = PortainerCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
