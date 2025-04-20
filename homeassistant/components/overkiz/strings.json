@@ -112,6 +112,12 @@
           "highest": "Highest",
           "standard": "Standard"
         }
+      },
+      "operating_mode": {
+        "state": {
+          "heating": "Heating",
+          "cooling": "Cooling"
+        }
       }
     },
     "sensor": {

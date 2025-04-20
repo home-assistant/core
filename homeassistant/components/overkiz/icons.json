@@ -8,11 +8,21 @@
               "auto": "mdi:thermostat-auto",
               "comfort-1": "mdi:thermometer",
               "comfort-2": "mdi:thermometer-low",
+              "drying": "mdi:hair-dryer",
               "frost_protection": "mdi:snowflake",
               "prog": "mdi:clock-outline",
               "external": "mdi:remote"
             }
           }
+        }
+      }
+    },
+    "select": {
+      "operating_mode": {
+        "default": "mdi:sun-snowflake",
+        "state": {
+          "heating": "mdi:heat-wave",
+          "cooling": "mdi:snowflake"
         }
       }
     }

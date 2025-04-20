@@ -112,6 +112,7 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
             OverkizCommand.SET_OPERATING_MODE, option
         ),
         entity_category=EntityCategory.CONFIG,
+        translation_key="operating_mode",
     ),
     # StatefulAlarmController
     OverkizSelectDescription(
