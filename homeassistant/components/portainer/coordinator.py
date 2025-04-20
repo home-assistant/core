@@ -18,17 +18,12 @@ from pyportainer.models.portainer import Endpoint
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
+from . import PortainerConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
-
-if TYPE_CHECKING:
-    from . import PortainerConfigEntry
-
-
 @dataclass
 class PortainerCoordinatorData:
     """Data class for Portainer Coordinator."""
