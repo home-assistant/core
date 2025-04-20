@@ -154,7 +154,7 @@ async def test_flow_reconfigure_abort(
     access_token: str,
     expires_at: float,
 ) -> None:
-    """Test reauth step with correct params and mismatches."""
+    """Test reconfigure step with correct params."""
 
     CURRENT_TOKEN = {
         "auth_implementation": DOMAIN,
