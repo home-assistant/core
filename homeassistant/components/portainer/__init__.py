@@ -32,10 +32,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     """Set up Portainer from a config entry."""
 
 
+    session = async_create_clientsession(
+        hass,
+        entry.data[CONF_VERIFY_SSL],
+        cookie_jar=CookieJar(unsafe=True),
+    )
     client = Portainer(
         api_url=entry.data[CONF_URL],
         api_key=entry.data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
+        session=session,
     )
 
     try:
