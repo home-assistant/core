@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.tuya.const import CONF_APP_TYPE, CONF_USER_CODE, DOMAIN
+from homeassistant.components.tuya.const import CONF_APP_TYPE, DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -26,10 +26,22 @@ def mock_old_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock an config entry."""
+    data = {
+        "user_code": "12345",
+        "terminal_id": "mocked_terminal_id",
+        "endpoint": "https://api.mock",
+        "token_info": {
+            "access_token": "mocked_access_token",
+            "refresh_token": "mocked_refresh_token",
+            "expire_time": 99999999,
+            "t": 0,
+            "uid": "mocked_uid",
+        },
+    }
     return MockConfigEntry(
         title="12345",
         domain=DOMAIN,
-        data={CONF_USER_CODE: "12345"},
+        data=data,
         unique_id="12345",
     )
 
