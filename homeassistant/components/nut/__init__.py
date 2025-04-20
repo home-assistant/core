@@ -185,6 +185,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove NUT config entry from a device."""
+    return True
+
+
 async def _async_update_listener(hass: HomeAssistant, entry: NutConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

@@ -18,10 +18,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from .util import _get_mock_nutclient, async_init_integration
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_config_entry_migrations(hass: HomeAssistant) -> None:
@@ -82,6 +84,45 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 
         assert entry.state is ConfigEntryState.NOT_LOADED
         assert not hass.data.get(DOMAIN)
+
+
+async def test_remove_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test remove device through device registry."""
+    assert await async_setup_component(hass, "config", {})
+
+    mock_serial_number = "A00000000000"
+    config_entry = await async_init_integration(
+        hass,
+        username="someuser",
+        password="somepassword",
+        list_vars={"ups.serial": mock_serial_number},
+        list_ups={"ups1": "UPS 1"},
+        list_commands_return_value=[],
+    )
+
+    device_registry = dr.async_get(hass)
+    assert device_registry is not None
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_serial_number)}
+    )
+
+    assert device_entry is not None
+    assert device_entry.serial_number == mock_serial_number
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    assert response["success"]
+
+    # Verify that device entry is removed since this is the only config entry
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_serial_number)}
+    )
+    assert device_entry is None
 
 
 async def test_config_not_ready(
