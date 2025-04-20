@@ -43,7 +43,7 @@ async def test_button_states_and_commands(
     assert state.state == STATE_UNAVAILABLE
 
     values[TEST_MOWER_ID].mower.is_error_confirmable = None
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -51,7 +51,7 @@ async def test_button_states_and_commands(
     assert state.state == STATE_UNAVAILABLE
 
     values[TEST_MOWER_ID].mower.is_error_confirmable = True
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -64,8 +64,7 @@ async def test_button_states_and_commands(
         target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mocked_method = getattr(mock_automower_client.commands, "error_confirm")
-    mocked_method.assert_called_once_with(TEST_MOWER_ID)
+    mock_automower_client.commands.error_confirm.assert_called_once_with(TEST_MOWER_ID)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "2023-06-05T00:16:00+00:00"
@@ -98,7 +97,7 @@ async def test_sync_clock(
     state = hass.states.get(entity_id)
     assert state.name == "Test Mower 1 Sync clock"
 
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -106,8 +105,7 @@ async def test_sync_clock(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mocked_method = mock_automower_client.commands.set_datetime
-    mocked_method.assert_called_once_with(TEST_MOWER_ID)
+    mock_automower_client.commands.set_datetime.assert_called_once_with(TEST_MOWER_ID)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "2024-02-29T11:00:00+00:00"

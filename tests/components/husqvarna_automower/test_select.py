@@ -39,7 +39,7 @@ async def test_select_states(
         (HeadlightModes.EVENING_AND_NIGHT, "evening_and_night"),
     ):
         values[TEST_MOWER_ID].settings.headlight.mode = state
-        mock_automower_client.get_status.return_value = values
+        mock_automower_client.get_joost.return_value = values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

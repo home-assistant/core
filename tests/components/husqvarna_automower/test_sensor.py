@@ -34,7 +34,7 @@ async def test_sensor_unknown_states(
     assert state.state == "main_area"
 
     values[TEST_MOWER_ID].mower.mode = MowerModes.UNKNOWN
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -73,7 +73,7 @@ async def test_next_start_sensor(
     assert state.state == "2023-06-05T17:00:00+00:00"
 
     values[TEST_MOWER_ID].planner.next_start_datetime = None
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -95,7 +95,7 @@ async def test_work_area_sensor(
     assert state.state == "Front lawn"
 
     values[TEST_MOWER_ID].mower.work_area_id = None
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -103,7 +103,7 @@ async def test_work_area_sensor(
     assert state.state == "no_work_area_active"
 
     values[TEST_MOWER_ID].mower.work_area_id = 0
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -115,7 +115,7 @@ async def test_work_area_sensor(
     values[TEST_MOWER_ID].mower.work_area_id = 0
     del values[TEST_MOWER_ID].work_areas[0]
     del values[TEST_MOWER_ID].work_area_dict[0]
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -147,7 +147,7 @@ async def test_statistics_not_available(
     """Test if this sensor is only added, if data is available."""
 
     delattr(values[TEST_MOWER_ID].statistics, sensor_to_test)
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get(f"sensor.test_mower_1_{sensor_to_test}")
     assert state is None
@@ -172,7 +172,7 @@ async def test_error_sensor(
     ):
         values[TEST_MOWER_ID].mower.state = state
         values[TEST_MOWER_ID].mower.error_key = error_key
-        mock_automower_client.get_status.return_value = values
+        mock_automower_client.get_joost.return_value = values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

@@ -123,7 +123,7 @@ async def test_update_failed(
     entry_state: ConfigEntryState,
 ) -> None:
     """Test update failed."""
-    mock_automower_client.get_status.side_effect = exception("Test error")
+    mock_automower_client.get_joost.side_effect = exception("Test error")
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state is entry_state
@@ -243,7 +243,7 @@ async def test_coordinator_automatic_registry_cleanup(
     )
     # Remove mower 2 and check if it worked
     mower2 = values.pop("1234")
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -258,7 +258,7 @@ async def test_coordinator_automatic_registry_cleanup(
     )
     # Add mower 2 and check if it worked
     values["1234"] = mower2
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -273,7 +273,7 @@ async def test_coordinator_automatic_registry_cleanup(
 
     # Remove mower 1 and check if it worked
     mower1 = values.pop(TEST_MOWER_ID)
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -285,7 +285,7 @@ async def test_coordinator_automatic_registry_cleanup(
     )
     # Add mower 1 and check if it worked
     values[TEST_MOWER_ID] = mower1
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -331,7 +331,7 @@ async def test_add_and_remove_work_area(
             )
         }
     )
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -354,7 +354,7 @@ async def test_add_and_remove_work_area(
     del values[TEST_MOWER_ID].work_areas[123456]
     del values[TEST_MOWER_ID].calendar.tasks[:2]
     values[TEST_MOWER_ID].mower.work_area_id = 654321
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
