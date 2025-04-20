@@ -31,7 +31,6 @@ type PortainerConfigEntry = ConfigEntry[PortainerData]
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Set up Portainer from a config entry."""
 
-    _LOGGER.debug("Setting up Portainer API: %s", entry.data[CONF_URL])
 
     client = Portainer(
         api_url=entry.data[CONF_URL],
