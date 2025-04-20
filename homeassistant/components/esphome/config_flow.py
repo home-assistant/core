@@ -579,8 +579,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             entry = self._reauth_entry
         elif self.source == SOURCE_RECONFIGURE:
             entry = self._reconfig_entry
-        elif self._entry_with_name_conflict:
-            entry = self._entry_with_name_conflict
         names: list[str] = []
         for part in (
             entry.title if entry else None,
