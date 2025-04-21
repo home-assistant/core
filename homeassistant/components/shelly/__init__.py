@@ -15,6 +15,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, bluetooth_mac_from_primary_mac
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import async_remove_scanner
@@ -38,8 +39,10 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
+    CONF_BLE_SCANNER_MODE,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
@@ -47,6 +50,7 @@ from .const import (
     LOGGER,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
     PUSH_UPDATE_ISSUE_ID,
+    BLEScannerMode,
 )
 from .coordinator import (
     ShellyBlockCoordinator,
@@ -320,6 +324,29 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
+
+        if (
+            runtime_data.rpc_supports_scripts
+            and entry.options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE
+        ):
+            firmware = AwesomeVersion(device.shelly["ver"])
+            if firmware < "1.5.0":
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(
+                        unique=runtime_data.rpc.mac
+                    ),
+                    is_fixable=False,
+                    is_persistent=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="ble_scanner_firmware_unsupported",
+                    translation_placeholders={
+                        "device_name": runtime_data.rpc.name,
+                        "ip_address": runtime_data.rpc.device.ip_address,
+                        "firmware": firmware,
+                    },
+                )
     elif (
         sleep_period is None
         or device_entry is None
@@ -362,6 +389,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
     )
     ir.async_delete_issue(
         hass, DOMAIN, PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
+    )
+
+    ir.async_delete_issue(
+        hass,
+        DOMAIN,
+        BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id),
     )
 
     runtime_data = entry.runtime_data
