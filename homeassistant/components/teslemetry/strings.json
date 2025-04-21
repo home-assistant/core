@@ -655,6 +655,135 @@
           "panic": "Panic",
           "quiet": "Quiet"
         }
+      },
+      "bms_state": {
+        "name": "BMS state"
+      },
+      "brake_pedal_position": {
+        "name": "Brake pedal position"
+      },
+      "brick_voltage_max": {
+        "name": "Brick voltage max"
+      },
+      "brick_voltage_min": {
+        "name": "Brick voltage min"
+      },
+      "cruise_follow_distance": {
+        "name": "Cruise follow distance"
+      },
+      "cruise_set_speed": {
+        "name": "Cruise set speed"
+      },
+      "current_limit_mph": {
+        "name": "Current speed limit"
+      },
+      "dc_charging_energy_in": {
+        "name": "DC charging energy in"
+      },
+      "dc_charging_power": {
+        "name": "DC charging power"
+      },
+      "di_axle_speed_f": {
+        "name": "Front drive inverter axle speed"
+      },
+      "di_axle_speed_r": {
+        "name": "Rear drive inverter axle speed"
+      },
+      "di_axle_speed_rel": {
+        "name": "Rear left drive inverter axle speed"
+      },
+      "di_axle_speed_rer": {
+        "name": "Rear right drive inverter axle speed"
+      },
+      "di_heatsink_tf": {
+        "name": "Front drive inverter heatsink temperature"
+      },
+      "di_heatsink_tr": {
+        "name": "Rear drive inverter heatsink temperature"
+      },
+      "di_heatsink_trel": {
+        "name": "Rear left drive inverter heatsink temperature"
+      },
+      "di_heatsink_trer": {
+        "name": "Rear right drive inverter heatsink temperature"
+      },
+      "di_inverter_tf": {
+        "name": "Front drive inverter temperature"
+      },
+      "di_inverter_tr": {
+        "name": "Rear drive inverter temperature"
+      },
+      "di_inverter_trel": {
+        "name": "Rear left drive inverter temperature"
+      },
+      "di_inverter_trer": {
+        "name": "Rear right drive inverter temperature"
+      },
+      "di_motor_current_f": {
+        "name": "Front drive inverter motor current"
+      },
+      "di_motor_current_r": {
+        "name": "Rear drive inverter motor current"
+      },
+      "di_motor_current_rel": {
+        "name": "Rear left drive inverter motor current"
+      },
+      "di_motor_current_rer": {
+        "name": "Rear right drive inverter motor current"
+      },
+      "di_slave_torque_cmd": {
+        "name": "Secondary drive unit torque command"
+      },
+      "di_state_f": {
+        "name": "Front drive inverter state"
+      },
+      "di_state_r": {
+        "name": "Rear drive inverter state"
+      },
+      "di_state_rel": {
+        "name": "Rear left drive inverter state"
+      },
+      "di_state_rer": {
+        "name": "Rear right drive inverter state"
+      },
+      "di_stator_temp_f": {
+        "name": "Front drive unit stator temperature"
+      },
+      "di_stator_temp_r": {
+        "name": "Rear drive unit stator temperature"
+      },
+      "di_stator_temp_rel": {
+        "name": "Rear left drive unit stator temperature"
+      },
+      "di_stator_temp_rer": {
+        "name": "Rear right drive unit stator temperature"
+      },
+      "di_torque_actual_f": {
+        "name": "Front drive unit actual torque"
+      },
+      "di_torque_actual_r": {
+        "name": "Rear drive unit actual torque"
+      },
+      "di_torque_actual_rel": {
+        "name": "Rear left drive unit actual torque"
+      },
+      "di_torque_actual_rer": {
+        "name": "Rear right drive unit actual torque"
+      },
+      "di_torquemotor": {
+        "name": "Drive unit torque command"
+      },
+      "di_vbat_f": {
+        "name": "Front drive inverter battery voltage"
+      },
+      "di_vbat_r": {
+        "name": "Rear drive inverter battery voltage"
+      },
+      "di_vbat_rel": {
+        "name": "Rear left drive inverter battery voltage"
+      },
+      "di_vbat_rer": {
+        "name": "Rear right drive inverter battery voltage"
       }
     },
     "switch": {

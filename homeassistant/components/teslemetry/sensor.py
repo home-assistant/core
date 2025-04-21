@@ -359,6 +359,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
     ),
+    # NEW STARTS HERE
     TeslemetryVehicleSensorEntityDescription(
         key="bms_state",
         streaming_listener=lambda x, y: x.listen_BMSState(y),
