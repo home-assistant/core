@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import MammotionConfigEntry
+from . import MammotionConfigEntry, MammotionMowerData
 
 TO_REDACT: list[str] = []
 
@@ -18,5 +18,9 @@ async def async_get_config_entry_diagnostics(
     entry: MammotionConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
-    return async_redact_data(asdict(coordinator.data), TO_REDACT)
+    mammotion_devices: list[MammotionMowerData] = entry.runtime_data
+    data = {}
+    for device in mammotion_devices:
+        data[device.name] = asdict(device.reporting_coordinator.data)
+
+    return async_redact_data(data, TO_REDACT)

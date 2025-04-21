@@ -40,10 +40,10 @@ START_MOW_SCHEMA = {
     vol.Optional("speed", default=0.3): vol.All(
         vol.Coerce(float), vol.Range(min=0.2, max=1.2)
     ),
-    vol.Optional("ultra_wave", default=2): vol.In([0, 1, 2, 10]),
+    vol.Optional("ultra_wave", default=2): vol.In([0, 1, 2, 10, 11]),
     vol.Optional("channel_mode", default=0): vol.In([0, 1, 2, 3]),
     vol.Optional("channel_width", default=25): vol.All(
-        vol.Coerce(int), vol.Range(min=20, max=35)
+        vol.Coerce(int), vol.Range(min=5, max=35)
     ),
     vol.Optional("rain_tactics", default=1): vol.In([0, 1]),
     vol.Optional("blade_height", default=25): vol.All(
@@ -70,6 +70,7 @@ START_MOW_SCHEMA = {
 def get_entity_attribute(
     hass: HomeAssistant, entity_id: str, attribute_name: str
 ) -> str | None:
+    """Get an attribute from an entity."""
     # Get the state object of the entity
     entity = hass.states.get(entity_id)
 
@@ -113,7 +114,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
     def __init__(self, coordinator: MammotionReportUpdateCoordinator) -> None:
         """Initialize the lawn mower."""
         super().__init__(coordinator, "mower")
-        self._attr_name = None  # main feature of device
+        self._attr_name = None
 
     @property
     def rpt_dev_status(self) -> DeviceData:
@@ -122,6 +123,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
 
     @property
     def report_data(self) -> ReportData:
+        """Return the report data."""
         return self.coordinator.data.report_data
 
     @property
