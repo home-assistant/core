@@ -3,17 +3,18 @@
 from dataclasses import dataclass
 import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, TypedDict
 
+from homelink.model.device import Device
 from homelink.mqtt_provider import MQTTProvider
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.ssl import get_default_context
 
-from .event import HomeLinkEventEntity
+if TYPE_CHECKING:
+    from .event import HomeLinkEventEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,21 @@ class HomeLinkData:
     last_update_id: str | None
 
 
-class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class HomeLinkEventData(TypedDict):
+    """Data for a single event."""
+
+    request_id: str
+    timestamp: int
+
+
+class HomeLinkMQTTMessage(TypedDict):
+    """HomeLink MQTT Event message."""
+
+    type: str
+    data: dict | HomeLinkEventData
+
+
+class HomeLinkCoordinator(DataUpdateCoordinator[dict | HomeLinkEventData]):
     """HomeLink integration coordinator."""
 
     def __init__(
@@ -47,14 +62,14 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.provider = provider
         self.last_sync_timestamp = None
         self.last_sync_id = None
-        self.config_entry = config_entry
+        self.device_data: list[Device] = []
         self.buttons: list[HomeLinkEventEntity] = []
 
     async def async_on_unload(self, _event):
         """Disconnect and unregister when unloaded."""
         await self.provider.disable()
 
-    async def _async_setup(self):
+    async def _async_setup(self) -> None:
         """Set up the coordinator."""
         await self.provider.enable(get_default_context())
 
@@ -64,22 +79,10 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def discover_devices(self):
         """Discover devices and build the Entities."""
-        device_data = await self.provider.discover()
+        self.device_data = await self.provider.discover()
 
-        for device in device_data:
-            self.buttons = [
-                HomeLinkEventEntity(b.id, b.name, device.id, device.name, self)
-                for b in device.buttons
-            ]
-
-            if self.buttons[0].device_entry is not None:
-                registry = dr.async_get(self.hass)
-                registry.async_update_device(
-                    self.buttons[0].device_entry.id, name=device.name
-                )
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch data from API endpoint."""
+    async def _async_update_data(self) -> dict | HomeLinkEventData:
+        """Fetch data from API endpoint. We only use manual updates so just return an empty dict."""
         return {}
 
     async def async_update_devices(self, message):
@@ -93,10 +96,16 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.last_sync_timestamp = message["timestamp"]
 
 
-def on_message(coordinator: HomeLinkCoordinator, _topic, message):
+def on_message(
+    coordinator: HomeLinkCoordinator, _topic: str, message: HomeLinkMQTTMessage
+):
     "MQTT Callback function."
 
     if message["type"] == "state":
-        coordinator.async_set_updated_data(message["data"])
+        coordinator.hass.add_job(coordinator.async_set_updated_data, message["data"])
     if message["type"] == "requestSync":
-        coordinator.async_set_updated_data(message["data"])
+        if coordinator.config_entry:
+            coordinator.hass.add_job(
+                coordinator.hass.config_entries.async_reload,
+                coordinator.config_entry.entry_id,
+            )
