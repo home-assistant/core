@@ -20,13 +20,14 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import DOMAIN
+from .const import CONF_DEVICE_CONFIG, DOMAIN
 
 
 class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for an Airzone Cloud device."""
 
     airzone: AirzoneCloudApi
+    MINOR_VERSION = 2
 
     async def async_step_inst_pick(
         self, user_input: dict[str, Any] | None = None
@@ -74,6 +75,7 @@ class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
+                    vol.Required(CONF_DEVICE_CONFIG, default=True): bool,
                 }
             ),
             errors=errors,

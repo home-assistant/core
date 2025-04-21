@@ -113,7 +113,7 @@ from aioairzone_cloud.const import (
 from aioairzone_cloud.device import Device
 from aioairzone_cloud.webserver import WebServer
 
-from homeassistant.components.airzone_cloud.const import DOMAIN
+from homeassistant.components.airzone_cloud.const import CONF_DEVICE_CONFIG, DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -124,6 +124,7 @@ WS_ID_AIDOO = "11:22:33:44:55:67"
 WS_ID_AIDOO_PRO = "11:22:33:44:55:68"
 
 CONFIG = {
+    CONF_DEVICE_CONFIG: True,
     CONF_ID: "inst1",
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
