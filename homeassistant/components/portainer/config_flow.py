@@ -76,7 +76,6 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
 
     return {
         "title": url,
-        "unique_id": URL(data[CONF_URL]).host,
         "portainer": portainer_data,
     }
 
