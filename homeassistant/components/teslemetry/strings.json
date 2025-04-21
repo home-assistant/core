@@ -1003,7 +1003,7 @@
         }
       },
       "charge_rate_mile_per_hour": {
-        "name": "Charge rate mile per hour"
+        "name": "Charge rate"
       },
       "hvac_power_state": {
         "name": "HVAC power state",
