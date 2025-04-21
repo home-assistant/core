@@ -32,6 +32,7 @@ SENSORS = [
         translation_key="firmware_version",
         icon="mdi:update",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="engineSpeedRpm",
@@ -93,6 +94,11 @@ SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="device:status",
+        icon="mdi:home-lightning-bolt",
+        translation_key="generator_status",
+    ),
+    SensorEntityDescription(
         key="engineState",
         icon="mdi:home-lightning-bolt",
         translation_key="engine_state",
@@ -114,6 +120,7 @@ SENSORS = [
         native_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="device:totalRuntimeHours",
@@ -121,6 +128,7 @@ SENSORS = [
         native_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="runtimeSinceLastMaintenanceHours",
@@ -128,18 +136,21 @@ SENSORS = [
         native_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="device:deviceIpAddress",
         icon="mdi:ip-network",
         translation_key="device_ip_address",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="serverIpAddress",
         icon="mdi:server-network",
         translation_key="server_ip_address",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="utilityVoltageV",

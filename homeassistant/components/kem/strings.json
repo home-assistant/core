@@ -91,6 +91,9 @@
       },
       "generator_load_percent": {
         "name": "Generator load percentage"
+      },
+      "generator_status": {
+        "name": "Generator status"
       }
     }
   },

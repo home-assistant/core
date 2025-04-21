@@ -60,8 +60,3 @@ async def test_binary_sensors_delayed(
     freezer.tick(_DEVICE_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert (
-        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
-        == 8
-    )

@@ -613,6 +613,54 @@
     'state': '0',
   })
 # ---
+# name: test_sensors[sensor.generator_1_generator_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.generator_1_generator_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:home-lightning-bolt',
+    'original_name': 'Generator status',
+    'platform': 'kem',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'generator_status',
+    'unique_id': '12345_device:status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.generator_1_generator_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Generator 1 Generator status',
+      'icon': 'mdi:home-lightning-bolt',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.generator_1_generator_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ReadyToRun',
+  })
+# ---
 # name: test_sensors[sensor.generator_1_lube_oil_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
