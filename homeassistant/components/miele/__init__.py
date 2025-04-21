@@ -16,6 +16,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -60,6 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
         "pymiele event listener",
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    await async_setup_services(hass)
 
     return True
 

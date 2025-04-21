@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_program": {
+      "service": "mdi:arrow-right-circle-outline"
+    }
+  }
+}

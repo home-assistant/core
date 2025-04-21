@@ -147,8 +147,31 @@
     "config_entry_not_ready": {
       "message": "Error while loading the integration."
     },
-    "set_switch_error": {
+    "set_program_error": {
+      "message": "Set program action failed {status} / {message}."
+    },
+    "set_state_error": {
       "message": "Failed to set state for {entity}."
+    }
+  },
+  "services": {
+    "set_program": {
+      "name": "Set program",
+      "description": "Set and start a program on the appliance.",
+      "fields": {
+        "program_id": {
+          "description": "The ID of the program to set.",
+          "name": "Program ID"
+        },
+        "duration": {
+          "description": "The duration of the program in minutes (only for ovens).",
+          "name": "Duration"
+        },
+        "temperature": {
+          "description": "The target temperature in degrees Celsius (only for ovens).",
+          "name": "Temperature"
+        }
+      }
     }
   }
 }
