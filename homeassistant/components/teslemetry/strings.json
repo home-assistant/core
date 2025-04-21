@@ -657,7 +657,19 @@
         }
       },
       "bms_state": {
-        "name": "BMS state"
+        "name": "BMS state",
+        "state": {
+          "standby": "Standby",
+          "drive": "Drive",
+          "support": "Support",
+          "charge": "Charge",
+          "feim": "FEIM",
+          "clearfault": "ClearFault",
+          "fault": "Fault",
+          "weld": "Weld",
+          "test": "Test",
+          "sna": "SNA"
+        }
       },
       "brake_pedal_position": {
         "name": "Brake pedal position"
@@ -735,16 +747,44 @@
         "name": "Secondary drive unit torque command"
       },
       "di_state_f": {
-        "name": "Front drive inverter state"
+        "name": "Front drive inverter state",
+        "state": {
+          "unavailable": "Unavailable",
+          "standby": "Standby",
+          "fault": "Fault",
+          "abort": "Abort",
+          "enable": "Enable"
+        }
       },
       "di_state_r": {
-        "name": "Rear drive inverter state"
+        "name": "Rear drive inverter state",
+        "state": {
+          "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
+          "standby": "[%key:component::teslemetry:sensor:di_state_f:standby]",
+          "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
+          "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
+          "enable": "[%key:component::teslemetry:sensor:di_state_f:enable]"
+        }
       },
       "di_state_rel": {
-        "name": "Rear left drive inverter state"
+        "name": "Rear left drive inverter state",
+        "state": {
+          "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
+          "standby": "[%key:component::teslemetry:sensor:di_state_f:standby]",
+          "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
+          "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
+          "enable": "[%key:component::teslemetry:sensor:di_state_f:enable]"
+        }
       },
       "di_state_rer": {
-        "name": "Rear right drive inverter state"
+        "name": "Rear right drive inverter state",
+        "state": {
+          "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
+          "standby": "[%key:component::teslemetry:sensor:di_state_f:standby]",
+          "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
+          "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
+          "enable": "[%key:component::teslemetry:sensor:di_state_f:enable]"
+        }
       },
       "di_stator_temp_f": {
         "name": "Front drive unit stator temperature"

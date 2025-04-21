@@ -48,6 +48,18 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 
+BMS_STATES = {
+    "Standby": "standby",
+    "Drive": "drive",
+    "Support": "support",
+    "Charge": "charge",
+    "FEIM": "feim",
+    "ClearFault": "clear_fault",
+    "Fault": "fault",
+    "Weld": "weld",
+    "Test": "test",
+    "SNA": "sna",
+}
 
 CHARGE_STATES = {
     "Starting": "starting",
@@ -56,6 +68,14 @@ CHARGE_STATES = {
     "Complete": "complete",
     "Disconnected": "disconnected",
     "NoPower": "no_power",
+}
+
+DRIVE_INVERTER_STATES = {
+    "Unavailable": "unavailable",
+    "Standby": "standby",
+    "Fault": "fault",
+    "Abort": "abort",
+    "Enable": "enable",
 }
 
 SHIFT_STATES = {"P": "p", "D": "d", "R": "r", "N": "n"}
@@ -362,7 +382,11 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     # NEW STARTS HERE
     TeslemetryVehicleSensorEntityDescription(
         key="bms_state",
-        streaming_listener=lambda x, y: x.listen_BMSState(y),
+        streaming_listener=lambda x, y: x.listen_BMSState(
+            lambda z: None if z is None else y(BMS_STATES.get(z))
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=list(BMS_STATES.values()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -401,6 +425,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="cruise_set_speed",
         streaming_listener=lambda x, y: x.listen_CruiseSetSpeed(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -408,6 +434,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="current_limit_mph",
         streaming_listener=lambda x, y: x.listen_CurrentLimitMph(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -433,78 +461,108 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_axle_speed_f",
         streaming_listener=lambda x, y: x.listen_DiAxleSpeedF(y),
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_axle_speed_r",
         streaming_listener=lambda x, y: x.listen_DiAxleSpeedR(y),
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_axle_speed_rel",
         streaming_listener=lambda x, y: x.listen_DiAxleSpeedREL(y),
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_axle_speed_rer",
         streaming_listener=lambda x, y: x.listen_DiAxleSpeedRER(y),
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_heatsink_tf",
         streaming_listener=lambda x, y: x.listen_DiHeatsinkTF(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_heatsink_tr",
         streaming_listener=lambda x, y: x.listen_DiHeatsinkTR(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_heatsink_trel",
         streaming_listener=lambda x, y: x.listen_DiHeatsinkTREL(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_heatsink_trer",
         streaming_listener=lambda x, y: x.listen_DiHeatsinkTRER(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_inverter_tf",
         streaming_listener=lambda x, y: x.listen_DiInverterTF(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_inverter_tr",
         streaming_listener=lambda x, y: x.listen_DiInverterTR(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_inverter_trel",
         streaming_listener=lambda x, y: x.listen_DiInverterTREL(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_inverter_trer",
         streaming_listener=lambda x, y: x.listen_DiInverterTRER(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_motor_current_f",
         streaming_listener=lambda x, y: x.listen_DiMotorCurrentF(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -512,6 +570,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_motor_current_r",
         streaming_listener=lambda x, y: x.listen_DiMotorCurrentR(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -519,6 +579,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_motor_current_rel",
         streaming_listener=lambda x, y: x.listen_DiMotorCurrentREL(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -526,6 +588,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_motor_current_rer",
         streaming_listener=lambda x, y: x.listen_DiMotorCurrentRER(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -533,36 +597,55 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_slave_torque_cmd",
         streaming_listener=lambda x, y: x.listen_DiSlaveTorqueCmd(y),
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_state_f",
-        streaming_listener=lambda x, y: x.listen_DiStateF(y),
+        streaming_listener=lambda x, y: x.listen_DiStateF(
+            lambda z: None if z is None else y(DRIVE_INVERTER_STATES.get(z))
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=list(DRIVE_INVERTER_STATES.values()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_state_r",
-        streaming_listener=lambda x, y: x.listen_DiStateR(y),
+        streaming_listener=lambda x, y: x.listen_DiStateR(
+            lambda z: None if z is None else y(DRIVE_INVERTER_STATES.get(z))
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=list(DRIVE_INVERTER_STATES.values()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_state_rel",
-        streaming_listener=lambda x, y: x.listen_DiStateREL(y),
+        streaming_listener=lambda x, y: x.listen_DiStateREL(
+            lambda z: None if z is None else y(DRIVE_INVERTER_STATES.get(z))
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=list(DRIVE_INVERTER_STATES.values()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_state_rer",
-        streaming_listener=lambda x, y: x.listen_DiStateRER(y),
+        streaming_listener=lambda x, y: x.listen_DiStateRER(
+            lambda z: None if z is None else y(DRIVE_INVERTER_STATES.get(z))
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=list(DRIVE_INVERTER_STATES.values()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_stator_temp_f",
         streaming_listener=lambda x, y: x.listen_DiStatorTempF(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -570,6 +653,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_stator_temp_r",
         streaming_listener=lambda x, y: x.listen_DiStatorTempR(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -577,6 +662,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_stator_temp_rel",
         streaming_listener=lambda x, y: x.listen_DiStatorTempREL(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -584,6 +671,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_stator_temp_rer",
         streaming_listener=lambda x, y: x.listen_DiStatorTempRER(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -591,36 +680,43 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_torque_actual_f",
         streaming_listener=lambda x, y: x.listen_DiTorqueActualF(y),
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_torque_actual_r",
         streaming_listener=lambda x, y: x.listen_DiTorqueActualR(y),
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_torque_actual_rel",
         streaming_listener=lambda x, y: x.listen_DiTorqueActualREL(y),
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_torque_actual_rer",
         streaming_listener=lambda x, y: x.listen_DiTorqueActualRER(y),
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_torquemotor",
         streaming_listener=lambda x, y: x.listen_DiTorquemotor(y),
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="di_vbat_f",
         streaming_listener=lambda x, y: x.listen_DiVBatF(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -628,6 +724,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_vbat_r",
         streaming_listener=lambda x, y: x.listen_DiVBatR(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -635,6 +733,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_vbat_rel",
         streaming_listener=lambda x, y: x.listen_DiVBatREL(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -642,6 +742,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="di_vbat_rer",
         streaming_listener=lambda x, y: x.listen_DiVBatRER(y),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
