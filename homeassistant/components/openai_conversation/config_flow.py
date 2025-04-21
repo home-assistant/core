@@ -160,11 +160,11 @@ class OpenAIOptionsFlow(OptionsFlow):
         ):
             options[CONF_LLM_HASS_API] = [suggested_llm_apis]
 
-        if CONF_PROMPT not in options:
-            options[CONF_PROMPT] = llm.DEFAULT_INSTRUCTIONS_PROMPT
-
         step_schema: VolDictType = {
-            vol.Optional(CONF_PROMPT): TemplateSelector(),
+            vol.Optional(
+                CONF_PROMPT,
+                description={"suggested_value": llm.DEFAULT_INSTRUCTIONS_PROMPT},
+            ): TemplateSelector(),
             vol.Optional(CONF_LLM_HASS_API): SelectSelector(
                 SelectSelectorConfig(options=hass_apis, multiple=True)
             ),

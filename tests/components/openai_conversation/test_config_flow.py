@@ -515,10 +515,10 @@ async def test_options_switching(
             if (
                 isinstance(key.description, dict)
                 and "suggested_value" in key.description
-                and str(key) in current_options
+                and key in current_options
             ):
-                current_option = current_options[str(key)]
-                if str(key) == CONF_LLM_HASS_API and isinstance(current_option, str):
+                current_option = current_options[key]
+                if key == CONF_LLM_HASS_API and isinstance(current_option, str):
                     current_option = [current_option]
                 assert key.description["suggested_value"] == current_option
 
