@@ -97,6 +97,7 @@ class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
                     False,
+                    False,
                 ),
             )
 
