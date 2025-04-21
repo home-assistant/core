@@ -663,12 +663,12 @@
           "drive": "Drive",
           "support": "Support",
           "charge": "Charge",
-          "feim": "FEIM",
-          "clearfault": "ClearFault",
+          "full_electric_in_motion": "Full electric in motion",
+          "clear_fault": "Clear fault",
           "fault": "Fault",
           "weld": "Weld",
           "test": "Test",
-          "sna": "SNA"
+          "system_not_available": "System not available"
         }
       },
       "brake_pedal_position": {
@@ -753,7 +753,7 @@
           "standby": "[%key:common::state::standby%]",
           "fault": "Fault",
           "abort": "Abort",
-          "enable": "[%key:common::state::enabled%]"
+          "enabled": "[%key:common::state::enabled%]"
         }
       },
       "di_state_r": {
@@ -763,7 +763,7 @@
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
-          "enable": "[%key:common::state::enabled%]"
+          "enabled": "[%key:common::state::enabled%]"
         }
       },
       "di_state_rel": {
@@ -773,7 +773,7 @@
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
-          "enable": "[%key:common::state::enabled%]"
+          "enabled": "[%key:common::state::enabled%]"
         }
       },
       "di_state_rer": {
@@ -783,7 +783,7 @@
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
-          "enable": "[%key:common::state::enabled%]"
+          "enabled": "[%key:common::state::enabled%]"
         }
       },
       "di_stator_temp_f": {
@@ -847,23 +847,23 @@
         "name": "Guest mode mobile access",
         "state": {
           "init": "Init",
-          "not_authenticated": "NotAuthenticated",
+          "not_authenticated": "Not authenticated",
           "authenticated": "Authenticated",
-          "aborted_driving": "AbortedDriving",
-          "aborted_using_remote_start": "AbortedUsingRemoteStart",
-          "aborted_using_ble_keys": "AbortedUsingBLEKeys",
-          "aborted_valet_mode": "AbortedValetMode",
-          "aborted_guest_mode_off": "AbortedGuestModeOff",
-          "aborted_drive_auth_time_exceeded": "AbortedDriveAuthTimeExceeded",
-          "aborted_no_data_received": "AbortedNoDataReceived",
-          "requesting_from_mothership": "RequestingFromMothership",
-          "requesting_from_auth_d": "RequestingFromAuthD",
-          "aborted_fetch_failed": "AbortedFetchFailed",
-          "aborted_bad_data_received": "AbortedBadDataReceived",
-          "showing_qr_code": "ShowingQRCode",
-          "swiped_away": "SwipedAway",
-          "dismissed_qr_code_expired": "DismissedQRCodeExpired",
-          "succeeded_paired_new_ble_key": "SucceededPairedNewBLEKey"
+          "aborted_driving": "Aborted driving",
+          "aborted_using_remote_start": "Aborted using remote start",
+          "aborted_using_ble_keys": "Aborted using BLE keys",
+          "aborted_valet_mode": "Aborted valet mode",
+          "aborted_guest_mode_off": "Aborted guest mode off",
+          "aborted_drive_auth_time_exceeded": "Aborted drive auth time exceeded",
+          "aborted_no_data_received": "Aborted no data received",
+          "requesting_from_mothership": "Requesting from mothership",
+          "requesting_from_auth_d": "Requesting from Authd",
+          "aborted_fetch_failed": "Aborted fetch failed",
+          "aborted_bad_data_received": "Aborted bad data received",
+          "showing_qr_code": "Showing QR code",
+          "swiped_away": "Swiped away",
+          "dismissed_qr_code_expired": "Dismissed QR code expired",
+          "succeeded_paired_new_ble_key": "Succeeded paired new BLE key"
         }
       },
       "homelink_device_count": {
