@@ -492,7 +492,9 @@ def _mock_rpc_device(version: str | None = None):
         initialized=True,
         connected=True,
         script_getcode=AsyncMock(
-            side_effect=lambda script_id: {"data": MOCK_SCRIPTS[script_id - 1]}
+            side_effect=lambda script_id, bytes_to_read: {
+                "data": MOCK_SCRIPTS[script_id - 1]
+            }
         ),
         xmod_info={},
     )
@@ -513,6 +515,11 @@ def _mock_blu_rtv_device(version: str | None = None):
         firmware_version="some fw string",
         initialized=True,
         connected=True,
+        script_getcode=AsyncMock(
+            side_effect=lambda script_id, bytes_to_read: {
+                "data": MOCK_SCRIPTS[script_id - 1]
+            }
+        ),
         xmod_info={},
     )
     type(device).name = PropertyMock(return_value="Test name")

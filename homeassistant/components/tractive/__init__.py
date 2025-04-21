@@ -31,6 +31,7 @@ from .const import (
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
+    ATTR_POWER_SAVING,
     ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
     CLIENT_ID,
@@ -277,6 +278,7 @@ class TractiveClient:
         payload = {
             ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
             ATTR_TRACKER_STATE: event["tracker_state"].lower(),
+            ATTR_POWER_SAVING: event.get("tracker_state_reason") == "POWER_SAVING",
             ATTR_BATTERY_CHARGING: event["charging_state"] == "CHARGING",
         }
         self._dispatch_tracker_event(

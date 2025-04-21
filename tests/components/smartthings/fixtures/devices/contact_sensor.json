@@ -42,7 +42,7 @@
               "categoryType": "manufacturer"
             },
             {
-              "name": "ContactSensor",
+              "name": "GarageDoor",
               "categoryType": "user"
             }
           ]

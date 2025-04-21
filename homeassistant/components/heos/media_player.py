@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from contextlib import suppress
+import dataclasses
 from datetime import datetime
 from functools import reduce, wraps
 import logging
@@ -23,12 +24,10 @@ from pyheos import (
     const as heos_const,
 )
 from pyheos.util import mediauri as heos_source
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_VOLUME_LEVEL,
     BrowseError,
     BrowseMedia,
     MediaClass,
@@ -42,24 +41,16 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_source import BrowseMediaSource
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    entity_registry as er,
-)
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    DOMAIN as HEOS_DOMAIN,
-    SERVICE_GROUP_VOLUME_DOWN,
-    SERVICE_GROUP_VOLUME_SET,
-    SERVICE_GROUP_VOLUME_UP,
-)
+from . import services
+from .const import DOMAIN as HEOS_DOMAIN
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
 PARALLEL_UPDATES = 0
@@ -80,6 +71,7 @@ BASE_SUPPORTED_FEATURES = (
 
 PLAY_STATE_TO_STATE = {
     None: MediaPlayerState.IDLE,
+    PlayState.UNKNOWN: MediaPlayerState.IDLE,
     PlayState.PLAY: MediaPlayerState.PLAYING,
     PlayState.STOP: MediaPlayerState.IDLE,
     PlayState.PAUSE: MediaPlayerState.PAUSED,
@@ -130,19 +122,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add media players for a config entry."""
-    # Register custom entity services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_GROUP_VOLUME_SET,
-        {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
-        "async_set_group_volume_level",
-    )
-    platform.async_register_entity_service(
-        SERVICE_GROUP_VOLUME_DOWN, None, "async_group_volume_down"
-    )
-    platform.async_register_entity_service(
-        SERVICE_GROUP_VOLUME_UP, None, "async_group_volume_up"
-    )
+    services.register_media_player_services()
 
     def add_entities_callback(players: Sequence[HeosPlayer]) -> None:
         """Add entities for each player."""
@@ -155,20 +135,20 @@ async def async_setup_entry(
     add_entities_callback(list(coordinator.heos.players.values()))
 
 
-type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
-type _ReturnFuncType[**_P] = Callable[_P, Coroutine[Any, Any, None]]
+type _FuncType[**_P, _R] = Callable[_P, Awaitable[_R]]
+type _ReturnFuncType[**_P, _R] = Callable[_P, Coroutine[Any, Any, _R]]
 
 
-def catch_action_error[**_P](
+def catch_action_error[**_P, _R](
     action: str,
-) -> Callable[[_FuncType[_P]], _ReturnFuncType[_P]]:
+) -> Callable[[_FuncType[_P, _R]], _ReturnFuncType[_P, _R]]:
     """Return decorator that catches errors and raises HomeAssistantError."""
 
-    def decorator(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
+    def decorator(func: _FuncType[_P, _R]) -> _ReturnFuncType[_P, _R]:
         @wraps(func)
-        async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
+        async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             try:
-                await func(*args, **kwargs)
+                return await func(*args, **kwargs)
             except (HeosError, ValueError) as ex:
                 raise HomeAssistantError(
                     translation_domain=HEOS_DOMAIN,
@@ -268,6 +248,12 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self.async_on_remove(self._player.add_on_player_event(self._player_update))
         await super().async_added_to_hass()
 
+    @catch_action_error("get queue")
+    async def async_get_queue(self) -> ServiceResponse:
+        """Get the queue for the current player."""
+        queue = await self._player.get_queue()
+        return {"queue": [dataclasses.asdict(item) for item in queue]}
+
     @catch_action_error("clear playlist")
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
@@ -366,6 +352,15 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             if index is None:
                 raise ValueError(f"Invalid favorite '{media_id}'")
             await self._player.play_preset_station(index)
+            return
+
+        if media_type == "queue":
+            # media_id must be an int
+            try:
+                queue_id = int(media_id)
+            except ValueError:
+                raise ValueError(f"Invalid queue id '{media_id}'") from None
+            await self._player.play_queue(queue_id)
             return
 
         raise ValueError(f"Unsupported media type '{media_type}'")
@@ -481,6 +476,17 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 await self.coordinator.heos.set_group(new_members)
                 return
 
+    async def async_remove_from_queue(self, queue_ids: list[int]) -> None:
+        """Remove items from the queue."""
+        await self._player.remove_from_queue(queue_ids)
+
+    @catch_action_error("move queue item")
+    async def async_move_queue_item(
+        self, queue_ids: list[int], destination_position: int
+    ) -> None:
+        """Move items in the queue."""
+        await self._player.move_queue_item(queue_ids, destination_position)
+
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
@@ -580,7 +586,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         children: list[BrowseMedia] = [
             _media_to_browse_media(source)
             for source in self.coordinator.heos.music_sources.values()
-            if source.available
+            if source.available or source.source_id == heos_const.MUSIC_SOURCE_TUNEIN
         ]
         root = BrowseMedia(
             title="Music Sources",
@@ -654,7 +660,9 @@ def _media_to_browse_media(media: MediaItem | MediaMusicSource) -> BrowseMedia:
     can_play = False
 
     if isinstance(media, MediaMusicSource):
-        can_expand = media.available
+        can_expand = (
+            media.source_id == heos_const.MUSIC_SOURCE_TUNEIN or media.available
+        )
     else:
         can_expand = media.browsable
         can_play = media.playable

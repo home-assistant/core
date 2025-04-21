@@ -8,12 +8,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 from wolf_comm import (
     EnergyParameter,
+    FlowParameter,
+    FrequencyParameter,
     HoursParameter,
     ListItem,
     ListItemParameter,
     PercentageParameter,
     PowerParameter,
     Pressure,
+    RPMParameter,
     SimpleParameter,
     Temperature,
     Value,
@@ -86,6 +89,13 @@ def mock_wolflink() -> Generator[MagicMock]:
             ),
             HoursParameter(7002800000, "Hours Parameter", "Heating", 7005200000, 1000),
             SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000, 1000),
+            FrequencyParameter(
+                9002800000, "Frequency Parameter", "Heating", 9005200000, 1000
+            ),
+            RPMParameter(1000280001, "RPM Parameter", "Heating", 10005200000, 7000),
+            FlowParameter(1100280001, "Flow Parameter", "Heating", 11005200000, 8000),
+            HoursParameter(7002800000, "Hours Parameter", "Heating", 7005200000, 1000),
+            SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000, 1000),
         ]
 
         wolflink.fetch_value.return_value = [
@@ -97,6 +107,9 @@ def mock_wolflink() -> Generator[MagicMock]:
             Value(2002800000, "20", 1),
             Value(7002800000, "10", 1),
             Value(1002800000, "12", 1),
+            Value(9002800000, "50", 1),
+            Value(1000280001, "1500", 1),
+            Value(1100280001, "5", 1),
         ]
 
         yield wolflink
