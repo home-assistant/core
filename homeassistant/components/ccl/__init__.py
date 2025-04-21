@@ -12,9 +12,10 @@ from aiohttp.hdrs import METH_POST
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, NAME
+from .coordinator import CCLCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,9 +27,19 @@ type CCLConfigEntry = ConfigEntry[CCLDevice]
 async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Set up a config entry for a single CCL device."""
     new_device = CCLDevice(entry.data[CONF_WEBHOOK_ID])
+    new_coordinator = entry.runtime_data = CCLCoordinator(hass, new_device)
     CCLServer.register(new_device)
 
+    @callback
+    def push_update_callback(data) -> None:
+        """Handle data pushed from the device."""
+        new_coordinator.async_push_update(data)
+
+    new_device.set_update_callback(push_update_callback)
+
     async def register_webhook() -> None:
+        """Register webhook for the device."""
+
         def handle_webhook(
             hass: HomeAssistant, webhook_id: str, request: web.Request
         ) -> Any:
@@ -63,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     entry.async_create_background_task(hass, register_webhook(), "ccl_register_webhook")
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.runtime_data = new_device
+    await new_coordinator.async_config_entry_first_refresh()
 
     return True
 

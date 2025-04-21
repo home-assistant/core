@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from aioccl import CCLDevice, CCLSensor, CCLSensorTypes
+from aioccl import CCLSensor, CCLSensorTypes
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,6 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CCLConfigEntry
+from .coordinator import CCLCoordinator
 from .entity import CCLEntity
 
 PARALLEL_UPDATES = 0
@@ -92,7 +93,7 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     CCLSensorTypes.CH_SENSOR_TYPE: SensorEntityDescription(
         key="CH_SENSOR_TYPE",
-        translation_key="ch_sensor_type",
+        device_class=SensorDeviceClass.ENUM,
     ),
     CCLSensorTypes.CO: SensorEntityDescription(
         key="CO",
@@ -121,14 +122,12 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        translation_key="pm10",
     ),
     CCLSensorTypes.PM25: SensorEntityDescription(
         key="PM25",
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        translation_key="pm25",
     ),
     CCLSensorTypes.AQI: SensorEntityDescription(
         key="AQI",
@@ -138,10 +137,6 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     CCLSensorTypes.BATTERY: SensorEntityDescription(
         key="BATTERY",
         translation_key="battery",
-    ),
-    CCLSensorTypes.LEAKAGE: SensorEntityDescription(
-        key="LEAKAGE",
-        translation_key="leakage",
     ),
     CCLSensorTypes.LIGHTNING_DISTANCE: SensorEntityDescription(
         key="LIGHTNING_DISTANCE",
@@ -177,7 +172,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add sensors for passed config entry in HA."""
-    device = entry.runtime_data
+    coordinator = entry.runtime_data
 
     def _new_sensor(sensor: CCLSensor) -> None:
         """Add a sensor to the data entry."""
@@ -186,13 +181,14 @@ async def async_setup_entry(
             key=sensor.key,
             name=sensor.name,
         )
-        async_add_entities([CCLSensorEntity(sensor, device, entity_description)])
+        async_add_entities([CCLSensorEntity(coordinator, entity_description)])
 
-    device.register_new_sensor_cb(_new_sensor)
-    entry.async_on_unload(lambda: device.remove_new_sensor_cb(_new_sensor))
+    coordinator.device.register_new_sensor_cb(_new_sensor)
+    entry.async_on_unload(lambda: coordinator.device.remove_new_sensor_cb(_new_sensor))
 
-    for sensor in device.sensors.values():
-        _new_sensor(sensor)
+    if "sensors" in coordinator.data:
+        for sensor in coordinator.data["sensors"].values():
+            _new_sensor(sensor)
 
 
 class CCLSensorEntity(CCLEntity, SensorEntity):
@@ -200,16 +196,16 @@ class CCLSensorEntity(CCLEntity, SensorEntity):
 
     def __init__(
         self,
-        internal: CCLSensor,
-        device: CCLDevice,
+        coordinator: CCLCoordinator,
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize a CCL Sensor Entity."""
-        super().__init__(internal, device)
+        self._internal: CCLSensor = coordinator.data["sensors"][entity_description.key]
+        super().__init__(self._internal, coordinator)
 
         self.entity_description = entity_description
 
     @property
     def native_value(self) -> None | str | int | float:
         """Return the state of the sensor."""
-        return self.internal.value
+        return self._internal.value

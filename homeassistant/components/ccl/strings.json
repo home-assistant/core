@@ -17,12 +17,6 @@
           "pool": "Pool",
           "soil": "Soil"
         }
-      },
-      "leakage": {
-        "state": {
-          "no_leak": "No leak",
-          "leaking": "Leaking"
-        }
       }
     }
   }

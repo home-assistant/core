@@ -18,25 +18,11 @@
       "voc": {
         "default": "mdi:molecule"
       },
-      "pm10": {
-        "default": "mdi:grain"
-      },
-      "pm25": {
-        "default": "mdi:grain"
-      },
       "aqi": {
         "default": "mdi:grain"
       },
       "battery": {
-        "default": "mdi:battery-unknown",
-        "state": {
-          "0": "mdi:battery-outline",
-          "1": "mdi:battery-20",
-          "2": "mdi:battery-40",
-          "3": "mdi:battery-60",
-          "4": "mdi:battery-80",
-          "5": "mdi:battery"
-        }
+        "default": "mdi:battery"
       },
       "leakage": {
         "default": "mdi:pipe-leak",
