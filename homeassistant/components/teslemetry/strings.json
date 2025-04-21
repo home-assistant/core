@@ -206,18 +206,6 @@
       "speed_limit_mode": {
         "name": "Speed limited"
       },
-      "fd_door": {
-        "name": "Front driver door"
-      },
-      "rd_door": {
-        "name": "Rear driver door"
-      },
-      "fp_door": {
-        "name": "Front passenger door"
-      },
-      "rp_door": {
-        "name": "Rear passenger door"
-      },
       "remote_start_enabled": {
         "name": "Remote start"
       },

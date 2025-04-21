@@ -396,30 +396,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
-        key="fd_door",
-        streaming_listener=lambda x, y: x.listen_FrontDriverDoor(y),
-        device_class=BinarySensorDeviceClass.DOOR,
-        entity_registry_enabled_default=False,
-    ),
-    TeslemetryBinarySensorEntityDescription(
-        key="rd_door",
-        streaming_listener=lambda x, y: x.listen_RearDriverDoor(y),
-        device_class=BinarySensorDeviceClass.DOOR,
-        entity_registry_enabled_default=False,
-    ),
-    TeslemetryBinarySensorEntityDescription(
-        key="fp_door",
-        streaming_listener=lambda x, y: x.listen_FrontPassengerDoor(y),
-        device_class=BinarySensorDeviceClass.DOOR,
-        entity_registry_enabled_default=False,
-    ),
-    TeslemetryBinarySensorEntityDescription(
-        key="rp_door",
-        streaming_listener=lambda x, y: x.listen_RearPassengerDoor(y),
-        device_class=BinarySensorDeviceClass.DOOR,
-        entity_registry_enabled_default=False,
-    ),
-    TeslemetryBinarySensorEntityDescription(
         key="remote_start_enabled",
         streaming_listener=lambda x, y: x.listen_RemoteStartEnabled(y),
         entity_registry_enabled_default=False,
