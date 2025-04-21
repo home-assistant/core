@@ -36,7 +36,9 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   config-entry-unloading: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
   docs-installation-parameters: done
   entity-unavailable:
     status: exempt
