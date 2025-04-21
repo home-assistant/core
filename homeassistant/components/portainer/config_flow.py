@@ -90,7 +90,8 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+            url = URL(user_input[CONF_URL]).human_repr()
+            self._async_abort_entries_match({CONF_URL: url})
 
             try:
                 api = await _validate_input(self.hass, user_input)
@@ -105,7 +106,9 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 _LOGGER.debug("Erwin title: %s", api["title"])
-                return self.async_create_entry(title=api["title"], data=user_input)
+                return self.async_create_entry(
+                    title=api["title"], data={**user_input, CONF_URL: url}
+                )
 
         return self.async_show_form(
             step_id="user",
