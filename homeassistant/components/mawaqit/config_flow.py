@@ -1,6 +1,7 @@
 """Adds config flow for Mawaqit."""
 
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from mawaqit.consts import NoMosqueAround, NoMosqueFound
@@ -44,24 +45,31 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self._errors: dict[str, str] = {}
         self.store: Store | None = None
         self.previous_keyword_search: str = ""
 
-    async def async_step_user(self, user_input=None) -> config_entries.ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
-        self._errors = {}
+        errors: dict[str, str] = {}
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        )
 
         if self.store is None:
             self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
 
-        # Set a unique ID for the whole integration since we do not want the user to have more than one instance of mawaqit
-        await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
-
         if user_input is None:
-            return await self._show_config_form(user_input=None)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=schema,
+                errors=errors,
+            )
 
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
@@ -71,8 +79,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             valid = await mawaqit_wrapper.test_credentials(username, password)
         # if we have an error connecting to the server :
         except ClientConnectorError:
-            self._errors["base"] = CANNOT_CONNECT_TO_SERVER
-            return await self._show_config_form(user_input)
+            errors["base"] = CANNOT_CONNECT_TO_SERVER
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(schema, user_input),
+                errors=errors,
+            )
 
         if valid:
             mawaqit_token = await mawaqit_wrapper.get_mawaqit_api_token(
@@ -83,16 +95,20 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_search_method()
 
-        self._errors["base"] = WRONG_CREDENTIAL
+        errors["base"] = WRONG_CREDENTIAL
 
-        return await self._show_config_form(user_input)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(schema, user_input),
+            errors=errors,
+        )
 
     async def async_step_mosques_coordinates(
         self, user_input=None
     ) -> config_entries.ConfigFlowResult:
         """Handle mosques step."""
 
-        self._errors = {}
+        errors: dict[str, str] = {}
 
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
@@ -105,14 +121,53 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_create_entry(title=title, data=data_entry)
 
-        return await self._show_config_form2()
+        nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
+            lat, longi, token=mawaqit_token
+        )
+
+        await write_all_mosques_NN_file(nearest_mosques, self.store)
+
+        name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
+            self.store
+        )
+
+        return self.async_show_form(
+            step_id="mosques_coordinates",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_UUID): vol.In(name_servers),
+                }
+            ),
+            errors=errors,
+        )
 
     async def async_step_search_method(
         self, user_input=None
     ) -> config_entries.ConfigFlowResult:
         """Handle the user's choice of search method."""
+        errors: dict[str, str] = {}
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_TYPE_SEARCH, default=CONF_TYPE_SEARCH_COORDINATES
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            CONF_TYPE_SEARCH_COORDINATES,
+                            CONF_TYPE_SEARCH_KEYWORD,
+                        ],
+                        translation_key=CONF_TYPE_SEARCH_TRANSLATION_KEY,
+                    ),
+                ),
+            }
+        )
+
         if user_input is None:
-            return await self._show_search_method_form()
+            return self.async_show_form(
+                step_id="search_method",
+                data_schema=schema,
+                errors=errors,
+            )
 
         search_method = user_input[CONF_TYPE_SEARCH]
 
@@ -143,12 +198,21 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if search_method == CONF_TYPE_SEARCH_KEYWORD:
             return await self.async_step_keyword_search()
 
-        return await self._show_search_method_form()
+        return self.async_show_form(
+            step_id="search_method",
+            data_schema=schema,
+            errors=errors,
+        )
 
     async def async_step_keyword_search(
         self, user_input=None
     ) -> config_entries.ConfigFlowResult:
         """Handle the keyword search."""
+        errors: dict[str, str] = {}
+        option = {
+            vol.Required(CONF_SEARCH): str,
+        }
+
         if user_input is not None:
             if CONF_SEARCH in user_input:
                 keyword = user_input[CONF_SEARCH]
@@ -173,8 +237,14 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         search_keyword=keyword, token=mawaqit_token
                     )
                 except NoMosqueFound:
-                    self._errors["base"] = NO_MOSQUE_FOUND_KEYWORD
-                    return await self._show_search_keyword_form(user_input, None)
+                    errors["base"] = NO_MOSQUE_FOUND_KEYWORD
+                    return self.async_show_form(
+                        step_id="keyword_search",
+                        data_schema=self.add_suggested_values_to_schema(
+                            vol.Schema(option), user_input
+                        ),
+                        errors=errors,
+                    )
 
                 await write_all_mosques_NN_file(result_mosques, self.store)
 
@@ -184,94 +254,24 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CALC_METHODS,
                 ) = await read_all_mosques_NN_file(self.store)
 
-                return await self._show_search_keyword_form(user_input, name_servers)
-
-        return await self._show_search_keyword_form(None, None)
-
-    async def _show_search_keyword_form(self, user_input, name_data):
-        """Show form to ask the user to choose search method."""
-        if user_input is None:
-            user_input = {}
-            user_input[CONF_SEARCH] = ""
-
-        options = {
-            vol.Required(CONF_SEARCH, default=user_input[CONF_SEARCH]): str,
-        }
-
-        if name_data is not None:
-            options[vol.Required(CONF_UUID)] = vol.In(name_data)
+                return self.async_show_form(
+                    step_id="keyword_search",
+                    data_schema=self.add_suggested_values_to_schema(
+                        vol.Schema(
+                            {
+                                **option,
+                                vol.Required(CONF_UUID): vol.In(name_servers),
+                            }
+                        ),
+                        user_input,
+                    ),
+                    errors=errors,
+                )
 
         return self.async_show_form(
             step_id="keyword_search",
-            data_schema=vol.Schema(options),
-            errors=self._errors,
-        )
-
-    async def _show_search_method_form(self):
-        """Show form to ask the user to choose search method."""
-
-        options = {
-            vol.Required(
-                CONF_TYPE_SEARCH, default=CONF_TYPE_SEARCH_COORDINATES
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[CONF_TYPE_SEARCH_COORDINATES, CONF_TYPE_SEARCH_KEYWORD],
-                    translation_key=CONF_TYPE_SEARCH_TRANSLATION_KEY,
-                ),
-            ),
-        }
-
-        return self.async_show_form(
-            step_id="search_method",
-            data_schema=vol.Schema(options),
-            errors=self._errors,
-        )
-
-    async def _show_config_form(self, user_input):
-        if user_input is None:
-            user_input = {}
-            user_input[CONF_USERNAME] = ""
-            user_input[CONF_PASSWORD] = ""
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
-                vol.Required(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
-            }
-        )
-
-        # Show the configuration form to edit location data.
-        return self.async_show_form(
-            step_id="user",
-            data_schema=schema,
-            errors=self._errors,
-        )
-
-    async def _show_config_form2(self):
-        """Show the configuration form to edit location data."""
-        lat = self.hass.config.latitude
-        longi = self.hass.config.longitude
-
-        mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
-
-        nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-            lat, longi, token=mawaqit_token
-        )
-
-        await write_all_mosques_NN_file(nearest_mosques, self.store)
-
-        name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
-            self.store
-        )
-
-        return self.async_show_form(
-            step_id="mosques_coordinates",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_UUID): vol.In(name_servers),
-                }
-            ),
-            errors=self._errors,
+            data_schema=vol.Schema(option),
+            errors=errors,
         )
 
     @staticmethod

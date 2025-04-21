@@ -19,9 +19,7 @@ rules:
     comment: This integration does not use entity events
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: exempt
-    comment: This integration does not rely on runtime data
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done

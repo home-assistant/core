@@ -26,7 +26,7 @@ class MosqueCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name="Mosque Data",
             update_method=self._async_update_data,
-            update_interval=timedelta(days=1),  # Static data, updated every 6 hours
+            update_interval=timedelta(days=1),  # Static data, updated every day
         )
 
     async def _async_update_data(self):
