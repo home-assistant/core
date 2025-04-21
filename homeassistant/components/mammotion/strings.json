@@ -53,201 +53,61 @@
       }
     }
   },
-  "entity": {
-    "sensor": {
-      "battery_percent": {
-        "name": "Battery"
-      },
-      "ble_rssi": {
-        "name": "BLE RSSI"
-      },
-      "wifi_rssi": {
-        "name": "WiFi RSSI"
-      },
-      "connect_type": {
-        "name": "Connection"
-      },
-      "gps_stars": {
-        "name": "Satellites (Robot)"
-      },
-      "blade_height": {
-        "name": "Blade height"
-      },
-      "area": {
-        "name": "Area"
-      },
-      "mowing_speed": {
-        "name": "Mowing speed"
-      },
-      "progress": {
-        "name": "Progress"
-      },
-      "total_time": {
-        "name": "Total time"
-      },
-      "elapsed_time": {
-        "name": "Elapsed time"
-      },
-      "left_time": {
-        "name": "Time left"
-      },
-      "l1_satellites": {
-        "name": "L1 Satellites (Co-Viewing)"
-      },
-      "l2_satellites": {
-        "name": "L2 Satellites (Co-Viewing)"
-      },
-      "position_mode": {
-        "name": "RTK position"
-      },
-      "position_type": {
-        "name": "Device position type"
-      },
-      "activity_mode": {
-        "name": "Activity mode"
-      },
-      "work_area": {
-        "name": "Work area hash"
+  "entity": {},
+  "selector": {
+    "border_mode": {
+      "options": {
+        "0": "Perimeter first",
+        "1": "ZigZag/chessboard first"
       }
     },
-    "button": {
-      "start_map_sync": {
-        "name": "Sync maps"
-      },
-      "resync_rtk_dock": {
-        "name": "Sync RTK and dock"
-      },
-      "release_from_dock": {
-        "name": "Undock"
-      },
-      "emergency_nudge_forward": {
-        "name": "Emergency nudge forward"
-      },
-      "emergency_nudge_left": {
-        "name": "Emergency nudge left"
-      },
-      "emergency_nudge_right": {
-        "name": "Emergency nudge right"
-      },
-      "emergency_nudge_back": {
-        "name": "Emergency nudge back"
-      },
-      "cancel_task": {
-        "name": "Cancel current task"
-      },
-      "clear_all_mapdata": {
-        "name": "Clear maps and area names"
+    "ultra_wave": {
+      "options": {
+        "0": "Direct touch",
+        "1": "Slow touch",
+        "2": "Less touch",
+        "10": "No touch",
+        "11": "Sensitive"
       }
     },
-    "switch": {
-      "area": {
-        "name": "Area {name}"
-      },
-      "blade_status": {
-        "name": "Blades on/off"
-      },
-      "is_mow": {
-        "name": "Mowing on/off"
-      },
-      "is_dump": {
-        "name": "Dump grass on/off"
-      },
-      "is_edge": {
-        "name": "Edge cutting"
-      },
-      "rain_tactics": {
-        "name": "Rain detection On/Off"
-      },
-      "side_led": {
-        "name": "Side LED on/off"
-      },
-      "perimeter_first_on_off": {
-        "name": "Perimeter first"
-      },
-      "schedule_updates": {
-        "name": "Turn Updates On/Off"
+    "channel_mode": {
+      "options": {
+        "0": "Zigzag path",
+        "1": "Chessboard path",
+        "2": "Adaptive zigzag path",
+        "3": "Perimeter only"
       }
     },
-    "select": {
-      "channel_mode": {
-        "name": "Cutting Path Mode",
-        "state": {
-          "single_grid": "Zigzag Path",
-          "double_grid": "Chessboard Path",
-          "segment_grid": "Adaptive Zigzag Path",
-          "no_grid": "Perimeter Only"
-        }
-      },
-      "mowing_laps": {
-        "name": "Perimeter Mowing Laps",
-        "state": {
-          "none": "None",
-          "one": "One",
-          "two": "Two",
-          "three": "Three",
-          "four": "Four"
-        }
-      },
-      "obstacle_laps": {
-        "name": "No-go Zone Mowing Laps",
-        "state": {
-          "none": "None",
-          "one": "One",
-          "two": "Two",
-          "three": "Three",
-          "four": "Four"
-        }
-      },
-      "border_mode": {
-        "name": "Mow Order",
-        "state": {
-          "border_first": "Perimeter first",
-          "grid_first": "ZigZag / Chessboard first"
-        }
-      },
-      "bypass_mode": {
-        "name": "Obstacle avoidance mode",
-        "state": {
-          "direct_touch": "Direct touch",
-          "slow_touch": "Slow touch",
-          "less_touch": "Less touch",
-          "no_touch": "No Touch"
-        }
-      },
-      "cutting_angle_mode": {
-        "name": "Cutting path angle mode",
-        "state": {
-          "relative_angle": "Relative angle",
-          "absolute_angle": "Absolute angle",
-          "random_angle": "Random angle"
-        }
+    "rain_tactics": {
+      "options": {
+        "0": "Off",
+        "1": "On"
       }
     },
-    "number": {
-      "start_progress": {
-        "name": "Start Progress"
-      },
-      "blade_height": {
-        "name": "Blade Height"
-      },
-      "working_speed": {
-        "name": "Working Speed"
-      },
-      "cutting_angle": {
-        "name": "Cutting Path Angle"
-      },
-      "path_spacing": {
-        "name": "Path Spacing"
-      },
-      "dumping_interval": {
-        "name": "Dumping Frequency"
-      },
-      "toward_included_angle": {
-        "name": "Crossing Angle"
+    "toward_mode": {
+      "options": {
+        "0": "Relative angle",
+        "1": "Absolute angle",
+        "2": "Random angle"
       }
     },
-    "device_tracker": {
-      "name": "Device Tracking"
+    "mowing_laps": {
+      "options": {
+        "0": "None",
+        "1": "One lap",
+        "2": "Two laps",
+        "3": "Three laps",
+        "4": "Four laps"
+      }
+    },
+    "obstacle_laps": {
+      "options": {
+        "0": "None",
+        "1": "One lap",
+        "2": "Two laps",
+        "3": "Three laps",
+        "4": "Four laps"
+      }
     }
   },
   "services": {

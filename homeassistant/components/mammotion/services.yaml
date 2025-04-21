@@ -42,11 +42,10 @@ start_mow:
       required: false
       selector:
         select:
+          translation_key: "border_mode"
           options:
-            - value: 0
-              label: "Perimeter First"
-            - value: 1
-              label: "ZigZag/Chessboard First"
+            - 0
+            - 1
     job_version:
       example: 0
       default: 0
@@ -75,15 +74,13 @@ start_mow:
       default: 2
       selector:
         select:
+          translation_key: "ultra_wave"
           options:
-            - value: 0
-              label: "Direct Touch"
-            - value: 1
-              label: "Slow Touch"
-            - value: 2
-              label: "Less Touch"
-            - value: 10
-              label: "No Touch"
+            - 0
+            - 1
+            - 2
+            - 10
+            - 11
       required: false
     channel_mode:
       example: 0
@@ -91,33 +88,30 @@ start_mow:
       required: false
       selector:
         select:
+          translation_key: "channel_mode"
           options:
-            - value: 0
-              label: "Zigzag Path"
-            - value: 1
-              label: "Chessboard Path"
-            - value: 2
-              label: "Adaptive Zigzag Path"
-            - value: 3
-              label: "Perimeter Only"
+            - 0
+            - 1
+            - 2
+            - 3
     channel_width:
       example: 25
       default: 25
       required: false
       selector:
         number:
-          min: 20
+          min: 5
           max: 35
     rain_tactics:
       example: 1
       default: 1
       required: false
       selector:
-        options:
-          - value: 0
-            label: "Off"
-          - value: 1
-            label: "On"
+        select:
+          translation_key: "rain_tactics"
+          options:
+            - 0
+            - 1
     blade_height:
       example: 0
       default: 25
@@ -151,47 +145,37 @@ start_mow:
       default: 0
       selector:
         select:
+          translation_key: "toward_mode"
           options:
-            - value: 0
-              label: "Relative Angle"
-            - value: 1
-              label: "Absolute Angle"
-            - value: 2
-              label: "Random Angle"
+            - 0
+            - 1
+            - 2
       required: false
     mowing_laps:
       example: 1
       default: 1
       selector:
         select:
+          translation_key: "mowing_laps"
           options:
-            - value: 0
-              label: "None"
-            - value: 1
-              label: "One Lap"
-            - value: 2
-              label: "Two Laps"
-            - value: 3
-              label: "Three Laps"
-            - value: 4
-              label: "Four Laps"
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
       required: false
     obstacle_laps:
       example: 1
       default: 1
       selector:
         select:
+          translation_key: "obstacle_laps"
           options:
-            - value: 0
-              label: "None"
-            - value: 1
-              label: "One Lap"
-            - value: 2
-              label: "Two Laps"
-            - value: 3
-              label: "Three Laps"
-            - value: 4
-              label: "Four Laps"
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
       required: false
     start_progress:
       example: 0
