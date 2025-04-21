@@ -744,10 +744,10 @@
         "name": "Rear right drive inverter motor current"
       },
       "di_slave_torque_cmd": {
-        "name": "Secondary drive unit torque command"
+        "name": "Secondary drive unit torque"
       },
       "di_state_f": {
-        "name": "Front drive inverter state",
+        "name": "Front drive inverter",
         "state": {
           "unavailable": "Unavailable",
           "standby": "Standby",
@@ -757,7 +757,7 @@
         }
       },
       "di_state_r": {
-        "name": "Rear drive inverter state",
+        "name": "Rear drive inverter",
         "state": {
           "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
           "standby": "[%key:component::teslemetry:sensor:di_state_f:standby]",
@@ -767,7 +767,7 @@
         }
       },
       "di_state_rel": {
-        "name": "Rear left drive inverter state",
+        "name": "Rear left drive inverter",
         "state": {
           "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
           "standby": "[%key:component::teslemetry:sensor:di_state_f:standby]",
@@ -777,7 +777,7 @@
         }
       },
       "di_state_rer": {
-        "name": "Rear right drive inverter state",
+        "name": "Rear right drive inverter",
         "state": {
           "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
           "standby": "[%key:component::teslemetry:sensor:di_state_f:standby]",
@@ -811,7 +811,7 @@
         "name": "Rear right drive unit actual torque"
       },
       "di_torquemotor": {
-        "name": "Drive unit torque command"
+        "name": "Drive unit torque"
       },
       "di_vbat_f": {
         "name": "Front drive inverter battery voltage"
@@ -844,7 +844,7 @@
         "name": "GPS heading"
       },
       "guest_mode_mobile_access_state": {
-        "name": "Guest mode mobile access state",
+        "name": "Guest mode mobile access",
         "state": {
           "no_access": "No access",
           "read_only": "Read only",
@@ -852,27 +852,13 @@
         }
       },
       "homelink_device_count": {
-        "name": "Homelink device count"
+        "name": "Homelink devices"
       },
       "hvac_fan_speed": {
         "name": "HVAC fan speed"
       },
       "hvac_fan_status": {
         "name": "HVAC fan status"
-      },
-      "hvac_power": {
-        "name": "HVAC power",
-        "state": {
-          "off": "Off",
-          "on": "On"
-        }
-      },
-      "hvil": {
-        "name": "HVIL status",
-        "state": {
-          "open": "Open",
-          "closed": "Closed"
-        }
       },
       "isolation_resistance": {
         "name": "Isolation resistance"
@@ -957,9 +943,6 @@
       },
       "rated_range": {
         "name": "Rated range"
-      },
-      "rear_seat_heaters": {
-        "name": "Rear seat heaters"
       },
       "route_last_updated": {
         "name": "Route last updated"

@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    DEGREE,
     PERCENTAGE,
     EntityCategory,
     UnitOfElectricCurrent,
@@ -147,11 +148,6 @@ HVAC_POWER_STATES = {
     "On": "on",
     "Precondition": "precondition",
     "OverheatProtect": "overheat_protect",
-}
-
-HVIL_STATUSES = {
-    "Fault": "fault",
-    "OK": "ok",
 }
 
 LANE_ASSIST_LEVELS = {
@@ -884,8 +880,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="gps_heading",
         streaming_listener=lambda x, y: x.listen_GpsHeading(y),
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="°",
+        native_unit_of_measurement=DEGREE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -921,16 +916,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
-        key="hvac_power",
-        streaming_listener=lambda x, y: x.listen_HvacPower(
-            lambda z: None if z is None else y(HVAC_POWER_STATES.get(z))
-        ),
-        device_class=SensorDeviceClass.ENUM,
-        options=list(HVAC_POWER_STATES.values()),
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    TeslemetryVehicleSensorEntityDescription(
         key="isolation_resistance",
         streaming_listener=lambda x, y: x.listen_IsolationResistance(y),
         state_class=SensorStateClass.MEASUREMENT,
@@ -951,6 +936,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="lateral_acceleration",
         streaming_listener=lambda x, y: x.listen_LateralAcceleration(y),
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="g",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -967,6 +953,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="longitudinal_acceleration",
         streaming_listener=lambda x, y: x.listen_LongitudinalAcceleration(y),
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="g",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -974,6 +961,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="module_temp_max",
         streaming_listener=lambda x, y: x.listen_ModuleTempMax(y),
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -981,6 +969,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="module_temp_min",
         streaming_listener=lambda x, y: x.listen_ModuleTempMin(y),
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -1071,12 +1060,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    TeslemetryVehicleSensorEntityDescription(
-        key="rear_seat_heaters",
-        streaming_listener=lambda x, y: x.listen_RearSeatHeaters(y),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
