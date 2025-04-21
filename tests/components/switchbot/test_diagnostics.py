@@ -2,7 +2,9 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.diagnostics import async_redact_data
+from syrupy import SnapshotAssertion
+from syrupy.filters import props
+
 from homeassistant.components.switchbot.const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
@@ -10,7 +12,6 @@ from homeassistant.components.switchbot.const import (
     DEFAULT_RETRY_COUNT,
     DOMAIN,
 )
-from homeassistant.components.switchbot.diagnostics import TO_REDACT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant
@@ -26,13 +27,14 @@ from tests.typing import ClientSessionGenerator
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for config entry."""
 
     inject_bluetooth_service_info(hass, WORELAY_SWITCH_1PM_SERVICE_INFO)
 
     with patch(
-        "switchbot.SwitchbotRelaySwitch.update",
+        "homeassistant.components.switchbot.switch.switchbot.SwitchbotRelaySwitch.update",
         return_value=None,
     ):
         mock_config_entry = MockConfigEntry(
@@ -53,10 +55,7 @@ async def test_diagnostics(
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    entry_dict = async_redact_data(mock_config_entry.as_dict(), TO_REDACT)
-
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
-
-    assert result["entry"] == entry_dict | {"discovery_keys": {}}
+    assert result == snapshot(exclude=props("created_at", "modified_at"))
