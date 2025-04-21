@@ -1,7 +1,7 @@
 {
   "creationTime": 1665238624000,
   "lastUpdateTime": 1665238624000,
-  "id": "SETUP-****-****-6867",
+  "id": "SETUP-1234-5678-1234",
   "location": {
     "creationTime": 1665238624000,
     "lastUpdateTime": 1667054735000,
@@ -25,7 +25,7 @@
   },
   "gateways": [
     {
-      "gatewayId": "****-****-6867",
+      "gatewayId": "1234-5678-1234",
       "type": 98,
       "subType": 1,
       "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
@@ -48,7 +48,7 @@
       "creationTime": 1665238630000,
       "lastUpdateTime": 1665238630000,
       "label": "** *(**)*",
-      "deviceURL": "homekit://****-****-6867/stack",
+      "deviceURL": "homekit://1234-5678-1234/stack",
       "shortcut": false,
       "controllableName": "homekit:StackComponent",
       "definition": {
@@ -90,7 +90,7 @@
       "creationTime": 1665238630000,
       "lastUpdateTime": 1665238630000,
       "label": "**",
-      "deviceURL": "internal://****-****-6867/pod/0",
+      "deviceURL": "internal://1234-5678-1234/pod/0",
       "shortcut": false,
       "controllableName": "internal:PodV3Component",
       "definition": {
@@ -242,7 +242,7 @@
       "creationTime": 1665238630000,
       "lastUpdateTime": 1665238630000,
       "label": "** *(**/**)*",
-      "deviceURL": "internal://****-****-6867/wifi/0",
+      "deviceURL": "internal://1234-5678-1234/wifi/0",
       "shortcut": false,
       "controllableName": "internal:WifiComponent",
       "definition": {
@@ -310,7 +310,7 @@
       "creationTime": 1665238924000,
       "lastUpdateTime": 1665238924000,
       "label": "** *(**)*",
-      "deviceURL": "io://****-****-6867/4167385",
+      "deviceURL": "io://1234-5678-1234/4167385",
       "shortcut": false,
       "controllableName": "io:StackComponent",
       "definition": {
@@ -367,8 +367,8 @@
     {
       "creationTime": 1665238637000,
       "lastUpdateTime": 1665238637000,
-      "label": "** ** **",
-      "deviceURL": "ogp://****-****-6867/00000BE8",
+      "label": "Name of the device",
+      "deviceURL": "ogp://1234-5678-1234/00000BE8",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
       "definition": {
@@ -452,7 +452,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Name of the device"
         }
       ],
       "attributes": [
@@ -495,8 +495,8 @@
     {
       "creationTime": 1665238799000,
       "lastUpdateTime": 1665238799000,
-      "label": "** ** **",
-      "deviceURL": "ogp://****-****-6867/0003FEF3",
+      "label": "Name of the device",
+      "deviceURL": "ogp://1234-5678-1234/0003FEF3",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
       "definition": {
@@ -536,7 +536,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Name of the device"
         }
       ],
       "attributes": [
@@ -583,8 +583,8 @@
     {
       "creationTime": 1665238637000,
       "lastUpdateTime": 1665238637000,
-      "label": "** ** **",
-      "deviceURL": "ogp://****-****-6867/039575E9",
+      "label": "Name of the device",
+      "deviceURL": "ogp://1234-5678-1234/039575E9",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
       "definition": {
@@ -628,7 +628,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Name of the device"
         }
       ],
       "attributes": [
@@ -671,8 +671,8 @@
     {
       "creationTime": 1665238637000,
       "lastUpdateTime": 1665238637000,
-      "label": "** ** **",
-      "deviceURL": "ogp://****-****-6867/09E45393",
+      "label": "Name of the device",
+      "deviceURL": "ogp://1234-5678-1234/09E45393",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
       "definition": {
@@ -716,7 +716,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Name of the device"
         }
       ],
       "attributes": [
@@ -759,8 +759,8 @@
     {
       "creationTime": 1667840384000,
       "lastUpdateTime": 1667840384000,
-      "label": "** ** **",
-      "deviceURL": "rts://****-****-6867/16756006",
+      "label": "Name of the device",
+      "deviceURL": "rts://1234-5678-1234/16756006",
       "shortcut": false,
       "controllableName": "rts:RollerShutterRTSComponent",
       "definition": {
@@ -838,7 +838,7 @@
       "creationTime": 1665238630000,
       "lastUpdateTime": 1665238630000,
       "label": "** *(**)*",
-      "deviceURL": "zigbee://****-****-6867/65535",
+      "deviceURL": "zigbee://1234-5678-1234/65535",
       "shortcut": false,
       "controllableName": "zigbee:TransceiverV3_0Component",
       "definition": {
