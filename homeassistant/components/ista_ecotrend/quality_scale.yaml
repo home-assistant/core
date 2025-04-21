@@ -8,9 +8,7 @@ rules:
   common-modules:
     status: todo
     comment: Group the 3 different executor jobs as one executor job
-  config-flow-test-coverage:
-    status: todo
-    comment: test_form/docstrings outdated, test already_configuret, test abort conditions in reauth,
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:

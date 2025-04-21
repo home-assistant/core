@@ -11,6 +11,8 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.usefixtures("mock_ista")
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -47,14 +49,14 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         (IndexError, "unknown"),
     ],
 )
-async def test_form_invalid_auth(
+async def test_form_error_and_recover(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_ista: MagicMock,
     side_effect: Exception,
     error_text: str,
 ) -> None:
-    """Test we handle invalid auth."""
+    """Test config flow error and recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -89,10 +91,10 @@ async def test_form_invalid_auth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_ista")
 async def test_reauth(
     hass: HomeAssistant,
-    ista_config_entry: AsyncMock,
-    mock_ista: MagicMock,
+    ista_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow."""
 
@@ -131,12 +133,12 @@ async def test_reauth(
 )
 async def test_reauth_error_and_recover(
     hass: HomeAssistant,
-    ista_config_entry: AsyncMock,
+    ista_config_entry: MockConfigEntry,
     mock_ista: MagicMock,
     side_effect: Exception,
     error_text: str,
 ) -> None:
-    """Test reauth flow."""
+    """Test reauth flow error and recover."""
 
     ista_config_entry.add_to_hass(hass)
 
@@ -174,3 +176,31 @@ async def test_reauth_error_and_recover(
         CONF_PASSWORD: "new-password",
     }
     assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("mock_ista")
+async def test_form__already_configured(
+    hass: HomeAssistant,
+    ista_config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort form login when entry is already configured."""
+
+    ista_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_EMAIL: "new@example.com",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
