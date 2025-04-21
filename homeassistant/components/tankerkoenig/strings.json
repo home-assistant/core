@@ -47,7 +47,7 @@
         },
         "data_description": {
           "stations": "[%key:component::tankerkoenig::common::data_description_stations%]",
-          "show_on_map": "Weather to show the station sensors on the map or not."
+          "show_on_map": "Whether to show the station sensors on the map or not."
         }
       }
     },
