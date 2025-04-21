@@ -57,6 +57,7 @@ ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
 _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
+DEFAULT_NAME = "ESPHome"
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -117,8 +118,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host = entry_data[CONF_HOST]
         self._port = entry_data[CONF_PORT]
         self._password = entry_data[CONF_PASSWORD]
-        self._name = self._reauth_entry.title
         self._device_name = entry_data.get(CONF_DEVICE_NAME)
+        self._name = self._reauth_entry.title
 
         # Device without encryption allows fetching device info. We can then check
         # if the device is no longer using a password. If we did try with a password,
@@ -147,7 +148,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_encryption_removed_confirm",
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
 
     async def async_step_reauth_confirm(
@@ -172,7 +173,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_NOISE_PSK): str}),
             errors=errors,
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
 
     async def async_step_reconfigure(
@@ -189,12 +190,14 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @property
     def _name(self) -> str:
-        return self.__name or "ESPHome"
+        return self.__name or DEFAULT_NAME
 
     @_name.setter
     def _name(self, value: str) -> None:
         self.__name = value
-        self.context["title_placeholders"] = {"name": self._name}
+        self.context["title_placeholders"] = {
+            "name": self._async_get_human_readable_name()
+        }
 
     async def _async_try_fetch_device_info(self) -> ConfigFlowResult:
         """Try to fetch device info and return any errors."""
@@ -254,7 +257,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._async_try_fetch_device_info()
         return self.async_show_form(
-            step_id="discovery_confirm", description_placeholders={"name": self._name}
+            step_id="discovery_confirm",
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
 
     async def async_step_zeroconf(
@@ -274,8 +278,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # Hostname is format: livingroom.local.
         device_name = discovery_info.hostname.removesuffix(".local.")
 
-        self._name = discovery_info.properties.get("friendly_name", device_name)
         self._device_name = device_name
+        self._name = discovery_info.properties.get("friendly_name", device_name)
         self._host = discovery_info.host
         self._port = discovery_info.port
         self._noise_required = bool(discovery_info.properties.get("api_encryption"))
@@ -593,8 +597,29 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="encryption_key",
             data_schema=vol.Schema({vol.Required(CONF_NOISE_PSK): str}),
             errors=errors,
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
+
+    @callback
+    def _async_get_human_readable_name(self) -> str:
+        """Return a human readable name for the entry."""
+        entry: ConfigEntry | None = None
+        if self.source == SOURCE_REAUTH:
+            entry = self._reauth_entry
+        elif self.source == SOURCE_RECONFIGURE:
+            entry = self._reconfig_entry
+        friendly_name = self._name
+        device_name = self._device_name
+        if (
+            device_name
+            and friendly_name in (DEFAULT_NAME, device_name)
+            and entry
+            and entry.title != friendly_name
+        ):
+            friendly_name = entry.title
+        if not device_name or friendly_name == device_name:
+            return friendly_name
+        return f"{friendly_name} ({device_name})"
 
     async def async_step_authenticate(
         self, user_input: dict[str, Any] | None = None, error: str | None = None
@@ -614,7 +639,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="authenticate",
             data_schema=vol.Schema({vol.Required("password"): str}),
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
             errors=errors,
         )
 
@@ -648,9 +673,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return "connection_error"
         finally:
             await cli.disconnect(force=True)
-        self._name = self._device_info.friendly_name or self._device_info.name
-        self._device_name = self._device_info.name
         self._device_mac = format_mac(self._device_info.mac_address)
+        self._device_name = self._device_info.name
+        self._name = self._device_info.friendly_name or self._device_info.name
         return None
 
     async def fetch_device_info(self) -> str | None:
