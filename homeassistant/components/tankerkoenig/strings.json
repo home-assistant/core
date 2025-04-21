@@ -1,4 +1,7 @@
 {
+  "common": {
+    "data_description_stations": "Select the stations you want to add to Home Assistant."
+  },
   "config": {
     "step": {
       "user": {
@@ -6,7 +9,6 @@
           "name": "Region name",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "location": "[%key:common::config_flow::data::location%]",
-          "stations": "Additional fuel stations",
           "radius": "Search radius"
         }
       },
@@ -20,6 +22,9 @@
         "description": "Found {stations_count} stations in radius",
         "data": {
           "stations": "Stations"
+        },
+        "data_description": {
+          "stations": "[%key:component::tankerkoenig::common::data_description_stations%]"
         }
       }
     },
@@ -39,6 +44,10 @@
         "data": {
           "stations": "[%key:component::tankerkoenig::config::step::select_station::data::stations%]",
           "show_on_map": "Show stations on map"
+        },
+        "data_description": {
+          "stations": "[%key:component::tankerkoenig::common::data_description_stations%]",
+          "show_on_map": "Weather to show the station sensors on the map or not."
         }
       }
     },
