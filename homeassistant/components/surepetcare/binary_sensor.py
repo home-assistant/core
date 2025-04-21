@@ -114,6 +114,7 @@ class Pet(SurePetcareBinarySensor):
         else:
             self._attr_extra_state_attributes = {}
 
+
 class DeviceConnectivity(SurePetcareBinarySensor):
     """Sure Petcare Device."""
 
