@@ -47,7 +47,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: The integration is a web service, there are no discoverable devices.
