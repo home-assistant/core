@@ -629,6 +629,10 @@ class _ScriptRun:
         self, script: Script, *, parallel: bool = False
     ) -> None:
         """Execute a script."""
+        if not script.enabled:
+            self._log("Skipping disabled script: %s", script.name)
+            trace_set_result(enabled=False)
+            return
         result = await self._async_run_long_action(
             self._hass.async_create_task_internal(
                 script.async_run(
@@ -1311,7 +1315,7 @@ class _QueuedScriptRun(_ScriptRun):
 
     lock_acquired = False
 
-    async def async_run(self) -> None:
+    async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
         # Wait for previous run, if any, to finish by attempting to acquire the script's
         # shared lock. At the same time monitor if we've been told to stop.
@@ -1325,7 +1329,7 @@ class _QueuedScriptRun(_ScriptRun):
 
         self.lock_acquired = True
         # We've acquired the lock so we can go ahead and start the run.
-        await super().async_run()
+        return await super().async_run()
 
     def _finish(self) -> None:
         if self.lock_acquired:
@@ -1442,8 +1446,12 @@ class Script:
         script_mode: str = DEFAULT_SCRIPT_MODE,
         top_level: bool = True,
         variables: ScriptVariables | None = None,
+        enabled: bool = True,
     ) -> None:
-        """Initialize the script."""
+        """Initialize the script.
+
+        enabled attribute is only used for non-top-level scripts.
+        """
         if not (all_scripts := hass.data.get(DATA_SCRIPTS)):
             all_scripts = hass.data[DATA_SCRIPTS] = []
             hass.bus.async_listen_once(
@@ -1462,6 +1470,7 @@ class Script:
         self.name = name
         self.unique_id = f"{domain}.{name}-{id(self)}"
         self.domain = domain
+        self.enabled = enabled
         self.running_description = running_description or f"{domain} script"
         self._change_listener = change_listener
         self._change_listener_job = (
@@ -2002,6 +2011,7 @@ class Script:
                 max_runs=self.max_runs,
                 logger=self._logger,
                 top_level=False,
+                enabled=parallel_script.get(CONF_ENABLED, True),
             )
             parallel_script.change_listener = partial(
                 self._chain_change_listener, parallel_script

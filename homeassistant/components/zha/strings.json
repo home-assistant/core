@@ -1487,7 +1487,7 @@
       "adaptation_run_status": {
         "name": "Adaptation run status",
         "state": {
-          "nothing": "Idle",
+          "nothing": "[%key:common::state::idle%]",
           "something": "State"
         },
         "state_attributes": {
@@ -1509,7 +1509,7 @@
         "name": "Software error",
         "state": {
           "nothing": "Good",
-          "something": "Error"
+          "something": "[%key:common::state::error%]"
         },
         "state_attributes": {
           "top_pcb_sensor_error": {

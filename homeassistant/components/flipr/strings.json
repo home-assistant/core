@@ -14,7 +14,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_flipr_id_found": "No flipr or hub associated to your account for now. You should verify it is working with the Flipr's mobile app first."
+      "no_flipr_id_found": "No Flipr or hub associated to your account for now. You should verify it is working with the Flipr mobile app first."
     }
   },
   "entity": {
@@ -44,17 +44,11 @@
       "hub_mode": {
         "name": "Mode",
         "state": {
-          "auto": "Automatic",
-          "manual": "Manual",
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
           "planning": "Planning"
         }
       }
-    }
-  },
-  "issues": {
-    "duplicate_config": {
-      "title": "Multiple flipr configurations with the same account",
-      "description": "The Flipr integration has been updated to work account based rather than device based. This means that if you have 2 devices, you only need one configuration. For every account you have, please delete all but one configuration and restart Home Assistant for it to set up the devices linked to your account."
     }
   }
 }
