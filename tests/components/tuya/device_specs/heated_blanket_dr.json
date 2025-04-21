@@ -1,0 +1,184 @@
+{
+  "endpoint": "https://api.mock",
+  "terminal_id": "mocked_terminal_id",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "id": "moked_id",
+  "name": "moked_name",
+  "category": "dr",
+  "product_id": "pjvxl1wsyqxivsaf",
+  "product_name": "moked_product_name",
+  "online": false,
+  "sub": false,
+  "time_zone": "-05:00",
+  "active_time": "2022-03-02T21:50:20+00:00",
+  "create_time": "2022-03-02T21:50:20+00:00",
+  "update_time": "2022-03-02T21:50:20+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_2": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "level": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "level_1",
+          "level_2",
+          "level_3",
+          "level_4",
+          "level_5",
+          "level_6",
+          "level_7",
+          "level_8",
+          "level_9",
+          "level_10"
+        ]
+      }
+    },
+    "preheat": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "preheat_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "preheat_2": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "level_1": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "level_1",
+          "level_2",
+          "level_3",
+          "level_4",
+          "level_5",
+          "level_6",
+          "level_7",
+          "level_8",
+          "level_9",
+          "level_10"
+        ]
+      }
+    },
+    "level_2": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "level_1",
+          "level_2",
+          "level_3",
+          "level_4",
+          "level_5",
+          "level_6",
+          "level_7",
+          "level_8",
+          "level_9",
+          "level_10"
+        ]
+      }
+    }
+  },
+  "status_range": {
+    "level_1": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "level_1",
+          "level_2",
+          "level_3",
+          "level_4",
+          "level_5",
+          "level_6",
+          "level_7",
+          "level_8",
+          "level_9",
+          "level_10"
+        ]
+      }
+    },
+    "level_2": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "level_1",
+          "level_2",
+          "level_3",
+          "level_4",
+          "level_5",
+          "level_6",
+          "level_7",
+          "level_8",
+          "level_9",
+          "level_10"
+        ]
+      }
+    },
+    "level": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "level_1",
+          "level_2",
+          "level_3",
+          "level_4",
+          "level_5",
+          "level_6",
+          "level_7",
+          "level_8",
+          "level_9",
+          "level_10"
+        ]
+      }
+    },
+    "preheat": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "preheat_2": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_2": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "preheat_1": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch": true,
+    "level": "level_2",
+    "preheat": true,
+    "switch_1": false,
+    "switch_2": false,
+    "level_1": "level_10",
+    "level_2": "level_10",
+    "preheat_1": true,
+    "preheat_2": true
+  },
+  "support_local": true
+}
