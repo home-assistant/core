@@ -55,7 +55,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     except PortainerTimeoutError as err:
         raise PortainerTimeout from err
 
-    _LOGGER.debug("Connected to Portainer API: %s", url)
+    _LOGGER.debug("Connected to Portainer API: %s", data[CONF_URL])
 
     portainer_data: list[dict[str, Any]] = []
 
@@ -74,7 +74,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
         )
 
     return {
-        "title": url,
+        "title": data[CONF_URL],
         "portainer": portainer_data,
     }
 
@@ -104,7 +104,6 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                _LOGGER.debug("Erwin title: %s", api["title"])
                 return self.async_create_entry(
                     title=api["title"], data={**user_input, CONF_URL: url}
                 )
