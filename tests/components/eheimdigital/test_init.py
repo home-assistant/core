@@ -66,4 +66,4 @@ async def test_entry_setup_error(
 
     eheimdigital_hub_mock.return_value.connect.side_effect = EheimDigitalClientError()
     await init_integration(hass, mock_config_entry)
-    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
