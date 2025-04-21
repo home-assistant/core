@@ -155,8 +155,8 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
             await self.async_set_preset_mode("manual")
 
         # If no percentage is given, use the last known value.
-        if percentage is None:
-            if self._speed_attribute is not None:
+        if self._speed_attribute is not None:
+            if percentage is None:
                 percentage = ranged_value_to_percentage(
                     self.entity_description.speed_range,
                     self._speed_attribute.last_value,
@@ -164,7 +164,5 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
                 # If the last known value is 0, set 100%.
                 if percentage == 0:
                     percentage = 100
-            else:
-                percentage = 100
 
-        await self.async_set_percentage(percentage)
+            await self.async_set_percentage(percentage)
