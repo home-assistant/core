@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_BRAND, CONF_BRANDS_MAP, CONF_REGIONS_MAP, DOMAIN
+from .const import BRANDS_CONF_MAP, CONF_BRAND, DOMAIN, REGIONS_CONF_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,8 +25,8 @@ type WhirlpoolConfigEntry = ConfigEntry[AppliancesManager]
 async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) -> bool:
     """Set up Whirlpool Sixth Sense from a config entry."""
     session = async_get_clientsession(hass)
-    region = CONF_REGIONS_MAP[entry.data.get(CONF_REGION, "EU")]
-    brand = CONF_BRANDS_MAP[entry.data.get(CONF_BRAND, "Whirlpool")]
+    region = REGIONS_CONF_MAP[entry.data.get(CONF_REGION, "EU")]
+    brand = BRANDS_CONF_MAP[entry.data.get(CONF_BRAND, "Whirlpool")]
     backend_selector = BackendSelector(brand, region)
 
     auth = Auth(
