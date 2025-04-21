@@ -151,7 +151,7 @@ HVAC_POWER_STATES = {
 }
 
 LANE_ASSIST_LEVELS = {
-    "None": "none",
+    "None": "off",
     "Warning": "warning",
     "Assist": "assist",
 }
@@ -1134,6 +1134,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
 >>>>>>> e3c6221fa2f (Sensors)
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="hvac_power_state",
+        streaming_listener=lambda x, y: x.listen_HvacPower(
+            lambda z: None if z is None else y(HVAC_POWER_STATES.get(z))
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=list(HVAC_POWER_STATES.values()),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 

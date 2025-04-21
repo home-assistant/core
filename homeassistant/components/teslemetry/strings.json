@@ -659,7 +659,7 @@
       "bms_state": {
         "name": "BMS state",
         "state": {
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "drive": "Drive",
           "support": "Support",
           "charge": "Charge",
@@ -750,7 +750,7 @@
         "name": "Front drive inverter",
         "state": {
           "unavailable": "Unavailable",
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "fault": "Fault",
           "abort": "Abort",
           "enable": "Enable"
@@ -760,7 +760,7 @@
         "name": "Rear drive inverter",
         "state": {
           "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
-          "standby": "[%key:component::teslemetry:sensor:di_state_f:standby]",
+          "standby": "[%key:common::state::standby%]",
           "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
           "enable": "[%key:component::teslemetry:sensor:di_state_f:enable]"
@@ -770,7 +770,7 @@
         "name": "Rear left drive inverter",
         "state": {
           "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
-          "standby": "[%key:component::teslemetry:sensor:di_state_f:standby]",
+          "standby": "[%key:common::state::standby%]",
           "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
           "enable": "[%key:component::teslemetry:sensor:di_state_f:enable]"
@@ -780,7 +780,7 @@
         "name": "Rear right drive inverter",
         "state": {
           "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
-          "standby": "[%key:component::teslemetry:sensor:di_state_f:standby]",
+          "standby": "[%key:common::state::standby%]",
           "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
           "enable": "[%key:component::teslemetry:sensor:di_state_f:enable]"
@@ -834,10 +834,10 @@
       "forward_collision_warning": {
         "name": "Forward collision warning",
         "state": {
-          "disabled": "Disabled",
-          "medium": "Medium",
-          "early": "Early",
-          "late": "Late"
+          "off": "[%key:common::state::off%]",
+          "late": "Late",
+          "average": "Average",
+          "early": "Early"
         }
       },
       "gps_heading": {
@@ -846,9 +846,24 @@
       "guest_mode_mobile_access_state": {
         "name": "Guest mode mobile access",
         "state": {
-          "no_access": "No access",
-          "read_only": "Read only",
-          "access": "Access"
+          "init": "Init",
+          "not_authenticated": "NotAuthenticated",
+          "authenticated": "Authenticated",
+          "aborted_driving": "AbortedDriving",
+          "aborted_using_remote_start": "AbortedUsingRemoteStart",
+          "aborted_using_ble_keys": "AbortedUsingBLEKeys",
+          "aborted_valet_mode": "AbortedValetMode",
+          "aborted_guest_mode_off": "AbortedGuestModeOff",
+          "aborted_drive_auth_time_exceeded": "AbortedDriveAuthTimeExceeded",
+          "aborted_no_data_received": "AbortedNoDataReceived",
+          "requesting_from_mothership": "RequestingFromMothership",
+          "requesting_from_auth_d": "RequestingFromAuthD",
+          "aborted_fetch_failed": "AbortedFetchFailed",
+          "aborted_bad_data_received": "AbortedBadDataReceived",
+          "showing_qr_code": "ShowingQRCode",
+          "swiped_away": "SwipedAway",
+          "dismissed_qr_code_expired": "DismissedQRCodeExpired",
+          "succeeded_paired_new_ble_key": "SucceededPairedNewBLEKey"
         }
       },
       "homelink_device_count": {
@@ -866,8 +881,7 @@
       "lane_departure_avoidance": {
         "name": "Lane departure avoidance",
         "state": {
-          "unavailable": "Unavailable",
-          "off": "Off",
+          "off": "[]",
           "warning": "Warning",
           "assist": "Assist"
         }
@@ -911,34 +925,32 @@
       "powershare_status": {
         "name": "Powershare status",
         "state": {
-          "disabled": "Disabled",
-          "stopped": "Stopped",
-          "discharging": "Discharging",
-          "standby": "Standby"
+          "inactive": "Inactive",
+          "handshaking": "Handshaking",
+          "init": "Initializing",
+          "enabled": "Enabled",
+          "enabled_reconnecting_soon": "Reconnecting",
+          "stopped": "Stopped"
         }
       },
       "powershare_stop_reason": {
         "name": "Powershare stop reason",
         "state": {
           "none": "None",
-          "charge_needed": "Charge needed",
-          "user_disabled": "User disabled",
-          "vehicle_cabin_conditioning": "Vehicle cabin conditioning",
-          "vehicle_charging": "Vehicle charging",
-          "grid_voltage_high": "Grid voltage high",
-          "grid_voltage_low": "Grid voltage low",
-          "grid_frequency_high": "Grid frequency high",
-          "grid_frequency_low": "Grid frequency low"
+          "soc_too_low": "SOC too low",
+          "retry": "Retry",
+          "fault": "Fault",
+          "user": "User",
+          "reconnecting": "Reconnecting",
+          "authentication": "Authentication"
         }
       },
       "powershare_type": {
         "name": "Powershare type",
         "state": {
           "none": "None",
-          "solar_offset": "Solar offset",
-          "scheduled": "Scheduled",
-          "manual": "Manual",
-          "storm_watch": "Storm watch"
+          "load": "Load",
+          "home": "Home"
         }
       },
       "rated_range": {
@@ -950,7 +962,7 @@
       "scheduled_charging_mode": {
         "name": "Scheduled charging mode",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "departure": "Departure",
           "start_at": "Start at"
         }
@@ -959,10 +971,21 @@
         "name": "Software update expected duration"
       },
       "speed_limit_warning": {
-        "name": "Speed limit warning"
+        "name": "Speed limit warning",
+        "state": {
+          "none": "None",
+          "display": "Display",
+          "chime": "Chime"
+        }
       },
       "tonneau_tent_mode": {
-        "name": "Tonneau tent mode"
+        "name": "Tonneau tent mode",
+        "state": {
+          "inactive": "Inactive",
+          "moving": "Moving",
+          "failed": "Failed",
+          "active": "Active"
+        }
       },
       "tpms_hard_warnings": {
         "name": "Tire pressure hard warnings"
@@ -973,15 +996,23 @@
       "lights_turn_signal": {
         "name": "Turn signal",
         "state": {
-          "unavailable": "Unavailable",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "left": "Left",
           "right": "Right",
-          "emergency": "Emergency"
+          "both": "Both"
         }
       },
       "charge_rate_mile_per_hour": {
         "name": "Charge rate mile per hour"
+      },
+      "hvac_power_state": {
+        "name": "HVAC power state",
+        "state": {
+          "precondition": "Precondition",
+          "overheat_protect": "Overheat protection",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
       }
     },
     "switch": {
