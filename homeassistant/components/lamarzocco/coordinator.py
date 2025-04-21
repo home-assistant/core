@@ -22,6 +22,7 @@ from .const import DOMAIN
 SCAN_INTERVAL = timedelta(seconds=30)
 SETTINGS_UPDATE_INTERVAL = timedelta(hours=1)
 SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=5)
+STATISTICS_UPDATE_INTERVAL = timedelta(minutes=15)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -32,6 +33,7 @@ class LaMarzoccoRuntimeData:
     config_coordinator: LaMarzoccoConfigUpdateCoordinator
     settings_coordinator: LaMarzoccoSettingsUpdateCoordinator
     schedule_coordinator: LaMarzoccoScheduleUpdateCoordinator
+    statistics_coordinator: LaMarzoccoStatisticsUpdateCoordinator
 
 
 type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoRuntimeData]
@@ -133,3 +135,15 @@ class LaMarzoccoScheduleUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         """Fetch data from API endpoint."""
         await self.device.get_schedule()
         _LOGGER.debug("Current schedule: %s", self.device.schedule.to_dict())
+
+
+class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Coordinator for La Marzocco statistics."""
+
+    _default_update_interval = SCAN_INTERVAL
+
+    async def _internal_async_update_data(self) -> None:
+        """Fetch data from API endpoint."""
+        await self.device.get_statistics()
+        await self.device.get_coffee_and_flush_counter()
+        _LOGGER.debug("Current statistics: %s", self.device.statistics.to_dict())
