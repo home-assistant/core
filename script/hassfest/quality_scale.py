@@ -2131,7 +2131,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "upcloud",
     "upnp",
     "uptime",
-    "uptimerobot",
     "usb",
     "usgs_earthquakes_feed",
     "utility_meter",
