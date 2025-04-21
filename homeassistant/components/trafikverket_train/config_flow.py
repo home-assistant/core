@@ -266,7 +266,7 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     CONF_API_KEY: api_key,
                     CONF_FROM: train_from,
-                    CONF_TO: user_input[CONF_TO],
+                    CONF_TO: train_to,
                     CONF_TIME: train_time,
                     CONF_WEEKDAY: train_days,
                     CONF_FILTER_PRODUCT: filter_product,
