@@ -82,6 +82,7 @@ CONF_VOLUME = "volume"
 CONF_VOLUME_FLOW_RATE = "volume_flow_rate"
 CONF_WATER = "water"
 CONF_WEIGHT = "weight"
+CONF_WIND_DIRECTION = "wind_direction"
 CONF_WIND_SPEED = "wind_speed"
 
 ENTITY_TRIGGERS = {
@@ -144,6 +145,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.VOLUME_FLOW_RATE: [{CONF_TYPE: CONF_VOLUME_FLOW_RATE}],
     SensorDeviceClass.WATER: [{CONF_TYPE: CONF_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_WEIGHT}],
+    SensorDeviceClass.WIND_DIRECTION: [{CONF_TYPE: CONF_WIND_DIRECTION}],
     SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_WIND_SPEED}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_VALUE}],
 }
@@ -204,6 +206,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_VOLUME_FLOW_RATE,
                     CONF_WATER,
                     CONF_WEIGHT,
+                    CONF_WIND_DIRECTION,
                     CONF_WIND_SPEED,
                     CONF_VALUE,
                 ]

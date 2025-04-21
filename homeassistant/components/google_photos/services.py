@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, UPLOAD_SCOPE
-from .types import GooglePhotosConfigEntry
+from .coordinator import GooglePhotosConfigEntry
 
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
 CONF_ALBUM = "album"

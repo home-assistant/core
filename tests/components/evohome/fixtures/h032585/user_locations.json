@@ -3,6 +3,7 @@
     "locationInfo": {
       "locationId": "111111",
       "name": "My Home",
+      "useDaylightSaveSwitching": true,
       "timeZone": {
         "timeZoneId": "GMTStandardTime",
         "displayName": "(UTC+00:00) Dublin, Edinburgh, Lisbon, London",

@@ -1,6 +1,7 @@
 # serializer version: 1
 # name: test_custom_agent
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -44,6 +45,7 @@
 # ---
 # name: test_turn_on_intent[None-turn kitchen on-None]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -74,6 +76,7 @@
 # ---
 # name: test_turn_on_intent[None-turn kitchen on-conversation.home_assistant]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -104,6 +107,7 @@
 # ---
 # name: test_turn_on_intent[None-turn kitchen on-homeassistant]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -134,6 +138,7 @@
 # ---
 # name: test_turn_on_intent[None-turn on kitchen-None]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -164,6 +169,7 @@
 # ---
 # name: test_turn_on_intent[None-turn on kitchen-conversation.home_assistant]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -194,6 +200,7 @@
 # ---
 # name: test_turn_on_intent[None-turn on kitchen-homeassistant]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -224,6 +231,7 @@
 # ---
 # name: test_turn_on_intent[my_new_conversation-turn kitchen on-None]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -254,6 +262,7 @@
 # ---
 # name: test_turn_on_intent[my_new_conversation-turn kitchen on-conversation.home_assistant]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -284,6 +293,7 @@
 # ---
 # name: test_turn_on_intent[my_new_conversation-turn kitchen on-homeassistant]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -314,6 +324,7 @@
 # ---
 # name: test_turn_on_intent[my_new_conversation-turn on kitchen-None]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -344,6 +355,7 @@
 # ---
 # name: test_turn_on_intent[my_new_conversation-turn on kitchen-conversation.home_assistant]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -374,6 +386,7 @@
 # ---
 # name: test_turn_on_intent[my_new_conversation-turn on kitchen-homeassistant]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({

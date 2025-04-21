@@ -6,6 +6,7 @@ from collections.abc import AsyncGenerator, AsyncIterable
 import logging
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
+from google.api_core.retry import AsyncRetry
 from google.cloud import speech_v1
 
 from homeassistant.components.stt import (
@@ -22,7 +23,7 @@ from homeassistant.components.stt import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_SERVICE_ACCOUNT_INFO,
@@ -38,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Google Cloud speech platform via config entry."""
     service_account_info = config_entry.data[CONF_SERVICE_ACCOUNT_INFO]
@@ -127,6 +128,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
             responses = await self._client.streaming_recognize(
                 requests=request_generator(),
                 timeout=10,
+                retry=AsyncRetry(initial=0.1, maximum=2.0, multiplier=2.0),
             )
 
             transcript = ""

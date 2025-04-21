@@ -57,7 +57,7 @@ class XiaomiDevice(Entity):
             self._is_gateway = False
             self._device_id = self._sid
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Start unavailability tracking."""
         self._xiaomi_hub.callbacks[self._sid].append(self.push_data)
         self._async_track_unavailable()
@@ -100,7 +100,7 @@ class XiaomiDevice(Entity):
         return device_info
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._is_available
 

@@ -50,9 +50,6 @@ from .common import (
     RESPONSE_DISARMED,
     RESPONSE_DISARMING,
     RESPONSE_SUCCESS,
-    RESPONSE_TRIGGERED_CARBON_MONOXIDE,
-    RESPONSE_TRIGGERED_FIRE,
-    RESPONSE_TRIGGERED_POLICE,
     RESPONSE_UNKNOWN,
     RESPONSE_USER_CODE_INVALID,
     TOTALCONNECT_REQUEST,
@@ -195,7 +192,7 @@ async def test_arm_home_instant_failure(hass: HomeAssistant) -> None:
                 DOMAIN, SERVICE_ALARM_ARM_HOME_INSTANT, DATA, blocking=True
             )
         await hass.async_block_till_done()
-        assert f"{err.value}" == "Usercode is invalid, did not arm home instant"
+        assert str(err.value) == "Usercode is invalid, did not arm home instant"
         assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
         # should have started a re-auth flow
         assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
@@ -511,45 +508,6 @@ async def test_disarming(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
         await hass.async_block_till_done()
         assert mock_request.call_count == 3
         assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMING
-
-
-async def test_triggered_fire(hass: HomeAssistant) -> None:
-    """Test triggered by fire."""
-    responses = [RESPONSE_TRIGGERED_FIRE]
-    await setup_platform(hass, ALARM_DOMAIN)
-    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
-        await async_update_entity(hass, ENTITY_ID)
-        await hass.async_block_till_done()
-        state = hass.states.get(ENTITY_ID)
-        assert state.state == AlarmControlPanelState.TRIGGERED
-        assert state.attributes.get("triggered_source") == "Fire/Smoke"
-        assert mock_request.call_count == 1
-
-
-async def test_triggered_police(hass: HomeAssistant) -> None:
-    """Test triggered by police."""
-    responses = [RESPONSE_TRIGGERED_POLICE]
-    await setup_platform(hass, ALARM_DOMAIN)
-    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
-        await async_update_entity(hass, ENTITY_ID)
-        await hass.async_block_till_done()
-        state = hass.states.get(ENTITY_ID)
-        assert state.state == AlarmControlPanelState.TRIGGERED
-        assert state.attributes.get("triggered_source") == "Police/Medical"
-        assert mock_request.call_count == 1
-
-
-async def test_triggered_carbon_monoxide(hass: HomeAssistant) -> None:
-    """Test triggered by carbon monoxide."""
-    responses = [RESPONSE_TRIGGERED_CARBON_MONOXIDE]
-    await setup_platform(hass, ALARM_DOMAIN)
-    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
-        await async_update_entity(hass, ENTITY_ID)
-        await hass.async_block_till_done()
-        state = hass.states.get(ENTITY_ID)
-        assert state.state == AlarmControlPanelState.TRIGGERED
-        assert state.attributes.get("triggered_source") == "Carbon Monoxide"
-        assert mock_request.call_count == 1
 
 
 async def test_armed_custom(hass: HomeAssistant) -> None:

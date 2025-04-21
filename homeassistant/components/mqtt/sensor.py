@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     STATE_CLASSES_SCHEMA,
@@ -31,15 +32,24 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_OPTIONS, CONF_STATE_TOPIC, PAYLOAD_NONE
+from .const import (
+    CONF_EXPIRE_AFTER,
+    CONF_LAST_RESET_VALUE_TEMPLATE,
+    CONF_OPTIONS,
+    CONF_STATE_TOPIC,
+    CONF_SUGGESTED_DISPLAY_PRECISION,
+    DOMAIN,
+    PAYLOAD_NONE,
+)
 from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -48,10 +58,6 @@ from .util import check_state_too_long
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-CONF_EXPIRE_AFTER = "expire_after"
-CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
-CONF_SUGGESTED_DISPLAY_PRECISION = "suggested_display_precision"
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -62,6 +68,10 @@ MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
 
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
+
+URL_DOCS_SUPPORTED_SENSOR_UOM = (
+    "https://www.home-assistant.io/integrations/sensor/#device-class"
+)
 
 _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
@@ -107,6 +117,23 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
                 f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
             )
 
+    if (device_class := config.get(CONF_DEVICE_CLASS)) is None or (
+        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
+    ) is None:
+        return config
+
+    if (
+        device_class in DEVICE_CLASS_UNITS
+        and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
+    ):
+        _LOGGER.warning(
+            "The unit of measurement `%s` is not valid "
+            "together with device class `%s`. "
+            "this will stop working in HA Core 2025.7.0",
+            unit_of_measurement,
+            device_class,
+        )
+
     return config
 
 
@@ -124,7 +151,7 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT sensor through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -155,8 +182,40 @@ class MqttSensor(MqttEntity, RestoreSensor):
         None
     )
 
+    @callback
+    def async_check_uom(self) -> None:
+        """Check if the unit of measurement is valid with the device class."""
+        if (
+            self._discovery_data is not None
+            or self.device_class is None
+            or self.native_unit_of_measurement is None
+        ):
+            return
+        if (
+            self.device_class in DEVICE_CLASS_UNITS
+            and self.native_unit_of_measurement
+            not in DEVICE_CLASS_UNITS[self.device_class]
+        ):
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                self.entity_id,
+                issue_domain=sensor.DOMAIN,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                learn_more_url=URL_DOCS_SUPPORTED_SENSOR_UOM,
+                translation_placeholders={
+                    "uom": self.native_unit_of_measurement,
+                    "device_class": self.device_class.value,
+                    "entity_id": self.entity_id,
+                },
+                translation_key="invalid_unit_of_measurement",
+                breaks_in_ha_version="2025.7.0",
+            )
+
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
+        self.async_check_uom()
         last_state: State | None
         last_sensor_data: SensorExtraStoredData | None
         if (

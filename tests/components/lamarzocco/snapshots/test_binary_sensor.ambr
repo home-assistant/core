@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -53,6 +54,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -100,6 +102,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -140,33 +143,20 @@
     'state': 'off',
   })
 # ---
-# name: test_scale_connectivity[Linea Mini]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'LMZ-123A45 Connectivity',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.lmz_123a45_connectivity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_scale_connectivity[Linea Mini].1
+# name: test_binary_sensors[binary_sensor.gs012345_websocket_connected-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.lmz_123a45_connectivity',
+    'entity_id': 'binary_sensor.gs012345_websocket_connected',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -178,12 +168,26 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Connectivity',
+    'original_name': 'WebSocket connected',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'LM012345_connected',
+    'translation_key': 'websocket_connected',
+    'unique_id': 'GS012345_websocket_connected',
     'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.gs012345_websocket_connected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'GS012345 WebSocket connected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gs012345_websocket_connected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---

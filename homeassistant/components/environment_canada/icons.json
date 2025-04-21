@@ -21,6 +21,9 @@
   "services": {
     "set_radar_type": {
       "service": "mdi:radar"
+    },
+    "get_forecasts": {
+      "service": "mdi:weather-cloudy-clock"
     }
   }
 }

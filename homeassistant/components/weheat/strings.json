@@ -37,7 +37,7 @@
         "name": "Indoor unit water pump"
       },
       "indoor_unit_auxiliary_pump_state": {
-        "name": "Indoor unit auxilary water pump"
+        "name": "Indoor unit auxiliary water pump"
       },
       "indoor_unit_dhw_valve_or_pump_state": {
         "name": "Indoor unit DHW valve or water pump"
@@ -85,6 +85,12 @@
       },
       "dhw_bottom_temperature": {
         "name": "DHW bottom temperature"
+      },
+      "dhw_flow_volume": {
+        "name": "DHW pump flow"
+      },
+      "central_heating_flow_volume": {
+        "name": "Central heating pump flow"
       },
       "heat_pump_state": {
         "state": {

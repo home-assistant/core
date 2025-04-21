@@ -126,7 +126,6 @@ DEFAULT_MAX_HUMIDITY = 99
 
 DOMAIN = "climate"
 
-INTENT_GET_TEMPERATURE = "HassClimateGetTemperature"
 INTENT_SET_TEMPERATURE = "HassClimateSetTemperature"
 
 SERVICE_SET_AUX_HEAT = "set_aux_heat"

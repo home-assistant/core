@@ -94,8 +94,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await _async_migrate_unique_ids(hass, entry, gateway)
 
-    coordinator = SleepIQDataUpdateCoordinator(hass, gateway, email)
-    pause_coordinator = SleepIQPauseUpdateCoordinator(hass, gateway, email)
+    coordinator = SleepIQDataUpdateCoordinator(hass, entry, gateway)
+    pause_coordinator = SleepIQPauseUpdateCoordinator(hass, entry, gateway)
 
     # Call the SleepIQ API to refresh data
     await coordinator.async_config_entry_first_refresh()

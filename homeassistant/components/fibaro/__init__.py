@@ -7,21 +7,22 @@ from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
-from pyfibaro.fibaro_client import FibaroClient
+from pyfibaro.fibaro_client import (
+    FibaroAuthenticationFailed,
+    FibaroClient,
+    FibaroConnectFailed,
+)
+from pyfibaro.fibaro_data_helper import find_master_devices, read_rooms
 from pyfibaro.fibaro_device import DeviceModel
-from pyfibaro.fibaro_room import RoomModel
+from pyfibaro.fibaro_device_manager import FibaroDeviceManager
+from pyfibaro.fibaro_info import InfoModel
 from pyfibaro.fibaro_scene import SceneModel
-from pyfibaro.fibaro_state_resolver import FibaroEvent, FibaroStateResolver
-from requests.exceptions import HTTPError
+from pyfibaro.fibaro_state_resolver import FibaroEvent
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.util import slugify
@@ -74,128 +75,47 @@ FIBARO_TYPEMAP = {
 class FibaroController:
     """Initiate Fibaro Controller Class."""
 
-    def __init__(self, config: Mapping[str, Any]) -> None:
+    def __init__(
+        self, fibaro_client: FibaroClient, info: InfoModel, import_plugins: bool
+    ) -> None:
         """Initialize the Fibaro controller."""
+        self._client = fibaro_client
+        self._fibaro_info = info
 
-        # The FibaroClient uses the correct API version automatically
-        self._client = FibaroClient(config[CONF_URL])
-        self._client.set_authentication(config[CONF_USERNAME], config[CONF_PASSWORD])
-
-        # Whether to import devices from plugins
-        self._import_plugins = config[CONF_IMPORT_PLUGINS]
-        self._room_map: dict[int, RoomModel]  # Mapping roomId to room object
+        # The fibaro device manager exposes higher level API to access fibaro devices
+        self._fibaro_device_manager = FibaroDeviceManager(fibaro_client, import_plugins)
+        # Mapping roomId to room object
+        self._room_map = read_rooms(fibaro_client)
         self._device_map: dict[int, DeviceModel]  # Mapping deviceId to device object
         self.fibaro_devices: dict[Platform, list[DeviceModel]] = defaultdict(
             list
         )  # List of devices by entity platform
         # All scenes
-        self._scenes: list[SceneModel] = []
-        self._callbacks: dict[int, list[Any]] = {}  # Update value callbacks by deviceId
-        # Event callbacks by device id
-        self._event_callbacks: dict[int, list[Callable[[FibaroEvent], None]]] = {}
-        self.hub_serial: str  # Unique serial number of the hub
-        self.hub_name: str  # The friendly name of the hub
-        self.hub_model: str
-        self.hub_software_version: str
-        self.hub_api_url: str = config[CONF_URL]
+        self._scenes = self._client.read_scenes()
+        # Unique serial number of the hub
+        self.hub_serial = info.serial_number
         # Device infos by fibaro device id
         self._device_infos: dict[int, DeviceInfo] = {}
-
-    def connect(self) -> None:
-        """Start the communication with the Fibaro controller."""
-
-        # Return value doesn't need to be checked,
-        # it is only relevant when connecting without credentials
-        self._client.connect()
-        info = self._client.read_info()
-        self.hub_serial = info.serial_number
-        self.hub_name = info.hc_name
-        self.hub_model = info.platform
-        self.hub_software_version = info.current_version
-
-        self._room_map = {room.fibaro_id: room for room in self._client.read_rooms()}
         self._read_devices()
-        self._scenes = self._client.read_scenes()
 
-    def connect_with_error_handling(self) -> None:
-        """Translate connect errors to easily differentiate auth and connect failures.
+    def disconnect(self) -> None:
+        """Close push channel."""
+        self._fibaro_device_manager.close()
 
-        When there is a better error handling in the used library this can be improved.
-        """
-        try:
-            self.connect()
-        except HTTPError as http_ex:
-            if http_ex.response.status_code == 403:
-                raise FibaroAuthFailed from http_ex
-
-            raise FibaroConnectFailed from http_ex
-        except Exception as ex:
-            raise FibaroConnectFailed from ex
-
-    def enable_state_handler(self) -> None:
-        """Start StateHandler thread for monitoring updates."""
-        self._client.register_update_handler(self._on_state_change)
-
-    def disable_state_handler(self) -> None:
-        """Stop StateHandler thread used for monitoring updates."""
-        self._client.unregister_update_handler()
-
-    def _on_state_change(self, state: Any) -> None:
-        """Handle change report received from the HomeCenter."""
-        callback_set = set()
-        for change in state.get("changes", []):
-            try:
-                dev_id = change.pop("id")
-                if dev_id not in self._device_map:
-                    continue
-                device = self._device_map[dev_id]
-                for property_name, value in change.items():
-                    if property_name == "log":
-                        if value and value != "transfer OK":
-                            _LOGGER.debug("LOG %s: %s", device.friendly_name, value)
-                        continue
-                    if property_name == "logTemp":
-                        continue
-                    if property_name in device.properties:
-                        device.properties[property_name] = value
-                        _LOGGER.debug(
-                            "<- %s.%s = %s", device.ha_id, property_name, str(value)
-                        )
-                    else:
-                        _LOGGER.warning("%s.%s not found", device.ha_id, property_name)
-                    if dev_id in self._callbacks:
-                        callback_set.add(dev_id)
-            except (ValueError, KeyError):
-                pass
-        for item in callback_set:
-            for callback in self._callbacks[item]:
-                callback()
-
-        resolver = FibaroStateResolver(state)
-        for event in resolver.get_events():
-            # event does not always have a fibaro id, therefore it is
-            # essential that we first check for relevant event type
-            if (
-                event.event_type.lower() == "centralsceneevent"
-                and event.fibaro_id in self._event_callbacks
-            ):
-                for callback in self._event_callbacks[event.fibaro_id]:
-                    callback(event)
-
-    def register(self, device_id: int, callback: Any) -> None:
+    def register(
+        self, device_id: int, callback: Callable[[DeviceModel], None]
+    ) -> Callable[[], None]:
         """Register device with a callback for updates."""
-        device_callbacks = self._callbacks.setdefault(device_id, [])
-        device_callbacks.append(callback)
+        return self._fibaro_device_manager.add_change_listener(device_id, callback)
 
     def register_event(
         self, device_id: int, callback: Callable[[FibaroEvent], None]
-    ) -> None:
+    ) -> Callable[[], None]:
         """Register device with a callback for central scene events.
 
         The callback receives one parameter with the event.
         """
-        device_callbacks = self._event_callbacks.setdefault(device_id, [])
-        device_callbacks.append(callback)
+        return self._fibaro_device_manager.add_event_listener(device_id, callback)
 
     def get_children(self, device_id: int) -> list[DeviceModel]:
         """Get a list of child devices."""
@@ -256,35 +176,18 @@ class FibaroController:
             platform = Platform.LIGHT
         return platform
 
-    def _create_device_info(
-        self, device: DeviceModel, devices: list[DeviceModel]
-    ) -> None:
-        """Create the device info. Unrooted entities are directly shown below the home center."""
+    def _create_device_info(self, main_device: DeviceModel) -> None:
+        """Create the device info for a main device."""
 
-        # The home center is always id 1 (z-wave primary controller)
-        if device.parent_fibaro_id <= 1:
-            return
-
-        master_entity: DeviceModel | None = None
-        if device.parent_fibaro_id == 1:
-            master_entity = device
-        else:
-            for parent in devices:
-                if parent.fibaro_id == device.parent_fibaro_id:
-                    master_entity = parent
-        if master_entity is None:
-            _LOGGER.error("Parent with id %s not found", device.parent_fibaro_id)
-            return
-
-        if "zwaveCompany" in master_entity.properties:
-            manufacturer = master_entity.properties.get("zwaveCompany")
+        if "zwaveCompany" in main_device.properties:
+            manufacturer = main_device.properties.get("zwaveCompany")
         else:
             manufacturer = None
 
-        self._device_infos[master_entity.fibaro_id] = DeviceInfo(
-            identifiers={(DOMAIN, master_entity.fibaro_id)},
+        self._device_infos[main_device.fibaro_id] = DeviceInfo(
+            identifiers={(DOMAIN, main_device.fibaro_id)},
             manufacturer=manufacturer,
-            name=master_entity.name,
+            name=main_device.name,
             via_device=(DOMAIN, self.hub_serial),
         )
 
@@ -302,40 +205,50 @@ class FibaroController:
 
     def get_room_name(self, room_id: int) -> str | None:
         """Get the room name by room id."""
-        assert self._room_map
-        room = self._room_map.get(room_id)
-        return room.name if room else None
+        return self._room_map.get(room_id)
 
     def read_scenes(self) -> list[SceneModel]:
         """Return list of scenes."""
         return self._scenes
 
+    def get_all_devices(self) -> list[DeviceModel]:
+        """Return list of all fibaro devices."""
+        return self._fibaro_device_manager.get_devices()
+
+    def read_fibaro_info(self) -> InfoModel:
+        """Return the general info about the hub."""
+        return self._fibaro_info
+
+    def get_frontend_url(self) -> str:
+        """Return the url to the Fibaro hub web UI."""
+        return self._client.frontend_url()
+
     def _read_devices(self) -> None:
         """Read and process the device list."""
-        devices = self._client.read_devices()
+        devices = self._fibaro_device_manager.get_devices()
+
+        for main_device in find_master_devices(devices):
+            self._create_device_info(main_device)
+
         self._device_map = {}
         last_climate_parent = None
         last_endpoint = None
         for device in devices:
             try:
                 device.fibaro_controller = self
-                if device.room_id == 0:
+                room_name = self.get_room_name(device.room_id)
+                if not room_name:
                     room_name = "Unknown"
-                else:
-                    room_name = self._room_map[device.room_id].name
                 device.room_name = room_name
                 device.friendly_name = f"{room_name} {device.name}"
                 device.ha_id = (
                     f"{slugify(room_name)}_{slugify(device.name)}_{device.fibaro_id}"
                 )
-                if device.enabled and (not device.is_plugin or self._import_plugins):
-                    device.mapped_platform = self._map_device_to_platform(device)
-                else:
-                    device.mapped_platform = None
-                if (platform := device.mapped_platform) is None:
+
+                platform = self._map_device_to_platform(device)
+                if platform is None:
                     continue
                 device.unique_id_str = f"{slugify(self.hub_serial)}.{device.fibaro_id}"
-                self._create_device_info(device, devices)
                 self._device_map[device.fibaro_id] = device
                 _LOGGER.debug(
                     "%s (%s, %s) -> %s %s",
@@ -375,11 +288,17 @@ class FibaroController:
                 pass
 
 
+def connect_fibaro_client(data: Mapping[str, Any]) -> tuple[InfoModel, FibaroClient]:
+    """Connect to the fibaro hub and read some basic data."""
+    client = FibaroClient(data[CONF_URL])
+    info = client.connect_with_credentials(data[CONF_USERNAME], data[CONF_PASSWORD])
+    return (info, client)
+
+
 def init_controller(data: Mapping[str, Any]) -> FibaroController:
-    """Validate the user input allows us to connect to fibaro."""
-    controller = FibaroController(data)
-    controller.connect_with_error_handling()
-    return controller
+    """Connect to the fibaro hub and init the controller."""
+    info, client = connect_fibaro_client(data)
+    return FibaroController(client, info, data[CONF_IMPORT_PLUGINS])
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bool:
@@ -393,27 +312,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bo
         raise ConfigEntryNotReady(
             f"Could not connect to controller at {entry.data[CONF_URL]}"
         ) from connect_ex
-    except FibaroAuthFailed as auth_ex:
+    except FibaroAuthenticationFailed as auth_ex:
         raise ConfigEntryAuthFailed from auth_ex
 
     entry.runtime_data = controller
 
     # register the hub device info separately as the hub has sometimes no entities
+    fibaro_info = controller.read_fibaro_info()
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, controller.hub_serial)},
         serial_number=controller.hub_serial,
-        manufacturer="Fibaro",
-        name=controller.hub_name,
-        model=controller.hub_model,
-        sw_version=controller.hub_software_version,
-        configuration_url=controller.hub_api_url.removesuffix("/api/"),
+        manufacturer=fibaro_info.manufacturer_name,
+        name=fibaro_info.hc_name,
+        model=fibaro_info.model_name,
+        sw_version=fibaro_info.current_version,
+        configuration_url=controller.get_frontend_url(),
+        connections={(dr.CONNECTION_NETWORK_MAC, fibaro_info.mac_address)},
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    controller.enable_state_handler()
 
     return True
 
@@ -423,8 +342,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> b
     _LOGGER.debug("Shutting down Fibaro connection")
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    entry.runtime_data.disable_state_handler()
-
+    entry.runtime_data.disconnect()
     return unload_ok
 
 
@@ -443,11 +361,3 @@ async def async_remove_config_entry_device(
             return False
 
     return True
-
-
-class FibaroConnectFailed(HomeAssistantError):
-    """Error to indicate we cannot connect to fibaro home center."""
-
-
-class FibaroAuthFailed(HomeAssistantError):
-    """Error to indicate that authentication failed on fibaro home center."""

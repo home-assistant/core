@@ -4,11 +4,18 @@ from typing import Any
 from unittest.mock import patch
 
 from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
+import pytest
 
-from homeassistant.components.esphome import CONF_NOISE_PSK, coordinator, dashboard
+from homeassistant.components.esphome import (
+    CONF_NOISE_PSK,
+    DOMAIN,
+    coordinator,
+    dashboard,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from . import VALID_NOISE_PSK
 
@@ -33,7 +40,6 @@ async def test_dashboard_storage(
 
 async def test_restore_dashboard_storage(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
     """Restore dashboard url and slug from storage."""
@@ -46,14 +52,13 @@ async def test_restore_dashboard_storage(
     with patch.object(
         dashboard, "async_get_or_create_dashboard_manager"
     ) as mock_get_or_create:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert mock_get_or_create.call_count == 1
 
 
 async def test_restore_dashboard_storage_end_to_end(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
     """Restore dashboard url and slug from storage."""
@@ -63,28 +68,61 @@ async def test_restore_dashboard_storage_end_to_end(
         "key": dashboard.STORAGE_KEY,
         "data": {"info": {"addon_slug": "test-slug", "host": "new-host", "port": 6052}},
     }
-    with patch(
-        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI"
-    ) as mock_dashboard_api:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with (
+        patch(
+            "homeassistant.components.esphome.dashboard.is_hassio", return_value=False
+        ),
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI"
+        ) as mock_dashboard_api,
+    ):
+        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-        assert mock_config_entry.state is ConfigEntryState.LOADED
         assert mock_dashboard_api.mock_calls[0][1][0] == "http://new-host:6052"
+
+
+@pytest.mark.usefixtures("hassio_stubs")
+async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Restore dashboard restore is skipped if the addon is uninstalled."""
+    hass_storage[dashboard.STORAGE_KEY] = {
+        "version": dashboard.STORAGE_VERSION,
+        "minor_version": dashboard.STORAGE_VERSION,
+        "key": dashboard.STORAGE_KEY,
+        "data": {"info": {"addon_slug": "test-slug", "host": "new-host", "port": 6052}},
+    }
+    with (
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI"
+        ) as mock_dashboard_api,
+        patch(
+            "homeassistant.components.esphome.dashboard.is_hassio", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hassio.get_addons_info",
+            return_value={},
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert "test-slug is no longer installed" in caplog.text
+        assert not mock_dashboard_api.called
 
 
 async def test_setup_dashboard_fails(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test that nothing is stored on failed dashboard setup when there was no dashboard before."""
     with patch.object(
         coordinator.ESPHomeDashboardAPI, "get_devices", side_effect=TimeoutError
     ) as mock_get_devices:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
-        assert mock_config_entry.state is ConfigEntryState.LOADED
         assert mock_get_devices.call_count == 1
 
     # The dashboard addon might recover later so we still
@@ -155,7 +193,7 @@ async def test_new_dashboard_fix_reauth(
     """Test config entries waiting for reauth are triggered."""
     mock_client.device_info.side_effect = (
         InvalidAuthAPIError,
-        DeviceInfo(uses_password=False, name="test"),
+        DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:AA"),
     )
 
     with patch(

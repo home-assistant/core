@@ -4,19 +4,15 @@ from __future__ import annotations
 
 from nyt_games import NYTGamesClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .coordinator import NYTGamesCoordinator
+from .coordinator import NYTGamesConfigEntry, NYTGamesCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
-
-
-type NYTGamesConfigEntry = ConfigEntry[NYTGamesCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NYTGamesConfigEntry) -> bool:
@@ -26,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NYTGamesConfigEntry) -> 
         entry.data[CONF_TOKEN], session=async_create_clientsession(hass)
     )
 
-    coordinator = NYTGamesCoordinator(hass, client)
+    coordinator = NYTGamesCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
 

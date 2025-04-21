@@ -961,7 +961,7 @@ async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
             side_effect=service._load_services_files,
         ) as proxy_load_services_files,
         patch(
-            "homeassistant.util.yaml.loader.load_yaml",
+            "annotatedyaml.loader.load_yaml",
             side_effect=load_yaml,
         ) as mock_load_yaml,
     ):
@@ -1033,7 +1033,7 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
             side_effect=service._load_services_files,
         ) as proxy_load_services_files,
         patch(
-            "homeassistant.util.yaml.loader.load_yaml",
+            "annotatedyaml.loader.load_yaml",
             side_effect=load_yaml,
         ) as mock_load_yaml,
     ):

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
@@ -37,6 +37,9 @@ from .coordinator import (
 from .entity import FritzBoxBaseEntity, FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
+
+# Set a sane value to avoid too many updates
+PARALLEL_UPDATES = 5
 
 
 async def _async_deflection_entities_list(
@@ -207,8 +210,9 @@ async def async_all_entities_list(
     local_ip: str,
 ) -> list[Entity]:
     """Get a list of all entities."""
-
     if avm_wrapper.mesh_role == MeshRoles.SLAVE:
+        if not avm_wrapper.mesh_wifi_uplink:
+            return [*await _async_wifi_entities_list(avm_wrapper, device_friendly_name)]
         return []
 
     return [
@@ -222,7 +226,7 @@ async def async_all_entities_list(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up switches")
@@ -510,16 +514,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._name = f"{device.hostname} Internet Access"
         self._attr_unique_id = f"{self._mac}_internet_access"
         self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            default_manufacturer="AVM",
-            default_model="FRITZ!Box Tracked device",
-            default_name=device.hostname,
-            via_device=(
-                DOMAIN,
-                avm_wrapper.unique_id,
-            ),
-        )
 
     @property
     def is_on(self) -> bool | None:
@@ -565,6 +559,9 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
 
         self._attributes = {}
         self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_entity_registry_enabled_default = (
+            avm_wrapper.mesh_role is not MeshRoles.SLAVE
+        )
         self._network_num = network_num
 
         switch_info = SwitchInfo(

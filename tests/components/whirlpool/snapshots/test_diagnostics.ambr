@@ -2,23 +2,31 @@
 # name: test_entry_diagnostics
   dict({
     'appliances': dict({
-      'Washer_dryers': dict({
-        'dryer': dict({
-          'NAME': 'dryer',
-          'SAID': '**REDACTED**',
-        }),
-        'washer': dict({
-          'NAME': 'washer',
-          'SAID': '**REDACTED**',
-        }),
-      }),
       'aircons': dict({
-        'TestZone': dict({
-          'NAME': 'TestZone',
-          'SAID': '**REDACTED**',
+        'Aircon said1': dict({
+          'category': 'aircon',
+          'data_model': 'aircon_model',
+          'model_number': '12345',
+        }),
+        'Aircon said2': dict({
+          'category': 'aircon',
+          'data_model': 'aircon_model',
+          'model_number': '12345',
         }),
       }),
       'ovens': dict({
+      }),
+      'washer_dryers': dict({
+        'Dryer': dict({
+          'category': 'washer_dryer',
+          'data_model': 'dryer',
+          'model_number': '12345',
+        }),
+        'Washer': dict({
+          'category': 'washer_dryer',
+          'data_model': 'washer',
+          'model_number': '12345',
+        }),
       }),
     }),
     'config_entry': dict({
@@ -38,6 +46,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': None,
       'version': 1,

@@ -3,11 +3,11 @@
 from collections.abc import Iterator
 from datetime import datetime, timedelta
 
-from pylamarzocco.models import LaMarzoccoWakeUpSleepEntry
+from pylamarzocco.const import WeekDay
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
@@ -18,28 +18,30 @@ PARALLEL_UPDATES = 0
 
 CALENDAR_KEY = "auto_on_off_schedule"
 
-DAY_OF_WEEK = [
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-    "sunday",
-]
+WEEKDAY_TO_ENUM = {
+    0: WeekDay.MONDAY,
+    1: WeekDay.TUESDAY,
+    2: WeekDay.WEDNESDAY,
+    3: WeekDay.THURSDAY,
+    4: WeekDay.FRIDAY,
+    5: WeekDay.SATURDAY,
+    6: WeekDay.SUNDAY,
+}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LaMarzoccoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch entities and services."""
 
-    coordinator = entry.runtime_data.config_coordinator
+    coordinator = entry.runtime_data.schedule_coordinator
+
     async_add_entities(
-        LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY, wake_up_sleep_entry)
-        for wake_up_sleep_entry in coordinator.device.config.wake_up_sleep_entries.values()
+        LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY, schedule.identifier)
+        for schedule in coordinator.device.schedule.smart_wake_up_sleep.schedules
+        if schedule.identifier
     )
 
 
@@ -52,12 +54,12 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         self,
         coordinator: LaMarzoccoUpdateCoordinator,
         key: str,
-        wake_up_sleep_entry: LaMarzoccoWakeUpSleepEntry,
+        identifier: str,
     ) -> None:
         """Set up calendar."""
-        super().__init__(coordinator, f"{key}_{wake_up_sleep_entry.entry_id}")
-        self.wake_up_sleep_entry = wake_up_sleep_entry
-        self._attr_translation_placeholders = {"id": wake_up_sleep_entry.entry_id}
+        super().__init__(coordinator, f"{key}_{identifier}")
+        self._identifier = identifier
+        self._attr_translation_placeholders = {"id": identifier}
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -112,24 +114,31 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
     def _async_get_calendar_event(self, date: datetime) -> CalendarEvent | None:
         """Return calendar event for a given weekday."""
 
+        schedule_entry = (
+            self.coordinator.device.schedule.smart_wake_up_sleep.schedules_dict[
+                self._identifier
+            ]
+        )
         # check first if auto/on off is turned on in general
-        if not self.wake_up_sleep_entry.enabled:
+        if not schedule_entry.enabled:
             return None
 
         # parse the schedule for the day
 
-        if DAY_OF_WEEK[date.weekday()] not in self.wake_up_sleep_entry.days:
+        if WEEKDAY_TO_ENUM[date.weekday()] not in schedule_entry.days:
             return None
 
-        hour_on, minute_on = self.wake_up_sleep_entry.time_on.split(":")
-        hour_off, minute_off = self.wake_up_sleep_entry.time_off.split(":")
+        hour_on = schedule_entry.on_time_minutes // 60
+        minute_on = schedule_entry.on_time_minutes % 60
+        hour_off = schedule_entry.off_time_minutes // 60
+        minute_off = schedule_entry.off_time_minutes % 60
 
-        # if off time is 24:00, then it means the off time is the next day
-        # only for legacy schedules
         day_offset = 0
-        if hour_off == "24":
+        if hour_off == 24:
+            # if the machine is scheduled to turn off at midnight, we need to
+            # set the end date to the next day
             day_offset = 1
-            hour_off = "0"
+            hour_off = 0
 
         end_date = date.replace(
             hour=int(hour_off),

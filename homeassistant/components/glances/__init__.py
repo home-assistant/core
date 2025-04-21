@@ -10,7 +10,6 @@ from glances_api.exceptions import (
     GlancesApiNoDataAvailable,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -29,14 +28,12 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .coordinator import GlancesDataUpdateCoordinator
+from .coordinator import GlancesConfigEntry, GlancesDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 
 _LOGGER = logging.getLogger(__name__)
-
-type GlancesConfigEntry = ConfigEntry[GlancesDataUpdateCoordinator]
 
 
 async def async_setup_entry(

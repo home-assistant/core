@@ -106,10 +106,10 @@
           "cutting_drive_motor_2_defect": "Cutting drive motor 2 defect",
           "cutting_drive_motor_3_defect": "Cutting drive motor 3 defect",
           "cutting_height_blocked": "Cutting height blocked",
-          "cutting_height_problem": "Cutting height problem",
           "cutting_height_problem_curr": "Cutting height problem, curr",
           "cutting_height_problem_dir": "Cutting height problem, dir",
           "cutting_height_problem_drive": "Cutting height problem, drive",
+          "cutting_height_problem": "Cutting height problem",
           "cutting_motor_problem": "Cutting motor problem",
           "cutting_stopped_slope_too_steep": "Cutting stopped - slope too steep",
           "cutting_system_blocked": "Cutting system blocked",
@@ -120,8 +120,8 @@
           "docking_sensor_defect": "Docking sensor defect",
           "electronic_problem": "Electronic problem",
           "empty_battery": "Empty battery",
-          "error": "Error",
           "error_at_power_up": "Error at power up",
+          "error": "[%key:common::state::error%]",
           "fatal_error": "Fatal error",
           "folding_cutting_deck_sensor_defect": "Folding cutting deck sensor defect",
           "folding_sensor_activated": "Folding sensor activated",
@@ -159,6 +159,7 @@
           "no_loop_signal": "No loop signal",
           "no_power_in_charging_station": "No power in charging station",
           "no_response_from_charger": "No response from charger",
+          "off": "[%key:common::state::off%]",
           "outside_working_area": "Outside working area",
           "poor_signal_quality": "Poor signal quality",
           "reference_station_communication_problem": "Reference station communication problem",
@@ -172,6 +173,7 @@
           "slope_too_steep": "Slope too steep",
           "sms_could_not_be_sent": "SMS could not be sent",
           "stop_button_problem": "STOP button problem",
+          "stopped": "[%key:common::state::stopped%]",
           "stuck_in_charging_station": "Stuck in charging station",
           "switch_cord_problem": "Switch cord problem",
           "temporary_battery_problem": "Temporary battery problem",
@@ -187,6 +189,8 @@
           "unexpected_cutting_height_adj": "Unexpected cutting height adjustment",
           "unexpected_error": "Unexpected error",
           "upside_down": "Upside down",
+          "wait_power_up": "Wait power up",
+          "wait_updating": "Wait updating",
           "weak_gps_signal": "Weak GPS signal",
           "wheel_drive_problem_left": "Left wheel drive problem",
           "wheel_drive_problem_rear_left": "Rear left wheel drive problem",
@@ -220,6 +224,9 @@
       },
       "cutting_blade_usage_time": {
         "name": "Cutting blade usage time"
+      },
+      "downtime": {
+        "name": "Downtime"
       },
       "restricted_reason": {
         "name": "Restricted reason",
@@ -262,6 +269,9 @@
           "home": "Home",
           "demo": "Demo"
         }
+      },
+      "uptime": {
+        "name": "Uptime"
       },
       "work_area": {
         "name": "Work area",

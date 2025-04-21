@@ -47,9 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except TimeoutError as error:
         raise ConfigEntryNotReady from error
     data_coordinator = MillDataUpdateCoordinator(
-        hass,
-        mill_data_connection=mill_data_connection,
-        update_interval=update_interval,
+        hass, entry, mill_data_connection, update_interval
     )
 
     await data_coordinator.async_config_entry_first_refresh()

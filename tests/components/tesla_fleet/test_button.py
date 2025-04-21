@@ -56,7 +56,7 @@ async def test_press(
     await setup_platform(hass, normal_config_entry, [Platform.BUTTON])
 
     with patch(
-        f"homeassistant.components.tesla_fleet.VehicleSpecific.{func}",
+        f"tesla_fleet_api.tesla.VehicleFleet.{func}",
         return_value=COMMAND_OK,
     ) as command:
         await hass.services.async_call(
@@ -85,7 +85,7 @@ async def test_press_signing_error(
     with (
         patch("homeassistant.components.tesla_fleet.TeslaFleetApi.get_private_key"),
         patch(
-            "homeassistant.components.tesla_fleet.VehicleSigned.flash_lights",
+            "tesla_fleet_api.tesla.VehicleSigned.flash_lights",
             side_effect=NotOnWhitelistFault,
         ),
         pytest.raises(HomeAssistantError) as error,

@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import EcoforestConfigEntry
@@ -132,7 +132,7 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
     ),
     EcoforestSensorEntityDescription(
         key="convecto_air_flow",
-        translation_key="convecto_air_flow",
+        translation_key="convector_air_flow",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.convecto_air_flow,
@@ -143,7 +143,7 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EcoforestConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ecoforest sensor platform."""
     coordinator = entry.runtime_data

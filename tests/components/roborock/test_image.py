@@ -3,7 +3,6 @@
 import copy
 from datetime import timedelta
 from http import HTTPStatus
-import io
 from unittest.mock import patch
 
 from PIL import Image
@@ -12,6 +11,7 @@ from roborock import RoborockException
 from vacuum_map_parser_base.map_data import ImageConfig, ImageData
 
 from homeassistant.components.roborock import DOMAIN
+from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -63,20 +63,26 @@ async def test_floorplan_image(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
-            return_value=new_map_data,
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
+            return_value=MAP_DATA,
         ) as parse_map,
     ):
+        # This should call parse_map twice as the both devices are in cleaning.
         async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+        assert resp.status == HTTPStatus.OK
+        resp = await client.get("/api/image_proxy/image.roborock_s7_2_upstairs")
+        assert resp.status == HTTPStatus.OK
+        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_downstairs")
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body is not None
-    assert parse_map.call_count == 1
+
+    assert parse_map.call_count == 2
 
 
 async def test_floorplan_image_failed_parse(
@@ -92,10 +98,11 @@ async def test_floorplan_image_failed_parse(
     # Copy the device prop so we don't override it
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = 1
+    previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
     # Update image, but get none for parse image.
     with (
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
         patch(
@@ -103,45 +110,16 @@ async def test_floorplan_image_failed_parse(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
         ),
     ):
         async_fire_time_changed(hass, now)
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    assert not resp.ok
-
-
-async def test_load_stored_image(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    setup_entry: MockConfigEntry,
-) -> None:
-    """Test that we correctly load an image from storage when it already exists."""
-    img_byte_arr = io.BytesIO()
-    MAP_DATA.image.data.save(img_byte_arr, format="PNG")
-    img_bytes = img_byte_arr.getvalue()
-
-    # Load the image on demand, which should queue it to be cached on disk
-    client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    assert resp.status == HTTPStatus.OK
-
-    with patch(
-        "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
-    ) as parse_map:
-        # Reload the config entry so that the map is saved in storage and entities exist.
-        await hass.config_entries.async_reload(setup_entry.entry_id)
-        await hass.async_block_till_done()
-        assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
-        client = await hass_client()
-        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-        # Test that we can get the image and it correctly serialized and unserialized.
-        assert resp.status == HTTPStatus.OK
-        body = await resp.read()
-        assert body == img_bytes
-
-        # Ensure that we never tried to update the map, and only used the cached image.
-        assert parse_map.call_count == 0
+    # The map should load fine from the coordinator, but it should not update the
+    # last_updated timestamp.
+    assert resp.ok
+    assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state
 
 
 async def test_fail_to_save_image(
@@ -182,9 +160,6 @@ async def test_fail_to_load_image(
     """Test that we gracefully handle failing to load an image."""
     with (
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
-        ) as parse_map,
-        patch(
             "homeassistant.components.roborock.roborock_storage.Path.exists",
             return_value=True,
         ),
@@ -192,13 +167,14 @@ async def test_fail_to_load_image(
             "homeassistant.components.roborock.roborock_storage.Path.read_bytes",
             side_effect=OSError,
         ) as read_bytes,
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockDataUpdateCoordinator.refresh_coordinator_map"
+        ),
     ):
         # Reload the config entry so that the map is saved in storage and entities exist.
         await hass.config_entries.async_reload(setup_entry.entry_id)
         await hass.async_block_till_done()
         assert read_bytes.call_count == 4
-        # Ensure that we never updated the map manually since we couldn't load it.
-        assert parse_map.call_count == 0
     assert "Unable to read map file" in caplog.text
 
 
@@ -212,7 +188,7 @@ async def test_fail_parse_on_startup(
     map_data = copy.deepcopy(MAP_DATA)
     map_data.image = None
     with patch(
-        "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+        "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
         return_value=map_data,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -258,9 +234,10 @@ async def test_fail_updating_image(
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = 1
     # Update image, but get none for parse image.
+    previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
     with (
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
         patch(
@@ -268,7 +245,8 @@ async def test_fail_updating_image(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
         ),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
@@ -277,4 +255,91 @@ async def test_fail_updating_image(
     ):
         async_fire_time_changed(hass, now)
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    assert not resp.ok
+    # The map should load fine from the coordinator, but it should not update the
+    # last_updated timestamp.
+    assert resp.ok
+    assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state
+
+
+async def test_index_error_map(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that we handle failing getting the image after it has already been setup with a indexerror."""
+    client = await hass_client()
+    now = dt_util.utcnow() + timedelta(seconds=91)
+    # Copy the device prop so we don't override it
+    prop = copy.deepcopy(PROP)
+    prop.status.in_cleaning = 1
+    previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
+    # Update image, but get IndexError for image.
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
+            side_effect=IndexError,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
+            return_value=prop,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
+        ),
+    ):
+        async_fire_time_changed(hass, now)
+        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    # The map should load fine from the coordinator, but it should not update the
+    # last_updated timestamp.
+    assert resp.ok
+    assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state
+
+
+async def test_map_status_change(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test floor plan map image is correctly updated on status change."""
+    assert len(hass.states.async_all("image")) == 4
+
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+    old_body = await resp.read()
+    assert old_body[0:4] == b"\x89PNG"
+
+    # Call a second time. This interval does not directly trigger a map update, but does
+    # trigger a status update which detects the state has changed and uddates the map
+    now = dt_util.utcnow() + V1_LOCAL_NOT_CLEANING_INTERVAL
+
+    # Copy the device prop so we don't override it
+    prop = copy.deepcopy(PROP)
+    prop.status.state_name = "testing"
+    new_map_data = copy.deepcopy(MAP_DATA)
+    new_map_data.image = ImageData(
+        100, 10, 10, 10, 10, ImageConfig(), Image.new("RGB", (2, 2)), lambda p: p
+    )
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
+            return_value=prop,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
+            return_value=new_map_data,
+        ),
+    ):
+        async_fire_time_changed(hass, now)
+        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+        assert resp.status == HTTPStatus.OK
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body is not None
+    assert body != old_body

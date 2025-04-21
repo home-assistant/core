@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from copy import deepcopy
-from itertools import chain
 import re
 from typing import cast
 
@@ -22,7 +21,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RESOURCE,
     CONF_SENSORS,
-    CONF_SOURCE,
     CONF_SWITCHES,
 )
 from homeassistant.core import HomeAssistant
@@ -30,23 +28,14 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    BINSENSOR_PORTS,
     CONF_CLIMATES,
     CONF_HARDWARE_SERIAL,
     CONF_HARDWARE_TYPE,
-    CONF_OUTPUT,
     CONF_SCENES,
     CONF_SOFTWARE_SERIAL,
     CONNECTION,
     DEVICE_CONNECTIONS,
     DOMAIN,
-    LED_PORTS,
-    LOGICOP_PORTS,
-    OUTPUT_PORTS,
-    S0_INPUTS,
-    SETPOINTS,
-    THRESHOLDS,
-    VARIABLES,
 )
 
 # typing
@@ -93,31 +82,6 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
         return f"{domain_data['source']}.{domain_data['setpoint']}"
     if domain_name == "scene":
         return f"{domain_data['register']}.{domain_data['scene']}"
-    raise ValueError("Unknown domain")
-
-
-def get_device_model(domain_name: str, domain_data: ConfigType) -> str:
-    """Return the model for the specified domain_data."""
-    if domain_name in ("switch", "light"):
-        return "Output" if domain_data[CONF_OUTPUT] in OUTPUT_PORTS else "Relay"
-    if domain_name in ("binary_sensor", "sensor"):
-        if domain_data[CONF_SOURCE] in BINSENSOR_PORTS:
-            return "Binary Sensor"
-        if domain_data[CONF_SOURCE] in chain(
-            VARIABLES, SETPOINTS, THRESHOLDS, S0_INPUTS
-        ):
-            return "Variable"
-        if domain_data[CONF_SOURCE] in LED_PORTS:
-            return "Led"
-        if domain_data[CONF_SOURCE] in LOGICOP_PORTS:
-            return "Logical Operation"
-        return "Key"
-    if domain_name == "cover":
-        return "Motor"
-    if domain_name == "climate":
-        return "Regulator"
-    if domain_name == "scene":
-        return "Scene"
     raise ValueError("Unknown domain")
 
 
@@ -169,13 +133,6 @@ def purge_device_registry(
 ) -> None:
     """Remove orphans from device registry which are not in entry data."""
     device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
-    # Find all devices that are referenced in the entity registry.
-    references_entities = {
-        entry.device_id
-        for entry in entity_registry.entities.get_entries_for_config_entry_id(entry_id)
-    }
 
     # Find device that references the host.
     references_host = set()
@@ -198,7 +155,6 @@ def purge_device_registry(
             entry.id
             for entry in dr.async_entries_for_config_entry(device_registry, entry_id)
         }
-        - references_entities
         - references_host
         - references_entry_data
     )

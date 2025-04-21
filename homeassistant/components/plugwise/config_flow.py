@@ -59,7 +59,6 @@ def smile_user_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
         schema = schema.extend(
             {
                 vol.Required(CONF_HOST): str,
-                vol.Required(CONF_PASSWORD): str,
                 vol.Required(CONF_USERNAME, default=SMILE): vol.In(
                     {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
                 ),

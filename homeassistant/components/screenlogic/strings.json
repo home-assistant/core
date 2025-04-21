@@ -3,9 +3,9 @@
     "service_config_entry_name": "Config entry",
     "service_config_entry_description": "The config entry to use for this action.",
     "climate_preset_solar": "Solar",
-    "climate_preset_solar_preferred": "Solar Preferred",
+    "climate_preset_solar_preferred": "Solar preferred",
     "climate_preset_heater": "Heater",
-    "climate_preset_dont_change": "Don't Change"
+    "climate_preset_dont_change": "Don't change"
   },
   "config": {
     "flow_title": "{name}",
@@ -15,7 +15,7 @@
     "step": {
       "gateway_entry": {
         "title": "ScreenLogic",
-        "description": "Enter your ScreenLogic Gateway information.",
+        "description": "Enter your ScreenLogic gateway information.",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]"
@@ -46,7 +46,7 @@
   },
   "services": {
     "set_color_mode": {
-      "name": "Set Color Mode",
+      "name": "Set color mode",
       "description": "Sets the color mode for all color-capable lights attached to this ScreenLogic gateway.",
       "fields": {
         "config_entry": {
@@ -54,13 +54,13 @@
           "description": "[%key:component::screenlogic::common::service_config_entry_description%]"
         },
         "color_mode": {
-          "name": "Color Mode",
+          "name": "Color mode",
           "description": "The ScreenLogic color mode to set."
         }
       }
     },
     "start_super_chlorination": {
-      "name": "Start Super Chlorination",
+      "name": "Start super chlorination",
       "description": "Begins super chlorination, running for the specified period or 24 hours if none is specified.",
       "fields": {
         "config_entry": {
@@ -68,13 +68,13 @@
           "description": "[%key:component::screenlogic::common::service_config_entry_description%]"
         },
         "runtime": {
-          "name": "Run Time",
+          "name": "Run time",
           "description": "Number of hours for super chlorination to run."
         }
       }
     },
     "stop_super_chlorination": {
-      "name": "Stop Super Chlorination",
+      "name": "Stop super chlorination",
       "description": "Stops super chlorination.",
       "fields": {
         "config_entry": {

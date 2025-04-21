@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ElmaxConfigEntry
 from .entity import ElmaxEntity
@@ -18,7 +18,7 @@ from .entity import ElmaxEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ElmaxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Elmax sensor platform."""
     coordinator = config_entry.runtime_data

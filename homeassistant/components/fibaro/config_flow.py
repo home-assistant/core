@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from pyfibaro.fibaro_client import FibaroAuthenticationFailed, FibaroConnectFailed
 from slugify import slugify
 import voluptuous as vol
 
@@ -13,7 +14,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import FibaroAuthFailed, FibaroConnectFailed, init_controller
+from . import connect_fibaro_client
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,16 +34,16 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    controller = await hass.async_add_executor_job(init_controller, data)
+    info, _ = await hass.async_add_executor_job(connect_fibaro_client, data)
 
     _LOGGER.debug(
         "Successfully connected to fibaro home center %s with name %s",
-        controller.hub_serial,
-        controller.hub_name,
+        info.serial_number,
+        info.hc_name,
     )
     return {
-        "serial_number": slugify(controller.hub_serial),
-        "name": controller.hub_name,
+        "serial_number": slugify(info.serial_number),
+        "name": info.hc_name,
     }
 
 
@@ -75,7 +76,7 @@ class FibaroConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await _validate_input(self.hass, user_input)
             except FibaroConnectFailed:
                 errors["base"] = "cannot_connect"
-            except FibaroAuthFailed:
+            except FibaroAuthenticationFailed:
                 errors["base"] = "invalid_auth"
             else:
                 await self.async_set_unique_id(info["serial_number"])
@@ -106,7 +107,7 @@ class FibaroConfigFlow(ConfigFlow, domain=DOMAIN):
                 await _validate_input(self.hass, new_data)
             except FibaroConnectFailed:
                 errors["base"] = "cannot_connect"
-            except FibaroAuthFailed:
+            except FibaroAuthenticationFailed:
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_update_reload_and_abort(

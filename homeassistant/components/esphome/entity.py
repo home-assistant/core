@@ -28,6 +28,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import DOMAIN
+
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
@@ -167,7 +169,12 @@ def convert_api_error_ha_error[**_P, _R, _EntityT: EsphomeEntity[Any, Any]](
             return await func(self, *args, **kwargs)
         except APIConnectionError as error:
             raise HomeAssistantError(
-                f"Error communicating with device: {error}"
+                translation_domain=DOMAIN,
+                translation_key="error_communicating_with_device",
+                translation_placeholders={
+                    "device_name": self._device_info.name,
+                    "error": str(error),
+                },
             ) from error
 
     return handler
@@ -191,9 +198,11 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
     _static_info: _InfoT
     _state: _StateT
     _has_state: bool
+    device_entry: dr.DeviceEntry
 
     def __init__(
         self,
@@ -215,25 +224,16 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
-        #
-        # If `friendly_name` is set, we use the Friendly naming rules, if
-        # `friendly_name` is not set we make an exception to the naming rules for
-        # backwards compatibility and use the Legacy naming rules.
-        #
-        # Friendly naming
-        # - Friendly name is prepended to entity names
-        # - Device Name is prepended to entity ids
-        # - Entity id is constructed from device name and object id
-        #
-        # Legacy naming
-        # - Device name is not prepended to entity names
-        # - Device name is not prepended to entity ids
-        # - Entity id is constructed from entity name
-        #
-        if not device_info.friendly_name:
-            return
-        self._attr_has_entity_name = True
-        self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
+        if entity_info.name:
+            self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
+        else:
+            # https://github.com/home-assistant/core/issues/132532
+            # If name is not set, ESPHome will use the sanitized friendly name
+            # as the name, however we want to use the original object_id
+            # as the entity_id before it is sanitized since the sanitizer
+            # is not utf-8 aware. In this case, its always going to be
+            # an empty string so we drop the object_id.
+            self.entity_id = f"{domain}.{device_info.name}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -269,7 +269,12 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._static_info = static_info
         self._attr_unique_id = build_unique_id(device_info.mac_address, static_info)
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
-        self._attr_name = static_info.name
+        # https://github.com/home-assistant/core/issues/132532
+        # If the name is "", we need to set it to None since otherwise
+        # the friendly_name will be "{friendly_name} " with a trailing
+        # space. ESPHome uses protobuf under the hood, and an empty field
+        # gets a default value of "".
+        self._attr_name = static_info.name if static_info.name else None
         if entity_category := static_info.entity_category:
             self._attr_entity_category = ENTITY_CATEGORIES.from_esphome(entity_category)
         else:

@@ -6,17 +6,14 @@ import asyncio
 
 from pytouchlinesl import TouchlineSL
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-from .coordinator import TouchlineSLModuleCoordinator
+from .coordinator import TouchlineSLConfigEntry, TouchlineSLModuleCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
-
-type TouchlineSLConfigEntry = ConfigEntry[list[TouchlineSLModuleCoordinator]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) -> bool:
@@ -26,7 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) 
     )
 
     coordinators: list[TouchlineSLModuleCoordinator] = [
-        TouchlineSLModuleCoordinator(hass, module) for module in await account.modules()
+        TouchlineSLModuleCoordinator(hass, entry, module)
+        for module in await account.modules()
     ]
 
     await asyncio.gather(

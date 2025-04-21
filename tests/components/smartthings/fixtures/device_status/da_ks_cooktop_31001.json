@@ -1,0 +1,508 @@
+{
+  "components": {
+    "burner-02": {
+      "samsungce.surfaceResidualHeat": {
+        "surfaceResidualHeat": {
+          "value": "normal",
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        }
+      },
+      "samsungce.cooktopHeatingPower": {
+        "manualLevel": {
+          "value": 0,
+          "timestamp": "2025-03-26T05:57:23.203Z"
+        },
+        "heatingMode": {
+          "value": "manual",
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        },
+        "manualLevelMin": {
+          "value": 0,
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        },
+        "supportedHeatingModes": {
+          "value": ["manual", "boost", "keepWarm"],
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        },
+        "manualLevelMax": {
+          "value": 15,
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        }
+      },
+      "samsungce.countDownTimer": {
+        "startValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        },
+        "currentValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        },
+        "status": {
+          "value": "idle",
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        }
+      }
+    },
+    "burner-01": {
+      "samsungce.surfaceResidualHeat": {
+        "surfaceResidualHeat": {
+          "value": "normal",
+          "timestamp": "2025-03-25T18:18:28.518Z"
+        }
+      },
+      "samsungce.cooktopHeatingPower": {
+        "manualLevel": {
+          "value": 0,
+          "timestamp": "2025-03-26T05:57:23.203Z"
+        },
+        "heatingMode": {
+          "value": "manual",
+          "timestamp": "2025-03-25T18:18:28.518Z"
+        },
+        "manualLevelMin": {
+          "value": 0,
+          "timestamp": "2025-03-25T18:18:28.518Z"
+        },
+        "supportedHeatingModes": {
+          "value": ["manual", "boost", "keepWarm"],
+          "timestamp": "2025-03-25T18:18:28.518Z"
+        },
+        "manualLevelMax": {
+          "value": 15,
+          "timestamp": "2025-03-25T18:18:28.518Z"
+        }
+      },
+      "samsungce.countDownTimer": {
+        "startValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.518Z"
+        },
+        "currentValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.518Z"
+        },
+        "status": {
+          "value": "idle",
+          "timestamp": "2025-03-25T18:18:28.518Z"
+        }
+      }
+    },
+    "main": {
+      "custom.disabledComponents": {
+        "disabledComponents": {
+          "value": ["burner-6"],
+          "timestamp": "2025-03-25T18:18:28.464Z"
+        }
+      },
+      "custom.userNotification": {
+        "message": {
+          "value": null
+        }
+      },
+      "samsungce.remoteManagementData": {
+        "reportRawData": {
+          "value": "AgUBASCgAwAACaEDAAAM4AQAAAAA4QHwAw==",
+          "timestamp": "2025-03-26T07:27:58.282Z"
+        },
+        "version": {
+          "value": "CT-31.0001",
+          "timestamp": "2025-03-25T18:18:28.476Z"
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": "5828",
+          "timestamp": "2025-03-25T18:18:28.476Z"
+        },
+        "modelName": {
+          "value": "NZ64B5046GK",
+          "timestamp": "2025-03-25T18:18:28.476Z"
+        },
+        "serialNumber": {
+          "value": "B8C878DX900290H",
+          "timestamp": "2025-03-25T18:18:28.476Z"
+        },
+        "serialNumberExtra": {
+          "value": "N/A",
+          "timestamp": "2025-03-25T18:18:28.476Z"
+        },
+        "modelClassificationCode": {
+          "value": "50000204001611000E00000000000000",
+          "timestamp": "2025-03-25T18:18:28.476Z"
+        },
+        "description": {
+          "value": "N/A",
+          "timestamp": "2025-03-25T18:18:28.476Z"
+        },
+        "releaseYear": {
+          "value": null
+        },
+        "binaryId": {
+          "value": "TP2X_DA-KS-COOKTOP-31001",
+          "timestamp": "2025-03-25T18:18:28.476Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-03-26T07:27:58.478Z"
+        }
+      },
+      "samsungce.errorAndAlarmState": {
+        "events": {
+          "value": [],
+          "timestamp": "2025-03-25T18:18:28.476Z"
+        }
+      },
+      "samsungce.cooktopFlexZone": {
+        "flexZones": {
+          "value": [],
+          "timestamp": "2025-03-26T05:57:23.671Z"
+        }
+      },
+      "samsungce.softwareVersion": {
+        "versions": {
+          "value": [
+            {
+              "id": "Wifi",
+              "swType": "Wifi-Application",
+              "versionNumber": "80001A220811",
+              "description": "Aug 11 2022 08:38:36, Wifi:ws029_030, STDK : 1.7.4)"
+            },
+            {
+              "id": "Micom",
+              "swType": "Micom Software",
+              "versionNumber": "240617",
+              "description": "Description for this micom version"
+            }
+          ],
+          "timestamp": "2025-03-25T18:18:28.482Z"
+        }
+      },
+      "healthCheck": {
+        "checkInterval": {
+          "value": null
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": null
+        }
+      },
+      "custom.cooktopOperatingState": {
+        "supportedCooktopOperatingState": {
+          "value": ["ready", "run", "paused"],
+          "timestamp": "2025-03-26T07:26:39.690Z"
+        },
+        "cooktopOperatingState": {
+          "value": "ready",
+          "timestamp": "2025-03-26T07:27:58.652Z"
+        }
+      },
+      "samsungce.kitchenDeviceIdentification": {
+        "regionCode": {
+          "value": "EU",
+          "timestamp": "2025-03-25T18:18:28.501Z"
+        },
+        "modelCode": {
+          "value": "OZ8500B/EU2",
+          "timestamp": "2025-03-25T18:18:28.501Z"
+        },
+        "fuel": {
+          "value": null
+        },
+        "type": {
+          "value": "cooktop",
+          "timestamp": "2025-03-25T18:18:28.501Z"
+        },
+        "representativeComponent": {
+          "value": null
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": null
+        },
+        "otnDUID": {
+          "value": "JHCB2ZD4E2KRY",
+          "timestamp": "2025-03-25T18:18:28.482Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2025-03-25T18:18:28.501Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2025-03-25T18:18:28.501Z"
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "samsungce.kidsLockControl": {
+        "lockState": {
+          "value": "unlocked",
+          "timestamp": "2025-03-25T18:18:28.476Z"
+        }
+      },
+      "audioMute": {
+        "mute": {
+          "value": "unmuted",
+          "timestamp": "2025-03-25T18:18:28.464Z"
+        }
+      }
+    },
+    "burner-06": {
+      "samsungce.surfaceResidualHeat": {
+        "surfaceResidualHeat": {
+          "value": "normal",
+          "timestamp": "2025-03-25T18:18:28.591Z"
+        }
+      },
+      "samsungce.cooktopHeatingPower": {
+        "manualLevel": {
+          "value": 0,
+          "timestamp": "2025-03-25T18:18:28.591Z"
+        },
+        "heatingMode": {
+          "value": "manual",
+          "timestamp": "2025-03-25T18:18:28.591Z"
+        },
+        "manualLevelMin": {
+          "value": 0,
+          "timestamp": "2025-03-25T18:18:28.591Z"
+        },
+        "supportedHeatingModes": {
+          "value": ["manual", "boost", "keepWarm"],
+          "timestamp": "2025-03-25T18:18:28.591Z"
+        },
+        "manualLevelMax": {
+          "value": 15,
+          "timestamp": "2025-03-25T18:18:28.591Z"
+        }
+      },
+      "samsungce.countDownTimer": {
+        "startValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.591Z"
+        },
+        "currentValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.591Z"
+        },
+        "status": {
+          "value": null
+        }
+      }
+    },
+    "hood": {
+      "samsungce.connectionState": {
+        "connectionState": {
+          "value": "disconnected",
+          "timestamp": "2025-03-25T18:18:28.650Z"
+        }
+      },
+      "samsungce.hoodFanSpeed": {
+        "settableMaxFanSpeed": {
+          "value": 5,
+          "timestamp": "2025-03-25T18:18:28.650Z"
+        },
+        "hoodFanSpeed": {
+          "value": 0,
+          "timestamp": "2025-03-25T18:18:28.650Z"
+        },
+        "supportedHoodFanSpeed": {
+          "value": [1, 2, 3, 4, 5],
+          "timestamp": "2025-03-25T18:18:28.650Z"
+        },
+        "settableMinFanSpeed": {
+          "value": 0,
+          "timestamp": "2025-03-25T18:18:28.650Z"
+        }
+      },
+      "samsungce.countDownTimer": {
+        "startValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.650Z"
+        },
+        "currentValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.646Z"
+        },
+        "status": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": null
+        }
+      },
+      "samsungce.lamp": {
+        "brightnessLevel": {
+          "value": null
+        },
+        "supportedBrightnessLevel": {
+          "value": ["off", "mid"],
+          "timestamp": "2025-03-25T18:18:28.650Z"
+        }
+      }
+    },
+    "burner-05": {
+      "samsungce.surfaceResidualHeat": {
+        "surfaceResidualHeat": {
+          "value": "normal",
+          "timestamp": "2025-03-25T18:18:28.586Z"
+        }
+      },
+      "samsungce.cooktopHeatingPower": {
+        "manualLevel": {
+          "value": 0,
+          "timestamp": "2025-03-25T18:18:28.586Z"
+        },
+        "heatingMode": {
+          "value": "manual",
+          "timestamp": "2025-03-25T18:18:28.586Z"
+        },
+        "manualLevelMin": {
+          "value": 0,
+          "timestamp": "2025-03-25T18:18:28.586Z"
+        },
+        "supportedHeatingModes": {
+          "value": ["manual", "boost", "keepWarm"],
+          "timestamp": "2025-03-25T18:18:28.586Z"
+        },
+        "manualLevelMax": {
+          "value": 15,
+          "timestamp": "2025-03-25T18:18:28.586Z"
+        }
+      },
+      "samsungce.countDownTimer": {
+        "startValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.586Z"
+        },
+        "currentValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.591Z"
+        },
+        "status": {
+          "value": null
+        }
+      }
+    },
+    "burner-04": {
+      "samsungce.surfaceResidualHeat": {
+        "surfaceResidualHeat": {
+          "value": "normal",
+          "timestamp": "2025-03-25T18:18:28.578Z"
+        }
+      },
+      "samsungce.cooktopHeatingPower": {
+        "manualLevel": {
+          "value": 0,
+          "timestamp": "2025-03-25T18:49:25.153Z"
+        },
+        "heatingMode": {
+          "value": "manual",
+          "timestamp": "2025-03-25T18:18:28.578Z"
+        },
+        "manualLevelMin": {
+          "value": 0,
+          "timestamp": "2025-03-25T18:18:28.578Z"
+        },
+        "supportedHeatingModes": {
+          "value": ["manual", "boost", "keepWarm"],
+          "timestamp": "2025-03-25T18:18:28.578Z"
+        },
+        "manualLevelMax": {
+          "value": 15,
+          "timestamp": "2025-03-25T18:18:28.578Z"
+        }
+      },
+      "samsungce.countDownTimer": {
+        "startValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.586Z"
+        },
+        "currentValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.586Z"
+        },
+        "status": {
+          "value": "idle",
+          "timestamp": "2025-03-25T18:18:28.578Z"
+        }
+      }
+    },
+    "burner-03": {
+      "samsungce.surfaceResidualHeat": {
+        "surfaceResidualHeat": {
+          "value": "normal",
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        }
+      },
+      "samsungce.cooktopHeatingPower": {
+        "manualLevel": {
+          "value": 0,
+          "timestamp": "2025-03-26T07:27:58.652Z"
+        },
+        "heatingMode": {
+          "value": "manual",
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        },
+        "manualLevelMin": {
+          "value": 0,
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        },
+        "supportedHeatingModes": {
+          "value": ["manual", "boost", "keepWarm"],
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        },
+        "manualLevelMax": {
+          "value": 15,
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        }
+      },
+      "samsungce.countDownTimer": {
+        "startValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        },
+        "currentValue": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        },
+        "status": {
+          "value": "idle",
+          "timestamp": "2025-03-25T18:18:28.550Z"
+        }
+      }
+    }
+  }
+}

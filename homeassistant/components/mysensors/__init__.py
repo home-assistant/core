@@ -17,7 +17,6 @@ from .const import (
     DOMAIN,
     MYSENSORS_DISCOVERED_NODES,
     MYSENSORS_GATEWAYS,
-    MYSENSORS_ON_UNLOAD,
     PLATFORMS,
     DevId,
     DiscoveryInfo,
@@ -61,13 +60,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
         return False
-
-    key = MYSENSORS_ON_UNLOAD.format(entry.entry_id)
-    if key in hass.data[DOMAIN]:
-        for fnct in hass.data[DOMAIN][key]:
-            fnct()
-
-        hass.data[DOMAIN].pop(key)
 
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
     hass.data[DOMAIN].pop(MYSENSORS_DISCOVERED_NODES.format(entry.entry_id), None)

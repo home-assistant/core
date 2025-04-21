@@ -2,11 +2,21 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
+from music_assistant_models.api import MassEvent
 from music_assistant_models.enums import EventType
-from music_assistant_models.media_items import Album, Artist, Playlist, Radio, Track
+from music_assistant_models.media_items import (
+    Album,
+    Artist,
+    Audiobook,
+    Playlist,
+    Podcast,
+    Radio,
+    Track,
+)
 from music_assistant_models.player import Player
 from music_assistant_models.player_queue import PlayerQueue
 from syrupy import SnapshotAssertion
@@ -60,6 +70,10 @@ async def setup_integration_from_fixtures(
     music.get_playlist_tracks = AsyncMock(return_value=library_playlist_tracks)
     library_radios = create_library_radios_from_fixture()
     music.get_library_radios = AsyncMock(return_value=library_radios)
+    library_audiobooks = create_library_audiobooks_from_fixture()
+    music.get_library_audiobooks = AsyncMock(return_value=library_audiobooks)
+    library_podcasts = create_library_podcasts_from_fixture()
+    music.get_library_podcasts = AsyncMock(return_value=library_podcasts)
     music.get_item_by_uri = AsyncMock()
 
     config_entry.add_to_hass(hass)
@@ -130,19 +144,58 @@ def create_library_radios_from_fixture() -> list[Radio]:
     return [Radio.from_dict(radio_data) for radio_data in fixture_data]
 
 
+def create_library_audiobooks_from_fixture() -> list[Audiobook]:
+    """Create MA Audiobooks from fixture."""
+    fixture_data = load_and_parse_fixture("library_audiobooks")
+    return [Audiobook.from_dict(radio_data) for radio_data in fixture_data]
+
+
+def create_library_podcasts_from_fixture() -> list[Podcast]:
+    """Create MA Podcasts from fixture."""
+    fixture_data = load_and_parse_fixture("library_podcasts")
+    return [Podcast.from_dict(radio_data) for radio_data in fixture_data]
+
+
 async def trigger_subscription_callback(
     hass: HomeAssistant,
     client: MagicMock,
     event: EventType = EventType.PLAYER_UPDATED,
+    object_id: str | None = None,
     data: Any = None,
 ) -> None:
     """Trigger a subscription callback."""
     # trigger callback on all subscribers
-    for sub in client.subscribe_events.call_args_list:
-        callback = sub.kwargs["callback"]
-        event_filter = sub.kwargs.get("event_filter")
-        if event_filter in (None, event):
-            callback(event, data)
+    for sub in client.subscribe.call_args_list:
+        cb_func = sub.kwargs.get("cb_func", sub.args[0])
+        event_filter = sub.kwargs.get(
+            "event_filter", sub.args[1] if len(sub.args) > 1 else None
+        )
+        id_filter = sub.kwargs.get(
+            "id_filter", sub.args[2] if len(sub.args) > 2 else None
+        )
+        if not (
+            event_filter is None
+            or event == event_filter
+            or (isinstance(event_filter, list) and event in event_filter)
+        ):
+            continue
+        if not (
+            id_filter is None
+            or object_id == id_filter
+            or (isinstance(id_filter, list) and object_id in id_filter)
+        ):
+            continue
+
+        event = MassEvent(
+            event=event,
+            object_id=object_id,
+            data=data,
+        )
+        if asyncio.iscoroutinefunction(cb_func):
+            await cb_func(event)
+        else:
+            cb_func(event)
+
     await hass.async_block_till_done()
 
 

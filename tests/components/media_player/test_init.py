@@ -10,11 +10,21 @@ import voluptuous as vol
 
 from homeassistant.components import media_player
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_FILTER_CLASSES,
+    ATTR_MEDIA_SEARCH_QUERY,
     BrowseMedia,
     MediaClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    SearchMedia,
+    SearchMediaQuery,
+)
+from homeassistant.components.media_player.const import (
+    SERVICE_BROWSE_MEDIA,
+    SERVICE_SEARCH_MEDIA,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
@@ -44,6 +54,7 @@ def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, s
         not in [
             MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
             MediaPlayerEntityFeature.MEDIA_ENQUEUE,
+            MediaPlayerEntityFeature.SEARCH_MEDIA,
         ]
     ]
 
@@ -280,7 +291,7 @@ async def test_media_browse(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
+        "homeassistant.components.demo.media_player.DemoBrowsePlayer.async_browse_media",
         return_value=BrowseMedia(
             media_class=MediaClass.DIRECTORY,
             media_content_id="mock-id",
@@ -312,6 +323,7 @@ async def test_media_browse(
         "media_content_id": "mock-id",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": None,
         "thumbnail": None,
         "not_shown": 0,
@@ -320,7 +332,7 @@ async def test_media_browse(
     assert mock_browse_media.mock_calls[0][1] == ("album", "abcd")
 
     with patch(
-        "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
+        "homeassistant.components.demo.media_player.DemoBrowsePlayer.async_browse_media",
         return_value={"bla": "yo"},
     ):
         await client.send_json(
@@ -337,6 +349,188 @@ async def test_media_browse(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"bla": "yo"}
+
+
+async def test_media_browse_service(hass: HomeAssistant) -> None:
+    """Test browsing media using service call."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.demo.media_player.DemoBrowsePlayer.async_browse_media",
+        return_value=BrowseMedia(
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="mock-id",
+            media_content_type="mock-type",
+            title="Mock Title",
+            can_play=False,
+            can_expand=True,
+            children=[
+                BrowseMedia(
+                    media_class=MediaClass.ALBUM,
+                    media_content_id="album1 content id",
+                    media_content_type="album",
+                    title="Album 1",
+                    can_play=True,
+                    can_expand=True,
+                ),
+                BrowseMedia(
+                    media_class=MediaClass.ALBUM,
+                    media_content_id="album2 content id",
+                    media_content_type="album",
+                    title="Album 2",
+                    can_play=True,
+                    can_expand=True,
+                ),
+            ],
+        ),
+    ) as mock_browse_media:
+        result = await hass.services.async_call(
+            "media_player",
+            SERVICE_BROWSE_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.browse",
+                ATTR_MEDIA_CONTENT_TYPE: "album",
+                ATTR_MEDIA_CONTENT_ID: "title=Album*",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+        mock_browse_media.assert_called_with(
+            media_content_type="album", media_content_id="title=Album*"
+        )
+        browse_res: BrowseMedia = result["media_player.browse"]
+        assert browse_res.title == "Mock Title"
+        assert browse_res.media_class == "directory"
+        assert browse_res.media_content_type == "mock-type"
+        assert browse_res.media_content_id == "mock-id"
+        assert browse_res.can_play is False
+        assert browse_res.can_expand is True
+        assert len(browse_res.children) == 2
+        assert browse_res.children[0].title == "Album 1"
+        assert browse_res.children[0].media_class == "album"
+        assert browse_res.children[0].media_content_id == "album1 content id"
+        assert browse_res.children[0].media_content_type == "album"
+        assert browse_res.children[1].title == "Album 2"
+        assert browse_res.children[1].media_class == "album"
+        assert browse_res.children[1].media_content_id == "album2 content id"
+        assert browse_res.children[1].media_content_type == "album"
+
+
+async def test_media_search(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test browsing media."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.demo.media_player.DemoSearchPlayer.async_search_media",
+        return_value=SearchMedia(
+            result=[
+                BrowseMedia(
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_id="mock-id",
+                    media_content_type="mock-type",
+                    title="Mock Title",
+                    can_play=False,
+                    can_expand=True,
+                )
+            ]
+        ),
+    ) as mock_search_media:
+        await client.send_json(
+            {
+                "id": 7,
+                "type": "media_player/search_media",
+                "entity_id": "media_player.search",
+                "media_content_type": "album",
+                "media_content_id": "abcd",
+                "search_query": "query",
+                "media_filter_classes": ["album"],
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["result"] == [
+        {
+            "title": "Mock Title",
+            "media_class": "directory",
+            "media_content_type": "mock-type",
+            "media_content_id": "mock-id",
+            "children_media_class": None,
+            "can_play": False,
+            "can_expand": True,
+            "can_search": False,
+            "thumbnail": None,
+            "not_shown": 0,
+            "children": [],
+        }
+    ]
+    assert mock_search_media.mock_calls[0].kwargs["query"] == SearchMediaQuery(
+        search_query="query",
+        media_content_type="album",
+        media_content_id="abcd",
+        media_filter_classes={MediaClass.ALBUM},
+    )
+
+
+async def test_media_search_service(hass: HomeAssistant) -> None:
+    """Test browsing media."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+    expected = [
+        BrowseMedia(
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="mock-id",
+            media_content_type="mock-type",
+            title="Mock Title",
+            can_play=False,
+            can_expand=True,
+            children=[],
+        )
+    ]
+
+    with patch(
+        "homeassistant.components.demo.media_player.DemoSearchPlayer.async_search_media",
+        return_value=SearchMedia(result=expected),
+    ) as mock_search_media:
+        result = await hass.services.async_call(
+            "media_player",
+            SERVICE_SEARCH_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.search",
+                ATTR_MEDIA_CONTENT_TYPE: "album",
+                ATTR_MEDIA_CONTENT_ID: "title=Album*",
+                ATTR_MEDIA_SEARCH_QUERY: "query",
+                ATTR_MEDIA_FILTER_CLASSES: ["album"],
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    search_res: SearchMedia = result["media_player.search"]
+    assert search_res.version == 1
+    assert search_res.result == expected
+    assert mock_search_media.mock_calls[0].kwargs["query"] == SearchMediaQuery(
+        search_query="query",
+        media_content_type="album",
+        media_content_id="title=Album*",
+        media_filter_classes={MediaClass.ALBUM},
+    )
 
 
 async def test_group_members_available_when_off(hass: HomeAssistant) -> None:

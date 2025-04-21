@@ -6,5 +6,11 @@
       "ipv6_addresses": "IPv6 addresses",
       "announce_addresses": "Announce addresses"
     }
+  },
+  "issues": {
+    "docker_host_network": {
+      "title": "Home Assistant is not using host networking",
+      "description": "Home Assistant is running in a container without host networking mode. This can cause networking issues with device discovery, multicast, broadcast, other network features, and incorrectly detecting its own URL and IP addresses, causing issues with media players and sending audio responses to voice assistants.\n\nIt is recommended to run Home Assistant with host networking by adding the `--network host` flag to your Docker run command or setting `network_mode: host` in your `docker-compose.yml` file.\n\nSee the [Docker documentation]({docs_url}) for more information about Docker host networking and refer to the [Home Assistant installation guide]({install_url}) for our recommended and supported setup."
+    }
   }
 }

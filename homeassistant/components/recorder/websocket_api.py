@@ -37,7 +37,7 @@ from homeassistant.util.unit_conversion import (
     VolumeFlowRateConverter,
 )
 
-from .models import StatisticPeriod
+from .models import StatisticMeanType, StatisticPeriod
 from .statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     async_add_external_statistics,
@@ -297,13 +297,13 @@ async def ws_list_statistic_ids(
 async def ws_validate_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Fetch a list of available statistic_id."""
+    """Validate statistics and return issues found."""
     instance = get_instance(hass)
-    statistic_ids = await instance.async_add_executor_job(
+    validation_issues = await instance.async_add_executor_job(
         validate_statistics,
         hass,
     )
-    connection.send_result(msg["id"], statistic_ids)
+    connection.send_result(msg["id"], validation_issues)
 
 
 @websocket_api.websocket_command(
@@ -532,6 +532,10 @@ def ws_import_statistics(
 ) -> None:
     """Import statistics."""
     metadata = msg["metadata"]
+    # The WS command will be changed in a follow up PR
+    metadata["mean_type"] = (
+        StatisticMeanType.ARITHMETIC if metadata["has_mean"] else StatisticMeanType.NONE
+    )
     stats = msg["stats"]
 
     if valid_entity_id(metadata["statistic_id"]):

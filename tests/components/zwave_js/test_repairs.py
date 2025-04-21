@@ -180,7 +180,7 @@ async def test_device_config_file_changed_ignore_step(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
+    "ignore_missing_translations",
     ["component.zwave_js.issues.invalid_issue.title"],
 )
 async def test_invalid_issue(

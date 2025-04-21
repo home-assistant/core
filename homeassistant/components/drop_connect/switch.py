@@ -9,7 +9,7 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -65,7 +65,7 @@ DEVICE_SWITCHES: dict[str, list[str]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DROPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the DROP switches from config entry."""
     _LOGGER.debug(

@@ -14,7 +14,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcobeeConfigEntry, EcobeeData
 from .entity import EcobeeBaseEntity
@@ -53,7 +53,7 @@ VENTILATOR_NUMBERS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcobeeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ecobee thermostat number entity."""
     data = config_entry.runtime_data

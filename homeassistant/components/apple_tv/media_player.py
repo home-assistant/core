@@ -39,7 +39,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import AppleTvConfigEntry, AppleTVManager
@@ -100,7 +100,7 @@ SUPPORT_FEATURE_MAPPING = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AppleTvConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load Apple TV media player based on a config entry."""
     name: str = config_entry.data[CONF_NAME]
@@ -120,6 +120,7 @@ class AppleTvMediaPlayer(
         """Initialize the Apple TV media player."""
         super().__init__(name, identifier, manager)
         self._playing: Playing | None = None
+        self._playing_last_updated: datetime | None = None
         self._app_list: dict[str, str] = {}
 
     @callback
@@ -209,6 +210,7 @@ class AppleTvMediaPlayer(
         This is a callback function from pyatv.interface.PushListener.
         """
         self._playing = playstatus
+        self._playing_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
 
     @callback
@@ -316,7 +318,7 @@ class AppleTvMediaPlayer(
     def media_position_updated_at(self) -> datetime | None:
         """Last valid time of media position."""
         if self.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
-            return dt_util.utcnow()
+            return self._playing_last_updated
         return None
 
     async def async_play_media(

@@ -24,34 +24,48 @@
           "top_p": "Top P",
           "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
           "recommended": "Recommended model settings",
-          "reasoning_effort": "Reasoning effort"
+          "reasoning_effort": "Reasoning effort",
+          "web_search": "Enable web search",
+          "search_context_size": "Search context size",
+          "user_location": "Include home location"
         },
         "data_description": {
           "prompt": "Instruct how the LLM should respond. This can be a template.",
-          "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt (for certain reasoning models)"
+          "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt (for certain reasoning models)",
+          "web_search": "Allow the model to search the web for the latest information before generating a response",
+          "search_context_size": "High level guidance for the amount of context window space to use for the search",
+          "user_location": "Refine search results based on geography"
         }
       }
     },
     "error": {
-      "model_not_supported": "This model is not supported, please select a different model"
+      "model_not_supported": "This model is not supported, please select a different model",
+      "web_search_not_supported": "Web search is not supported by this model"
     }
   },
   "selector": {
     "reasoning_effort": {
       "options": {
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
+      }
+    },
+    "search_context_size": {
+      "options": {
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
       }
     }
   },
   "services": {
     "generate_image": {
       "name": "Generate image",
-      "description": "Turn a prompt into an image",
+      "description": "Turns a prompt into an image",
       "fields": {
         "config_entry": {
-          "name": "Config Entry",
+          "name": "Config entry",
           "description": "The config entry to use for this action"
         },
         "prompt": {
@@ -70,6 +84,24 @@
         "style": {
           "name": "Style",
           "description": "The style of the generated image"
+        }
+      }
+    },
+    "generate_content": {
+      "name": "Generate content",
+      "description": "Sends a conversational query to ChatGPT including any attached image or PDF files",
+      "fields": {
+        "config_entry": {
+          "name": "Config entry",
+          "description": "The config entry to use for this action"
+        },
+        "prompt": {
+          "name": "Prompt",
+          "description": "The prompt to send"
+        },
+        "filenames": {
+          "name": "Files",
+          "description": "List of files to upload"
         }
       }
     }
