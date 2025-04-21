@@ -824,6 +824,181 @@
       },
       "di_vbat_rer": {
         "name": "Rear right drive inverter battery voltage"
+      },
+      "energy_remaining": {
+        "name": "Energy remaining"
+      },
+      "estimated_hours_to_charge_termination": {
+        "name": "Estimated hours to charge termination"
+      },
+      "forward_collision_warning": {
+        "name": "Forward collision warning",
+        "state": {
+          "disabled": "Disabled",
+          "medium": "Medium",
+          "early": "Early",
+          "late": "Late"
+        }
+      },
+      "gps_heading": {
+        "name": "GPS heading"
+      },
+      "guest_mode_mobile_access_state": {
+        "name": "Guest mode mobile access state",
+        "state": {
+          "no_access": "No access",
+          "read_only": "Read only",
+          "access": "Access"
+        }
+      },
+      "homelink_device_count": {
+        "name": "Homelink device count"
+      },
+      "hvac_fan_speed": {
+        "name": "HVAC fan speed"
+      },
+      "hvac_fan_status": {
+        "name": "HVAC fan status"
+      },
+      "hvac_power": {
+        "name": "HVAC power",
+        "state": {
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "hvil": {
+        "name": "HVIL status",
+        "state": {
+          "open": "Open",
+          "closed": "Closed"
+        }
+      },
+      "isolation_resistance": {
+        "name": "Isolation resistance"
+      },
+      "lane_departure_avoidance": {
+        "name": "Lane departure avoidance",
+        "state": {
+          "unavailable": "Unavailable",
+          "off": "Off",
+          "warning": "Warning",
+          "assist": "Assist"
+        }
+      },
+      "lateral_acceleration": {
+        "name": "Lateral acceleration"
+      },
+      "lifetime_energy_used": {
+        "name": "Lifetime energy used"
+      },
+      "lifetime_energy_used_drive": {
+        "name": "Lifetime energy used drive"
+      },
+      "longitudinal_acceleration": {
+        "name": "Longitudinal acceleration"
+      },
+      "module_temp_max": {
+        "name": "Module temperature maximum"
+      },
+      "module_temp_min": {
+        "name": "Module temperature minimum"
+      },
+      "pack_current": {
+        "name": "Pack current"
+      },
+      "pack_voltage": {
+        "name": "Pack voltage"
+      },
+      "paired_phone_key_and_key_fob_qty": {
+        "name": "Paired phone key and key fob quantity"
+      },
+      "pedal_position": {
+        "name": "Pedal position"
+      },
+      "powershare_hours_left": {
+        "name": "Powershare hours left"
+      },
+      "powershare_instantaneous_power_kw": {
+        "name": "Powershare instantaneous power"
+      },
+      "powershare_status": {
+        "name": "Powershare status",
+        "state": {
+          "disabled": "Disabled",
+          "stopped": "Stopped",
+          "discharging": "Discharging",
+          "standby": "Standby"
+        }
+      },
+      "powershare_stop_reason": {
+        "name": "Powershare stop reason",
+        "state": {
+          "none": "None",
+          "charge_needed": "Charge needed",
+          "user_disabled": "User disabled",
+          "vehicle_cabin_conditioning": "Vehicle cabin conditioning",
+          "vehicle_charging": "Vehicle charging",
+          "grid_voltage_high": "Grid voltage high",
+          "grid_voltage_low": "Grid voltage low",
+          "grid_frequency_high": "Grid frequency high",
+          "grid_frequency_low": "Grid frequency low"
+        }
+      },
+      "powershare_type": {
+        "name": "Powershare type",
+        "state": {
+          "none": "None",
+          "solar_offset": "Solar offset",
+          "scheduled": "Scheduled",
+          "manual": "Manual",
+          "storm_watch": "Storm watch"
+        }
+      },
+      "rated_range": {
+        "name": "Rated range"
+      },
+      "rear_seat_heaters": {
+        "name": "Rear seat heaters"
+      },
+      "route_last_updated": {
+        "name": "Route last updated"
+      },
+      "scheduled_charging_mode": {
+        "name": "Scheduled charging mode",
+        "state": {
+          "off": "Off",
+          "departure": "Departure",
+          "start_at": "Start at"
+        }
+      },
+      "software_update_expected_duration_minutes": {
+        "name": "Software update expected duration"
+      },
+      "speed_limit_warning": {
+        "name": "Speed limit warning"
+      },
+      "tonneau_tent_mode": {
+        "name": "Tonneau tent mode"
+      },
+      "tpms_hard_warnings": {
+        "name": "Tire pressure hard warnings"
+      },
+      "tpms_soft_warnings": {
+        "name": "Tire pressure soft warnings"
+      },
+      "lights_turn_signal": {
+        "name": "Turn signal",
+        "state": {
+          "unavailable": "Unavailable",
+          "off": "Off",
+          "left": "Left",
+          "right": "Right",
+          "emergency": "Emergency"
+        }
+      },
+      "charge_rate_mile_per_hour": {
+        "name": "Charge rate mile per hour"
       }
     },
     "switch": {
