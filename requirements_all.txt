@@ -2241,7 +2241,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==0.1.3
+pyportainer==0.1.5
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5

@@ -106,11 +106,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 id=endpoint.id,
                 name=endpoint.name,
                 endpoint=endpoint,
-                containers={
-                    str(container.id): container
-                    for container in containers
-                    if container.id is not None
-                },  # This will be addressed in a later release of pyportainer to be explicit in a str and not str | None
+                containers={container.id: container for container in containers},
             )
 
         self.endpoints = mapped_endpoints
