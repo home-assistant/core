@@ -319,8 +319,6 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        entry_id = self.context["entry_id"]
-        self.reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -329,17 +327,16 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauth input."""
 
         errors: dict[str, str] = {}
-        existing_entry = self.reauth_entry
-        assert existing_entry
-        existing_data = existing_entry.data
+        reauth_entry = self._get_reauth_entry()
+        reauth_data = reauth_entry.data
         description_placeholders: dict[str, str] = {
-            CONF_HOST: existing_data[CONF_HOST],
-            CONF_PORT: existing_data[CONF_PORT],
+            CONF_HOST: reauth_data[CONF_HOST],
+            CONF_PORT: reauth_data[CONF_PORT],
         }
 
         if user_input is not None:
             new_config = {
-                **existing_data,
+                **reauth_data,
                 # Username/password are optional and some servers
                 # use ip based authentication and will fail if
                 # username/password are provided
@@ -348,9 +345,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
             }
             _, errors, placeholders = await self._async_validate_or_error(new_config)
             if not errors:
-                return self.async_update_reload_and_abort(
-                    existing_entry, data=new_config
-                )
+                return self.async_update_reload_and_abort(reauth_entry, data=new_config)
             description_placeholders.update(placeholders)
 
         return self.async_show_form(
