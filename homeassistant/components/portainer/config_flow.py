@@ -35,14 +35,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    url = URL(data[CONF_URL]).human_repr()
     session = async_create_clientsession(
         hass,
         data[CONF_VERIFY_SSL],
         cookie_jar=CookieJar(unsafe=True),
     )
     client = Portainer(
-        api_url=url,
+        api_url=data[CONF_URL],
         api_key=data[CONF_API_KEY],
         session=session,
     )
