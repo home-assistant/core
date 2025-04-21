@@ -929,7 +929,7 @@
           "handshaking": "Handshaking",
           "init": "Initializing",
           "enabled": "[%key:common::state::enabled%]",
-          "enabled_reconnecting_soon": "Reconnecting",
+          "reconnecting": "Reconnecting",
           "stopped": "[%key:common::state::stopped%]"
         }
       },
