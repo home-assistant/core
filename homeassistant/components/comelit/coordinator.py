@@ -22,7 +22,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
 
 type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
 
@@ -53,7 +53,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
             logger=_LOGGER,
             config_entry=entry,
             name=f"{DOMAIN}-{host}-coordinator",
-            update_interval=timedelta(seconds=5),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(

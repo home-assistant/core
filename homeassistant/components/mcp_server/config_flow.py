@@ -16,7 +16,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import DOMAIN, LLM_API, LLM_API_NAME
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,13 +33,6 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         llm_apis = {api.id: api.name for api in llm.async_get_apis(self.hass)}
-        if LLM_API not in llm_apis:
-            # MCP server component is not loaded yet, so make the LLM API a choice.
-            llm_apis = {
-                LLM_API: LLM_API_NAME,
-                **llm_apis,
-            }
-
         if user_input is not None:
             return self.async_create_entry(
                 title=llm_apis[user_input[CONF_LLM_HASS_API]], data=user_input

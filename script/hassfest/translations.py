@@ -29,6 +29,7 @@ ALLOW_NAME_TRANSLATION = {
     "cert_expiry",
     "cpuspeed",
     "emulated_roku",
+    "energenie_power_sockets",
     "faa_delays",
     "garages_amsterdam",
     "generic",
