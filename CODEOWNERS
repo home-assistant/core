@@ -1176,6 +1176,8 @@ build.json @home-assistant/supervisor
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
 /homeassistant/components/private_ble_device/ @Jc2k
 /tests/components/private_ble_device/ @Jc2k
+/homeassistant/components/probe_plus/ @pantherale0
+/tests/components/probe_plus/ @pantherale0
 /homeassistant/components/profiler/ @bdraco
 /tests/components/profiler/ @bdraco
 /homeassistant/components/progettihwsw/ @ardaseremet

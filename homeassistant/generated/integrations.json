@@ -5018,6 +5018,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "probe_plus": {
+      "name": "Probe Plus",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "profiler": {
       "name": "Profiler",
       "integration_type": "hub",

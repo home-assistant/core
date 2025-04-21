@@ -589,6 +589,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_id": 220,
     },
     {
+        "connectable": True,
+        "domain": "probe_plus",
+        "local_name": "FM2*",
+        "manufacturer_id": 36606,
+    },
+    {
         "connectable": False,
         "domain": "qingping",
         "local_name": "Qingping*",
