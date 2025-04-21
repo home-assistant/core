@@ -7,6 +7,7 @@ from bleak.exc import BleakError
 from bleak_retry_connector import BleakNotFoundError
 from pymammotion.aliyun.cloud_gateway import CheckSessionException, SetupException
 from pymammotion.mammotion.devices.mammotion_bluetooth import CharacteristicMissingError
+from pymammotion.utility.constant import WorkMode
 
 DOMAIN: Final = "mammotion"
 
@@ -40,3 +41,11 @@ CONF_SESSION_DATA: Final = "session_data"
 CONF_REGION_DATA: Final = "region_data"
 CONF_DEVICE_DATA: Final = "device_data"
 CONF_MAMMOTION_DATA: Final = "mammotion_data"
+
+NO_REQUEST_MODES = (
+    WorkMode.MODE_JOB_DRAW,
+    WorkMode.MODE_OBSTACLE_DRAW,
+    WorkMode.MODE_CHANNEL_DRAW,
+    WorkMode.MODE_ERASER_DRAW,
+    WorkMode.MODE_UPDATING,
+)
