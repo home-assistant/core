@@ -158,23 +158,16 @@ class OpenAIOptionsFlow(OptionsFlow):
         if (suggested_llm_apis := options.get(CONF_LLM_HASS_API)) and isinstance(
             suggested_llm_apis, str
         ):
-            suggested_llm_apis = [suggested_llm_apis]
+            options[CONF_LLM_HASS_API] = [suggested_llm_apis]
+
+        if CONF_PROMPT not in options:
+            options[CONF_PROMPT] = llm.DEFAULT_INSTRUCTIONS_PROMPT
 
         step_schema: VolDictType = {
-            vol.Optional(
-                CONF_PROMPT,
-                description={
-                    "suggested_value": options.get(
-                        CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                    )
-                },
-            ): TemplateSelector(),
-            vol.Optional(
-                CONF_LLM_HASS_API,
-                description={"suggested_value": suggested_llm_apis}
-                if suggested_llm_apis
-                else {},
-            ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
+            vol.Optional(CONF_PROMPT): TemplateSelector(),
+            vol.Optional(CONF_LLM_HASS_API): SelectSelector(
+                SelectSelectorConfig(options=hass_apis, multiple=True)
+            ),
             vol.Required(
                 CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
             ): bool,

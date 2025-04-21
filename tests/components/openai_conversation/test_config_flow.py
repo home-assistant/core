@@ -517,7 +517,10 @@ async def test_options_switching(
                 and "suggested_value" in key.description
                 and str(key) in current_options
             ):
-                assert current_options[str(key)] == key.description["suggested_value"]
+                current_option = current_options[str(key)]
+                if str(key) == CONF_LLM_HASS_API and isinstance(current_option, str):
+                    current_option = [current_option]
+                assert key.description["suggested_value"] == current_option
 
         # Configure current step
         options = await hass.config_entries.options.async_configure(
