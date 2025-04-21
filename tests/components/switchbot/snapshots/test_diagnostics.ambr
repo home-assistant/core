@@ -19,7 +19,6 @@
       'discovery_keys': dict({
       }),
       'domain': 'switchbot',
-      'entry_id': '01JSC6148GWZR18SJAJDSJD5XR',
       'minor_version': 1,
       'options': dict({
         'retry_count': 3,
