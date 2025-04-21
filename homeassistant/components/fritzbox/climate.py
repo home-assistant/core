@@ -138,12 +138,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if self.data.lock:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="change_settings_while_lock_enabled",
-            )
-
+        self.check_active_or_lock_mode()
         if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is HVACMode.OFF:
             await self.async_set_hvac_mode(hvac_mode)
         elif (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
@@ -175,16 +170,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
-        if self.data.holiday_active or self.data.summer_active:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="change_hvac_while_active_mode",
-            )
-        if self.data.lock:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="change_settings_while_lock_enabled",
-            )
+        self.check_active_or_lock_mode()
         if self.hvac_mode is hvac_mode:
             LOGGER.debug(
                 "%s is already in requested hvac mode %s", self.name, hvac_mode
@@ -216,11 +202,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        if self.data.holiday_active or self.data.summer_active:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="change_preset_while_active_mode",
-            )
+        self.check_active_or_lock_mode()
         if preset_mode == PRESET_COMFORT:
             await self.async_set_temperature(temperature=self.data.comfort_temperature)
         elif preset_mode == PRESET_ECO:
@@ -246,3 +228,17 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             attrs[ATTR_STATE_WINDOW_OPEN] = self.data.window_open
 
         return attrs
+
+    def check_active_or_lock_mode(self) -> None:
+        """Check if in summer/vacation mode or lock enabled."""
+        if self.data.holiday_active or self.data.summer_active:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_settings_while_active_mode",
+            )
+
+        if self.data.lock:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_settings_while_lock_enabled",
+            )

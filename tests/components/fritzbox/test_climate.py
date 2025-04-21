@@ -569,7 +569,7 @@ async def test_holidy_summer_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change HVAC mode while holiday or summer mode is active on the device",
+        match="Can't change setting while holiday or summer mode is active on the device",
     ):
         await hass.services.async_call(
             "climate",
@@ -579,7 +579,7 @@ async def test_holidy_summer_mode(
         )
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change preset while holiday or summer mode is active on the device",
+        match="Can't change setting while holiday or summer mode is active on the device",
     ):
         await hass.services.async_call(
             "climate",
@@ -605,7 +605,7 @@ async def test_holidy_summer_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change HVAC mode while holiday or summer mode is active on the device",
+        match="Can't change setting while holiday or summer mode is active on the device",
     ):
         await hass.services.async_call(
             "climate",
@@ -615,7 +615,7 @@ async def test_holidy_summer_mode(
         )
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change preset while holiday or summer mode is active on the device",
+        match="Can't change setting while holiday or summer mode is active on the device",
     ):
         await hass.services.async_call(
             "climate",
