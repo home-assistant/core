@@ -58,7 +58,7 @@ async def test_sensor(
     keys: list[str],
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test time to service."""
+    """Test sensor."""
 
     with patch("homeassistant.components.volvo.PLATFORMS", [Platform.SENSOR]):
         assert await setup_integration()

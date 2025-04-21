@@ -1,8 +1,6 @@
 {
   "common": {
-    "api_timestamp": "API timestamp",
-    "error": "Error",
-    "unknown": "Unknown"
+    "api_timestamp": "API timestamp"
   },
   "config": {
     "step": {
@@ -61,8 +59,7 @@
           "car_in_use": "Car is in use",
           "no_internet": "No internet",
           "power_saving_mode": "Power saving mode",
-          "unavailable": "Unavailable",
-          "unspecified": "[%key:component::volvo::common::unknown%]"
+          "unavailable": "Unavailable"
         },
         "state_attributes": {
           "api_timestamp": {
@@ -156,8 +153,7 @@
           "connection_status_connected_ac": "Connected AC",
           "connection_status_connected_dc": "Connected DC",
           "connection_status_disconnected": "[%key:common::state::disconnected%]",
-          "connection_status_fault": "[%key:component::volvo::common::error%]",
-          "connection_status_unspecified": "[%key:component::volvo::common::unknown%]"
+          "connection_status_fault": "[%key:common::state::error%]"
         },
         "state_attributes": {
           "api_timestamp": {
@@ -170,10 +166,9 @@
         "state": {
           "charging_system_charging": "[%key:common::state::charging%]",
           "charging_system_done": "Done",
-          "charging_system_fault": "[%key:component::volvo::common::error%]",
+          "charging_system_fault": "[%key:common::state::error%]",
           "charging_system_idle": "[%key:common::state::idle%]",
-          "charging_system_scheduled": "Scheduled",
-          "charging_system_unspecified": "[%key:component::volvo::common::unknown%]"
+          "charging_system_scheduled": "Scheduled"
         },
         "state_attributes": {
           "api_timestamp": {

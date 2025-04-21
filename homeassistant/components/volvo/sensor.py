@@ -39,6 +39,13 @@ from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_ke
 
 PARALLEL_UPDATES = 0
 
+# Entities having an "unknown" value should report None as the state
+_UNKNOWN_VALUES = [
+    "UNSPECIFIED",
+    "CONNECTION_STATUS_UNSPECIFIED",
+    "CHARGING_SYSTEM_UNSPECIFIED",
+]
+
 
 @dataclass(frozen=True, kw_only=True)
 class VolvoSensorDescription(VolvoEntityDescription, SensorEntityDescription):
@@ -348,6 +355,11 @@ class VolvoSensor(VolvoEntity, SensorEntity):
         )
 
         if self.device_class == SensorDeviceClass.ENUM:
-            native_value = value_to_translation_key(str(native_value))
+            native_value = str(native_value)
+            native_value = (
+                value_to_translation_key(native_value)
+                if native_value.upper() not in _UNKNOWN_VALUES
+                else None
+            )
 
         self._attr_native_value = native_value
