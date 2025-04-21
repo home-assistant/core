@@ -78,6 +78,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.device_state.relay_voltage,
         name="Relay Voltage",
+        entity_registry_enabled_default=False,
     ),
     ProbePlusSensorEntityDescription(
         key="probe_voltage",
@@ -87,6 +88,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.device_state.probe_voltage,
         name="Probe Voltage",
+        entity_registry_enabled_default=False,
     ),
 )
 
