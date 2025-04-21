@@ -210,7 +210,7 @@
         "name": "Remote start"
       },
       "hvil": {
-        "name": "HVIL fault"
+        "name": "High voltage interlock loop fault"
       },
       "hvac_auto_mode": {
         "name": "HVAC auto mode"

@@ -1179,54 +1179,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor[binary_sensor.test_front_driver_door_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.test_front_driver_door_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Front driver door',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'fd_door',
-    'unique_id': 'LRW3F7EK4NC700000-fd_door',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.test_front_driver_door_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Front driver door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_front_driver_door_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_binary_sensor[binary_sensor.test_front_driver_window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1317,54 +1269,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_passenger_door',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.test_front_passenger_door_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.test_front_passenger_door_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Front passenger door',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'fp_door',
-    'unique_id': 'LRW3F7EK4NC700000-fp_door',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.test_front_passenger_door_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Front passenger door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_front_passenger_door_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1561,6 +1465,54 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.test_high_voltage_interlock_loop_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_high_voltage_interlock_loop_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'High voltage interlock loop fault',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'hvil',
+    'unique_id': 'LRW3F7EK4NC700000-hvil',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_high_voltage_interlock_loop_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Test High voltage interlock loop fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_high_voltage_interlock_loop_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.test_homelink_nearby-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1649,54 +1601,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_hvac_auto_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.test_hvil_fault-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_hvil_fault',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'HVIL fault',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'hvil',
-    'unique_id': 'LRW3F7EK4NC700000-hvil',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.test_hvil_fault-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test HVIL fault',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_hvil_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2174,54 +2078,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor[binary_sensor.test_rear_driver_door_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.test_rear_driver_door_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Rear driver door',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rd_door',
-    'unique_id': 'LRW3F7EK4NC700000-rd_door',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.test_rear_driver_door_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Rear driver door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_rear_driver_door_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_binary_sensor[binary_sensor.test_rear_driver_window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2312,54 +2168,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_passenger_door',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.test_rear_passenger_door_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.test_rear_passenger_door_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Rear passenger door',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rp_door',
-    'unique_id': 'LRW3F7EK4NC700000-rp_door',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.test_rear_passenger_door_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Rear passenger door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_rear_passenger_door_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3455,20 +3263,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor_refresh[binary_sensor.test_front_driver_door_2-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Front driver door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_front_driver_door_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_binary_sensor_refresh[binary_sensor.test_front_driver_window-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -3491,20 +3285,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_passenger_door',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_binary_sensor_refresh[binary_sensor.test_front_passenger_door_2-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Front passenger door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_front_passenger_door_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3565,6 +3345,20 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor_refresh[binary_sensor.test_high_voltage_interlock_loop_fault-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Test High voltage interlock loop fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_high_voltage_interlock_loop_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor_refresh[binary_sensor.test_homelink_nearby-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -3585,20 +3379,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_hvac_auto_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_binary_sensor_refresh[binary_sensor.test_hvil_fault-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test HVIL fault',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_hvil_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3736,20 +3516,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor_refresh[binary_sensor.test_rear_driver_door_2-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Rear driver door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_rear_driver_door_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_binary_sensor_refresh[binary_sensor.test_rear_driver_window-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -3772,20 +3538,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_passenger_door',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_binary_sensor_refresh[binary_sensor.test_rear_passenger_door_2-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Rear passenger door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_rear_passenger_door_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
