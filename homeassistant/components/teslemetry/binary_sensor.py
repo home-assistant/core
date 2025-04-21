@@ -395,6 +395,47 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         streaming_listener=lambda x, y: x.listen_SpeedLimitMode(y),
         entity_registry_enabled_default=False,
     ),
+    TeslemetryBinarySensorEntityDescription(
+        key="fd_door",
+        streaming_listener=lambda x, y: x.listen_FrontDriverDoor(y),
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="rd_door",
+        streaming_listener=lambda x, y: x.listen_RearDriverDoor(y),
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="fp_door",
+        streaming_listener=lambda x, y: x.listen_FrontPassengerDoor(y),
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="rp_door",
+        streaming_listener=lambda x, y: x.listen_RearPassengerDoor(y),
+        device_class=BinarySensorDeviceClass.DOOR,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="remote_start_enabled",
+        streaming_listener=lambda x, y: x.listen_RemoteStartEnabled(y),
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="hvil",
+        streaming_listener=lambda x, y: x.listen_Hvil(lambda z: y(z == "Fault")),
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="hvac_auto_mode",
+        streaming_listener=lambda x, y: x.listen_HvacAutoMode(lambda z: y(z == "On")),
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
