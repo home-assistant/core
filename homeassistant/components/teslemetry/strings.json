@@ -753,7 +753,7 @@
           "standby": "[%key:common::state::standby%]",
           "fault": "Fault",
           "abort": "Abort",
-          "enable": "Enable"
+          "enable": "[%key:common::state::enabled%]"
         }
       },
       "di_state_r": {
@@ -763,7 +763,7 @@
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
-          "enable": "[%key:component::teslemetry:sensor:di_state_f:enable]"
+          "enable": "[%key:common::state::enabled%]"
         }
       },
       "di_state_rel": {
@@ -773,7 +773,7 @@
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
-          "enable": "[%key:component::teslemetry:sensor:di_state_f:enable]"
+          "enable": "[%key:common::state::enabled%]"
         }
       },
       "di_state_rer": {
@@ -783,7 +783,7 @@
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
-          "enable": "[%key:component::teslemetry:sensor:di_state_f:enable]"
+          "enable": "[%key:common::state::enabled%]"
         }
       },
       "di_stator_temp_f": {
