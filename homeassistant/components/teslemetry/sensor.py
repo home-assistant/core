@@ -54,12 +54,12 @@ BMS_STATES = {
     "Drive": "drive",
     "Support": "support",
     "Charge": "charge",
-    "FEIM": "feim",
+    "FEIM": "full_electric_in_motion",
     "ClearFault": "clear_fault",
     "Fault": "fault",
     "Weld": "weld",
     "Test": "test",
-    "SNA": "sna",
+    "SNA": "system_not_available",
 }
 
 CHARGE_STATES = {
@@ -76,7 +76,7 @@ DRIVE_INVERTER_STATES = {
     "Standby": "standby",
     "Fault": "fault",
     "Abort": "abort",
-    "Enable": "enable",
+    "Enable": "enabled",
 }
 
 SHIFT_STATES = {"P": "p", "D": "d", "R": "r", "N": "n"}
@@ -95,7 +95,7 @@ POWER_SHARE_STATES = {
     "Handshaking": "handshaking",
     "Init": "init",
     "Enabled": "enabled",
-    "EnabledReconnectingSoon": "enabled_reconnecting_soon",
+    "EnabledReconnectingSoon": "reconnecting",
     "Stopped": "stopped",
 }
 
@@ -147,7 +147,7 @@ HVAC_POWER_STATES = {
     "Off": "off",
     "On": "on",
     "Precondition": "precondition",
-    "OverheatProtect": "overheat_protect",
+    "OverheatProtect": "overheat_protection",
 }
 
 LANE_ASSIST_LEVELS = {

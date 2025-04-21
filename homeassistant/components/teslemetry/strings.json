@@ -1009,7 +1009,7 @@
         "name": "HVAC power state",
         "state": {
           "precondition": "Precondition",
-          "overheat_protect": "Overheat protection",
+          "overheat_protection": "Overheat protection",
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]"
         }
