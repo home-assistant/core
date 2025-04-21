@@ -1,5 +1,9 @@
 {
   "common": {
+    "data_description_api_key": "The tankerkoenig API-KEY to be used.",
+    "data_description_location": "Pick the location, were to search for gas stations.",
+    "data_description_name": "The name of the particular region to be added.",
+    "data_description_radius": "The radius in kilometers to search for gas stations around the selected location.",
     "data_description_stations": "Select the stations you want to add to Home Assistant."
   },
   "config": {
@@ -10,11 +14,20 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "location": "[%key:common::config_flow::data::location%]",
           "radius": "Search radius"
+        },
+        "data_description": {
+          "name": "[%key:component::tankerkoenig::common::data_description_name%]",
+          "api_key": "[%key:component::tankerkoenig::common::data_description_api_key%]",
+          "location": "[%key:component::tankerkoenig::common::data_description_location%]",
+          "radius": "[%key:component::tankerkoenig::common::data_description_radius%]"
         }
       },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::tankerkoenig::common::data_description_api_key%]"
         }
       },
       "select_station": {
