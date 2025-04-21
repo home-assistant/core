@@ -1,10 +1,12 @@
 """Tests for Overkiz integration init."""
 
+from unittest.mock import AsyncMock, patch
+
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
+from . import load_setup_fixture
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
 
 from tests.common import MockConfigEntry, mock_registry
@@ -69,8 +71,18 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
             ),
         },
     )
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_setup=AsyncMock(
+            return_value=load_setup_fixture("overkiz/setup_no_devices.json")
+        ),
+        get_scenarios=AsyncMock(return_value=[]),
+        fetch_events=AsyncMock(return_value=[]),
+    ):
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
 
     ent_reg = er.async_get(hass)
 
