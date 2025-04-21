@@ -24,9 +24,9 @@ from homeassistant.components.modbus.const import (
     CONF_WRITE_TYPE,
     LIGHT_DEFAULT_MAX_KELVIN,
     LIGHT_DEFAULT_MIN_KELVIN,
-    MODBUS_DOMAIN,
     LIGHT_MODBUS_SCALE_MAX,
     LIGHT_MODBUS_SCALE_MIN,
+    MODBUS_DOMAIN,
 )
 from homeassistant.components.modbus.light import ModbusLight
 from homeassistant.const import (
