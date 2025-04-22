@@ -129,12 +129,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
             firmware = vehicle_metadata[vin].get("firmware", "Unknown")
             stream_vehicle = stream.get_vehicle(vin)
+            poll = product["command_signing"] == "off"
 
             vehicles.append(
                 TeslemetryVehicleData(
                     api=api,
                     config_entry=entry,
                     coordinator=coordinator,
+                    poll=poll,
                     stream=stream,
                     stream_vehicle=stream_vehicle,
                     vin=vin,
