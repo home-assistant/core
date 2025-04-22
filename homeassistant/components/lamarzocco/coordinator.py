@@ -137,7 +137,7 @@ class LaMarzoccoScheduleUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Coordinator for La Marzocco statistics."""
 
-    _default_update_interval = SCAN_INTERVAL
+    _default_update_interval = STATISTICS_UPDATE_INTERVAL
 
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
