@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
+from math import isfinite
 from typing import Any, cast
 
 from aioesphomeapi import (
@@ -63,6 +64,8 @@ from .entity import (
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
+
+PARALLEL_UPDATES = 0
 
 FAN_QUIET = "quiet"
 
@@ -238,9 +241,13 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_state_property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        if not self._static_info.supports_current_humidity:
+        if (
+            not self._static_info.supports_current_humidity
+            or (val := self._state.current_humidity) is None
+            or not isfinite(val)
+        ):
             return None
-        return round(self._state.current_humidity)
+        return round(val)
 
     @property
     @esphome_float_state_property

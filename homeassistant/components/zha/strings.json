@@ -176,7 +176,7 @@
   },
   "config_panel": {
     "zha_options": {
-      "title": "Global Options",
+      "title": "Global options",
       "enhanced_light_transition": "Enable enhanced light color/temperature transition from an off-state",
       "light_transitioning_flag": "Enable enhanced brightness slider during light transition",
       "group_members_assume_state": "Group members assume state of group",
@@ -187,7 +187,7 @@
       "consider_unavailable_battery": "Consider battery powered devices unavailable after (seconds)"
     },
     "zha_alarm_options": {
-      "title": "Alarm Control Panel Options",
+      "title": "Alarm control panel options",
       "alarm_master_code": "Master code for the alarm control panel(s)",
       "alarm_failed_tries": "The number of consecutive failed code entries to trigger an alarm",
       "alarm_arm_requires_code": "Code required for arming actions"
@@ -274,15 +274,15 @@
         },
         "source_ieee": {
           "name": "Source IEEE",
-          "description": "IEEE address of the joining device (must be used with the install code)."
+          "description": "IEEE address of the joining device (must be combined with the 'Install code' field)."
         },
         "install_code": {
           "name": "Install code",
-          "description": "Install code of the joining device (must be used with the source_ieee)."
+          "description": "Install code of the joining device (must be combined with the 'Source IEEE' field)."
         },
         "qr_code": {
           "name": "QR code",
-          "description": "Value of the QR install code (different between vendors)."
+          "description": "Provides both the IEEE address and the install code of the joining device (different between vendors)."
         }
       }
     },
@@ -610,6 +610,12 @@
       },
       "flow_switch": {
         "name": "Flow switch"
+      },
+      "water_leak": {
+        "name": "Water leak"
+      },
+      "water_supply": {
+        "name": "Water supply"
       }
     },
     "button": {
@@ -1044,6 +1050,84 @@
       },
       "valve_duration": {
         "name": "Irrigation duration"
+      },
+      "down_movement": {
+        "name": "Down movement"
+      },
+      "sustain_time": {
+        "name": "Sustain time"
+      },
+      "up_movement": {
+        "name": "Up movement"
+      },
+      "large_motion_detection_sensitivity": {
+        "name": "Motion detection sensitivity"
+      },
+      "large_motion_detection_distance": {
+        "name": "Motion detection distance"
+      },
+      "medium_motion_detection_distance": {
+        "name": "Medium motion detection distance"
+      },
+      "medium_motion_detection_sensitivity": {
+        "name": "Medium motion detection sensitivity"
+      },
+      "small_motion_detection_distance": {
+        "name": "Small motion detection distance"
+      },
+      "small_motion_detection_sensitivity": {
+        "name": "Small motion detection sensitivity"
+      },
+      "static_detection_sensitivity": {
+        "name": "Static detection sensitivity"
+      },
+      "static_detection_distance": {
+        "name": "Static detection distance"
+      },
+      "motion_detection_sensitivity": {
+        "name": "Motion detection sensitivity"
+      },
+      "holiday_temperature": {
+        "name": "Holiday temperature"
+      },
+      "boost_time": {
+        "name": "Boost time"
+      },
+      "antifrost_temperature": {
+        "name": "Antifrost temperature"
+      },
+      "eco_temperature": {
+        "name": "Eco temperature"
+      },
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      },
+      "valve_state_auto_shutdown": {
+        "name": "Valve state auto shutdown"
+      },
+      "shutdown_timer": {
+        "name": "Shutdown timer"
+      },
+      "calibration_vertical_run_time_up": {
+        "name": "Calibration vertical run time up"
+      },
+      "calibration_vertical_run_time_down": {
+        "name": "Calibration vertical run time down"
+      },
+      "calibration_rotation_run_time_up": {
+        "name": "Calibration rotation run time up"
+      },
+      "calibration_rotation_run_time_down": {
+        "name": "Calibration rotation run time down"
+      },
+      "impulse_mode_duration": {
+        "name": "Impulse mode duration"
+      },
+      "water_duration": {
+        "name": "Water duration"
+      },
+      "water_interval": {
+        "name": "Water interval"
       }
     },
     "select": {
@@ -1087,10 +1171,10 @@
         "name": "Switch type"
       },
       "led_scaling_mode": {
-        "name": "Led scaling mode"
+        "name": "LED scaling mode"
       },
       "smart_fan_led_display_levels": {
-        "name": "Smart fan led display levels"
+        "name": "Smart fan LED display levels"
       },
       "increased_non_neutral_output": {
         "name": "Non neutral output"
@@ -1235,6 +1319,36 @@
       },
       "eco_mode": {
         "name": "Eco mode"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "reverse": {
+        "name": "Reverse"
+      },
+      "motion_state": {
+        "name": "Motion state"
+      },
+      "motion_detection_mode": {
+        "name": "Motion detection mode"
+      },
+      "screen_orientation": {
+        "name": "Screen orientation"
+      },
+      "motor_thrust": {
+        "name": "Motor thrust"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
+      },
+      "display_orientation": {
+        "name": "Display orientation"
+      },
+      "hysteresis_mode": {
+        "name": "Hysteresis mode"
+      },
+      "speed": {
+        "name": "Speed"
       }
     },
     "sensor": {
@@ -1373,7 +1487,7 @@
       "adaptation_run_status": {
         "name": "Adaptation run status",
         "state": {
-          "nothing": "Idle",
+          "nothing": "[%key:common::state::idle%]",
           "something": "State"
         },
         "state_attributes": {
@@ -1395,7 +1509,7 @@
         "name": "Software error",
         "state": {
           "nothing": "Good",
-          "something": "Error"
+          "something": "[%key:common::state::error%]"
         },
         "state_attributes": {
           "top_pcb_sensor_error": {
@@ -1561,6 +1675,30 @@
       },
       "error_status": {
         "name": "Error status"
+      },
+      "brightness_level": {
+        "name": "Brightness level"
+      },
+      "average_light_intensity_20mins": {
+        "name": "Average light intensity last 20 min"
+      },
+      "todays_max_light_intensity": {
+        "name": "Today's max light intensity"
+      },
+      "fault_code": {
+        "name": "Fault code"
+      },
+      "water_flow": {
+        "name": "Water flow"
+      },
+      "remaining_watering_time": {
+        "name": "Remaining watering time"
+      },
+      "last_watering_duration": {
+        "name": "Last watering duration"
+      },
+      "device_status": {
+        "name": "Device status"
       }
     },
     "switch": {
@@ -1746,6 +1884,30 @@
       },
       "total_flow_reset_switch": {
         "name": "Total flow reset switch"
+      },
+      "touch_control": {
+        "name": "Touch control"
+      },
+      "sound_enabled": {
+        "name": "Sound enabled"
+      },
+      "invert_relay": {
+        "name": "Invert relay"
+      },
+      "boost_heating": {
+        "name": "Boost heating"
+      },
+      "holiday_mode": {
+        "name": "Holiday mode"
+      },
+      "heating_stop": {
+        "name": "Heating stop"
+      },
+      "schedule_mode": {
+        "name": "Schedule mode"
+      },
+      "auto_clean": {
+        "name": "Auto clean"
       }
     }
   }

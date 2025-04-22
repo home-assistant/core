@@ -44,11 +44,11 @@
     "sensor": {
       "movies": {
         "name": "Movies",
-        "unit_of_measurement": "[%key:component::radarr::entity::sensor::movies::name%]"
+        "unit_of_measurement": "movies"
       },
       "queue": {
         "name": "Queue",
-        "unit_of_measurement": "[%key:component::radarr::entity::sensor::movies::name%]"
+        "unit_of_measurement": "[%key:component::radarr::entity::sensor::movies::unit_of_measurement%]"
       },
       "start_time": {
         "name": "Start time"

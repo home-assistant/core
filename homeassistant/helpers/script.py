@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
-from types import MappingProxyType
 from typing import Any, Literal, TypedDict, cast, overload
 
 import async_interrupt
@@ -90,7 +89,7 @@ from . import condition, config_validation as cv, service, template
 from .condition import ConditionCheckerType, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
-from .script_variables import ScriptVariables
+from .script_variables import ScriptRunVariables, ScriptVariables
 from .template import Template
 from .trace import (
     TraceElement,
@@ -177,7 +176,7 @@ def _set_result_unless_done(future: asyncio.Future[None]) -> None:
         future.set_result(None)
 
 
-def action_trace_append(variables: dict[str, Any], path: str) -> TraceElement:
+def action_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
     """Append a TraceElement to trace[path]."""
     trace_element = TraceElement(variables, path)
     trace_append_element(trace_element, ACTION_TRACE_NODE_MAX_LEN)
@@ -189,7 +188,7 @@ async def trace_action(
     hass: HomeAssistant,
     script_run: _ScriptRun,
     stop: asyncio.Future[None],
-    variables: dict[str, Any],
+    variables: TemplateVarsType,
 ) -> AsyncGenerator[TraceElement]:
     """Trace action execution."""
     path = trace_path_get()
@@ -411,7 +410,7 @@ class _ScriptRun:
         self,
         hass: HomeAssistant,
         script: Script,
-        variables: dict[str, Any],
+        variables: ScriptRunVariables,
         context: Context | None,
         log_exceptions: bool,
     ) -> None:
@@ -485,14 +484,16 @@ class _ScriptRun:
             script_stack.pop()
             self._finish()
 
-        return ScriptRunResult(self._conversation_response, response, self._variables)
+        return ScriptRunResult(
+            self._conversation_response, response, self._variables.local_scope
+        )
 
     async def _async_step(self, log_exceptions: bool) -> None:
         continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
 
         with trace_path(str(self._step)):
             async with trace_action(
-                self._hass, self, self._stop, self._variables
+                self._hass, self, self._stop, self._variables.non_parallel_scope
             ) as trace_element:
                 if self._stop.done():
                     return
@@ -526,7 +527,7 @@ class _ScriptRun:
                         ex, continue_on_error, self._log_exceptions or log_exceptions
                     )
                 finally:
-                    trace_element.update_variables(self._variables)
+                    trace_element.update_variables(self._variables.non_parallel_scope)
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # noqa: SLF001
@@ -624,11 +625,20 @@ class _ScriptRun:
         except ScriptStoppedError as ex:
             raise asyncio.CancelledError from ex
 
-    async def _async_run_script(self, script: Script) -> None:
+    async def _async_run_script(
+        self, script: Script, *, parallel: bool = False
+    ) -> None:
         """Execute a script."""
+        if not script.enabled:
+            self._log("Skipping disabled script: %s", script.name)
+            trace_set_result(enabled=False)
+            return
         result = await self._async_run_long_action(
             self._hass.async_create_task_internal(
-                script.async_run(self._variables, self._context), eager_start=True
+                script.async_run(
+                    self._variables.enter_scope(parallel=parallel), self._context
+                ),
+                eager_start=True,
             )
         )
         if result and result.conversation_response is not UNDEFINED:
@@ -647,7 +657,7 @@ class _ScriptRun:
             """Run a script with a trace path."""
             trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
             with trace_path([str(idx), "sequence"]):
-                await self._async_run_script(script)
+                await self._async_run_script(script, parallel=True)
 
         results = await asyncio.gather(
             *(async_run_with_trace(idx, script) for idx, script in enumerate(scripts)),
@@ -760,13 +770,10 @@ class _ScriptRun:
             with trace_path("else"):
                 await self._async_run_script(if_data["if_else"])
 
-    @async_trace_path("repeat")
-    async def _async_step_repeat(self) -> None:  # noqa: C901
-        """Repeat a sequence."""
+    async def _async_do_step_repeat(self) -> None:  # noqa: C901
+        """Repeat a sequence helper."""
         description = self._action.get(CONF_ALIAS, "sequence")
         repeat = self._action[CONF_REPEAT]
-
-        saved_repeat_vars = self._variables.get("repeat")
 
         def set_repeat_var(
             iteration: int, count: int | None = None, item: Any = None
@@ -776,7 +783,7 @@ class _ScriptRun:
                 repeat_vars["last"] = iteration == count
             if item is not None:
                 repeat_vars["item"] = item
-            self._variables["repeat"] = repeat_vars
+            self._variables.define_local("repeat", repeat_vars)
 
         script = self._script._get_repeat_script(self._step)  # noqa: SLF001
         warned_too_many_loops = False
@@ -927,10 +934,14 @@ class _ScriptRun:
                 # while all the cpu time is consumed.
                 await asyncio.sleep(0)
 
-        if saved_repeat_vars:
-            self._variables["repeat"] = saved_repeat_vars
-        else:
-            self._variables.pop("repeat", None)  # Not set if count = 0
+    @async_trace_path("repeat")
+    async def _async_step_repeat(self) -> None:
+        """Repeat a sequence."""
+        self._variables = self._variables.enter_scope()
+        try:
+            await self._async_do_step_repeat()
+        finally:
+            self._variables = self._variables.exit_scope()
 
     ### Stop actions ###
 
@@ -959,10 +970,10 @@ class _ScriptRun:
     ## Variable actions ##
 
     async def _async_step_variables(self) -> None:
-        """Set a variable value."""
-        self._step_log("setting variables")
-        self._variables = self._action[CONF_VARIABLES].async_render(
-            self._hass, self._variables, render_as_defaults=False
+        """Assign values to variables."""
+        self._step_log("assigning variables")
+        self._variables.update(
+            self._action[CONF_VARIABLES].async_simple_render(self._variables)
         )
 
     ## External actions ##
@@ -1016,7 +1027,7 @@ class _ScriptRun:
         """Perform the device automation specified in the action."""
         self._step_log("device automation")
         await device_action.async_call_action_from_config(
-            self._hass, self._action, self._variables, self._context
+            self._hass, self._action, dict(self._variables), self._context
         )
 
     async def _async_step_event(self) -> None:
@@ -1189,12 +1200,15 @@ class _ScriptRun:
 
         self._step_log("wait for trigger", timeout)
 
-        variables = {**self._variables}
-        self._variables["wait"] = {
-            "remaining": timeout,
-            "completed": False,
-            "trigger": None,
-        }
+        variables = dict(self._variables)
+        self._variables.assign_parallel_protected(
+            "wait",
+            {
+                "remaining": timeout,
+                "completed": False,
+                "trigger": None,
+            },
+        )
         trace_set_result(wait=self._variables["wait"])
 
         if timeout == 0:
@@ -1240,7 +1254,9 @@ class _ScriptRun:
         timeout = self._get_timeout_seconds_from_action()
         self._step_log("wait template", timeout)
 
-        self._variables["wait"] = {"remaining": timeout, "completed": False}
+        self._variables.assign_parallel_protected(
+            "wait", {"remaining": timeout, "completed": False}
+        )
         trace_set_result(wait=self._variables["wait"])
 
         wait_template = self._action[CONF_WAIT_TEMPLATE]
@@ -1299,7 +1315,7 @@ class _QueuedScriptRun(_ScriptRun):
 
     lock_acquired = False
 
-    async def async_run(self) -> None:
+    async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
         # Wait for previous run, if any, to finish by attempting to acquire the script's
         # shared lock. At the same time monitor if we've been told to stop.
@@ -1313,7 +1329,7 @@ class _QueuedScriptRun(_ScriptRun):
 
         self.lock_acquired = True
         # We've acquired the lock so we can go ahead and start the run.
-        await super().async_run()
+        return await super().async_run()
 
     def _finish(self) -> None:
         if self.lock_acquired:
@@ -1369,7 +1385,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
 
-type _VarsType = dict[str, Any] | Mapping[str, Any] | MappingProxyType[str, Any]
+type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
@@ -1407,7 +1423,7 @@ class ScriptRunResult:
 
     conversation_response: str | None | UndefinedType
     service_response: ServiceResponse
-    variables: dict[str, Any]
+    variables: Mapping[str, Any]
 
 
 class Script:
@@ -1422,7 +1438,6 @@ class Script:
         *,
         # Used in "Running <running_description>" log message
         change_listener: Callable[[], Any] | None = None,
-        copy_variables: bool = False,
         log_exceptions: bool = True,
         logger: logging.Logger | None = None,
         max_exceeded: str = DEFAULT_MAX_EXCEEDED,
@@ -1431,8 +1446,12 @@ class Script:
         script_mode: str = DEFAULT_SCRIPT_MODE,
         top_level: bool = True,
         variables: ScriptVariables | None = None,
+        enabled: bool = True,
     ) -> None:
-        """Initialize the script."""
+        """Initialize the script.
+
+        enabled attribute is only used for non-top-level scripts.
+        """
         if not (all_scripts := hass.data.get(DATA_SCRIPTS)):
             all_scripts = hass.data[DATA_SCRIPTS] = []
             hass.bus.async_listen_once(
@@ -1451,6 +1470,7 @@ class Script:
         self.name = name
         self.unique_id = f"{domain}.{name}-{id(self)}"
         self.domain = domain
+        self.enabled = enabled
         self.running_description = running_description or f"{domain} script"
         self._change_listener = change_listener
         self._change_listener_job = (
@@ -1476,8 +1496,6 @@ class Script:
         self._parallel_scripts: dict[int, list[Script]] = {}
         self._sequence_scripts: dict[int, Script] = {}
         self.variables = variables
-        self._variables_dynamic = template.is_complex(variables)
-        self._copy_variables_on_run = copy_variables
 
     @property
     def change_listener(self) -> Callable[..., Any] | None:
@@ -1755,25 +1773,19 @@ class Script:
         if self.top_level:
             if self.variables:
                 try:
-                    variables = self.variables.async_render(
+                    run_variables = self.variables.async_render(
                         self._hass,
                         run_variables,
                     )
                 except exceptions.TemplateError as err:
                     self._log("Error rendering variables: %s", err, level=logging.ERROR)
                     raise
-            elif run_variables:
-                variables = dict(run_variables)
-            else:
-                variables = {}
 
+            variables = ScriptRunVariables.create_top_level(run_variables)
             variables["context"] = context
-        elif self._copy_variables_on_run:
-            # This is not the top level script, variables have been turned to a dict
-            variables = cast(dict[str, Any], copy(run_variables))
         else:
-            # This is not the top level script, variables have been turned to a dict
-            variables = cast(dict[str, Any], run_variables)
+            # This is not the top level script, run_variables is an instance of ScriptRunVariables
+            variables = cast(ScriptRunVariables, run_variables)
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to
         # stop (restart) or wait for (queued) our own script run.
@@ -1999,7 +2011,7 @@ class Script:
                 max_runs=self.max_runs,
                 logger=self._logger,
                 top_level=False,
-                copy_variables=True,
+                enabled=parallel_script.get(CONF_ENABLED, True),
             )
             parallel_script.change_listener = partial(
                 self._chain_change_listener, parallel_script

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -86,15 +87,9 @@ REPEAT_MAP: dict[LoopMode, RepeatMode] = {
 
 REPEAT_MAP_INV: dict[RepeatMode, LoopMode] = {v: k for k, v in REPEAT_MAP.items()}
 
-EQUALIZER_MAP: dict[EqualizerMode, str] = {
-    EqualizerMode.NONE: "None",
-    EqualizerMode.CLASSIC: "Classic",
-    EqualizerMode.POP: "Pop",
-    EqualizerMode.JAZZ: "Jazz",
-    EqualizerMode.VOCAL: "Vocal",
+EQUALIZER_MAP_INV: dict[str, EqualizerMode] = {
+    mode.value: mode for mode in EqualizerMode
 }
-
-EQUALIZER_MAP_INV: dict[str, EqualizerMode] = {v: k for k, v in EQUALIZER_MAP.items()}
 
 DEFAULT_FEATURES: MediaPlayerEntityFeature = (
     MediaPlayerEntityFeature.PLAY
@@ -125,6 +120,10 @@ SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
+RETRY_POLL_MAXIMUM = 3
+SCAN_INTERVAL = timedelta(seconds=5)
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -146,7 +145,6 @@ async def async_setup_entry(
 class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     """Representation of a LinkPlay media player."""
 
-    _attr_sound_mode_list = list(EQUALIZER_MAP.values())
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_media_content_type = MediaType.MUSIC
     _attr_name = None
@@ -156,9 +154,13 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
 
         super().__init__(bridge)
         self._attr_unique_id = bridge.device.uuid
+        self._retry_count = 0
 
         self._attr_source_list = [
             SOURCE_MAP[playing_mode] for playing_mode in bridge.device.playmode_support
+        ]
+        self._attr_sound_mode_list = [
+            mode.value for mode in bridge.player.available_equalizer_modes
         ]
 
     @exception_wrap
@@ -166,9 +168,12 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         """Update the state of the media player."""
         try:
             await self._bridge.player.update_status()
+            self._retry_count = 0
             self._update_properties()
         except LinkPlayRequestException:
-            self._attr_available = False
+            self._retry_count += 1
+            if self._retry_count >= RETRY_POLL_MAXIMUM:
+                self._attr_available = False
 
     @exception_wrap
     async def async_select_source(self, source: str) -> None:
@@ -342,7 +347,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         self._attr_is_volume_muted = self._bridge.player.muted
         self._attr_repeat = REPEAT_MAP[self._bridge.player.loop_mode]
         self._attr_shuffle = self._bridge.player.loop_mode == LoopMode.RANDOM_PLAYBACK
-        self._attr_sound_mode = EQUALIZER_MAP[self._bridge.player.equalizer_mode]
+        self._attr_sound_mode = self._bridge.player.equalizer_mode.value
         self._attr_supported_features = DEFAULT_FEATURES
 
         if self._bridge.player.status == PlayingStatus.PLAYING:

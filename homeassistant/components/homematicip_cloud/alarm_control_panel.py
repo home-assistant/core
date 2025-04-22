@@ -82,15 +82,15 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self._home.set_security_zones_activation(False, False)
+        await self._home.set_security_zones_activation_async(False, False)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self._home.set_security_zones_activation(False, True)
+        await self._home.set_security_zones_activation_async(False, True)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._home.set_security_zones_activation(True, True)
+        await self._home.set_security_zones_activation_async(True, True)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

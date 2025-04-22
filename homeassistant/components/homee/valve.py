@@ -15,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
 
+PARALLEL_UPDATES = 0
+
 VALVE_DESCRIPTIONS = {
     AttributeType.CURRENT_VALVE_POSITION: ValveEntityDescription(
         key="valve_position",
@@ -78,4 +80,4 @@ class HomeeValve(HomeeEntity, ValveEntity):
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
-        await self.async_set_value(position)
+        await self.async_set_homee_value(position)

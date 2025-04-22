@@ -8,6 +8,7 @@ from enum import Enum
 import logging
 from typing import cast
 
+from awesomeversion import AwesomeVersion
 from pynecil import (
     CharSetting,
     CommunicationError,
@@ -21,6 +22,7 @@ from pynecil import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.debounce import Debouncer
@@ -33,6 +35,8 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
 SCAN_INTERVAL_GITHUB = timedelta(hours=3)
 SCAN_INTERVAL_SETTINGS = timedelta(seconds=60)
+
+V223 = AwesomeVersion("v2.23")
 
 
 @dataclass
@@ -72,6 +76,7 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             ),
         )
         self.device = device
+        self.v223_features = False
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -79,7 +84,13 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             self.device_info = await self.device.get_device_info()
 
         except CommunicationError as e:
-            raise UpdateFailed("Cannot connect to device") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={CONF_NAME: self.config_entry.title},
+            ) from e
+
+        self.v223_features = AwesomeVersion(self.device_info.build) >= V223
 
 
 class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
@@ -102,7 +113,11 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
             return await self.device.get_live_data()
 
         except CommunicationError as e:
-            raise UpdateFailed("Cannot connect to device") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={CONF_NAME: self.config_entry.title},
+            ) from e
 
     @property
     def has_tip(self) -> bool:
@@ -181,4 +196,7 @@ class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
         try:
             return await self.github.latest_release()
         except UpdateException as e:
-            raise UpdateFailed("Failed to check for latest IronOS update") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_check_failed",
+            ) from e

@@ -79,9 +79,20 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
             ClientConnectorError,
             RetryError,
         ) as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={
+                    "entry": self.config_entry.title,
+                    "error": repr(err),
+                },
+            ) from err
         except InvalidApiKeyError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={"entry": self.config_entry.title},
+            ) from err
 
     async def _async_update_data_internal(self) -> CoordinatorDataT:
         """Update data via library."""

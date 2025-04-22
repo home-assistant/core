@@ -4,7 +4,7 @@
       "user": {
         "title": "Provide your address details",
         "data": {
-          "zip_code": "Your zip code",
+          "zip_code": "Your ZIP code",
           "house_number": "Your house number",
           "house_number_suffix": "A suffix for your house number"
         }

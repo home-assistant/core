@@ -172,8 +172,8 @@
           "vcc": "Vcc (5V)",
           "led_e": "LED E",
           "led_f": "LED F",
-          "home": "Home",
-          "away": "Away",
+          "home": "[%key:common::state::home%]",
+          "away": "[%key:common::state::not_home%]",
           "ds1820": "DS1820",
           "dhw_block": "Block hot water"
         }
@@ -352,12 +352,6 @@
       "central_heating_override_n": {
         "name": "Force central heating {circuit_number} on"
       }
-    }
-  },
-  "issues": {
-    "deprecated_import_from_configuration_yaml": {
-      "title": "Deprecated configuration",
-      "description": "Configuration of the OpenTherm Gateway integration through configuration.yaml is deprecated. Your configuration has been migrated to config entries. Please remove any OpenTherm Gateway configuration from your configuration.yaml."
     }
   },
   "options": {
