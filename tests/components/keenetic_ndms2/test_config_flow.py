@@ -145,6 +145,40 @@ async def test_connection_error(hass: HomeAssistant, connect_error) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_options_not_initialized(hass: HomeAssistant) -> None:
+    """Test the error when the integration is not initialized."""
+
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    # not setting entry.runtime_data
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_initialized"
+
+
+async def test_options_connection_error(hass: HomeAssistant) -> None:
+    """Test updating options."""
+
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    def get_interfaces_error():
+        raise ConnectionException("Mocked failure")
+
+    # fake with connection error
+    entry.runtime_data = Mock(
+        client=Mock(get_interfaces=Mock(wraps=get_interfaces_error))
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
     """Test host already configured and discovered."""
 
