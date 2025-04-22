@@ -154,6 +154,9 @@
       "total_flushes_done": {
         "name": "Total flushes done",
         "unit_of_measurement": "flushes"
+      },
+      "last_cleaning_time": {
+        "name": "Last cleaning time"
       }
     },
     "switch": {

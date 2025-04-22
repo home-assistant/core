@@ -224,7 +224,16 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
-        self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
+        if entity_info.name:
+            self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
+        else:
+            # https://github.com/home-assistant/core/issues/132532
+            # If name is not set, ESPHome will use the sanitized friendly name
+            # as the name, however we want to use the original object_id
+            # as the entity_id before it is sanitized since the sanitizer
+            # is not utf-8 aware. In this case, its always going to be
+            # an empty string so we drop the object_id.
+            self.entity_id = f"{domain}.{device_info.name}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -260,7 +269,12 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._static_info = static_info
         self._attr_unique_id = build_unique_id(device_info.mac_address, static_info)
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
-        self._attr_name = static_info.name
+        # https://github.com/home-assistant/core/issues/132532
+        # If the name is "", we need to set it to None since otherwise
+        # the friendly_name will be "{friendly_name} " with a trailing
+        # space. ESPHome uses protobuf under the hood, and an empty field
+        # gets a default value of "".
+        self._attr_name = static_info.name if static_info.name else None
         if entity_category := static_info.entity_category:
             self._attr_entity_category = ENTITY_CATEGORIES.from_esphome(entity_category)
         else:

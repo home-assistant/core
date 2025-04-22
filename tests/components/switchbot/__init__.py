@@ -463,3 +463,28 @@ HUMIDIFIER_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+
+WOSTRIP_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoStrip",
+    address="AA:BB:CC:DD:EE:FF",
+    manufacturer_data={
+        2409: b'\x84\xf7\x03\xb3?\xde\x04\xe4"\x0c\x00\x00\x00\x00\x00\x00'
+    },
+    service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"r\x00d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoStrip",
+        manufacturer_data={
+            2409: b'\x84\xf7\x03\xb3?\xde\x04\xe4"\x0c\x00\x00\x00\x00\x00\x00'
+        },
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"r\x00d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoStrip"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
