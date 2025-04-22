@@ -14,7 +14,7 @@
           "api_key": "The API key for authenticating with Portainer",
           "verify_ssl": "Verify the SSL certificate of the Portainer instance"
         },
-        "description": "You can retrieve your `API Key ` from the Portainer UI. Go to `My Account` > `Access Tokens` and create a new API key"
+        "description": "You can create an `access token` in the Portainer UI. Go to **My account > Access tokens** and click on **Add access token**"
       }
     },
     "error": {
