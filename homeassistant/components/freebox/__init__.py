@@ -1,9 +1,9 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
-from datetime import timedelta
-import logging
-from functools import partial
 import asyncio
+from datetime import timedelta
+from functools import partial
+import logging
 
 from freebox_api.exceptions import HttpRequestError
 
