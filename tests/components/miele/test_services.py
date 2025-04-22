@@ -4,11 +4,12 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientResponseError
 import pytest
+from voluptuous import MultipleInvalid
 
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import setup_integration
@@ -53,13 +54,13 @@ async def test_services(
     assert mock_miele_client.set_program.call_count == 2
 
 
-async def test_service_errors(
+async def test_service_api_errors(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
     mock_miele_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test service errors."""
+    """Test service api errors."""
     await setup_integration(hass, mock_config_entry)
     device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
 
@@ -73,3 +74,45 @@ async def test_service_errors(
             blocking=True,
         )
     assert mock_miele_client.set_program.call_count == 1
+
+
+async def test_service_validation_errors(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Tests that the custom services handle bad data."""
+
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
+
+    # Test missing program_id
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_program",
+            {"device_id": device.id},
+            blocking=True,
+        )
+    mock_miele_client.set_program.assert_not_called()
+
+    # Test invalid program_id
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_program",
+            {"device_id": device.id, "program_id": "invalid"},
+            blocking=True,
+        )
+    mock_miele_client.set_program.assert_not_called()
+
+    # Test invalid device
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_program",
+            {"device_id": "invalid_device", "program_id": 1},
+            blocking=True,
+        )
+    mock_miele_client.set_program.assert_not_called()

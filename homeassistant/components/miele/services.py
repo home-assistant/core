@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
@@ -42,9 +42,15 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async def set_program(call: ServiceCall):
         _LOGGER.debug("Set program call: %s", call)
         entries = await extract_our_config_entry_ids(call)
-        config_entry: MieleConfigEntry | None = hass.config_entries.async_get_entry(
-            entries[0]
-        )
+        try:
+            config_entry: MieleConfigEntry | None = hass.config_entries.async_get_entry(
+                entries[0]
+            )
+        except IndexError:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_program_no_device",
+            ) from None
         device_reg = dr.async_get(hass)
         api = cast(MieleConfigEntry, config_entry).runtime_data.api
         for device in call.data[CONF_DEVICE_ID]:
