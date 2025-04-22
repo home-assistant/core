@@ -160,7 +160,7 @@
   "services": {
     "set_program": {
       "name": "Set program",
-      "description": "Set and start a program on the appliance.",
+      "description": "Sets and starts a program on the appliance.",
       "fields": {
         "program_id": {
           "description": "The ID of the program to set.",
