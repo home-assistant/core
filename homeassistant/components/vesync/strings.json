@@ -86,7 +86,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
               "sleep": "Sleep",
               "advanced_sleep": "Advanced sleep",
               "pet": "Pet",

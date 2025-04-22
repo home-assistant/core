@@ -248,7 +248,7 @@ class OneDriveBackupAgent(BackupAgent):
             try:
                 metadata_stream = await self._client.download_drive_item(item_id)
             except OneDriveException as err:
-                _LOGGER.debug("Error downloading metadata for %s: %s", item_id, err)
+                _LOGGER.warning("Error downloading metadata for %s: %s", item_id, err)
                 return None
             metadata_json = loads(await metadata_stream.read())
             return AgentBackup.from_dict(metadata_json)

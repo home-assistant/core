@@ -139,7 +139,7 @@
         "state": {
           "default": "Default",
           "charging": "[%key:common::state::charging%]",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "complete": "Complete",
           "fully_charged": "Fully charged",
           "finished_fully_charged": "Finished, fully charged",
