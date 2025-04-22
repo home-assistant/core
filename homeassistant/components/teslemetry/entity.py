@@ -20,7 +20,6 @@ from .coordinator import (
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import wake_up_vehicle
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 
@@ -125,10 +124,6 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
     def _value(self) -> Any | None:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(self.key)
-
-    async def wake_up_if_asleep(self) -> None:
-        """Wake up the vehicle if its asleep."""
-        await wake_up_vehicle(self.vehicle)
 
 
 class TeslemetryEnergyLiveEntity(TeslemetryEntity):
