@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 from functools import partial
+import asyncio
 
 from freebox_api.exceptions import HttpRequestError
 
@@ -20,12 +21,19 @@ SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
+def blocking_api_open(api, host, port):
+    """Wrapper to run the asynchronous api.open in a blocking way."""
+    asyncio.run(api.open(host, port))
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Freebox entry."""
     api = await get_api(hass, entry.data[CONF_HOST])
     try:
         await hass.async_add_executor_job(
-            partial(api.open, entry.data[CONF_HOST], entry.data[CONF_PORT])
+            partial(
+                blocking_api_open, api, entry.data[CONF_HOST], entry.data[CONF_PORT]
+            )
         )
     except HttpRequestError as err:
         raise ConfigEntryNotReady from err
