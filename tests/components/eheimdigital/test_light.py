@@ -131,13 +131,15 @@ async def test_turn_off(
 
     classic_led_ctrl_mock.turn_off.side_effect = EheimDigitalClientError
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_0"},
             blocking=True,
         )
+
+    assert isinstance(exc_info.value.__cause__, EheimDigitalClientError)
 
     classic_led_ctrl_mock.turn_off.side_effect = None
 
