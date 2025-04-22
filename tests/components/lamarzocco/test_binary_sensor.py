@@ -65,6 +65,7 @@ async def test_sensor_going_unavailable(
     assert state
     assert state.state != STATE_UNAVAILABLE
 
+    mock_lamarzocco.websocket.connected = False
     mock_lamarzocco.get_dashboard.side_effect = RequestNotSuccessful("")
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
