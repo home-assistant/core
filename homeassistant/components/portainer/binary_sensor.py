@@ -154,7 +154,9 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
             if (
                 device_info := self.coordinator.endpoints[
                     self.endpoint_id
-                ].containers.get(self.device_id)
+                device_info := self.coordinator.data[self.endpoint_id].containers.get(
+                    self.device_id
+                )
             )
             else None
         )
