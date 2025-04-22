@@ -204,3 +204,37 @@ async def test_form__already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_ista")
+async def test_flow_reauth_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reauth flow unique id mismatch."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_EMAIL: "test@example.com",
+            CONF_PASSWORD: "test-password",
+        },
+        unique_id="42243134-21f6-40a2-a79f-e417a3a12104",
+    )
+
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "new@example.com",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+    assert len(hass.config_entries.async_entries()) == 1
