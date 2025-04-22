@@ -45,7 +45,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def create_omada_client(
-    hass: HomeAssistant, data: MappingProxyType[str, Any]
+    hass: HomeAssistant, data: Mapping[str, Any]
 ) -> OmadaClient:
     """Create a TP-Link Omada client API for the given config entry."""
 

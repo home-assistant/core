@@ -22,6 +22,7 @@ from pynecil import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.debounce import Debouncer
@@ -83,7 +84,11 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             self.device_info = await self.device.get_device_info()
 
         except CommunicationError as e:
-            raise UpdateFailed("Cannot connect to device") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={CONF_NAME: self.config_entry.title},
+            ) from e
 
         self.v223_features = AwesomeVersion(self.device_info.build) >= V223
 
@@ -108,7 +113,11 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
             return await self.device.get_live_data()
 
         except CommunicationError as e:
-            raise UpdateFailed("Cannot connect to device") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={CONF_NAME: self.config_entry.title},
+            ) from e
 
     @property
     def has_tip(self) -> bool:
@@ -187,4 +196,7 @@ class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
         try:
             return await self.github.latest_release()
         except UpdateException as e:
-            raise UpdateFailed("Failed to check for latest IronOS update") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_check_failed",
+            ) from e
