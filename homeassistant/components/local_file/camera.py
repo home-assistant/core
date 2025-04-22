@@ -7,37 +7,18 @@ import mimetypes
 
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
-    Camera,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.camera import Camera
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    issue_registry as ir,
-)
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEFAULT_NAME, DOMAIN, SERVICE_UPDATE_FILE_PATH
+from .const import SERVICE_UPDATE_FILE_PATH
 from .util import check_file_path_access
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_FILE_PATH): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 
 async def async_setup_entry(
@@ -64,57 +45,6 @@ async def async_setup_entry(
                 entry.entry_id,
             )
         ]
-    )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Camera that works with local files."""
-    file_path: str = config[CONF_FILE_PATH]
-    file_path_slug = slugify(file_path)
-
-    if not await hass.async_add_executor_job(check_file_path_access, file_path):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"no_access_path_{file_path_slug}",
-            breaks_in_ha_version="2025.5.0",
-            is_fixable=False,
-            learn_more_url="https://www.home-assistant.io/integrations/local_file/",
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="no_access_path",
-            translation_placeholders={
-                "file_path": file_path_slug,
-            },
-        )
-        return
-
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2025.5.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        learn_more_url="https://www.home-assistant.io/integrations/local_file/",
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Local file",
-        },
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
     )
 
 
