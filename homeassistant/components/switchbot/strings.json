@@ -181,5 +181,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "characteristic_missing_error": {
+      "message": "An error occurred while Get a characteristic by handle or UUID: {error}"
+    },
+    "operation_error": {
+      "message": "An error occurred while check command result: {error}"
+    }
   }
 }
