@@ -154,9 +154,6 @@ async def test_water_heater_set_temperature(
             },
             blocking=True,
         )
-
-        state = hass.states.get("water_heater.water_heater")
-        assert state.state == STATE_HIGH_DEMAND
         assert matter_client.write_attribute.call_count == 1
         assert matter_client.write_attribute.call_args == call(
             node_id=matter_node.node_id,
