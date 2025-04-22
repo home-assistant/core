@@ -319,7 +319,12 @@ async def test_form_auth(
     ],
 )
 async def test_form_errors_get_info(
-    hass: HomeAssistant, exc: Exception, base_error: str
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    mock_setup: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exc: Exception,
+    base_error: str,
 ) -> None:
     """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
@@ -334,6 +339,28 @@ async def test_form_errors_get_info(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": base_error}
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "type": MODEL_1, "gen": 1},
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1"},
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Test name"
+    assert result3["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_MODEL: MODEL_1,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 1,
+    }
+    assert result3["context"]["unique_id"] == "test-mac"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_missing_model_key(
