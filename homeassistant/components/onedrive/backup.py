@@ -174,11 +174,15 @@ class OneDriveBackupAgent(BackupAgent):
         description = dumps(backup.as_dict())
         _LOGGER.debug("Creating metadata: %s", description)
         metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
-        metadata_file = await self._client.upload_file(
-            self._folder_id,
-            metadata_filename,
-            description,
-        )
+        try:
+            metadata_file = await self._client.upload_file(
+                self._folder_id,
+                metadata_filename,
+                description,
+            )
+        except OneDriveException:
+            await self._client.delete_drive_item(backup_file.id)
+            raise
 
         # add metadata to the metadata file
         metadata_description = {
@@ -186,10 +190,15 @@ class OneDriveBackupAgent(BackupAgent):
             "backup_id": backup.backup_id,
             "backup_file_id": backup_file.id,
         }
-        await self._client.update_drive_item(
-            path_or_id=metadata_file.id,
-            data=ItemUpdate(description=dumps(metadata_description)),
-        )
+        try:
+            await self._client.update_drive_item(
+                path_or_id=metadata_file.id,
+                data=ItemUpdate(description=dumps(metadata_description)),
+            )
+        except OneDriveException:
+            await self._client.delete_drive_item(backup_file.id)
+            await self._client.delete_drive_item(metadata_file.id)
+            raise
         self._cache_expiration = time()
 
     @handle_backup_errors
