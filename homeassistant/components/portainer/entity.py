@@ -53,9 +53,10 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         self.endpoint_id = via_device.endpoint.id
 
         self.device_name = (
-            self._device_info.names[0].replace("/", " ")
+        device_name = (
+            self._device_info.names[0].replace("/", " ").strip()
             if self._device_info.names
-            else "Unknown Container"
+            else None
         )
 
         self._attr_device_info = DeviceInfo(
@@ -64,9 +65,10 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             },
             manufacturer=DEFAULT_NAME,
             model="Container",
-            name=self.device_name,
+            name=device_name,
             via_device=(
                 DOMAIN,
                 f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
+            translation_key=None if device_name else "unknown_container",
         )
