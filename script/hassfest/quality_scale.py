@@ -1397,7 +1397,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "energy",
     "energyzero",
     "enigma2",
-    "enphase_envoy",
     "enocean",
     "entur_public_transport",
     "environment_canada",
