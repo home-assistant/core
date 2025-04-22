@@ -167,7 +167,7 @@ aioacaia==0.1.14
 aioairq==0.4.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.11
+aioairzone-cloud==0.6.12
 
 # homeassistant.components.airzone
 aioairzone==1.0.0
@@ -252,7 +252,7 @@ aiohasupervisor==0.3.1b1
 aiohomeconnect==0.17.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.13
+aiohomekit==3.2.14
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -344,7 +344,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.5.0
+aiorussound==4.5.2
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -353,7 +353,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.4.1
+aioshelly==13.5.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -999,7 +999,7 @@ homematicip==2.0.0
 httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.10.0
+huawei-lte-api==1.11.0
 
 # homeassistant.components.huum
 huum==0.7.12
@@ -1746,7 +1746,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.3.4
+pymiele==0.3.6
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -1811,7 +1811,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.17.0
+pyoverkiz==1.17.1
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1871,7 +1871,7 @@ pyrympro==0.0.9
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2024.11.0
+pyschlage==2025.4.0
 
 # homeassistant.components.sensibo
 pysensibo==1.1.0
@@ -2334,7 +2334,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.1
+teslemetry-stream==0.7.5
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
@@ -2523,7 +2523,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.7
+yalexs-ble==2.6.0
 
 # homeassistant.components.august
 # homeassistant.components.yale
