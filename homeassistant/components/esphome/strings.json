@@ -19,11 +19,11 @@
       "reconfigure_unique_id_changed": "**Reconfiguration of `{name}` was aborted** because the address `{host}` points to a different device: `{unexpected_device_name}` (MAC: `{unexpected_mac}`) instead of the expected one (MAC: `{expected_mac}`)."
     },
     "error": {
-      "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address",
-      "connection_error": "Can't connect to ESP. Please make sure your YAML file contains an 'api:' line.",
-      "requires_encryption_key": "This ESPHome device requires an encryption key to connect. Please enter the key configured in the device’s YAML file under `api.encryption.key`",
+      "resolve_error": "Unable to resolve the address of the ESPHome device. If this issue continues, consider setting a static IP address.",
+      "connection_error": "Unable to connect to the ESPHome device. Make sure the device’s YAML configuration includes an `api` section.",
+      "requires_encryption_key": "The ESPHome device requires an encryption key. Enter the key defined in the device’s YAML configuration under `api -> encryption -> key`.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_psk": "The transport encryption key is invalid. Please ensure it matches the device’s YAML file under `api.encryption.key`"
+      "invalid_psk": "The encryption key is invalid. Make sure it matches the value in the device’s YAML configuration under `api -> encryption -> key`."
     },
     "step": {
       "user": {
