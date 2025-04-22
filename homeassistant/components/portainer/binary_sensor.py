@@ -82,7 +82,7 @@ async def async_setup_entry(
             entities.extend(
                 [
                     PortainerContainerSensor(
-                        coordinator=portainer,
+                        coordinator=coordinator,
                         entity_description=entity_description,
                         device_info=container,
                         via_device=endpoint,
