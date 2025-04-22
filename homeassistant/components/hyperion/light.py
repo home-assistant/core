@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 import functools
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from hyperion import client, const
@@ -129,7 +128,7 @@ class HyperionLight(LightEntity):
         server_id: str,
         instance_num: int,
         instance_name: str,
-        options: MappingProxyType[str, Any],
+        options: Mapping[str, Any],
         hyperion_client: client.HyperionClient,
     ) -> None:
         """Initialize the light."""
