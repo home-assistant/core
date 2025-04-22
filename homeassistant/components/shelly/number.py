@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Final, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.number import (
     DOMAIN as NUMBER_PLATFORM,
@@ -34,6 +34,7 @@ from .entity import (
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
@@ -97,6 +98,7 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
 
         return self.attribute_value
 
+    @rpc_call
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
         method = getattr(self.coordinator.device, self.entity_description.method)
@@ -105,29 +107,7 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
             assert isinstance(self._id, int)
             assert method is not None
 
-        try:
-            await method(self._id, value)
-        except DeviceConnectionError as err:
-            self.coordinator.last_update_success = False
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="device_communication_action_error",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "device": self.coordinator.name,
-                },
-            ) from err
-        except RpcCallError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="rpc_call_action_error",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "device": self.coordinator.name,
-                },
-            ) from err
-        except InvalidAuthError:
-            await self.coordinator.async_shutdown_device_and_start_reauth()
+        await method(self._id, value)
 
 
 class RpcBluTrvNumber(RpcNumber):
