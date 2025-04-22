@@ -629,6 +629,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ref_normal_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '7d3feb98-8a36-4351-c362-5e21ad3a78dd',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': '24K_REF_LCD_FHUB9.0',
+    'model_id': None,
+    'name': 'Refrigerator',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '20240616.213423',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ref_normal_01011]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1054,6 +1087,39 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': 'Theater',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[gas_meter]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '3b57dca3-9a90-4f27-ba80-f947b1e60d58',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'CopperLabs',
+    'model': 'Virtual Gas Meter',
+    'model_id': None,
+    'name': 'Gas Meter',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1616,6 +1682,39 @@
     'serial_number': None,
     'suggested_area': 'Theater',
     'sw_version': 'SAT-iMX8M23WWC-1010.5',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[vd_network_audio_003s]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'a75cb1e1-03fd-3c77-ca9f-d4e56c4096c6',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'HW-S60D',
+    'model_id': None,
+    'name': 'Soundbar',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'SAT-MT8532D24WWC-1016.0',
     'via_device_id': None,
   })
 # ---

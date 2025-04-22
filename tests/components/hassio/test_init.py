@@ -17,16 +17,16 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.hassio import (
     ADDONS_COORDINATOR,
     DOMAIN,
-    STORAGE_KEY,
     get_core_info,
     get_supervisor_ip,
     hostname_from_addon_slug,
     is_hassio as deprecated_is_hassio,
 )
+from homeassistant.components.hassio.config import STORAGE_KEY
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
@@ -309,7 +309,10 @@ async def test_setup_api_push_api_data_default(
     supervisor_client: AsyncMock,
 ) -> None:
     """Test setup with API push default data."""
-    with patch.dict(os.environ, MOCK_ENVIRON):
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0),
+    ):
         result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
         await hass.async_block_till_done()
 
@@ -470,7 +473,6 @@ async def test_service_register(hass: HomeAssistant) -> None:
     assert hass.services.has_service("hassio", "addon_start")
     assert hass.services.has_service("hassio", "addon_stop")
     assert hass.services.has_service("hassio", "addon_restart")
-    assert hass.services.has_service("hassio", "addon_update")
     assert hass.services.has_service("hassio", "addon_stdin")
     assert hass.services.has_service("hassio", "host_shutdown")
     assert hass.services.has_service("hassio", "host_reboot")
@@ -489,7 +491,6 @@ async def test_service_calls(
     supervisor_client: AsyncMock,
     addon_installed: AsyncMock,
     supervisor_is_connected: AsyncMock,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Call service and check the API calls behind that."""
     supervisor_is_connected.side_effect = SupervisorError
@@ -516,21 +517,19 @@ async def test_service_calls(
     await hass.services.async_call("hassio", "addon_start", {"addon": "test"})
     await hass.services.async_call("hassio", "addon_stop", {"addon": "test"})
     await hass.services.async_call("hassio", "addon_restart", {"addon": "test"})
-    await hass.services.async_call("hassio", "addon_update", {"addon": "test"})
-    assert (DOMAIN, "update_service_deprecated") in issue_registry.issues
     await hass.services.async_call(
         "hassio", "addon_stdin", {"addon": "test", "input": "test"}
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 25
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 24
     assert aioclient_mock.mock_calls[-1][2] == "test"
 
     await hass.services.async_call("hassio", "host_shutdown", {})
     await hass.services.async_call("hassio", "host_reboot", {})
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 27
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 26
 
     await hass.services.async_call("hassio", "backup_full", {})
     await hass.services.async_call(
@@ -545,7 +544,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 29
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 28
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "homeassistant": True,
@@ -570,7 +569,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 31
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 30
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
@@ -589,7 +588,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 32
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 31
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "backup_name",
         "location": "backup_share",
@@ -605,7 +604,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 33
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 32
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "location": None,
@@ -624,7 +623,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 35
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 34
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "location": None,

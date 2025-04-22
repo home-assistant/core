@@ -147,7 +147,7 @@
               "low": "[%key:common::state::low%]",
               "medium": "[%key:common::state::medium%]",
               "high": "[%key:common::state::high%]",
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
               "natural_wind": "Natural wind",
               "sleep_wind": "Sleep wind"
             }
@@ -222,7 +222,7 @@
         "name": "Number of rinses",
         "state": {
           "off": "[%key:common::state::off%]",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "extra": "Extra",
           "max": "Max"
         }
@@ -238,7 +238,7 @@
       "contamination_state": {
         "name": "Contamination state",
         "state": {
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "low": "[%key:common::state::low%]",
           "warning": "Warning",
           "critical": "Critical"
@@ -270,7 +270,7 @@
           "stopped": "[%key:common::state::stopped%]",
           "running": "Running",
           "paused": "[%key:common::state::paused%]",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "seeking_charger": "Seeking charger",
           "charging": "[%key:common::state::charging%]",
           "docked": "Docked"
