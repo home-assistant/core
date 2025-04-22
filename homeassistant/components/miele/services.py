@@ -26,31 +26,28 @@ SERVICE_PROGRAM = cv.make_entity_service_schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def extract_our_config_entry_ids(service_call: ServiceCall) -> list[str]:
+async def extract_our_config_entry_ids(service_call: ServiceCall) -> MieleConfigEntry:
     """Extract config entry IDs from the service call."""
     hass = service_call.hass
-    return [
-        entry_id
-        for entry_id in await async_extract_config_entry_ids(hass, service_call)
-        if (entry := hass.config_entries.async_get_entry(entry_id))
-        and entry.domain == DOMAIN
+    target_entry_ids = await async_extract_config_entry_ids(hass, service_call)
+    target_entries: list[MieleConfigEntry] = [
+        loaded_entry
+        for loaded_entry in hass.config_entries.async_loaded_entries(DOMAIN)
+        if loaded_entry.entry_id in target_entry_ids
     ]
+    if not target_entries:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="set_program_no_device",
+        )
+    return target_entries[0]
 
 
 async def set_program(call: ServiceCall) -> None:
     """Set a program on a Miele appliance."""
 
     _LOGGER.debug("Set program call: %s", call)
-    entries = await extract_our_config_entry_ids(call)
-    try:
-        config_entry: MieleConfigEntry | None = (
-            call.hass.config_entries.async_get_entry(entries[0])
-        )
-    except IndexError:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="set_program_no_device",
-        ) from None
+    config_entry = await extract_our_config_entry_ids(call)
     device_reg = dr.async_get(call.hass)
     api = cast(MieleConfigEntry, config_entry).runtime_data.api
     for device in call.data[CONF_DEVICE_ID]:
