@@ -38,7 +38,10 @@ async def test_services(
         },
         blocking=True,
     )
-    mock_miele_client.set_program.assert_called_once()
+    mock_miele_client.set_program.assert_called_once_with(
+        TEST_APPLIANCE, {"programId": 24}
+    )
+    mock_miele_client.reset_mock()
 
     await hass.services.async_call(
         DOMAIN,
@@ -51,7 +54,10 @@ async def test_services(
         },
         blocking=True,
     )
-    assert mock_miele_client.set_program.call_count == 2
+    mock_miele_client.set_program.assert_called_once_with(
+        TEST_APPLIANCE, {"programId": 24, "duration": [1, 15], "temperature": 195}
+    )
+    mock_miele_client.reset_mock()
 
 
 async def test_service_api_errors(
@@ -73,7 +79,9 @@ async def test_service_api_errors(
             {"device_id": device.id, "program_id": 1},
             blocking=True,
         )
-    assert mock_miele_client.set_program.call_count == 1
+    mock_miele_client.set_program.assert_called_once_with(
+        TEST_APPLIANCE, {"programId": 1}
+    )
 
 
 async def test_service_validation_errors(

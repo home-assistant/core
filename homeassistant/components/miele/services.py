@@ -12,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import DOMAIN, PROGRAM_ID
+from .const import DOMAIN
 from .coordinator import MieleConfigEntry
 
 SERVICE_PROGRAM = cv.make_entity_service_schema(
@@ -26,8 +26,8 @@ SERVICE_PROGRAM = cv.make_entity_service_schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def extract_our_config_entry_ids(service_call: ServiceCall) -> MieleConfigEntry:
-    """Extract config entry IDs from the service call."""
+async def extract_our_config_entry(service_call: ServiceCall) -> MieleConfigEntry:
+    """Extract config entry from the service call."""
     hass = service_call.hass
     target_entry_ids = await async_extract_config_entry_ids(hass, service_call)
     target_entries: list[MieleConfigEntry] = [
@@ -47,13 +47,13 @@ async def set_program(call: ServiceCall) -> None:
     """Set a program on a Miele appliance."""
 
     _LOGGER.debug("Set program call: %s", call)
-    config_entry = await extract_our_config_entry_ids(call)
+    config_entry = await extract_our_config_entry(call)
     device_reg = dr.async_get(call.hass)
-    api = cast(MieleConfigEntry, config_entry).runtime_data.api
+    api = config_entry.runtime_data.api
     for device in call.data[CONF_DEVICE_ID]:
         device_entry = device_reg.async_get(device)
 
-        data = {PROGRAM_ID: call.data["program_id"]}
+        data = {"programId": call.data["program_id"]}
         if "duration" in call.data:
             data["duration"] = [
                 call.data["duration"] // 60,
