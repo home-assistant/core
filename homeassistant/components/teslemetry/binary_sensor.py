@@ -59,6 +59,17 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="state",
         polling=True,
         polling_value_fn=lambda x: x == TeslemetryState.ONLINE,
+        streaming_listener=lambda x, y: x.listen_State(y),
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="cellular",
+        streaming_listener=lambda x, y: x.listen_Cellular(y),
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="wifi",
+        streaming_listener=lambda x, y: x.listen_Wifi(y),
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
     TeslemetryBinarySensorEntityDescription(
