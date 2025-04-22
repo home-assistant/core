@@ -110,5 +110,4 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 containers={container.id: container for container in containers},
             )
 
-        self.endpoints = mapped_endpoints
         return mapped_endpoints
