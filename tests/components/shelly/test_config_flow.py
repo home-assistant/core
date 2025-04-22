@@ -82,6 +82,7 @@ async def test_form(
     port: int,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -104,10 +105,6 @@ async def test_form(
         patch(
             "homeassistant.components.shelly.async_setup", return_value=True
         ) as mock_setup,
-        patch(
-            "homeassistant.components.shelly.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -131,6 +128,7 @@ async def test_form(
 async def test_user_flow_overrides_existing_discovery(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test setting up from the user flow when the devices is already discovered."""
     with (
@@ -147,10 +145,6 @@ async def test_user_flow_overrides_existing_discovery(
         patch(
             "homeassistant.components.shelly.async_setup", return_value=True
         ) as mock_setup,
-        patch(
-            "homeassistant.components.shelly.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
     ):
         discovery_result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -256,6 +250,7 @@ async def test_form_auth(
     username: str,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test manual configuration if auth is required."""
     result = await hass.config_entries.flow.async_init(
@@ -280,10 +275,6 @@ async def test_form_auth(
         patch(
             "homeassistant.components.shelly.async_setup", return_value=True
         ) as mock_setup,
-        patch(
-            "homeassistant.components.shelly.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], user_input
@@ -465,7 +456,9 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 
 
 async def test_user_setup_ignored_device(
-    hass: HomeAssistant, mock_block_device: Mock
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test user can successfully setup an ignored device."""
 
@@ -489,10 +482,6 @@ async def test_user_setup_ignored_device(
         patch(
             "homeassistant.components.shelly.async_setup", return_value=True
         ) as mock_setup,
-        patch(
-            "homeassistant.components.shelly.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -609,6 +598,7 @@ async def test_zeroconf(
     get_info: dict[str, Any],
     mock_block_device: Mock,
     mock_rpc_device: Mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we get the form."""
 
@@ -633,10 +623,6 @@ async def test_zeroconf(
         patch(
             "homeassistant.components.shelly.async_setup", return_value=True
         ) as mock_setup,
-        patch(
-            "homeassistant.components.shelly.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -657,7 +643,10 @@ async def test_zeroconf(
 
 
 async def test_zeroconf_sleeping_device(
-    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test sleeping device configuration via zeroconf."""
     monkeypatch.setitem(
@@ -691,10 +680,6 @@ async def test_zeroconf_sleeping_device(
         patch(
             "homeassistant.components.shelly.async_setup", return_value=True
         ) as mock_setup,
-        patch(
-            "homeassistant.components.shelly.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -862,7 +847,7 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf_require_auth(
-    hass: HomeAssistant, mock_block_device: Mock
+    hass: HomeAssistant, mock_block_device: Mock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test zeroconf if auth is required."""
 
@@ -882,10 +867,6 @@ async def test_zeroconf_require_auth(
         patch(
             "homeassistant.components.shelly.async_setup", return_value=True
         ) as mock_setup,
-        patch(
-            "homeassistant.components.shelly.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
