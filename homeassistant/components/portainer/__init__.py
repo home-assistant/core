@@ -18,11 +18,10 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN
 from .coordinator import PortainerCoordinator
-from .models import PortainerData
 
 _PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 
-type PortainerConfigEntry = ConfigEntry[PortainerData]
+type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
@@ -60,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     coordinator = PortainerCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = PortainerData(coordinator)
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     return True

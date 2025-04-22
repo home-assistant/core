@@ -62,7 +62,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer binary sensors."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     entities: list[BinarySensorEntity] = []
 
     for endpoint in coordinator.data.values():
@@ -152,8 +152,6 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
         return (
             self.entity_description.state_fn(device_info)
             if (
-                device_info := self.coordinator.endpoints[
-                    self.endpoint_id
                 device_info := self.coordinator.data[self.endpoint_id].containers.get(
                     self.device_id
                 )

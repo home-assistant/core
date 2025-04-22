@@ -52,7 +52,6 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         self.device_id = self._device_info.id
         self.endpoint_id = via_device.endpoint.id
 
-        self.device_name = (
         device_name = (
             self._device_info.names[0].replace("/", " ").strip()
             if self._device_info.names

@@ -60,4 +60,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Portainer test",
         data=MOCK_TEST_CONFIG,
+        entry_id="portainer_test_entry_123",
     )

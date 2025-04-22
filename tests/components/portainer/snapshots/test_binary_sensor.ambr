@@ -37,7 +37,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': ' focused_einstein Status',
+      'friendly_name': 'focused_einstein Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.focused_einstein_status',
@@ -85,7 +85,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': ' funny_chatelet Status',
+      'friendly_name': 'funny_chatelet Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.funny_chatelet_status',
@@ -181,7 +181,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': ' practical_morse Status',
+      'friendly_name': 'practical_morse Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.practical_morse_status',
@@ -229,7 +229,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': ' serene_banach Status',
+      'friendly_name': 'serene_banach Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.serene_banach_status',
@@ -277,7 +277,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': ' stoic_turing Status',
+      'friendly_name': 'stoic_turing Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.stoic_turing_status',
