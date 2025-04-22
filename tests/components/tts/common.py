@@ -24,6 +24,7 @@ from homeassistant.components.tts import (
     Voice,
     _get_cache_files,
 )
+from homeassistant.components.tts.media_source import media_source_id_to_kwargs
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -42,6 +43,19 @@ from tests.typing import ClientSessionGenerator
 DEFAULT_LANG = "en_US"
 SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
 TEST_DOMAIN = "test"
+
+
+async def async_get_media_source_audio(
+    hass: HomeAssistant,
+    media_source_id: str,
+) -> tuple[str, bytes]:
+    """Get TTS audio as extension, data."""
+    manager = hass.data[DATA_TTS_MANAGER]
+    cache = manager.async_cache_message_in_memory(
+        **media_source_id_to_kwargs(media_source_id)
+    )
+    data = b"".join([chunk async for chunk in cache.async_stream_data()])
+    return cache.extension, data
 
 
 def mock_tts_get_cache_files_fixture_helper() -> Generator[MagicMock]:

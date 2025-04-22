@@ -63,7 +63,7 @@ from .const import (
 from .entity import TextToSpeechEntity, TTSAudioRequest
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
-from .media_source import generate_media_source_id, media_source_id_to_kwargs
+from .media_source import generate_media_source_id
 from .models import Voice
 
 __all__ = [
@@ -83,7 +83,6 @@ __all__ = [
     "TtsAudioType",
     "Voice",
     "async_default_engine",
-    "async_get_media_source_audio",
     "generate_media_source_id",
 ]
 
@@ -265,19 +264,6 @@ def async_create_stream(
 def async_get_stream(hass: HomeAssistant, token: str) -> ResultStream | None:
     """Return a result stream given a token."""
     return hass.data[DATA_TTS_MANAGER].token_to_stream.get(token)
-
-
-async def async_get_media_source_audio(
-    hass: HomeAssistant,
-    media_source_id: str,
-) -> tuple[str, bytes]:
-    """Get TTS audio as extension, data."""
-    manager = hass.data[DATA_TTS_MANAGER]
-    cache = manager.async_cache_message_in_memory(
-        **media_source_id_to_kwargs(media_source_id)
-    )
-    data = b"".join([chunk async for chunk in cache.async_stream_data()])
-    return cache.extension, data
 
 
 @callback

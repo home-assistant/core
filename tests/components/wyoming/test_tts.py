@@ -17,6 +17,8 @@ from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from . import MockAsyncTcpClient
 
+from tests.components.tts.common import async_get_media_source_audio
+
 
 async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
     """Test supported properties."""
@@ -59,7 +61,7 @@ async def test_get_tts_audio(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        extension, data = await tts.async_get_media_source_audio(
+        extension, data = await async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
                 hass,
@@ -96,7 +98,7 @@ async def test_get_tts_audio_different_formats(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        extension, data = await tts.async_get_media_source_audio(
+        extension, data = await async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
                 hass,
@@ -130,7 +132,7 @@ async def test_get_tts_audio_different_formats(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        extension, data = await tts.async_get_media_source_audio(
+        extension, data = await async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
                 hass,
@@ -182,7 +184,7 @@ async def test_get_tts_audio_audio_oserror(
             HomeAssistantError,
         ),
     ):
-        await tts.async_get_media_source_audio(
+        await async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
                 hass, "Hello world", "tts.test_tts", hass.config.language
@@ -204,7 +206,7 @@ async def test_voice_speaker(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        await tts.async_get_media_source_audio(
+        await async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
                 hass,
