@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def blocking_api_open(api, host, port):
-    """Wrapper to run the asynchronous api.open in a blocking way."""
+    """Run the asynchronous api.open in a blocking way."""
     asyncio.run(api.open(host, port))
 
 
