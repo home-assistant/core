@@ -1,10 +1,8 @@
 """Test jewish calendar service."""
 
 import datetime as dt
-from unittest.mock import patch
 
-from hdate import HebrewDate, Months
-from hdate.translator import Language
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.jewish_calendar.const import DOMAIN
@@ -14,69 +12,83 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("test_date", "nusach", "language", "is_after_sunset", "expected"),
+    ("test_time", "service_data", "expected"),
     [
-        pytest.param(dt.date(2025, 3, 20), "sfarad", "he", False, "", id="no_blessing"),
         pytest.param(
-            dt.date(2025, 5, 20),
-            "ashkenaz",
-            "he",
-            False,
+            dt.datetime(2025, 3, 20, 21, 0),
+            {
+                "date": dt.date(2025, 3, 20),
+                "nusach": "sfarad",
+                "language": "he",
+                "is_after_sunset": False,
+            },
+            "",
+            id="no_blessing",
+        ),
+        pytest.param(
+            dt.datetime(2025, 3, 20, 21, 0),
+            {
+                "date": dt.date(2025, 5, 20),
+                "nusach": "ashkenaz",
+                "language": "he",
+                "is_after_sunset": False,
+            },
             "היום שבעה ושלושים יום שהם חמישה שבועות ושני ימים בעומר",
             id="ahskenaz-hebrew",
         ),
         pytest.param(
-            dt.date(2025, 5, 20),
-            "sfarad",
-            "en",
-            True,
+            dt.datetime(2025, 3, 20, 21, 0),
+            {
+                "date": dt.date(2025, 5, 20),
+                "nusach": "sfarad",
+                "language": "en",
+                "is_after_sunset": True,
+            },
             "Today is the thirty-eighth day, which are five weeks and three days of the Omer",
-            id="sefarad-english",
+            id="sefarad-english-after-sunset",
         ),
         pytest.param(
-            None,  # Test case where date is not provided
-            "sfarad",
-            "en",
-            False,
-            "Today is the thirteenth day, which are one week and six days of the Omer",
-            id="no_date_provided",
+            dt.datetime(2025, 3, 20, 21, 0),
+            {
+                "date": dt.date(2025, 5, 20),
+                "nusach": "sfarad",
+                "language": "en",
+                "is_after_sunset": False,
+            },
+            "Today is the thirty-seventh day, which are five weeks and two days of the Omer",
+            id="sefarad-english-before-sunset",
         ),
         pytest.param(
-            None,  # Test case where date is not provided and it's after sunset
-            "adot_mizrah",
-            "he",
-            True,  # Ignored
-            "היום שלושה עשר יום לעומר שהם שבוע אחד ושישה ימים",
-            id="no_date_after_sunset",
+            dt.datetime(2025, 5, 20, 21, 0),
+            {"nusach": "sfarad", "language": "en"},
+            "Today is the thirty-eighth day, which are five weeks and three days of the Omer",
+            id="sefarad-english-after-sunset-without-date",
+        ),
+        pytest.param(
+            dt.datetime(2025, 5, 20, 6, 0),
+            {
+                "nusach": "sfarad",
+            },
+            "היום שבעה ושלושים יום שהם חמישה שבועות ושני ימים לעומר",
+            id="sefarad-english-before-sunset-without-date",
         ),
     ],
+    indirect=["test_time"],
 )
 async def test_get_omer_blessing(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    test_date: dt.date | None,
-    nusach: str,
-    language: Language,
-    is_after_sunset: bool,
+    test_time: dt.date | None,
+    service_data: object,
     expected: str,
 ) -> None:
     """Test get omer blessing."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.jewish_calendar.service.get_hebrew_date"
-    ) as mock_date:
-        mock_date.return_value = HebrewDate(5785, Months.NISAN, 28)
-        service_data = {
-            "nusach": nusach,
-            "language": language,
-            "is_after_sunset": is_after_sunset,
-        }
-        if test_date:
-            service_data["date"] = test_date
 
-        result = await hass.services.async_call(
+    async def call_service():
+        return await hass.services.async_call(
             DOMAIN,
             "count_omer",
             service_data,
@@ -84,4 +96,10 @@ async def test_get_omer_blessing(
             return_response=True,
         )
 
-        assert result["message"] == expected
+    if test_time:
+        with freeze_time(test_time):
+            result = await call_service()
+    else:
+        result = await call_service()
+
+    assert result["message"] == expected
