@@ -26,10 +26,9 @@ async def async_setup_entry(hass, entry):
     name = entry.data.get("name", "TheSilentWave")
     host = entry.data.get("host", "")
     scan_interval = entry.data.get("scan_interval", 10)
-    url = f"http://{host}:8080/api/status"
 
     # Create the coordinator with scan_interval
-    coordinator = TheSilentWaveCoordinator(hass, name, url, scan_interval)
+    coordinator = TheSilentWaveCoordinator(hass, name, host, scan_interval)
     await coordinator.async_config_entry_first_refresh()
 
     # Register the sensor entity
