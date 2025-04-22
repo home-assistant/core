@@ -1,6 +1,6 @@
 {
   "domain": "nuki",
-  "name": "Nuki",
+  "name": "Nuki bridge",
   "codeowners": ["@pschmitt", "@pvizeli", "@pree"],
   "config_flow": true,
   "dependencies": ["webhook"],
