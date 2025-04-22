@@ -86,7 +86,6 @@ class ModbusLight(BaseSwitch, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on and set brightness if provided."""
-        await self.async_turn(self.command_on)
         if ATTR_BRIGHTNESS in kwargs:
             await self.async_set_brightness(
                 kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness)
@@ -96,6 +95,7 @@ class ModbusLight(BaseSwitch, LightEntity):
             await self.async_set_color_temp(
                 kwargs.get(ATTR_COLOR_TEMP_KELVIN, self._attr_color_temp_kelvin)
             )
+        await self.async_turn(self.command_on)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
