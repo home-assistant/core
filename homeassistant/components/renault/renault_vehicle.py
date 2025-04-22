@@ -91,6 +91,13 @@ class RenaultVehicleProxy:
         self._scan_interval = scan_interval
         self._hub = hub
 
+    def update_scan_interval(self, scan_interval: timedelta) -> None:
+        """Set the scan interval for the vehicle."""
+        if scan_interval != self._scan_interval:
+            self._scan_interval = scan_interval
+            for coordinator in self.coordinators.values():
+                coordinator.update_interval = scan_interval
+
     @property
     def details(self) -> models.KamereonVehicleDetails:
         """Return the specs of the vehicle."""

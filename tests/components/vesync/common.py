@@ -15,6 +15,8 @@ ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
 ENTITY_HUMIDIFIER_HUMIDITY = "sensor.humidifier_200s_humidity"
 ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT = "select.humidifier_300s_night_light_level"
 
+ENTITY_SWITCH_DISPLAY = "switch.humidifier_200s_display"
+
 ALL_DEVICES = load_json_object_fixture("vesync-devices.json", DOMAIN)
 ALL_DEVICE_NAMES: list[str] = [
     dev["deviceName"] for dev in ALL_DEVICES["result"]["list"]
@@ -27,7 +29,11 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
         ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
     ],
     "Air Purifier 131s": [
-        ("post", "/131airPurifier/v1/device/deviceDetail", "purifier-detail.json")
+        (
+            "post",
+            "/131airPurifier/v1/device/deviceDetail",
+            "air-purifier-131s-detail.json",
+        )
     ],
     "Air Purifier 200s": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
