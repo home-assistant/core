@@ -37,7 +37,12 @@ from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_has
 from homeassistant.setup import async_when_setup_or_start
 
 from .const import DOMAIN, ZEROCONF_TYPE
-from .discovery import DATA_DISCOVERY, ZeroconfDiscovery, build_homekit_model_lookups
+from .discovery import (  # noqa: F401
+    DATA_DISCOVERY,
+    ZeroconfDiscovery,
+    build_homekit_model_lookups,
+    info_from_service,
+)
 from .models import HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
 

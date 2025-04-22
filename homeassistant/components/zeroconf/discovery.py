@@ -25,7 +25,9 @@ from homeassistant.loader import HomeKitDiscoveredIntegration, ZeroconfMatcher
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .models import HaZeroconf
+
+if TYPE_CHECKING:
+    from .models import HaZeroconf
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +48,8 @@ ATTR_DOMAIN: Final = "domain"
 ATTR_NAME: Final = "name"
 ATTR_PROPERTIES: Final = "properties"
 
-DATA_DISCOVERY: HassKey[ZeroconfDiscovery] = HassKey(DOMAIN)
+
+DATA_DISCOVERY: HassKey[ZeroconfDiscovery] = HassKey("zeroconf_discovery")
 
 
 def build_homekit_model_lookups(
