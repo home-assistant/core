@@ -1577,7 +1577,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "iqvia",
     "irish_rail_transport",
     "isal",
-    "ista_ecotrend",
     "iskra",
     "islamic_prayer_times",
     "israel_rail",
