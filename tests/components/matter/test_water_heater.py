@@ -181,13 +181,25 @@ async def test_water_heater_set_temperature(
         matter_node: MatterNode,
     ) -> None:
         """Test enable boost from water heater device side."""
-        state = hass.states.get("water_heater.water_heater")
+        entity_id = "water_heater.water_heater"
+
+        # confirm initial BoostState (as stored in the fixture)
+        state = hass.states.get(entity_id)
         assert state
 
+        # confirm thermostat state is 'high_demand' by setting the BoostState to 1
         set_node_attribute(matter_node, 2, 148, 5, 1)
         await trigger_subscription_callback(hass, matter_client)
-        state = hass.states.get("water_heater.water_heater")
+        state = hass.states.get(entity_id)
+        assert state
         assert state.state == STATE_HIGH_DEMAND
+
+        # confirm thermostat state is 'eco' by setting the BoostState to 0
+        set_node_attribute(matter_node, 2, 148, 5, 0)
+        await trigger_subscription_callback(hass, matter_client)
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_ECO
 
     @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
     async def test_water_heater_turn_on_off(
