@@ -1,8 +1,7 @@
-"""Tests for the LG Thinq number platform."""
+"""Tests for the LG ThinQ switch platform."""
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -14,8 +13,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_number_entities(
+async def test_switch_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     devices: AsyncMock,
@@ -24,7 +22,7 @@ async def test_number_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.NUMBER]):
+    with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.SWITCH]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
