@@ -186,6 +186,8 @@ async def test_user_flow_overrides_existing_discovery(
 async def test_form_gen1_custom_port(
     hass: HomeAssistant,
     mock_block_device: Mock,
+    mock_setup_entry: AsyncMock,
+    mock_setup: AsyncMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -206,11 +208,33 @@ async def test_form_gen1_custom_port(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1", "port": "1100"},
+            {CONF_HOST: "1.1.1.1", CONF_PORT: "1100"},
         )
 
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "custom_port_not_supported"
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "type": MODEL_1, "gen": 1},
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTP_PORT},
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Test name"
+    assert result3["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_MODEL: MODEL_1,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 1,
+    }
+    assert result3["context"]["unique_id"] == "test-mac"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
