@@ -82,6 +82,8 @@ class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             title = self._discovered_devices[address]
+            await self.async_set_unique_id(address, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
             device = Pynecil(address)
             try:
                 await device.connect()
@@ -92,8 +94,6 @@ class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(address, raise_on_progress=False)
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=title, data={})
             finally:
                 await device.disconnect()

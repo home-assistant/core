@@ -135,19 +135,21 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
         build = self.device_info.build
         self.device_info = await self.device.get_device_info()
 
-        if build != self.device_info.build:
-            device_registry = dr.async_get(self.hass)
-            if TYPE_CHECKING:
-                assert self.config_entry.unique_id
-            device = device_registry.async_get_device(
-                connections={(CONNECTION_BLUETOOTH, self.config_entry.unique_id)}
-            )
-            if device is not None:
-                device_registry.async_update_device(
-                    device_id=device.id,
-                    sw_version=self.device_info.build,
-                    serial_number=f"{self.device_info.device_sn} (ID:{self.device_info.device_id})",
-                )
+        if build == self.device_info.build:
+            return
+        device_registry = dr.async_get(self.hass)
+        if TYPE_CHECKING:
+            assert self.config_entry.unique_id
+        device = device_registry.async_get_device(
+            connections={(CONNECTION_BLUETOOTH, self.config_entry.unique_id)}
+        )
+        if device is None:
+            return
+        device_registry.async_update_device(
+            device_id=device.id,
+            sw_version=self.device_info.build,
+            serial_number=f"{self.device_info.device_sn} (ID:{self.device_info.device_id})",
+        )
 
 
 class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
