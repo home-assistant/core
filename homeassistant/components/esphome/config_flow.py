@@ -665,7 +665,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._device_name = ex.received_name
                 if ex.received_mac:
                     self._device_mac = format_mac(ex.received_mac)
-                self._name = ex.received_name
+                if not self._name:
+                    self._name = ex.received_name
             return ERROR_INVALID_ENCRYPTION_KEY
         except ResolveAPIError:
             return "resolve_error"
