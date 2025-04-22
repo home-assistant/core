@@ -440,7 +440,7 @@ async def test_user_dashboard_has_wrong_key(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
-    assert result["description_placeholders"] == {"name": "test"}
+    assert result["description_placeholders"] == {"name": "ESPHome (test)"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -547,7 +547,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
-    assert result["description_placeholders"] == {"name": "test"}
+    assert result["description_placeholders"] == {"name": "ESPHome (test)"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -602,7 +602,7 @@ async def test_user_discovers_name_and_dashboard_is_unavailable(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
-    assert result["description_placeholders"] == {"name": "test"}
+    assert result["description_placeholders"] == {"name": "ESPHome (test)"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -1775,7 +1775,7 @@ async def test_user_discovers_name_no_dashboard(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
-    assert result["description_placeholders"] == {"name": "test"}
+    assert result["description_placeholders"] == {"name": "ESPHome (test)"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
