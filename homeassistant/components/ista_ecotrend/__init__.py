@@ -10,6 +10,7 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
+from .const import DOMAIN
 from .coordinator import IstaConfigEntry, IstaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
