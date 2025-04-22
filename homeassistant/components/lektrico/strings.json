@@ -87,11 +87,11 @@
         "state": {
           "available": "Available",
           "charging": "[%key:common::state::charging%]",
-          "connected": "Connected",
-          "error": "Error",
-          "locked": "Locked",
+          "connected": "[%key:common::state::connected%]",
+          "error": "[%key:common::state::error%]",
+          "locked": "[%key:common::state::locked%]",
           "need_auth": "Waiting for authentication",
-          "paused": "Paused",
+          "paused": "[%key:common::state::paused%]",
           "paused_by_scheduler": "Paused by scheduler",
           "updating_firmware": "Updating firmware"
         }
@@ -118,7 +118,7 @@
           "ocpp": "OCPP",
           "overtemperature": "Overtemperature",
           "switching_phases": "Switching phases",
-          "1p_charging_disabled": "1p charging disabled"
+          "1p_charging_disabled": "1P charging disabled"
         }
       },
       "breaker_current": {

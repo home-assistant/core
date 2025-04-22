@@ -122,7 +122,11 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 data_sensors = await self.api.get_sensor_data()
                 await self.api.logout()
             except exceptions.CannotAuthenticate as err:
-                raise ConfigEntryAuthFailed from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_authenticate",
+                    translation_placeholders={"error": repr(err)},
+                ) from err
             except (
                 exceptions.CannotConnect,
                 exceptions.AlreadyLogged,

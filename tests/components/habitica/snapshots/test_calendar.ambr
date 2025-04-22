@@ -88,6 +88,20 @@
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
     }),
     dict({
+      'description': 'Klicke um den Namen Deines aktuellen Projekts anzugeben & setze einen Terminplan!',
+      'end': dict({
+        'date': '2024-09-23',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=MONTHLY;BYSETPOS=4;BYDAY=SU',
+      'start': dict({
+        'date': '2024-09-22',
+      }),
+      'summary': 'Arbeite an einem kreativen Projekt',
+      'uid': '6e53f1f5-a315-4edd-984d-8d762e4a08ef',
+    }),
+    dict({
       'description': 'Klicke um Änderungen zu machen!',
       'end': dict({
         'date': '2024-09-24',
@@ -562,6 +576,20 @@
       }),
       'summary': 'Fitnessstudio besuchen',
       'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+    }),
+    dict({
+      'description': 'Setze dich einmal im Monat hin, um deine Einnahmen und Ausgaben zu überprüfen und dein Budget zu planen.',
+      'end': dict({
+        'date': '2024-10-07',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': 'FREQ=MONTHLY;BYSETPOS=1;BYDAY=SU',
+      'start': dict({
+        'date': '2024-10-06',
+      }),
+      'summary': 'Monatliche Finanzübersicht erstellen',
+      'uid': '369afeed-61e3-4bf7-9747-66e05807134c',
     }),
     dict({
       'description': 'Klicke um Änderungen zu machen!',

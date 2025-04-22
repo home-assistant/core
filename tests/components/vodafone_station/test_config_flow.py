@@ -228,3 +228,77 @@ async def test_options_flow(
     assert result["data"] == {
         CONF_CONSIDER_HOME: 37,
     }
+
+
+async def test_reconfigure_successful(
+    hass: HomeAssistant,
+    mock_vodafone_station_router: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the host can be reconfigured."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # original entry
+    assert mock_config_entry.data["host"] == "fake_host"
+
+    new_host = "192.168.100.60"
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: new_host,
+            CONF_PASSWORD: "fake_password",
+            CONF_USERNAME: "fake_username",
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.ABORT
+    assert reconfigure_result["reason"] == "reconfigure_successful"
+
+    # changed entry
+    assert mock_config_entry.data["host"] == new_host
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (CannotConnect, "cannot_connect"),
+        (CannotAuthenticate, "invalid_auth"),
+        (AlreadyLogged, "already_logged"),
+        (ConnectionResetError, "unknown"),
+    ],
+)
+async def test_reconfigure_fails(
+    hass: HomeAssistant,
+    mock_vodafone_station_router: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test that the host can be reconfigured."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_vodafone_station_router.login.side_effect = side_effect
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.100.60",
+            CONF_PASSWORD: "fake_password",
+            CONF_USERNAME: "fake_username",
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.FORM
+    assert reconfigure_result["step_id"] == "reconfigure"
+    assert reconfigure_result["errors"] == {"base": error}

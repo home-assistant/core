@@ -123,6 +123,9 @@ DEVICE_TYPE_NUMBER_MAP: dict[DeviceType, tuple[NumberEntityDescription, ...]] = 
         NUMBER_DESC[ThinQProperty.LIGHT_STATUS],
         NUMBER_DESC[ThinQProperty.TARGET_TEMPERATURE],
     ),
+    DeviceType.VENTILATOR: (
+        TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
+    ),
 }
 
 _LOGGER = logging.getLogger(__name__)

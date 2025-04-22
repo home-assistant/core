@@ -20,6 +20,7 @@ import voluptuous as vol
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
+    SOURCE_REAUTH,
     SOURCE_ZEROCONF,
     ConfigEntry,
     ConfigFlow,
@@ -381,7 +382,9 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_IDENTIFIERS: list(combined_identifiers),
                     },
                 )
-                if entry.source != SOURCE_IGNORE:
+                # Don't reload ignored entries or in the middle of reauth,
+                # e.g. if the user is entering a new PIN
+                if entry.source != SOURCE_IGNORE and self.source != SOURCE_REAUTH:
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
             if not allow_exist:
                 raise DeviceAlreadyConfigured

@@ -473,20 +473,6 @@ def mock_client_with_exception(
     return mock
 
 
-@pytest.fixture(name="appliance_ha_id")
-def mock_appliance_ha_id(
-    appliances: list[HomeAppliance], request: pytest.FixtureRequest
-) -> str:
-    """Fixture to get the ha_id of an appliance."""
-    appliance_type = "Washer"
-    if hasattr(request, "param") and request.param:
-        appliance_type = request.param
-    for appliance in appliances:
-        if appliance.type == appliance_type:
-            return appliance.ha_id
-    raise ValueError(f"Appliance {appliance_type} not found")
-
-
 @pytest.fixture(name="appliances")
 def mock_appliances(
     appliances_data: str, request: pytest.FixtureRequest

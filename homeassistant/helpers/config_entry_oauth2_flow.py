@@ -27,11 +27,11 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries
-from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import async_get_application_credentials
 from homeassistant.util.hass_dict import HassKey
 
+from . import http
 from .aiohttp_client import async_get_clientsession
 from .network import NoURLAvailableError
 

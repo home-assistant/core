@@ -6,11 +6,13 @@ import pytest
 
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
+from homeassistant.components.homekit import TYPE_AIR_PURIFIER
 from homeassistant.components.homekit.accessories import TYPES, get_accessory
 from homeassistant.components.homekit.const import (
     ATTR_INTEGRATION,
     CONF_FEATURE_LIST,
     FEATURE_ON_OFF,
+    TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -49,6 +51,12 @@ def test_not_supported(caplog: pytest.LogCaptureFixture) -> None:
     assert get_accessory(None, None, State("light.demo", "on"), None, None) is None
     assert caplog.records[0].levelname == "WARNING"
     assert "invalid aid" in caplog.records[0].msg
+
+
+def test_not_supported_sensor(caplog: pytest.LogCaptureFixture) -> None:
+    """Test if none is returned if entity isn't supported."""
+    assert get_accessory(None, None, State("sensor.xyz", "on"), 2, {}) is None
+    assert "Unsupported sensor type (device_class=None)" in caplog.text
 
 
 def test_not_supported_media_player() -> None:
@@ -342,6 +350,23 @@ def test_type_sensors(type_name, entity_id, state, attrs) -> None:
     ],
 )
 def test_type_switches(type_name, entity_id, state, attrs, config) -> None:
+    """Test if switch types are associated correctly."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State(entity_id, state, attrs)
+        get_accessory(None, None, entity_state, 2, config)
+    assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    ("type_name", "entity_id", "state", "attrs", "config"),
+    [
+        ("Fan", "fan.test", "on", {}, {}),
+        ("Fan", "fan.test", "on", {}, {CONF_TYPE: TYPE_FAN}),
+        ("AirPurifier", "fan.test", "on", {}, {CONF_TYPE: TYPE_AIR_PURIFIER}),
+    ],
+)
+def test_type_fans(type_name, entity_id, state, attrs, config) -> None:
     """Test if switch types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):

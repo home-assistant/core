@@ -26,6 +26,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
     """Class to manage fetching calendar data."""
 
     config_entry: RemoteCalendarConfigEntry
+    ics: str
 
     def __init__(
         self,
@@ -40,7 +41,6 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             update_interval=SCAN_INTERVAL,
             always_update=True,
         )
-        self._etag = None
         self._client = get_async_client(hass)
         self._url = config_entry.data[CONF_URL]
 
@@ -59,8 +59,9 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             # calendar_from_ics will dynamically load packages
             # the first time it is called, so we need to do it
             # in a separate thread to avoid blocking the event loop
+            self.ics = res.text
             return await self.hass.async_add_executor_job(
-                IcsCalendarStream.calendar_from_ics, res.text
+                IcsCalendarStream.calendar_from_ics, self.ics
             )
         except CalendarParseError as err:
             raise UpdateFailed(

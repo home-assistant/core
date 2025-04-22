@@ -37,6 +37,7 @@ LOCK_FINGERPRINT = "lock_fingerprint"
 MOTION_DEVICE: Final = "motion_device"
 DOUBLE_BUTTON: Final = "double_button"
 TRIPPLE_BUTTON: Final = "tripple_button"
+QUADRUPLE_BUTTON: Final = "quadruple_button"
 REMOTE: Final = "remote"
 REMOTE_FAN: Final = "remote_fan"
 REMOTE_VENFAN: Final = "remote_ventilator_fan"
@@ -48,6 +49,7 @@ BUTTON_PRESS_LONG: Final = "button_press_long"
 BUTTON_PRESS_DOUBLE_LONG: Final = "button_press_double_long"
 DOUBLE_BUTTON_PRESS_DOUBLE_LONG: Final = "double_button_press_double_long"
 TRIPPLE_BUTTON_PRESS_DOUBLE_LONG: Final = "tripple_button_press_double_long"
+QUADRUPLE_BUTTON_PRESS_DOUBLE_LONG: Final = "quadruple_button_press_double_long"
 
 
 class XiaomiBleEvent(TypedDict):

@@ -24,8 +24,8 @@ def patch_requests():
         mock_data.get_rain.return_value = Rain(
             load_json_object_fixture("raw_rain.json", DOMAIN)
         )
-        mock_data.get_warning_current_phenomenoms.return_value = CurrentPhenomenons(
-            load_json_object_fixture("raw_warning_current_phenomenoms.json", DOMAIN)
+        mock_data.get_warning_current_phenomenons.return_value = CurrentPhenomenons(
+            load_json_object_fixture("raw_warning_current_phenomenons.json", DOMAIN)
         )
         yield mock_data
 

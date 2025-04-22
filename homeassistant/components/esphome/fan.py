@@ -30,6 +30,8 @@ from .entity import (
 )
 from .enum_mapper import EsphomeEnumMapper
 
+PARALLEL_UPDATES = 0
+
 ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
 
 

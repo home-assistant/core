@@ -129,7 +129,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vol.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Required(ATTR_ITEM): vol.All(
+                        cv.string, str.strip, vol.Length(min=1)
+                    ),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
@@ -144,7 +146,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.make_entity_service_schema(
                 {
                     vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional(ATTR_RENAME): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional(ATTR_RENAME): vol.All(
+                        cv.string, str.strip, vol.Length(min=1)
+                    ),
                     vol.Optional(ATTR_STATUS): vol.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
@@ -219,18 +223,10 @@ class TodoItem:
     """A status or confirmation of the To-do item."""
 
     due: datetime.date | datetime.datetime | None = None
-    """The date and time that a to-do is expected to be completed.
-
-    This field may be a date or datetime depending whether the entity feature
-    DUE_DATE or DUE_DATETIME are set.
-    """
+    """The date and time that a to-do is expected to be completed."""
 
     description: str | None = None
-    """A more complete description of than that provided by the summary.
-
-    This field may be set when TodoListEntityFeature.DESCRIPTION is supported by
-    the entity.
-    """
+    """A more complete description than that provided by the summary."""
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {

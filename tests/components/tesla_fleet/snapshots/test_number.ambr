@@ -88,7 +88,7 @@
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-unknown',
-    'original_name': 'Off grid reserve',
+    'original_name': 'Off-grid reserve',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -101,7 +101,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Energy Site Off grid reserve',
+      'friendly_name': 'Energy Site Off-grid reserve',
       'icon': 'mdi:battery-unknown',
       'max': 100,
       'min': 0,

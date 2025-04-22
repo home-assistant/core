@@ -61,11 +61,11 @@ async def test_select_services(
     entity_id = "select.test_seat_heater_front_left"
     with (
         patch(
-            "homeassistant.components.tesla_fleet.VehicleSpecific.remote_seat_heater_request",
+            "tesla_fleet_api.tesla.VehicleFleet.remote_seat_heater_request",
             return_value=COMMAND_OK,
         ) as remote_seat_heater_request,
         patch(
-            "homeassistant.components.tesla_fleet.VehicleSpecific.auto_conditioning_start",
+            "tesla_fleet_api.tesla.VehicleFleet.auto_conditioning_start",
             return_value=COMMAND_OK,
         ) as auto_conditioning_start,
     ):
@@ -83,11 +83,11 @@ async def test_select_services(
     entity_id = "select.test_steering_wheel_heater"
     with (
         patch(
-            "homeassistant.components.tesla_fleet.VehicleSpecific.remote_steering_wheel_heat_level_request",
+            "tesla_fleet_api.tesla.VehicleFleet.remote_steering_wheel_heat_level_request",
             return_value=COMMAND_OK,
         ) as remote_steering_wheel_heat_level_request,
         patch(
-            "homeassistant.components.tesla_fleet.VehicleSpecific.auto_conditioning_start",
+            "tesla_fleet_api.tesla.VehicleFleet.auto_conditioning_start",
             return_value=COMMAND_OK,
         ) as auto_conditioning_start,
     ):
@@ -104,7 +104,7 @@ async def test_select_services(
 
     entity_id = "select.energy_site_operation_mode"
     with patch(
-        "homeassistant.components.tesla_fleet.EnergySpecific.operation",
+        "tesla_fleet_api.tesla.EnergySite.operation",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -122,7 +122,7 @@ async def test_select_services(
 
     entity_id = "select.energy_site_allow_export"
     with patch(
-        "homeassistant.components.tesla_fleet.EnergySpecific.grid_import_export",
+        "tesla_fleet_api.tesla.EnergySite.grid_import_export",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
