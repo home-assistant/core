@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'status_dd19facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+    'unique_id': 'portainer_test_entry_123_dd19facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
     'unit_of_measurement': None,
   })
 # ---
@@ -77,7 +77,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'status_aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+    'unique_id': 'portainer_test_entry_123_aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
     'unit_of_measurement': None,
   })
 # ---
@@ -125,7 +125,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': '1_status',
+    'unique_id': 'portainer_test_entry_123_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -173,7 +173,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'status_ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+    'unique_id': 'portainer_test_entry_123_ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
     'unit_of_measurement': None,
   })
 # ---
@@ -221,7 +221,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'status_bb97facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+    'unique_id': 'portainer_test_entry_123_bb97facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
     'unit_of_measurement': None,
   })
 # ---
@@ -269,7 +269,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'status_cc08facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+    'unique_id': 'portainer_test_entry_123_cc08facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
     'unit_of_measurement': None,
   })
 # ---
