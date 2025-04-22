@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from contextlib import suppress
+from dataclasses import dataclass
 import logging
-from typing import Any, TypedDict, cast
+from typing import Any, cast
 
 from awesomeversion import AwesomeVersion
 from hyperion import client, const as hyperion_const
@@ -22,8 +23,6 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import (
-    CONF_INSTANCE_CLIENTS,
-    CONF_ROOT_CLIENT,
     DEFAULT_NAME,
     DOMAIN,
     HYPERION_RELEASES_URL,
@@ -54,11 +53,12 @@ _LOGGER = logging.getLogger(__name__)
 type HyperionConfigEntry = ConfigEntry[HyperionData]
 
 
-class HyperionData(TypedDict):
+@dataclass
+class HyperionData:
     "Hyperion runtime data."
 
-    ROOT_CLIENT: client.HyperionClient
-    INSTANCE_CLIENTS: dict[int, client.HyperionClient]
+    root_client: client.HyperionClient
+    instance_clients: dict[int, client.HyperionClient]
 
 
 def get_hyperion_unique_id(server_id: str, instance: int, name: str) -> str:
@@ -183,10 +183,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HyperionConfigEntry) -> 
     # We need 1 root client (to manage instances being removed/added) and then 1 client
     # per Hyperion server instance which is shared for all entities associated with
     # that instance.
-    entry.runtime_data = {
-        CONF_ROOT_CLIENT: hyperion_client,
-        CONF_INSTANCE_CLIENTS: {},
-    }
+    entry.runtime_data = HyperionData(
+        root_client=hyperion_client,
+        instance_clients={},
+    )
 
     async def async_instances_to_clients(response: dict[str, Any]) -> None:
         """Convert instances to Hyperion clients."""
@@ -199,7 +199,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HyperionConfigEntry) -> 
         device_registry = dr.async_get(hass)
         running_instances: set[int] = set()
         stopped_instances: set[int] = set()
-        existing_instances = entry.runtime_data[CONF_INSTANCE_CLIENTS]
+        existing_instances = entry.runtime_data.instance_clients
         server_id = cast(str, entry.unique_id)
 
         # In practice, an instance can be in 3 states as seen by this function:
@@ -284,11 +284,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: HyperionConfigEntry) ->
         await asyncio.gather(
             *(
                 inst.async_client_disconnect()
-                for inst in entry.runtime_data[CONF_INSTANCE_CLIENTS].values()
+                for inst in entry.runtime_data.instance_clients.values()
             )
         )
 
         # Disconnect the root client.
-        root_client = entry.runtime_data[CONF_ROOT_CLIENT]
+        root_client = entry.runtime_data.root_client
         await root_client.async_client_disconnect()
     return unload_ok

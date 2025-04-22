@@ -34,7 +34,6 @@ from . import (
     listen_for_instance_updates,
 )
 from .const import (
-    CONF_INSTANCE_CLIENTS,
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
     HYPERION_MODEL_NAME,
@@ -77,7 +76,7 @@ async def async_setup_entry(
                 server_id,
                 instance_num,
                 instance_name,
-                entry.runtime_data[CONF_INSTANCE_CLIENTS][instance_num],
+                entry.runtime_data.instance_clients[instance_num],
                 PRIORITY_SENSOR_DESCRIPTION,
             )
         ]

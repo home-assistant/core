@@ -35,7 +35,6 @@ from . import (
 )
 from .const import (
     CONF_EFFECT_HIDE_LIST,
-    CONF_INSTANCE_CLIENTS,
     CONF_PRIORITY,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
@@ -93,7 +92,7 @@ async def async_setup_entry(
                     instance_num,
                     instance_name,
                     entry.options,
-                    entry.runtime_data[CONF_INSTANCE_CLIENTS][instance_num],
+                    entry.runtime_data.instance_clients[instance_num],
                 ),
             ]
         )

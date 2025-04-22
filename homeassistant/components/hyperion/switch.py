@@ -43,7 +43,6 @@ from . import (
     listen_for_instance_updates,
 )
 from .const import (
-    CONF_INSTANCE_CLIENTS,
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
     HYPERION_MODEL_NAME,
@@ -105,7 +104,7 @@ async def async_setup_entry(
                 instance_num,
                 instance_name,
                 component,
-                entry.runtime_data[CONF_INSTANCE_CLIENTS][instance_num],
+                entry.runtime_data.instance_clients[instance_num],
             )
             for component in COMPONENT_SWITCHES
         )
