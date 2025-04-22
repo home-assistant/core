@@ -1,14 +1,15 @@
 """Constants for Hyperion integration."""
 
-CONF_AUTH_ID = "auth_id"
-CONF_CREATE_TOKEN = "create_token"
-CONF_INSTANCE = "instance"
-CONF_INSTANCE_CLIENTS = "INSTANCE_CLIENTS"
-CONF_ON_UNLOAD = "ON_UNLOAD"
-CONF_PRIORITY = "priority"
-CONF_ROOT_CLIENT = "ROOT_CLIENT"
-CONF_EFFECT_HIDE_LIST = "effect_hide_list"
-CONF_EFFECT_SHOW_LIST = "effect_show_list"
+from typing import Final
+
+CONF_AUTH_ID: Final = "auth_id"
+CONF_CREATE_TOKEN: Final = "create_token"
+CONF_INSTANCE: Final = "instance"
+CONF_INSTANCE_CLIENTS: Final = "INSTANCE_CLIENTS"
+CONF_PRIORITY: Final = "priority"
+CONF_ROOT_CLIENT: Final = "ROOT_CLIENT"
+CONF_EFFECT_HIDE_LIST: Final = "effect_hide_list"
+CONF_EFFECT_SHOW_LIST: Final = "effect_show_list"
 
 DEFAULT_NAME = "Hyperion"
 DEFAULT_ORIGIN = "Home Assistant"
