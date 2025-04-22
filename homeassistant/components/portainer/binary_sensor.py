@@ -119,7 +119,7 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
 
         return (
             self.entity_description.state_fn(device_info)
-            if (device_info := self.coordinator.endpoints.get(self.device_id))
+            if (device_info := self.coordinator.data.get(self.device_id))
             else None
         )
 
