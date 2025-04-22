@@ -1,7 +1,7 @@
 """Support for Met Éireann weather service."""
 
+from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import Any, cast
 
 from homeassistant.components.weather import (
@@ -64,7 +64,7 @@ async def async_setup_entry(
     async_add_entities([MetEireannWeather(coordinator, config_entry.data)])
 
 
-def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> str:
+def _calculate_unique_id(config: Mapping[str, Any], hourly: bool) -> str:
     """Calculate unique ID."""
     name_appendix = ""
     if hourly:
@@ -90,7 +90,7 @@ class MetEireannWeather(
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[MetEireannWeatherData],
-        config: MappingProxyType[str, Any],
+        config: Mapping[str, Any],
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
