@@ -1,19 +1,23 @@
-"""The Rexense integration."""
+"""The Rexense integration using external rexense-wsclient library."""
 
 from __future__ import annotations
 
+from functools import partial
 import logging
 
+from aiorexense import RexenseWebsocketClient
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import CONF_HOST, CONF_PORT, DOMAIN
-from .websocket_client import RexenseWebsocketClient
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# Typed alias for ConfigEntry with runtime_data of type RexenseWebsocketClient
 type RexenseConfigEntry = ConfigEntry[RexenseWebsocketClient]
 
 
@@ -21,19 +25,32 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: RexenseConfigEntry,
 ) -> bool:
-    """Set up Rexense from a config entry."""
-    host: str = entry.data[CONF_HOST]
-    port: int = entry.data.get(CONF_PORT, 80)
-    model: str = entry.data.get("model", "Rexense Device")
-    device_id: str = entry.unique_id or entry.data["device_id"]
-    sw_build_id: str = entry.data.get("sw_build_id", "unknown")
-    # e.g. [{"EP":1,"Attributes":["Current","Voltage","ActivePower","AprtPower","PowerFactor"],"Services":["OnOff"]}]
-    feature_map: list[dict[str, str]] = entry.data.get("feature_map", [])
+    """Set up the Rexense integration after the config entry is created."""
+    host = entry.data[CONF_HOST]
+    port = entry.data.get(CONF_PORT, 80)
+    model = entry.data.get(CONF_MODEL, "")
+    device_id = entry.unique_id or entry.data["device_id"]
+    sw_build_id = entry.data.get("sw_build_id", "unknown")
+    feature_map = entry.data.get("feature_map", [])
 
     ws_url = f"ws://{host}:{port}/rpc"
+    session = aiohttp_client.async_get_clientsession(hass)
+
+    # Create the client and configure the Home Assistant dispatcher callback.
     client = RexenseWebsocketClient(
-        hass, device_id, model, ws_url, sw_build_id, feature_map
+        device_id=device_id,
+        model=model,
+        url=ws_url,
+        sw_build_id=sw_build_id,
+        feature_map=feature_map,
+        session=session,
     )
+
+    client.on_update = partial(
+        dispatcher_send, hass, f"{DOMAIN}_{client.device_id}_update"
+    )
+    client.signal_update = f"{DOMAIN}_{device_id}_update"
+
     try:
         await client.connect()
     except Exception as err:
@@ -46,8 +63,8 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from err
 
     entry.runtime_data = client
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
+
     # Forward to sensor and switch platforms
     await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
     _LOGGER.debug("Rexense integration setup complete for device %s", device_id)
@@ -58,8 +75,8 @@ async def async_unload_entry(
     hass: HomeAssistant,
     entry: RexenseConfigEntry,
 ) -> bool:
-    """Unload a Rexense config entry."""
-    client: RexenseWebsocketClient = entry.runtime_data
+    """Unload the Rexense integration and disconnect the client."""
+    client = entry.runtime_data
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, ["sensor"]
     )

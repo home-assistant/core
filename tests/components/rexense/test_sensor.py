@@ -1,7 +1,7 @@
 import pytest
 
 from homeassistant.components.rexense.sensor import RexenseSensor
-from homeassistant.components.rexense.websocket_client import RexenseWebsocketClient
+from aiorexense import RexenseWebsocketClient
 from homeassistant.components.rexense.const import REXSENSE_SENSOR_TYPES, DOMAIN
 
 class DummyClient:

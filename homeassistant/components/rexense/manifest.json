@@ -7,6 +7,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "bronze",
+  "requirements": ["aiorexense==0.1.2"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
