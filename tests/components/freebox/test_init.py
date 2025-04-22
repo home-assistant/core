@@ -126,7 +126,7 @@ async def test_blocking_call_handling(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.freebox.get_api") as mock_get_api,
         patch(
-            "homeassistant.components.freebox.hass.async_add_executor_job"
+            "homeassistant.core.HomeAssistant.async_add_executor_job"
         ) as mock_executor_job,
     ):
         mock_api = mock_get_api.return_value
