@@ -55,7 +55,7 @@ type HyperionConfigEntry = ConfigEntry[HyperionData]
 
 @dataclass
 class HyperionData:
-    "Hyperion runtime data."
+    """Hyperion runtime data."""
 
     root_client: client.HyperionClient
     instance_clients: dict[int, client.HyperionClient]
