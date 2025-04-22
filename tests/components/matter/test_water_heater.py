@@ -164,7 +164,7 @@ async def test_water_heater_set_temperature(
                 endpoint_id=2,
                 attribute=clusters.Thermostat.Attributes.SystemMode,
             ),
-            value=0,
+            value=4,
         )
         assert matter_client.send_device_command.call_count == 1
         assert matter_client.send_device_command.call_args == call(
