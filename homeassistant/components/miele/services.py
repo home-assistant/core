@@ -1,6 +1,7 @@
 """Services for Miele integration."""
 
 import logging
+from typing import cast
 
 import aiohttp
 import voluptuous as vol
@@ -45,8 +46,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             entries[0]
         )
         device_reg = dr.async_get(hass)
-        assert config_entry
-        api = config_entry.runtime_data.api
+        api = cast(MieleConfigEntry, config_entry).runtime_data.api
         for device in call.data[CONF_DEVICE_ID]:
             device_entry = device_reg.async_get(device)
 
@@ -58,9 +58,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 ]
             if "temperature" in call.data:
                 data["temperature"] = call.data["temperature"]
-            assert device_entry
             try:
-                if serial_number := device_entry.serial_number:
+                if serial_number := cast(dr.DeviceEntry, device_entry).serial_number:
                     await api.set_program(serial_number, data)
             except aiohttp.ClientResponseError as ex:
                 raise HomeAssistantError(
