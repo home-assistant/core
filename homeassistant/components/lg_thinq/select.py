@@ -129,7 +129,7 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
     ),
     DeviceType.WASHER: (OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],),
     DeviceType.WASHTOWER_DRYER: (
-        OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],
+        OPERATION_SELECT_DESC[ThinQProperty.DRYER_OPERATION_MODE],
     ),
     DeviceType.WASHTOWER: (
         OPERATION_SELECT_DESC[ThinQProperty.DRYER_OPERATION_MODE],
