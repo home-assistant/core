@@ -81,7 +81,7 @@ async def test_rpc_device_virtual_enum(
         blocking=True,
     )
     # 'Title 1' corresponds to 'option 1'
-    assert mock_rpc_device.call_rpc.call_args[0][1] == {"id": 203, "value": "option 1"}
+    mock_rpc_device.enum_set.assert_called_once_with(203, "option 1")
     mock_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))

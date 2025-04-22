@@ -67,6 +67,7 @@ async def test_rpc_device_virtual_text(
         blocking=True,
     )
     mock_rpc_device.mock_update()
+    mock_rpc_device.text_set.assert_called_once_with(203, "sed do eiusmod")
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "sed do eiusmod"
