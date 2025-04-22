@@ -6,6 +6,7 @@ import logging
 
 from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -52,3 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> None:
+    """Handle removal of an entry."""
+    statistic_ids = [f"{DOMAIN}:{name}" for name in entry.options.values()]
+    get_instance(hass).async_clear_statistics(statistic_ids)
