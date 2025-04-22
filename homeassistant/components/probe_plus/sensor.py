@@ -43,7 +43,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda device: device.device_state.probe_temperature,
-        name="Probe Temperature",
+        name="Probe temperature",
     ),
     ProbePlusSensorEntityDescription(
         key="probe_battery",
@@ -51,7 +51,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.device_state.probe_battery,
-        name="Probe Battery",
+        name="Probe battery",
     ),
     ProbePlusSensorEntityDescription(
         key="relay_battery",
@@ -59,7 +59,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.device_state.relay_battery,
-        name="Relay Battery",
+        name="Relay battery",
     ),
     ProbePlusSensorEntityDescription(
         key="probe_rssi",
@@ -68,7 +68,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.device_state.probe_rssi,
-        name="Probe Signal Strength",
+        name="Probe RSSI",
     ),
     ProbePlusSensorEntityDescription(
         key="relay_voltage",
@@ -77,7 +77,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.device_state.relay_voltage,
-        name="Relay Voltage",
+        name="Relay voltage",
         entity_registry_enabled_default=False,
     ),
     ProbePlusSensorEntityDescription(
@@ -87,7 +87,7 @@ SENSOR_DESCRIPTIONS: tuple[ProbePlusSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.device_state.probe_voltage,
-        name="Probe Voltage",
+        name="Probe voltage",
         entity_registry_enabled_default=False,
     ),
 )
