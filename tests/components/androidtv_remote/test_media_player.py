@@ -355,6 +355,7 @@ async def test_browse_media(
         "children_media_class": "app",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "thumbnail": None,
         "not_shown": 0,
         "children": [
@@ -366,6 +367,7 @@ async def test_browse_media(
                 "children_media_class": None,
                 "can_play": False,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "https://www.youtube.com/icon.png",
             },
             {
@@ -376,6 +378,7 @@ async def test_browse_media(
                 "children_media_class": None,
                 "can_play": False,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "",
             },
         ],

@@ -3,7 +3,6 @@
 from abc import abstractmethod
 from typing import Any
 
-from propcache.api import cached_property
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import Signal
@@ -20,7 +19,6 @@ from .coordinator import (
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import wake_up_vehicle
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 
@@ -125,10 +123,6 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
     def _value(self) -> Any | None:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(self.key)
-
-    async def wake_up_if_asleep(self) -> None:
-        """Wake up the vehicle if its asleep."""
-        await wake_up_vehicle(self.vehicle)
 
 
 class TeslemetryEnergyLiveEntity(TeslemetryEntity):
@@ -290,7 +284,7 @@ class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
         """Update the entity with the latest value from the stream."""
         raise NotImplementedError
 
-    @cached_property
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.stream.connected

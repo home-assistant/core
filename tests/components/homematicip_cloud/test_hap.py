@@ -129,10 +129,6 @@ async def test_hap_reset_unloads_entry_if_setup(
     assert hass.data[HMIPC_DOMAIN] == {}
 
 
-@patch(
-    "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
-    return_value=ConnectionContext(),
-)
 async def test_hap_create(
     hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
 ) -> None:
@@ -140,15 +136,17 @@ async def test_hap_create(
     hass.config.components.add(HMIPC_DOMAIN)
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
-    with patch.object(hap, "async_connect"):
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+            return_value=ConnectionContext(),
+        ),
+        patch.object(hap, "async_connect"),
+    ):
         async with hmip_config_entry.setup_lock:
             assert await hap.async_setup()
 
 
-@patch(
-    "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
-    return_value=ConnectionContext(),
-)
 async def test_hap_create_exception(
     hass: HomeAssistant, hmip_config_entry: MockConfigEntry, mock_connection_init
 ) -> None:
@@ -158,13 +156,23 @@ async def test_hap_create_exception(
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
 
-    with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
-        side_effect=Exception,
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+            return_value=ConnectionContext(),
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
+            side_effect=Exception,
+        ),
     ):
         assert not await hap.async_setup()
 
     with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+            return_value=ConnectionContext(),
+        ),
         patch(
             "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
             side_effect=HmipConnectionError,
