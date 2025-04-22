@@ -165,7 +165,7 @@ class LaMarzoccoStatisticSensorEntity(LaMarzoccoSensorEntity):
 
     @property
     def native_value(self) -> StateType | datetime | None:
-        """Return  value of the sensor."""
+        """Return the value of the sensor."""
         return self.entity_description.value_fn(
             self.coordinator.device.statistics.widgets
         )
