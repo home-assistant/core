@@ -191,8 +191,8 @@ class BackupConfig:
         """Update config."""
         if agents is not UNDEFINED:
             for agent_id, agent_config in agents.items():
-                agent_retention = agent_config.get("retention", UNDEFINED)
-                if agent_retention is UNDEFINED or agent_retention is None:
+                agent_retention = agent_config.get("retention")
+                if agent_retention is None:
                     new_agent_retention = None
                 else:
                     new_agent_retention = AgentRetentionConfig(
