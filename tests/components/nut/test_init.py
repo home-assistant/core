@@ -264,9 +264,6 @@ async def test_device_location(
         list_commands_return_value=[],
     )
 
-    device_registry = dr.async_get(hass)
-    assert device_registry is not None
-
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_serial_number)}
     )
