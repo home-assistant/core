@@ -7,8 +7,8 @@ count_omer:
         date:
     is_after_sunset:
       required: false
-      example: false
-      default: false
+      example: true
+      default: true
       selector:
         boolean:
     nusach:
