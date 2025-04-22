@@ -23,7 +23,7 @@
       "connection_error": "Can't connect to ESP. Please make sure your YAML file contains an 'api:' line.",
       "requires_encryption_key": "This ESPHome device requires an encryption key to connect. Please enter the key configured in the device’s YAML file under `api.encryption.key`",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_psk": "The transport encryption key is invalid. Please ensure it matches what you have in your configuration"
+      "invalid_psk": "The transport encryption key is invalid. Please ensure it matches the device’s YAML file under `api.encryption.key`"
     },
     "step": {
       "user": {
