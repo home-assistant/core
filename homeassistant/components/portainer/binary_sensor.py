@@ -62,14 +62,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer binary sensors."""
-    portainer = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data.coordinator
     entities: list[BinarySensorEntity] = []
 
-    for endpoint in portainer.endpoints.values():
+    for endpoint in coordinator.data.values():
         entities.extend(
             [
                 PortainerEndpointSensor(
-                    coordinator=portainer,
+                    coordinator=coordinator,
                     entity_description=entity_description,
                     device_info=endpoint,
                 )
