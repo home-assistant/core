@@ -290,7 +290,7 @@ async def test_reconfigure(
     mock_setup_entry: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test we get the form."""
+    """Test reconfigure works."""
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -345,7 +345,7 @@ async def test_reconfigure_mismatch(
     mock_setup_entry: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test we get the form."""
+    """Test reconfigure fails on account ID mismatch."""
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
