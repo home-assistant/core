@@ -85,7 +85,7 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
         entry: HomeeConfigEntry,
         description: HomeeAlarmControlPanelEntityDescription,
     ) -> None:
-        """Initialize a Homee alarm Control panel entity."""
+        """Initialize a Homee alarm control panel entity."""
         super().__init__(attribute, entry)
         self.entity_description = description
         self._attr_code_arm_required = description.code_arm_required
@@ -114,7 +114,8 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self._async_set_alarm_state(AlarmControlPanelState.DISARMED)
+        # Homee does not offer a disarm command. However, we cannot get
+        # rid of this function, so we do nothing.
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
