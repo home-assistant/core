@@ -1275,14 +1275,17 @@ class PipelineRun:
 
         self.tts_stream.async_set_message(tts_input)
 
-        tts_output = {
-            "token": self.tts_stream.token,
-            "url": self.tts_stream.url,
-            "mime_type": self.tts_stream.content_type,
-        }
-
         self.process_event(
-            PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
+            PipelineEvent(
+                PipelineEventType.TTS_END,
+                {
+                    "tts_output": {
+                        "token": self.tts_stream.token,
+                        "url": self.tts_stream.url,
+                        "mime_type": self.tts_stream.content_type,
+                    }
+                },
+            )
         )
 
     def _capture_chunk(self, audio_bytes: bytes | None) -> None:
