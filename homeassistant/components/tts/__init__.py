@@ -63,7 +63,6 @@ from .const import (
 from .entity import TextToSpeechEntity, TTSAudioRequest
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
-from .media_source import generate_media_source_id
 from .models import Voice
 
 __all__ = [
@@ -83,7 +82,6 @@ __all__ = [
     "TtsAudioType",
     "Voice",
     "async_default_engine",
-    "generate_media_source_id",
 ]
 
 _LOGGER = logging.getLogger(__name__)

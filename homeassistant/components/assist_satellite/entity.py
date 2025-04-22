@@ -92,9 +92,6 @@ class AssistSatelliteAnnouncement:
     media_id: str
     """Media ID to be played."""
 
-    original_media_id: str
-    """The raw media ID before processing."""
-
     tts_token: str | None
     """The TTS token of the media."""
 
@@ -501,9 +498,7 @@ class AssistSatelliteEntity(entity.Entity):
         media_id_source: Literal["url", "media_id", "tts"] | None = None
         tts_token: str | None = None
 
-        if media_id:
-            original_media_id = media_id
-        else:
+        if not media_id:
             media_id_source = "tts"
             # Synthesize audio and get URL
             pipeline_id = self._resolve_pipeline()
@@ -530,13 +525,6 @@ class AssistSatelliteEntity(entity.Entity):
 
             tts_token = stream.token
             media_id = stream.url
-            original_media_id = tts.generate_media_source_id(
-                self.hass,
-                message,
-                engine=engine,
-                language=pipeline.tts_language,
-                options=tts_options,
-            )
 
         if media_source.is_media_source_id(media_id):
             if not media_id_source:
@@ -572,7 +560,6 @@ class AssistSatelliteEntity(entity.Entity):
         return AssistSatelliteAnnouncement(
             message=message,
             media_id=media_id,
-            original_media_id=original_media_id,
             tts_token=tts_token,
             media_id_source=media_id_source,
             preannounce_media_id=preannounce_media_id,

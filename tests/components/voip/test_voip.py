@@ -832,7 +832,6 @@ async def test_announce(
         message="test announcement",
         media_id=_MEDIA_ID,
         tts_token=mock_tts_result_stream.token,
-        original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
 
@@ -883,7 +882,6 @@ async def test_voip_id_is_ip_address(
         message="test announcement",
         media_id=_MEDIA_ID,
         tts_token=mock_tts_result_stream.token,
-        original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
 
@@ -939,7 +937,6 @@ async def test_announce_timeout(
         message="test announcement",
         media_id=_MEDIA_ID,
         tts_token=mock_tts_result_stream.token,
-        original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
 
@@ -981,7 +978,6 @@ async def test_start_conversation(
         message="test announcement",
         media_id=_MEDIA_ID,
         tts_token=mock_tts_result_stream.token,
-        original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
 
@@ -1124,10 +1120,6 @@ async def test_start_conversation_user_doesnt_pick_up(
         patch(
             "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
             new=async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.tts.generate_media_source_id",
-            return_value="media-source://bla",
         ),
         patch(
             "homeassistant.components.tts.async_resolve_engine",

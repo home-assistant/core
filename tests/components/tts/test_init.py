@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
+from homeassistant.components.tts.media_source import generate_media_source_id
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -1315,7 +1316,7 @@ async def test_generate_media_source_id(
     result_query: str,
 ) -> None:
     """Test generating a media source ID."""
-    media_source_id = tts.generate_media_source_id(
+    media_source_id = generate_media_source_id(
         hass, "msg", engine, language, options, cache
     )
 
@@ -1353,7 +1354,7 @@ async def test_generate_media_source_id_invalid_options(
 ) -> None:
     """Test generating a media source ID."""
     with pytest.raises(HomeAssistantError):
-        tts.generate_media_source_id(hass, "msg", engine, language, options, None)
+        generate_media_source_id(hass, "msg", engine, language, options, None)
 
 
 @pytest.mark.parametrize(
@@ -1405,7 +1406,7 @@ async def test_legacy_fetching_in_async(
     await mock_setup(hass, ProviderWithAsyncFetching(DEFAULT_LANG))
 
     # Test async_get_media_source_audio
-    media_source_id = tts.generate_media_source_id(
+    media_source_id = generate_media_source_id(
         hass,
         "test message",
         "test",
@@ -1435,7 +1436,7 @@ async def test_legacy_fetching_in_async(
     assert await req.read() == b"test"
 
     # Test error is not cached
-    media_source_id = tts.generate_media_source_id(
+    media_source_id = generate_media_source_id(
         hass, "test message 2", "test", "en_US", None, None
     )
     tts_audio = asyncio.Future()
@@ -1468,7 +1469,7 @@ async def test_fetching_in_async(
     await mock_config_entry_setup(hass, EntityWithAsyncFetching(DEFAULT_LANG))
 
     # Test async_get_media_source_audio
-    media_source_id = tts.generate_media_source_id(
+    media_source_id = generate_media_source_id(
         hass,
         "test message",
         "tts.test",
@@ -1498,7 +1499,7 @@ async def test_fetching_in_async(
     assert await req.read() == b"test"
 
     # Test error is not cached
-    media_source_id = tts.generate_media_source_id(
+    media_source_id = generate_media_source_id(
         hass, "test message 2", "tts.test", "en_US", None, None
     )
     tts_audio = asyncio.Future()

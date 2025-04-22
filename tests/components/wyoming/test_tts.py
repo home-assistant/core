@@ -11,6 +11,9 @@ from syrupy import SnapshotAssertion
 from wyoming.audio import AudioChunk, AudioStop
 
 from homeassistant.components import tts, wyoming
+
+# pylint: disable=hass-component-root-import
+from homeassistant.components.tts.media_source import generate_media_source_id
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import DATA_INSTANCES
@@ -63,7 +66,7 @@ async def test_get_tts_audio(
     ) as mock_client:
         extension, data = await async_get_media_source_audio(
             hass,
-            tts.generate_media_source_id(
+            generate_media_source_id(
                 hass,
                 "Hello world",
                 "tts.test_tts",
@@ -100,7 +103,7 @@ async def test_get_tts_audio_different_formats(
     ) as mock_client:
         extension, data = await async_get_media_source_audio(
             hass,
-            tts.generate_media_source_id(
+            generate_media_source_id(
                 hass,
                 "Hello world",
                 "tts.test_tts",
@@ -134,7 +137,7 @@ async def test_get_tts_audio_different_formats(
     ) as mock_client:
         extension, data = await async_get_media_source_audio(
             hass,
-            tts.generate_media_source_id(
+            generate_media_source_id(
                 hass,
                 "Hello world",
                 "tts.test_tts",
@@ -186,7 +189,7 @@ async def test_get_tts_audio_audio_oserror(
     ):
         await async_get_media_source_audio(
             hass,
-            tts.generate_media_source_id(
+            generate_media_source_id(
                 hass, "Hello world", "tts.test_tts", hass.config.language
             ),
         )
@@ -208,7 +211,7 @@ async def test_voice_speaker(
     ) as mock_client:
         await async_get_media_source_audio(
             hass,
-            tts.generate_media_source_id(
+            generate_media_source_id(
                 hass,
                 "Hello world",
                 "tts.test_tts",
