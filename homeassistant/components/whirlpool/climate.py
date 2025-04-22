@@ -63,7 +63,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     appliances_manager = config_entry.runtime_data
-    async_add_entities([AirConEntity(aircon) for aircon in appliances_manager.aircons])
+    async_add_entities(AirConEntity(aircon) for aircon in appliances_manager.aircons)
 
 
 class AirConEntity(WhirlpoolEntity, ClimateEntity):
