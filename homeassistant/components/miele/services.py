@@ -21,7 +21,6 @@ SERVICE_PROGRAM = cv.make_entity_service_schema(
         vol.Optional("duration"): cv.positive_int,
         vol.Optional("temperature"): cv.positive_int,
     },
-    extra=vol.ALLOW_EXTRA,
 )
 
 _LOGGER = logging.getLogger(__name__)
