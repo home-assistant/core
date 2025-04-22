@@ -149,7 +149,7 @@
       },
       "total_coffees_made": {
         "name": "Total coffees made",
-        "unit_of_measurement": "coffees"
+        "unit_of_measurement": "cups"
       },
       "total_flushes_done": {
         "name": "Total flushes done",
