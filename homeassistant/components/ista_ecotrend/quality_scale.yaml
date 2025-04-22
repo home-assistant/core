@@ -5,9 +5,7 @@ rules:
     comment: The integration registers no actions.
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: Group the 3 different executor jobs as one executor job
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done

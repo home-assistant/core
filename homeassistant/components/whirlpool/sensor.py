@@ -174,8 +174,6 @@ async def async_setup_entry(
 class WhirlpoolSensor(WhirlpoolEntity, SensorEntity):
     """A class for the Whirlpool sensors."""
 
-    _attr_should_poll = False
-
     def __init__(
         self, appliance: Appliance, description: WhirlpoolSensorEntityDescription
     ) -> None:

@@ -1037,6 +1037,7 @@ async def test_entity_browse_media(
         ),
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1049,6 +1050,7 @@ async def test_entity_browse_media(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1107,6 +1109,7 @@ async def test_entity_browse_media_audio_only(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -2208,6 +2211,7 @@ async def test_cast_platform_browse_media(
         "media_content_id": "",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "thumbnail": "https://brands.home-assistant.io/_/spotify/logo.png",
         "children_media_class": None,
     }
@@ -2232,6 +2236,7 @@ async def test_cast_platform_browse_media(
         "media_content_id": "",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "children_media_class": None,
         "thumbnail": None,
         "children": [],
