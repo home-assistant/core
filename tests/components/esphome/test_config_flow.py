@@ -27,6 +27,7 @@ from homeassistant.components.esphome.const import (
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -48,6 +49,17 @@ def mock_setup_entry():
     """Mock setting up a config entry."""
     with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
         yield
+
+
+def get_flow_context(hass: HomeAssistant, result: ConfigFlowResult) -> dict[str, Any]:
+    """Get the flow context from the result of async_init or async_configure."""
+    flow = next(
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+
+    return flow["context"]
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -119,7 +131,12 @@ async def test_user_connection_updates_host(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
     assert entry.data[CONF_HOST] == "127.0.0.1"
 
 
@@ -145,6 +162,9 @@ async def test_user_sets_unique_id(
 
     assert discovery_result["type"] is FlowResultType.FORM
     assert discovery_result["step_id"] == "discovery_confirm"
+    assert discovery_result["description_placeholders"] == {
+        "name": "test8266",
+    }
 
     discovery_result = await hass.config_entries.flow.async_configure(
         discovery_result["flow_id"],
@@ -173,7 +193,12 @@ async def test_user_sets_unique_id(
         {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "test",
+        "name": "test",
+        "mac": "11:22:33:44:55:aa",
+    }
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -224,6 +249,9 @@ async def test_user_causes_zeroconf_to_abort(
 
     assert discovery_result["type"] is FlowResultType.FORM
     assert discovery_result["step_id"] == "discovery_confirm"
+    assert discovery_result["description_placeholders"] == {
+        "name": "test8266",
+    }
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -287,6 +315,7 @@ async def test_user_with_password(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
+    assert result["description_placeholders"] == {"name": "test"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_PASSWORD: "password1"}
@@ -316,6 +345,7 @@ async def test_user_invalid_password(hass: HomeAssistant, mock_client) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
+    assert result["description_placeholders"] == {"name": "test"}
 
     mock_client.connect.side_effect = InvalidAuthAPIError
 
@@ -325,6 +355,7 @@ async def test_user_invalid_password(hass: HomeAssistant, mock_client) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
+    assert result["description_placeholders"] == {"name": "test"}
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -338,7 +369,7 @@ async def test_user_dashboard_has_wrong_key(
     """Test user step with key from dashboard that is incorrect."""
     mock_client.device_info.side_effect = [
         RequiresEncryptionAPIError,
-        InvalidEncryptionKeyAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
         DeviceInfo(
             uses_password=False,
             name="test",
@@ -359,6 +390,7 @@ async def test_user_dashboard_has_wrong_key(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    assert result["description_placeholders"] == {"name": "test"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -467,6 +499,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    assert result["description_placeholders"] == {"name": "test"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -522,6 +555,7 @@ async def test_user_discovers_name_and_dashboard_is_unavailable(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    assert result["description_placeholders"] == {"name": "test"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -553,6 +587,7 @@ async def test_login_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
+    assert result["description_placeholders"] == {"name": "test"}
 
     mock_client.connect.side_effect = APIConnectionError
 
@@ -562,6 +597,7 @@ async def test_login_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
+    assert result["description_placeholders"] == {"name": "test"}
     assert result["errors"] == {"base": "connection_error"}
 
 
@@ -578,12 +614,18 @@ async def test_discovery_initiation(
         port=6053,
         properties={
             "mac": "1122334455aa",
+            "friendly_name": "The Test",
         },
         type="mock_type",
     )
     flow = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
+    assert get_flow_context(hass, flow) == {
+        "source": config_entries.SOURCE_ZEROCONF,
+        "title_placeholders": {"name": "The Test (test)"},
+        "unique_id": "11:22:33:44:55:aa",
+    }
 
     result = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}
@@ -645,7 +687,12 @@ async def test_discovery_already_configured(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
 
 async def test_discovery_duplicate_data(
@@ -667,6 +714,7 @@ async def test_discovery_duplicate_data(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"] == {"name": "test"}
 
     result = await hass.config_entries.flow.async_init(
         "esphome", data=service_info, context={"source": config_entries.SOURCE_ZEROCONF}
@@ -701,7 +749,12 @@ async def test_discovery_updates_unique_id(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
     assert entry.unique_id == "11:22:33:44:55:aa"
 
@@ -722,6 +775,7 @@ async def test_user_requires_psk(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
     assert result["errors"] == {}
+    assert result["description_placeholders"] == {"name": "ESPHome"}
 
     assert len(mock_client.connect.mock_calls) == 2
     assert len(mock_client.device_info.mock_calls) == 2
@@ -744,6 +798,7 @@ async def test_encryption_key_valid_psk(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    assert result["description_placeholders"] == {"name": "ESPHome"}
 
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(uses_password=False, name="test")
@@ -779,6 +834,7 @@ async def test_encryption_key_invalid_psk(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    assert result["description_placeholders"] == {"name": "ESPHome"}
 
     mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError
     result = await hass.config_entries.flow.async_configure(
@@ -788,6 +844,7 @@ async def test_encryption_key_invalid_psk(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
     assert result["errors"] == {"base": "invalid_psk"}
+    assert result["description_placeholders"] == {"name": "ESPHome"}
     assert mock_client.noise_psk == INVALID_NOISE_PSK
 
 
@@ -803,6 +860,9 @@ async def test_reauth_initiation(hass: HomeAssistant, mock_client) -> None:
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        "name": "Mock Title (test)",
+    }
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -1005,6 +1065,9 @@ async def test_reauth_fixed_via_dashboard_at_confirm(
 
     assert result["type"] is FlowResultType.FORM, result
     assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        "name": "Mock Title (test)",
+    }
 
     mock_dashboard["configured"].append(
         {
@@ -1050,6 +1113,9 @@ async def test_reauth_confirm_invalid(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        "name": "Mock Title (test)",
+    }
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
 
@@ -1088,6 +1154,9 @@ async def test_reauth_confirm_invalid_with_unique_id(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        "name": "Mock Title (test)",
+    }
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
 
@@ -1125,6 +1194,9 @@ async def test_reauth_encryption_key_removed(
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_encryption_removed_confirm"
+    assert result["description_placeholders"] == {
+        "name": "Mock Title (test)",
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -1159,7 +1231,12 @@ async def test_discovery_dhcp_updates_host(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
     assert entry.data[CONF_HOST] == "192.168.43.184"
 
@@ -1188,7 +1265,12 @@ async def test_discovery_dhcp_does_not_update_host_wrong_mac(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_detailed"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
     # Mac was wrong, should not update
     assert entry.data[CONF_HOST] == "192.168.43.183"
@@ -1217,7 +1299,12 @@ async def test_discovery_dhcp_does_not_update_host_wrong_mac_bad_key(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_detailed"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
     # Mac was wrong, should not update
     assert entry.data[CONF_HOST] == "192.168.43.183"
@@ -1246,7 +1333,12 @@ async def test_discovery_dhcp_does_not_update_host_missing_mac_bad_key(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_detailed"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
     # Mac was missing, should not update
     assert entry.data[CONF_HOST] == "192.168.43.183"
@@ -1330,6 +1422,7 @@ async def test_zeroconf_encryption_key_via_dashboard(
 
     assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "discovery_confirm"
+    assert flow["description_placeholders"] == {"name": "test8266"}
 
     mock_dashboard["configured"].append(
         {
@@ -1397,6 +1490,7 @@ async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
 
     assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "discovery_confirm"
+    assert flow["description_placeholders"] == {"name": "test8266"}
 
     mock_dashboard["configured"].append(
         {
@@ -1462,6 +1556,7 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
 
     assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "discovery_confirm"
+    assert flow["description_placeholders"] == {"name": "test8266"}
 
     await dashboard.async_get_dashboard(hass).async_refresh()
 
@@ -1473,6 +1568,7 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    assert result["description_placeholders"] == {"name": "test8266"}
 
 
 async def test_option_flow_allow_service_calls(
@@ -1585,6 +1681,7 @@ async def test_user_discovers_name_no_dashboard(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    assert result["description_placeholders"] == {"name": "test"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -1878,6 +1975,54 @@ async def test_reconfig_success_with_new_ip_same_name(
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+async def test_reconfig_success_noise_psk_changes(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reconfig initiation with new ip and new noise psk."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+            CONF_NOISE_PSK: VALID_NOISE_PSK,
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
+        DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:aa"),
+    ]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+    assert result["description_placeholders"] == {"name": "Mock Title (test)"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+    assert result["description_placeholders"] == {"name": "Mock Title (test)"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "127.0.0.1"
+    assert entry.data[CONF_DEVICE_NAME] == "test"
+    assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
 async def test_reconfig_name_conflict_with_existing_entry(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:
@@ -1999,7 +2144,12 @@ async def test_reconfig_mac_used_by_other_entry(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "test4",
+        "mac": "11:22:33:44:55:bb",
+    }
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
