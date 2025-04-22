@@ -133,23 +133,13 @@ class DeviceConnectivity(SurePetcareBinarySensor):
 
     @callback
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
-        try:
-            state = surepy_entity.raw_data()["status"]
-            online = state["online"]
-        except KeyError:
-            online = False
-        self._attr_is_on = bool(online)
+        state = surepy_entity.raw_data().get("status", {})
+        online = bool(state.get("online", False))
+        self._attr_is_on = online
+        self._attr_extra_state_attributes = {}
         if online:
-            self._attr_extra_state_attributes = {}
-            try:
-                device_rssi = state["signal"]["device_rssi"]
-                self._attr_extra_state_attributes["device_rssi"] = f"{device_rssi:.2f}"
-            except KeyError:
-                self._attr_extra_state_attributes["device_rssi"] = "Unknown"
-            try:
-                hub_rssi = state["signal"]["hub_rssi"]
+            value = state.get("device_rssi", {}).get(attr)
+            self._attr_extra_state_attributes["device_rssi"] = value ? f"{value:.2f}" : "Unknown"
+            hub_rssi = state.get("hub_rssi", False).get(attr)
+            if hub_rssi is not False:
                 self._attr_extra_state_attributes["hub_rssi"] = f"{hub_rssi:.2f}"
-            except KeyError:
-                pass
-        else:
-            self._attr_extra_state_attributes = {}
