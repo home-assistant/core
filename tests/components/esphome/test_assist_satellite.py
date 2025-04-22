@@ -345,6 +345,23 @@ async def test_pipeline_api_audio(
             {"url": get_url(hass) + mock_tts_result_stream.url},
         )
 
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.RUN_START,
+                data={
+                    "tts_output": {
+                        "media_id": "test-media-id",
+                        "url": mock_tts_result_stream.url,
+                        "token": mock_tts_result_stream.token,
+                    }
+                },
+            )
+        )
+        assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+            VoiceAssistantEventType.VOICE_ASSISTANT_RUN_START,
+            {"url": get_url(hass) + mock_tts_result_stream.url},
+        )
+
         event_callback(PipelineEvent(type=PipelineEventType.RUN_END))
         assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
             VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END,
