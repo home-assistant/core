@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
 import sys
 from types import MappingProxyType
@@ -228,7 +229,7 @@ class OllamaOptionsFlow(OptionsFlow):
 
 
 def ollama_config_option_schema(
-    hass: HomeAssistant, options: MappingProxyType[str, Any]
+    hass: HomeAssistant, options: Mapping[str, Any]
 ) -> dict:
     """Ollama options schema."""
     hass_apis: list[SelectOptionDict] = [

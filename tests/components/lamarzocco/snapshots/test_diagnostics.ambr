@@ -7,7 +7,7 @@
       'coffee_station': None,
       'config': dict({
         'CMBackFlush': dict({
-          'last_cleaning_start_time': None,
+          'last_cleaning_start_time': '2025-03-29T08:25:47.166000+00:00',
           'status': 'Off',
         }),
         'CMCoffeeBoiler': dict({
@@ -571,7 +571,7 @@
           'code': 'CMBackFlush',
           'index': 1,
           'output': dict({
-            'last_cleaning_start_time': None,
+            'last_cleaning_start_time': '2025-03-29T08:25:47.166000+00:00',
             'status': 'Off',
           }),
         }),
