@@ -4,8 +4,10 @@ import ipaddress
 import logging
 from typing import Any
 
-from aiohttp import ClientError, ClientSession
 import voluptuous as vol
+
+from pysilentwave import SilentWaveClient
+from pysilentwave.exceptions import SilentWaveError
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
@@ -68,10 +70,8 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
 
     async def _async_check_device(self, host: str) -> None:
         """Check if the device is reachable."""
-        url = f"http://{host}:8080/api/status"
-        async with ClientSession() as session:
-            try:
-                async with session.get(url) as response:
-                    response.raise_for_status()
-            except ClientError as err:
-                raise ConfigEntryNotReady(f"Cannot connect to device: {err}") from err
+        client = SilentWaveClient(host)
+        try:
+            await client.get_status()
+        except SilentWaveError as err:
+            raise ConfigEntryNotReady(f"Cannot connect to device: {err}") from err
