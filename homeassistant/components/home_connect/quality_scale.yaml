@@ -4,7 +4,10 @@ rules:
   appropriate-polling:
     status: done
     comment: |
-      Polling is performed only once at the configuration entry setup.
+      Full polling is performed at the configuration entry setup and
+      device polling is performed when a CONNECTED or a PAIRED event is received.
+      If many CONNECTED or PAIRED events are received for a device,
+      the integration will stop polling for that device and will rise an issue.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
