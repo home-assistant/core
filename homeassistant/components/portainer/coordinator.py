@@ -60,7 +60,6 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.portainer = portainer
-        self.config_entry = config_entry
         self.endpoints: dict[int, PortainerCoordinatorData] = {}
 
     async def _async_update_data(self) -> dict[int, PortainerCoordinatorData]:
