@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from aioshelly.const import RPC_GENERATIONS
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_PLATFORM,
@@ -13,8 +14,10 @@ from homeassistant.components.select import (
     SelectEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
@@ -98,6 +101,31 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the value."""
-        await self.call_rpc(
-            "Enum.Set", {"id": self._id, "value": self.reversed_option_map[option]}
-        )
+        if TYPE_CHECKING:
+            assert isinstance(self._id, int)
+
+        try:
+            await self.coordinator.device.enum_set(
+                self._id, self.reversed_option_map[option]
+            )
+        except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rpc_call_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except InvalidAuthError:
+            await self.coordinator.async_shutdown_device_and_start_reauth()

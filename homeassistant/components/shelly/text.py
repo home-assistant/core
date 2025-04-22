@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from aioshelly.const import RPC_GENERATIONS
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.text import (
     DOMAIN as TEXT_PLATFORM,
@@ -13,8 +14,10 @@ from homeassistant.components.text import (
     TextEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import ShellyConfigEntry
 from .entity import (
     RpcEntityDescription,
@@ -86,4 +89,29 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
 
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
-        await self.call_rpc("Text.Set", {"id": self._id, "value": value})
+        if TYPE_CHECKING:
+            assert isinstance(self._id, int)
+
+        try:
+            await self.coordinator.device.text_set(self._id, value)
+        except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rpc_call_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except InvalidAuthError:
+            await self.coordinator.async_shutdown_device_and_start_reauth()
