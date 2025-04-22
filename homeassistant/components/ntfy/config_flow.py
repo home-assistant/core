@@ -102,18 +102,19 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             url = URL(user_input[CONF_URL])
+            username = user_input[SECTION_AUTH].get(CONF_USERNAME)
             self._async_abort_entries_match(
                 {
                     CONF_URL: url.human_repr(),
-                    CONF_USERNAME: user_input[SECTION_AUTH].get(CONF_USERNAME),
+                    CONF_USERNAME: username,
                 }
             )
             session = async_get_clientsession(self.hass)
-            if user_input[SECTION_AUTH].get(CONF_USERNAME):
+            if username:
                 ntfy = Ntfy(
                     user_input[CONF_URL],
                     session,
-                    user_input[SECTION_AUTH][CONF_USERNAME],
+                    username,
                     user_input[SECTION_AUTH].get(CONF_PASSWORD, ""),
                 )
             else:
@@ -141,7 +142,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=url.host or "",
                     data={
                         CONF_URL: url.human_repr(),
-                        CONF_USERNAME: user_input[SECTION_AUTH].get(CONF_USERNAME),
+                        CONF_USERNAME: username,
                         CONF_TOKEN: token,
                     },
                 )
@@ -158,7 +159,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
 class TopicSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for adding and modifying a topic."""
 
-    async def async_step_user(  # pylint: disable=hass-return-type
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add a new topic."""
@@ -168,7 +169,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
             menu_options=["add_topic", "generate_topic"],
         )
 
-    async def async_step_generate_topic(  # pylint: disable=hass-return-type
+    async def async_step_generate_topic(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add a new topic."""
@@ -186,7 +187,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
-    async def async_step_add_topic(  # pylint: disable=hass-return-type
+    async def async_step_add_topic(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add a new topic."""

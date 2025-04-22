@@ -46,7 +46,7 @@
           "description": "[%key:component::ntfy::common::add_topic_description%]",
           "menu_options": {
             "add_topic": "Enter topic",
-            "generate_topic": "Generate name"
+            "generate_topic": "Generate topic name"
           }
         },
         "add_topic": {

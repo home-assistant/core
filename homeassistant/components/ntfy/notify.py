@@ -62,7 +62,6 @@ class NtfyNotifyEntity(NotifyEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ntfy LLC",
             model="ntfy",
-            model_id=config_entry.data[CONF_URL],
             name=subentry.data.get(CONF_NAME, self.topic),
             configuration_url=URL(config_entry.data[CONF_URL]) / self.topic,
             identifiers={(DOMAIN, f"{config_entry.entry_id}_{subentry.subentry_id}")},
