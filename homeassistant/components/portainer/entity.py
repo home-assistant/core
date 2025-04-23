@@ -22,7 +22,6 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
     def __init__(
         self,
         device_info: PortainerCoordinatorData,
-        entry: PortainerConfigEntry,
         coordinator: PortainerCoordinator,
     ) -> None:
         """Initialize a Portainer endpoint."""
@@ -30,7 +29,7 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
         self._device_info = device_info
         self.device_id = self._device_info.endpoint.id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_{self.device_id}")},
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{self.device_id}")},
             manufacturer=DEFAULT_NAME,
             model="Endpoint",
             name=self._device_info.endpoint.name,
