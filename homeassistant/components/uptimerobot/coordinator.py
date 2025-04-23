@@ -56,12 +56,7 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
         monitors: list[UptimeRobotMonitor] = response.data
 
         device_registry = dr.async_get(self.hass)
-        current_monitors = {
-            list(device.identifiers)[0][1]
-            for device in dr.async_entries_for_config_entry(
-                device_registry, self.config_entry.entry_id
-            )
-        }
+        current_monitors = {str(monitor.id) for monitor in self.data or []}
         new_monitors = {str(monitor.id) for monitor in monitors}
         if stale_monitors := current_monitors - new_monitors:
             for monitor_id in stale_monitors:
@@ -72,7 +67,7 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
 
         # If there are new monitors, we should reload the config entry so we can
         # create new devices and entities.
-        if self.data and new_monitors - {str(monitor.id) for monitor in self.data}:
+        if new_monitors - current_monitors:
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.config_entry.entry_id)
             )
