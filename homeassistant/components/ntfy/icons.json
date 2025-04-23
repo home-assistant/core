@@ -4,6 +4,11 @@
       "publish": {
         "default": "mdi:console-line"
       }
+    },
+    "event": {
+      "subscribe": {
+        "default": "mdi:message-outline"
+      }
     }
   }
 }
