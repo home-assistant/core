@@ -637,7 +637,12 @@ async def test_form_auth_errors_test_connection_gen1(
     ],
 )
 async def test_form_auth_errors_test_connection_gen2(
-    hass: HomeAssistant, exc: Exception, base_error: str
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    mock_setup: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exc: Exception,
+    base_error: str,
 ) -> None:
     """Test we handle errors in Gen2 authenticated devices."""
     result = await hass.config_entries.flow.async_init(
@@ -655,13 +660,37 @@ async def test_form_auth_errors_test_connection_gen2(
 
     with patch(
         "aioshelly.rpc_device.RpcDevice.create",
-        new=AsyncMock(side_effect=exc),
+        side_effect=exc,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], {CONF_PASSWORD: "test password"}
         )
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": base_error}
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "auth": True, "gen": 2},
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_PASSWORD: "test password"},
+        )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Test name"
+    assert result4["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_MODEL: "SNSW-002P16EU",
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 2,
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "test password",
+    }
+    assert result4["context"]["unique_id"] == "test-mac"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
