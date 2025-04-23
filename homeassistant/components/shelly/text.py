@@ -20,6 +20,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
@@ -75,6 +76,7 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
     """Represent a RPC text entity."""
 
     entity_description: RpcTextDescription
+    _id: int
 
     @property
     def native_value(self) -> str | None:
@@ -84,6 +86,7 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
 
         return self.attribute_value
 
+    @rpc_call
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
-        await self.call_rpc("Text.Set", {"id": self._id, "value": value})
+        await self.coordinator.device.text_set(self._id, value)

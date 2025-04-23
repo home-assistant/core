@@ -336,6 +336,12 @@ class EsphomeAssistSatellite(
                 "code": event.data["code"],
                 "message": event.data["message"],
             }
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_RUN_START:
+            assert event.data is not None
+            if tts_output := event.data["tts_output"]:
+                path = tts_output["url"]
+                url = async_process_play_media_url(self.hass, path)
+                data_to_send = {"url": url}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END:
             if self._tts_streaming_task is None:
                 # No TTS
