@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from aioshelly.const import RPC_GENERATIONS
 
@@ -76,6 +76,7 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
     """Represent a RPC select entity."""
 
     entity_description: RpcSelectDescription
+    _id: int
 
     def __init__(
         self,
@@ -100,9 +101,6 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
     @rpc_call
     async def async_select_option(self, option: str) -> None:
         """Change the value."""
-        if TYPE_CHECKING:
-            assert isinstance(self._id, int)
-
         await self.coordinator.device.enum_set(
             self._id, self.reversed_option_map[option]
         )

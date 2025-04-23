@@ -76,6 +76,7 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
     """Represent a RPC text entity."""
 
     entity_description: RpcTextDescription
+    _id: int
 
     @property
     def native_value(self) -> str | None:
@@ -88,7 +89,4 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
     @rpc_call
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
-        if TYPE_CHECKING:
-            assert isinstance(self._id, int)
-
         await self.coordinator.device.text_set(self._id, value)
