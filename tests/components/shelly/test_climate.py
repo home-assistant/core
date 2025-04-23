@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, Mock, PropertyMock
 
 from aioshelly.const import (
     BLU_TRV_IDENTIFIER,
-    BLU_TRV_TIMEOUT,
     MODEL_BLU_GATEWAY_G3,
     MODEL_VALVE,
     MODEL_WALL_DISPLAY,
@@ -799,15 +798,7 @@ async def test_blu_trv_climate_set_temperature(
     )
     mock_blu_trv.mock_update()
 
-    mock_blu_trv.call_rpc.assert_called_once_with(
-        "BluTRV.Call",
-        {
-            "id": 200,
-            "method": "Trv.SetTarget",
-            "params": {"id": 0, "target_C": 28.0},
-        },
-        BLU_TRV_TIMEOUT,
-    )
+    mock_blu_trv.blu_trv_set_target_temperature.assert_called_once_with(200, 28.0)
 
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_TEMPERATURE] == 28
