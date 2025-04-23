@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, NTFY_EVENT
 
 type NtfyConfigEntry = ConfigEntry[NtfyDataUpdateCoordinator]
 
@@ -77,7 +77,7 @@ class NtfyDataUpdateCoordinator(DataUpdateCoordinator[Notification | None]):
                         topics=list(topics),
                         callback=lambda data: async_dispatcher_send(
                             self.hass,
-                            f"ntfy_event_{self.config_entry.entry_id}",
+                            f"{NTFY_EVENT}_{self.config_entry.entry_id}",
                             data,
                         ),
                     ),
