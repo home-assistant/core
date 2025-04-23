@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 import re
-from types import MappingProxyType
 from typing import Any, NamedTuple
 from urllib.parse import urlsplit
 
@@ -84,7 +83,7 @@ class HubInfo(NamedTuple):
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> HubInfo:
     """Validate the user input allows us to connect."""
 
-    client = await create_omada_client(hass, MappingProxyType(data))
+    client = await create_omada_client(hass, data)
     controller_id = await client.login()
     name = await client.get_controller_name()
     sites = await client.get_sites()
