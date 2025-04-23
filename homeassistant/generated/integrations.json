@@ -4443,7 +4443,7 @@
       "iot_class": "cloud_polling"
     },
     "nuki": {
-      "name": "Nuki",
+      "name": "Nuki Bridge",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
