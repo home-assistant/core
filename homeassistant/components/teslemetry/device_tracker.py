@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStreamVehicle
 from teslemetry_stream.const import TeslaLocation
 
@@ -76,16 +77,21 @@ async def async_setup_entry(
         TeslemetryPollingDeviceTrackerEntity | TeslemetryStreamingDeviceTrackerEntity
     ] = []
     for vehicle in entry.runtime_data.vehicles:
-        for description in DESCRIPTIONS:
-            if vehicle.api.pre2021 or vehicle.firmware < description.streaming_firmware:
-                if description.polling_prefix:
+        # Only add vehicle location entities if the user has granted vehicle location scope.
+        if Scope.VEHICLE_LOCATION in entry.runtime_data.scopes:
+            for description in DESCRIPTIONS:
+                if (
+                    vehicle.api.pre2021
+                    or vehicle.firmware < description.streaming_firmware
+                ):
+                    if description.polling_prefix:
+                        entities.append(
+                            TeslemetryPollingDeviceTrackerEntity(vehicle, description)
+                        )
+                else:
                     entities.append(
-                        TeslemetryPollingDeviceTrackerEntity(vehicle, description)
+                        TeslemetryStreamingDeviceTrackerEntity(vehicle, description)
                     )
-            else:
-                entities.append(
-                    TeslemetryStreamingDeviceTrackerEntity(vehicle, description)
-                )
 
     async_add_entities(entities)
 
