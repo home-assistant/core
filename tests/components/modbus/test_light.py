@@ -404,8 +404,6 @@ async def test_no_discovery_info_light(
 )
 async def test_brightness_light(hass: HomeAssistant, mock_modbus_ha) -> None:
     """Test Modbus Light brightness."""
-    from homeassistant.components.modbus.light import ModbusLight
-
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     await hass.services.async_call(
@@ -457,8 +455,6 @@ async def test_brightness_light(hass: HomeAssistant, mock_modbus_ha) -> None:
 )
 async def test_color_temp_light(hass: HomeAssistant, mock_modbus_ha) -> None:
     """Test Modbus Light color temperature."""
-    from homeassistant.components.modbus.light import ModbusLight
-
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     await hass.services.async_call(
