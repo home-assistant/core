@@ -1,10 +1,10 @@
 """Common fixtures for the ntfy tests."""
 
-from collections.abc import Generator
-from datetime import datetime
+from collections.abc import Callable, Generator
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiontfy import Account, AccountTokenResponse
+from aiontfy import Account, AccountTokenResponse, Event, Notification
 import pytest
 
 from homeassistant.components.ntfy.const import CONF_TOPIC, DOMAIN
@@ -40,6 +40,28 @@ def mock_aiontfy() -> Generator[AsyncMock]:
         client.generate_token.return_value = AccountTokenResponse(
             token="token", last_access=datetime.now()
         )
+
+        async def mock_ws(topics: list[str], callback: Callable[[Notification], None]):
+            callback(
+                Notification(
+                    id="h6Y2hKA5sy0U",
+                    time=datetime(2025, 3, 28, 17, 58, 46, tzinfo=UTC),
+                    expires=datetime(2025, 3, 29, 5, 58, 46, tzinfo=UTC),
+                    event=Event.MESSAGE,
+                    topic="mytopic",
+                    message="Hello",
+                    title="Title",
+                    tags=["octopus"],
+                    priority=3,
+                    click="https://example.com/",
+                    icon="https://example.com/icon.png",
+                    actions=[],
+                    attachment=None,
+                )
+            )
+
+        client.subscribe.side_effect = mock_ws
+
         yield client
 
 
