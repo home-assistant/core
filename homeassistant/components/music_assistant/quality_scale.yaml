@@ -24,11 +24,9 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: Integration has no configuration options
+  docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
@@ -53,7 +51,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default:
@@ -63,10 +61,8 @@ rules:
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: no repairs/issues
-  stale-devices: todo
+  repair-issues: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: todo
