@@ -76,22 +76,21 @@ async def async_setup_entry(
     entities: list[
         TeslemetryPollingDeviceTrackerEntity | TeslemetryStreamingDeviceTrackerEntity
     ] = []
+    # Only add vehicle location entities if the user has granted vehicle location scope.
+    if Scope.VEHICLE_LOCATION not in entry.runtime_data.scopes:
+        return
+
     for vehicle in entry.runtime_data.vehicles:
-        # Only add vehicle location entities if the user has granted vehicle location scope.
-        if Scope.VEHICLE_LOCATION in entry.runtime_data.scopes:
-            for description in DESCRIPTIONS:
-                if (
-                    vehicle.api.pre2021
-                    or vehicle.firmware < description.streaming_firmware
-                ):
-                    if description.polling_prefix:
-                        entities.append(
-                            TeslemetryPollingDeviceTrackerEntity(vehicle, description)
-                        )
-                else:
+        for description in DESCRIPTIONS:
+            if vehicle.api.pre2021 or vehicle.firmware < description.streaming_firmware:
+                if description.polling_prefix:
                     entities.append(
-                        TeslemetryStreamingDeviceTrackerEntity(vehicle, description)
+                        TeslemetryPollingDeviceTrackerEntity(vehicle, description)
                     )
+            else:
+                entities.append(
+                    TeslemetryStreamingDeviceTrackerEntity(vehicle, description)
+                )
 
     async_add_entities(entities)
 
