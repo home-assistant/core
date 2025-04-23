@@ -167,7 +167,7 @@ aioacaia==0.1.14
 aioairq==0.4.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.11
+aioairzone-cloud==0.6.12
 
 # homeassistant.components.airzone
 aioairzone==1.0.0
@@ -252,7 +252,7 @@ aiohasupervisor==0.3.1b1
 aiohomeconnect==0.17.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.13
+aiohomekit==3.2.14
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -295,6 +295,9 @@ aionanoleaf==0.2.1
 
 # homeassistant.components.notion
 aionotion==2024.03.0
+
+# homeassistant.components.ntfy
+aiontfy==0.5.1
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -344,7 +347,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.5.0
+aiorussound==4.5.2
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -675,7 +678,7 @@ devolo-home-control-api==0.18.3
 devolo-plc-api==1.5.1
 
 # homeassistant.components.chacon_dio
-dio-chacon-wifi-api==1.2.1
+dio-chacon-wifi-api==1.2.2
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -808,7 +811,7 @@ flux-led==1.2.0
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==1.4.0
+fnv-hash-fast==1.5.0
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -1108,7 +1111,7 @@ lacrosse-view==1.1.1
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.3
+lcn-frontend==0.2.4
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1515,7 +1518,7 @@ pyasuswrt==0.1.21
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==8.1.0
+pyatmo==9.0.0
 
 # homeassistant.components.apple_tv
 pyatv==0.16.0
@@ -1704,7 +1707,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.0b1
+pylamarzocco==2.0.0b3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2334,7 +2337,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.1
+teslemetry-stream==0.7.5
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
@@ -2523,7 +2526,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.7
+yalexs-ble==2.6.0
 
 # homeassistant.components.august
 # homeassistant.components.yale
