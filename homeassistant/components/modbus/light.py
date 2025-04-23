@@ -182,7 +182,7 @@ class ModbusLight(BaseSwitch, LightEntity):
             * LIGHT_MAX_BRIGHTNESS
         )
 
-    async def _convert_modbus_percent_to_temperature(self, percent: int) -> int:
+    async def _convert_modbus_percent_to_temperature(self, percent: int) -> int | None:
         """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
         if isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
             self._attr_max_color_temp_kelvin, int
@@ -198,6 +198,7 @@ class ModbusLight(BaseSwitch, LightEntity):
                     )
                 )
             )
+        return None
 
     @staticmethod
     async def _convert_brightness_to_modbus(brightness: int) -> int:
@@ -208,7 +209,7 @@ class ModbusLight(BaseSwitch, LightEntity):
             * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
         )
 
-    async def _convert_color_temp_to_modbus(self, kelvin: int) -> int:
+    async def _convert_color_temp_to_modbus(self, kelvin: int) -> int | None:
         """Convert color temperature from Kelvin to the Modbus scale (0-100)."""
         if isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
             self._attr_max_color_temp_kelvin, int
@@ -219,3 +220,4 @@ class ModbusLight(BaseSwitch, LightEntity):
                 * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
                 / (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
             )
+        return None
