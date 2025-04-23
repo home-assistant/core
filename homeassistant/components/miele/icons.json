@@ -1,0 +1,15 @@
+{
+    "entity": {
+        "button": {
+            "start": {
+                "default": "mdi:playr"
+            },
+            "stop": {
+                "default": "mdi:stop"
+            },
+            "pause": {
+                "default": "mdi:pause"
+            }
+        }
+    }
+}
