@@ -147,8 +147,8 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "manual": "Manual",
-              "auto": "Automatic",
+              "manual": "[%key:common::state::manual%]",
+              "auto": "[%key:common::state::auto%]",
               "summer": "Summer"
             }
           }
