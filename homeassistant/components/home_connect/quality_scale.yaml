@@ -6,8 +6,8 @@ rules:
     comment: |
       Full polling is performed at the configuration entry setup and
       device polling is performed when a CONNECTED or a PAIRED event is received.
-      If many CONNECTED or PAIRED events are received for a device,
-      the integration will stop polling for that device and will rise an issue.
+      If many CONNECTED or PAIRED events are received for a device within a short time span,
+      the integration will stop polling for that device and will create a repair issue.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
