@@ -12,6 +12,7 @@ from aiohomeconnect.model import (
     EventMessage,
     EventType,
     GetSetting,
+    HomeAppliance,
     OptionKey,
     ProgramDefinition,
     ProgramKey,
@@ -19,6 +20,7 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
+    HomeConnectApiError,
     HomeConnectError,
     SelectedProgramNotSetError,
     TooManyRequestsError,
@@ -72,8 +74,9 @@ async def test_select(
     assert config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_paired_depaired_devices_flow(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -98,7 +101,7 @@ async def test_paired_depaired_devices_flow(
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert entity_entries
@@ -106,7 +109,7 @@ async def test_paired_depaired_devices_flow(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.DEPAIRED,
                 data=ArrayOfEvents([]),
             )
@@ -114,7 +117,7 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert not device
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
@@ -123,7 +126,7 @@ async def test_paired_depaired_devices_flow(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.PAIRED,
                 data=ArrayOfEvents([]),
             )
@@ -131,13 +134,28 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     for entity_entry in entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
+@pytest.mark.parametrize(
+    ("appliance", "keys_to_check"),
+    [
+        (
+            "Hood",
+            (
+                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                SettingKey.COOKING_HOOD_COLOR_TEMPERATURE,
+            ),
+        )
+    ],
+    indirect=["appliance"],
+)
 async def test_connected_devices(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
+    keys_to_check: tuple,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -151,18 +169,44 @@ async def test_connected_devices(
     Specifically those devices whose settings, status, etc. could
     not be obtained while disconnected and once connected, the entities are added.
     """
+    get_settings_original_mock = client.get_settings
+    get_all_programs_mock = client.get_all_programs
 
+    async def get_settings_side_effect(ha_id: str):
+        if ha_id == appliance.ha_id:
+            raise HomeConnectApiError(
+                "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
+            )
+        return await get_settings_original_mock.side_effect(ha_id)
+
+    async def get_all_programs_side_effect(ha_id: str):
+        if ha_id == appliance.ha_id:
+            raise HomeConnectApiError(
+                "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
+            )
+        return await get_all_programs_mock.side_effect(ha_id)
+
+    client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
+    client.get_all_programs = AsyncMock(side_effect=get_all_programs_side_effect)
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
+    client.get_settings = get_settings_original_mock
+    client.get_all_programs = get_all_programs_mock
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
+    for key in keys_to_check:
+        assert not entity_registry.async_get_entity_id(
+            Platform.SELECT,
+            DOMAIN,
+            f"{appliance.ha_id}-{key}",
+        )
 
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.CONNECTED,
                 data=ArrayOfEvents([]),
             )
@@ -170,19 +214,22 @@ async def test_connected_devices(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
-    assert device
-    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
-    assert entity_entries
+    for key in keys_to_check:
+        assert entity_registry.async_get_entity_id(
+            Platform.SELECT,
+            DOMAIN,
+            f"{appliance.ha_id}-{key}",
+        )
 
 
-async def test_select_entity_availabilty(
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_select_entity_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
 ) -> None:
     """Test if select entities availability are based on the appliance connection state."""
     entity_ids = [
@@ -200,7 +247,7 @@ async def test_select_entity_availabilty(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.DISCONNECTED,
                 ArrayOfEvents([]),
             )
@@ -214,7 +261,7 @@ async def test_select_entity_availabilty(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.CONNECTED,
                 ArrayOfEvents([]),
             )
@@ -290,7 +337,7 @@ async def test_filter_programs(
 
 @pytest.mark.parametrize(
     (
-        "appliance_ha_id",
+        "appliance",
         "entity_id",
         "expected_initial_state",
         "mock_method",
@@ -318,10 +365,10 @@ async def test_filter_programs(
             EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
         ),
     ],
-    indirect=["appliance_ha_id"],
+    indirect=["appliance"],
 )
 async def test_select_program_functionality(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     entity_id: str,
     expected_initial_state: str,
     mock_method: str,
@@ -347,14 +394,14 @@ async def test_select_program_functionality(
     )
     await hass.async_block_till_done()
     getattr(client, mock_method).assert_awaited_once_with(
-        appliance_ha_id, program_key=program_key
+        appliance.ha_id, program_key=program_key
     )
     assert hass.states.is_state(entity_id, program_to_set)
 
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.NOTIFY,
                 ArrayOfEvents(
                     [
@@ -433,13 +480,13 @@ async def test_select_exception_handling(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {"entity_id": entity_id, "option": program_to_set},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: program_to_set},
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
 @pytest.mark.parametrize(
     (
         "entity_id",
@@ -473,7 +520,7 @@ async def test_select_exception_handling(
     ],
 )
 async def test_select_functionality(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     entity_id: str,
     setting_key: SettingKey,
     expected_options: set[str],
@@ -497,12 +544,12 @@ async def test_select_functionality(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, "option": value_to_set},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: value_to_set},
     )
     await hass.async_block_till_done()
 
     client.set_setting.assert_called_once()
-    assert client.set_setting.call_args.args == (appliance_ha_id,)
+    assert client.set_setting.call_args.args == (appliance.ha_id,)
     assert client.set_setting.call_args.kwargs == {
         "setting_key": setting_key,
         "value": expected_value_call_arg,
@@ -510,7 +557,7 @@ async def test_select_functionality(
     assert hass.states.is_state(entity_id, value_to_set)
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
 @pytest.mark.parametrize(
     (
         "entity_id",
@@ -537,7 +584,7 @@ async def test_select_functionality(
     ],
 )
 async def test_fetch_allowed_values(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     entity_id: str,
     test_setting_key: SettingKey,
     allowed_values: list[str | None],
@@ -554,7 +601,7 @@ async def test_fetch_allowed_values(
     async def get_setting_side_effect(
         ha_id: str, setting_key: SettingKey
     ) -> GetSetting:
-        if ha_id != appliance_ha_id or setting_key != test_setting_key:
+        if ha_id != appliance.ha_id or setting_key != test_setting_key:
             return await original_get_setting_side_effect(ha_id, setting_key)
         return GetSetting(
             key=test_setting_key,
@@ -576,7 +623,7 @@ async def test_fetch_allowed_values(
     assert set(entity_state.attributes[ATTR_OPTIONS]) == expected_options
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
 @pytest.mark.parametrize(
     (
         "entity_id",
@@ -594,7 +641,7 @@ async def test_fetch_allowed_values(
     ],
 )
 async def test_fetch_allowed_values_after_rate_limit_error(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     entity_id: str,
     setting_key: SettingKey,
     allowed_values: list[str | None],
@@ -608,7 +655,7 @@ async def test_fetch_allowed_values_after_rate_limit_error(
     """Test fetch allowed values."""
 
     def get_settings_side_effect(ha_id: str):
-        if ha_id != appliance_ha_id:
+        if ha_id != appliance.ha_id:
             return ArrayOfSettings([])
         return ArrayOfSettings(
             [
@@ -648,7 +695,7 @@ async def test_fetch_allowed_values_after_rate_limit_error(
     assert set(entity_state.attributes[ATTR_OPTIONS]) == expected_options
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
 @pytest.mark.parametrize(
     (
         "entity_id",
@@ -669,7 +716,7 @@ async def test_fetch_allowed_values_after_rate_limit_error(
     ],
 )
 async def test_default_values_after_fetch_allowed_values_error(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     entity_id: str,
     setting_key: SettingKey,
     exception: Exception,
@@ -683,7 +730,7 @@ async def test_default_values_after_fetch_allowed_values_error(
     """Test fetch allowed values."""
 
     def get_settings_side_effect(ha_id: str):
-        if ha_id != appliance_ha_id:
+        if ha_id != appliance.ha_id:
             return ArrayOfSettings([])
         return ArrayOfSettings(
             [
@@ -758,12 +805,13 @@ async def test_select_entity_error(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, "option": value_to_set},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: value_to_set},
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
     (
         "set_active_program_options_side_effect",
@@ -840,7 +888,7 @@ async def test_options_functionality(
     option_key: OptionKey,
     allowed_values: list[str | None] | None,
     expected_options: set[str],
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     set_active_program_options_side_effect: ActiveProgramNotSetError | None,
     set_selected_program_options_side_effect: SelectedProgramNotSetError | None,
     called_mock_method: str,
@@ -894,7 +942,7 @@ async def test_options_functionality(
     await hass.async_block_till_done()
 
     assert called_mock.called
-    assert called_mock.call_args.args == (appliance_ha_id,)
+    assert called_mock.call_args.args == (appliance.ha_id,)
     assert called_mock.call_args.kwargs == {
         "option_key": option_key,
         "value": "LaundryCare.Washer.EnumType.Temperature.UlWarm",

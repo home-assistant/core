@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_TOKEN
-from aiohomeconnect.model import SettingKey, StatusKey
+from aiohomeconnect.model import HomeAppliance, SettingKey, StatusKey
 from aiohomeconnect.model.error import (
     HomeConnectError,
     TooManyRequestsError,
@@ -247,6 +247,7 @@ async def test_client_rate_limit_error(
     asyncio_sleep_mock.assert_called_once_with(retry_after)
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_required_program_or_at_least_an_option(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -254,7 +255,7 @@ async def test_required_program_or_at_least_an_option(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
 ) -> None:
     "Test that the set_program_and_options does raise an exception if no program nor options are set."
 
@@ -264,7 +265,7 @@ async def test_required_program_or_at_least_an_option(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance_ha_id)},
+        identifiers={(DOMAIN, appliance.ha_id)},
     )
 
     with pytest.raises(
@@ -281,12 +282,13 @@ async def test_required_program_or_at_least_an_option(
         )
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_entity_migration(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_v1_1: MockConfigEntry,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     platforms: list[Platform],
 ) -> None:
     """Test entity migration."""
@@ -295,7 +297,7 @@ async def test_entity_migration(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry_v1_1.entry_id,
-        identifiers={(DOMAIN, appliance_ha_id)},
+        identifiers={(DOMAIN, appliance.ha_id)},
     )
 
     test_entities = [
@@ -335,7 +337,7 @@ async def test_entity_migration(
         entity_registry.async_get_or_create(
             domain,
             DOMAIN,
-            f"{appliance_ha_id}-{old_unique_id_suffix}",
+            f"{appliance.ha_id}-{old_unique_id_suffix}",
             device_id=device_entry.id,
             config_entry=config_entry_v1_1,
         )
@@ -346,7 +348,7 @@ async def test_entity_migration(
 
     for domain, _, expected_unique_id_suffix in test_entities:
         assert entity_registry.async_get_entity_id(
-            domain, DOMAIN, f"{appliance_ha_id}-{expected_unique_id_suffix}"
+            domain, DOMAIN, f"{appliance.ha_id}-{expected_unique_id_suffix}"
         )
     assert config_entry_v1_1.minor_version == 2
 

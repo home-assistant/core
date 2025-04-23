@@ -47,3 +47,13 @@ def mock_zha_get_last_network_settings() -> Generator[None]:
         AsyncMock(return_value=None),
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_usb_path_exists() -> Generator[None]:
+    """Mock os.path.exists to allow the ZBT-1 integration to load."""
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        return_value=True,
+    ):
+        yield

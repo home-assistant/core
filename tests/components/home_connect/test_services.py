@@ -5,7 +5,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock
 
-from aiohomeconnect.model import OptionKey, ProgramKey, SettingKey
+from aiohomeconnect.model import HomeAppliance, OptionKey, ProgramKey, SettingKey
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -170,6 +170,7 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
 ]
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
     "service_call",
     SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
@@ -182,7 +183,7 @@ async def test_key_value_services(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
 ) -> None:
     """Create and test services."""
     assert config_entry.state == ConfigEntryState.NOT_LOADED
@@ -191,7 +192,7 @@ async def test_key_value_services(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance_ha_id)},
+        identifiers={(DOMAIN, appliance.ha_id)},
     )
 
     service_name = service_call["service"]
@@ -203,6 +204,7 @@ async def test_key_value_services(
     )
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
     ("service_call", "issue_id"),
     [
@@ -231,7 +233,7 @@ async def test_programs_and_options_actions_deprecation(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     issue_registry: ir.IssueRegistry,
     hass_client: ClientSessionGenerator,
 ) -> None:
@@ -242,7 +244,7 @@ async def test_programs_and_options_actions_deprecation(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance_ha_id)},
+        identifiers={(DOMAIN, appliance.ha_id)},
     )
 
     service_call["service_data"]["device_id"] = device_entry.id
@@ -279,6 +281,7 @@ async def test_programs_and_options_actions_deprecation(
     assert len(issue_registry.issues) == 0
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
     ("service_call", "called_method"),
     zip(
@@ -301,7 +304,7 @@ async def test_set_program_and_options(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test recognized options."""
@@ -311,7 +314,7 @@ async def test_set_program_and_options(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance_ha_id)},
+        identifiers={(DOMAIN, appliance.ha_id)},
     )
 
     service_call["service_data"]["device_id"] = device_entry.id
@@ -322,6 +325,7 @@ async def test_set_program_and_options(
     assert method_mock.call_args == snapshot
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
     ("service_call", "error_regex"),
     zip(
@@ -344,7 +348,7 @@ async def test_set_program_and_options_exceptions(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client_with_exception: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
 ) -> None:
     """Test recognized options."""
     assert config_entry.state == ConfigEntryState.NOT_LOADED
@@ -353,7 +357,7 @@ async def test_set_program_and_options_exceptions(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance_ha_id)},
+        identifiers={(DOMAIN, appliance.ha_id)},
     )
 
     service_call["service_data"]["device_id"] = device_entry.id
@@ -361,6 +365,7 @@ async def test_set_program_and_options_exceptions(
         await hass.services.async_call(**service_call)
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
     "service_call",
     SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
@@ -372,7 +377,7 @@ async def test_services_exception_device_id(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client_with_exception: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Raise a HomeAssistantError when there is an API error."""
@@ -382,7 +387,7 @@ async def test_services_exception_device_id(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance_ha_id)},
+        identifiers={(DOMAIN, appliance.ha_id)},
     )
 
     service_call["service_data"]["device_id"] = device_entry.id
@@ -434,6 +439,7 @@ async def test_services_appliance_not_found(
         await hass.services.async_call(**service_call)
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
     "service_call",
     SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
@@ -445,7 +451,7 @@ async def test_services_exception(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client_with_exception: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Raise a ValueError when device id does not match."""
@@ -455,7 +461,7 @@ async def test_services_exception(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance_ha_id)},
+        identifiers={(DOMAIN, appliance.ha_id)},
     )
 
     service_call["service_data"]["device_id"] = device_entry.id

@@ -121,7 +121,9 @@ def handle_config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture
-async def init_wyoming_stt(hass: HomeAssistant, stt_config_entry: ConfigEntry):
+async def init_wyoming_stt(
+    hass: HomeAssistant, stt_config_entry: ConfigEntry
+) -> ConfigEntry:
     """Initialize Wyoming STT."""
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
@@ -129,9 +131,13 @@ async def init_wyoming_stt(hass: HomeAssistant, stt_config_entry: ConfigEntry):
     ):
         await hass.config_entries.async_setup(stt_config_entry.entry_id)
 
+    return stt_config_entry
+
 
 @pytest.fixture
-async def init_wyoming_tts(hass: HomeAssistant, tts_config_entry: ConfigEntry):
+async def init_wyoming_tts(
+    hass: HomeAssistant, tts_config_entry: ConfigEntry
+) -> ConfigEntry:
     """Initialize Wyoming TTS."""
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
@@ -139,17 +145,21 @@ async def init_wyoming_tts(hass: HomeAssistant, tts_config_entry: ConfigEntry):
     ):
         await hass.config_entries.async_setup(tts_config_entry.entry_id)
 
+    return tts_config_entry
+
 
 @pytest.fixture
 async def init_wyoming_wake_word(
     hass: HomeAssistant, wake_word_config_entry: ConfigEntry
-):
+) -> ConfigEntry:
     """Initialize Wyoming Wake Word."""
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
         return_value=WAKE_WORD_INFO,
     ):
         await hass.config_entries.async_setup(wake_word_config_entry.entry_id)
+
+    return wake_word_config_entry
 
 
 @pytest.fixture
