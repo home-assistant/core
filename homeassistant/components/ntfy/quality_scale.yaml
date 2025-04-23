@@ -5,7 +5,7 @@ rules:
     comment: only entity actions
   appropriate-polling:
     status: exempt
-    comment: the integration does not poll
+    comment: the integration does not poll but the coordinator will connect via websocket and check the connection every 10s
   brands: done
   common-modules:
     status: exempt
