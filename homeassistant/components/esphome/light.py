@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import lru_cache, partial
+from operator import methodcaller
 from typing import TYPE_CHECKING, Any, cast
 
 from aioesphomeapi import (
@@ -148,7 +149,7 @@ def _least_complex_color_mode(color_modes: tuple[int, ...]) -> int:
     # popcount with bin() function because it appears
     # to be the best way: https://stackoverflow.com/a/9831671
     color_modes_list = list(color_modes)
-    color_modes_list.sort(key=lambda mode: (mode).bit_count())
+    color_modes_list.sort(key=methodcaller("bit_count"))
     return color_modes_list[0]
 
 
