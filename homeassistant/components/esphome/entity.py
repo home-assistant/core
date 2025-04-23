@@ -337,7 +337,7 @@ class EsphomeAssistEntity(EsphomeBaseEntity):
 
     def __init__(self, entry_data: RuntimeEntryData) -> None:
         """Initialize the binary sensor."""
-        self._entry_data: RuntimeEntryData = entry_data
+        self._entry_data = entry_data
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
         self._device_info = device_info
