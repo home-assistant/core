@@ -211,8 +211,8 @@ async def test_form_gen1_custom_port(
             {CONF_HOST: "1.1.1.1", CONF_PORT: "1100"},
         )
 
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["errors"]["base"] == "custom_port_not_supported"
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"]["base"] == "custom_port_not_supported"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
@@ -430,6 +430,7 @@ async def test_form_missing_model_key_zeroconf(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "firmware_not_fully_provisioned"
 
@@ -516,8 +517,8 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             {CONF_HOST: "1.1.1.1"},
         )
 
-        assert result2["type"] is FlowResultType.ABORT
-        assert result2["reason"] == "already_configured"
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
     assert entry.data[CONF_HOST] == "1.1.1.1"
@@ -552,7 +553,7 @@ async def test_user_setup_ignored_device(
             {CONF_HOST: "1.1.1.1"},
         )
 
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     # Test config entry got updated with latest IP
     assert entry.data[CONF_HOST] == "1.1.1.1"
@@ -837,8 +838,9 @@ async def test_zeroconf_sleeping_device_error(hass: HomeAssistant) -> None:
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "cannot_connect"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_options_flow_abort_setup_retry(
@@ -890,8 +892,9 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
     assert entry.data[CONF_HOST] == "1.1.1.1"
@@ -917,8 +920,9 @@ async def test_zeroconf_ignored(hass: HomeAssistant) -> None:
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_zeroconf_with_wifi_ap_ip(hass: HomeAssistant) -> None:
@@ -940,8 +944,9 @@ async def test_zeroconf_with_wifi_ap_ip(hass: HomeAssistant) -> None:
             ),
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     # Test config entry was not updated with the wifi ap ip
     assert entry.data[CONF_HOST] == "2.2.2.2"
@@ -958,8 +963,9 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "cannot_connect"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_require_auth(
@@ -979,8 +985,9 @@ async def test_zeroconf_require_auth(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {}
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1039,8 +1046,8 @@ async def test_reauth_successful(
             user_input=user_input,
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(
@@ -1096,8 +1103,8 @@ async def test_reauth_unsuccessful(
             user_input=user_input,
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == abort_reason
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
 
 
 async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
@@ -1119,8 +1126,8 @@ async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
             user_input={CONF_PASSWORD: "test2 password"},
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_unsuccessful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_unsuccessful"
 
 
 async def test_options_flow_disabled_gen_1(
@@ -1268,8 +1275,9 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
             data=DISCOVERY_INFO_WITH_MAC,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
@@ -1308,8 +1316,9 @@ async def test_zeroconf_already_configured_triggers_refresh(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
@@ -1358,8 +1367,9 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     mock_rpc_device.mock_disconnected()
@@ -1412,8 +1422,9 @@ async def test_zeroconf_sleeping_device_attempts_configure(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     assert mock_rpc_device.update_outbound_websocket.mock_calls == []
 
@@ -1477,8 +1488,9 @@ async def test_zeroconf_sleeping_device_attempts_configure_ws_disabled(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     assert mock_rpc_device.update_outbound_websocket.mock_calls == []
 
@@ -1542,8 +1554,9 @@ async def test_zeroconf_sleeping_device_attempts_configure_no_url_available(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     assert mock_rpc_device.update_outbound_websocket.mock_calls == []
 
