@@ -46,6 +46,7 @@ class NtfyNotifyEntity(NotifyEntity):
         name=None,
         has_entity_name=True,
     )
+    _attr_supported_features = NotifyEntityFeature.TITLE
 
     def __init__(
         self,
@@ -57,8 +58,7 @@ class NtfyNotifyEntity(NotifyEntity):
         self._attr_unique_id = f"{config_entry.entry_id}_{subentry.subentry_id}_{self.entity_description.key}"
         self.topic = subentry.data[CONF_TOPIC]
 
-        self._attr_supported_features = NotifyEntityFeature.TITLE
-        self.device_info = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ntfy LLC",
             model="ntfy",
