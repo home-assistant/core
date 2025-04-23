@@ -291,6 +291,7 @@ homeassistant.components.kaleidescape.*
 homeassistant.components.knocki.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
+homeassistant.components.kulersky.*
 homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
 homeassistant.components.lamarzocco.*
