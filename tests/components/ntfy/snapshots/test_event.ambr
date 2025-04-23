@@ -1,4 +1,31 @@
 # serializer version: 1
+# name: test_event
+  ReadOnlyDict({
+    'actions': list([
+    ]),
+    'attachment': None,
+    'click': 'https://example.com/',
+    'content_type': None,
+    'entity_picture': 'https://example.com/icon.png',
+    'event': <Event.MESSAGE: 'message'>,
+    'event_type': 'Title: Hello',
+    'event_types': list([
+      'Title: Hello',
+    ]),
+    'expires': HAFakeDatetime(2025, 3, 29, 5, 58, 46, tzinfo=datetime.timezone.utc),
+    'friendly_name': 'mytopic',
+    'icon': 'https://example.com/icon.png',
+    'id': 'h6Y2hKA5sy0U',
+    'message': 'Hello',
+    'priority': 3,
+    'tags': list([
+      'octopus',
+    ]),
+    'time': HAFakeDatetime(2025, 3, 28, 17, 58, 46, tzinfo=datetime.timezone.utc),
+    'title': 'Title',
+    'topic': 'mytopic',
+  })
+# ---
 # name: test_event_platform[event.mytopic-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

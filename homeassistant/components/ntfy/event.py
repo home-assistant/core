@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NtfyConfigEntry
-from .const import CONF_TOPIC, DOMAIN
+from .const import CONF_TOPIC, DOMAIN, NTFY_EVENT
 from .coordinator import NtfyDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
@@ -92,7 +92,7 @@ class NtfyEventEntity(CoordinatorEntity[NtfyDataUpdateCoordinator], EventEntity)
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"ntfy_event_{self.coordinator.config_entry.entry_id}",
+                f"{NTFY_EVENT}_{self.coordinator.config_entry.entry_id}",
                 self._async_handle_event,
             )
         )
