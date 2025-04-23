@@ -201,7 +201,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     _attr_has_entity_name = True
     _static_info: _InfoT
     _state: _StateT
-    _has_state: bool
+    _has_state: bool = False
     device_entry: dr.DeviceEntry
 
     def __init__(
