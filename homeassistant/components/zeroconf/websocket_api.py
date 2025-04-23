@@ -5,17 +5,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from functools import partial
+from itertools import chain
 import logging
 from typing import Any, cast
 
 import voluptuous as vol
-from zeroconf import (
-    BadTypeInNameException,
-    DNSPointer,
-    DNSRecord,
-    Zeroconf,
-    current_time_millis,
-)
+from zeroconf import BadTypeInNameException, DNSPointer, Zeroconf, current_time_millis
 from zeroconf.asyncio import AsyncServiceInfo, IPVersion
 
 from homeassistant.components import websocket_api
@@ -124,10 +119,15 @@ class _DiscoverySubscription:
 
     def _async_get_ptr_records(self, zc: Zeroconf) -> list[DNSPointer]:
         """Return all PTR records for the HAP type."""
-        records: list[DNSRecord] = []
-        for zc_type in self.discovery.zeroconf_types:
-            records.extend(zc.cache.async_all_by_details(zc_type, TYPE_PTR, CLASS_IN))
-        return cast(list[DNSPointer], records)
+        return cast(
+            list[DNSPointer],
+            list(
+                chain.from_iterable(
+                    zc.cache.async_all_by_details(zc_type, TYPE_PTR, CLASS_IN)
+                    for zc_type in self.discovery.zeroconf_types
+                )
+            ),
+        )
 
     async def _async_handle_service(self, info: AsyncServiceInfo) -> None:
         """Add a device that became visible via zeroconf."""
