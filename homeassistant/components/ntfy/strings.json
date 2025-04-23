@@ -35,7 +35,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "config_subentries": {
@@ -69,11 +69,11 @@
       "error": {
         "publish_forbidden": "Publishing to this topic is forbidden",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-        "unknown": "[%key:common::config_flow::error::unknown%]"
+        "unknown": "[%key:common::config_flow::error::unknown%]",
+        "invalid_topic": "Invalid topic. Only letters, numbers, underscores, or dashes allowed."
       },
       "abort": {
-        "already_configured": "Topic is already configured",
-        "invalid_topic": "Invalid topic. Only letters, numbers, underscores, or dashes allowed."
+        "already_configured": "Topic is already configured"
       }
     }
   },

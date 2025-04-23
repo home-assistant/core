@@ -1,7 +1,7 @@
 """Test the ntfy config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aiontfy.exceptions import (
     NtfyException,
@@ -56,20 +56,15 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.ntfy.config_flow.Ntfy.publish",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ntfy.sh"
     assert result["data"] == entry_data
     assert len(mock_setup_entry.mock_calls) == 1
@@ -116,7 +111,7 @@ async def test_form_errors(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     mock_aiontfy.account.side_effect = None
@@ -129,7 +124,7 @@ async def test_form_errors(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ntfy.sh"
     assert result["data"] == {
         CONF_URL: "https://ntfy.sh/",

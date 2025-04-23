@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: NtfyConfigEntry) -> None:
     """Handle update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
