@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 type ProbePlusConfigEntry = ConfigEntry[ProbePlusDataUpdateCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = 15
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
 class ProbePlusDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -36,7 +36,7 @@ class ProbePlusDataUpdateCoordinator(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             name="ProbePlusDataUpdateCoordinator",
-            update_interval=timedelta(seconds=SCAN_INTERVAL),
+            update_interval=SCAN_INTERVAL,
             config_entry=entry,
         )
 
