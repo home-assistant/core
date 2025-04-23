@@ -685,10 +685,8 @@ class ESPHomeManager:
         entry = self.entry
         entry_data = self.entry_data
 
-        if self.entry.options.get(
-            CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
-        ):
-            async_delete_issue(self.hass, DOMAIN, self.services_issue)
+        if entry.options.get(CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS):
+            async_delete_issue(hass, DOMAIN, self.services_issue)
 
         reconnect_logic = ReconnectLogic(
             client=self.cli,
