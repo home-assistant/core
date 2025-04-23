@@ -47,6 +47,8 @@ from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 from .ffmpeg_proxy import async_create_proxy_url
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
@@ -334,6 +336,12 @@ class EsphomeAssistSatellite(
                 "code": event.data["code"],
                 "message": event.data["message"],
             }
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_RUN_START:
+            assert event.data is not None
+            if tts_output := event.data["tts_output"]:
+                path = tts_output["url"]
+                url = async_process_play_media_url(self.hass, path)
+                data_to_send = {"url": url}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END:
             if self._tts_streaming_task is None:
                 # No TTS

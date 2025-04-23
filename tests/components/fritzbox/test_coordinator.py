@@ -85,8 +85,16 @@ async def test_coordinator_automatic_registry_cleanup(
 ) -> None:
     """Test automatic registry cleanup."""
     fritz().get_devices.return_value = [
-        FritzDeviceSwitchMock(ain="fake ain switch", name="fake_switch"),
-        FritzDeviceCoverMock(ain="fake ain cover", name="fake_cover"),
+        FritzDeviceSwitchMock(
+            ain="fake ain switch",
+            device_and_unit_id=("fake ain switch", None),
+            name="fake_switch",
+        ),
+        FritzDeviceCoverMock(
+            ain="fake ain cover",
+            device_and_unit_id=("fake ain cover", None),
+            name="fake_cover",
+        ),
     ]
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
@@ -101,7 +109,11 @@ async def test_coordinator_automatic_registry_cleanup(
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
 
     fritz().get_devices.return_value = [
-        FritzDeviceSwitchMock(ain="fake ain switch", name="fake_switch")
+        FritzDeviceSwitchMock(
+            ain="fake ain switch",
+            device_and_unit_id=("fake ain switch", None),
+            name="fake_switch",
+        )
     ]
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
