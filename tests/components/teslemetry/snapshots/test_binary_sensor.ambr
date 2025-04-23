@@ -2934,7 +2934,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[binary_sensor.test_wifi-entry]
+# name: test_binary_sensor[binary_sensor.test_wi_fi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2947,7 +2947,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_wifi',
+    'entity_id': 'binary_sensor.test_wi_fi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2959,7 +2959,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'WiFi',
+    'original_name': 'Wi-Fi',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2968,14 +2968,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[binary_sensor.test_wifi-state]
+# name: test_binary_sensor[binary_sensor.test_wi_fi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Test WiFi',
+      'friendly_name': 'Test Wi-Fi',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_wifi',
+    'entity_id': 'binary_sensor.test_wi_fi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3856,14 +3856,14 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor_refresh[binary_sensor.test_wifi-statealt]
+# name: test_binary_sensor_refresh[binary_sensor.test_wi_fi-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Test WiFi',
+      'friendly_name': 'Test Wi-Fi',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_wifi',
+    'entity_id': 'binary_sensor.test_wi_fi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3886,7 +3886,7 @@
 # name: test_binary_sensors_connectivity[binary_sensor.test_cellular-state]
   'on'
 # ---
-# name: test_binary_sensors_connectivity[binary_sensor.test_wifi-state]
+# name: test_binary_sensors_connectivity[binary_sensor.test_wi_fi-state]
   'off'
 # ---
 # name: test_binary_sensors_streaming[binary_sensor.test_driver_seat_belt-state]

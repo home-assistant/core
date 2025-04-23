@@ -146,7 +146,7 @@ async def test_binary_sensors_connectivity(
     # Assert the entities restored their values
     for entity_id in (
         "binary_sensor.test_cellular",
-        "binary_sensor.test_wifi",
+        "binary_sensor.test_wi_fi",
     ):
         state = hass.states.get(entity_id)
         assert state.state == snapshot(name=f"{entity_id}-state")

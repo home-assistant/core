@@ -69,7 +69,7 @@
         "name": "Cellular"
       },
       "wifi": {
-        "name": "WiFi"
+        "name": "Wi-Fi"
       },
       "storm_mode_active": {
         "name": "Storm watch active"
