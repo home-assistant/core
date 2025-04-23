@@ -107,7 +107,7 @@ class ModbusLight(BaseSwitch, LightEntity):
             conv_brightness = await self._convert_brightness_to_modbus(
                 brightness=brightness
             )
-            if conv_brightness:
+            if conv_brightness is not None:
                 await self._hub.async_pb_call(
                     unit=self._slave,
                     address=self._brightness_address,
@@ -123,7 +123,7 @@ class ModbusLight(BaseSwitch, LightEntity):
             conv_color_temp_kelvin = await self._convert_color_temp_to_modbus(
                 kelvin=color_temp_kelvin
             )
-            if conv_color_temp_kelvin:
+            if conv_color_temp_kelvin is not None:
                 await self._hub.async_pb_call(
                     unit=self._slave,
                     address=self._color_temp_address,
@@ -198,7 +198,6 @@ class ModbusLight(BaseSwitch, LightEntity):
                     )
                 )
             )
-        return 0
 
     @staticmethod
     async def _convert_brightness_to_modbus(brightness: int) -> int:
@@ -220,4 +219,3 @@ class ModbusLight(BaseSwitch, LightEntity):
                 * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
                 / (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
             )
-        return 0
