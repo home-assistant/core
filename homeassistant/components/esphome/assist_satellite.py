@@ -35,7 +35,6 @@ from homeassistant.components.intent import (
     async_register_timer_handler,
 )
 from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -111,7 +110,7 @@ class EsphomeAssistSatellite(
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ESPHomeConfigEntry,
         entry_data: RuntimeEntryData,
     ) -> None:
         """Initialize satellite."""
