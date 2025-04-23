@@ -1,8 +1,9 @@
 """Test Homee fans."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -16,12 +17,13 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import build_mock_node, setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -170,3 +172,19 @@ async def test_turn_on_preset_last_value_zero(
         call(77, 2, 0),
         call(77, 1, 8),
     ]
+
+
+async def test_fan_snapshot(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the fan snapshot."""
+    mock_homee.nodes = [build_mock_node("fan.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.FAN]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
