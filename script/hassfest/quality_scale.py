@@ -439,7 +439,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "goalzero",
     "gogogate2",
     "goodwe",
-    "google",
     "google_assistant",
     "google_assistant_sdk",
     "google_cloud",
