@@ -376,7 +376,7 @@ class ESPHomeManager:
     async def on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         try:
-            await self._on_connnect()
+            await self._on_connect()
         except APIConnectionError as err:
             _LOGGER.warning(
                 "Error getting setting up connection for %s: %s", self.host, err
@@ -412,7 +412,7 @@ class ESPHomeManager:
             self._async_on_log, self._log_level
         )
 
-    async def _on_connnect(self) -> None:
+    async def _on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         entry = self.entry
         unique_id = entry.unique_id
