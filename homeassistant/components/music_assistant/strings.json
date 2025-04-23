@@ -4,6 +4,9 @@
       "init": {
         "data": {
           "url": "URL of the Music Assistant server"
+        },
+        "data_description": {
+          "url": "URL of the Music Assistant server in the form `http://mass.local:8095` or `http://192.168.1.150:8095`"
         }
       },
       "manual": {
@@ -11,6 +14,9 @@
         "description": "Enter the URL to your already running Music Assistant server. If you do not have the Music Assistant server running, you should install it first.",
         "data": {
           "url": "URL of the Music Assistant server"
+        },
+        "data_description": {
+          "url": "URL of the Music Assistant server in the form `http://myserver.local:8095` or `http://192.168.1.150:8095`"
         }
       },
       "discovery_confirm": {
