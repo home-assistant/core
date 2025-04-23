@@ -41,7 +41,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .entity import EsphomeAssistEntity
+from .entity import EsphomeAssistEntity, convert_api_error_ha_error
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 from .ffmpeg_proxy import async_create_proxy_url
@@ -348,6 +348,7 @@ class EsphomeAssistSatellite(
 
         self.cli.send_voice_assistant_event(event_type, data_to_send)
 
+    @convert_api_error_ha_error
     async def async_announce(
         self, announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
@@ -357,6 +358,7 @@ class EsphomeAssistSatellite(
         """
         await self._do_announce(announcement, run_pipeline_after=False)
 
+    @convert_api_error_ha_error
     async def async_start_conversation(
         self, start_announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
