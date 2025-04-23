@@ -1532,6 +1532,7 @@ async def test_sleeping_device_gen2_with_new_firmware(
         )
         await hass.async_block_till_done()
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTP_PORT,
@@ -1644,6 +1645,19 @@ async def test_reconfigure_with_exception(
         )
 
     assert result["errors"] == {"base": base_error}
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "type": MODEL_1, "auth": False, "gen": 2},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "10.10.10.10", CONF_PORT: 99},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_HOST: "10.10.10.10", CONF_PORT: 99, CONF_GEN: 2}
 
 
 async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
