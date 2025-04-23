@@ -42,7 +42,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     )
     client = Portainer(
         api_url=data[CONF_URL],
-        api_key=data[CONF_API_KEY],
+        api_key=data[CONF_ACCESS_TOKEN],
         session=session,
     )
 
