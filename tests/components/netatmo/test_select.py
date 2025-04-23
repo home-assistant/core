@@ -48,7 +48,7 @@ async def test_select_schedule_thermostats(
     netatmo_auth: AsyncMock,
 ) -> None:
     """Test service for selecting Netatmo schedule with thermostats."""
-    with selected_platforms(["climate", "select"]):
+    with selected_platforms([Platform.CLIMATE, Platform.SELECT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
