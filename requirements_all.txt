@@ -179,7 +179,7 @@ aioacaia==0.1.14
 aioairq==0.4.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.11
+aioairzone-cloud==0.6.12
 
 # homeassistant.components.airzone
 aioairzone==1.0.0
@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.10.0
+aioesphomeapi==30.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -267,7 +267,7 @@ aiohasupervisor==0.3.1b1
 aiohomeconnect==0.17.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.13
+aiohomekit==3.2.14
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -313,6 +313,9 @@ aionanoleaf==0.2.1
 
 # homeassistant.components.notion
 aionotion==2024.03.0
+
+# homeassistant.components.ntfy
+aiontfy==0.5.1
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -362,7 +365,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.5.0
+aiorussound==4.5.2
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -371,7 +374,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.4.1
+aioshelly==13.5.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -781,10 +784,10 @@ devialet==1.5.7
 devolo-home-control-api==0.18.3
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==1.4.1
+devolo-plc-api==1.5.1
 
 # homeassistant.components.chacon_dio
-dio-chacon-wifi-api==1.2.1
+dio-chacon-wifi-api==1.2.2
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -829,7 +832,7 @@ ebusdpy==0.0.17
 ecoaliface==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.0.6
+eheimdigital==1.1.0
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.14
@@ -889,7 +892,7 @@ epson-projector==0.5.1
 eq3btsmart==1.4.1
 
 # homeassistant.components.esphome
-esphome-dashboard-api==1.2.3
+esphome-dashboard-api==1.3.0
 
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.16
@@ -948,7 +951,7 @@ flux-led==1.2.0
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==1.4.0
+fnv-hash-fast==1.5.0
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -1114,7 +1117,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.38.1
+habluetooth==3.39.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.94.0
@@ -1154,7 +1157,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.69
+holidays==0.70
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250411.0
@@ -1172,7 +1175,7 @@ horimote==0.4.1
 httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.10.0
+huawei-lte-api==1.11.0
 
 # homeassistant.components.huum
 huum==0.7.12
@@ -1308,7 +1311,7 @@ lakeside==0.13
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.3
+lcn-frontend==0.2.4
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1834,7 +1837,7 @@ pyasuswrt==0.1.21
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==8.1.0
+pyatmo==9.0.0
 
 # homeassistant.components.apple_tv
 pyatv==0.16.0
@@ -1852,7 +1855,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==2.0.0
+pyblu==2.0.1
 
 # homeassistant.components.neato
 pybotvac==0.0.26
@@ -1957,7 +1960,7 @@ pyenphase==1.25.5
 pyenvisalink==4.7
 
 # homeassistant.components.ephember
-pyephember==0.3.1
+pyephember2==0.4.12
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -2089,7 +2092,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.4.9
+pylamarzocco==2.0.0b3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2113,7 +2116,7 @@ pylitterbot==2024.0.0
 pylutron-caseta==0.24.0
 
 # homeassistant.components.lutron
-pylutron==0.2.16
+pylutron==0.2.18
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2134,7 +2137,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.3.4
+pymiele==0.3.6
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -2214,7 +2217,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.17.0
+pyoverkiz==1.17.1
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2289,7 +2292,7 @@ pysabnzbd==1.1.1
 pysaj==0.0.16
 
 # homeassistant.components.schlage
-pyschlage==2024.11.0
+pyschlage==2025.4.0
 
 # homeassistant.components.sensibo
 pysensibo==1.1.0
@@ -2331,7 +2334,7 @@ pysmartthings==3.0.4
 pysmarty2==0.10.2
 
 # homeassistant.components.smhi
-pysmhi==1.0.1
+pysmhi==1.0.2
 
 # homeassistant.components.edl21
 pysml==0.0.12
@@ -2436,7 +2439,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.2
+python-linkplay==0.2.4
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2633,7 +2636,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.1
+reolink-aio==0.13.2
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2855,7 +2858,7 @@ systembridgeconnector==4.1.5
 systembridgemodels==4.2.4
 
 # homeassistant.components.tailscale
-tailscale==0.6.1
+tailscale==0.6.2
 
 # homeassistant.components.tank_utility
 tank-utility==1.5.0
@@ -2893,7 +2896,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.1
+teslemetry-stream==0.7.5
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
@@ -3121,7 +3124,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.7
+yalexs-ble==2.6.0
 
 # homeassistant.components.august
 # homeassistant.components.yale
@@ -3152,13 +3155,13 @@ zabbix-utils==2.0.2
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.146.0
+zeroconf==0.146.5
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.55
+zha==0.0.56
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

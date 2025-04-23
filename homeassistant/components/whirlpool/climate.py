@@ -63,19 +63,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     appliances_manager = config_entry.runtime_data
-    aircons = [AirConEntity(hass, aircon) for aircon in appliances_manager.aircons]
-    async_add_entities(aircons)
+    async_add_entities(AirConEntity(aircon) for aircon in appliances_manager.aircons)
 
 
 class AirConEntity(WhirlpoolEntity, ClimateEntity):
     """Representation of an air conditioner."""
+
+    _appliance: Aircon
 
     _attr_fan_modes = SUPPORTED_FAN_MODES
     _attr_name = None
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
     _attr_max_temp = SUPPORTED_MAX_TEMP
     _attr_min_temp = SUPPORTED_MIN_TEMP
-    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -87,86 +87,81 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, hass: HomeAssistant, aircon: Aircon) -> None:
-        """Initialize the entity."""
-        super().__init__(aircon)
-        self._aircon = aircon
-
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        return self._aircon.get_current_temp()
+        return self._appliance.get_current_temp()
 
     @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        return self._aircon.get_temp()
+        return self._appliance.get_temp()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self._aircon.set_temp(kwargs.get(ATTR_TEMPERATURE))
+        await self._appliance.set_temp(kwargs.get(ATTR_TEMPERATURE))
 
     @property
     def current_humidity(self) -> int:
         """Return the current humidity."""
-        return self._aircon.get_current_humidity()
+        return self._appliance.get_current_humidity()
 
     @property
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
-        return self._aircon.get_humidity()
+        return self._appliance.get_humidity()
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        await self._aircon.set_humidity(humidity)
+        await self._appliance.set_humidity(humidity)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, fan."""
-        if not self._aircon.get_power_on():
+        if not self._appliance.get_power_on():
             return HVACMode.OFF
 
-        mode: AirconMode = self._aircon.get_mode()
+        mode: AirconMode = self._appliance.get_mode()
         return AIRCON_MODE_MAP.get(mode)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         if hvac_mode == HVACMode.OFF:
-            await self._aircon.set_power_on(False)
+            await self._appliance.set_power_on(False)
             return
 
         if not (mode := HVAC_MODE_TO_AIRCON_MODE.get(hvac_mode)):
             raise ValueError(f"Invalid hvac mode {hvac_mode}")
 
-        await self._aircon.set_mode(mode)
-        if not self._aircon.get_power_on():
-            await self._aircon.set_power_on(True)
+        await self._appliance.set_mode(mode)
+        if not self._appliance.get_power_on():
+            await self._appliance.set_power_on(True)
 
     @property
     def fan_mode(self) -> str:
         """Return the fan setting."""
-        fanspeed = self._aircon.get_fanspeed()
+        fanspeed = self._appliance.get_fanspeed()
         return AIRCON_FANSPEED_MAP.get(fanspeed, FAN_OFF)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         if not (fanspeed := FAN_MODE_TO_AIRCON_FANSPEED.get(fan_mode)):
             raise ValueError(f"Invalid fan mode {fan_mode}")
-        await self._aircon.set_fanspeed(fanspeed)
+        await self._appliance.set_fanspeed(fanspeed)
 
     @property
     def swing_mode(self) -> str:
         """Return the swing setting."""
-        return SWING_HORIZONTAL if self._aircon.get_h_louver_swing() else SWING_OFF
+        return SWING_HORIZONTAL if self._appliance.get_h_louver_swing() else SWING_OFF
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target temperature."""
-        await self._aircon.set_h_louver_swing(swing_mode == SWING_HORIZONTAL)
+        await self._appliance.set_h_louver_swing(swing_mode == SWING_HORIZONTAL)
 
     async def async_turn_on(self) -> None:
         """Turn device on."""
-        await self._aircon.set_power_on(True)
+        await self._appliance.set_power_on(True)
 
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        await self._aircon.set_power_on(False)
+        await self._appliance.set_power_on(False)
