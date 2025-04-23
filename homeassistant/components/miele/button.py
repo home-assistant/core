@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 class MieleButtonDescription(ButtonEntityDescription):
     """Class describing Miele button entities."""
 
-    press_data: dict[str, MieleActions]
+    press_data: dict[str, str | int | bool]
 
 
 @dataclass
@@ -132,14 +132,12 @@ class MieleButton(MieleEntity, ButtonEntity):
         super().__init__(coordinator, device_id, description)
         self.api = coordinator.api
 
-    def _action_available(self, action: MieleActions) -> bool:
+    def _action_available(self, action: dict[str, str | int | bool]) -> bool:
         """Check if action is available according to API."""
-        if PROCESS_ACTION in action:
-            return (
-                action[PROCESS_ACTION] in self.coordinator.data.actions.process_actions
-            )
-        _LOGGER.debug("Action not found: %s", action)
-        return False
+        return (
+            action[PROCESS_ACTION]
+            in self.coordinator.data.actions[self._device_id].process_actions
+        )
 
     @property
     def available(self) -> bool:
@@ -155,7 +153,8 @@ class MieleButton(MieleEntity, ButtonEntity):
         if self._action_available(self.entity_description.press_data):
             try:
                 await self.api.send_action(
-                    self.device_id, self.entity_description.press_data
+                    self._device_id,
+                    self.entity_description.press_data,
                 )
             except aiohttp.ClientResponseError as ex:
                 raise HomeAssistantError(

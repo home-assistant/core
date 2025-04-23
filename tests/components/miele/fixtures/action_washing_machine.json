@@ -1,5 +1,5 @@
 {
-  "processAction": [],
+  "processAction": [1, 2, 3],
   "light": [],
   "ambientLight": [],
   "startTime": [],
