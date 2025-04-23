@@ -6,7 +6,7 @@ import logging
 import random
 import re
 import string
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiontfy import Ntfy
 from aiontfy.exceptions import (
@@ -138,8 +138,10 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if TYPE_CHECKING:
+                    assert url.host
                 return self.async_create_entry(
-                    title=url.host or "",
+                    title=url.host,
                     data={
                         CONF_URL: url.human_repr(),
                         CONF_USERNAME: username,
