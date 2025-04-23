@@ -76,11 +76,13 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
             ) from err
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
@@ -94,12 +96,14 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="cannot_connect",
+                    translation_placeholders={"error": repr(err)},
                 ) from err
             except PortainerAuthenticationError as err:
                 _LOGGER.exception("Authentication error")
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="invalid_auth",
+                    translation_placeholders={"error": repr(err)},
                 ) from err
 
             mapped_endpoints[endpoint.id] = PortainerCoordinatorData(
