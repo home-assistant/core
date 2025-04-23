@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The login details correspond to a different account. Please re-authenticate to the previously configured account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
