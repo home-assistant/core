@@ -570,7 +570,12 @@ async def test_user_setup_ignored_device(
     ],
 )
 async def test_form_auth_errors_test_connection_gen1(
-    hass: HomeAssistant, exc: Exception, base_error: str
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    mock_setup: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exc: Exception,
+    base_error: str,
 ) -> None:
     """Test we handle errors in Gen1 authenticated devices."""
     result = await hass.config_entries.flow.async_init(
@@ -588,7 +593,7 @@ async def test_form_auth_errors_test_connection_gen1(
 
     with patch(
         "aioshelly.block_device.BlockDevice.create",
-        new=AsyncMock(side_effect=exc),
+        side_effect=exc,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -596,6 +601,30 @@ async def test_form_auth_errors_test_connection_gen1(
         )
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": base_error}
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "auth": True},
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_USERNAME: "test username", CONF_PASSWORD: "test password"},
+        )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Test name"
+    assert result4["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_MODEL: MODEL_1,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 1,
+        CONF_USERNAME: "test username",
+        CONF_PASSWORD: "test password",
+    }
+    assert result4["context"]["unique_id"] == "test-mac"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
