@@ -80,7 +80,7 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
         self._set_confirm_only()
-        assert self.unique_id is not None
+        assert self.unique_id
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders={
