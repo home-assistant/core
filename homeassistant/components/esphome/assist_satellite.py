@@ -35,14 +35,13 @@ from homeassistant.components.intent import (
     async_register_timer_handler,
 )
 from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .entity import EsphomeAssistEntity
+from .entity import EsphomeAssistEntity, convert_api_error_ha_error
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 from .ffmpeg_proxy import async_create_proxy_url
@@ -111,7 +110,7 @@ class EsphomeAssistSatellite(
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ESPHomeConfigEntry,
         entry_data: RuntimeEntryData,
     ) -> None:
         """Initialize satellite."""
@@ -349,6 +348,7 @@ class EsphomeAssistSatellite(
 
         self.cli.send_voice_assistant_event(event_type, data_to_send)
 
+    @convert_api_error_ha_error
     async def async_announce(
         self, announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
@@ -358,6 +358,7 @@ class EsphomeAssistSatellite(
         """
         await self._do_announce(announcement, run_pipeline_after=False)
 
+    @convert_api_error_ha_error
     async def async_start_conversation(
         self, start_announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:

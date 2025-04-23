@@ -215,7 +215,7 @@ class ESPHomeManager:
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
-        await cleanup_instance(self.hass, self.entry)
+        await cleanup_instance(self.entry)
 
     @property
     def services_issue(self) -> str:
@@ -376,7 +376,7 @@ class ESPHomeManager:
     async def on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         try:
-            await self._on_connnect()
+            await self._on_connect()
         except APIConnectionError as err:
             _LOGGER.warning(
                 "Error getting setting up connection for %s: %s", self.host, err
@@ -412,7 +412,7 @@ class ESPHomeManager:
             self._async_on_log, self._log_level
         )
 
-    async def _on_connnect(self) -> None:
+    async def _on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         entry = self.entry
         unique_id = entry.unique_id
@@ -939,9 +939,7 @@ def _setup_services(
         _async_register_service(hass, entry_data, device_info, service)
 
 
-async def cleanup_instance(
-    hass: HomeAssistant, entry: ESPHomeConfigEntry
-) -> RuntimeEntryData:
+async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data = entry.runtime_data
     data.async_on_disconnect()
