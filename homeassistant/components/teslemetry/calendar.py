@@ -76,17 +76,6 @@ def test_days_of_week(date: datetime, days_of_week: int) -> bool:
     return days_of_week & 1 << date.weekday() > 0
 
 
-def get_delta(minutes: int, days_of_week: int, start: datetime) -> timedelta:
-    """Figure out how far in the future the schedule is."""
-
-    startDay = start.weekday()
-    startMinutes = start.hour * 60 + start.minute
-    for i in range(7):
-        if days_of_week & 1 << ((startDay + i) % 7) and (i or startMinutes < minutes):
-            return timedelta(days=i, minutes=minutes - startMinutes)
-    raise ValueError("Schedule has no days")
-
-
 @dataclass
 class Schedule:
     """A schedule for a vehicle."""
