@@ -2311,7 +2311,7 @@ systembridgeconnector==4.1.5
 systembridgemodels==4.2.4
 
 # homeassistant.components.tailscale
-tailscale==0.6.1
+tailscale==0.6.2
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.12
