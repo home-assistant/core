@@ -1311,7 +1311,7 @@ lakeside==0.13
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.4
+lcn-frontend==0.2.5
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -2229,7 +2229,7 @@ pypalazzetti==0.1.19
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.8.5
+pypck==0.8.6
 
 # homeassistant.components.pglab
 pypglab==0.0.5
