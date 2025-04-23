@@ -104,7 +104,7 @@ async def test_empty_calendar(
         json_values,
         mower_time_zone,
     )
-    mock_automower_client.get_joost.return_value = values
+    mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

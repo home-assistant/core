@@ -43,7 +43,7 @@ async def test_button_states_and_commands(
     assert state.state == STATE_UNAVAILABLE
 
     values[TEST_MOWER_ID].mower.is_error_confirmable = None
-    mock_automower_client.get_joost.return_value = values
+    mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -51,7 +51,7 @@ async def test_button_states_and_commands(
     assert state.state == STATE_UNAVAILABLE
 
     values[TEST_MOWER_ID].mower.is_error_confirmable = True
-    mock_automower_client.get_joost.return_value = values
+    mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -97,7 +97,7 @@ async def test_sync_clock(
     state = hass.states.get(entity_id)
     assert state.name == "Test Mower 1 Sync clock"
 
-    mock_automower_client.get_joost.return_value = values
+    mock_automower_client.get_status.return_value = values
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
