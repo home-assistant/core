@@ -215,7 +215,7 @@ class ESPHomeManager:
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
-        await cleanup_instance(self.hass, self.entry)
+        await cleanup_instance(self.entry)
 
     @property
     def services_issue(self) -> str:
@@ -939,9 +939,7 @@ def _setup_services(
         _async_register_service(hass, entry_data, device_info, service)
 
 
-async def cleanup_instance(
-    hass: HomeAssistant, entry: ESPHomeConfigEntry
-) -> RuntimeEntryData:
+async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data = entry.runtime_data
     data.async_on_disconnect()
