@@ -3,7 +3,6 @@
   "name": "Swing2Sleep Smarla",
   "codeowners": ["@explicatis", "@rlint-explicatis"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/smarla",
   "integration_type": "device",
   "iot_class": "cloud_push",
