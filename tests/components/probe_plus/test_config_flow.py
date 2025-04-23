@@ -55,7 +55,7 @@ async def test_form(
         user_input=user_input,
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_bluetooth_discovery(
@@ -79,8 +79,8 @@ async def test_bluetooth_discovery(
         user_input=user_input,
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
         CONF_ADDRESS: service_info.address,
     }
 
