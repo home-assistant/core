@@ -41,9 +41,9 @@ from tests.components.bluetooth import inject_bluetooth_service_info
     [
         (
             SERVICE_SET_PRESET_MODE,
-            {ATTR_PRESET_MODE: "BABY"},
+            {ATTR_PRESET_MODE: "baby"},
             "set_preset_mode",
-            {ATTR_PRESET_MODE: "BABY"},
+            {ATTR_PRESET_MODE: "baby"},
             STATE_ON,
             b"\xb0\xe9\xfeXY\xa8\xfd\xccWO",
         ),
