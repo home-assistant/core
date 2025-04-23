@@ -93,6 +93,19 @@
       }
     }
   },
+  "entity": {
+    "event": {
+      "subscribe": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "triggered": "Triggered"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
     "publish_failed_request_error": {
       "message": "Failed to publish notification: {error_msg}"
@@ -112,6 +125,9 @@
     },
     "timeout_error": {
       "message": "Failed to connect to ntfy service due to a connection timeout"
+    },
+    "connection_closed": {
+      "message": "Connection to ntfy service was terminated unexpectedly"
     }
   }
 }
