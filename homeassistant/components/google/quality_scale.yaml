@@ -1,0 +1,119 @@
+rules:
+  # Bronze
+  config-flow:
+    status: todo
+    comment: Some fields missing data_description in the option flow.
+  brands: done
+  dependency-transparency:
+    status: todo
+    comment: |
+      This depends on the legacy (deprecated) oauth libraries for device
+      auth (no longer recommended auth). Google publishes to pypi using
+      an internal build system. We need to either revisit approach or
+      revisit our stance on this.
+  common-modules: done
+  has-entity-name: done
+  action-setup:
+    status: todo
+    comment: |
+      Actions are current setup in `async_setup_entry` and need to be moved
+      to `async_setup`.
+  appropriate-polling: done
+  test-before-configure: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to events.
+  unique-config-entry: done
+  entity-unique-id: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  test-before-setup:
+    status: todo
+    comment: |
+      The integration does not test the connection in `async_setup_entry` but
+      instead does this in the calendar platform only, which can be improved.
+  docs-high-level-description: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      The config flow has 100% test coverage, however there are opportunities
+      to increase functionality such as checking for the specific contents
+      of a unique id assigned to a config entry.
+  docs-actions: done
+  runtime-data:
+    status: todo
+    comment: |
+      The integration stores config entry data in `hass.data` and should be
+      updated to use `runtime_data`.
+
+  # Silver
+  log-when-unavailable: done
+  config-entry-unloading: done
+  reauthentication-flow:
+    status: todo
+    comment: |
+      The integration supports reauthentication, however the config flow test
+      coverage can be improved on reauth corner cases.
+  action-exceptions: done
+  docs-installation-parameters: todo
+  integration-owner: done
+  parallel-updates: todo
+  test-coverage:
+    status: todo
+    comment: One module needs an additional line of coverage to be above the bar
+  docs-configuration-parameters: todo
+  entity-unavailable: done
+
+  # Gold
+  docs-examples: done
+  discovery-update-info:
+    status: exempt
+    comment: Google calendar does not support discovery
+  entity-device-class: todo
+  entity-translations: todo
+  docs-data-update: todo
+  entity-disabled-by-default: done
+  discovery:
+    status: exempt
+    comment: Google calendar does not support discovery
+  exception-translations: todo
+  devices: todo
+  docs-supported-devices: done
+  icon-translations:
+    status: exempt
+    comment: Google calendar does not have any icons
+  docs-known-limitations: todo
+  stale-devices:
+    status: exempt
+    comment: Google calendar does not have devices
+  docs-supported-functions: done
+  repair-issues:
+    status: todo
+    comment: There are some warnings/deprecations that should be repair issues
+  reconfiguration-flow:
+    status: exempt
+    comment: There is nothing to configure in the configuration flow
+  entity-category:
+    status: exempt
+    comment: The entities in google calendar do not support categories
+  dynamic-devices:
+    status: exempt
+    comment: Google calendar does not have devices
+  docs-troubleshooting: todo
+  diagnostics: todo
+  docs-use-cases: todo
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: |
+      The main client `gcal_sync` library is async. The primary authentication
+      used in config flow is handled by built in async OAuth code. The
+      integration still supports legacy OAuth credentials setup in the
+      configuration flow, which is no longer recommended or described in the
+      documentation for new users. This legacy config flow uses oauth2client
+      which is not natively async.
+  strict-typing:
+    status: todo
+    comment: Dependency oauth2client does not confirm to PEP 561
+  inject-websession: done

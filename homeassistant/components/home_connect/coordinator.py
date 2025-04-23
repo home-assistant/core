@@ -47,8 +47,8 @@ from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_EXECUTIONS_TIME_WINDOW = 15 * 60  # 15 minutes
-MAX_EXECUTIONS = 5
+MAX_EXECUTIONS_TIME_WINDOW = 60 * 60  # 1 hour
+MAX_EXECUTIONS = 8
 
 type HomeConnectConfigEntry = ConfigEntry[HomeConnectCoordinator]
 
@@ -252,9 +252,7 @@ class HomeConnectCoordinator(
                             appliance_data = await self._get_appliance_data(
                                 appliance_info, self.data.get(appliance_info.ha_id)
                             )
-                            if event_message_ha_id in self.data:
-                                self.data[event_message_ha_id].update(appliance_data)
-                            else:
+                            if event_message_ha_id not in self.data:
                                 self.data[event_message_ha_id] = appliance_data
                             for listener, context in self._special_listeners.values():
                                 if (

@@ -3,6 +3,7 @@
 from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 from whirlpool.washerdryer import MachineState
@@ -23,7 +24,7 @@ DRYER_ENTITY_ID_BASE = "sensor.dryer"
 
 async def trigger_attr_callback(
     hass: HomeAssistant, mock_api_instance: MagicMock
-) -> State:
+) -> None:
     """Simulate an update trigger from the API."""
 
     for call in mock_api_instance.register_attr_callback.call_args_list:
@@ -58,6 +59,7 @@ async def test_washer_dryer_time_sensor(
     entity_id: str,
     mock_fixture: str,
     request: pytest.FixtureRequest,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test Washer/Dryer end time sensors."""
     now = utcnow()
@@ -113,7 +115,8 @@ async def test_washer_dryer_time_sensor(
 
     # Test that periodic updates call the API to fetch data
     mock_instance.fetch_data.reset_mock()
-    async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_instance.fetch_data.assert_called_once()
 
