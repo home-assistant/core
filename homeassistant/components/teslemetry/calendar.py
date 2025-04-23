@@ -453,10 +453,10 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
                                     self.charges.get(season, self.charges["ALL"])[
                                         "rates"
                                     ].get(name, self.charges["ALL"]["rates"]["ALL"]),
-                                    period.get("from_hour", 0) % 24,
-                                    period.get("from_minute", 0) % 60,
-                                    period.get("to_hour", 0) % 24,
-                                    period.get("to_minute", 0) % 60,
+                                    period.get("fromHour", 0) % 24,
+                                    period.get("fromMinute", 0) % 60,
+                                    period.get("toHour", 0) % 24,
+                                    period.get("toMinute", 0) % 60,
                                 )
                             )
 
