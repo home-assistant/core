@@ -43,7 +43,11 @@ def with_error_wrapping[**_P, _R](
         try:
             return await func(self, *args, **kwargs)
         except RenaultException as err:
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     return wrapper
 
