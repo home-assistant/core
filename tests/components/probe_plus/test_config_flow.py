@@ -74,7 +74,7 @@ async def test_bluetooth_discovery(
     user_input = {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
     }
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=user_input,
     )
