@@ -29,14 +29,14 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
 
         if user_input is not None:
             try:
-                # Validate IP address
+                # Validate IP address.
                 ipaddress.ip_address(user_input[CONF_HOST])
 
-                # Check for duplicate entries
+                # Check for duplicate entries.
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
 
-                # Check if device is reachable
+                # Check if device is reachable.
                 await self._async_check_device(user_input[CONF_HOST])
 
                 return self.async_create_entry(
@@ -52,6 +52,7 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
                 _LOGGER.warning("Invalid IP address entered: %s", user_input[CONF_HOST])
                 errors[CONF_HOST] = "invalid_ip"
             except ConfigEntryNotReady:
+                _LOGGER.warning("Cannot connect to device")
                 errors[CONF_HOST] = "cannot_connect"
 
         return self.async_show_form(
@@ -74,4 +75,5 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
         try:
             await client.get_status()
         except SilentWaveError as err:
-            raise ConfigEntryNotReady(f"Cannot connect to device: {err}") from err
+            _LOGGER.debug("Device connection check failed: %s", err)
+            raise ConfigEntryNotReady("Cannot connect to device") from err
