@@ -12,7 +12,6 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
