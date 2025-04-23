@@ -69,9 +69,8 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the bluetooth confirmation step."""
         if user_input is not None:
             assert self.unique_id
-            address: str = self.unique_id
             self._abort_if_unique_id_configured()
-            discovery = self._discovered_devices[address]
+            discovery = self._discovered_devices[self.unique_id]
             return self.async_create_entry(
                 title=discovery.title,
                 data={
