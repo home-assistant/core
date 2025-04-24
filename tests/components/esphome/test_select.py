@@ -17,8 +17,6 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
     AssistSatelliteWakeWord,
 )
-
-# pylint: disable-next=hass-component-root-import
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
