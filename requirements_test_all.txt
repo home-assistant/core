@@ -201,7 +201,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==0.11.3
+aiocomelit==0.12.0
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
@@ -398,7 +398,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.6.1
+aiovodafone==0.10.0
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
