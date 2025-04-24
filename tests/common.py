@@ -1911,3 +1911,16 @@ def get_quality_scale(integration: str) -> dict[str, QualityScaleStatus]:
         )
         for rule, details in raw["rules"].items()
     }
+
+
+def get_schema_suggested_value(schema: vol.Schema, key: str) -> Any | None:
+    """Get suggested value for key in voluptuous schema."""
+    for schema_key in schema:
+        if schema_key == key:
+            if (
+                schema_key.description is None
+                or "suggested_value" not in schema_key.description
+            ):
+                return None
+            return schema_key.description["suggested_value"]
+    return None
