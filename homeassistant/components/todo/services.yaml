@@ -55,7 +55,7 @@ update_item:
   fields:
     item:
       required: true
-      example: "Submit income tax return"
+      example: "62df5ffa78e84f90a0f7ff38aa28ff9d"
       selector:
         text:
     rename:
@@ -100,6 +100,7 @@ remove_item:
   fields:
     item:
       required: true
+      example: "62df5ffa78e84f90a0f7ff38aa28ff9d"
       selector:
         text:
 

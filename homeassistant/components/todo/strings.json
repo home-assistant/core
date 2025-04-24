@@ -40,11 +40,11 @@
     },
     "update_item": {
       "name": "Update item",
-      "description": "Updates an existing to-do list item based on its name.",
+      "description": "Updates an existing to-do list item based on its UID or name.",
       "fields": {
         "item": {
-          "name": "Item name",
-          "description": "The current name of the to-do item."
+          "name": "Item UID or name",
+          "description": "The UID of the to-do item. Using the name is discouraged as it may not be unique."
         },
         "rename": {
           "name": "Rename item",
@@ -74,11 +74,11 @@
     },
     "remove_item": {
       "name": "Remove item",
-      "description": "Removes an existing to-do list item by its name.",
+      "description": "Removes an existing to-do list item by its UID or name.",
       "fields": {
         "item": {
-          "name": "Item name",
-          "description": "The name for the to-do list item."
+          "name": "Item UID or name",
+          "description": "The UID of the to-do item. Using the name is discouraged as it may not be unique."
         }
       }
     }
