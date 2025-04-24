@@ -102,11 +102,6 @@
         "name": "[%key:component::assist_satellite::entity_component::_::name%]"
       }
     },
-    "binary_sensor": {
-      "assist_in_progress": {
-        "name": "[%key:component::assist_pipeline::entity::binary_sensor::assist_in_progress::name%]"
-      }
-    },
     "select": {
       "pipeline": {
         "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
