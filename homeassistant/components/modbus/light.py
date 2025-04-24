@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.light import (
@@ -33,6 +34,7 @@ from .entity import BaseSwitch
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -169,51 +171,66 @@ class ModbusLight(BaseSwitch, LightEntity):
     @staticmethod
     def _convert_modbus_percent_to_brightness(percent: int | Any) -> int | None:
         """Convert Modbus scale (0-100) to the brightness (0-255)."""
-        return round(
-            percent
-            / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-            * LIGHT_MAX_BRIGHTNESS
-        )
-
-    async def _convert_modbus_percent_to_temperature(self, percent: int) -> int | None:
-        """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
-        if isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
-            self._attr_max_color_temp_kelvin, int
-        ):
+        if isinstance(percent, int):
             return round(
-                self._attr_min_color_temp_kelvin
-                + (
-                    percent
-                    / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-                    * (
-                        self._attr_max_color_temp_kelvin
-                        - self._attr_min_color_temp_kelvin
-                    )
-                )
+                percent
+                / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+                * LIGHT_MAX_BRIGHTNESS
             )
         return None
+
+    def _convert_modbus_percent_to_temperature(self, percent: int | Any) -> int | None:
+        """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
+        if (
+            not isinstance(self._attr_min_color_temp_kelvin, int)
+            or not isinstance(self._attr_max_color_temp_kelvin, int)
+            or not isinstance(percent, int)
+        ):
+            _LOGGER.error(
+                "Invalid color temp bounds or value from device: min=%s, max=%s, temp_value=%s",
+                self._attr_min_color_temp_kelvin,
+                self._attr_max_color_temp_kelvin,
+                percent,
+            )
+            return None
+        return round(
+            self._attr_min_color_temp_kelvin
+            + (
+                percent
+                / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+                * (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
+            )
+        )
 
     @staticmethod
-    async def _convert_brightness_to_modbus(brightness: int) -> int:
-        """Convert brightness (0-255) to Modbus scale (0-100)."""
-    def _convert_modbus_percent_to_temperature(self, percent: int | Any) -> int | None:
-        return round(
-            brightness
-            / LIGHT_MAX_BRIGHTNESS
-            * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-        )
-
-    async def _convert_color_temp_to_modbus(self, kelvin: int) -> int | None:
-        """Convert color temperature from Kelvin to the Modbus scale (0-100)."""
-        if isinstance(self._attr_min_color_temp_kelvin, int) and isinstance(
-            self._attr_max_color_temp_kelvin, int
-        ):
     def _convert_brightness_to_modbus(brightness: int | Any) -> int | None:
+        """Convert brightness (0-255) to Modbus scale (0-100)."""
+        if isinstance(brightness, int):
             return round(
-                LIGHT_MODBUS_SCALE_MIN
-                + (kelvin - self._attr_min_color_temp_kelvin)
+                brightness
+                / LIGHT_MAX_BRIGHTNESS
                 * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-                / (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
             )
         return None
+
     def _convert_color_temp_to_modbus(self, kelvin: int | Any) -> int | None:
+        """Convert color temperature from Kelvin to the Modbus scale (0-100)."""
+        if (
+            not isinstance(self._attr_min_color_temp_kelvin, int)
+            or not isinstance(self._attr_max_color_temp_kelvin, int)
+            or not isinstance(kelvin, int)
+        ):
+            _LOGGER.error(
+                "Invalid color temp bounds or value from switch: min=%s, max=%s, temp_value=%s",
+                self._attr_min_color_temp_kelvin,
+                self._attr_max_color_temp_kelvin,
+                kelvin,
+            )
+            return None
+
+        return round(
+            LIGHT_MODBUS_SCALE_MIN
+            + (kelvin - self._attr_min_color_temp_kelvin)
+            * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+            / (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
+        )
