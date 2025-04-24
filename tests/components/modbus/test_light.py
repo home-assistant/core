@@ -419,7 +419,7 @@ async def test_brightness_light(hass: HomeAssistant, mock_modbus_ha) -> None:
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     calls = mock_modbus_ha.write_register.call_args_list
-    modbus_brightness = await ModbusLight._convert_brightness_to_modbus(brightness=128)
+    modbus_brightness = ModbusLight._convert_brightness_to_modbus(brightness=128)
 
     assert any(
         call.args[0] == 1 and call.kwargs["value"] == modbus_brightness
@@ -472,7 +472,7 @@ async def test_color_temp_light(hass: HomeAssistant, mock_modbus_ha) -> None:
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     calls = mock_modbus_ha.write_register.call_args_list
-    modbus_brightness = await ModbusLight._convert_brightness_to_modbus(brightness=128)
+    modbus_brightness = ModbusLight._convert_brightness_to_modbus(brightness=128)
     modbus_temp = round(
         LIGHT_MODBUS_SCALE_MIN
         + (2000 - LIGHT_DEFAULT_MIN_KELVIN)
@@ -498,46 +498,85 @@ async def test_color_temp_light(hass: HomeAssistant, mock_modbus_ha) -> None:
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
+CONFIG_LIGHT = {
+    CONF_NAME: TEST_ENTITY_NAME,
+    CONF_ADDRESS: 1234,
+    CONF_SLAVE: 1,
+    CONF_COMMAND_OFF: 0x00,
+    CONF_COMMAND_ON: 0x01,
+    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+    CONF_SCAN_INTERVAL: 0,
+    CONF_BRIGHTNESS_REGISTER: 1,
+    CONF_COLOR_TEMP_REGISTER: 2,
+}
+
+
 @pytest.mark.asyncio
 class TestModbusConvectors:
     """Tests for ModbusLight brightness and color temperature conversions."""
+
+    light = ModbusLight(None, None, CONFIG_LIGHT)
 
     async def test_convert_brightness_to_modbus(self):
         """Test conversion of brightness (0–255) to Modbus scale (0–100)."""
         brightness = 128
         expected = 50
-        result = await ModbusLight._convert_brightness_to_modbus(brightness)
+        result = self.light._convert_brightness_to_modbus(brightness)
         assert result == expected
+        result = self.light._convert_brightness_to_modbus("invalid")
+        assert result is None
 
     async def test_convert_color_temp_to_modbus(self):
         """Test conversion of color temperature in Kelvin to Modbus scale (0–100)."""
         kelvin = 2000
         expected = 0
-        result = round(
-            LIGHT_MODBUS_SCALE_MIN
-            + (kelvin - LIGHT_DEFAULT_MIN_KELVIN)
-            * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-            / (LIGHT_DEFAULT_MAX_KELVIN - LIGHT_DEFAULT_MIN_KELVIN)
-        )
+
+        result = self.light._convert_color_temp_to_modbus(kelvin)
         assert result == expected
+        result = self.light._convert_color_temp_to_modbus(None)
+        assert result is None
+        result = self.light._convert_color_temp_to_modbus("invalid")
+        assert result is None
 
     async def test_percent_to_temperature(self):
         """Test conversion of Modbus percentage (0–100) to color temperature in Kelvin."""
         percent = 20
         expected_kelvin = 3000
-        result = round(
-            LIGHT_DEFAULT_MIN_KELVIN
-            + (
-                percent
-                / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-                * (LIGHT_DEFAULT_MAX_KELVIN - LIGHT_DEFAULT_MIN_KELVIN)
-            )
-        )
+
+        result = self.light._convert_modbus_percent_to_temperature(percent)
         assert result == expected_kelvin
+        result = self.light._convert_modbus_percent_to_temperature(None)
+        assert result is None
+        result = self.light._convert_modbus_percent_to_temperature("invalid")
+        assert result is None
+
+        self.light._attr_min_color_temp_kelvin = None
+        self.light._attr_max_color_temp_kelvin = None
+
+        result = self.light._convert_modbus_percent_to_temperature(20)
+        assert result is None
+
+        result = self.light._convert_color_temp_to_modbus(3000)
+        assert result is None
 
     async def test_percent_to_brightness(self):
         """Test conversion of Modbus percentage (0–100) to brightness (0–255)."""
         percent = 20
         expected_brightness = 51
-        result = await ModbusLight._convert_modbus_percent_to_brightness(percent)
+
+        result = self.light._convert_modbus_percent_to_brightness(percent)
         assert result == expected_brightness
+        result = self.light._convert_modbus_percent_to_brightness(None)
+        assert result is None
+        result = self.light._convert_modbus_percent_to_brightness("invalid")
+        assert result is None
+
+    async def test_color_temp_bounds(self):
+        """Test color temp bounds with None."""
+        self.light._attr_min_color_temp_kelvin = None
+        self.light._attr_max_color_temp_kelvin = None
+
+        result = self.light._convert_modbus_percent_to_temperature(20)
+        assert result is None
+        result = self.light._convert_color_temp_to_modbus(3000)
+        assert result is None
