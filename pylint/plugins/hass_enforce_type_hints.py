@@ -1374,7 +1374,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="location_accuracy",
-                    return_type="int",
+                    return_type="float",
                 ),
                 TypeHintMatch(
                     function_name="location_name",
