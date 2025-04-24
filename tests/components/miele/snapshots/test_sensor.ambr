@@ -463,7 +463,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_energy-entry]
+# name: test_sensor_states[platforms0][sensor.washing_machine_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -478,7 +478,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.washing_machine_energy',
+    'entity_id': 'sensor.washing_machine_energy_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -490,7 +490,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy consumption',
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -499,23 +499,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_energy-state]
+# name: test_sensor_states[platforms0][sensor.washing_machine_energy_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Washing machine Energy',
+      'friendly_name': 'Washing machine Energy consumption',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_energy',
+    'entity_id': 'sensor.washing_machine_energy_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_none-entry]
+# name: test_sensor_states[platforms0][sensor.washing_machine_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -567,7 +567,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washing_machine_none',
+    'entity_id': 'sensor.washing_machine_program',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -579,7 +579,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Program',
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -588,11 +588,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_none-state]
+# name: test_sensor_states[platforms0][sensor.washing_machine_program-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Washing machine None',
+      'friendly_name': 'Washing machine Program',
       'options': list([
         'no_program',
         'no_program',
@@ -633,14 +633,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_none',
+    'entity_id': 'sensor.washing_machine_program',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'no_program',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_none_2-entry]
+# name: test_sensor_states[platforms0][sensor.washing_machine_program_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -679,7 +679,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washing_machine_none_2',
+    'entity_id': 'sensor.washing_machine_program_phase',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -691,7 +691,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Program phase',
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -700,11 +700,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_none_2-state]
+# name: test_sensor_states[platforms0][sensor.washing_machine_program_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Washing machine None',
+      'friendly_name': 'Washing machine Program phase',
       'options': list([
         'not_running',
         'not_running',
@@ -732,14 +732,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_none_2',
+    'entity_id': 'sensor.washing_machine_program_phase',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'not_running',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_none_3-entry]
+# name: test_sensor_states[platforms0][sensor.washing_machine_program_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -760,7 +760,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.washing_machine_none_3',
+    'entity_id': 'sensor.washing_machine_program_type',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -772,7 +772,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Program type',
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -781,11 +781,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_none_3-state]
+# name: test_sensor_states[platforms0][sensor.washing_machine_program_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Washing machine None',
+      'friendly_name': 'Washing machine Program type',
       'options': list([
         'normal_operation_mode',
         'own_program',
@@ -795,14 +795,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_none_3',
+    'entity_id': 'sensor.washing_machine_program_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'normal_operation_mode',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_none_4-entry]
+# name: test_sensor_states[platforms0][sensor.washing_machine_spin_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -815,7 +815,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.washing_machine_none_4',
+    'entity_id': 'sensor.washing_machine_spin_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -827,7 +827,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Spin speed',
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -836,21 +836,21 @@
     'unit_of_measurement': 'rpm',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_none_4-state]
+# name: test_sensor_states[platforms0][sensor.washing_machine_spin_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine None',
+      'friendly_name': 'Washing machine Spin speed',
       'unit_of_measurement': 'rpm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_none_4',
+    'entity_id': 'sensor.washing_machine_spin_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_water-entry]
+# name: test_sensor_states[platforms0][sensor.washing_machine_water_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -865,7 +865,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.washing_machine_water',
+    'entity_id': 'sensor.washing_machine_water_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -877,7 +877,7 @@
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
-    'original_name': 'Water',
+    'original_name': 'Water consumption',
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -886,16 +886,16 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.washing_machine_water-state]
+# name: test_sensor_states[platforms0][sensor.washing_machine_water_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Washing machine Water',
+      'friendly_name': 'Washing machine Water consumption',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_water',
+    'entity_id': 'sensor.washing_machine_water_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
