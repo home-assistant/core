@@ -100,8 +100,19 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PASSWORD],
                 _LOGGER,
             )
+
+            def get_consumption_units() -> set[str]:
+                ista.login()
+                consumption_units = ista.get_consumption_unit_details()[
+                    "consumptionUnits"
+                ]
+                return {unit["id"] for unit in consumption_units}
+
             try:
-                await self.hass.async_add_executor_job(ista.login)
+                consumption_units = await self.hass.async_add_executor_job(
+                    get_consumption_units
+                )
+
             except ServerError:
                 errors["base"] = "cannot_connect"
             except (LoginError, KeycloakError):
@@ -110,6 +121,8 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if reauth_entry.unique_id not in consumption_units:
+                    return self.async_abort(reason="unique_id_mismatch")
                 return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
         return self.async_show_form(

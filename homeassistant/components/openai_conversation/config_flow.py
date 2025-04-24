@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import json
 import logging
 from types import MappingProxyType
@@ -154,9 +155,8 @@ class OpenAIOptionsFlow(OptionsFlow):
 
         if user_input is not None:
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
-                if user_input[CONF_LLM_HASS_API] == "none":
-                    user_input.pop(CONF_LLM_HASS_API)
-
+                if not user_input.get(CONF_LLM_HASS_API):
+                    user_input.pop(CONF_LLM_HASS_API, None)
                 if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
                     errors[CONF_CHAT_MODEL] = "model_not_supported"
 
@@ -178,7 +178,7 @@ class OpenAIOptionsFlow(OptionsFlow):
                 options = {
                     CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
                     CONF_PROMPT: user_input[CONF_PROMPT],
-                    CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
+                    CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API),
                 }
 
         schema = openai_config_option_schema(self.hass, options)
@@ -244,23 +244,20 @@ class OpenAIOptionsFlow(OptionsFlow):
 
 def openai_config_option_schema(
     hass: HomeAssistant,
-    options: dict[str, Any] | MappingProxyType[str, Any],
+    options: Mapping[str, Any],
 ) -> VolDictType:
     """Return a schema for OpenAI completion options."""
     hass_apis: list[SelectOptionDict] = [
-        SelectOptionDict(
-            label="No control",
-            value="none",
-        )
-    ]
-    hass_apis.extend(
         SelectOptionDict(
             label=api.name,
             value=api.id,
         )
         for api in llm.async_get_apis(hass)
-    )
-
+    ]
+    if (suggested_llm_apis := options.get(CONF_LLM_HASS_API)) and isinstance(
+        suggested_llm_apis, str
+    ):
+        suggested_llm_apis = [suggested_llm_apis]
     schema: VolDictType = {
         vol.Optional(
             CONF_PROMPT,
@@ -272,9 +269,8 @@ def openai_config_option_schema(
         ): TemplateSelector(),
         vol.Optional(
             CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+            description={"suggested_value": suggested_llm_apis},
+        ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
         vol.Required(
             CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
         ): bool,
