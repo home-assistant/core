@@ -119,7 +119,9 @@ from .typing import (
 if TYPE_CHECKING:
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
+    from homeassistant.auth.models import RefreshToken
     from homeassistant.components import recorder
+
 
 pytest.register_assert_rewrite("tests.common")
 
@@ -852,7 +854,7 @@ def hass_client_no_auth(
 @pytest.fixture
 def current_request() -> Generator[MagicMock]:
     """Mock current request."""
-    with patch("homeassistant.components.http.current_request") as mock_request_context:
+    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mocked_request = make_mocked_request(
             "GET",
             "/some/request",
@@ -1344,7 +1346,10 @@ def mock_zeroconf() -> Generator[MagicMock]:
 
     with (
         patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True) as mock_zc,
-        patch("homeassistant.components.zeroconf.AsyncServiceBrowser", autospec=True),
+        patch(
+            "homeassistant.components.zeroconf.discovery.AsyncServiceBrowser",
+            autospec=True,
+        ),
     ):
         zc = mock_zc.return_value
         # DNSCache has strong Cython type checks, and MagicMock does not work
@@ -1892,6 +1897,67 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
         patch.object(bluetooth_scanner, "HaScanner"),
     ):
         yield mock_bleak_scanner_start
+
+
+@pytest.fixture
+def hassio_env(supervisor_is_connected: AsyncMock) -> Generator[None]:
+    """Fixture to inject hassio env."""
+    from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
+        HassioAPIError,
+    )
+
+    from .components.hassio import (  # pylint: disable=import-outside-toplevel
+        SUPERVISOR_TOKEN,
+    )
+
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            Mock(side_effect=HassioAPIError()),
+        ),
+    ):
+        yield
+
+
+@pytest.fixture
+async def hassio_stubs(
+    hassio_env: None,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
+) -> RefreshToken:
+    """Create mock hassio http client."""
+    from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
+        HassioAPIError,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.hassio.HassIO.update_hass_api",
+            return_value={"result": "ok"},
+        ) as hass_api,
+        patch(
+            "homeassistant.components.hassio.HassIO.update_hass_timezone",
+            return_value={"result": "ok"},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            side_effect=HassioAPIError(),
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_ingress_panels",
+            return_value={"panels": []},
+        ),
+        patch(
+            "homeassistant.components.hassio.issues.SupervisorIssues.setup",
+        ),
+    ):
+        await async_setup_component(hass, "hassio", {})
+
+    return hass_api.call_args[0][1]
 
 
 @pytest.fixture

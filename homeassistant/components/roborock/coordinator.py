@@ -29,6 +29,7 @@ from roborock.web_api import RoborockApiClient
 from vacuum_map_parser_base.config.color import ColorsPalette
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Sizes
+from vacuum_map_parser_base.map_data import MapData
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.config_entries import ConfigEntry
@@ -128,7 +129,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self.current_map: int | None = None
 
         if mac := self.roborock_device_info.network_info.mac:
-            self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+            self.device_info[ATTR_CONNECTIONS] = {
+                (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
+            }
         # Maps from map flag to map name
         self.maps: dict[int, RoborockMapInfo] = {}
         self._home_data_rooms = {str(room.id): room.name for room in home_data_rooms}
@@ -150,6 +153,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             ImageConfig(scale=MAP_SCALE),
             [],
         )
+        self.last_update_state: str | None = None
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -168,18 +172,20 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             sw_version=self.roborock_device_info.device.fv,
         )
 
-    def parse_image(self, map_bytes: bytes) -> bytes | None:
-        """Parse map_bytes and store it as image bytes."""
+    def parse_map_data_v1(
+        self, map_bytes: bytes
+    ) -> tuple[bytes | None, MapData | None]:
+        """Parse map_bytes and return MapData and the image."""
         try:
             parsed_map = self.map_parser.parse(map_bytes)
         except (IndexError, ValueError) as err:
             _LOGGER.debug("Exception when parsing map contents: %s", err)
-            return None
+            return None, None
         if parsed_map.image is None:
-            return None
+            return None, None
         img_byte_arr = io.BytesIO()
         parsed_map.image.data.save(img_byte_arr, format=MAP_FILE_FORMAT)
-        return img_byte_arr.getvalue()
+        return img_byte_arr.getvalue(), parsed_map
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -190,7 +196,12 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         try:
             maps = await self.api.get_multi_maps_list()
         except RoborockException as err:
-            raise UpdateFailed("Failed to get map data: {err}") from err
+            _LOGGER.debug("Failed to get maps: %s", err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+                translation_placeholders={"error": str(err)},
+            ) from err
         # Rooms names populated later with calls to `set_current_map_rooms` for each map
         roborock_maps = maps.map_info if (maps and maps.map_info) else ()
         stored_images = await asyncio.gather(
@@ -206,6 +217,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 rooms={},
                 image=image,
                 last_updated=dt_util.utcnow() - IMAGE_CACHE_INTERVAL,
+                map_data=None,
             )
             for image, roborock_map in zip(stored_images, roborock_maps, strict=False)
         }
@@ -214,7 +226,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         """Update the currently selected map."""
         # The current map was set in the props update, so these can be done without
         # worry of applying them to the wrong map.
-        if self.current_map is None:
+        if self.current_map is None or self.current_map not in self.maps:
             # This exists as a safeguard/ to keep mypy happy.
             return
         try:
@@ -230,20 +242,21 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
-        parsed_image = self.parse_image(response)
-        if parsed_image is None:
+        parsed_image, parsed_map = self.parse_map_data_v1(response)
+        if parsed_image is None or parsed_map is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
+        current_roborock_map_info = self.maps[self.current_map]
         if parsed_image != self.maps[self.current_map].image:
             await self.map_storage.async_save_map(
                 self.current_map,
                 parsed_image,
             )
-            current_roborock_map_info = self.maps[self.current_map]
             current_roborock_map_info.image = parsed_image
             current_roborock_map_info.last_updated = dt_util.utcnow()
+        current_roborock_map_info.map_data = parsed_map
 
     async def _verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
@@ -288,11 +301,18 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
             # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
             # since the last map update, you can update the map.
+            new_status = self.roborock_device_info.props.status
             if (
                 self.current_map is not None
-                and self.roborock_device_info.props.status.in_cleaning
-                and (dt_util.utcnow() - self.maps[self.current_map].last_updated)
-                > IMAGE_CACHE_INTERVAL
+                and (current_map := self.maps.get(self.current_map))
+                and (
+                    (
+                        new_status.in_cleaning
+                        and (dt_util.utcnow() - current_map.last_updated)
+                        > IMAGE_CACHE_INTERVAL
+                    )
+                    or self.last_update_state != new_status.state_name
+                )
             ):
                 try:
                     await self.update_map()
@@ -301,7 +321,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             await self.set_current_map_rooms()
         except RoborockException as ex:
             _LOGGER.debug("Failed to update data: %s", ex)
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_data_fail",
+            ) from ex
         if self.roborock_device_info.props.status.in_cleaning:
             if self._is_cloud_api:
                 self.update_interval = V1_CLOUD_IN_CLEANING_INTERVAL
@@ -311,6 +334,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             self.update_interval = V1_CLOUD_NOT_CLEANING_INTERVAL
         else:
             self.update_interval = V1_LOCAL_NOT_CLEANING_INTERVAL
+        self.last_update_state = self.roborock_device_info.props.status.state_name
         return self.roborock_device_info.props
 
     def _set_current_map(self) -> None:

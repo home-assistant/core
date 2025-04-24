@@ -61,6 +61,7 @@ from . import (
 from tests.common import (
     MockConfigEntry,
     MockModule,
+    async_call_logger_set_level,
     async_fire_time_changed,
     load_fixture,
     mock_integration,
@@ -1144,54 +1145,45 @@ async def test_debug_logging(
 ) -> None:
     """Test debug logging."""
     assert await async_setup_component(hass, "logger", {"logger": {}})
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.bluetooth": "DEBUG"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    async with async_call_logger_set_level(
+        "homeassistant.components.bluetooth", "DEBUG", hass=hass, caplog=caplog
+    ):
+        address = "44:44:33:11:23:41"
+        start_time_monotonic = 50.0
 
-    address = "44:44:33:11:23:41"
-    start_time_monotonic = 50.0
+        switchbot_device_poor_signal_hci0 = generate_ble_device(
+            address, "wohand_poor_signal_hci0"
+        )
+        switchbot_adv_poor_signal_hci0 = generate_advertisement_data(
+            local_name="wohand_poor_signal_hci0", service_uuids=[], rssi=-100
+        )
+        inject_advertisement_with_time_and_source(
+            hass,
+            switchbot_device_poor_signal_hci0,
+            switchbot_adv_poor_signal_hci0,
+            start_time_monotonic,
+            "hci0",
+        )
+        assert "wohand_poor_signal_hci0" in caplog.text
+        caplog.clear()
 
-    switchbot_device_poor_signal_hci0 = generate_ble_device(
-        address, "wohand_poor_signal_hci0"
-    )
-    switchbot_adv_poor_signal_hci0 = generate_advertisement_data(
-        local_name="wohand_poor_signal_hci0", service_uuids=[], rssi=-100
-    )
-    inject_advertisement_with_time_and_source(
-        hass,
-        switchbot_device_poor_signal_hci0,
-        switchbot_adv_poor_signal_hci0,
-        start_time_monotonic,
-        "hci0",
-    )
-    assert "wohand_poor_signal_hci0" in caplog.text
-    caplog.clear()
-
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.bluetooth": "WARNING"},
-        blocking=True,
-    )
-
-    switchbot_device_good_signal_hci0 = generate_ble_device(
-        address, "wohand_good_signal_hci0"
-    )
-    switchbot_adv_good_signal_hci0 = generate_advertisement_data(
-        local_name="wohand_good_signal_hci0", service_uuids=[], rssi=-33
-    )
-    inject_advertisement_with_time_and_source(
-        hass,
-        switchbot_device_good_signal_hci0,
-        switchbot_adv_good_signal_hci0,
-        start_time_monotonic,
-        "hci0",
-    )
-    assert "wohand_good_signal_hci0" not in caplog.text
+    async with async_call_logger_set_level(
+        "homeassistant.components.bluetooth", "WARNING", hass=hass, caplog=caplog
+    ):
+        switchbot_device_good_signal_hci0 = generate_ble_device(
+            address, "wohand_good_signal_hci0"
+        )
+        switchbot_adv_good_signal_hci0 = generate_advertisement_data(
+            local_name="wohand_good_signal_hci0", service_uuids=[], rssi=-33
+        )
+        inject_advertisement_with_time_and_source(
+            hass,
+            switchbot_device_good_signal_hci0,
+            switchbot_adv_good_signal_hci0,
+            start_time_monotonic,
+            "hci0",
+        )
+        assert "wohand_good_signal_hci0" not in caplog.text
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")

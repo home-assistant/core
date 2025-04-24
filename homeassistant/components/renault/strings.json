@@ -118,7 +118,7 @@
           "charge_ended": "Charge ended",
           "waiting_for_current_charge": "Waiting for current charge",
           "energy_flap_opened": "Energy flap opened",
-          "charge_in_progress": "Charging",
+          "charge_in_progress": "[%key:common::state::charging%]",
           "charge_error": "Not charging or plugged in",
           "unavailable": "Unavailable"
         }
@@ -232,6 +232,9 @@
     },
     "no_config_entry_for_device": {
       "message": "No loaded config entry was found for device with ID {device_id}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Renault servers: {error}"
     }
   }
 }

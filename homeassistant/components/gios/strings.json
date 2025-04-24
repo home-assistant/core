@@ -170,5 +170,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "An error occurred while connecting to the GIOS API for {entry}: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from the GIOS API for {entry}: {error}"
+    }
   }
 }
