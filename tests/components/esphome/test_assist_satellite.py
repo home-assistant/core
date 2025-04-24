@@ -1143,32 +1143,6 @@ async def test_tts_minimal_format_from_media_player(
         }
 
 
-async def test_announce_supported_features(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
-) -> None:
-    """Test that the announce supported feature is not set by default."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
-        mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
-        device_info={
-            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
-        },
-    )
-    await hass.async_block_till_done()
-
-    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
-    assert satellite is not None
-
-    assert not (satellite.supported_features & AssistSatelliteEntityFeature.ANNOUNCE)
-
-
 async def test_announce_message(
     hass: HomeAssistant,
     mock_client: APIClient,
@@ -1423,7 +1397,7 @@ async def test_announce_message_with_preannounce(
             assert satellite.state == AssistSatelliteState.IDLE
 
 
-async def test_start_conversation_supported_features(
+async def test_non_default_supported_features(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: Callable[
@@ -1431,7 +1405,7 @@ async def test_start_conversation_supported_features(
         Awaitable[MockESPHomeDevice],
     ],
 ) -> None:
-    """Test that the start conversation supported feature is not set by default."""
+    """Test that the start conversation and announce are not set by default."""
     mock_device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
@@ -1449,6 +1423,7 @@ async def test_start_conversation_supported_features(
     assert not (
         satellite.supported_features & AssistSatelliteEntityFeature.START_CONVERSATION
     )
+    assert not (satellite.supported_features & AssistSatelliteEntityFeature.ANNOUNCE)
 
 
 async def test_start_conversation_message(
