@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from types import MappingProxyType
 from typing import Any
 
 from elkm1_lib.elements import Element
@@ -235,7 +234,7 @@ def _async_find_matching_config_entry(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
-    conf: MappingProxyType[str, Any] = entry.data
+    conf = entry.data
 
     host = hostname_from_url(entry.data[CONF_HOST])
 

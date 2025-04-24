@@ -6,6 +6,7 @@ from typing import Any
 
 from roborock.containers import HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.roborock_typing import DeviceProp
+from vacuum_map_parser_base.map_data import MapData
 
 
 @dataclass
@@ -51,3 +52,11 @@ class RoborockMapInfo:
     rooms: dict[int, str]
     image: bytes | None
     last_updated: datetime
+    map_data: MapData | None
+
+    @property
+    def current_room(self) -> str | None:
+        """Get the currently active room for this map if any."""
+        if self.map_data is None or self.map_data.vacuum_room is None:
+            return None
+        return self.rooms.get(self.map_data.vacuum_room)

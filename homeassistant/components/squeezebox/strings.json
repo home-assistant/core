@@ -63,6 +63,29 @@
     }
   },
   "entity": {
+    "button": {
+      "preset": {
+        "name": "Preset {index}"
+      },
+      "brightness_up": {
+        "name": "Brightness up"
+      },
+      "brightness_down": {
+        "name": "Brightness down"
+      },
+      "bass_up": {
+        "name": "Bass up"
+      },
+      "bass_down": {
+        "name": "Bass down"
+      },
+      "treble_up": {
+        "name": "Treble up"
+      },
+      "treble_down": {
+        "name": "Treble down"
+      }
+    },
     "binary_sensor": {
       "rescan": {
         "name": "Library rescan"

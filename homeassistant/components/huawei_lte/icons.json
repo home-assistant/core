@@ -34,7 +34,7 @@
     },
     "select": {
       "preferred_network_mode": {
-        "default": "mdi:transmission-tower"
+        "default": "mdi:antenna"
       }
     },
     "switch": {

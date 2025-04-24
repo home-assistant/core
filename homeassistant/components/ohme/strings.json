@@ -21,6 +21,16 @@
         "data_description": {
           "password": "Enter the password for your Ohme account"
         }
+      },
+      "reconfigure": {
+        "description": "Update your password for {email}",
+        "title": "Reconfigure Ohme Account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Enter the password for your Ohme account"
+        }
       }
     },
     "error": {
@@ -29,7 +39,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "services": {
@@ -78,7 +89,7 @@
         "state": {
           "smart_charge": "Smart charge",
           "max_charge": "Max charge",
-          "paused": "Paused"
+          "paused": "[%key:common::state::paused%]"
         }
       },
       "vehicle": {
@@ -89,8 +100,8 @@
       "status": {
         "name": "Status",
         "state": {
-          "unplugged": "Unplugged",
-          "plugged_in": "Plugged in",
+          "unplugged": "[%key:component::binary_sensor::entity_component::plug::state::off%]",
+          "plugged_in": "[%key:component::binary_sensor::entity_component::plug::state::on%]",
           "charging": "[%key:common::state::charging%]",
           "paused": "[%key:common::state::paused%]",
           "pending_approval": "Pending approval",
@@ -129,7 +140,7 @@
   },
   "exceptions": {
     "auth_failed": {
-      "message": "Unable to login to Ohme"
+      "message": "Unable to log in to Ohme"
     },
     "device_info_failed": {
       "message": "Unable to get Ohme device information"

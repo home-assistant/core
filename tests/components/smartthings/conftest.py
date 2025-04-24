@@ -4,7 +4,7 @@ from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
-from pysmartthings.models import (
+from pysmartthings import (
     DeviceResponse,
     DeviceStatus,
     LocationResponse,
@@ -91,7 +91,9 @@ def mock_smartthings() -> Generator[AsyncMock]:
 
 @pytest.fixture(
     params=[
+        "da_ac_airsensor_01001",
         "da_ac_rac_000001",
+        "da_ac_rac_000003",
         "da_ac_rac_100001",
         "da_ac_rac_01001",
         "multipurpose_sensor",
@@ -104,7 +106,11 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "ge_in_wall_smart_dimmer",
         "centralite",
         "da_ref_normal_000001",
+        "da_ref_normal_01011",
+        "da_ref_normal_01001",
         "vd_network_audio_002s",
+        "vd_network_audio_003s",
+        "vd_sensor_light_2023",
         "iphone",
         "da_sac_ehs_000001_sub",
         "da_wm_dw_000001",
@@ -112,8 +118,10 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_wm_wd_000001_1",
         "da_wm_wm_000001",
         "da_wm_wm_000001_1",
+        "da_wm_sc_000001",
         "da_rvc_normal_000001",
         "da_ks_microwave_0101x",
+        "da_ks_cooktop_31001",
         "da_ks_range_0101x",
         "da_ks_oven_01061",
         "hue_color_temperature_bulb",
@@ -131,6 +139,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "fake_fan",
         "generic_fan_3_speed",
         "heatit_ztrm3_thermostat",
+        "heatit_zpushwall",
         "generic_ef00_v1",
         "bosch_radiator_thermostat_ii",
         "im_speaker_ai_0001",
@@ -138,6 +147,8 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "tplink_p110",
         "ikea_kadrilj",
         "aux_ac",
+        "hw_q80r_soundbar",
+        "gas_meter",
     ]
 )
 def device_fixture(
@@ -180,6 +191,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
             CONF_INSTALLED_APP_ID: "123",
         },
         version=3,
+        minor_version=2,
     )
 
 
