@@ -67,6 +67,12 @@
     },
     "service_unsupported": {
       "message": "Entity {entity} does not support this action."
+    },
+    "error_set_volume": {
+      "message": "Unable to set volume level on {host}: {error}"
+    },
+    "error_sending_command": {
+      "message": "Unable to send command to {host}: {error}"
     }
   }
 }
