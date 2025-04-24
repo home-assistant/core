@@ -15,7 +15,7 @@ from zwave_js_server.const import (
     ConfigurationValueType,
     LogLevel,
 )
-from zwave_js_server.model.controller import Controller
+from zwave_js_server.model.controller import Controller, ProvisioningEntry
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -233,7 +233,7 @@ def get_home_and_node_id_from_device_entry(
         ),
         None,
     )
-    if device_id is None:
+    if device_id is None or device_id.startswith("provision_"):
         return None
     id_ = device_id.split("-")
     return (id_[0], int(id_[1]))
@@ -264,12 +264,12 @@ def async_get_node_from_device_id(
         ),
         None,
     )
-    if entry and entry.state != ConfigEntryState.LOADED:
-        raise ValueError(f"Device {device_id} config entry is not loaded")
     if entry is None:
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
+    if entry.state != ConfigEntryState.LOADED:
+        raise ValueError(f"Device {device_id} config entry is not loaded")
 
     client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
     driver = client.driver
@@ -287,6 +287,53 @@ def async_get_node_from_device_id(
         raise ValueError(f"Node for device {device_id} can't be found")
 
     return driver.controller.nodes[node_id]
+
+
+async def async_get_provisioning_entry_from_device_id(
+    hass: HomeAssistant, device_id: str
+) -> ProvisioningEntry | None:
+    """Get provisioning entry from a device ID.
+
+    Raises ValueError if device is invalid
+    """
+    dev_reg = dr.async_get(hass)
+
+    if not (device_entry := dev_reg.async_get(device_id)):
+        raise ValueError(f"Device ID {device_id} is not valid")
+
+    # Use device config entry ID's to validate that this is a valid zwave_js device
+    # and to get the client
+    config_entry_ids = device_entry.config_entries
+    entry = next(
+        (
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id in config_entry_ids
+        ),
+        None,
+    )
+    if entry is None:
+        raise ValueError(
+            f"Device {device_id} is not from an existing zwave_js config entry"
+        )
+    if entry.state != ConfigEntryState.LOADED:
+        raise ValueError(f"Device {device_id} config entry is not loaded")
+
+    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
+    driver = client.driver
+
+    if driver is None:
+        raise ValueError("Driver is not ready.")
+
+    provisioning_entries = await driver.controller.async_get_provisioning_entries()
+    for provisioning_entry in provisioning_entries:
+        if (
+            provisioning_entry.additional_properties
+            and provisioning_entry.additional_properties.get("device_id") == device_id
+        ):
+            return provisioning_entry
+
+    return None
 
 
 @callback

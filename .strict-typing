@@ -291,6 +291,7 @@ homeassistant.components.kaleidescape.*
 homeassistant.components.knocki.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
+homeassistant.components.kulersky.*
 homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
 homeassistant.components.lamarzocco.*
@@ -362,6 +363,7 @@ homeassistant.components.no_ip.*
 homeassistant.components.nordpool.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
+homeassistant.components.ntfy.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
 homeassistant.components.ohme.*
@@ -384,6 +386,7 @@ homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*
+homeassistant.components.pegel_online.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.person.*
 homeassistant.components.pi_hole.*

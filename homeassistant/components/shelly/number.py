@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import BLU_TRV_TIMEOUT, RPC_GENERATIONS
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.number import (
@@ -34,6 +34,7 @@ from .entity import (
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
@@ -59,13 +60,14 @@ class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
     step_fn: Callable[[dict], float] | None = None
     mode_fn: Callable[[dict], NumberMode] | None = None
     method: str
-    method_params_fn: Callable[[int, float], dict]
 
 
 class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
     """Represent a RPC number entity."""
 
     entity_description: RpcNumberDescription
+    attribute_value: float | None
+    _id: int | None
 
     def __init__(
         self,
@@ -93,20 +95,17 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return value of number."""
-        if TYPE_CHECKING:
-            assert isinstance(self.attribute_value, float | None)
-
         return self.attribute_value
 
+    @rpc_call
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
-        if TYPE_CHECKING:
-            assert isinstance(self._id, int)
+        method = getattr(self.coordinator.device, self.entity_description.method)
 
-        await self.call_rpc(
-            self.entity_description.method,
-            self.entity_description.method_params_fn(self._id, value),
-        )
+        if TYPE_CHECKING:
+            assert method is not None
+
+        await method(self._id, value)
 
 
 class RpcBluTrvNumber(RpcNumber):
@@ -125,17 +124,6 @@ class RpcBluTrvNumber(RpcNumber):
         ble_addr: str = coordinator.device.config[key]["addr"]
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, ble_addr)}
-        )
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Change the value."""
-        if TYPE_CHECKING:
-            assert isinstance(self._id, int)
-
-        await self.call_rpc(
-            self.entity_description.method,
-            self.entity_description.method_params_fn(self._id, value),
-            timeout=BLU_TRV_TIMEOUT,
         )
 
 
@@ -187,12 +175,7 @@ RPC_NUMBERS: Final = {
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        method="BluTRV.Call",
-        method_params_fn=lambda idx, value: {
-            "id": idx,
-            "method": "Trv.SetExternalTemperature",
-            "params": {"id": 0, "t_C": value},
-        },
+        method="blu_trv_set_external_temperature",
         entity_class=RpcBluTrvExtTempNumber,
     ),
     "number": RpcNumberDescription(
@@ -209,8 +192,7 @@ RPC_NUMBERS: Final = {
         unit=lambda config: config["meta"]["ui"]["unit"]
         if config["meta"]["ui"]["unit"]
         else None,
-        method="Number.Set",
-        method_params_fn=lambda idx, value: {"id": idx, "value": value},
+        method="number_set",
     ),
     "valve_position": RpcNumberDescription(
         key="blutrv",
@@ -222,12 +204,7 @@ RPC_NUMBERS: Final = {
         native_step=1,
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=PERCENTAGE,
-        method="BluTRV.Call",
-        method_params_fn=lambda idx, value: {
-            "id": idx,
-            "method": "Trv.SetPosition",
-            "params": {"id": 0, "pos": int(value)},
-        },
+        method="blu_trv_set_valve_position",
         removal_condition=lambda config, _status, key: config[key].get("enable", True)
         is True,
         entity_class=RpcBluTrvNumber,

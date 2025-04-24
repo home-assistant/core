@@ -232,6 +232,9 @@
     },
     "no_config_entry_for_device": {
       "message": "No loaded config entry was found for device with ID {device_id}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Renault servers: {error}"
     }
   }
 }

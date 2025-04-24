@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.switcher_kis.const import DOMAIN, MAX_UPDATE_INTERVAL_SEC
@@ -20,7 +21,10 @@ from tests.typing import WebSocketGenerator
 
 
 async def test_update_fail(
-    hass: HomeAssistant, mock_bridge, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_bridge,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entities state unavailable when updates fail.."""
     entry = await init_integration(hass)
@@ -32,9 +36,8 @@ async def test_update_fail(
     assert mock_bridge.is_running is True
     assert len(entry.runtime_data) == 2
 
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1)
-    )
+    freezer.tick(timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     for device in DUMMY_SWITCHER_DEVICES:

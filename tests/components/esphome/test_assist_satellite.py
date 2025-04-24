@@ -34,57 +34,26 @@ from homeassistant.components import (
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
-    AssistSatelliteEntity,
     AssistSatelliteEntityFeature,
     AssistSatelliteWakeWord,
 )
 
 # pylint: disable-next=hass-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
-from homeassistant.components.esphome import DOMAIN
-from homeassistant.components.esphome.assist_satellite import (
-    EsphomeAssistSatellite,
-    VoiceAssistantUDPServer,
-)
+from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    intent as intent_helper,
-)
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers import device_registry as dr, intent as intent_helper
 from homeassistant.helpers.network import get_url
 
+from .common import get_satellite_entity
 from .conftest import MockESPHomeDevice
 
 from tests.components.tts.common import MockResultStream
-
-
-def get_satellite_entity(
-    hass: HomeAssistant, mac_address: str
-) -> EsphomeAssistSatellite | None:
-    """Get the satellite entity for a device."""
-    ent_reg = er.async_get(hass)
-    satellite_entity_id = ent_reg.async_get_entity_id(
-        Platform.ASSIST_SATELLITE, DOMAIN, f"{mac_address}-assist_satellite"
-    )
-    if satellite_entity_id is None:
-        return None
-    assert satellite_entity_id.endswith("_assist_satellite")
-
-    component: EntityComponent[AssistSatelliteEntity] = hass.data[
-        assist_satellite.DOMAIN
-    ]
-    if (entity := component.get_entity(satellite_entity_id)) is not None:
-        assert isinstance(entity, EsphomeAssistSatellite)
-        return entity
-
-    return None
 
 
 @pytest.fixture
@@ -342,6 +311,23 @@ async def test_pipeline_api_audio(
         )
         assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
             VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END,
+            {"url": get_url(hass) + mock_tts_result_stream.url},
+        )
+
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.RUN_START,
+                data={
+                    "tts_output": {
+                        "media_id": "test-media-id",
+                        "url": mock_tts_result_stream.url,
+                        "token": mock_tts_result_stream.token,
+                    }
+                },
+            )
+        )
+        assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+            VoiceAssistantEventType.VOICE_ASSISTANT_RUN_START,
             {"url": get_url(hass) + mock_tts_result_stream.url},
         )
 
@@ -1126,32 +1112,6 @@ async def test_tts_minimal_format_from_media_player(
         }
 
 
-async def test_announce_supported_features(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
-) -> None:
-    """Test that the announce supported feature is not set by default."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
-        mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
-        device_info={
-            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
-        },
-    )
-    await hass.async_block_till_done()
-
-    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
-    assert satellite is not None
-
-    assert not (satellite.supported_features & AssistSatelliteEntityFeature.ANNOUNCE)
-
-
 async def test_announce_message(
     hass: HomeAssistant,
     mock_client: APIClient,
@@ -1219,7 +1179,7 @@ async def test_announce_message(
                 assist_satellite.DOMAIN,
                 "announce",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "message": "test-text",
                     "preannounce": False,
                 },
@@ -1309,7 +1269,7 @@ async def test_announce_media_id(
                 assist_satellite.DOMAIN,
                 "announce",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "media_id": "https://www.home-assistant.io/resolved.mp3",
                     "preannounce": False,
                 },
@@ -1396,7 +1356,7 @@ async def test_announce_message_with_preannounce(
                 assist_satellite.DOMAIN,
                 "announce",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "message": "test-text",
                     "preannounce_media_id": "test-preannounce",
                 },
@@ -1406,7 +1366,7 @@ async def test_announce_message_with_preannounce(
             assert satellite.state == AssistSatelliteState.IDLE
 
 
-async def test_start_conversation_supported_features(
+async def test_non_default_supported_features(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: Callable[
@@ -1414,7 +1374,7 @@ async def test_start_conversation_supported_features(
         Awaitable[MockESPHomeDevice],
     ],
 ) -> None:
-    """Test that the start conversation supported feature is not set by default."""
+    """Test that the start conversation and announce are not set by default."""
     mock_device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
@@ -1432,6 +1392,7 @@ async def test_start_conversation_supported_features(
     assert not (
         satellite.supported_features & AssistSatelliteEntityFeature.START_CONVERSATION
     )
+    assert not (satellite.supported_features & AssistSatelliteEntityFeature.ANNOUNCE)
 
 
 async def test_start_conversation_message(
@@ -1520,7 +1481,7 @@ async def test_start_conversation_message(
                 assist_satellite.DOMAIN,
                 "start_conversation",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "start_message": "test-text",
                     "preannounce": False,
                 },
@@ -1629,7 +1590,7 @@ async def test_start_conversation_media_id(
                 assist_satellite.DOMAIN,
                 "start_conversation",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "start_media_id": "https://www.home-assistant.io/resolved.mp3",
                     "preannounce": False,
                 },
@@ -1735,7 +1696,7 @@ async def test_start_conversation_message_with_preannounce(
                 assist_satellite.DOMAIN,
                 "start_conversation",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "start_message": "test-text",
                     "preannounce_media_id": "test-preannounce",
                 },
@@ -1965,7 +1926,7 @@ async def test_wake_word_select(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {"entity_id": "select.test_wake_word", "option": "Okay Nabu"},
+        {ATTR_ENTITY_ID: "select.test_wake_word", "option": "Okay Nabu"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1980,122 +1941,3 @@ async def test_wake_word_select(
 
     # Satellite config should have been updated
     assert satellite.async_get_configuration().active_wake_words == ["okay_nabu"]
-
-
-async def test_wake_word_select_no_wake_words(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
-) -> None:
-    """Test wake word select is unavailable when there are no available wake word."""
-    device_config = AssistSatelliteConfiguration(
-        available_wake_words=[],
-        active_wake_words=[],
-        max_active_wake_words=1,
-    )
-    mock_client.get_voice_assistant_configuration.return_value = device_config
-
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
-        mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
-        device_info={
-            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
-            | VoiceAssistantFeature.ANNOUNCE
-        },
-    )
-    await hass.async_block_till_done()
-
-    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
-    assert satellite is not None
-    assert not satellite.async_get_configuration().available_wake_words
-
-    # Select should be unavailable
-    state = hass.states.get("select.test_wake_word")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_wake_word_select_zero_max_wake_words(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
-) -> None:
-    """Test wake word select is unavailable max wake words is zero."""
-    device_config = AssistSatelliteConfiguration(
-        available_wake_words=[
-            AssistSatelliteWakeWord("okay_nabu", "Okay Nabu", ["en"]),
-        ],
-        active_wake_words=[],
-        max_active_wake_words=0,
-    )
-    mock_client.get_voice_assistant_configuration.return_value = device_config
-
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
-        mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
-        device_info={
-            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
-            | VoiceAssistantFeature.ANNOUNCE
-        },
-    )
-    await hass.async_block_till_done()
-
-    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
-    assert satellite is not None
-    assert satellite.async_get_configuration().max_active_wake_words == 0
-
-    # Select should be unavailable
-    state = hass.states.get("select.test_wake_word")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_wake_word_select_no_active_wake_words(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
-) -> None:
-    """Test wake word select uses first available wake word if none are active."""
-    device_config = AssistSatelliteConfiguration(
-        available_wake_words=[
-            AssistSatelliteWakeWord("okay_nabu", "Okay Nabu", ["en"]),
-            AssistSatelliteWakeWord("hey_jarvis", "Hey Jarvis", ["en"]),
-        ],
-        active_wake_words=[],
-        max_active_wake_words=1,
-    )
-    mock_client.get_voice_assistant_configuration.return_value = device_config
-
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
-        mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
-        device_info={
-            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
-            | VoiceAssistantFeature.ANNOUNCE
-        },
-    )
-    await hass.async_block_till_done()
-
-    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
-    assert satellite is not None
-    assert not satellite.async_get_configuration().active_wake_words
-
-    # First available wake word should be selected
-    state = hass.states.get("select.test_wake_word")
-    assert state is not None
-    assert state.state == "Okay Nabu"

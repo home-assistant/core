@@ -1,5 +1,22 @@
 {
   "entity": {
+    "number": {
+      "manual_speed": {
+        "default": "mdi:pump"
+      },
+      "day_speed": {
+        "default": "mdi:weather-sunny"
+      },
+      "night_speed": {
+        "default": "mdi:moon-waning-crescent"
+      },
+      "temperature_offset": {
+        "default": "mdi:thermometer"
+      },
+      "night_temperature_offset": {
+        "default": "mdi:thermometer"
+      }
+    },
     "sensor": {
       "current_speed": {
         "default": "mdi:pump"
