@@ -1,4 +1,4 @@
-"""Support for KEM sensors."""
+"""Base class for KEM entities."""
 
 from __future__ import annotations
 
