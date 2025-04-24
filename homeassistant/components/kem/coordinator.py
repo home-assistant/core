@@ -1,4 +1,4 @@
-"""The AccuWeather coordinator."""
+"""The KEM coordinator."""
 
 from __future__ import annotations
 
