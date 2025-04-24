@@ -52,7 +52,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDevice, MockGenericDeviceEntryType
 
 from tests.common import (
     MockConfigEntry,
@@ -962,10 +962,7 @@ async def test_state_request(
 async def test_debug_logging(
     mock_client: APIClient,
     hass: HomeAssistant,
-    mock_generic_device_entry: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockConfigEntry],
-    ],
+    mock_generic_device_entry: MockGenericDeviceEntryType,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test enabling and disabling debug logging."""

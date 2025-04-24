@@ -15,9 +15,7 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from .conftest import MockESPHomeDevice
-
-from tests.common import MockConfigEntry
+from .conftest import MockESPHomeDevice, MockGenericDeviceEntryType
 
 
 @pytest.mark.parametrize(
@@ -27,10 +25,7 @@ async def test_binary_sensor_generic_entity(
     hass: HomeAssistant,
     mock_client: APIClient,
     binary_state: tuple[bool, str],
-    mock_generic_device_entry: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockConfigEntry],
-    ],
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic binary_sensor entity."""
     entity_info = [
@@ -58,10 +53,7 @@ async def test_binary_sensor_generic_entity(
 async def test_status_binary_sensor(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockConfigEntry],
-    ],
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic binary_sensor entity."""
     entity_info = [
@@ -89,10 +81,7 @@ async def test_status_binary_sensor(
 async def test_binary_sensor_missing_state(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockConfigEntry],
-    ],
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic binary_sensor that is missing state."""
     entity_info = [

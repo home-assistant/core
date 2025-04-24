@@ -48,6 +48,12 @@ if TYPE_CHECKING:
     from aioesphomeapi.api_pb2 import SubscribeLogsResponse
 
 
+type MockGenericDeviceEntryType = Callable[
+    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+    Coroutine[Any, Any, MockConfigEntry],
+]
+
+
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 
 
@@ -638,10 +644,7 @@ async def mock_bluetooth_entry_with_legacy_adv(
 async def mock_generic_device_entry(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-) -> Callable[
-    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-    Awaitable[MockConfigEntry],
-]:
+) -> MockGenericDeviceEntryType:
     """Set up an ESPHome entry and return the MockConfigEntry."""
 
     async def _mock_device_entry(

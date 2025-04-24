@@ -41,14 +41,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDevice, MockGenericDeviceEntryType
 
 from tests.common import mock_platform
 from tests.typing import WebSocketGenerator
 
 
 async def test_media_player_entity(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic media_player entity."""
     entity_info = [
@@ -160,7 +162,7 @@ async def test_media_player_entity_with_source(
     hass: HomeAssistant,
     mock_client: APIClient,
     hass_ws_client: WebSocketGenerator,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic media_player entity media source."""
     await async_setup_component(hass, "media_source", {"media_source": {}})

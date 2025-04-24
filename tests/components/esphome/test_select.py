@@ -26,7 +26,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .common import get_satellite_entity
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDevice, MockGenericDeviceEntryType
 
 
 async def test_pipeline_selector(
@@ -65,7 +65,9 @@ async def test_wake_word_select(
 
 
 async def test_select_generic_entity(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic select entity."""
     entity_info = [

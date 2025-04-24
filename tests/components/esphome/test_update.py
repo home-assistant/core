@@ -35,7 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDevice, MockGenericDeviceEntryType
 
 
 @pytest.fixture(autouse=True)
@@ -476,7 +476,7 @@ async def test_update_entity_not_present_with_dashboard_but_unknown_device(
 async def test_generic_device_update_entity(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic device update entity."""
     entity_info = [
