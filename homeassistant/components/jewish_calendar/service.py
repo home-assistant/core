@@ -42,13 +42,6 @@ OMER_SCHEMA = vol.Schema(
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Jewish Calendar services."""
 
-    def get_hebrew_date(hass: HomeAssistant) -> HebrewDate:
-        """Convert a Gregorian date to a Hebrew date."""
-        after_sunset = is_after_sunset(hass)
-        return HebrewDate.from_gdate(
-            dt_util.now() + datetime.timedelta(days=int(after_sunset))
-        )
-
     def is_after_sunset(hass: HomeAssistant) -> bool:
         """Determine if the current time is after sunset."""
         now = dt_util.now()
@@ -63,13 +56,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def get_omer_count(call: ServiceCall) -> ServiceResponse:
         """Return the Omer blessing for a given date."""
-        if "date" in call.data:
-            date = call.data["date"]
-            hebrew_date = HebrewDate.from_gdate(
-                date + datetime.timedelta(days=int(call.data[ATTR_AFTER_SUNSET]))
-            )
-        else:
-            hebrew_date = get_hebrew_date(call.hass)
+        date = call.data.get("date", dt_util.now().date())
+        after_sunset = (
+            call.data[ATTR_AFTER_SUNSET]
+            if "date" in call.data
+            else is_after_sunset(hass)
+        )
+        hebrew_date = HebrewDate.from_gdate(
+            date + datetime.timedelta(days=int(after_sunset))
+        )
         nusach = Nusach[call.data["nusach"].upper()]
 
         # Currently Omer only supports Hebrew, English, and French and requires
