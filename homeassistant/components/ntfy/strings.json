@@ -278,11 +278,11 @@
   "selector": {
     "priority": {
       "options": {
-        "1": "Min. priority",
-        "2": "Low priority",
-        "3": "Default priority",
-        "4": "High priority",
-        "5": "Max. priority"
+        "1": "Minimum",
+        "2": "[%key:common::state::low%]",
+        "3": "Default",
+        "4": "[%key:common::state::high%]",
+        "5": "Maximum"
       }
     }
   }
