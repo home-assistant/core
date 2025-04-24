@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 class MieleButtonDescription(ButtonEntityDescription):
     """Class describing Miele button entities."""
 
-    press_data: dict[str, str | int | bool]
+    press_data: MieleActions
 
 
 @dataclass
@@ -56,7 +56,7 @@ BUTTON_TYPES: Final[tuple[MieleButtonDefinition, ...]] = (
         description=MieleButtonDescription(
             key="start",
             translation_key="start",
-            press_data={PROCESS_ACTION: MieleActions.START},
+            press_data=MieleActions.START,
             entity_registry_enabled_default=False,
         ),
     ),
@@ -81,7 +81,7 @@ BUTTON_TYPES: Final[tuple[MieleButtonDefinition, ...]] = (
         description=MieleButtonDescription(
             key="stop",
             translation_key="stop",
-            press_data={PROCESS_ACTION: MieleActions.STOP},
+            press_data=MieleActions.STOP,
             entity_registry_enabled_default=False,
         ),
     ),
@@ -97,7 +97,7 @@ BUTTON_TYPES: Final[tuple[MieleButtonDefinition, ...]] = (
         description=MieleButtonDescription(
             key="pause",
             translation_key="pause",
-            press_data={PROCESS_ACTION: MieleActions.PAUSE},
+            press_data=MieleActions.PAUSE,
             entity_registry_enabled_default=False,
         ),
     ),
@@ -135,35 +135,29 @@ class MieleButton(MieleEntity, ButtonEntity):
         super().__init__(coordinator, device_id, description)
         self.api = coordinator.api
 
-    def _action_available(self, action: dict[str, str | int | bool]) -> bool:
-        """Check if action is available according to API."""
-        return (
-            action[PROCESS_ACTION]
-            in self.coordinator.data.actions[self._device_id].process_actions
-        )
-
     @property
     def available(self) -> bool:
         """Return the availability of the entity."""
 
-        return super().available and self._action_available(
-            self.entity_description.press_data
+        return (
+            super().available
+            and self.entity_description.press_data
+            in self.coordinator.data.actions[self._device_id].process_actions
         )
 
     async def async_press(self) -> None:
         """Press the button."""
         _LOGGER.debug("Press: %s", self.entity_description.key)
-        if self._action_available(self.entity_description.press_data):
-            try:
-                await self.api.send_action(
-                    self._device_id,
-                    self.entity_description.press_data,
-                )
-            except aiohttp.ClientResponseError as ex:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="set_state_error",
-                    translation_placeholders={
-                        "entity": self.entity_id,
-                    },
-                ) from ex
+        try:
+            await self.api.send_action(
+                self._device_id,
+                {PROCESS_ACTION: self.entity_description.press_data},
+            )
+        except aiohttp.ClientResponseError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_state_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                },
+            ) from ex
