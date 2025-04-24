@@ -1,21 +1,17 @@
 """Test ESPHome sensors."""
 
-from collections.abc import Awaitable, Callable
 import logging
 import math
 
 from aioesphomeapi import (
     APIClient,
     EntityCategory as ESPHomeEntityCategory,
-    EntityInfo,
-    EntityState,
     LastResetType,
     SensorInfo,
     SensorState,
     SensorStateClass as ESPHomeSensorStateClass,
     TextSensorInfo,
     TextSensorState,
-    UserService,
 )
 
 from homeassistant.components.sensor import (
@@ -33,16 +29,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockESPHomeDevice, MockGenericDeviceEntryType
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 
 async def test_generic_numeric_sensor(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a generic sensor entity."""
     logging.getLogger("homeassistant.components.esphome").setLevel(logging.DEBUG)
