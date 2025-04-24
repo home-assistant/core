@@ -2,13 +2,10 @@
 
 import datetime as dt
 
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.jewish_calendar.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -75,31 +72,18 @@ from tests.common import MockConfigEntry
     ],
     indirect=["test_time"],
 )
+@pytest.mark.usefixtures("setup_at_time")
 async def test_get_omer_blessing(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    test_time: dt.date | None,
-    service_data: object,
-    expected: str,
+    hass: HomeAssistant, service_data: dict[str, str | dt.date | bool], expected: str
 ) -> None:
     """Test get omer blessing."""
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
-    async def call_service():
-        return await hass.services.async_call(
-            DOMAIN,
-            "count_omer",
-            service_data,
-            blocking=True,
-            return_response=True,
-        )
-
-    if test_time:
-        with freeze_time(test_time):
-            result = await call_service()
-    else:
-        result = await call_service()
+    result = await hass.services.async_call(
+        DOMAIN,
+        "count_omer",
+        service_data,
+        blocking=True,
+        return_response=True,
+    )
 
     assert result["message"] == expected
