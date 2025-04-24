@@ -1,0 +1,6 @@
+{
+  "domain": "profilo",
+  "name": "Profilo",
+  "integration_type": "virtual",
+  "supported_by": "home_connect"
+}

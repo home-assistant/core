@@ -109,8 +109,14 @@ async def test_rpc_config_entry_diagnostics(
         "bluetooth": {
             "scanner": {
                 "connectable": False,
-                "current_mode": None,
-                "requested_mode": None,
+                "current_mode": {
+                    "__type": "<enum 'BluetoothScanningMode'>",
+                    "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                },
+                "requested_mode": {
+                    "__type": "<enum 'BluetoothScanningMode'>",
+                    "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                },
                 "discovered_device_timestamps": {"AA:BB:CC:DD:EE:FF": ANY},
                 "discovered_devices_and_advertisement_data": [
                     {

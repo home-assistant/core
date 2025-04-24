@@ -245,6 +245,10 @@ class CloudLoginView(HomeAssistantView):
     name = "api:cloud:login"
 
     @require_admin
+    async def post(self, request: web.Request) -> web.Response:
+        """Handle login request."""
+        return await self._post(request)
+
     @_handle_cloud_errors
     @RequestDataValidator(
         vol.Schema(
@@ -259,7 +263,7 @@ class CloudLoginView(HomeAssistantView):
             )
         )
     )
-    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+    async def _post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle login request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
@@ -316,8 +320,12 @@ class CloudLogoutView(HomeAssistantView):
     name = "api:cloud:logout"
 
     @require_admin
-    @_handle_cloud_errors
     async def post(self, request: web.Request) -> web.Response:
+        """Handle logout request."""
+        return await self._post(request)
+
+    @_handle_cloud_errors
+    async def _post(self, request: web.Request) -> web.Response:
         """Handle logout request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
@@ -400,9 +408,13 @@ class CloudForgotPasswordView(HomeAssistantView):
     name = "api:cloud:forgot_password"
 
     @require_admin
+    async def post(self, request: web.Request) -> web.Response:
+        """Handle forgot password request."""
+        return await self._post(request)
+
     @_handle_cloud_errors
     @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
-    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+    async def _post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle forgot password request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
