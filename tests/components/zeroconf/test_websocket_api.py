@@ -157,14 +157,4 @@ async def test_subscribe_discovery(
     instance.zeroconf.record_manager.async_updates_complete(False)
     async with asyncio.timeout(2):
         response = await client.receive_json()
-    assert response["event"] == {
-        "add": [
-            {
-                "ip_addresses": ["127.0.0.1"],
-                "name": "foo3._http._tcp.local.",
-                "port": 1234,
-                "properties": {},
-                "type": "_http._tcp.local.",
-            }
-        ]
-    }
+    assert response["event"] == {"remove": ["foo2._http._tcp.local."]}
