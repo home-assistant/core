@@ -22,7 +22,6 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
-    CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
 )
@@ -195,7 +194,6 @@ class TriggerBaseEntity(Entity):
         self._parse_result = {CONF_AVAILABILITY}
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
-        self._state_render_error = False
         self._availability_template = config.get(CONF_AVAILABILITY)
         self._available = True
 
@@ -222,9 +220,6 @@ class TriggerBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return availability of the entity."""
-        if self._state_render_error:
-            return False
-
         if self._availability_template is None:
             return True
 
@@ -301,33 +296,8 @@ class TriggerBaseEntity(Entity):
 
         return self._available
 
-    def _render_templates(self, variables: dict[str, Any]) -> None:
-        """Render templates."""
-        self._state_render_error = False
-        rendered = dict(self._static_rendered)
-
-        # If state fails to render, the entity should go unavailable.  Render the
-        # state as a simple template because the result should always be a string or None.
-        if CONF_STATE in self._to_render_simple:
-            if (
-                result := self._render_single_template(CONF_STATE, variables)
-            ) is _SENTINEL:
-                self._rendered = self._static_rendered
-                self._state_render_error = True
-                return
-
-            rendered[CONF_STATE] = result
-
-        for key in itertools.chain(self._to_render_simple, self._to_render_complex):
-            # Skip state because we already handled it before.
-            if key == CONF_STATE:
-                continue
-
-            if (
-                result := self._render_single_template(key, variables)
-            ) is not _SENTINEL:
-                rendered[key] = result
-
+    def _render_attributes(self, rendered: dict, variables: dict[str, Any]) -> None:
+        """Render template attributes."""
         if CONF_ATTRIBUTES in self._config:
             attributes = {}
             for attribute, attribute_template in self._config[CONF_ATTRIBUTES].items():
@@ -341,6 +311,27 @@ class TriggerBaseEntity(Entity):
                     )
             rendered[CONF_ATTRIBUTES] = attributes
 
+    def _render_single_templates(
+        self,
+        rendered: dict,
+        variables: dict[str, Any],
+        filtered: list[str] | None = None,
+    ) -> None:
+        """Render all single templates."""
+        for key in itertools.chain(self._to_render_simple, self._to_render_complex):
+            if filtered and key in filtered:
+                continue
+
+            if (
+                result := self._render_single_template(key, variables)
+            ) is not _SENTINEL:
+                rendered[key] = result
+
+    def _render_templates(self, variables: dict[str, Any]) -> None:
+        """Render templates."""
+        rendered = dict(self._static_rendered)
+        self._render_single_templates(rendered, variables)
+        self._render_attributes(rendered, variables)
         self._rendered = rendered
 
 
