@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 CLASS_IN = 1
 TYPE_PTR = 12
 
-_TIMEOUT_MS = 3000
+_TIMEOUT_MS = 10000
 
 
 @callback
