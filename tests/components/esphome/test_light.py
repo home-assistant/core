@@ -38,6 +38,8 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
+LIGHT_COLOR_CAPABILITY_UNKNOWN = 1 << 8  # 256
+
 
 async def test_light_on_off(
     hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
@@ -391,7 +393,9 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[
-                LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS | 1 << 8
+                LightColorCapability.ON_OFF
+                | LightColorCapability.BRIGHTNESS
+                | LIGHT_COLOR_CAPABILITY_UNKNOWN
             ],
         )
     ]
@@ -420,7 +424,7 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
                 state=True,
                 color_mode=LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS
-                | 1 << 8,
+                | LIGHT_COLOR_CAPABILITY_UNKNOWN,
             )
         ]
     )
@@ -439,7 +443,7 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
                 state=True,
                 color_mode=LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS
-                | 1 << 8,
+                | LIGHT_COLOR_CAPABILITY_UNKNOWN,
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
