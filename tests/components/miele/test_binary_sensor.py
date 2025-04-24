@@ -5,14 +5,14 @@ from unittest.mock import MagicMock
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize("platforms", [(Platform.BINARY_SENSOR,)])
+@pytest.mark.parametrize("platforms", [(BINARY_SENSOR_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor_states(
     hass: HomeAssistant,
