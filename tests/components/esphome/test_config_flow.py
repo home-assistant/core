@@ -80,10 +80,9 @@ async def test_user_connection_works(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -127,10 +126,9 @@ async def test_user_connection_updates_host(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured_updates"
