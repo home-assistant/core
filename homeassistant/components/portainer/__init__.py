@@ -44,16 +44,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
+            translation_placeholders={"error": repr(err)},
         ) from err
     except PortainerConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
+            translation_placeholders={"error": repr(err)},
         ) from err
     except PortainerTimeoutError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="timeout_connect",
+            translation_placeholders={"error": repr(err)},
         ) from err
 
     coordinator = PortainerCoordinator(hass, entry, client)

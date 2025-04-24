@@ -33,14 +33,6 @@
     }
   },
   "entity": {
-    "sensor": {
-      "type": {
-        "name": "Type"
-      },
-      "status": {
-        "name": "Status"
-      }
-    },
     "binary_sensor": {
       "status": {
         "name": "Status"
@@ -53,6 +45,9 @@
     },
     "invalid_auth": {
       "message": "An error occurred while trying authenticate: {error}"
+    },
+    "timeout_connect": {
+      "message": "An time-out occurred while trying to connect to the Portainer instance: {error}"
     }
   }
 }
