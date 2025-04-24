@@ -65,9 +65,9 @@
           "name": "Date",
           "description": "Date to count the Omer for."
         },
-        "is_after_sunset": {
+        "after_sunset": {
           "name": "After sunset",
-          "description": "Calculates the next day for a given date. This indicator is ignored if the Date field is empty."
+          "description": "Uses the next Hebrew day (starting at sunset) for a given date. This indicator is ignored if the Date field is empty."
         },
         "nusach": {
           "name": "Nusach",

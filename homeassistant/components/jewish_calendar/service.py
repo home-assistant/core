@@ -21,14 +21,14 @@ from homeassistant.helpers.selector import LanguageSelector, LanguageSelectorCon
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_DATE, ATTR_NUSACH, DOMAIN, SERVICE_COUNT_OMER
+from .const import ATTR_AFTER_SUNSET, ATTR_DATE, ATTR_NUSACH, DOMAIN, SERVICE_COUNT_OMER
 
 _LOGGER = logging.getLogger(__name__)
 SUPPORTED_LANGUAGES = {"en": "english", "fr": "french", "he": "hebrew"}
 OMER_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_DATE): cv.date,
-        vol.Optional("is_after_sunset", default=True): cv.boolean,
+        vol.Optional(ATTR_AFTER_SUNSET, default=True): cv.boolean,
         vol.Required(ATTR_NUSACH, default="sfarad"): vol.In(
             [nusach.name.lower() for nusach in Nusach]
         ),
@@ -66,7 +66,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         if "date" in call.data:
             date = call.data["date"]
             hebrew_date = HebrewDate.from_gdate(
-                date + datetime.timedelta(days=int(call.data["is_after_sunset"]))
+                date + datetime.timedelta(days=int(call.data[ATTR_AFTER_SUNSET]))
             )
         else:
             hebrew_date = get_hebrew_date(call.hass)

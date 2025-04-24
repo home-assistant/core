@@ -5,7 +5,7 @@ count_omer:
       example: "2025-04-14"
       selector:
         date:
-    is_after_sunset:
+    after_sunset:
       required: false
       example: true
       default: true
