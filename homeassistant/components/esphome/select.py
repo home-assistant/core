@@ -107,7 +107,6 @@ class EsphomeAssistSatelliteWakeWordSelect(
         translation_key="wake_word",
         entity_category=EntityCategory.CONFIG,
     )
-    _attr_should_poll = False
     _attr_current_option: str | None = None
     _attr_options: list[str] = []
 
