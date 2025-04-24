@@ -57,6 +57,7 @@ from .const import (
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
+    VOICE_STYLE_SEPERATOR,
 )
 from .google_config import CLOUD_GOOGLE
 from .repairs import async_manage_legacy_subscription_issue
@@ -592,7 +593,7 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
     """Validate language and voice."""
     language, voice = value
     style: str | None
-    voice, _, style = voice.partition("||")
+    voice, _, style = voice.partition(VOICE_STYLE_SEPERATOR)
     if not style:
         style = None
     if language not in TTS_VOICES:
@@ -1034,7 +1035,11 @@ def tts_info(
             result.append((language, voice_id, name))
             result.extend(
                 [
-                    (language, f"{voice_id}||{variant}", f"{name} ({variant})")
+                    (
+                        language,
+                        f"{voice_id}{VOICE_STYLE_SEPERATOR}{variant}",
+                        f"{name} ({variant})",
+                    )
                     for variant in voice_info.get("variants", [])
                 ]
             )
