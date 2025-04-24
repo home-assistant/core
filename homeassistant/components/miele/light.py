@@ -31,6 +31,7 @@ class MieleLightDescription(LightEntityDescription):
     """Class describing Miele light entities."""
 
     value_fn: Callable[[MieleDevice], StateType]
+    light_type: str
 
 
 @dataclass
@@ -61,6 +62,7 @@ LIGHT_TYPES: Final[tuple[MieleLightDefinition, ...]] = (
         description=MieleLightDescription(
             key="light",
             value_fn=lambda value: value.state_light,
+            light_type=LIGHT,
             translation_key="light",
         ),
     ),
@@ -69,6 +71,7 @@ LIGHT_TYPES: Final[tuple[MieleLightDefinition, ...]] = (
         description=MieleLightDescription(
             key="ambient_light",
             value_fn=lambda value: value.state_ambient_light,
+            light_type=AMBIENT_LIGHT,
             translation_key="ambient_light",
         ),
     ),
@@ -109,7 +112,7 @@ class MieleLight(MieleEntity, LightEntity):
         self.api = coordinator.api
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return current on/off state."""
         return self.entity_description.value_fn(self.device) == LIGHT_ON
 
@@ -123,11 +126,10 @@ class MieleLight(MieleEntity, LightEntity):
 
     async def async_turn_light(self, mode: int) -> None:
         """Set light to mode."""
-        light_type = (
-            AMBIENT_LIGHT if self.entity_description.key == "ambient_light" else LIGHT
-        )
         try:
-            await self.api.send_action(self._device_id, {light_type: mode})
+            await self.api.send_action(
+                self._device_id, {self.entity_description.light_type: mode}
+            )
         except aiohttp.ClientError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

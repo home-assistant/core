@@ -38,10 +38,10 @@ async def test_light_states(
 
 
 @pytest.mark.parametrize(
-    ("service"),
+    ("service", "light_state"),
     [
-        (SERVICE_TURN_ON),
-        (SERVICE_TURN_OFF),
+        (SERVICE_TURN_ON, 1),
+        (SERVICE_TURN_OFF, 2),
     ],
 )
 async def test_light_toggle(
@@ -49,6 +49,7 @@ async def test_light_toggle(
     mock_miele_client: MagicMock,
     setup_platform: None,
     service: str,
+    light_state: int,
 ) -> None:
     """Test the light can be turned on/off."""
 
@@ -56,7 +57,9 @@ async def test_light_toggle(
         TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     await hass.async_block_till_done()
-    mock_miele_client.send_action.assert_called_once()
+    mock_miele_client.send_action.assert_called_once_with(
+        "DummyAppliance_18", {"light": light_state}
+    )
 
 
 @pytest.mark.parametrize(
