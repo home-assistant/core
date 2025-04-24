@@ -1,15 +1,40 @@
 """Fixtures for Adax testing."""
 
+import json
 from typing import Any
 from unittest.mock import patch
 
 import pytest
-import json
 
-from homeassistant.components.adax.const import DOMAIN
+from homeassistant.components.adax.const import (
+    ACCOUNT_ID,
+    CLOUD,
+    CONNECTION_TYPE,
+    DOMAIN,
+    LOCAL,
+)
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_UNIQUE_ID,
+)
+
 from tests.common import AsyncMock, MockConfigEntry, load_fixture
 
-from . import LOCAL_CONFIG, CLOUD_CONFIG
+CLOUD_CONFIG = {
+    ACCOUNT_ID: 12345,
+    CONF_PASSWORD: "pswd",
+    CONNECTION_TYPE: CLOUD,
+}
+
+LOCAL_CONFIG = {
+    CONF_IP_ADDRESS: "192.168.1.12",
+    CONF_TOKEN: "TOKEN-123",
+    CONF_UNIQUE_ID: "11:22:33:44:55:66",
+    CONNECTION_TYPE: LOCAL,
+}
+
 
 CLOUD_DEVICE_DATA: dict[str, Any] = [
     {
@@ -28,12 +53,16 @@ LOCAL_DEVICE_DATA: dict[str, Any] = {
 }
 
 
-@pytest.fixture(params=["cloud", "local"])
-def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
-    """Mock a config entry."""
-    f = load_fixture(f"get_config_{request.param}.json", DOMAIN)
-    entry_data = json.loads(f)
-    return MockConfigEntry(domain=DOMAIN, data=entry_data)
+@pytest.fixture
+def mock_cloud_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
+    """Mock a "CLOUD" config entry."""
+    return MockConfigEntry(domain=DOMAIN, data=CLOUD_CONFIG)
+
+
+@pytest.fixture
+def mock_local_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
+    """Mock a "LOCAL" config entry."""
+    return MockConfigEntry(domain=DOMAIN, data=LOCAL_CONFIG)
 
 
 @pytest.fixture
