@@ -1,5 +1,6 @@
 """Test ESPHome dashboard features."""
 
+from datetime import datetime
 from typing import Any
 from unittest.mock import patch
 
@@ -7,14 +8,33 @@ from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
 import pytest
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
+from homeassistant.components.esphome.coordinator import REFRESH_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import VALID_NOISE_PSK
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+class MockDashboardRefresh:
+    """Mock dashboard refresh."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the mock dashboard refresh."""
+        self.hass = hass
+        self.last_time: datetime | None = None
+
+    async def async_refresh(self) -> None:
+        """Refresh the dashboard."""
+        if self.last_time is None:
+            self.last_time = dt_util.utcnow()
+        self.last_time += REFRESH_INTERVAL
+        async_fire_time_changed(self.hass, self.last_time)
+        await self.hass.async_block_till_done()
 
 
 async def test_dashboard_storage(
@@ -209,7 +229,7 @@ async def test_new_dashboard_fix_reauth(
         }
     )
 
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     with (
         patch(
@@ -233,11 +253,14 @@ async def test_dashboard_supports_update(
 ) -> None:
     """Test dashboard supports update."""
     dash = dashboard.async_get_dashboard(hass)
+    # Register a listener to start the coordinator
+    dash.async_add_listener(lambda: None)
+    mock_refresh = MockDashboardRefresh(hass)
 
     # No data
     assert not dash.supports_update
 
-    await dash.async_refresh()
+    await mock_refresh.async_refresh()
     assert dash.supports_update is None
 
     # supported version
@@ -248,12 +271,13 @@ async def test_dashboard_supports_update(
             "current_version": "2023.2.0-dev",
         }
     )
-    await dash.async_refresh()
+
+    await mock_refresh.async_refresh()
     assert dash.supports_update is True
 
     # unsupported version
     dash.supports_update = None
     mock_dashboard["configured"][0]["current_version"] = "2023.1.0"
-    await dash.async_refresh()
+    await mock_refresh.async_refresh()
 
     assert dash.supports_update is False
