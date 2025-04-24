@@ -43,16 +43,9 @@ async def test_lock_services(
     entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock.lock",
-            new=AsyncMock(return_value=True),
-        ) as mock_lock,
-        patch(
-            "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock.unlock",
-            new=AsyncMock(return_value=True),
-        ) as mock_unlock,
-    ):
+    with patch(
+        f"homeassistant.components.switchbot.lock.switchbot.SwitchbotLock.{mock_method}",
+    ) as mocked_instance:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -65,12 +58,7 @@ async def test_lock_services(
             blocking=True,
         )
 
-        mock_map = {
-            "lock": mock_lock,
-            "unlock": mock_unlock,
-        }
-        mock_instance = mock_map[mock_method]
-        mock_instance.assert_awaited_once()
+        mocked_instance.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -95,19 +83,12 @@ async def test_lock_services_with_night_latch_enabled(
     entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock.is_night_latch_enabled",
-            new=MagicMock(return_value=True),
-        ),
-        patch(
-            "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock.unlock_without_unlatch",
-            new=AsyncMock(return_value=True),
-        ) as mock_unlock_without_unlatch,
-        patch(
-            "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock.unlock",
-            new=AsyncMock(return_value=True),
-        ) as mock_unlock,
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
+        is_night_latch_enabled=MagicMock(return_value=True),
+        **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -121,9 +102,4 @@ async def test_lock_services_with_night_latch_enabled(
             blocking=True,
         )
 
-        mock_map = {
-            "unlock_without_unlatch": mock_unlock_without_unlatch,
-            "unlock": mock_unlock,
-        }
-        mock_instance = mock_map[mock_method]
-        mock_instance.assert_awaited_once()
+        mocked_instance.assert_awaited_once()
