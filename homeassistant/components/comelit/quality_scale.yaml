@@ -55,10 +55,8 @@ rules:
   docs-known-limitations:
     status: exempt
     comment: no known limitations, yet
-  docs-supported-devices:
-    status: todo
-    comment: review and complete missing ones
-  docs-supported-functions: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
