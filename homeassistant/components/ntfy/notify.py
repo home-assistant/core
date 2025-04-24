@@ -66,7 +66,7 @@ async def async_setup_entry(
         SERVICE_PUBLISH,
         {
             vol.Optional(ATTR_TITLE): cv.string,
-            vol.Optional(ATTR_MESSAGE, default=""): cv.string,
+            vol.Optional(ATTR_MESSAGE): cv.string,
             vol.Optional(ATTR_MARKDOWN): cv.boolean,
             vol.Optional(ATTR_TAGS): vol.All(cv.ensure_list, [str]),
             vol.Optional(ATTR_PRIORITY): vol.All(vol.Coerce(int), vol.Range(1, 5)),
@@ -118,7 +118,7 @@ class NtfyNotifyEntity(NotifyEntity):
         self.ntfy = config_entry.runtime_data.ntfy
 
     async def async_send_message(
-        self, message: str, title: str | None = None, **kwargs: Any
+        self, message: str | None = None, title: str | None = None, **kwargs: Any
     ) -> None:
         """Publish a message to a topic."""
         params: dict[str, Any] = kwargs
