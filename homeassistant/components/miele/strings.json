@@ -125,6 +125,14 @@
         "name": "[%key:common::action::pause%]"
       }
     },
+    "light": {
+      "ambient_light": {
+        "name": "Ambient light"
+      },
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
