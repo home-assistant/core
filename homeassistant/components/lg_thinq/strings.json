@@ -334,13 +334,16 @@
         }
       },
       "carbon_dioxide": {
-        "name": "Carbon dioxide",
+        "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
         "state": {
           "invalid": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::invalid%]",
           "good": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::good%]",
           "normal": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::normal%]",
+          "moderate": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::normal%]",
           "bad": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::bad%]",
-          "very_bad": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::very_bad%]"
+          "unhealthy": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::bad%]",
+          "very_bad": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::very_bad%]",
+          "poor": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::very_bad%]"
         }
       },
       "monitoring_enabled": {
