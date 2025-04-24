@@ -34,6 +34,7 @@ from homeassistant.components.esphome.const import (
     STABLE_BLE_VERSION_STR,
 )
 from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
+from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -192,7 +193,7 @@ async def test_esphome_device_service_calls_allowed(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with service calls are allowed."""
-    await async_setup_component(hass, "tag", {})
+    await async_setup_component(hass, TAG_DOMAIN, {})
     entity_info = []
     states = []
     user_service = []
