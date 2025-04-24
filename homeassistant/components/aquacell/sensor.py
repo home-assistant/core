@@ -81,6 +81,12 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
             "low",
         ],
     ),
+    SoftenerSensorEntityDescription(
+        key="last_update",
+        translation_key="last_update",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda softener: softener.lastUpdate,  # type: ignore[return-value, arg-type]
+    ),
 )
 
 
