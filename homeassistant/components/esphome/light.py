@@ -109,7 +109,7 @@ def _mired_to_kelvin(mired_temperature: float) -> int:
 def _color_mode_to_ha(mode: int) -> str:
     """Convert an esphome color mode to a HA color mode constant.
 
-    Chose the color mode that best matches the feature-set.
+    Choose the color mode that best matches the feature-set.
     """
     candidates = []
     for ha_mode, cap_lists in _COLOR_MODE_MAPPING.items():

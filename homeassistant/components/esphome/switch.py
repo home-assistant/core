@@ -36,7 +36,7 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
 
     @property
     @esphome_state_property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self._state.state
 

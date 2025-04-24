@@ -6,12 +6,7 @@ from unittest.mock import patch
 from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
 import pytest
 
-from homeassistant.components.esphome import (
-    CONF_NOISE_PSK,
-    DOMAIN,
-    coordinator,
-    dashboard,
-)
+from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -117,8 +112,9 @@ async def test_setup_dashboard_fails(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test that nothing is stored on failed dashboard setup when there was no dashboard before."""
-    with patch.object(
-        coordinator.ESPHomeDashboardAPI, "get_devices", side_effect=TimeoutError
+    with patch(
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
+        side_effect=TimeoutError,
     ) as mock_get_devices:
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -136,8 +132,8 @@ async def test_setup_dashboard_fails_when_already_setup(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test failed dashboard setup still reloads entries if one existed before."""
-    with patch.object(
-        coordinator.ESPHomeDashboardAPI, "get_devices"
+    with patch(
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices"
     ) as mock_get_devices:
         await dashboard.async_set_dashboard_info(
             hass, "test-slug", "working-host", 6052
@@ -151,8 +147,9 @@ async def test_setup_dashboard_fails_when_already_setup(
     await hass.async_block_till_done()
 
     with (
-        patch.object(
-            coordinator.ESPHomeDashboardAPI, "get_devices", side_effect=TimeoutError
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
+            side_effect=TimeoutError,
         ) as mock_get_devices,
         patch(
             "homeassistant.components.esphome.async_setup_entry", return_value=True
