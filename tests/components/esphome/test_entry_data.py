@@ -7,6 +7,8 @@ from aioesphomeapi import (
     SensorState,
 )
 
+from homeassistant.components.esphome import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -62,15 +64,15 @@ async def test_migrate_entity_unique_id_downgrade_upgrade(
 ) -> None:
     """Test unique id migration prefers the original entity on downgrade upgrade."""
     entity_registry.async_get_or_create(
-        "sensor",
-        "esphome",
+        SENSOR_DOMAIN,
+        DOMAIN,
         "my_sensor",
         suggested_object_id="old_sensor",
         disabled_by=None,
     )
     entity_registry.async_get_or_create(
-        "sensor",
-        "esphome",
+        SENSOR_DOMAIN,
+        DOMAIN,
         "11:22:33:44:55:AA-sensor-mysensor",
         suggested_object_id="new_sensor",
         disabled_by=None,
@@ -103,7 +105,7 @@ async def test_migrate_entity_unique_id_downgrade_upgrade(
     # entity that was only created on downgrade and they keep
     # the original one.
     assert (
-        entity_registry.async_get_entity_id("sensor", "esphome", "my_sensor")
+        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, "my_sensor")
         is not None
     )
     # Note that ESPHome includes the EntityInfo type in the unique id
