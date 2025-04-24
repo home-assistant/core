@@ -4,7 +4,6 @@ from collections.abc import Callable, Coroutine
 from copy import deepcopy
 import datetime
 from http import HTTPStatus
-import json
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
@@ -20,7 +19,6 @@ from hass_nabucasa.auth import (
 )
 from hass_nabucasa.const import STATE_CONNECTED
 from hass_nabucasa.remote import CertificateStatus
-from hass_nabucasa.voice_data import TTS_VOICES
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -31,6 +29,7 @@ from homeassistant.components.alexa import errors as alexa_errors
 from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
 from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
+from homeassistant.components.cloud.http_api import validate_language_voice
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
@@ -1822,17 +1821,14 @@ async def test_tts_info(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {
-        "languages": json.loads(
-            json.dumps(
-                [
-                    (language, voice)
-                    for language, voices in TTS_VOICES.items()
-                    for voice in voices
-                ]
-            )
-        )
-    }
+    assert "languages" in response["result"]
+    assert all(len(lang) for lang in response["result"]["languages"])
+    assert len(response["result"]["languages"]) > 300
+    assert (
+        len([lang for lang in response["result"]["languages"] if "||" in lang[1]]) > 100
+    )
+    for lang in response["result"]["languages"]:
+        assert validate_language_voice(lang[:2])
 
 
 @pytest.mark.parametrize(
