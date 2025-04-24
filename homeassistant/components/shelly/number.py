@@ -66,6 +66,7 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
     """Represent a RPC number entity."""
 
     entity_description: RpcNumberDescription
+    _id: int | None
 
     def __init__(
         self,
@@ -104,7 +105,6 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
         method = getattr(self.coordinator.device, self.entity_description.method)
 
         if TYPE_CHECKING:
-            assert isinstance(self._id, int)
             assert method is not None
 
         await method(self._id, value)
