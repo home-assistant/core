@@ -6,19 +6,15 @@ from aiohttp import ClientError
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-TEST_PLATFORM = Platform.LIGHT
+TEST_PLATFORM = LIGHT_DOMAIN
 pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 
 ENTITY_ID = "light.hood_light"
@@ -56,7 +52,6 @@ async def test_light_toggle(
     await hass.services.async_call(
         TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
-    await hass.async_block_till_done()
     mock_miele_client.send_action.assert_called_once_with(
         "DummyAppliance_18", {"light": light_state}
     )
