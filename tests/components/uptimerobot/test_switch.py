@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
@@ -128,10 +129,10 @@ async def test_authentication_error(
         assert config_entry_reauth.assert_called
 
 
-async def test_refresh_data(
+async def test_action_execution_failure(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test authentication error turning switch on/off."""
+    """Test turning switch on/off failure."""
     await setup_uptimerobot_integration(hass)
 
     entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
@@ -139,15 +140,20 @@ async def test_refresh_data(
 
     with patch(
         "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_request_refresh"
-    ) as coordinator_refresh:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
-            blocking=True,
-        )
+    ):
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
+                blocking=True,
+            )
 
-        assert coordinator_refresh.assert_called
+        assert exc_info.value.translation_domain == "uptimerobot"
+        assert exc_info.value.translation_key == "api_exception"
+        assert exc_info.value.translation_placeholders == {
+            "error": "UptimeRobotException(\"Unexpected exception for 'https://api.uptimerobot.com/v2/editMonitor' with - Task <Task pending name='Task-72' coro=<TCPConnector._resolve_host_with_throttle() running at /home/vscode/.local/ha-venv/lib/python3.13/site-packages/aiohttp/connector.py:1026> created at /home/vscode/.local/ha-venv/lib/python3.13/site-packages/aiohttp/connector.py:986> got Future <Future pending created at /home/vscode/.local/ha-venv/lib/python3.13/site-packages/aiodns/__init__.py:117> attached to a different loop\")"
+        }
 
 
 async def test_switch_api_failure(
@@ -163,11 +169,16 @@ async def test_switch_api_failure(
         "pyuptimerobot.UptimeRobot.async_edit_monitor",
         return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ERROR),
     ):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
-            blocking=True,
-        )
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
+                blocking=True,
+            )
 
-        assert "API exception" in caplog.text
+        assert exc_info.value.translation_domain == "uptimerobot"
+        assert exc_info.value.translation_key == "api_exception"
+        assert exc_info.value.translation_placeholders == {
+            "error": "test error from API."
+        }

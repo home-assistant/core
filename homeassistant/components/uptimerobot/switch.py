@@ -12,9 +12,10 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API_ATTR_OK, LOGGER
+from .const import API_ATTR_OK, DOMAIN
 from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
 
@@ -57,16 +58,21 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
         try:
             response = await self.api.async_edit_monitor(**kwargs)
         except UptimeRobotAuthenticationException:
-            LOGGER.debug("API authentication error, calling reauth")
             self.coordinator.config_entry.async_start_reauth(self.hass)
             return
         except UptimeRobotException as exception:
-            LOGGER.error("API exception: %s", exception)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_exception",
+                translation_placeholders={"error": repr(exception)},
+            ) from exception
 
         if response.status != API_ATTR_OK:
-            LOGGER.error("API exception: %s", response.error.message, exc_info=True)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_exception",
+                translation_placeholders={"error": response.error.message},
+            )
 
         await self.coordinator.async_request_refresh()
 
