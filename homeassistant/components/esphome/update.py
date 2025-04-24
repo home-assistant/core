@@ -109,7 +109,6 @@ class ESPHomeDashboardUpdateEntity(
     _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_title = "ESPHome"
-    _attr_name = "Firmware"
     _attr_release_url = "https://esphome.io/changelog/"
     _attr_entity_registry_enabled_default = False
 
