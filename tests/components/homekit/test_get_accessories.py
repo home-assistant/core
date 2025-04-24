@@ -53,6 +53,12 @@ def test_not_supported(caplog: pytest.LogCaptureFixture) -> None:
     assert "invalid aid" in caplog.records[0].msg
 
 
+def test_not_supported_sensor(caplog: pytest.LogCaptureFixture) -> None:
+    """Test if none is returned if entity isn't supported."""
+    assert get_accessory(None, None, State("sensor.xyz", "on"), 2, {}) is None
+    assert "Unsupported sensor type (device_class=None)" in caplog.text
+
+
 def test_not_supported_media_player() -> None:
     """Test if mode isn't supported and if no supported modes."""
     # selected mode for entity not supported

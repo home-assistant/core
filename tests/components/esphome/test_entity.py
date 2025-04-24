@@ -17,6 +17,7 @@ from aioesphomeapi import (
 )
 
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     ATTR_RESTORED,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
@@ -500,6 +501,43 @@ async def test_esphome_device_without_friendly_name(
         states=states,
         device_info={"friendly_name": None},
     )
-    state = hass.states.get("binary_sensor.my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def test_entity_without_name_device_with_friendly_name(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test name and entity_id for a device a friendly name and an entity without a name."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="mybinary_sensor",
+            key=1,
+            name="",
+            unique_id="my_binary_sensor",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    user_service = []
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
+    )
+    state = hass.states.get("binary_sensor.mixer")
+    assert state is not None
+    assert state.state == STATE_ON
+    # Make sure we have set the name to `None` as otherwise
+    # the friendly_name will be "The Best Mixer "
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "The Best Mixer"

@@ -317,13 +317,18 @@ class SynchronizeTask(RecorderTask):
     """Ensure all pending data has been committed."""
 
     # commit_before is the default
-    event: asyncio.Event
+    future: asyncio.Future
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         # Does not use a tracked task to avoid
         # blocking shutdown if the recorder is broken
-        instance.hass.loop.call_soon_threadsafe(self.event.set)
+        instance.hass.loop.call_soon_threadsafe(self._set_result_if_not_done)
+
+    def _set_result_if_not_done(self) -> None:
+        """Set the result if not done."""
+        if not self.future.done():
+            self.future.set_result(None)
 
 
 @dataclass(slots=True)

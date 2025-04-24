@@ -651,7 +651,7 @@ async def test_coordinator_disabling_updates_for_appliance(
                 EventType.CONNECTED,
                 data=ArrayOfEvents([]),
             )
-            for _ in range(5)
+            for _ in range(8)
         ]
     )
     await hass.async_block_till_done()
@@ -744,7 +744,7 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
                 EventType.CONNECTED,
                 data=ArrayOfEvents([]),
             )
-            for _ in range(5)
+            for _ in range(8)
         ]
     )
     await hass.async_block_till_done()
