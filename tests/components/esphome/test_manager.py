@@ -49,7 +49,12 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDevice
 
-from tests.common import MockConfigEntry, async_capture_events, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    async_call_logger_set_level,
+    async_capture_events,
+    async_mock_service,
+)
 
 
 async def test_esphome_device_subscribe_logs(
@@ -83,62 +88,50 @@ async def test_esphome_device_subscribe_logs(
     )
     await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.esphome": "DEBUG"},
-        blocking=True,
-    )
-    assert device.current_log_level == LogLevel.LOG_LEVEL_VERY_VERBOSE
+    async with async_call_logger_set_level(
+        "homeassistant.components.esphome", "DEBUG", hass=hass, caplog=caplog
+    ):
+        assert device.current_log_level == LogLevel.LOG_LEVEL_VERY_VERBOSE
 
-    caplog.set_level(logging.DEBUG)
-    device.mock_on_log_message(
-        Mock(level=LogLevel.LOG_LEVEL_INFO, message=b"test_log_message")
-    )
-    await hass.async_block_till_done()
-    assert "test_log_message" in caplog.text
+        caplog.set_level(logging.DEBUG)
+        device.mock_on_log_message(
+            Mock(level=LogLevel.LOG_LEVEL_INFO, message=b"test_log_message")
+        )
+        await hass.async_block_till_done()
+        assert "test_log_message" in caplog.text
 
-    device.mock_on_log_message(
-        Mock(level=LogLevel.LOG_LEVEL_ERROR, message=b"test_error_log_message")
-    )
-    await hass.async_block_till_done()
-    assert "test_error_log_message" in caplog.text
+        device.mock_on_log_message(
+            Mock(level=LogLevel.LOG_LEVEL_ERROR, message=b"test_error_log_message")
+        )
+        await hass.async_block_till_done()
+        assert "test_error_log_message" in caplog.text
 
-    caplog.set_level(logging.ERROR)
-    device.mock_on_log_message(
-        Mock(level=LogLevel.LOG_LEVEL_DEBUG, message=b"test_debug_log_message")
-    )
-    await hass.async_block_till_done()
-    assert "test_debug_log_message" not in caplog.text
+        caplog.set_level(logging.ERROR)
+        device.mock_on_log_message(
+            Mock(level=LogLevel.LOG_LEVEL_DEBUG, message=b"test_debug_log_message")
+        )
+        await hass.async_block_till_done()
+        assert "test_debug_log_message" not in caplog.text
 
-    caplog.set_level(logging.DEBUG)
-    device.mock_on_log_message(
-        Mock(level=LogLevel.LOG_LEVEL_DEBUG, message=b"test_debug_log_message")
-    )
-    await hass.async_block_till_done()
-    assert "test_debug_log_message" in caplog.text
+        caplog.set_level(logging.DEBUG)
+        device.mock_on_log_message(
+            Mock(level=LogLevel.LOG_LEVEL_DEBUG, message=b"test_debug_log_message")
+        )
+        await hass.async_block_till_done()
+        assert "test_debug_log_message" in caplog.text
 
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.esphome": "WARNING"},
-        blocking=True,
-    )
-    assert device.current_log_level == LogLevel.LOG_LEVEL_WARN
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.esphome": "ERROR"},
-        blocking=True,
-    )
-    assert device.current_log_level == LogLevel.LOG_LEVEL_ERROR
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.esphome": "INFO"},
-        blocking=True,
-    )
-    assert device.current_log_level == LogLevel.LOG_LEVEL_CONFIG
+    async with async_call_logger_set_level(
+        "homeassistant.components.esphome", "WARNING", hass=hass, caplog=caplog
+    ):
+        assert device.current_log_level == LogLevel.LOG_LEVEL_WARN
+    async with async_call_logger_set_level(
+        "homeassistant.components.esphome", "ERROR", hass=hass, caplog=caplog
+    ):
+        assert device.current_log_level == LogLevel.LOG_LEVEL_ERROR
+    async with async_call_logger_set_level(
+        "homeassistant.components.esphome", "INFO", hass=hass, caplog=caplog
+    ):
+        assert device.current_log_level == LogLevel.LOG_LEVEL_CONFIG
 
 
 async def test_esphome_device_service_calls_not_allowed(
@@ -750,7 +743,12 @@ async def test_connection_aborted_wrong_device(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "test",
+        "mac": "11:22:33:44:55:aa",
+    }
     assert entry.data[CONF_HOST] == "192.168.43.184"
     await hass.async_block_till_done()
     assert len(new_info.mock_calls) == 2
@@ -819,7 +817,12 @@ async def test_connection_aborted_wrong_device_same_name(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "test",
+        "mac": "11:22:33:44:55:aa",
+    }
     assert entry.data[CONF_HOST] == "192.168.43.184"
     await hass.async_block_till_done()
     assert len(new_info.mock_calls) == 2
@@ -958,6 +961,7 @@ async def test_debug_logging(
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
         Awaitable[MockConfigEntry],
     ],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test enabling and disabling debug logging."""
     assert await async_setup_component(hass, "logger", {"logger": {}})
@@ -967,24 +971,16 @@ async def test_debug_logging(
         user_service=[],
         states=[],
     )
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.esphome": "DEBUG"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    mock_client.set_debug.assert_has_calls([call(True)])
+    async with async_call_logger_set_level(
+        "homeassistant.components.esphome", "DEBUG", hass=hass, caplog=caplog
+    ):
+        mock_client.set_debug.assert_has_calls([call(True)])
+        mock_client.reset_mock()
 
-    mock_client.reset_mock()
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.esphome": "WARNING"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    mock_client.set_debug.assert_has_calls([call(False)])
+    async with async_call_logger_set_level(
+        "homeassistant.components.esphome", "WARNING", hass=hass, caplog=caplog
+    ):
+        mock_client.set_debug.assert_has_calls([call(False)])
 
 
 async def test_esphome_device_with_dash_in_name_user_services(
