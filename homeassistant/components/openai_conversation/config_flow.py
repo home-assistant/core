@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import json
 import logging
 from types import MappingProxyType
@@ -243,7 +244,7 @@ class OpenAIOptionsFlow(OptionsFlow):
 
 def openai_config_option_schema(
     hass: HomeAssistant,
-    options: dict[str, Any] | MappingProxyType[str, Any],
+    options: Mapping[str, Any],
 ) -> VolDictType:
     """Return a schema for OpenAI completion options."""
     hass_apis: list[SelectOptionDict] = [

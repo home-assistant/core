@@ -96,7 +96,7 @@ class EsphomeMediaPlayer(
 
     @property
     @esphome_float_state_property
-    def volume_level(self) -> float | None:
+    def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         return self._state.volume
 
