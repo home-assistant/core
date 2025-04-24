@@ -332,13 +332,38 @@ class CloudTTSEntity(TextToSpeechEntity):
         """Return a list of supported voices for a language."""
         if not (voices := TTS_VOICES.get(language)):
             return None
-        return [
-            Voice(
-                voice,
-                voice_info["name"] if isinstance(voice_info, dict) else voice_info,
+
+        result = []
+
+        for voice_id, voice_info in voices.items():
+            if isinstance(voice_info, str):
+                result.append(
+                    Voice(
+                        voice_id,
+                        voice_info,
+                    )
+                )
+                continue
+
+            name = voice_info["name"]
+
+            result.append(
+                Voice(
+                    voice_id,
+                    name,
+                )
             )
-            for voice, voice_info in voices.items()
-        ]
+            result.extend(
+                [
+                    Voice(
+                        f"{voice_id}||{variant}",
+                        f"{name} ({variant})",
+                    )
+                    for variant in voice_info.get("variants", [])
+                ]
+            )
+
+        return result
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
@@ -350,6 +375,10 @@ class CloudTTSEntity(TextToSpeechEntity):
             ATTR_VOICE,
             self._voice if language == self._language else DEFAULT_VOICES[language],
         )
+        style: str | None
+        original_voice, _, style = original_voice.partition("||")
+        if not style:
+            style = None
         voice = handle_deprecated_voice(self.hass, original_voice)
         if voice not in TTS_VOICES[language]:
             default_voice = DEFAULT_VOICES[language]
@@ -367,6 +396,7 @@ class CloudTTSEntity(TextToSpeechEntity):
                 language=language,
                 gender=gender,
                 voice=voice,
+                style=style,
                 output=options[ATTR_AUDIO_OUTPUT],
             )
         except VoiceError as err:
@@ -411,13 +441,38 @@ class CloudProvider(Provider):
         """Return a list of supported voices for a language."""
         if not (voices := TTS_VOICES.get(language)):
             return None
-        return [
-            Voice(
-                voice,
-                voice_info["name"] if isinstance(voice_info, dict) else voice_info,
+
+        result = []
+
+        for voice_id, voice_info in voices.items():
+            if isinstance(voice_info, str):
+                result.append(
+                    Voice(
+                        voice_id,
+                        voice_info,
+                    )
+                )
+                continue
+
+            name = voice_info["name"]
+
+            result.append(
+                Voice(
+                    voice_id,
+                    name,
+                )
             )
-            for voice, voice_info in voices.items()
-        ]
+            result.extend(
+                [
+                    Voice(
+                        f"{voice_id}||{variant}",
+                        f"{name} ({variant})",
+                    )
+                    for variant in voice_info.get("variants", [])
+                ]
+            )
+
+        return result
 
     @property
     def default_options(self) -> dict[str, str]:
@@ -437,6 +492,10 @@ class CloudProvider(Provider):
             ATTR_VOICE,
             self._voice if language == self._language else DEFAULT_VOICES[language],
         )
+        style: str | None
+        original_voice, _, style = original_voice.partition("||")
+        if not style:
+            style = None
         voice = handle_deprecated_voice(self.hass, original_voice)
         if voice not in TTS_VOICES[language]:
             default_voice = DEFAULT_VOICES[language]
@@ -454,6 +513,7 @@ class CloudProvider(Provider):
                 language=language,
                 gender=gender,
                 voice=voice,
+                style=style,
                 output=options[ATTR_AUDIO_OUTPUT],
             )
         except VoiceError as err:

@@ -591,10 +591,21 @@ async def websocket_subscription(
 def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
     """Validate language and voice."""
     language, voice = value
+    style: str | None
+    voice, _, style = voice.partition("||")
+    if not style:
+        style = None
     if language not in TTS_VOICES:
         raise vol.Invalid(f"Invalid language {language}")
-    if voice not in TTS_VOICES[language]:
+    if voice not in (language_info := TTS_VOICES[language]):
         raise vol.Invalid(f"Invalid voice {voice} for language {language}")
+    voice_info = language_info[voice]
+    if style and (
+        isinstance(voice_info, str) or style not in voice_info.get("variants", [])
+    ):
+        raise vol.Invalid(
+            f"Invalid style {style} for voice {voice} in language {language}"
+        )
     return value
 
 
@@ -1012,13 +1023,20 @@ def tts_info(
     msg: dict[str, Any],
 ) -> None:
     """Fetch available tts info."""
-    connection.send_result(
-        msg["id"],
-        {
-            "languages": [
-                (language, voice)
-                for language, voices in TTS_VOICES.items()
-                for voice in voices
-            ]
-        },
-    )
+    result = []
+    for language, voices in TTS_VOICES.items():
+        for voice_id, voice_info in voices.items():
+            if isinstance(voice_info, str):
+                result.append((language, voice_id, voice_info))
+                continue
+
+            name = voice_info["name"]
+            result.append((language, voice_id, name))
+            result.extend(
+                [
+                    (language, f"{voice_id}||{variant}", f"{name} ({variant})")
+                    for variant in voice_info.get("variants", [])
+                ]
+            )
+
+    connection.send_result(msg["id"], {"languages": result})
