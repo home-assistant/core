@@ -27,6 +27,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "device": {
+    "unknown_container": {
+      "name": "Unknown container"
+    }
+  },
   "entity": {
     "sensor": {
       "type": {
