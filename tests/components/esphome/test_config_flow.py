@@ -2228,7 +2228,7 @@ async def test_reconfig_mac_used_by_other_entry(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured_updates"
+    assert result["reason"] == "reconfigure_already_configured_updates"
     assert result["description_placeholders"] == {
         "title": "Mock Title",
         "name": "test4",
