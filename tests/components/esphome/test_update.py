@@ -119,10 +119,12 @@ async def test_update_entity(
     # Compile failed, don't try to upload
     with (
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=False
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
+            return_value=False,
         ) as mock_compile,
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=True
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.upload",
+            return_value=True,
         ) as mock_upload,
         pytest.raises(
             HomeAssistantError,
@@ -144,10 +146,12 @@ async def test_update_entity(
     # Compile success, upload fails
     with (
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=True
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
+            return_value=True,
         ) as mock_compile,
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=False
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.upload",
+            return_value=False,
         ) as mock_upload,
         pytest.raises(
             HomeAssistantError,
@@ -170,10 +174,12 @@ async def test_update_entity(
     # Everything works
     with (
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=True
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
+            return_value=True,
         ) as mock_compile,
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=True
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.upload",
+            return_value=True,
         ) as mock_upload,
     ):
         await hass.services.async_call(
@@ -286,7 +292,7 @@ async def test_update_entity_dashboard_not_available_startup(
     """Test ESPHome update entity when dashboard is not available at startup."""
     with (
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
             side_effect=TimeoutError,
         ),
     ):
@@ -334,7 +340,7 @@ async def test_update_entity_dashboard_discovered_after_startup_but_update_faile
 ) -> None:
     """Test ESPHome update entity when dashboard is discovered after startup and the first update fails."""
     with patch(
-        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
         side_effect=TimeoutError,
     ):
         await async_get_dashboard(hass).async_refresh()

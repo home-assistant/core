@@ -589,7 +589,7 @@ async def test_user_discovers_name_and_dashboard_is_unavailable(
     )
 
     with patch(
-        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
         side_effect=TimeoutError,
     ):
         await dashboard.async_get_dashboard(hass).async_refresh()
