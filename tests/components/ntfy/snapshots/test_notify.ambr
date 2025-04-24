@@ -38,6 +38,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'mytopic',
       'supported_features': <NotifyEntityFeature: 1>,
+      'topic': 'mytopic',
     }),
     'context': <ANY>,
     'entity_id': 'notify.mytopic',

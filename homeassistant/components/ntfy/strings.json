@@ -77,6 +77,15 @@
       }
     }
   },
+  "entity": {
+    "notify": {
+      "publish": {
+        "state": {
+          "topic": "[%key:component::ntfy::common::topic%]"
+        }
+      }
+    }
+  },
   "exceptions": {
     "publish_failed_request_error": {
       "message": "Failed to publish notification: {error_msg}"

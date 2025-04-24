@@ -68,6 +68,8 @@ class NtfyNotifyEntity(NotifyEntity):
         )
         self.ntfy = config_entry.runtime_data
 
+        self._attr_extra_state_attributes = {CONF_TOPIC: self.topic}
+
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Publish a message to a topic."""
         msg = Message(topic=self.topic, message=message, title=title)
