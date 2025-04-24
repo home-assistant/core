@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast
 
 from aioesphomeapi import (
     APIConnectionError,
+    DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
@@ -155,7 +156,7 @@ def esphome_float_state_property[_EntityT: EsphomeEntity[Any, Any]](
     return _wrapper
 
 
-def convert_api_error_ha_error[**_P, _R, _EntityT: EsphomeEntity[Any, Any]](
+def convert_api_error_ha_error[**_P, _R, _EntityT: EsphomeBaseEntity](
     func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate ESPHome command calls that send commands/make changes to the device.
@@ -194,15 +195,21 @@ ENTITY_CATEGORIES: EsphomeEnumMapper[EsphomeEntityCategory, EntityCategory | Non
 )
 
 
-class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
+class EsphomeBaseEntity(Entity):
     """Define a base esphome entity."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
+    _attr_should_poll = False
+    _device_info: EsphomeDeviceInfo
+    device_entry: dr.DeviceEntry
+
+
+class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
+    """Define an esphome entity."""
+
     _static_info: _InfoT
     _state: _StateT
     _has_state: bool
-    device_entry: dr.DeviceEntry
 
     def __init__(
         self,
@@ -325,15 +332,12 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             self.async_write_ha_state()
 
 
-class EsphomeAssistEntity(Entity):
+class EsphomeAssistEntity(EsphomeBaseEntity):
     """Define a base entity for Assist Pipeline entities."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(self, entry_data: RuntimeEntryData) -> None:
         """Initialize the binary sensor."""
-        self._entry_data: RuntimeEntryData = entry_data
+        self._entry_data = entry_data
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
         self._device_info = device_info
