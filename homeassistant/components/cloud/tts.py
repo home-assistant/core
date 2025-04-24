@@ -333,7 +333,11 @@ class CloudTTSEntity(TextToSpeechEntity):
         if not (voices := TTS_VOICES.get(language)):
             return None
         return [
-            Voice(voice, voice_info["name"]) for voice, voice_info in voices.items()
+            Voice(
+                voice,
+                voice_info["name"] if isinstance(voice_info, dict) else voice_info,
+            )
+            for voice, voice_info in voices.items()
         ]
 
     async def async_get_tts_audio(
@@ -408,7 +412,11 @@ class CloudProvider(Provider):
         if not (voices := TTS_VOICES.get(language)):
             return None
         return [
-            Voice(voice, voice_info["name"]) for voice, voice_info in voices.items()
+            Voice(
+                voice,
+                voice_info["name"] if isinstance(voice_info, dict) else voice_info,
+            )
+            for voice, voice_info in voices.items()
         ]
 
     @property
