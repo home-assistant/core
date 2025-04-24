@@ -1421,6 +1421,8 @@ build.json @home-assistant/supervisor
 /tests/components/snoo/ @Lash-L
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
+/homeassistant/components/redgtech/ @jonhsady @luan-nvg
+/tests/components/redgtech/ @jonhsady @luan-nvg
 /homeassistant/components/solaredge/ @frenck @bdraco
 /tests/components/solaredge/ @frenck @bdraco
 /homeassistant/components/solaredge_local/ @drobtravels @scheric

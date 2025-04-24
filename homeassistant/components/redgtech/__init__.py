@@ -1,3 +1,5 @@
+"""Initialize the Redgtech integration for Home Assistant."""
+
 import logging
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
