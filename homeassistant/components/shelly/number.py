@@ -66,6 +66,7 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
     """Represent a RPC number entity."""
 
     entity_description: RpcNumberDescription
+    attribute_value: float | None
     _id: int | None
 
     def __init__(
@@ -94,9 +95,6 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return value of number."""
-        if TYPE_CHECKING:
-            assert isinstance(self.attribute_value, float | None)
-
         return self.attribute_value
 
     @rpc_call
