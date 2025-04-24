@@ -154,8 +154,7 @@ PROCESS_ACTIONS = {
     "stop_supercooling": MieleActions.STOP_SUPERCOOL,
 }
 
-STATE_PROGRAM_PHASE = {
-    # Washing Machine
+STATE_PROGRAM_PHASE_WASHING_MACHINE = {
     0: "not_running",  # Returned by the API when the machine is switched off entirely.
     256: "not_running",
     257: "pre_wash",
@@ -178,7 +177,11 @@ STATE_PROGRAM_PHASE = {
     280: "drying",
     285: "disinfecting",
     295: "steam_smoothing",
-    # Dryer
+    65535: "not_running",  # Seems to be default for some devices.
+}
+
+STATE_PROGRAM_PHASE_TUMBLE_DRYER = {
+    0: "not_running",
     512: "not_running",
     513: "program_running",
     514: "drying",
@@ -206,7 +209,10 @@ STATE_PROGRAM_PHASE = {
     537: "not_running",
     538: "slightly_dry",
     539: "safety_cooling",
-    # Dishwasher
+    65535: "not_running",
+}
+
+STATE_PROGRAM_PHASE_DISHWASHER = {
     1792: "not_running",
     1793: "reactivating",
     1794: "pre_dishwash",
@@ -217,21 +223,35 @@ STATE_PROGRAM_PHASE = {
     1799: "drying",
     1800: "finished",
     1801: "pre_dishwash",
-    # Oven
-    3073: "heating_up",  # in common with coffee system and warming drawer
+    65535: "not_running",
+}
+
+STATE_PROGRAM_PHASE_OVEN = {
+    0: "not_running",
+    3073: "heating_up",
     3074: "process_running",
     3078: "process_finished",
     3084: "energy_save",
-    # Warming drawer
+    65535: "not_running",
+}
+STATE_PROGRAM_PHASE_WARMING_DRAWER = {
+    0: "not_running",
     3075: "door_open",
     3094: "keeping_warm",
     3088: "cooling_down",
-    # Microwave
+    65535: "not_running",
+}
+STATE_PROGRAM_PHASE_MICROWAVE = {
+    0: "not_running",
     3329: "heating",
     3330: "process_running",
     3334: "process_finished",
     3340: "energy_save",
+    65535: "not_running",
+}
+STATE_PROGRAM_PHASE_COFFEE_SYSTEM = {
     # Coffee system
+    3073: "heating_up",
     4352: "not_running",
     4353: "espresso",
     4355: "milk_foam",
@@ -244,7 +264,10 @@ STATE_PROGRAM_PHASE = {
     4385: "2nd_espresso",
     4404: "dispensing",
     4405: "rinse",
-    # Robot vacuum cleaner
+    65535: "not_running",
+}
+STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER = {
+    0: "not_running",
     5889: "vacuum_cleaning",
     5890: "returning",
     5891: "vacuum_cleaning_paused",
@@ -260,14 +283,35 @@ STATE_PROGRAM_PHASE = {
     5903: "docked",
     5904: "docked",
     5910: "remote_controlled",
-    # Steam oven microwave combination
+    65535: "not_running",
+}
+STATE_PROGRAM_PHASE_MICROWAVE_OVEN_COMBO = {
+    0: "not_running",
     3863: "steam_reduction",
     7938: "process_running",
     7939: "waiting_for_start",
     7940: "heating_up_phase",
     7942: "process_finished",
-    # Error conditions/API quirks.
-    65535: "not_running",  # Seems to be an API error/default value.
+    65535: "not_running",
+}
+
+STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
+    MieleAppliance.WASHING_MACHINE: STATE_PROGRAM_PHASE_WASHING_MACHINE,
+    MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_WASHING_MACHINE,
+    MieleAppliance.WASHING_MACHINE_PROFESSIONAL: STATE_PROGRAM_PHASE_WASHING_MACHINE,
+    MieleAppliance.TUMBLE_DRYER: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
+    MieleAppliance.DRYER_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
+    MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
+    MieleAppliance.DISHWASHER: STATE_PROGRAM_PHASE_DISHWASHER,
+    MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
+    MieleAppliance.DISHWASHER_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
+    MieleAppliance.OVEN: STATE_PROGRAM_PHASE_OVEN,
+    MieleAppliance.OVEN_MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE_OVEN_COMBO,
+    MieleAppliance.STEAM_OVEN: STATE_PROGRAM_PHASE_OVEN,
+    MieleAppliance.DIALOG_OVEN: STATE_PROGRAM_PHASE_OVEN,
+    MieleAppliance.MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE,
+    MieleAppliance.COFFEE_SYSTEM: STATE_PROGRAM_PHASE_COFFEE_SYSTEM,
+    MieleAppliance.ROBOT_VACUUM_CLEANER: STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER,
 }
 
 STATE_PROGRAM_TYPE = {

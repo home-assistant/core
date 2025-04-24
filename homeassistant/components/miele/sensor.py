@@ -150,7 +150,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             translation_key="program_phase",
             value_fn=lambda value: value.state_program_phase,
             device_class=SensorDeviceClass.ENUM,
-            options=list(STATE_PROGRAM_PHASE.values()),
         ),
     ),
     MieleSensorDefinition(
@@ -408,7 +407,9 @@ class MielePhaseSensor(MieleSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        ret_val = STATE_PROGRAM_PHASE.get(int(self.device.state_program_phase))
+        ret_val = STATE_PROGRAM_PHASE.get(self.device.device_type, {}).get(
+            self.device.state_program_phase
+        )
         if ret_val is None:
             _LOGGER.debug(
                 "Unknown program phase: %s on device type: %s",
@@ -416,6 +417,11 @@ class MielePhaseSensor(MieleSensor):
                 self.device.device_type,
             )
         return ret_val
+
+    @property
+    def options(self) -> list[str]:
+        """Return the options list for the actual device type."""
+        return list(STATE_PROGRAM_PHASE.get(self.device.device_type, {}).values())
 
 
 class MieleTypeSensor(MieleSensor):
