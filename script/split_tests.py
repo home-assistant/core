@@ -187,7 +187,6 @@ def collect_tests(path: Path) -> TestFolder:
         file_path, _, total_tests = line.partition(": ")
         if not path or not total_tests:
             print(f"Unexpected line: {line}")
-            print("all lines:\n", result.stdout)
             sys.exit(1)
 
         file = TestFile(int(total_tests), Path(file_path))
