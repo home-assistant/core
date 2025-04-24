@@ -10,6 +10,7 @@ from aioaquacell.const import Brand
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service import async_set_service_schema
 
 from .const import CONF_BRAND, DOMAIN, SERVICE_FORCE_POLL
 from .coordinator import AquacellConfigEntry, AquacellCoordinator
@@ -43,7 +44,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> 
             _LOGGER.error("Force poll failed: %s", err)  # NEW
 
     hass.services.async_register(DOMAIN, SERVICE_FORCE_POLL, handle_force_poll)
-
+    service_description = {
+        "name": "Force Poll",
+        "description": "Force a data poll from the Aquacell API",
+        "fields": {},
+    }
+    async_set_service_schema(hass, DOMAIN, SERVICE_FORCE_POLL, service_description)
     return True
 
 
