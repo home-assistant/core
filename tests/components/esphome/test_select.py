@@ -1,17 +1,9 @@
 """Test ESPHome selects."""
 
-from collections.abc import Awaitable, Callable
 from unittest.mock import call
 
-from aioesphomeapi import (
-    APIClient,
-    EntityInfo,
-    EntityState,
-    SelectInfo,
-    SelectState,
-    UserService,
-    VoiceAssistantFeature,
-)
+from aioesphomeapi import APIClient, SelectInfo, SelectState, VoiceAssistantFeature
+import pytest
 
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
@@ -26,12 +18,12 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .common import get_satellite_entity
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 
+@pytest.mark.usefixtures("mock_voice_assistant_v1_entry")
 async def test_pipeline_selector(
     hass: HomeAssistant,
-    mock_voice_assistant_v1_entry,
 ) -> None:
     """Test assist pipeline selector."""
 
@@ -40,9 +32,9 @@ async def test_pipeline_selector(
     assert state.state == "preferred"
 
 
+@pytest.mark.usefixtures("mock_voice_assistant_v1_entry")
 async def test_vad_sensitivity_select(
     hass: HomeAssistant,
-    mock_voice_assistant_v1_entry,
 ) -> None:
     """Test VAD sensitivity select.
 
@@ -54,9 +46,9 @@ async def test_vad_sensitivity_select(
     assert state.state == "default"
 
 
+@pytest.mark.usefixtures("mock_voice_assistant_v1_entry")
 async def test_wake_word_select(
     hass: HomeAssistant,
-    mock_voice_assistant_v1_entry,
 ) -> None:
     """Test that wake word select is unavailable initially."""
     state = hass.states.get("select.test_wake_word")
@@ -65,7 +57,9 @@ async def test_wake_word_select(
 
 
 async def test_select_generic_entity(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic select entity."""
     entity_info = [
@@ -101,10 +95,7 @@ async def test_select_generic_entity(
 async def test_wake_word_select_no_wake_words(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test wake word select is unavailable when there are no available wake word."""
     device_config = AssistSatelliteConfiguration(
@@ -114,7 +105,7 @@ async def test_wake_word_select_no_wake_words(
     )
     mock_client.get_voice_assistant_configuration.return_value = device_config
 
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -139,10 +130,7 @@ async def test_wake_word_select_no_wake_words(
 async def test_wake_word_select_zero_max_wake_words(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test wake word select is unavailable max wake words is zero."""
     device_config = AssistSatelliteConfiguration(
@@ -154,7 +142,7 @@ async def test_wake_word_select_zero_max_wake_words(
     )
     mock_client.get_voice_assistant_configuration.return_value = device_config
 
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -179,10 +167,7 @@ async def test_wake_word_select_zero_max_wake_words(
 async def test_wake_word_select_no_active_wake_words(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test wake word select uses first available wake word if none are active."""
     device_config = AssistSatelliteConfiguration(
@@ -195,7 +180,7 @@ async def test_wake_word_select_no_active_wake_words(
     )
     mock_client.get_voice_assistant_configuration.return_value = device_config
 
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],

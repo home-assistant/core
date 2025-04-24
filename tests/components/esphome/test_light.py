@@ -38,11 +38,15 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
+from .conftest import MockGenericDeviceEntryType
+
 LIGHT_COLOR_CAPABILITY_UNKNOWN = 1 << 8  # 256
 
 
 async def test_light_on_off(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that only supports on/off."""
     mock_client.api_version = APIVersion(1, 7)
@@ -82,7 +86,9 @@ async def test_light_on_off(
 
 
 async def test_light_brightness(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that only supports brightness."""
     mock_client.api_version = APIVersion(1, 7)
@@ -198,7 +204,9 @@ async def test_light_brightness(
 
 
 async def test_light_brightness_on_off(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that only supports brightness."""
     mock_client.api_version = APIVersion(1, 7)
@@ -266,7 +274,9 @@ async def test_light_brightness_on_off(
 
 
 async def test_light_legacy_white_converted_to_brightness(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that only supports legacy white."""
     mock_client.api_version = APIVersion(1, 7)
@@ -318,7 +328,9 @@ async def test_light_legacy_white_converted_to_brightness(
 
 
 async def test_light_legacy_white_with_rgb(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity with rgb and white."""
     mock_client.api_version = APIVersion(1, 7)
@@ -380,7 +392,9 @@ async def test_light_legacy_white_with_rgb(
 
 
 async def test_light_brightness_on_off_with_unknown_color_mode(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that only supports brightness along with an unknown color mode."""
     mock_client.api_version = APIVersion(1, 7)
@@ -452,7 +466,9 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
 
 
 async def test_light_on_and_brightness(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that supports on and on and brightness."""
     mock_client.api_version = APIVersion(1, 7)
@@ -495,7 +511,9 @@ async def test_light_on_and_brightness(
 
 
 async def test_rgb_color_temp_light(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light that supports color temp and RGB."""
     color_modes = [
@@ -591,7 +609,9 @@ async def test_rgb_color_temp_light(
 
 
 async def test_light_rgb(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic RGB light entity."""
     mock_client.api_version = APIVersion(1, 7)
@@ -708,7 +728,9 @@ async def test_light_rgb(
 
 
 async def test_light_rgbw(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic RGBW light entity."""
     mock_client.api_version = APIVersion(1, 7)
@@ -871,7 +893,9 @@ async def test_light_rgbw(
 
 
 async def test_light_rgbww_with_cold_warm_white_support(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic RGBWW light entity with cold warm white support."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1111,7 +1135,9 @@ async def test_light_rgbww_with_cold_warm_white_support(
 
 
 async def test_light_rgbww_without_cold_warm_white_support(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic RGBWW light entity without cold warm white support."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1341,7 +1367,9 @@ async def test_light_rgbww_without_cold_warm_white_support(
 
 
 async def test_light_color_temp(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that does supports color temp."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1413,7 +1441,9 @@ async def test_light_color_temp(
 
 
 async def test_light_color_temp_no_mireds_set(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic color temp with no mireds set uses the defaults."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1505,7 +1535,9 @@ async def test_light_color_temp_no_mireds_set(
 
 
 async def test_light_color_temp_legacy(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a legacy light entity that does supports color temp."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1587,7 +1619,9 @@ async def test_light_color_temp_legacy(
 
 
 async def test_light_rgb_legacy(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a legacy light entity that supports rgb."""
     mock_client.api_version = APIVersion(1, 5)
@@ -1683,7 +1717,9 @@ async def test_light_rgb_legacy(
 
 
 async def test_light_effects(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity that supports on and on and brightness."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1735,7 +1771,9 @@ async def test_light_effects(
 
 
 async def test_only_cold_warm_white_support(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity with only cold warm white support."""
     mock_client.api_version = APIVersion(1, 7)
@@ -1831,7 +1869,9 @@ async def test_only_cold_warm_white_support(
 
 
 async def test_light_no_color_modes(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic light entity with no color modes."""
     mock_client.api_version = APIVersion(1, 7)
