@@ -323,11 +323,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         ):
             return
         assert conflict_entry.unique_id is not None
-        if updates:
-            if self.source == SOURCE_RECONFIGURE:
-                error = "reconfigure_already_configured_updates"
-            else:
-                error = "already_configured_updates"
+        if self.source == SOURCE_RECONFIGURE:
+            error = "reconfigure_already_configured"
+        elif updates:
+            error = "already_configured_updates"
         else:
             error = "already_configured_detailed"
         self._abort_if_unique_id_configured(
