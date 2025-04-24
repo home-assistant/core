@@ -5,8 +5,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.autoskope.const import DOMAIN
-
-# Import runtime data model
 from homeassistant.components.autoskope.models import (
     AutoskopeRuntimeData,
     CannotConnect,
@@ -14,9 +12,6 @@ from homeassistant.components.autoskope.models import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-# Remove ConfigEntryNotReady import as we won't catch it directly
-# from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -69,10 +64,6 @@ async def test_async_setup_entry(
     # Check that runtime_data is stored and contains the coordinator
     assert isinstance(mock_config_entry.runtime_data, AutoskopeRuntimeData)
     assert mock_config_entry.runtime_data.coordinator is not None
-    # Remove checks for hass.data
-    # assert DOMAIN in hass.data
-    # assert mock_config_entry.entry_id in hass.data[DOMAIN]
-    # assert "coordinator" in hass.data[DOMAIN][mock_config_entry.entry_id]
 
 
 async def test_async_unload_entry(
@@ -128,8 +119,6 @@ async def test_async_unload_entry_failure(
     assert mock_config_entry.state is ConfigEntryState.FAILED_UNLOAD
     # runtime_data might still exist if unload failed partially
     assert mock_config_entry.runtime_data is not None
-    # Remove check for hass.data
-    # assert mock_config_entry.entry_id in hass.data[DOMAIN]
 
 
 async def test_setup_entry_authentication_fails(
@@ -209,8 +198,6 @@ async def test_reload_entry(
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data is not None
-    # Remove check for hass.data
-    # assert mock_config_entry.entry_id in hass.data[DOMAIN]
 
     # Store original runtime_data object id to check if it changes after reload
     original_runtime_data_id = id(mock_config_entry.runtime_data)
@@ -251,5 +238,3 @@ async def test_setup_entry_platform_setup_fails(
 
     # Check the entry state - platform setup failure usually results in SETUP_ERROR
     assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
-    # runtime_data might have been created before platform setup failed
-    # assert not hasattr(mock_config_entry, "runtime_data") # This might be True or False
