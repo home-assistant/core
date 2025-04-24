@@ -16,3 +16,7 @@ send_magic_packet:
           min: 1
           max: 65535
           mode: "box"
+    if:
+      example: "192.168.10.4"
+      selector:
+        text:

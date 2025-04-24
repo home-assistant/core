@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
     CONF_BROADCAST_PORT,
     CONF_HOST,
+    CONF_IF,
     CONF_MAC,
     CONF_NAME,
 )
@@ -35,6 +36,7 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
         vol.Optional(CONF_BROADCAST_PORT): cv.port,
+        vol.Optional(CONF_IF): cv.string,
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
@@ -51,6 +53,7 @@ async def async_setup_platform(
     """Set up a wake on lan switch."""
     broadcast_address: str | None = config.get(CONF_BROADCAST_ADDRESS)
     broadcast_port: int | None = config.get(CONF_BROADCAST_PORT)
+    interface: str | None = config.get(CONF_IF)
     host: str | None = config.get(CONF_HOST)
     mac_address: str = config[CONF_MAC]
     name: str = config[CONF_NAME]
@@ -66,6 +69,7 @@ async def async_setup_platform(
                 off_action,
                 broadcast_address,
                 broadcast_port,
+                interface,
             )
         ],
         host is not None,
@@ -84,6 +88,7 @@ class WolSwitch(SwitchEntity):
         off_action: list[Any] | None,
         broadcast_address: str | None,
         broadcast_port: int | None,
+        interface: str | None,
     ) -> None:
         """Initialize the WOL switch."""
         self._attr_name = name
@@ -91,6 +96,7 @@ class WolSwitch(SwitchEntity):
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
         self._broadcast_port = broadcast_port
+        self._interface = interface
         self._off_script = (
             Script(hass, off_action, name, DOMAIN) if off_action else None
         )
@@ -111,12 +117,16 @@ class WolSwitch(SwitchEntity):
             service_kwargs["ip_address"] = self._broadcast_address
         if self._broadcast_port is not None:
             service_kwargs["port"] = self._broadcast_port
+            service_kwargs["ip_address"] = self._broadcast_address
+        if self._interface is not None:
+            service_kwargs["interface"] = self._interface
 
         _LOGGER.debug(
-            "Send magic packet to mac %s (broadcast: %s, port: %s)",
+            "Send magic packet to mac %s (broadcast: %s, port: %s, interface: %s)",
             self._mac_address,
             self._broadcast_address,
             self._broadcast_port,
+            self._interface,
         )
 
         wakeonlan.send_magic_packet(self._mac_address, **service_kwargs)

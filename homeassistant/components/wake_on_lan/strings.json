@@ -8,12 +8,14 @@
         "data": {
           "mac": "MAC address",
           "broadcast_address": "Broadcast address",
-          "broadcast_port": "Broadcast port"
+          "broadcast_port": "Broadcast port",
+          "if": "Interface IP address"
         },
         "data_description": {
           "mac": "MAC address of the device to wake up.",
           "broadcast_address": "The IP address of the host to send the magic packet to. Defaults to `255.255.255.255` and is normally not changed.",
-          "broadcast_port": "The port to send the magic packet to. Defaults to `9` and is normally not changed."
+          "broadcast_port": "The port to send the magic packet to. Defaults to `9` and is normally not changed.",
+          "if": "The ip address of the network adapter to route the magic packet through. Defaults to None"
         }
       }
     }
@@ -26,11 +28,13 @@
       "init": {
         "data": {
           "broadcast_address": "[%key:component::wake_on_lan::config::step::user::data::broadcast_address%]",
-          "broadcast_port": "[%key:component::wake_on_lan::config::step::user::data::broadcast_port%]"
+          "broadcast_port": "[%key:component::wake_on_lan::config::step::user::data::broadcast_port%]",
+          "if": "[%key:component::wake_on_lan::config::step::user::data::if%]"
         },
         "data_description": {
           "broadcast_address": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_address%]",
-          "broadcast_port": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_port%]"
+          "broadcast_port": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_port%]",
+          "if": "[%key:component::wake_on_lan::config::step::user::data_description::if%]"
         }
       }
     }
@@ -51,6 +55,10 @@
         "broadcast_port": {
           "name": "[%key:component::wake_on_lan::config::step::user::data::broadcast_port%]",
           "description": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_port%]"
+        },
+        "if": {
+          "name": "[%key:component::wake_on_lan::config::step::user::data::if%]",
+          "description": "[%key:component::wake_on_lan::config::step::user::data_description::if%]"
         }
       }
     }
