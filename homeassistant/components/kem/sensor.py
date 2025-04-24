@@ -22,11 +22,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CE_RT_COORDINATORS, CE_RT_HOMES, DD_DEVICES, DD_ID, RPM
-from .coordinator import KemUpdateCoordinator
+from .const import DEVICE_DATA_DEVICES, DEVICE_DATA_ID, RPM
 from .entity import KemEntity
 
-SENSORS = [
+SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="device:firmwareVersion",
         translation_key="firmware_version",
@@ -180,7 +179,7 @@ SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-]
+)
 
 
 async def async_setup_entry(
@@ -190,15 +189,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
 
+    homes = config_entry.runtime_data.homes
+    coordinators = config_entry.runtime_data.coordinators
     entities = [
         KemSensorEntity(
-            coordinator, device_data[DD_ID], device_data, sensor_description
+            coordinator, device_data[DEVICE_DATA_ID], device_data, sensor_description
         )
-        for home_data in config_entry.runtime_data[CE_RT_HOMES]
-        for device_data in home_data[DD_DEVICES]
-        for coordinator in (
-            config_entry.runtime_data[CE_RT_COORDINATORS][device_data[DD_ID]],
-        )
+        for home_data in homes
+        for device_data in home_data[DEVICE_DATA_DEVICES]
+        for coordinator in (coordinators[device_data[DEVICE_DATA_ID]],)
         for sensor_description in SENSORS
     ]
     async_add_entities(entities)
@@ -206,16 +205,6 @@ async def async_setup_entry(
 
 class KemSensorEntity(KemEntity, SensorEntity):
     """Representation of an KEM sensor."""
-
-    def __init__(
-        self,
-        coordinator: KemUpdateCoordinator,
-        device_id: int,
-        device_data: dict,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, device_id, device_data, description)
 
     @property
     def native_value(self) -> str:

@@ -1,6 +1,6 @@
 """Test the Kem config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aiokem import AuthenticationCredentialsError
 
@@ -10,7 +10,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import Mock, MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -28,6 +28,8 @@ async def test_form(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
+        mock_setup_entry.runtime_data = Mock()
+        mock_setup_entry.runtime_data.kem = AsyncMock()
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

@@ -29,13 +29,15 @@ def kem_generator_fixture() -> dict[str, Any]:
 @pytest.fixture(name="kem_config_entry")
 def kem_config_entry_fixture() -> MockConfigEntry:
     """Create a config entry fixture."""
-    return MockConfigEntry(
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_USERNAME: "username",
             CONF_PASSWORD: "password",
         },
     )
+    config_entry.runtime_data = {}
+    return config_entry
 
 
 @pytest.fixture(name="kem_config_entry_with_refresh_token")
@@ -68,10 +70,10 @@ async def mock_kem(
     """Mock KEM instance."""
     kem_config_entry.add_to_hass(hass)
     with (
-        patch("homeassistant.components.kem.AioKem.authenticate") as mock_auth,
-        patch("homeassistant.components.kem.AioKem.get_homes") as mock_homes,
+        patch("homeassistant.components.kem.data.AioKem.authenticate") as mock_auth,
+        patch("homeassistant.components.kem.data.AioKem.get_homes") as mock_homes,
         patch(
-            "homeassistant.components.kem.AioKem.get_generator_data"
+            "homeassistant.components.kem.data.AioKem.get_generator_data"
         ) as mock_generator,
     ):
         mock_auth.return_value = None
@@ -79,5 +81,5 @@ async def mock_kem(
         mock_generator.return_value = generator
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
-        kem = kem_config_entry.runtime_data["kem"]
+        kem = kem_config_entry.runtime_data.kem
         yield kem
