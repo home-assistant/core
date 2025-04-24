@@ -19,6 +19,7 @@ from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
+    Platform.LIGHT,
     Platform.SENSOR,
 ]
 

@@ -134,6 +134,14 @@
         "name": "Zone 3"
       }
     },
+    "light": {
+      "ambient_light": {
+        "name": "Ambient light"
+      },
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",

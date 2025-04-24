@@ -13,6 +13,10 @@ DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
 )
+AMBIENT_LIGHT = "ambientLight"
+LIGHT = "light"
+LIGHT_ON = 1
+LIGHT_OFF = 2
 
 
 class MieleAppliance(IntEnum):
