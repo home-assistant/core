@@ -1230,8 +1230,7 @@ class Entity(
             )
             state = STATE_UNKNOWN
 
-        # Internally called with positional args
-        # for performance reasons
+        # Intentionally called with positional args for performance reasons
         hass.states.async_set_internal(
             entity_id,
             state,
