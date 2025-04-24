@@ -1,5 +1,7 @@
 """ESPHome constants."""
 
+from typing import Final
+
 from awesomeversion import AwesomeVersion
 
 DOMAIN = "esphome"
@@ -13,6 +15,7 @@ CONF_BLUETOOTH_MAC_ADDRESS = "bluetooth_mac_address"
 DEFAULT_ALLOW_SERVICE_CALLS = True
 DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False
 
+DEFAULT_PORT: Final = 6053
 
 STABLE_BLE_VERSION_STR = "2025.2.2"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
@@ -22,5 +25,3 @@ PROJECT_URLS = {
 # ESPHome always uses .0 for the changelog URL
 STABLE_BLE_URL_VERSION = f"{STABLE_BLE_VERSION.major}.{STABLE_BLE_VERSION.minor}.0"
 DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_URL_VERSION}.html"
-
-DATA_FFMPEG_PROXY = f"{DOMAIN}.ffmpeg_proxy"

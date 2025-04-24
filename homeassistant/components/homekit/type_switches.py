@@ -49,6 +49,7 @@ from homeassistant.helpers.event import async_call_later
 from .accessories import TYPES, HomeAccessory, HomeDriver
 from .const import (
     CHAR_ACTIVE,
+    CHAR_CONFIGURED_NAME,
     CHAR_IN_USE,
     CHAR_NAME,
     CHAR_ON,
@@ -360,11 +361,13 @@ class SelectSwitch(HomeAccessory):
         options = state.attributes[ATTR_OPTIONS]
         for option in options:
             serv_option = self.add_preload_service(
-                SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE], unique_id=option
+                SERV_OUTLET,
+                [CHAR_NAME, CHAR_CONFIGURED_NAME, CHAR_IN_USE],
+                unique_id=option,
             )
-            serv_option.configure_char(
-                CHAR_NAME, value=cleanup_name_for_homekit(option)
-            )
+            name = cleanup_name_for_homekit(option)
+            serv_option.configure_char(CHAR_NAME, value=name)
+            serv_option.configure_char(CHAR_CONFIGURED_NAME, value=name)
             serv_option.configure_char(CHAR_IN_USE, value=False)
             self.select_chars[option] = serv_option.configure_char(
                 CHAR_ON,

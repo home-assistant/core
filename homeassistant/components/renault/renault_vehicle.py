@@ -43,7 +43,11 @@ def with_error_wrapping[**_P, _R](
         try:
             return await func(self, *args, **kwargs)
         except RenaultException as err:
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     return wrapper
 
@@ -90,6 +94,13 @@ class RenaultVehicleProxy:
         self.hvac_target_temperature = 21
         self._scan_interval = scan_interval
         self._hub = hub
+
+    def update_scan_interval(self, scan_interval: timedelta) -> None:
+        """Set the scan interval for the vehicle."""
+        if scan_interval != self._scan_interval:
+            self._scan_interval = scan_interval
+            for coordinator in self.coordinators.values():
+                coordinator.update_interval = scan_interval
 
     @property
     def details(self) -> models.KamereonVehicleDetails:
