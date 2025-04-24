@@ -9,6 +9,8 @@ CONF_BRAND = "brand"
 CONF_REFRESH_TOKEN = "refresh_token"
 CONF_REFRESH_TOKEN_CREATION_TIME = "refresh_token_creation_time"
 
+LAST_POLL_TIMESTAMP = "last_poll_timestamp"
+
 REFRESH_TOKEN_EXPIRY_TIME = timedelta(days=30)
 UPDATE_INTERVAL = timedelta(days=1)
 

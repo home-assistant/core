@@ -1,7 +1,7 @@
 """Coordinator to update data from Aquacell API."""
 
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 import logging
 
 from aioaquacell import (
@@ -33,6 +33,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
     """My aquacell coordinator."""
 
     config_entry: AquacellConfigEntry
+    last_poll_timestamp: datetime | None
 
     def __init__(
         self,
@@ -56,6 +57,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
         self.email = self.config_entry.data[CONF_EMAIL]
         self.password = self.config_entry.data[CONF_PASSWORD]
         self.aquacell_api = aquacell_api
+        self.last_poll_timestamp = None
 
     async def _async_update_data(self) -> dict[str, Softener]:
         """Fetch data from API endpoint.
@@ -78,6 +80,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
                 _LOGGER.debug("Logged in using: %s", self.refresh_token)
 
                 softeners = await self.aquacell_api.get_all_softeners()
+                self.last_poll_timestamp = datetime.now(UTC)
             except AuthenticationFailed as err:
                 raise ConfigEntryError from err
             except (AquacellApiException, TimeoutError) as err:
@@ -96,3 +99,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
         }
 
         self.hass.config_entries.async_update_entry(self.config_entry, data=data)
+
+    async def async_force_poll(self) -> None:
+        """Force a data poll from the API."""
+        await self.async_refresh()

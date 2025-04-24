@@ -1,9 +1,11 @@
+# homeassistant/components/aquacell/sensor.py
 """Sensors exposing properties of the softener device."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
 from aioaquacell import Softener
 
@@ -13,11 +15,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import LAST_POLL_TIMESTAMP
 from .coordinator import AquacellConfigEntry, AquacellCoordinator
 from .entity import AquacellEntity
 
@@ -86,12 +90,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    softeners = config_entry.runtime_data.data
-    async_add_entities(
-        SoftenerSensor(config_entry.runtime_data, sensor, softener_key)
+    coordinator: AquacellCoordinator = config_entry.runtime_data
+    softeners = coordinator.data
+    entities: list[SensorEntity] = [
+        SoftenerSensor(coordinator, sensor, softener_key)
         for sensor in SENSORS
         for softener_key in softeners
-    )
+    ]
+    entities.append(AquacellLastPollSensor(coordinator, config_entry))
+    async_add_entities(entities)
 
 
 class SoftenerSensor(AquacellEntity, SensorEntity):
@@ -107,10 +114,29 @@ class SoftenerSensor(AquacellEntity, SensorEntity):
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator, softener_key, description.key)
-
         self.entity_description = description
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.softener)
+
+
+class AquacellLastPollSensor(AquacellEntity, SensorEntity):
+    """Sensor for last successful poll timestamp."""
+
+    _attr_name = "Last Poll"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_unique_id = "last_poll"
+
+    def __init__(
+        self, coordinator: AquacellCoordinator, config_entry: ConfigEntry
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, config_entry.entry_id, LAST_POLL_TIMESTAMP)
+        self._config_entry = config_entry
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the last poll timestamp."""
+        return self.coordinator.last_poll_timestamp
