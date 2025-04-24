@@ -17,15 +17,13 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
 
-from .const import DOMAIN
+from .const import DOMAIN, REQUEST_TIMEOUT
 from .discovery import DATA_DISCOVERY, ZeroconfDiscovery
 from .models import HaAsyncZeroconf
 
 _LOGGER = logging.getLogger(__name__)
 CLASS_IN = 1
 TYPE_PTR = 12
-
-_TIMEOUT_MS = 10000
 
 
 @callback
@@ -131,7 +129,7 @@ class _DiscoverySubscription:
 
     async def _async_handle_service(self, info: AsyncServiceInfo) -> None:
         """Add a device that became visible via zeroconf."""
-        await info.async_request(self.aiozc.zeroconf, _TIMEOUT_MS)
+        await info.async_request(self.aiozc.zeroconf, REQUEST_TIMEOUT)
         self._async_on_update(info)
 
     def _async_event_message(self, message: dict[str, Any]) -> None:
