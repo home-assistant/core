@@ -3,6 +3,7 @@
 from unittest.mock import call
 
 from aioesphomeapi import APIClient, SelectInfo, SelectState, VoiceAssistantFeature
+import pytest
 
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
@@ -20,9 +21,9 @@ from .common import get_satellite_entity
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 
+@pytest.mark.usefixtures("mock_voice_assistant_v1_entry")
 async def test_pipeline_selector(
     hass: HomeAssistant,
-    mock_voice_assistant_v1_entry,
 ) -> None:
     """Test assist pipeline selector."""
 
@@ -31,9 +32,9 @@ async def test_pipeline_selector(
     assert state.state == "preferred"
 
 
+@pytest.mark.usefixtures("mock_voice_assistant_v1_entry")
 async def test_vad_sensitivity_select(
     hass: HomeAssistant,
-    mock_voice_assistant_v1_entry,
 ) -> None:
     """Test VAD sensitivity select.
 
@@ -45,9 +46,9 @@ async def test_vad_sensitivity_select(
     assert state.state == "default"
 
 
+@pytest.mark.usefixtures("mock_voice_assistant_v1_entry")
 async def test_wake_word_select(
     hass: HomeAssistant,
-    mock_voice_assistant_v1_entry,
 ) -> None:
     """Test that wake word select is unavailable initially."""
     state = hass.states.get("select.test_wake_word")
