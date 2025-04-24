@@ -57,6 +57,7 @@ BUTTON_TYPES: Final[tuple[MieleButtonDefinition, ...]] = (
             key="start",
             translation_key="start",
             press_data={PROCESS_ACTION: MieleActions.START},
+            entity_registry_enabled_default=False,
         ),
     ),
     MieleButtonDefinition(
@@ -81,6 +82,7 @@ BUTTON_TYPES: Final[tuple[MieleButtonDefinition, ...]] = (
             key="stop",
             translation_key="stop",
             press_data={PROCESS_ACTION: MieleActions.STOP},
+            entity_registry_enabled_default=False,
         ),
     ),
     MieleButtonDefinition(
@@ -96,6 +98,7 @@ BUTTON_TYPES: Final[tuple[MieleButtonDefinition, ...]] = (
             key="pause",
             translation_key="pause",
             press_data={PROCESS_ACTION: MieleActions.PAUSE},
+            entity_registry_enabled_default=False,
         ),
     ),
 )
