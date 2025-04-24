@@ -116,6 +116,12 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
         self.vehicle = data
         self._attr_unique_id = f"{data.vin}-{key}"
         self._attr_device_info = data.device
+
+        if not data.poll:
+            # This entities data is not available for free
+            # so disable it by default
+            self._attr_entity_registry_enabled_default = False
+
         super().__init__(data.coordinator, key)
 
     @property
