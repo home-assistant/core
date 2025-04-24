@@ -352,7 +352,18 @@
         "key_localized": "Fan level"
       },
       "plateStep": [],
-      "ecoFeedback": null,
+      "ecoFeedback": {
+        "currentWaterConsumption": {
+          "unit": "l",
+          "value": 0.0
+        },
+        "currentEnergyConsumption": {
+          "unit": "kWh",
+          "value": 0.0
+        },
+        "waterForecast": 0.0,
+        "energyForecast": 0.1
+      },
       "batteryLevel": null
     }
   },

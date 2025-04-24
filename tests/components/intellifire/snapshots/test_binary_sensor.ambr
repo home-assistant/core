@@ -366,7 +366,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Flame Error',
+    'original_name': 'Flame error',
     'platform': 'intellifire',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -380,7 +380,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by unpublished Intellifire API',
       'device_class': 'problem',
-      'friendly_name': 'IntelliFire Flame Error',
+      'friendly_name': 'IntelliFire Flame error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_flame_error',

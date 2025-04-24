@@ -1,0 +1,115 @@
+{
+  "items": [
+    {
+      "deviceId": "a75cb1e1-03fd-3c77-ca9f-d4e56c4096c6",
+      "name": "Soundbar",
+      "label": "Soundbar",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "VD-NetworkAudio-003S",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "6bdf6730-8167-488b-8645-d0c5046ff763",
+      "ownerId": "15f0ae72-da51-14e2-65cf-ef59ae867e7f",
+      "roomId": "3b0fe9a8-51d6-49cf-b64a-8a719013c0a7",
+      "deviceTypeName": "Samsung OCF Network Audio Player",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "audioVolume",
+              "version": 1
+            },
+            {
+              "id": "audioMute",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.audioInputSource",
+              "version": 1
+            },
+            {
+              "id": "audioNotification",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.soundFrom",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.thingStatus",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.supportsFeatures",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.audioGroupInfo",
+              "version": 1,
+              "ephemeral": true
+            }
+          ],
+          "categories": [
+            {
+              "name": "NetworkAudio",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2025-02-21T14:25:21.843Z",
+      "profile": {
+        "id": "25504ad5-8563-3b07-8770-e52ad29a9c5a"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.networkaudio",
+        "name": "Soundbar",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "HW-S60D",
+        "platformVersion": "8.0",
+        "platformOS": "Tizen",
+        "hwVersion": "",
+        "firmwareVersion": "SAT-MT8532D24WWC-1016.0",
+        "vendorId": "VD-NetworkAudio-003S",
+        "vendorResourceClientServerVersion": "4.0.26",
+        "lastSignupTime": "2025-03-18T19:11:51.176292902Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

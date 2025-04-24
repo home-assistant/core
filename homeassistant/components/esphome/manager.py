@@ -44,7 +44,7 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -215,7 +215,7 @@ class ESPHomeManager:
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
-        await cleanup_instance(self.hass, self.entry)
+        await cleanup_instance(self.entry)
 
     @property
     def services_issue(self) -> str:
@@ -376,7 +376,7 @@ class ESPHomeManager:
     async def on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         try:
-            await self._on_connnect()
+            await self._on_connect()
         except APIConnectionError as err:
             _LOGGER.warning(
                 "Error getting setting up connection for %s: %s", self.host, err
@@ -412,7 +412,7 @@ class ESPHomeManager:
             self._async_on_log, self._log_level
         )
 
-    async def _on_connnect(self) -> None:
+    async def _on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         entry = self.entry
         unique_id = entry.unique_id
@@ -520,6 +520,15 @@ class ESPHomeManager:
         if device_info.name:
             reconnect_logic.name = device_info.name
 
+        if not device_info.friendly_name:
+            _LOGGER.info(
+                "No `friendly_name` set in the `esphome:` section of the "
+                "YAML config for device '%s' (MAC: %s); It's recommended "
+                "to add one for easier identification and better alignment "
+                "with Home Assistant naming conventions",
+                device_info.name,
+                device_mac,
+            )
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
 
         entry_data.async_update_device_state()
@@ -756,7 +765,7 @@ def _async_setup_device_registry(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=entry_data.friendly_name,
+        name=entry_data.friendly_name or entry_data.name,
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
@@ -827,7 +836,18 @@ def execute_service(
     entry_data: RuntimeEntryData, service: UserService, call: ServiceCall
 ) -> None:
     """Execute a service on a node."""
-    entry_data.client.execute_service(service, call.data)
+    try:
+        entry_data.client.execute_service(service, call.data)
+    except APIConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="action_call_failed",
+            translation_placeholders={
+                "call_name": service.name,
+                "device_name": entry_data.name,
+                "error": str(err),
+            },
+        ) from err
 
 
 def build_service_name(device_info: EsphomeDeviceInfo, service: UserService) -> str:
@@ -919,9 +939,7 @@ def _setup_services(
         _async_register_service(hass, entry_data, device_info, service)
 
 
-async def cleanup_instance(
-    hass: HomeAssistant, entry: ESPHomeConfigEntry
-) -> RuntimeEntryData:
+async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data = entry.runtime_data
     data.async_on_disconnect()
