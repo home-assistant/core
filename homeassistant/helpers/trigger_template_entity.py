@@ -37,6 +37,7 @@ from .template import (
     TemplateStateFromEntityId,
     _render_with_context,
     render_complex,
+    result_as_boolean,
 )
 from .typing import ConfigType
 
@@ -112,10 +113,7 @@ class ValueTemplate(Template):
 
     @callback
     def async_render_as_value_template(
-        self,
-        entity_id: str,
-        variables: dict[str, Any],
-        error_value: Any = _SENTINEL,
+        self, entity_id: str, variables: dict[str, Any], error_value: Any
     ) -> Any:
         """Render template that requires 'value' and optionally 'value_json'.
 
@@ -137,11 +135,8 @@ class ValueTemplate(Template):
         except jinja2.TemplateError as ex:
             message = f"Error parsing value for {entity_id}: {ex} (value: {variables['value']}, template: {self.template})"
             logger = logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}")
-            if error_value is _SENTINEL:
-                logger.error(message)
-            else:
-                logger.debug(message)
-            return variables["value"] if error_value is _SENTINEL else error_value
+            logger.debug(message)
+            return error_value
 
         return render_result
 
@@ -288,9 +283,12 @@ class TriggerBaseEntity(Entity):
             ) is False:
                 self._rendered = dict(self._static_rendered)
 
-            self._available = available
+            self._available = result_as_boolean(available)
 
         except TemplateError as err:
+            # The entity will be available when an error is rendered. This
+            # ensures functionality is conistent between template and trigger template
+            # entities.
             self._available = True
             log_triggered_template_error(self.entity_id, err, key=CONF_AVAILABILITY)
 

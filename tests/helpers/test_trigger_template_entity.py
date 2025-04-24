@@ -43,7 +43,7 @@ _PICTURE_TEMPLATE = '/local/picture_o{{ "n" if value=="on" else "ff" }}'
             1,
             "{{ x - 4 }}",
             template._SENTINEL,
-            1,
+            template._SENTINEL,
             "Error parsing value for test.entity: 'x' is undefined (value: 1, template: {{ x - 4 }})",
         ),
     ],
@@ -117,45 +117,42 @@ async def test_template_entity_requires_hass_set(hass: HomeAssistant) -> None:
     assert entity.entity_picture == "/local/picture_off"
 
 
-async def test_trigger_template_availability(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("test_template", "test_entity_state", "expected"),
+    [
+        ('{{ has_value("test.entity") }}', STATE_ON, True),
+        ('{{ has_value("test.entity") }}', STATE_OFF, True),
+        ('{{ has_value("test.entity") }}', STATE_UNKNOWN, False),
+        ('{{ "a" if has_value("test.entity") else "b" }}', STATE_ON, False),
+        ('{{ "something_not_boolean" }}', STATE_OFF, False),
+        ("{{ 1 }}", STATE_OFF, True),
+        ("{{ 0 }}", STATE_OFF, False),
+    ],
+)
+async def test_trigger_template_availability(
+    hass: HomeAssistant,
+    test_template: str,
+    test_entity_state: str,
+    expected: bool,
+) -> None:
     """Test manual trigger template entity availability template."""
     config = {
         CONF_NAME: template.Template("test_entity", hass),
-        CONF_AVAILABILITY: template.Template('{{ has_value("test.entity") }}', hass),
+        CONF_AVAILABILITY: template.Template(test_template, hass),
         CONF_UNIQUE_ID: "9961786c-f8c8-4ea0-ab1d-b9e922c39088",
     }
 
     entity = ManualTriggerEntity(hass, config)
     entity.entity_id = "test.entity"
-    hass.states.async_set("test.entity", STATE_ON)
+    hass.states.async_set("test.entity", test_entity_state)
     await entity.async_added_to_hass()
 
     variables = entity._template_variables()
-    assert entity._render_availability_template(variables) is True
+    assert entity._render_availability_template(variables) is expected
     await hass.async_block_till_done()
 
     assert entity.unique_id == "9961786c-f8c8-4ea0-ab1d-b9e922c39088"
-    assert entity.available is True
-
-    hass.states.async_set("test.entity", STATE_OFF)
-    await hass.async_block_till_done()
-
-    variables = entity._template_variables()
-    assert entity._render_availability_template(variables) is True
-    await hass.async_block_till_done()
-
-    assert entity.unique_id == "9961786c-f8c8-4ea0-ab1d-b9e922c39088"
-    assert entity.available is True
-
-    hass.states.async_set("test.entity", STATE_UNKNOWN)
-    await hass.async_block_till_done()
-
-    variables = entity._template_variables()
-    assert entity._render_availability_template(variables) is False
-    await hass.async_block_till_done()
-
-    assert entity.unique_id == "9961786c-f8c8-4ea0-ab1d-b9e922c39088"
-    assert entity.available is False
+    assert entity.available is expected
 
 
 async def test_trigger_no_availability_template(
