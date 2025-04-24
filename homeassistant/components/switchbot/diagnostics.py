@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components import bluetooth
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
@@ -18,14 +19,12 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
-    device_info = {
-        "address": coordinator.ble_device.address,
-        "name": coordinator.device_name,
-        "model": coordinator.model,
-        "connectable": coordinator.connectable,
-    }
+
+    service_info = bluetooth.async_last_service_info(
+        hass, coordinator.ble_device.address, connectable=coordinator.connectable
+    )
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "device_info": device_info,
+        "service_info": service_info,
     }
