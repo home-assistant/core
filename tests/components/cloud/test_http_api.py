@@ -20,7 +20,7 @@ from hass_nabucasa.auth import (
 )
 from hass_nabucasa.const import STATE_CONNECTED
 from hass_nabucasa.remote import CertificateStatus
-from hass_nabucasa.voice import TTS_VOICES
+from hass_nabucasa.voice_data import TTS_VOICES
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

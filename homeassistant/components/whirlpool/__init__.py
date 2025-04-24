@@ -47,8 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
 
     appliances_manager = AppliancesManager(backend_selector, auth, session)
     if not await appliances_manager.fetch_appliances():
-        _LOGGER.error("Cannot fetch appliances")
-        return False
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="appliances_fetch_failed"
+        )
     await appliances_manager.connect()
 
     entry.runtime_data = appliances_manager

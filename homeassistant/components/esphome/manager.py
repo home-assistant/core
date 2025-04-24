@@ -49,6 +49,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
     template,
 )
 from homeassistant.helpers.device_registry import format_mac
@@ -654,6 +655,30 @@ class ESPHomeManager:
         ):
             self._async_subscribe_logs(new_log_level)
 
+    @callback
+    def _async_cleanup(self) -> None:
+        """Cleanup stale issues and entities."""
+        assert self.entry_data.device_info is not None
+        ent_reg = er.async_get(self.hass)
+        # Cleanup stale assist_in_progress entity and issue,
+        # Remove this after 2026.4
+        if not (
+            stale_entry_entity_id := ent_reg.async_get_entity_id(
+                DOMAIN,
+                Platform.BINARY_SENSOR,
+                f"{self.entry_data.device_info.mac_address}-assist_in_progress",
+            )
+        ):
+            return
+        stale_entry = ent_reg.async_get(stale_entry_entity_id)
+        assert stale_entry is not None
+        ent_reg.async_remove(stale_entry_entity_id)
+        issue_reg = ir.async_get(self.hass)
+        if issue := issue_reg.async_get_issue(
+            DOMAIN, f"assist_in_progress_deprecated_{stale_entry.id}"
+        ):
+            issue_reg.async_delete(DOMAIN, issue.issue_id)
+
     async def async_start(self) -> None:
         """Start the esphome connection manager."""
         hass = self.hass
@@ -696,6 +721,7 @@ class ESPHomeManager:
         _setup_services(hass, entry_data, services)
 
         if (device_info := entry_data.device_info) is not None:
+            self._async_cleanup()
             if device_info.name:
                 reconnect_logic.name = device_info.name
             if (
