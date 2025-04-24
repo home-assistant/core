@@ -46,7 +46,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.device.available
+        return self.device.available and super().available
 
     @property
     def is_sub_device(self) -> bool:
