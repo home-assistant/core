@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from unittest.mock import patch
 
-from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
+from aioesphomeapi import APIClient, DeviceInfo, InvalidAuthAPIError
 import pytest
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
@@ -16,6 +16,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import VALID_NOISE_PSK
+from .conftest import MockESPHomeDeviceType
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -37,10 +38,9 @@ class MockDashboardRefresh:
         await self.hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("init_integration", "mock_dashboard")
 async def test_dashboard_storage(
     hass: HomeAssistant,
-    init_integration,
-    mock_dashboard: dict[str, Any],
     hass_storage: dict[str, Any],
 ) -> None:
     """Test dashboard storage."""
@@ -185,8 +185,9 @@ async def test_setup_dashboard_fails_when_already_setup(
     assert len(mock_setup.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_new_info_reload_config_entries(
-    hass: HomeAssistant, init_integration, mock_dashboard
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test config entries are reloaded when new info is set."""
     assert init_integration.state is ConfigEntryState.LOADED
@@ -205,7 +206,10 @@ async def test_new_info_reload_config_entries(
 
 
 async def test_new_dashboard_fix_reauth(
-    hass: HomeAssistant, mock_client, mock_config_entry: MockConfigEntry, mock_dashboard
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_config_entry: MockConfigEntry,
+    mock_dashboard: dict[str, Any],
 ) -> None:
     """Test config entries waiting for reauth are triggered."""
     mock_client.device_info.side_effect = (
@@ -249,13 +253,24 @@ async def test_new_dashboard_fix_reauth(
 
 
 async def test_dashboard_supports_update(
-    hass: HomeAssistant, mock_dashboard: dict[str, Any]
+    hass: HomeAssistant,
+    mock_dashboard: dict[str, Any],
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test dashboard supports update."""
     dash = dashboard.async_get_dashboard(hass)
-    # Register a listener to start the coordinator
-    dash.async_add_listener(lambda: None)
     mock_refresh = MockDashboardRefresh(hass)
+
+    entity_info = []
+    states = []
+    user_service = []
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
 
     # No data
     assert not dash.supports_update
@@ -275,9 +290,40 @@ async def test_dashboard_supports_update(
     await mock_refresh.async_refresh()
     assert dash.supports_update is True
 
-    # unsupported version
-    dash.supports_update = None
-    mock_dashboard["configured"][0]["current_version"] = "2023.1.0"
-    await mock_refresh.async_refresh()
 
+async def test_dashboard_unsupported_version(
+    hass: HomeAssistant,
+    mock_dashboard: dict[str, Any],
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test dashboard with unsupported version."""
+    dash = dashboard.async_get_dashboard(hass)
+    mock_refresh = MockDashboardRefresh(hass)
+
+    entity_info = []
+    states = []
+    user_service = []
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+
+    # No data
+    assert not dash.supports_update
+
+    await mock_refresh.async_refresh()
+    assert dash.supports_update is None
+
+    # unsupported version
+    mock_dashboard["configured"].append(
+        {
+            "name": "test",
+            "configuration": "test.yaml",
+            "current_version": "2023.1.0",
+        }
+    )
+    await mock_refresh.async_refresh()
     assert dash.supports_update is False
