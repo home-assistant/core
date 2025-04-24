@@ -1,11 +1,15 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: no custom actions
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: cleanup "pin" vin CONF_PIN
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -42,29 +46,53 @@ rules:
   diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update: done
+  docs-data-update:
+    status: todo
+    comment: add info about polling the bridge every 10 seconds
   docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices: done
-  docs-supported-functions: done
-  docs-troubleshooting: done
+  docs-supported-devices:
+    status: todo
+    comment: be more specific about supported devices
+  docs-supported-functions:
+    status: todo
+    comment: be more specific about supported functions
+  docs-troubleshooting:
+    status: todo
+    comment: split that up to proper troubleshooting and known limitations section
   docs-use-cases: done
-  dynamic-devices: done
-  entity-category: done
+  dynamic-devices:
+    status: exempt
+    comment: device type integration
+  entity-category:
+    status: exempt
+    comment: no config or diagnostic entities
   entity-device-class: done
-  entity-disabled-by-default: done
-  entity-translations: done
-  exception-translations: done
-  icon-translations: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: only 2 main entities
+  entity-translations:
+    status: exempt
+    comment: using only device name
+  exception-translations:
+    status: todo
+    comment: ConfigEntryReady & ConfigEntryAuthFailed not translated in init
+  icon-translations:
+    status: done
+    comment: no custom icons, only default icons
   reconfiguration-flow:
     status: todo
     comment: handle at least host change
-  repair-issues: done
-  stale-devices: done
+  repair-issues:
+    status: exempt
+    comment: no known repair use case so far
+  stale-devices:
+    status: exempt
+    comment: device type integration
 
   # Platinum
   async-dependency: done
   inject-websession: done
   strict-typing:
     status: todo
-    comment: some dependency are not typed
+    comment: Requirements 'getmac==0.9.5', 'samsungctl[websocket]==0.7.1' and 'wakeonlan==2.1.0' appear untyped

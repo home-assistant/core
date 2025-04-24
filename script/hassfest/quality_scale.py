@@ -1939,6 +1939,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "ruuvitag_ble",
     "rympro",
     "saj",
+    "samsungtv",
     "sanix",
     "satel_integra",
     "schlage",
