@@ -24,7 +24,7 @@ from homeassistant.helpers.service_info.zeroconf import (
 from homeassistant.loader import HomeKitDiscoveredIntegration, ZeroconfMatcher
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import DOMAIN, REQUEST_TIMEOUT
 
 if TYPE_CHECKING:
     from .models import HaZeroconf
@@ -296,7 +296,7 @@ class ZeroconfDiscovery:
         name: str,
     ) -> None:
         """Update and process a zeroconf update."""
-        await async_service_info.async_request(zeroconf, 3000)
+        await async_service_info.async_request(zeroconf, REQUEST_TIMEOUT)
         self._async_process_service_update(async_service_info, service_type, name)
 
     @callback
