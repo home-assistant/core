@@ -27,6 +27,7 @@ from .const import (
     LIGHT_DEFAULT_MAX_KELVIN,
     LIGHT_DEFAULT_MIN_KELVIN,
     LIGHT_MAX_BRIGHTNESS,
+    LIGHT_MODBUS_INVALID_VALUE,
     LIGHT_MODBUS_SCALE_MAX,
     LIGHT_MODBUS_SCALE_MIN,
 )
@@ -144,7 +145,7 @@ class ModbusLight(BaseSwitch, LightEntity):
             if (
                 brightness_result
                 and brightness_result.registers
-                and brightness_result.registers[0] != 0xFFFF
+                and brightness_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
             ):
                 self._attr_brightness = self._convert_modbus_percent_to_brightness(
                     brightness_result.registers[0]
@@ -160,7 +161,7 @@ class ModbusLight(BaseSwitch, LightEntity):
             if (
                 color_result
                 and color_result.registers
-                and color_result.registers[0] != 0xFFFF
+                and color_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
             ):
                 self._attr_color_temp_kelvin = (
                     self._convert_modbus_percent_to_temperature(
