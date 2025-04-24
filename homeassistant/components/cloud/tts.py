@@ -6,7 +6,8 @@ import logging
 from typing import Any
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.voice import MAP_VOICE, TTS_VOICES, AudioOutput, Gender, VoiceError
+from hass_nabucasa.voice import MAP_VOICE, AudioOutput, Gender, VoiceError
+from hass_nabucasa.voice_data import TTS_VOICES
 import voluptuous as vol
 
 from homeassistant.components.tts import (
@@ -57,6 +58,7 @@ DEFAULT_VOICES = {
     "ar-SY": "AmanyNeural",
     "ar-TN": "ReemNeural",
     "ar-YE": "MaryamNeural",
+    "as-IN": "PriyomNeural",
     "az-AZ": "BabekNeural",
     "bg-BG": "KalinaNeural",
     "bn-BD": "NabanitaNeural",
@@ -126,6 +128,8 @@ DEFAULT_VOICES = {
     "id-ID": "GadisNeural",
     "is-IS": "GudrunNeural",
     "it-IT": "ElsaNeural",
+    "iu-Cans-CA": "SiqiniqNeural",
+    "iu-Latn-CA": "SiqiniqNeural",
     "ja-JP": "NanamiNeural",
     "jv-ID": "SitiNeural",
     "ka-GE": "EkaNeural",
@@ -147,6 +151,8 @@ DEFAULT_VOICES = {
     "ne-NP": "HemkalaNeural",
     "nl-BE": "DenaNeural",
     "nl-NL": "ColetteNeural",
+    "or-IN": "SubhasiniNeural",
+    "pa-IN": "OjasNeural",
     "pl-PL": "AgnieszkaNeural",
     "ps-AF": "LatifaNeural",
     "pt-BR": "FranciscaNeural",
@@ -158,6 +164,7 @@ DEFAULT_VOICES = {
     "sl-SI": "PetraNeural",
     "so-SO": "UbaxNeural",
     "sq-AL": "AnilaNeural",
+    "sr-Latn-RS": "NicholasNeural",
     "sr-RS": "SophieNeural",
     "su-ID": "TutiNeural",
     "sv-SE": "SofieNeural",
@@ -177,12 +184,9 @@ DEFAULT_VOICES = {
     "vi-VN": "HoaiMyNeural",
     "wuu-CN": "XiaotongNeural",
     "yue-CN": "XiaoMinNeural",
-    "zh-CN": "XiaoxiaoNeural",
     "zh-CN-henan": "YundengNeural",
-    "zh-CN-liaoning": "XiaobeiNeural",
-    "zh-CN-shaanxi": "XiaoniNeural",
     "zh-CN-shandong": "YunxiangNeural",
-    "zh-CN-sichuan": "YunxiNeural",
+    "zh-CN": "XiaoxiaoNeural",
     "zh-HK": "HiuMaanNeural",
     "zh-TW": "HsiaoChenNeural",
     "zu-ZA": "ThandoNeural",
@@ -328,7 +332,9 @@ class CloudTTSEntity(TextToSpeechEntity):
         """Return a list of supported voices for a language."""
         if not (voices := TTS_VOICES.get(language)):
             return None
-        return [Voice(voice, voice) for voice in voices]
+        return [
+            Voice(voice, voice_info["name"]) for voice, voice_info in voices.items()
+        ]
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
@@ -401,7 +407,9 @@ class CloudProvider(Provider):
         """Return a list of supported voices for a language."""
         if not (voices := TTS_VOICES.get(language)):
             return None
-        return [Voice(voice, voice) for voice in voices]
+        return [
+            Voice(voice, voice_info["name"]) for voice, voice_info in voices.items()
+        ]
 
     @property
     def default_options(self) -> dict[str, str]:
