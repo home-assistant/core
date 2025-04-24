@@ -15,3 +15,5 @@ REFRESH_TOKEN_EXPIRY_TIME = timedelta(days=30)
 UPDATE_INTERVAL = timedelta(days=1)
 
 SERVICE_FORCE_POLL = "force_poll"
+
+INTEGRATION_DEVICE_NAME = "Aquacell Integration"

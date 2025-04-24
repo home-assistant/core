@@ -7,7 +7,7 @@ from aioaquacell import Softener
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, INTEGRATION_DEVICE_NAME
 from .coordinator import AquacellCoordinator
 
 
@@ -42,9 +42,10 @@ class AquacellEntity(CoordinatorEntity[AquacellCoordinator]):
             )
         else:
             self._attr_unique_id = f"{DOMAIN}-{entity_key}"
+            # Use a consistent identifier for the integration-level device
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, entity_key)},
-                name=device_name or "Aquacell Integration",
+                identifiers={(DOMAIN, DOMAIN)},  # Consistent identifier
+                name=device_name or INTEGRATION_DEVICE_NAME,
                 manufacturer="Aquacell",
             )
 

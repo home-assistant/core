@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import LAST_POLL_TIMESTAMP
+from .const import INTEGRATION_DEVICE_NAME, LAST_POLL_TIMESTAMP
 from .coordinator import AquacellConfigEntry, AquacellCoordinator
 from .entity import AquacellEntity
 
@@ -39,6 +39,7 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
     SoftenerSensorEntityDescription(
         key="salt_left_side_percentage",
         translation_key="salt_left_side_percentage",
+        name="Salt Left Side Percentage",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda softener: softener.salt.leftPercent,
@@ -46,6 +47,7 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
     SoftenerSensorEntityDescription(
         key="salt_right_side_percentage",
         translation_key="salt_right_side_percentage",
+        name="Salt Right Side Percentage",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda softener: softener.salt.rightPercent,
@@ -53,19 +55,23 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
     SoftenerSensorEntityDescription(
         key="salt_left_side_time_remaining",
         translation_key="salt_left_side_time_remaining",
-        device_class=SensorDeviceClass.DURATION,
+        name="Salt Left Side Time Remaining",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=lambda softener: softener.salt.leftDays,
     ),
     SoftenerSensorEntityDescription(
         key="salt_right_side_time_remaining",
         translation_key="salt_right_side_time_remaining",
-        device_class=SensorDeviceClass.DURATION,
+        name="Salt Right Side Time Remaining",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=lambda softener: softener.salt.rightDays,
     ),
     SoftenerSensorEntityDescription(
         key="battery",
+        translation_key="battery",
+        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda softener: softener.battery,
@@ -73,13 +79,10 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
     SoftenerSensorEntityDescription(
         key="wi_fi_strength",
         translation_key="wi_fi_strength",
-        value_fn=lambda softener: softener.wifiLevel,
+        name="Wi-Fi Strength",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "high",
-            "medium",
-            "low",
-        ],
+        options=["high", "medium", "low"],
+        value_fn=lambda softener: softener.wifiLevel,
     ),
     SoftenerSensorEntityDescription(
         key="last_update",
@@ -99,11 +102,15 @@ async def async_setup_entry(
     """Set up the sensors."""
     coordinator: AquacellCoordinator = config_entry.runtime_data
     softeners = coordinator.data
-    entities: list[SensorEntity] = [
-        SoftenerSensor(coordinator, sensor, softener_key)
-        for sensor in SENSORS
-        for softener_key in softeners
-    ]
+
+    entities: list[SensorEntity] = []
+    if softeners:
+        entities.extend(
+            SoftenerSensor(coordinator, sensor, softener_key)
+            for sensor in SENSORS
+            for softener_key in softeners
+        )
+
     entities.append(AquacellLastPollSensor(coordinator, config_entry))
     async_add_entities(entities)
 
@@ -141,7 +148,7 @@ class AquacellLastPollSensor(AquacellEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
-            coordinator, LAST_POLL_TIMESTAMP, device_name="Aquacell Integration"
+            coordinator, LAST_POLL_TIMESTAMP, device_name=INTEGRATION_DEVICE_NAME
         )
         self._config_entry = config_entry
 
