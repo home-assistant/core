@@ -35,6 +35,13 @@ async def test_subscribe_discovery(
                 const._TYPE_PTR,
                 const._CLASS_IN,
                 const._DNS_OTHER_TTL,
+                "wrong._wrongservice._tcp.local.",
+            ),
+            DNSPointer(
+                "_fakeservice._tcp.local.",
+                const._TYPE_PTR,
+                const._CLASS_IN,
+                const._DNS_OTHER_TTL,
                 "foo2._fakeservice._tcp.local.",
             ),
             DNSService(
