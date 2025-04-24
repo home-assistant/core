@@ -32,16 +32,12 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    username: str | None
-    token: str | None
-    discovered_devices: dict[str, SwitcherBase]
-
     def __init__(self) -> None:
         """Init the config flow."""
         super().__init__()
-        self.discovered_devices = {}
-        self.username = None
-        self.token = None
+        self.discovered_devices: dict[str, SwitcherBase] = {}
+        self.username: str | None = None
+        self.token: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
