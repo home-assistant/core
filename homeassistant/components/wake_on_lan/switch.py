@@ -117,7 +117,6 @@ class WolSwitch(SwitchEntity):
             service_kwargs["ip_address"] = self._broadcast_address
         if self._broadcast_port is not None:
             service_kwargs["port"] = self._broadcast_port
-            service_kwargs["ip_address"] = self._broadcast_address
         if self._interface is not None:
             service_kwargs["interface"] = self._interface
 

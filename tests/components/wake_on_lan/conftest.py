@@ -10,12 +10,18 @@ import pytest
 
 from homeassistant.components.wake_on_lan.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
+from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
+    CONF_BROADCAST_PORT,
+    CONF_IF,
+    CONF_MAC,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 DEFAULT_MAC = "00:01:02:03:04:05"
+DEFAULT_IF = "192.168.0.10"
 
 
 @pytest.fixture
@@ -60,6 +66,7 @@ async def get_config_to_integration_load() -> dict[str, Any]:
         CONF_MAC: DEFAULT_MAC,
         CONF_BROADCAST_ADDRESS: "255.255.255.255",
         CONF_BROADCAST_PORT: 9,
+        CONF_IF: DEFAULT_IF,
     }
 
 
