@@ -1,21 +1,12 @@
 """Test ESPHome binary sensors."""
 
-from collections.abc import Awaitable, Callable
-
-from aioesphomeapi import (
-    APIClient,
-    BinarySensorInfo,
-    BinarySensorState,
-    EntityInfo,
-    EntityState,
-    UserService,
-)
+from aioesphomeapi import APIClient, BinarySensorInfo, BinarySensorState
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from .conftest import MockESPHomeDevice, MockGenericDeviceEntryType
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 
 @pytest.mark.parametrize(
@@ -108,10 +99,7 @@ async def test_binary_sensor_missing_state(
 async def test_binary_sensor_has_state_false(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a generic binary_sensor where has_state is false."""
     entity_info = [
