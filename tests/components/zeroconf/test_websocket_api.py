@@ -2,6 +2,7 @@
 
 import asyncio
 import socket
+from unittest.mock import patch
 
 from zeroconf import (
     DNSAddress,
@@ -15,6 +16,7 @@ from zeroconf import (
 
 from homeassistant.components.zeroconf import DOMAIN, async_get_async_instance
 from homeassistant.core import HomeAssistant
+from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator
@@ -29,14 +31,14 @@ async def test_subscribe_discovery(
     instance.zeroconf.cache.async_add_records(
         [
             DNSPointer(
-                "_http._tcp.local.",
+                "_fakeservice._tcp.local.",
                 const._TYPE_PTR,
                 const._CLASS_IN,
                 const._DNS_OTHER_TTL,
-                "foo2._http._tcp.local.",
+                "foo2._fakeservice._tcp.local.",
             ),
             DNSService(
-                "foo2._http._tcp.local.",
+                "foo2._fakeservice._tcp.local.",
                 const._TYPE_SRV,
                 const._CLASS_IN,
                 const._DNS_OTHER_TTL,
@@ -60,14 +62,14 @@ async def test_subscribe_discovery(
                 b"\x13md=HASS Bridge W9DN\x06pv=1.0\x14id=11:8E:DB:5B:5C:C5\x05c#=12\x04s#=1",
             ),
             DNSPointer(
-                "_http._tcp.local.",
+                "_fakeservice._tcp.local.",
                 const._TYPE_PTR,
                 const._CLASS_IN,
                 const._DNS_OTHER_TTL,
-                "foo3._http._tcp.local.",
+                "foo3._fakeservice._tcp.local.",
             ),
             DNSService(
-                "foo3._http._tcp.local.",
+                "foo3._fakeservice._tcp.local.",
                 const._TYPE_SRV,
                 const._CLASS_IN,
                 const._DNS_OTHER_TTL,
@@ -85,7 +87,13 @@ async def test_subscribe_discovery(
             ),
         ]
     )
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    with patch.dict(
+        zc_gen.ZEROCONF,
+        {"_fakeservice._tcp.local.": []},
+        clear=True,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
     client = await hass_ws_client()
     await client.send_json(
         {
@@ -103,58 +111,75 @@ async def test_subscribe_discovery(
         "add": [
             {
                 "ip_addresses": ["127.0.0.1"],
-                "name": "foo2._http._tcp.local.",
+                "name": "foo2._fakeservice._tcp.local.",
                 "port": 1234,
                 "properties": {},
-                "type": "_http._tcp.local.",
+                "type": "_fakeservice._tcp.local.",
             }
         ]
     }
 
     # now late inject the address record
     records = [
-        DNSPointer(
-            "_http._tcp.local.",
-            const._TYPE_PTR,
+        DNSAddress(
+            "foo3.local.",
+            const._TYPE_A,
             const._CLASS_IN,
-            0,  # TTL = 0
-            "foo2._http._tcp.local.",
+            const._DNS_HOST_TTL,
+            socket.inet_aton("127.0.0.1"),
         ),
     ]
     instance.zeroconf.cache.async_add_records(records)
     instance.zeroconf.record_manager.async_updates(
         current_time_millis(), [RecordUpdate(record, None) for record in records]
     )
+    # Now for the add
     async with asyncio.timeout(1):
         response = await client.receive_json()
     assert response["event"] == {
         "add": [
             {
                 "ip_addresses": ["127.0.0.1"],
-                "name": "foo3._http._tcp.local.",
+                "name": "foo3._fakeservice._tcp.local.",
                 "port": 1234,
                 "properties": {},
-                "type": "_http._tcp.local.",
+                "type": "_fakeservice._tcp.local.",
+            }
+        ]
+    }
+    # Now for the update
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["event"] == {
+        "add": [
+            {
+                "ip_addresses": ["127.0.0.1"],
+                "name": "foo3._fakeservice._tcp.local.",
+                "port": 1234,
+                "properties": {},
+                "type": "_fakeservice._tcp.local.",
             }
         ]
     }
 
-    # now inject a goodbye
-    records = [
-        DNSPointer(
-            "_http._tcp.local.",
-            const._TYPE_PTR,
-            const._CLASS_IN,
-            0,  # goodbye TTL = 0
-            "foo2._http._tcp.local.",
-        ),
-    ]
+    # now move time forward and remove the record
+    future = current_time_millis() + (4500 * 1000)
+    records = instance.zeroconf.cache.async_expire(future)
     record_updates = [RecordUpdate(record, record) for record in records]
-    instance.zeroconf.cache.async_add_records(records)
-    instance.zeroconf.record_manager.async_updates(
-        current_time_millis(), record_updates
-    )
-    instance.zeroconf.record_manager.async_updates_complete(False)
-    async with asyncio.timeout(2):
+    instance.zeroconf.record_manager.async_updates(future, record_updates)
+    instance.zeroconf.record_manager.async_updates_complete(True)
+    removes: set[str] = set()
+    async with asyncio.timeout(1):
         response = await client.receive_json()
-    assert response["event"] == {"remove": ["foo2._http._tcp.local."]}
+    assert "remove" in response["event"]
+    removes.add(next(iter(response["event"]["remove"]))["name"])
+
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert "remove" in response["event"]
+    removes.add(next(iter(response["event"]["remove"]))["name"])
+    assert len(removes) == 2
+    assert removes == {
+        "foo2._fakeservice._tcp.local.",
+        "foo3._fakeservice._tcp.local.",
+    }

@@ -140,7 +140,8 @@ class _DiscoverySubscription:
         )
 
     def _async_on_update(self, info: AsyncServiceInfo) -> None:
-        self._async_event_message({"add": [serialize_service_info(info)]})
+        if info.type in self.discovery.zeroconf_types:
+            self._async_event_message({"add": [serialize_service_info(info)]})
 
     def _async_on_remove(self, name: str) -> None:
         self._async_event_message({"remove": [{"name": name}]})
