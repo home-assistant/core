@@ -134,6 +134,14 @@
         "name": "Smart grid"
       }
     },
+    "light": {
+      "ambient_light": {
+        "name": "Ambient light"
+      },
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
     "sensor": {
       "energy_consumption": {
         "name": "Energy consumption"
