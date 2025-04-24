@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import _LOGGER, DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 from .coordinator import VodafoneConfigEntry
-from .utils import client_session
+from .utils import async_client_session
 
 
 def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -39,7 +39,7 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    session = await client_session(hass)
+    session = await async_client_session(hass)
     api = VodafoneStationSercommApi(
         data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD], session
     )
