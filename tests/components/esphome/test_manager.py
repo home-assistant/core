@@ -43,7 +43,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
@@ -1621,3 +1625,56 @@ async def test_device_adds_friendly_name(
     assert (
         "No `friendly_name` set in the `esphome:` section of the YAML config for device"
     ) not in caplog.text
+
+
+async def test_assist_in_progress_issue_deleted(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test assist in progress entity and issue is deleted.
+
+    Remove this cleanup after 2026.4
+    """
+    entry = entity_registry.async_get_or_create(
+        domain=DOMAIN,
+        platform="binary_sensor",
+        unique_id="11:22:33:44:55:AA-assist_in_progress",
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"assist_in_progress_deprecated_{entry.id}",
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="assist_in_progress_deprecated",
+        translation_placeholders={
+            "integration_name": "ESPHome",
+        },
+    )
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        device_info={},
+        states=[],
+        mock_storage=True,
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            DOMAIN, "binary_sensor", "11:22:33:44:55:AA-assist_in_progress"
+        )
+        is None
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"assist_in_progress_deprecated_{entry.id}"
+        )
+        is None
+    )
