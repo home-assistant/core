@@ -1712,7 +1712,8 @@ async def test_invalid_state(
     assert (
         "homeassistant.helpers.entity",
         logging.ERROR,
-        f"State {long_state} for test.test is longer than 255, falling back to {STATE_UNKNOWN}",
+        f"State {long_state} for test.test is longer than 255, "
+        f"falling back to {STATE_UNKNOWN}",
     ) in caplog.record_tuples
 
     ent._attr_state = "x" * 255
