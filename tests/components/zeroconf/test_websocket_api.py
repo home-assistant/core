@@ -66,7 +66,8 @@ async def test_subscribe_discovery(
                 const._TYPE_TXT,
                 const._CLASS_IN,
                 const._DNS_HOST_TTL,
-                b"\x13md=HASS Bridge W9DN\x06pv=1.0\x14id=11:8E:DB:5B:5C:C5\x05c#=12\x04s#=1",
+                b"\x13md=HASS Bridge W9DN\x06pv=1.0\x14id=11:8E:DB:5B:5C:C5"
+                b"\x05c#=12\x04s#=1",
             ),
             DNSPointer(
                 "_fakeservice._tcp.local.",
@@ -90,7 +91,8 @@ async def test_subscribe_discovery(
                 const._TYPE_TXT,
                 const._CLASS_IN,
                 const._DNS_HOST_TTL,
-                b"\x13md=HASS Bridge W9DN\x06pv=1.0\x14id=11:8E:DB:5B:5C:C5\x05c#=12\x04s#=1",
+                b"\x13md=HASS Bridge W9DN\x06pv=1.0\x14id=11:8E:DB:5B:5C:C5"
+                b"\x05c#=12\x04s#=1",
             ),
         ]
     )
@@ -138,7 +140,8 @@ async def test_subscribe_discovery(
     ]
     instance.zeroconf.cache.async_add_records(records)
     instance.zeroconf.record_manager.async_updates(
-        current_time_millis(), [RecordUpdate(record, None) for record in records]
+        current_time_millis(),
+        [RecordUpdate(record, None) for record in records],
     )
     # Now for the add
     async with asyncio.timeout(1):
