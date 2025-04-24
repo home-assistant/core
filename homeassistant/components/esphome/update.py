@@ -70,7 +70,6 @@ async def async_setup_entry(
     @callback
     def _async_setup_update_entity() -> None:
         """Set up the update entity."""
-        nonlocal unsubs
         assert dashboard is not None
         # Keep listening until device is available
         if not entry_data.available or not dashboard.last_update_success:
@@ -95,10 +94,12 @@ async def async_setup_entry(
         _async_setup_update_entity()
         return
 
-    unsubs = [
-        entry_data.async_subscribe_device_updated(_async_setup_update_entity),
-        dashboard.async_add_listener(_async_setup_update_entity),
-    ]
+    unsubs.extend(
+        [
+            entry_data.async_subscribe_device_updated(_async_setup_update_entity),
+            dashboard.async_add_listener(_async_setup_update_entity),
+        ]
+    )
 
 
 class ESPHomeDashboardUpdateEntity(
