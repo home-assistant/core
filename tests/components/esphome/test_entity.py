@@ -221,9 +221,6 @@ async def test_entities_removed_after_reload(
             unique_id="my_binary_sensor",
         ),
     ]
-    states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-    ]
     mock_device.client.list_entities_services = AsyncMock(
         return_value=(entity_info, user_service)
     )
