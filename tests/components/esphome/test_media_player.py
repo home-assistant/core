@@ -266,7 +266,7 @@ async def test_media_player_entity_with_source(
         {
             "id": 1,
             "type": "media_player/browse_media",
-            "entity_id": "media_player.test_mymedia_player",
+            ATTR_ENTITY_ID: "media_player.test_mymedia_player",
         }
     )
     response = await client.receive_json()

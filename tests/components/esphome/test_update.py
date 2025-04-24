@@ -134,7 +134,7 @@ async def test_update_entity(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {"entity_id": "update.test_firmware"},
+            {ATTR_ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -185,7 +185,7 @@ async def test_update_entity(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {"entity_id": "update.test_firmware"},
+            {ATTR_ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 

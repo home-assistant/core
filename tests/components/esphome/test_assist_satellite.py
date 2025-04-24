@@ -45,7 +45,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, intent as intent_helper
 from homeassistant.helpers.network import get_url
@@ -174,7 +174,7 @@ async def test_pipeline_api_audio(
             PipelineEvent(
                 type=PipelineEventType.WAKE_WORD_START,
                 data={
-                    "entity_id": "test-wake-word-entity-id",
+                    ATTR_ENTITY_ID: "test-wake-word-entity-id",
                     "metadata": {},
                     "timeout": 0,
                 },
@@ -1179,7 +1179,7 @@ async def test_announce_message(
                 assist_satellite.DOMAIN,
                 "announce",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "message": "test-text",
                     "preannounce": False,
                 },
@@ -1269,7 +1269,7 @@ async def test_announce_media_id(
                 assist_satellite.DOMAIN,
                 "announce",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "media_id": "https://www.home-assistant.io/resolved.mp3",
                     "preannounce": False,
                 },
@@ -1356,7 +1356,7 @@ async def test_announce_message_with_preannounce(
                 assist_satellite.DOMAIN,
                 "announce",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "message": "test-text",
                     "preannounce_media_id": "test-preannounce",
                 },
@@ -1481,7 +1481,7 @@ async def test_start_conversation_message(
                 assist_satellite.DOMAIN,
                 "start_conversation",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "start_message": "test-text",
                     "preannounce": False,
                 },
@@ -1590,7 +1590,7 @@ async def test_start_conversation_media_id(
                 assist_satellite.DOMAIN,
                 "start_conversation",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "start_media_id": "https://www.home-assistant.io/resolved.mp3",
                     "preannounce": False,
                 },
@@ -1696,7 +1696,7 @@ async def test_start_conversation_message_with_preannounce(
                 assist_satellite.DOMAIN,
                 "start_conversation",
                 {
-                    "entity_id": satellite.entity_id,
+                    ATTR_ENTITY_ID: satellite.entity_id,
                     "start_message": "test-text",
                     "preannounce_media_id": "test-preannounce",
                 },
@@ -1926,7 +1926,7 @@ async def test_wake_word_select(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {"entity_id": "select.test_wake_word", "option": "Okay Nabu"},
+        {ATTR_ENTITY_ID: "select.test_wake_word", "option": "Okay Nabu"},
         blocking=True,
     )
     await hass.async_block_till_done()
