@@ -85,7 +85,7 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
         key="last_update",
         translation_key="last_update",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda softener: softener.lastUpdate,  # type: ignore[return-value, arg-type]
+        value_fn=lambda softener: softener.lastUpdate,  # type: ignore[arg-type, return-value]
     ),
 )
 
@@ -119,7 +119,7 @@ class SoftenerSensor(AquacellEntity, SensorEntity):
         softener_key: str,
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator, softener_key, description.key)
+        super().__init__(coordinator, description.key, softener_key)
         self.entity_description = description
 
     @property
@@ -139,7 +139,9 @@ class AquacellLastPollSensor(AquacellEntity, SensorEntity):
         self, coordinator: AquacellCoordinator, config_entry: ConfigEntry
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, config_entry.entry_id, LAST_POLL_TIMESTAMP)
+        super().__init__(
+            coordinator, LAST_POLL_TIMESTAMP, device_name="Aquacell Integration"
+        )
         self._config_entry = config_entry
 
     @property

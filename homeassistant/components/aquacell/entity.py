@@ -1,5 +1,7 @@
 """Aquacell entity."""
 
+from __future__ import annotations
+
 from aioaquacell import Softener
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,25 +19,38 @@ class AquacellEntity(CoordinatorEntity[AquacellCoordinator]):
     def __init__(
         self,
         coordinator: AquacellCoordinator,
-        softener_key: str,
         entity_key: str,
+        softener_key: str | None = None,
+        device_name: str | None = None,
     ) -> None:
         """Initialize the aquacell entity."""
         super().__init__(coordinator)
 
         self.softener_key = softener_key
+        self.entity_key = entity_key
 
-        self._attr_unique_id = f"{softener_key}-{entity_key}"
-        self._attr_device_info = DeviceInfo(
-            name=self.softener.name,
-            hw_version=self.softener.fwVersion,
-            identifiers={(DOMAIN, str(softener_key))},
-            manufacturer=self.softener.brand,
-            model=self.softener.ssn,
-            serial_number=softener_key,
-        )
+        if softener_key:
+            softener = coordinator.data[softener_key]
+            self._attr_unique_id = f"{softener_key}-{entity_key}"
+            self._attr_device_info = DeviceInfo(
+                name=softener.name,
+                hw_version=softener.fwVersion,
+                identifiers={(DOMAIN, str(softener_key))},
+                manufacturer=softener.brand,
+                model=softener.ssn,
+                serial_number=softener_key,
+            )
+        else:
+            self._attr_unique_id = f"{DOMAIN}-{entity_key}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, entity_key)},
+                name=device_name or "Aquacell Integration",
+                manufacturer="Aquacell",
+            )
 
     @property
     def softener(self) -> Softener:
-        """Handle updated data from the coordinator."""
+        """Return the softener object."""
+        if self.softener_key is None:
+            raise ValueError("No softener key defined for this entity")
         return self.coordinator.data[self.softener_key]
