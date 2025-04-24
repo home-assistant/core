@@ -126,6 +126,7 @@
       },
       "smart_grid": {
         "name": "Smart grid"
+      }
     "light": {
       "ambient_light": {
         "name": "Ambient light"
