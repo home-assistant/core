@@ -76,6 +76,15 @@ async def test_setup_and_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    freezer.tick(timedelta(minutes=1, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # pump the _async_update_data() task through its steps
+    freezer.tick(timedelta(minutes=1, seconds=1))
+    for _ in range(5):
+        await hass.async_block_till_done()
+
     assert (state := hass.states.get("device_tracker.10_10_10_10"))
     assert state.state == "home"
 
@@ -98,6 +107,10 @@ async def test_reload_not_triggering_home(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
+        # pump the _async_update_data() task through its steps
+        for _ in range(3):
+            await hass.async_block_till_done()
+
         assert hass.states.get("device_tracker.10_10_10_10").state == "not_home"
 
         # reload config entry
@@ -111,5 +124,9 @@ async def test_reload_not_triggering_home(
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    # pump the _async_update_data() task through its steps
+    for _ in range(2):
+        await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.10_10_10_10").state == "home"

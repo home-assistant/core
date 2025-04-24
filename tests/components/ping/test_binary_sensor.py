@@ -39,8 +39,9 @@ async def test_setup_and_update(
         return_value=Host(address="10.10.10.10", packets_sent=10, rtts=[]),
     ):
         freezer.tick(timedelta(minutes=6))
-        await hass.async_block_till_done()
-
+        # pump the _async_update_data() task through its steps
+        for _ in range(4):
+            await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.10_10_10_10")
     assert state == snapshot
 
