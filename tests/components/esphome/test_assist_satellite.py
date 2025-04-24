@@ -174,7 +174,7 @@ async def test_pipeline_api_audio(
             PipelineEvent(
                 type=PipelineEventType.WAKE_WORD_START,
                 data={
-                    ATTR_ENTITY_ID: "test-wake-word-entity-id",
+                    "entity_id": "test-wake-word-entity-id",
                     "metadata": {},
                     "timeout": 0,
                 },
