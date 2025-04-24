@@ -47,7 +47,7 @@
       "message": "An error occurred while trying authenticate: {error}"
     },
     "timeout_connect": {
-      "message": "An time-out occurred while trying to connect to the Portainer instance: {error}"
+      "message": "A timeout occurred while trying to connect to the Portainer instance: {error}"
     }
   }
 }
