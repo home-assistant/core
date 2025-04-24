@@ -242,7 +242,7 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
 
     @property
     @esphome_state_property
-    def installed_version(self) -> str | None:
+    def installed_version(self) -> str:
         """Return the installed version."""
         return self._state.current_version
 
@@ -260,19 +260,19 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
 
     @property
     @esphome_state_property
-    def release_summary(self) -> str | None:
+    def release_summary(self) -> str:
         """Return the release summary."""
         return self._state.release_summary
 
     @property
     @esphome_state_property
-    def release_url(self) -> str | None:
+    def release_url(self) -> str:
         """Return the release URL."""
         return self._state.release_url
 
     @property
     @esphome_state_property
-    def title(self) -> str | None:
+    def title(self) -> str:
         """Return the title of the update."""
         return self._state.title
 
