@@ -13,11 +13,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CHARGER_DATA_KEY,
+    CHARGER_ECO_SMART_KEY,
     CHARGER_FEATURES_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
-    CHARGER_SOLAR_CHARGING_MODE,
     DOMAIN,
     EcoSmartMode,
 )
@@ -31,12 +31,13 @@ class WallboxSelectEntityDescription(SelectEntityDescription):
 
     current_option_fn: Callable[[WallboxCoordinator], str | None]
     select_option_fn: Callable[[WallboxCoordinator, str], Awaitable[None]]
+    supported_fn: Callable[[WallboxCoordinator], bool]
 
 
 SELECT_TYPES: dict[str, WallboxSelectEntityDescription] = {
-    CHARGER_SOLAR_CHARGING_MODE: WallboxSelectEntityDescription(
-        key=CHARGER_SOLAR_CHARGING_MODE,
-        translation_key="eco_smart",
+    CHARGER_ECO_SMART_KEY: WallboxSelectEntityDescription(
+        key=CHARGER_ECO_SMART_KEY,
+        translation_key=CHARGER_ECO_SMART_KEY,
         options=[
             EcoSmartMode.OFF,
             EcoSmartMode.ECO_MODE,
@@ -45,9 +46,10 @@ SELECT_TYPES: dict[str, WallboxSelectEntityDescription] = {
         select_option_fn=lambda coordinator, mode: coordinator.async_set_eco_smart(
             mode
         ),
-        current_option_fn=lambda coordinator: coordinator.data[
-            CHARGER_SOLAR_CHARGING_MODE
-        ],
+        current_option_fn=lambda coordinator: coordinator.data[CHARGER_ECO_SMART_KEY],
+        supported_fn=lambda coordinator: coordinator.data[CHARGER_DATA_KEY][
+            CHARGER_PLAN_KEY
+        ][CHARGER_FEATURES_KEY].count(CHARGER_POWER_BOOST_KEY),
     )
 }
 
@@ -60,16 +62,14 @@ async def async_setup_entry(
     """Create wallbox select entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    # Only add select if Power Boost is available
-    if (
-        CHARGER_POWER_BOOST_KEY
-        in coordinator.data[CHARGER_DATA_KEY][CHARGER_PLAN_KEY][CHARGER_FEATURES_KEY]
-    ):
-        async_add_entities(
-            WallboxSelect(coordinator, description)
-            for ent in coordinator.data
-            if (description := SELECT_TYPES.get(ent))
+    async_add_entities(
+        WallboxSelect(coordinator, description)
+        for ent in coordinator.data
+        if (
+            (description := SELECT_TYPES.get(ent))
+            and description.supported_fn(coordinator)
         )
+    )
 
 
 class WallboxSelect(WallboxEntity, SelectEntity):
@@ -97,7 +97,7 @@ class WallboxSelect(WallboxEntity, SelectEntity):
         """Handle the selection of an option."""
         try:
             await self.entity_description.select_option_fn(self.coordinator, option)
-        except Exception as e:
+        except ConnectionError as e:
             raise HomeAssistantError(
                 translation_key="api_failed", translation_domain=DOMAIN
             ) from e

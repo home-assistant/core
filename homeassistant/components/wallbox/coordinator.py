@@ -29,7 +29,6 @@ from .const import (
     CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
-    CHARGER_SOLAR_CHARGING_MODE,
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
     CODE_KEY,
@@ -174,11 +173,11 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             CHARGER_ECO_SMART_MODE_KEY
         ]
         if eco_smart_enabled is False:
-            data[CHARGER_SOLAR_CHARGING_MODE] = EcoSmartMode.OFF
+            data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.OFF
         elif eco_smart_mode == 0:
-            data[CHARGER_SOLAR_CHARGING_MODE] = EcoSmartMode.ECO_MODE
+            data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.ECO_MODE
         elif eco_smart_mode == 1:
-            data[CHARGER_SOLAR_CHARGING_MODE] = EcoSmartMode.FULL_SOLAR
+            data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.FULL_SOLAR
 
         return data
 
@@ -262,24 +261,20 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self.async_request_refresh()
 
     @_require_authentication
-    def _set_eco_smart(self, enable: bool, mode: int = 0) -> None:
+    def _set_eco_smart(self, option: str) -> None:
         """Set wallbox solar charging mode."""
 
-        if enable:
-            self._wallbox.enableEcoSmart(self._station, mode)
+        if option == EcoSmartMode.ECO_MODE:
+            self._wallbox.enableEcoSmart(self._station, 0)
+        elif option == EcoSmartMode.FULL_SOLAR:
+            self._wallbox.enableEcoSmart(self._station, 1)
         else:
             self._wallbox.disableEcoSmart(self._station)
 
     async def async_set_eco_smart(self, option: str) -> None:
         """Set wallbox solar charging mode."""
 
-        if option == EcoSmartMode.ECO_MODE:
-            await self.hass.async_add_executor_job(self._set_eco_smart, True, 0)
-        elif option == EcoSmartMode.FULL_SOLAR:
-            await self.hass.async_add_executor_job(self._set_eco_smart, True, 1)
-        else:
-            await self.hass.async_add_executor_job(self._set_eco_smart, False)
-
+        await self.hass.async_add_executor_job(self._set_eco_smart, option)
         await self.async_request_refresh()
 
 

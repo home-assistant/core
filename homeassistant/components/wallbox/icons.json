@@ -1,7 +1,7 @@
 {
   "entity": {
     "select": {
-      "solar_charging": {
+      "ecosmart": {
         "default": "mdi:solar-power"
       }
     },
