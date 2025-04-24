@@ -1222,7 +1222,7 @@ class Entity(
 
         if len(state) > MAX_LENGTH_STATE_STATE:
             _LOGGER.error(
-                "State %s for %s is longer than %s, fall back to %s",
+                "State %s for %s is longer than %s, falling back to %s",
                 state,
                 entity_id,
                 MAX_LENGTH_STATE_STATE,
