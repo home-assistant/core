@@ -124,6 +124,9 @@
       "wine_cabinet": {
         "name": "[%key:component::miele::device::wine_cabinet::name%]"
       },
+      "zone_1": {
+        "name": "Zone 1"
+      },
       "zone_2": {
         "name": "Zone 2"
       },

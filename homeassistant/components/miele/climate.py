@@ -162,38 +162,31 @@ class MieleClimate(MieleEntity, ClimateEntity):
         """Initialize the climate entity."""
         super().__init__(coordinator, device_id, description)
         self.api = coordinator.api
+
         t_key = self.entity_description.translation_key
-        if (
-            self.device.device_type == MieleAppliance.FRIDGE_FREEZER
-            and self.entity_description.zone == 1
-        ):
-            t_key = DEVICE_TYPE_TAGS[MieleAppliance.FRIDGE]
-        elif (
-            self.device.device_type == MieleAppliance.FRIDGE_FREEZER
-            and self.entity_description.zone == 2
-        ):
-            t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
-        elif (
-            self.device.device_type == MieleAppliance.FRIDGE
-            and self.entity_description.zone == 1
-        ):
-            t_key = DEVICE_TYPE_TAGS[MieleAppliance.FRIDGE]
-        elif (
-            self.device.device_type == MieleAppliance.FREEZER
-            and self.entity_description.zone == 1
-        ):
-            t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
-        elif (
-            self.device.device_type == MieleAppliance.WINE_CABINET_FREEZER
-            and self.entity_description.zone == 1
-        ):
-            t_key = DEVICE_TYPE_TAGS[MieleAppliance.WINE_CABINET]
-        elif (
-            self.device.device_type == MieleAppliance.WINE_CABINET_FREEZER
-            and self.entity_description.zone == 2
-        ):
-            t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
-            f"{device_id}-{description.key}-{description.zone}"
+
+        if description.zone == 1:
+            if self.device.device_type in (
+                MieleAppliance.FRIDGE,
+                MieleAppliance.FRIDGE_FREEZER,
+            ):
+                t_key = DEVICE_TYPE_TAGS[MieleAppliance.FRIDGE]
+            elif self.device.device_type == MieleAppliance.FREEZER:
+                t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
+            else:
+                t_key = "zone_1"
+
+        if description.zone == 2:
+            if self.device.device_type in (
+                MieleAppliance.FRIDGE_FREEZER,
+                MieleAppliance.WINE_CABINET_FREEZER,
+            ):
+                t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
+            else:
+                t_key = "zone_2"
+        elif description.zone == 3:
+            t_key = "zone_3"
+
         self._attr_translation_key = t_key
         self._attr_unique_id = f"{device_id}-{description.key}-{description.zone}"
 

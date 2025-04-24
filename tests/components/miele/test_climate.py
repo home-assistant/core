@@ -73,7 +73,7 @@ async def test_api_failure(
         await hass.services.async_call(
             TEST_PLATFORM,
             "set_temperature",
-            {ATTR_ENTITY_ID: ENTITY_ID, "temperature": -17},
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: -17},
             blocking=True,
         )
     mock_miele_client.set_target_temperature.assert_called_once()
