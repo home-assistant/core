@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
@@ -11,7 +13,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import NutRuntimeData
+from . import NutConfigEntry, NutRuntimeData
 from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS
 
 ACTION_TYPES = {cmd.replace(".", "_") for cmd in INTEGRATION_SUPPORTED_COMMANDS}
@@ -46,16 +48,13 @@ async def async_call_action_from_config(
     context: Context | None,
 ) -> None:
     """Execute a device action."""
-
     device_action_name: str = config[CONF_TYPE]
     command_name = _get_command_name(device_action_name)
     device_id: str = config[CONF_DEVICE_ID]
 
-    runtime_data = _get_runtime_data_from_device_id_exception_on_failure(
+    if runtime_data := _get_runtime_data_from_device_id_exception_on_failure(
         hass, device_id
-    )
-
-    if runtime_data:
+    ):
         await runtime_data.data.async_run_command(command_name)
 
 
@@ -75,7 +74,13 @@ def _get_runtime_data_from_device_id(
     device_registry = dr.async_get(hass)
     if (device := device_registry.async_get(device_id)) is None:
         return None
+    return _get_runtime_data_for_device(hass, device)
 
+
+def _get_runtime_data_for_device(
+    hass: HomeAssistant, device: dr.DeviceEntry
+) -> NutRuntimeData | None:
+    """Find the runtime data for device and return None on error."""
     for config_entry_id in device.config_entries:
         entry = hass.config_entries.async_get_entry(config_entry_id)
         if (
@@ -83,9 +88,8 @@ def _get_runtime_data_from_device_id(
             and entry.domain == DOMAIN
             and entry.state is ConfigEntryState.LOADED
             and hasattr(entry, "runtime_data")
-            and isinstance(entry.runtime_data, NutRuntimeData)
         ):
-            return entry.runtime_data
+            return cast(NutConfigEntry, entry).runtime_data
 
     return None
 
@@ -105,16 +109,8 @@ def _get_runtime_data_from_device_id_exception_on_failure(
             },
         )
 
-    for config_entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(config_entry_id)
-        if (
-            entry
-            and entry.domain == DOMAIN
-            and entry.state is ConfigEntryState.LOADED
-            and hasattr(entry, "runtime_data")
-            and isinstance(entry.runtime_data, NutRuntimeData)
-        ):
-            return entry.runtime_data
+    if runtime_data := _get_runtime_data_for_device(hass, device):
+        return runtime_data
 
     raise InvalidDeviceAutomationConfig(
         translation_domain=DOMAIN,
