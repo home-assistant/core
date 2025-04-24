@@ -44,7 +44,7 @@ dependencies = [
   "certifi>=2021.5.30",
   "ciso8601==2.3.2",
   "cronsim==2.6",
-  "fnv-hash-fast==1.4.0",
+  "fnv-hash-fast==1.5.0",
   # ha-ffmpeg is indirectly imported from onboarding via the import chain
   # onboarding->cloud->assist_pipeline->tts->ffmpeg. Onboarding needs
   # to be setup in stage 0, but we don't want to also promote cloud with all its
