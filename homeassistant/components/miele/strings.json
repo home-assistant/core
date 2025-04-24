@@ -140,8 +140,8 @@
       }
     },
     "switch": {
-      "power_on": {
-        "name": "Power on"
+      "power": {
+        "name": "Power"
       },
       "supercooling": {
         "name": "Supercooling"

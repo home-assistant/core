@@ -101,7 +101,7 @@ SWITCH_TYPES: Final[tuple[MieleSwitchDefinition, ...]] = (
             key="poweronoff",
             value_fn=lambda value: value.state_status,
             off_value=1,
-            translation_key="power_on",
+            translation_key="power",
             on_cmd_data={POWER_ON: True},
             off_cmd_data={POWER_OFF: True},
         ),

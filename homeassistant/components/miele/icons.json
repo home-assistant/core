@@ -1,7 +1,7 @@
 {
   "entity": {
     "switch": {
-      "power_on": {
+      "power": {
         "default": "mdi:power"
       },
       "supercooling": {
