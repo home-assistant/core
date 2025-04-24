@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -59,12 +59,13 @@ CLIMATE_TYPES: Final[tuple[MieleClimateDefinition, ...]] = (
         ),
         description=MieleClimateDescription(
             key="thermostat",
-            value_fn=lambda value: cast(int, value.state_temperatures[0].temperature)
-            / 100.0,
-            target_fn=lambda value: cast(
-                int, value.state_target_temperature[0].temperature
-            )
-            / 100.0,
+            value_fn=(
+                lambda value: cast(int, value.state_temperatures[0].temperature) / 100.0
+            ),
+            target_fn=(
+                lambda value: cast(int, value.state_target_temperature[0].temperature)
+                / 100.0
+            ),
             zone=1,
         ),
     ),
@@ -80,12 +81,13 @@ CLIMATE_TYPES: Final[tuple[MieleClimateDefinition, ...]] = (
         ),
         description=MieleClimateDescription(
             key="thermostat2",
-            value_fn=lambda value: cast(int, value.state_temperatures[1].temperature)
-            / 100.0,
-            target_fn=lambda value: cast(
-                int, value.state_target_temperature[1].temperature
-            )
-            / 100.0,
+            value_fn=(
+                lambda value: cast(int, value.state_temperatures[1].temperature) / 100.0
+            ),
+            target_fn=(
+                lambda value: cast(int, value.state_target_temperature[1].temperature)
+                / 100.0
+            ),
             translation_key="zone_2",
             zone=2,
         ),
@@ -102,12 +104,13 @@ CLIMATE_TYPES: Final[tuple[MieleClimateDefinition, ...]] = (
         ),
         description=MieleClimateDescription(
             key="thermostat3",
-            value_fn=lambda value: cast(int, value.state_temperatures[2].temperature)
-            / 100.0,
-            target_fn=lambda value: cast(
-                int, value.state_target_temperature[2].temperature
-            )
-            / 100.0,
+            value_fn=(
+                lambda value: cast(int, value.state_temperatures[2].temperature) / 100.0
+            ),
+            target_fn=(
+                lambda value: cast(int, value.state_target_temperature[2].temperature)
+                / 100.0
+            ),
             translation_key="zone_3",
             zone=3,
         ),
@@ -138,7 +141,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
     """Representation of a climate entity."""
 
     entity_description: MieleClimateDescription
-    _attr_precision = 1.0
+    _attr_precision = PRECISION_WHOLE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1.0
     _attr_hvac_modes = [HVACMode.COOL]
@@ -190,18 +193,16 @@ class MieleClimate(MieleEntity, ClimateEntity):
             and self.entity_description.zone == 2
         ):
             t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
-
+            f"{device_id}-{description.key}-{description.zone}"
         self._attr_translation_key = t_key
-        self._attr_unique_id = (
-            f"{device_id}-{description.key}-{self.entity_description.zone}"
-        )
+        self._attr_unique_id = f"{device_id}-{description.key}-{description.zone}"
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         if self.entity_description.target_fn(self.device) is None:
             return None
-        return cast(float, self.entity_description.target_fn(self.device))
+        return cast(float | None, self.entity_description.target_fn(self.device))
 
     @property
     def max_temp(self) -> float:

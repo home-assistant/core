@@ -6,14 +6,15 @@ from aiohttp import ClientError
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-TEST_PLATFORM = Platform.CLIMATE
+TEST_PLATFORM = CLIMATE_DOMAIN
 pytestmark = [
     pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)]),
     pytest.mark.parametrize(
@@ -26,6 +27,7 @@ pytestmark = [
 ]
 
 ENTITY_ID = "climate.freezer_freezer"
+SERVICE_SET_TEMPERATURE = "set_temperature"
 
 
 async def test_climate_states(
@@ -50,12 +52,13 @@ async def test_set_target(
 
     await hass.services.async_call(
         TEST_PLATFORM,
-        "set_temperature",
-        {ATTR_ENTITY_ID: ENTITY_ID, "temperature": -17},
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: -17},
         blocking=True,
     )
-    await hass.async_block_till_done()
-    mock_miele_client.set_target_temperature.assert_called_once()
+    mock_miele_client.set_target_temperature.assert_called_once_with(
+        "Dummy_Appliance_1", -17.0, 1
+    )
 
 
 async def test_api_failure(
