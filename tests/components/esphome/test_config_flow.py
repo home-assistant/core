@@ -74,7 +74,6 @@ async def test_user_connection_works(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=None,
     )
 
     assert result["type"] is FlowResultType.FORM
