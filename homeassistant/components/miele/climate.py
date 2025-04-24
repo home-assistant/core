@@ -117,6 +117,12 @@ CLIMATE_TYPES: Final[tuple[MieleClimateDefinition, ...]] = (
     ),
 )
 
+ZONE1_DEVICES = {
+    MieleAppliance.FRIDGE: DEVICE_TYPE_TAGS[MieleAppliance.FRIDGE],
+    MieleAppliance.FRIDGE_FREEZER: DEVICE_TYPE_TAGS[MieleAppliance.FRIDGE],
+    MieleAppliance.FREEZER: DEVICE_TYPE_TAGS[MieleAppliance.FREEZER],
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -166,15 +172,9 @@ class MieleClimate(MieleEntity, ClimateEntity):
         t_key = self.entity_description.translation_key
 
         if description.zone == 1:
-            if self.device.device_type in (
-                MieleAppliance.FRIDGE,
-                MieleAppliance.FRIDGE_FREEZER,
-            ):
-                t_key = DEVICE_TYPE_TAGS[MieleAppliance.FRIDGE]
-            elif self.device.device_type == MieleAppliance.FREEZER:
-                t_key = DEVICE_TYPE_TAGS[MieleAppliance.FREEZER]
-            else:
-                t_key = "zone_1"
+            t_key = ZONE1_DEVICES.get(
+                cast(MieleAppliance, self.device.device_type), "zone_1"
+            )
 
         if description.zone == 2:
             if self.device.device_type in (
