@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from switchbot.devices.device import SwitchbotOperationError
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
@@ -506,146 +507,136 @@ async def test_roller_shade_controlling(
     ],
 )
 @pytest.mark.parametrize(
-    ("service", "service_data", "mock_method"),
-    [
-        (SERVICE_CLOSE_COVER, {}, "close"),
-        (SERVICE_OPEN_COVER, {}, "open"),
-        (SERVICE_STOP_COVER, {}, "stop"),
-        (SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 50}, "set_position"),
-    ],
-)
-async def test_exception_handling_curtain_service(
-    hass: HomeAssistant,
-    mock_entry_factory: Callable[[str], MockConfigEntry],
-    service: str,
-    service_data: dict,
-    mock_method: str,
-    exception: Exception,
-    error_message: str,
-) -> None:
-    """Test exception handling for curtain service with exception."""
-    inject_bluetooth_service_info(hass, ROLLER_SHADE_SERVICE_INFO)
-
-    entry = mock_entry_factory(sensor_type="curtain")
-    entry.add_to_hass(hass)
-    entity_id = "cover.test_name"
-
-    patch_target = f"homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.{mock_method}"
-
-    with (
-        patch(patch_target, new=AsyncMock(side_effect=exception)),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        with pytest.raises(HomeAssistantError, match=error_message):
-            await hass.services.async_call(
-                COVER_DOMAIN,
-                service,
-                {**service_data, ATTR_ENTITY_ID: entity_id},
-                blocking=True,
-            )
-
-
-@pytest.mark.parametrize(
-    ("exception", "error_message"),
+    (
+        "sensor_type",
+        "service_info",
+        "class_name",
+        "service",
+        "service_data",
+        "mock_method",
+    ),
     [
         (
-            SwitchbotOperationError("Operation failed"),
-            "An error occurred while performing the action: Operation failed",
+            "curtain",
+            WOCURTAIN3_SERVICE_INFO,
+            "SwitchbotCurtain",
+            SERVICE_CLOSE_COVER,
+            {},
+            "close",
+        ),
+        (
+            "curtain",
+            WOCURTAIN3_SERVICE_INFO,
+            "SwitchbotCurtain",
+            SERVICE_OPEN_COVER,
+            {},
+            "open",
+        ),
+        (
+            "curtain",
+            WOCURTAIN3_SERVICE_INFO,
+            "SwitchbotCurtain",
+            SERVICE_STOP_COVER,
+            {},
+            "stop",
+        ),
+        (
+            "curtain",
+            WOCURTAIN3_SERVICE_INFO,
+            "SwitchbotCurtain",
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 50},
+            "set_position",
+        ),
+        (
+            "roller_shade",
+            ROLLER_SHADE_SERVICE_INFO,
+            "SwitchbotRollerShade",
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 50},
+            "set_position",
+        ),
+        (
+            "roller_shade",
+            ROLLER_SHADE_SERVICE_INFO,
+            "SwitchbotRollerShade",
+            SERVICE_OPEN_COVER,
+            {},
+            "open",
+        ),
+        (
+            "roller_shade",
+            ROLLER_SHADE_SERVICE_INFO,
+            "SwitchbotRollerShade",
+            SERVICE_CLOSE_COVER,
+            {},
+            "close",
+        ),
+        (
+            "roller_shade",
+            ROLLER_SHADE_SERVICE_INFO,
+            "SwitchbotRollerShade",
+            SERVICE_STOP_COVER,
+            {},
+            "stop",
+        ),
+        (
+            "blind_tilt",
+            WOBLINDTILT_SERVICE_INFO,
+            "SwitchbotBlindTilt",
+            SERVICE_SET_COVER_TILT_POSITION,
+            {ATTR_TILT_POSITION: 50},
+            "set_position",
+        ),
+        (
+            "blind_tilt",
+            WOBLINDTILT_SERVICE_INFO,
+            "SwitchbotBlindTilt",
+            SERVICE_OPEN_COVER_TILT,
+            {},
+            "open",
+        ),
+        (
+            "blind_tilt",
+            WOBLINDTILT_SERVICE_INFO,
+            "SwitchbotBlindTilt",
+            SERVICE_CLOSE_COVER_TILT,
+            {},
+            "close",
+        ),
+        (
+            "blind_tilt",
+            WOBLINDTILT_SERVICE_INFO,
+            "SwitchbotBlindTilt",
+            SERVICE_STOP_COVER_TILT,
+            {},
+            "stop",
         ),
     ],
 )
-@pytest.mark.parametrize(
-    ("service", "service_data", "mock_method"),
-    [
-        (SERVICE_CLOSE_COVER, {}, "close"),
-        (SERVICE_OPEN_COVER, {}, "open"),
-        (SERVICE_STOP_COVER, {}, "stop"),
-        (SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 50}, "set_position"),
-    ],
-)
-async def test_exception_handling_roller_shade_service(
+async def test_exception_handling_cover_service(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
+    sensor_type: str,
+    service_info: BluetoothServiceInfoBleak,
+    class_name: str,
     service: str,
     service_data: dict,
     mock_method: str,
     exception: Exception,
     error_message: str,
 ) -> None:
-    """Test exception handling for roller shade service with exception."""
-    inject_bluetooth_service_info(hass, ROLLER_SHADE_SERVICE_INFO)
+    """Test exception handling for cover service with exception."""
+    inject_bluetooth_service_info(hass, service_info)
 
-    entry = mock_entry_factory(sensor_type="roller_shade")
+    entry = mock_entry_factory(sensor_type=sensor_type)
     entry.add_to_hass(hass)
     entity_id = "cover.test_name"
 
-    patch_update = (
-        "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.update"
-    )
-
-    patch_target = f"homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.{mock_method}"
-
-    with (
-        patch(patch_target, new=AsyncMock(side_effect=exception)),
-        patch(patch_update, new=AsyncMock(return_value=None)),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        with pytest.raises(HomeAssistantError, match=error_message):
-            await hass.services.async_call(
-                COVER_DOMAIN,
-                service,
-                {**service_data, ATTR_ENTITY_ID: entity_id},
-                blocking=True,
-            )
-
-
-@pytest.mark.parametrize(
-    ("exception", "error_message"),
-    [
-        (
-            SwitchbotOperationError("Operation failed"),
-            "An error occurred while performing the action: Operation failed",
-        ),
-    ],
-)
-@pytest.mark.parametrize(
-    ("service", "service_data", "mock_method"),
-    [
-        (SERVICE_CLOSE_COVER_TILT, {}, "close"),
-        (SERVICE_OPEN_COVER_TILT, {}, "open"),
-        (SERVICE_STOP_COVER_TILT, {}, "stop"),
-        (SERVICE_SET_COVER_TILT_POSITION, {ATTR_TILT_POSITION: 50}, "set_position"),
-    ],
-)
-async def test_exception_handling_blindtilt_service(
-    hass: HomeAssistant,
-    mock_entry_factory: Callable[[str], MockConfigEntry],
-    service: str,
-    service_data: dict,
-    mock_method: str,
-    exception: Exception,
-    error_message: str,
-) -> None:
-    """Test exception handling for blindtilt service tilt with exception."""
-    inject_bluetooth_service_info(hass, WOBLINDTILT_SERVICE_INFO)
-
-    entry = mock_entry_factory(sensor_type="blind_tilt")
-    entry.add_to_hass(hass)
-    entity_id = "cover.test_name"
-
-    patch_update = (
-        "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.update"
-    )
-
-    patch_target = f"homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.{mock_method}"
-
-    with (
-        patch(patch_target, new=AsyncMock(side_effect=exception)),
-        patch(patch_update, new=AsyncMock(return_value=True)),
+    with patch.multiple(
+        f"homeassistant.components.switchbot.cover.switchbot.{class_name}",
+        update=AsyncMock(return_value=None),
+        **{mock_method: AsyncMock(side_effect=exception)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

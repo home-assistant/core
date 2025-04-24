@@ -144,7 +144,7 @@ async def test_humidifier_services(
         (SERVICE_SET_MODE, {ATTR_MODE: MODE_NORMAL}, "async_set_manual"),
     ],
 )
-async def test_exception_handling_humidifier(
+async def test_exception_handling_humidifier_service(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
     service: str,

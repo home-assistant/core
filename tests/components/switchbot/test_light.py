@@ -95,39 +95,14 @@ async def test_light_strip_services(
     entry.add_to_hass(hass)
     entity_id = "light.test_name"
 
-    with (
-        patch(
-            "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.color_modes",
-            new=color_modes,
-        ),
-        patch(
-            "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.color_mode",
-            new=color_mode,
-        ),
-        patch(
-            "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.turn_on",
-            new=AsyncMock(return_value=True),
-        ) as mock_turn_on,
-        patch(
-            "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.turn_off",
-            new=AsyncMock(return_value=True),
-        ) as mock_turn_off,
-        patch(
-            "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.set_brightness",
-            new=AsyncMock(return_value=True),
-        ) as mock_set_brightness,
-        patch(
-            "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.set_rgb",
-            new=AsyncMock(return_value=True),
-        ) as mock_set_rgb,
-        patch(
-            "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.set_color_temp",
-            new=AsyncMock(return_value=True),
-        ) as mock_set_color_temp,
-        patch(
-            "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.update",
-            new=AsyncMock(return_value=None),
-        ),
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip",
+        color_modes=color_modes,
+        color_mode=color_mode,
+        update=AsyncMock(return_value=None),
+        **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -139,15 +114,7 @@ async def test_light_strip_services(
             blocking=True,
         )
 
-        mock_map = {
-            "turn_off": mock_turn_off,
-            "turn_on": mock_turn_on,
-            "set_brightness": mock_set_brightness,
-            "set_rgb": mock_set_rgb,
-            "set_color_temp": mock_set_color_temp,
-        }
-        mock_instance = mock_map[mock_method]
-        mock_instance.assert_awaited_once_with(*expected_args)
+        mocked_instance.assert_awaited_once_with(*expected_args)
 
 
 @pytest.mark.parametrize(
@@ -199,7 +166,7 @@ async def test_light_strip_services(
         ),
     ],
 )
-async def test_exception_handling_humidifier(
+async def test_exception_handling_light_service(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
     service: str,
@@ -210,32 +177,19 @@ async def test_exception_handling_humidifier(
     exception: Exception,
     error_message: str,
 ) -> None:
-    """Test exception handling for humidifier service with exception."""
+    """Test exception handling for light service with exception."""
     inject_bluetooth_service_info(hass, WOSTRIP_SERVICE_INFO)
 
     entry = mock_entry_factory(sensor_type="light_strip")
     entry.add_to_hass(hass)
     entity_id = "light.test_name"
 
-    patch_target = f"homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.{mock_method}"
-
-    with (
-        patch(
-            "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.color_modes",
-            new=color_modes,
-        ),
-        patch(
-            "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.color_mode",
-            new=color_mode,
-        ),
-        patch(
-            "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip.update",
-            new=AsyncMock(return_value=None),
-        ),
-        patch(
-            patch_target,
-            new=AsyncMock(side_effect=exception),
-        ),
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip",
+        color_modes=color_modes,
+        color_mode=color_mode,
+        update=AsyncMock(return_value=None),
+        **{mock_method: AsyncMock(side_effect=exception)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
