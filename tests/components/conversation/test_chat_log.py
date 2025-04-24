@@ -139,6 +139,48 @@ async def test_unknown_llm_api(
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
 
 
+async def test_multiple_llm_apis(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test when we reference an LLM API."""
+
+    class MyTool(llm.Tool):
+        """Test tool."""
+
+        name = "test_tool"
+        description = "Test function"
+        parameters = vol.Schema(
+            {vol.Optional("param1", description="Test parameters"): str}
+        )
+
+    class MyAPI(llm.API):
+        """Test API."""
+
+        async def async_get_api_instance(
+            self, llm_context: llm.LLMContext
+        ) -> llm.APIInstance:
+            """Return a list of tools."""
+            return llm.APIInstance(self, "My API Prompt", llm_context, [MyTool()])
+
+    api = MyAPI(hass=hass, id="my-api", name="Test")
+    llm.async_register_api(hass, api)
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        await chat_log.async_update_llm_data(
+            conversing_domain="test",
+            user_input=mock_conversation_input,
+            user_llm_hass_api=["assist", "my-api"],
+            user_llm_prompt=None,
+        )
+
+    assert chat_log.llm_api
+    assert chat_log.llm_api.api.id == "assist|my-api"
+
+
 async def test_template_error(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,

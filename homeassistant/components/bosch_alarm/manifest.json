@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["bosch-alarm-mode2==0.4.3"]
+  "requirements": ["bosch-alarm-mode2==0.4.6"]
 }

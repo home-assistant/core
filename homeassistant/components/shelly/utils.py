@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
@@ -58,6 +57,7 @@ from .const import (
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
     LOGGER,
+    MAX_SCRIPT_SIZE,
     RPC_INPUTS_EVENTS_TYPES,
     SHAIR_MAX_WORK_HOURS,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -199,8 +199,18 @@ def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
 
     if (
         not last_uptime
-        or abs((delta_uptime - last_uptime).total_seconds()) > UPTIME_DEVIATION
+        or (diff := abs((delta_uptime - last_uptime).total_seconds()))
+        > UPTIME_DEVIATION
     ):
+        if last_uptime:
+            LOGGER.debug(
+                "Time deviation %s > %s: uptime=%s, last_uptime=%s, delta_uptime=%s",
+                diff,
+                UPTIME_DEVIATION,
+                uptime,
+                last_uptime,
+                delta_uptime,
+            )
         return delta_uptime
 
     return last_uptime
@@ -535,7 +545,7 @@ def is_rpc_wifi_stations_disabled(
     return True
 
 
-def get_http_port(data: MappingProxyType[str, Any]) -> int:
+def get_http_port(data: Mapping[str, Any]) -> int:
     """Get port from config entry data."""
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
 
@@ -642,7 +652,7 @@ def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
 
 async def get_rpc_script_event_types(device: RpcDevice, id: int) -> list[str]:
     """Return a list of event types for a specific script."""
-    code_response = await device.script_getcode(id)
+    code_response = await device.script_getcode(id, bytes_to_read=MAX_SCRIPT_SIZE)
     matches = SHELLY_EMIT_EVENT_PATTERN.finditer(code_response["data"])
     return sorted([*{str(event_type.group(1)) for event_type in matches}])
 

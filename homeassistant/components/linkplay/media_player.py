@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -120,6 +121,8 @@ SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
 )
 
 RETRY_POLL_MAXIMUM = 3
+SCAN_INTERVAL = timedelta(seconds=5)
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
