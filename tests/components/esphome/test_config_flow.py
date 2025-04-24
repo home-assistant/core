@@ -1940,7 +1940,6 @@ async def test_user_flow_name_conflict_overwrite(
         context={"source": config_entries.SOURCE_USER},
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "name_conflict"
