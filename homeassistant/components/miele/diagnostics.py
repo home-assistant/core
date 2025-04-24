@@ -21,9 +21,10 @@ def hash_identifier(key: str) -> str:
 
 def redact_identifiers(in_data: dict[str, Any]) -> dict[str, Any]:
     """Redact identifiers from the data."""
-    for key in in_data:
-        in_data[hash_identifier(key)] = in_data.pop(key)
-    return in_data
+    out_data = {}
+    for key, value in in_data.items():
+        out_data[hash_identifier(key)] = value
+    return out_data
 
 
 async def async_get_config_entry_diagnostics(
