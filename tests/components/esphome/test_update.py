@@ -130,8 +130,8 @@ async def test_update_entity(
         ),
     ):
         await hass.services.async_call(
-            "update",
-            "install",
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
             {"entity_id": "update.test_firmware"},
             blocking=True,
         )
@@ -155,8 +155,8 @@ async def test_update_entity(
         ),
     ):
         await hass.services.async_call(
-            "update",
-            "install",
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
             {"entity_id": "update.test_firmware"},
             blocking=True,
         )
@@ -177,8 +177,8 @@ async def test_update_entity(
         ) as mock_upload,
     ):
         await hass.services.async_call(
-            "update",
-            "install",
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
             {"entity_id": "update.test_firmware"},
             blocking=True,
         )
