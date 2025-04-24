@@ -104,7 +104,7 @@
       "name": "Wine cabinet freezer"
     },
     "hob_extraction": {
-      "name": "How with extraction"
+      "name": "Hob with extraction"
     },
     "washer_dryer": {
       "name": "Washer dryer"
@@ -129,7 +129,7 @@
           "program_interrupted": "Program interrupted",
           "programmed": "Programmed",
           "rinse_hold": "Rinse hold",
-          "running": "Running",
+          "in_use": "In use",
           "service": "Service",
           "supercooling": "Supercooling",
           "supercooling_superfreezing": "Supercooling/superfreezing",
