@@ -262,7 +262,7 @@
           "artichokes_small": "Artichokes small",
           "atlantic_catfish_fillet_1_cm": "Atlantic catfish (fillet, 1 cm)",
           "atlantic_catfish_fillet_2_cm": "Atlantic catfish (fillet, 2 cm)",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "auto_roast": "Auto roast",
           "automatic": "Automatic",
           "automatic_plus": "Automatic plus",
