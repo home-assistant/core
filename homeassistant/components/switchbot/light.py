@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from switchbot import ColorMode as SwitchBotColorMode, SwitchbotBaseLight
+import switchbot
+from switchbot import ColorMode as SwitchBotColorMode
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -39,7 +40,7 @@ async def async_setup_entry(
 class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
     """Representation of switchbot light bulb."""
 
-    _device: SwitchbotBaseLight
+    _device: switchbot.SwitchbotBaseLight
     _attr_name = None
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:

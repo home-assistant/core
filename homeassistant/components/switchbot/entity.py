@@ -7,7 +7,7 @@ import logging
 from typing import Any, Concatenate
 
 from switchbot import Switchbot, SwitchbotDevice
-from switchbot.devices.device import CharacteristicMissingError, SwitchbotOperationError
+from switchbot.devices.device import SwitchbotOperationError
 
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
@@ -93,20 +93,14 @@ class SwitchbotEntity(
 def exception_handler[_EntityT: SwitchbotEntity, **_P](
     func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
-    """Decorate Enphase Envoy calls to handle exceptions.
+    """Decorate Switchbot calls to handle exceptions..
 
-    A decorator that wraps the passed in function, catches  errors.
+    A decorator that wraps the passed in function, catches Switchbot errors.
     """
 
     async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
-        except CharacteristicMissingError as error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="characteristic_missing_error",
-                translation_placeholders={"error": str(error)},
-            ) from error
         except SwitchbotOperationError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
