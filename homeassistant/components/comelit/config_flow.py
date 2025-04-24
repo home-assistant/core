@@ -22,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from .const import _LOGGER, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN
-from .utils import client_session
+from .utils import async_client_session
 
 DEFAULT_HOST = "192.168.1.252"
 DEFAULT_PIN = 111111
@@ -49,7 +49,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     api: ComelitCommonApi
 
-    session = await client_session(hass)
+    session = await async_client_session(hass)
     if data.get(CONF_TYPE, BRIDGE) == BRIDGE:
         api = ComeliteSerialBridgeApi(
             data[CONF_HOST], data[CONF_PORT], data[CONF_PIN], session

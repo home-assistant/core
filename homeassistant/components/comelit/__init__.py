@@ -12,7 +12,7 @@ from .coordinator import (
     ComelitSerialBridge,
     ComelitVedoSystem,
 )
-from .utils import client_session
+from .utils import async_client_session
 
 BRIDGE_PLATFORMS = [
     Platform.CLIMATE,
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> b
 
     coordinator: ComelitBaseCoordinator
 
-    session = await client_session(hass)
+    session = await async_client_session(hass)
 
     if entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
         coordinator = ComelitSerialBridge(
