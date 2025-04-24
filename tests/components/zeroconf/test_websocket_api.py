@@ -175,18 +175,17 @@ async def test_subscribe_discovery(
     record_updates = [RecordUpdate(record, record) for record in records]
     instance.zeroconf.record_manager.async_updates(future, record_updates)
     instance.zeroconf.record_manager.async_updates_complete(True)
-    removes: set[str] = set()
-    async with asyncio.timeout(1):
-        response = await client.receive_json()
-    assert "remove" in response["event"]
-    removes.add(next(iter(response["event"]["remove"]))["name"])
 
-    async with asyncio.timeout(1):
-        response = await client.receive_json()
-    assert "remove" in response["event"]
-    removes.add(next(iter(response["event"]["remove"]))["name"])
-    assert len(removes) == 2
+    removes: set[str] = set()
+    for _ in range(3):
+        async with asyncio.timeout(1):
+            response = await client.receive_json()
+        assert "remove" in response["event"]
+        removes.add(next(iter(response["event"]["remove"]))["name"])
+
+    assert len(removes) == 3
     assert removes == {
         "foo2._fakeservice._tcp.local.",
         "foo3._fakeservice._tcp.local.",
+        "wrong._wrongservice._tcp.local.",
     }
