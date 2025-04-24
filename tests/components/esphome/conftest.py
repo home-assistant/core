@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import Event
-from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine
+from collections.abc import AsyncGenerator, Callable, Coroutine
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aioesphomeapi import (
@@ -48,10 +48,34 @@ if TYPE_CHECKING:
     from aioesphomeapi.api_pb2 import SubscribeLogsResponse
 
 
-type MockGenericDeviceEntryType = Callable[
-    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-    Coroutine[Any, Any, MockConfigEntry],
-]
+class MockGenericDeviceEntryType(Protocol):
+    """Mock ESPHome device entry type."""
+
+    async def __call__(
+        self,
+        mock_client: APIClient,
+        entity_info: list[EntityInfo],
+        user_service: list[UserService],
+        states: list[EntityState],
+        mock_storage: bool = ...,
+    ) -> MockConfigEntry:
+        """Mock an ESPHome device entry."""
+
+
+class MockESPHomeDeviceType(Protocol):
+    """Mock ESPHome device type."""
+
+    async def __call__(
+        self,
+        mock_client: APIClient,
+        entity_info: list[EntityInfo] | None = ...,
+        user_service: list[UserService] | None = ...,
+        states: list[EntityState] | None = ...,
+        entry: MockConfigEntry | None = ...,
+        device_info: dict[str, Any] | None = ...,
+        mock_storage: bool = ...,
+    ) -> MockESPHomeDevice:
+        """Mock an ESPHome device."""
 
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
@@ -673,10 +697,7 @@ async def mock_generic_device_entry(
 async def mock_esphome_device(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-) -> Callable[
-    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-    Awaitable[MockESPHomeDevice],
-]:
+) -> MockESPHomeDeviceType:
     """Set up an ESPHome entry and return the MockESPHomeDevice."""
 
     async def _mock_device(
