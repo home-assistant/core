@@ -191,6 +191,7 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @bridge_api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self.coordinator.api.set_humidity_status(
