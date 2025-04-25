@@ -8,6 +8,11 @@
           "hapid": "Access point ID (SGTIN)",
           "pin": "[%key:common::config_flow::data::pin%]",
           "name": "Name (optional, used as name prefix for all devices)"
+        },
+        "data_description": {
+          "hapid": "The SGTIN of the Homematic IP access point. This is usually printed on the device.",
+          "pin": "The PIN code of the Homematic IP access point you set in the HomematicIP App.",
+          "name": "The name of the access point. This will be used as a prefix for all devices."
         }
       },
       "link": {
