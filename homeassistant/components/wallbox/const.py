@@ -69,6 +69,6 @@ class ChargerStatus(StrEnum):
 class EcoSmartMode(StrEnum):
     """Charger Eco mode select options."""
 
-    OFF = "Off"
-    ECO_MODE = "Eco mode"
-    FULL_SOLAR = "Full solar"
+    OFF = "off"
+    ECO_MODE = "eco_mode"
+    FULL_SOLAR = "full_solar"

@@ -94,7 +94,12 @@
     },
     "select": {
       "ecosmart": {
-        "name": "Solar charging"
+        "name": "Solar charging",
+        "state": {
+          "off": "Off",
+          "eco_mode": "Eco mode",
+          "full_solar": "Full solar"
+        }
       }
     }
   },
