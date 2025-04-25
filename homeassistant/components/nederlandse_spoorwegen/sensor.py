@@ -191,7 +191,7 @@ class NSDepartureSensor(SensorEntity):
 
         try:
             loop = asyncio.get_running_loop()
-            self._trips = await loop.run_in_executor(
+            self._trips = await loop.run_in_executor( # type: ignore # ns_api import contains to typing and causes a mypy error here.
                 None,
                 self._nsapi.get_trips,
                 trip_time,
