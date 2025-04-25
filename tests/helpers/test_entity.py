@@ -44,6 +44,7 @@ from tests.common import (
     MockEntityPlatform,
     MockModule,
     MockPlatform,
+    RegistryEntryWithDefaults,
     mock_integration,
     mock_registry,
 )
@@ -683,7 +684,7 @@ async def test_warn_disabled(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we warn once if we write to a disabled entity."""
-    entry = er.RegistryEntry(
+    entry = RegistryEntryWithDefaults(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
@@ -710,7 +711,7 @@ async def test_warn_disabled(
 
 async def test_disabled_in_entity_registry(hass: HomeAssistant) -> None:
     """Test entity is removed if we disable entity registry entry."""
-    entry = er.RegistryEntry(
+    entry = RegistryEntryWithDefaults(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
