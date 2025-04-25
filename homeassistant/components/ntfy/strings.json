@@ -1,0 +1,101 @@
+{
+  "common": {
+    "topic": "Topic",
+    "add_topic_description": "Set up a topic for notifications."
+  },
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up **ntfy** push notification service",
+        "data": {
+          "url": "Service URL"
+        },
+        "data_description": {
+          "url": "Address of the ntfy service. Modify this if you want to use a different server"
+        },
+        "sections": {
+          "auth": {
+            "name": "Authentication",
+            "description": "Depending on whether the server is configured to support access control, some topics may be read/write protected so that only users with the correct credentials can subscribe or publish to them. To publish/subscribe to protected topics, you can provide a username and password.",
+            "data": {
+              "username": "[%key:common::config_flow::data::username%]",
+              "password": "[%key:common::config_flow::data::password%]"
+            },
+            "data_description": {
+              "username": "Enter the username required to authenticate with protected ntfy topics",
+              "password": "Enter the password corresponding to the provided username for authentication"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "config_subentries": {
+    "topic": {
+      "step": {
+        "user": {
+          "title": "[%key:component::ntfy::common::topic%]",
+          "description": "[%key:component::ntfy::common::add_topic_description%]",
+          "menu_options": {
+            "add_topic": "Enter topic",
+            "generate_topic": "Generate topic name"
+          }
+        },
+        "add_topic": {
+          "title": "[%key:component::ntfy::common::topic%]",
+          "description": "[%key:component::ntfy::common::add_topic_description%]",
+          "data": {
+            "topic": "[%key:component::ntfy::common::topic%]",
+            "name": "Display name"
+          },
+          "data_description": {
+            "topic": "Enter the name of the topic you want to use for notifications. Topics may not be password-protected, so choose a name that's not easy to guess.",
+            "name": "Set an alternative name to display instead of the topic name. This helps identify topics with complex or hard-to-read names more easily."
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add topic"
+      },
+      "entry_type": "[%key:component::ntfy::common::topic%]",
+      "error": {
+        "publish_forbidden": "Publishing to this topic is forbidden",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]",
+        "invalid_topic": "Invalid topic. Only letters, numbers, underscores, or dashes allowed."
+      },
+      "abort": {
+        "already_configured": "Topic is already configured"
+      }
+    }
+  },
+  "exceptions": {
+    "publish_failed_request_error": {
+      "message": "Failed to publish notification: {error_msg}"
+    },
+
+    "publish_failed_exception": {
+      "message": "Failed to publish notification due to a connection error"
+    },
+    "authentication_error": {
+      "message": "Failed to authenticate with ntfy service. Please verify your credentials"
+    },
+    "server_error": {
+      "message": "Failed to connect to ntfy service due to a server error: {error_msg}"
+    },
+    "connection_error": {
+      "message": "Failed to connect to ntfy service due to a connection error"
+    },
+    "timeout_error": {
+      "message": "Failed to connect to ntfy service due to a connection timeout"
+    }
+  }
+}
