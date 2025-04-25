@@ -291,13 +291,13 @@ BAD_JSON_SUFFIX = "** and it ends here ^^"
 
 
 @pytest.fixture
-def setup_comp(
+async def setup_comp(
     hass: HomeAssistant,
     mock_device_tracker_conf: list[Device],
     mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Initialize components."""
-    hass.loop.run_until_complete(async_setup_component(hass, "device_tracker", {}))
+    await async_setup_component(hass, "device_tracker", {})
 
     hass.states.async_set("zone.inner", "zoning", INNER_ZONE)
 
@@ -320,7 +320,7 @@ async def setup_owntracks(
 
 
 @pytest.fixture
-def context(hass: HomeAssistant, setup_comp: None) -> OwnTracksContextFactory:
+async def context(hass: HomeAssistant, setup_comp: None) -> OwnTracksContextFactory:
     """Set up the mocked context."""
     orig_context = owntracks.OwnTracksContext
     context = None
@@ -331,16 +331,14 @@ def context(hass: HomeAssistant, setup_comp: None) -> OwnTracksContextFactory:
         context = orig_context(*args)
         return context
 
-    hass.loop.run_until_complete(
-        setup_owntracks(
-            hass,
-            {
-                CONF_MAX_GPS_ACCURACY: 200,
-                CONF_WAYPOINT_IMPORT: True,
-                CONF_WAYPOINT_WHITELIST: ["jon", "greg"],
-            },
-            store_context,
-        )
+    await setup_owntracks(
+        hass,
+        {
+            CONF_MAX_GPS_ACCURACY: 200,
+            CONF_WAYPOINT_IMPORT: True,
+            CONF_WAYPOINT_WHITELIST: ["jon", "greg"],
+        },
+        store_context,
     )
 
     def get_context():
@@ -382,7 +380,7 @@ def assert_location_longitude(hass: HomeAssistant, longitude: float) -> None:
     assert state.attributes.get("longitude") == longitude
 
 
-def assert_location_accuracy(hass: HomeAssistant, accuracy: int) -> None:
+def assert_location_accuracy(hass: HomeAssistant, accuracy: float) -> None:
     """Test the assertion of a location accuracy."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.attributes.get("gps_accuracy") == accuracy

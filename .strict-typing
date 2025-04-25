@@ -119,6 +119,7 @@ homeassistant.components.bluetooth_adapters.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
+homeassistant.components.bosch_alarm.*
 homeassistant.components.braviatv.*
 homeassistant.components.bring.*
 homeassistant.components.brother.*
@@ -290,6 +291,7 @@ homeassistant.components.kaleidescape.*
 homeassistant.components.knocki.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
+homeassistant.components.kulersky.*
 homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
 homeassistant.components.lamarzocco.*
@@ -361,8 +363,10 @@ homeassistant.components.no_ip.*
 homeassistant.components.nordpool.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
+homeassistant.components.ntfy.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
+homeassistant.components.ohme.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onedrive.*
@@ -382,6 +386,7 @@ homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*
+homeassistant.components.pegel_online.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.person.*
 homeassistant.components.pi_hole.*

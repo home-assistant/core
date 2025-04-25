@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homematicip.aio.device import AsyncWallMountedGarageDoorController
+from homematicip.device import WallMountedGarageDoorController
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities(
         HomematicipGarageDoorControllerButton(hap, device)
         for device in hap.home.devices
-        if isinstance(device, AsyncWallMountedGarageDoorController)
+        if isinstance(device, WallMountedGarageDoorController)
     )
 
 
@@ -39,4 +39,4 @@ class HomematicipGarageDoorControllerButton(HomematicipGenericEntity, ButtonEnti
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self._device.send_start_impulse()
+        await self._device.send_start_impulse_async()

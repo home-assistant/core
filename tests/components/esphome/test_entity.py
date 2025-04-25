@@ -1,7 +1,6 @@
 """Test ESPHome binary sensors."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -9,14 +8,12 @@ from aioesphomeapi import (
     APIClient,
     BinarySensorInfo,
     BinarySensorState,
-    EntityInfo,
-    EntityState,
     SensorInfo,
     SensorState,
-    UserService,
 )
 
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     ATTR_RESTORED,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
@@ -27,7 +24,7 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant, call
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDevice, MockESPHomeDeviceType
 
 
 async def test_entities_removed(
@@ -35,10 +32,7 @@ async def test_entities_removed(
     entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test entities are removed when static info changes."""
     entity_info = [
@@ -130,10 +124,7 @@ async def test_entities_removed_after_reload(
     entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test entities and their registry entry are removed when static info changes after a reload."""
     entity_info = [
@@ -220,9 +211,6 @@ async def test_entities_removed_after_reload(
             unique_id="my_binary_sensor",
         ),
     ]
-    states = [
-        BinarySensorState(key=1, state=True, missing_state=False),
-    ]
     mock_device.client.list_entities_services = AsyncMock(
         return_value=(entity_info, user_service)
     )
@@ -260,13 +248,77 @@ async def test_entities_removed_after_reload(
     assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 1
 
 
+async def test_entities_for_entire_platform_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test removing all entities for a specific platform when static info changes."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="mybinary_sensor_to_be_removed",
+            key=1,
+            name="my binary_sensor to be removed",
+            unique_id="mybinary_sensor_to_be_removed",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    user_service = []
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    entry = mock_device.entry
+    entry_id = entry.entry_id
+    storage_key = f"esphome.{entry_id}"
+    state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 1
+
+    state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    assert state is not None
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
+    assert reg_entry is not None
+    assert state.attributes[ATTR_RESTORED] is True
+
+    entity_info = []
+    states = []
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        entry=entry,
+    )
+    assert mock_device.entry.entry_id == entry_id
+    state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    assert state is None
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
+    assert reg_entry is None
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 0
+
+
 async def test_entity_info_object_ids(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test how object ids affect entity id."""
     entity_info = [
@@ -293,10 +345,7 @@ async def test_deep_sleep_device(
     hass: HomeAssistant,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a deep sleep device."""
     entity_info = [
@@ -404,10 +453,7 @@ async def test_esphome_device_without_friendly_name(
     hass: HomeAssistant,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device without friendly_name set."""
     entity_info = [
@@ -430,6 +476,40 @@ async def test_esphome_device_without_friendly_name(
         states=states,
         device_info={"friendly_name": None},
     )
-    state = hass.states.get("binary_sensor.my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def test_entity_without_name_device_with_friendly_name(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test name and entity_id for a device a friendly name and an entity without a name."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="mybinary_sensor",
+            key=1,
+            name="",
+            unique_id="my_binary_sensor",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+    user_service = []
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
+    )
+    state = hass.states.get("binary_sensor.mixer")
+    assert state is not None
+    assert state.state == STATE_ON
+    # Make sure we have set the name to `None` as otherwise
+    # the friendly_name will be "The Best Mixer "
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "The Best Mixer"

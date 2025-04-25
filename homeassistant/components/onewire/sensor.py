@@ -7,7 +7,6 @@ import dataclasses
 from datetime import timedelta
 import logging
 import os
-from types import MappingProxyType
 from typing import Any
 
 from pyownet import protocol
@@ -415,7 +414,7 @@ async def async_setup_entry(
 def get_entities(
     onewire_hub: OneWireHub,
     devices: list[OWDeviceDescription],
-    options: MappingProxyType[str, Any],
+    options: Mapping[str, Any],
 ) -> list[OneWireSensorEntity]:
     """Get a list of entities."""
     entities: list[OneWireSensorEntity] = []

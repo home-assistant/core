@@ -1,18 +1,9 @@
 """Test ESPHome update entities."""
 
-from collections.abc import Awaitable, Callable
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from aioesphomeapi import (
-    APIClient,
-    EntityInfo,
-    EntityState,
-    UpdateCommand,
-    UpdateInfo,
-    UpdateState,
-    UserService,
-)
+from aioesphomeapi import APIClient, UpdateCommand, UpdateInfo, UpdateState
 import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
@@ -35,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 
 @pytest.fixture(autouse=True)
@@ -86,26 +77,25 @@ def stub_reconnect():
 )
 async def test_update_entity(
     hass: HomeAssistant,
-    stub_reconnect,
-    mock_config_entry,
-    mock_device_info,
     mock_dashboard: dict[str, Any],
-    devices_payload,
-    expected_state,
-    expected_attributes,
+    devices_payload: list[dict[str, Any]],
+    expected_state: str,
+    expected_attributes: dict[str, Any],
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test ESPHome update entity."""
     mock_dashboard["configured"] = devices_payload
     await async_get_dashboard(hass).async_refresh()
 
-    with patch(
-        "homeassistant.components.esphome.update.DomainData.get_entry_data",
-        return_value=Mock(available=True, device_info=mock_device_info, info={}),
-    ):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
 
-    state = hass.states.get("update.none_firmware")
+    state = hass.states.get("update.test_firmware")
     assert state is not None
     assert state.state == expected_state
     for key, expected_value in expected_attributes.items():
@@ -117,10 +107,12 @@ async def test_update_entity(
     # Compile failed, don't try to upload
     with (
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=False
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
+            return_value=False,
         ) as mock_compile,
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=True
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.upload",
+            return_value=True,
         ) as mock_upload,
         pytest.raises(
             HomeAssistantError,
@@ -128,9 +120,9 @@ async def test_update_entity(
         ),
     ):
         await hass.services.async_call(
-            "update",
-            "install",
-            {"entity_id": "update.none_firmware"},
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -142,10 +134,12 @@ async def test_update_entity(
     # Compile success, upload fails
     with (
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=True
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
+            return_value=True,
         ) as mock_compile,
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=False
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.upload",
+            return_value=False,
         ) as mock_upload,
         pytest.raises(
             HomeAssistantError,
@@ -153,9 +147,9 @@ async def test_update_entity(
         ),
     ):
         await hass.services.async_call(
-            "update",
-            "install",
-            {"entity_id": "update.none_firmware"},
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -168,16 +162,18 @@ async def test_update_entity(
     # Everything works
     with (
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.compile", return_value=True
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
+            return_value=True,
         ) as mock_compile,
         patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.upload", return_value=True
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.upload",
+            return_value=True,
         ) as mock_upload,
     ):
         await hass.services.async_call(
-            "update",
-            "install",
-            {"entity_id": "update.none_firmware"},
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.test_firmware"},
             blocking=True,
         )
 
@@ -191,10 +187,7 @@ async def test_update_entity(
 async def test_update_static_info(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
     """Test ESPHome update entity."""
@@ -206,7 +199,7 @@ async def test_update_static_info(
     ]
     await async_get_dashboard(hass).async_refresh()
 
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -243,10 +236,7 @@ async def test_update_device_state_for_availability(
     has_deep_sleep: bool,
     mock_dashboard: dict[str, Any],
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test ESPHome update entity changes availability with the device."""
     mock_dashboard["configured"] = [
@@ -274,28 +264,27 @@ async def test_update_device_state_for_availability(
 
 async def test_update_entity_dashboard_not_available_startup(
     hass: HomeAssistant,
-    stub_reconnect,
-    mock_config_entry,
-    mock_device_info,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
     """Test ESPHome update entity when dashboard is not available at startup."""
     with (
         patch(
-            "homeassistant.components.esphome.update.DomainData.get_entry_data",
-            return_value=Mock(available=True, device_info=mock_device_info, info={}),
-        ),
-        patch(
-            "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
             side_effect=TimeoutError,
         ),
     ):
         await async_get_dashboard(hass).async_refresh()
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await mock_esphome_device(
+            mock_client=mock_client,
+            entity_info=[],
+            user_service=[],
+            states=[],
+        )
 
     # We have a dashboard but it is not available
-    state = hass.states.get("update.none_firmware")
+    state = hass.states.get("update.test_firmware")
     assert state is None
 
     mock_dashboard["configured"] = [
@@ -308,7 +297,7 @@ async def test_update_entity_dashboard_not_available_startup(
     await async_get_dashboard(hass).async_refresh()
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.none_firmware")
+    state = hass.states.get("update.test_firmware")
     assert state.state == STATE_ON
     expected_attributes = {
         "latest_version": "2023.2.0-dev",
@@ -322,15 +311,12 @@ async def test_update_entity_dashboard_not_available_startup(
 async def test_update_entity_dashboard_discovered_after_startup_but_update_failed(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
     """Test ESPHome update entity when dashboard is discovered after startup and the first update fails."""
     with patch(
-        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
         side_effect=TimeoutError,
     ):
         await async_get_dashboard(hass).async_refresh()
@@ -370,27 +356,26 @@ async def test_update_entity_dashboard_discovered_after_startup_but_update_faile
 
 
 async def test_update_entity_not_present_without_dashboard(
-    hass: HomeAssistant, stub_reconnect, mock_config_entry, mock_device_info
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test ESPHome update entity does not get created if there is no dashboard."""
-    with patch(
-        "homeassistant.components.esphome.update.DomainData.get_entry_data",
-        return_value=Mock(available=True, device_info=mock_device_info, info={}),
-    ):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
 
-    state = hass.states.get("update.none_firmware")
+    state = hass.states.get("update.test_firmware")
     assert state is None
 
 
 async def test_update_becomes_available_at_runtime(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
     """Test ESPHome update entity when the dashboard has no device at startup but gets them later."""
@@ -426,10 +411,7 @@ async def test_update_becomes_available_at_runtime(
 async def test_update_entity_not_present_with_dashboard_but_unknown_device(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
     """Test ESPHome update entity does not get created if the device is unknown to the dashboard."""
@@ -461,7 +443,7 @@ async def test_update_entity_not_present_with_dashboard_but_unknown_device(
 async def test_generic_device_update_entity(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic device update entity."""
     entity_info = [
@@ -497,10 +479,7 @@ async def test_generic_device_update_entity(
 async def test_generic_device_update_entity_has_update(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a generic device update entity with an update."""
     entity_info = [
@@ -522,7 +501,7 @@ async def test_generic_device_update_entity_has_update(
         )
     ]
     user_service = []
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=user_service,
