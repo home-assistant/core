@@ -84,6 +84,28 @@
           "off": "mdi:hvac-off",
           "on": "mdi:hvac"
         }
+      },
+      "backup_capable": {
+        "state": {
+          "off": "mdi:battery-off",
+          "on": "mdi:home-battery"
+        }
+      },
+      "grid_status": {
+        "state": {
+          "off": "mdi:transmission-tower-off",
+          "on": "mdi:transmission-tower"
+        }
+      },
+      "grid_services_active": {
+        "state": {
+          "on": "mdi:sine-wave"
+        }
+      },
+      "components_grid_services_enabled": {
+        "state": {
+          "on": "mdi:sine-wave"
+        }
       }
     },
     "button": {

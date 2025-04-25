@@ -419,6 +419,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = 
     TeslemetryBinarySensorEntityDescription(
         key="grid_status",
         polling_value_fn=lambda x: x == "Active",
+        device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TeslemetryBinarySensorEntityDescription(
