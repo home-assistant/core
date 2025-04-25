@@ -54,7 +54,6 @@ from .common import (
     PANEL_STATUS_TRIGGERED_GAS,
     PANEL_STATUS_TRIGGERED_POLICE,
     PANEL_STATUS_UNKNOWN,
-    TOTALCONNECT_REQUEST,
     USERCODES,
     setup_platform,
 )
@@ -506,7 +505,10 @@ async def test_authentication_error(hass: HomeAssistant) -> None:
     """Test other failures seen during updates."""
     entry = await setup_platform(hass, ALARM_DOMAIN)
 
-    with patch(TOTALCONNECT_REQUEST, side_effect=AuthenticationError):
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.http_request",
+        side_effect=AuthenticationError,
+    ):
         await async_update_entity(hass, ENTITY_ID)
         await hass.async_block_till_done()
 
