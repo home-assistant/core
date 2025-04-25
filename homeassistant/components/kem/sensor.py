@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfElectricPotential,
     UnitOfFrequency,
@@ -22,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEVICE_DATA_DEVICES, DEVICE_DATA_ID, RPM
+from .const import DEVICE_DATA_DEVICES, DEVICE_DATA_ID
 from .entity import KemEntity
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
@@ -39,7 +40,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:speedometer",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=RPM,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
     ),
     SensorEntityDescription(
         key="engineOilPressurePsi",

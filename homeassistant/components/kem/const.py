@@ -1,7 +1,6 @@
 """Constants for the KEM integration."""
 
 from datetime import timedelta
-from typing import Final
 
 from aiokem import CommunicationError
 
@@ -27,6 +26,5 @@ CONNECTION_EXCEPTIONS = (
     CommunicationError,
 )
 
-RPM: Final = "rpm"
 
 SCAN_INTERVAL_MINUTES = timedelta(minutes=10)
