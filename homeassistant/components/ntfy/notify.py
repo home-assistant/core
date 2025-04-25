@@ -2,21 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import Any
-
 from aiontfy import Message
 from aiontfy.exceptions import (
     NtfyException,
     NtfyHTTPError,
     NtfyUnauthorizedAuthenticationError,
 )
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     NotifyEntity,
     NotifyEntityDescription,
     NotifyEntityFeature,
@@ -25,24 +19,10 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_ATTACH,
-    ATTR_CALL,
-    ATTR_CLICK,
-    ATTR_DELAY,
-    ATTR_EMAIL,
-    ATTR_ICON,
-    ATTR_MARKDOWN,
-    ATTR_PRIORITY,
-    ATTR_TAGS,
-    CONF_TOPIC,
-    DOMAIN,
-    SERVICE_PUBLISH,
-)
+from .const import CONF_TOPIC, DOMAIN
 from .coordinator import NtfyConfigEntry
 
 PARALLEL_UPDATES = 0
@@ -59,29 +39,6 @@ async def async_setup_entry(
         async_add_entities(
             [NtfyNotifyEntity(config_entry, subentry)], config_subentry_id=subentry_id
         )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_PUBLISH,
-        {
-            vol.Optional(ATTR_TITLE): cv.string,
-            vol.Optional(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_MARKDOWN): cv.boolean,
-            vol.Optional(ATTR_TAGS): vol.All(cv.ensure_list, [str]),
-            vol.Optional(ATTR_PRIORITY): vol.All(vol.Coerce(int), vol.Range(1, 5)),
-            vol.Optional(ATTR_CLICK): vol.All(vol.Url(), vol.Coerce(URL)),
-            vol.Optional(ATTR_DELAY): vol.All(
-                cv.time_period,
-                vol.Range(min=timedelta(seconds=10), max=timedelta(days=3)),
-            ),
-            vol.Optional(ATTR_ATTACH): vol.All(vol.Url(), vol.Coerce(URL)),
-            vol.Optional(ATTR_EMAIL): vol.Email(),
-            vol.Optional(ATTR_CALL): cv.string,
-            vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
-        },
-        "_async_send_message",
-    )
 
 
 class NtfyNotifyEntity(NotifyEntity):
@@ -117,19 +74,10 @@ class NtfyNotifyEntity(NotifyEntity):
         self.config_entry = config_entry
         self.ntfy = config_entry.runtime_data.ntfy
 
-    async def async_send_message(
-        self, message: str | None = None, title: str | None = None, **kwargs: Any
-    ) -> None:
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Publish a message to a topic."""
-        params: dict[str, Any] = kwargs
 
-        delay: timedelta | None = kwargs.get("delay")
-        if delay:
-            params["delay"] = (
-                f"{delay.days}d {delay.seconds}s" if delay.days else f"{delay.seconds}s"
-            )
-
-        msg = Message(topic=self.topic, message=message, title=title, **params)
+        msg = Message(topic=self.topic, message=message, title=title)
         try:
             await self.ntfy.publish(msg)
         except NtfyUnauthorizedAuthenticationError as e:

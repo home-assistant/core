@@ -221,6 +221,12 @@
     },
     "timeout_error": {
       "message": "Failed to connect to ntfy service due to a connection timeout"
+    },
+    "entity_not_found": {
+      "message": "The selected ntfy entity could not be found."
+    },
+    "entry_not_loaded": {
+      "message": "The selected ntfy service is currently not loaded or disabled in Home Assistant."
     }
   },
   "services": {
@@ -228,6 +234,10 @@
       "name": "Publish notification",
       "description": "Publishes a notification message to a ntfy topic",
       "fields": {
+        "entity_id": {
+          "name": "[%key:component::ntfy::common::topic%]",
+          "description": "Select a target entity to publish to a topic"
+        },
         "title": {
           "name": "[%key:component::notify::services::send_message::fields::title::name%]",
           "description": "[%key:component::notify::services::send_message::fields::title::description%]"

@@ -1,9 +1,13 @@
 publish:
-  target:
-    entity:
-      domain: notify
-      integration: ntfy
   fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: ntfy
+      example: notify.mytopic
     title:
       required: false
       selector:
