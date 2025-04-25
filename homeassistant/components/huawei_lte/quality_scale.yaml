@@ -57,7 +57,9 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
-  icon-translations: done
+  icon-translations:
+    status: todo
+    comment: Most are trivially movable to translations, but some use numeric state ranges for selection (signal, bandwidth), and state selectors seem to apply only to enum like values.
   reconfiguration-flow: todo
   repair-issues:
     status: todo
