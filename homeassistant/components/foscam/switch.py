@@ -84,34 +84,20 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     if coordinator.data["is_asleep"]["supported"]:
-        async_add_entities(
-            [FoscamGenericSwitch(coordinator, config_entry, SLEEP_SWITCH_DESCRIPTION)]
-        )
+        async_add_entities([FoscamGenericSwitch(coordinator, SLEEP_SWITCH_DESCRIPTION)])
     if ((1 << 8) & int(coordinator.data["product_info"]["reserve3"])) != 0:
-        async_add_entities(
-            [FoscamGenericSwitch(coordinator, config_entry, WDR_SWITCH_DESCRIPTION)]
-        )
+        async_add_entities([FoscamGenericSwitch(coordinator, WDR_SWITCH_DESCRIPTION)])
     else:
-        async_add_entities(
-            [FoscamGenericSwitch(coordinator, config_entry, HDR_SWITCH_DESCRIPTION)]
-        )
+        async_add_entities([FoscamGenericSwitch(coordinator, HDR_SWITCH_DESCRIPTION)])
     async_add_entities(
         [
-            FoscamGenericSwitch(coordinator, config_entry, IR_SWITCH_DESCRIPTION),
-            FoscamGenericSwitch(coordinator, config_entry, FLIP_SWITCH_DESCRIPTION),
-            FoscamGenericSwitch(coordinator, config_entry, MIRROR_SWITCH_DESCRIPTION),
-            FoscamGenericSwitch(
-                coordinator, config_entry, WHITE_LIGHT_SWITCH_DESCRIPTION
-            ),
-            FoscamGenericSwitch(
-                coordinator, config_entry, SIREN_ALARM_SWITCH_DESCRIPTION
-            ),
-            FoscamGenericSwitch(
-                coordinator, config_entry, TURN_OFF_VOLUME_SWITCH_DESCRIPTION
-            ),
-            FoscamGenericSwitch(
-                coordinator, config_entry, LIGHT_STATUS_SWITCH_DESCRIPTION
-            ),
+            FoscamGenericSwitch(coordinator, IR_SWITCH_DESCRIPTION),
+            FoscamGenericSwitch(coordinator, FLIP_SWITCH_DESCRIPTION),
+            FoscamGenericSwitch(coordinator, MIRROR_SWITCH_DESCRIPTION),
+            FoscamGenericSwitch(coordinator, WHITE_LIGHT_SWITCH_DESCRIPTION),
+            FoscamGenericSwitch(coordinator, SIREN_ALARM_SWITCH_DESCRIPTION),
+            FoscamGenericSwitch(coordinator, TURN_OFF_VOLUME_SWITCH_DESCRIPTION),
+            FoscamGenericSwitch(coordinator, LIGHT_STATUS_SWITCH_DESCRIPTION),
         ]
     )
 
@@ -122,13 +108,20 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
     def __init__(
         self,
         coordinator: FoscamCoordinator,
-        config_entry: FoscamConfigEntry,
         description: SwitchEntityDescription,
     ) -> None:
         """Initialize the generic switch."""
-        super().__init__(coordinator, config_entry.entry_id)
+        if coordinator.config_entry.entry_id is not None:
+            super().__init__(coordinator, coordinator.config_entry.entry_id)
+        else:
+            return
         self.entity_description = description
-        self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
+        if coordinator.config_entry.entry_id is not None:
+            self._attr_unique_id = (
+                f"{coordinator.config_entry.entry_id}_{description.key}"
+            )
+        else:
+            return
         if self.entity_description.key == "is_asleep":
             self._state = self.coordinator.data["is_asleep"]["status"]
         else:
@@ -137,9 +130,7 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        if int(self._state) == 0:
-            return False
-        return True
+        return int(self._state) != 0
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
