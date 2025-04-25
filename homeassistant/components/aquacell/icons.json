@@ -16,5 +16,10 @@
         }
       }
     }
+  },
+  "services": {
+    "force_poll": {
+      "service": "mdi:cloud-download-outline"
+    }
   }
 }
