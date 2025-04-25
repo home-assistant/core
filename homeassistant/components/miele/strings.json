@@ -114,6 +114,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "notification_active": {
+        "name": "Notification active"
+      },
+      "mobile_start": {
+        "name": "Mobile start"
+      },
+      "remote_control": {
+        "name": "Remote control"
+      },
+      "smart_grid": {
+        "name": "Smart grid"
+      }
+    },
     "button": {
       "start": {
         "name": "[%key:common::action::start%]"
