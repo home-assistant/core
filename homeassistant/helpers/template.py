@@ -3201,6 +3201,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
+        self.tests["apply"] = apply
         self.tests["contains"] = contains
         self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number

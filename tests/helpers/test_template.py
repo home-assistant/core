@@ -798,6 +798,17 @@ def test_apply(hass: HomeAssistant) -> None:
         hass,
     ).async_render() == ["afoo", "bfoo", "cfoo"]
 
+    assert template.Template(
+        """
+            {%- macro macro_is_five(arg, returns) -%}
+              {%- do returns(arg == 5) -%}
+            {%- endmacro -%}
+            {%- set is_five = macro_is_five | as_function -%}
+            {{ [5, 1, 2, 3, 4, 5, 5] | map('apply', is_five) | list }}
+            """,
+        hass,
+    ).async_render() == [5, 5, 5]
+
 
 def test_apply_macro_with_arguments(hass: HomeAssistant) -> None:
     """Test apply macro with positional, named, and mixed arguments."""
