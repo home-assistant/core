@@ -6,7 +6,7 @@ import time
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.model import MowerAttributes
-from aioautomower.session import AutomowerSession, _MowerCommands
+from aioautomower.session import AutomowerSession, MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
@@ -119,7 +119,7 @@ def mock_automower_client(values) -> Generator[AsyncMock]:
 
     mock = AsyncMock(spec=AutomowerSession)
     mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
-    mock.commands = AsyncMock(spec_set=_MowerCommands)
+    mock.commands = AsyncMock(spec_set=MowerCommands)
     mock.get_status.return_value = values
     mock.start_listening = AsyncMock(side_effect=listen)
 
@@ -142,7 +142,7 @@ def mock_automower_client_one_mower(values) -> Generator[AsyncMock]:
 
     mock = AsyncMock(spec=AutomowerSession)
     mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
-    mock.commands = AsyncMock(spec_set=_MowerCommands)
+    mock.commands = AsyncMock(spec_set=MowerCommands)
     mock.get_status.return_value = values
     mock.start_listening = AsyncMock(side_effect=listen)
 
