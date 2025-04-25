@@ -804,7 +804,7 @@ def test_apply(hass: HomeAssistant) -> None:
               {%- do returns(arg == 5) -%}
             {%- endmacro -%}
             {%- set is_five = macro_is_five | as_function -%}
-            {{ [5, 1, 2, 3, 4, 5, 5] | map('apply', is_five) | list }}
+            {{ [5, 1, 2, 3, 4, 5, 5] | select('apply', is_five) | list }}
             """,
         hass,
     ).async_render() == [5, 5, 5]
