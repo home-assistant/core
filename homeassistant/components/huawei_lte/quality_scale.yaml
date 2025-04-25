@@ -5,7 +5,9 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: Rename ConfigFlowHandler to HuaweiLteConfigFlow.
   dependency-transparency:
     status: todo
     comment: huawei-lte-api and stringcase are not built and published to PyPI from a public CI pipeline.
