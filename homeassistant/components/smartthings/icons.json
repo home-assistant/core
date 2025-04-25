@@ -40,6 +40,12 @@
           "pause": "mdi:pause",
           "stop": "mdi:stop"
         }
+      },
+      "detergent_amount": {
+        "default": "mdi:car-coolant-level"
+      },
+      "flexible_detergent_amount": {
+        "default": "mdi:car-coolant-level"
       }
     },
     "switch": {
