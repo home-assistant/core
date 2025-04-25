@@ -22,7 +22,7 @@ class SmartThingsSelectDescription(SelectEntityDescription):
     """Class describing SmartThings select entities."""
 
     key: Capability
-    requires_remote_control_status: bool
+    requires_remote_control_status: bool = False
     options_attribute: Attribute
     status_attribute: Attribute
     command: Command
@@ -59,7 +59,6 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
     Capability.SAMSUNG_CE_AUTO_DISPENSE_DETERGENT: SmartThingsSelectDescription(
         key=Capability.SAMSUNG_CE_AUTO_DISPENSE_DETERGENT,
         translation_key="detergent_amount",
-        requires_remote_control_status=True,
         options_attribute=Attribute.SUPPORTED_AMOUNT,
         status_attribute=Attribute.AMOUNT,
         command=Command.SET_AMOUNT,
@@ -68,7 +67,6 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
     Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT: SmartThingsSelectDescription(
         key=Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT,
         translation_key="flexible_detergent_amount",
-        requires_remote_control_status=True,
         options_attribute=Attribute.SUPPORTED_AMOUNT,
         status_attribute=Attribute.AMOUNT,
         command=Command.SET_AMOUNT,
