@@ -1,9 +1,8 @@
 """Module for testing the KEM integration in Home Assistant."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from aiokem import AioKem
 import pytest
 
 from homeassistant.components.kem.const import CONF_REFRESH_TOKEN, DOMAIN
@@ -29,15 +28,13 @@ def kem_generator_fixture() -> dict[str, Any]:
 @pytest.fixture(name="kem_config_entry")
 def kem_config_entry_fixture() -> MockConfigEntry:
     """Create a config entry fixture."""
-    config_entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_USERNAME: "username",
             CONF_PASSWORD: "password",
         },
     )
-    config_entry.runtime_data = {}
-    return config_entry
 
 
 @pytest.fixture(name="kem_config_entry_with_refresh_token")
@@ -66,7 +63,7 @@ async def mock_kem(
     homes: list[dict[str, Any]],
     generator: dict[str, Any],
     kem_config_entry: MockConfigEntry,
-) -> AioKem:
+):
     """Mock KEM instance."""
     kem_config_entry.add_to_hass(hass)
     with (
@@ -81,5 +78,34 @@ async def mock_kem(
         mock_generator.return_value = generator
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
-        kem = kem_config_entry.runtime_data.kem
-        yield kem
+
+        mocks = {
+            "authenticate": mock_auth,
+            "get_homes": mock_homes,
+            "get_generator_data": mock_generator,
+        }
+        yield mocks
+
+
+@pytest.fixture
+async def mock_kem_authenticate(
+    mock_kem: dict[str, AsyncMock],
+):
+    """Mock the authenticate method of the KEM instance."""
+    return mock_kem["authenticate"]
+
+
+@pytest.fixture
+async def mock_kem_get_homes(
+    mock_kem: dict[str, AsyncMock],
+):
+    """Mock the get_homes method of the KEM instance."""
+    return mock_kem["get_homes"]
+
+
+@pytest.fixture
+async def mock_kem_get_generator_data(
+    mock_kem: dict[str, AsyncMock],
+):
+    """Mock the get_generator_data method of the KEM instance."""
+    return mock_kem["get_generator_data"]

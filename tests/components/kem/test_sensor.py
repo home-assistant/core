@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock
+
 from aiokem import AioKem
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
@@ -48,12 +50,8 @@ async def test_sensors(
 
 async def test_sensor_availability(
     hass: HomeAssistant,
-    platform_sensor,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-    kem_config_entry: MockConfigEntry,
     generator: dict[str, any],
-    mock_kem: AioKem,
+    mock_kem_get_generator_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the KEM sensors."""
@@ -74,7 +72,7 @@ async def test_sensor_availability(
 
     generator["device"]["isConnected"] = True
 
-    mock_kem.get_generator_data.side_effect = Exception("Test exception")
+    mock_kem_get_generator_data.side_effect = Exception("Test exception")
 
     # Move time to next update
     freezer.tick(SCAN_INTERVAL_MINUTES)
