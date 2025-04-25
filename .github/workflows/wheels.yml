@@ -235,6 +235,7 @@ jobs:
       - name: Create requirements file for custom build
         run: |
           touch requirements_custom.txt
+          echo "protobuf==6.30.2" >> requirements_custom.txt
           echo "grpcio==1.72.1" >> requirements_custom.txt
           echo "grpcio-status==1.72.1" >> requirements_custom.txt
           echo "grpcio-reflection==1.72.1" >> requirements_custom.txt
