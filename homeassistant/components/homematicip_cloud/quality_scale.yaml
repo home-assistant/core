@@ -38,13 +38,13 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      The Integration must be configured with a config flow and does not support discovery.
-      Devices are added automatically.
+      The Integration communicates with the AccessPoint via a cloud service and must be configured with
+      a config flow. Discovery is not possible. Devices are added automatically.
   discovery:
     status: exempt
     comment: |
-      The Integration must be configured with a config flow and does not support discovery.
-      Devices are added automatically.
+      The Integration communicates with the AccessPoint via a cloud service and must be configured with
+      a config flow. Discovery is not possible. Devices are added automatically.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
