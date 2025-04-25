@@ -55,7 +55,9 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations: done
+  entity-translations:
+    status: todo
+    comment: Buttons and selects are lacking translations.
   exception-translations: todo
   icon-translations:
     status: todo
