@@ -72,7 +72,7 @@ async def test_api_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             TEST_PLATFORM,
-            "set_temperature",
+            SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: -17},
             blocking=True,
         )
