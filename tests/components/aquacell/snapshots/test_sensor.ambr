@@ -48,6 +48,54 @@
     'state': '40',
   })
 # ---
+# name: test_sensors[sensor.aquacell_name_last_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aquacell_name_last_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last update',
+    'platform': 'aquacell',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_update',
+    'unique_id': 'DSN-last_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_last_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'AquaCell name Last update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aquacell_name_last_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-05-10T07:44:30+00:00',
+  })
+# ---
 # name: test_sensors[sensor.aquacell_name_salt_left_side_percentage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
