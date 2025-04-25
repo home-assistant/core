@@ -50,21 +50,21 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "custom_port_not_supported": "Gen1 device does not support custom port.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
-      "custom_port_not_supported": "Gen1 device does not support custom port.",
-      "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again."
+      "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
+      "ipv6_not_supported": "IPv6 is not supported.",
+      "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
-      "ipv6_not_supported": "IPv6 is not supported.",
-      "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "device_automation": {

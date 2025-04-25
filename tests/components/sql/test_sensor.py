@@ -317,6 +317,8 @@ async def test_templates_with_yaml(
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == STATE_UNAVAILABLE
+    assert CONF_ICON not in state.attributes
+    assert "entity_picture" not in state.attributes
 
     hass.states.async_set("sensor.input1", "on")
     hass.states.async_set("sensor.input2", "on")
@@ -660,3 +662,37 @@ async def test_setup_without_recorder(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.get_value")
     assert state.state == "5"
+
+
+async def test_availability_blocks_value_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test availability blocks value_template from rendering."""
+    error = "Error parsing value for sensor.get_value: 'x' is undefined"
+    config = YAML_CONFIG
+    config["sql"]["value_template"] = "{{ x - 0 }}"
+    config["sql"]["availability"] = '{{ states("sensor.input1")=="on" }}'
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert error not in caplog.text
+
+    state = hass.states.get("sensor.get_value")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set("sensor.input1", "on")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=1),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert error in caplog.text

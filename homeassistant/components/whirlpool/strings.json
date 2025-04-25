@@ -128,6 +128,9 @@
   "exceptions": {
     "account_locked": {
       "message": "[%key:component::whirlpool::common::account_locked_error%]"
+    },
+    "appliances_fetch_failed": {
+      "message": "Failed to fetch appliances"
     }
   }
 }
