@@ -59,6 +59,12 @@
       "food_level": {
         "name": "Food level"
       },
+      "hopper_status": {
+        "name": "Hopper status"
+      },
+      "hopper_connected": {
+        "name": "Hopper connected"
+      },
       "last_seen": {
         "name": "Last seen"
       },
