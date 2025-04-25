@@ -128,7 +128,7 @@ class ContainerSensorEntity(ContainerBaseEntity, SensorEntity):
         self.entity_description = description
         # We use container name as unique id, because the container_id changes
         # with an update of the container
-        self._attr_unique_id = f"{node_id}-{self.container_id}-{description.key}"
+        self._attr_unique_id = f"{node_id}-{container_id}-{description.key}"
         self._attr_translation_placeholders = {
             "container": self.container_attributes.name
         }
