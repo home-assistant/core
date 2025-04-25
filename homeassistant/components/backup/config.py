@@ -373,7 +373,7 @@ class RetentionConfig(BaseRetentionConfig):
                     backup_date = dt_util.parse_datetime(
                         backup.date, raise_on_error=True
                     )
-                    agents_for_backup_to_delete = set(backup.agents)
+                    delete_from_agents = set(backup.agents)
                     for agent_id in backup.agents:
                         agent_retention = agents_retention.get(agent_id)
                         if agent_retention is None:
@@ -383,14 +383,14 @@ class RetentionConfig(BaseRetentionConfig):
                                 # This agent does not have a retention setting
                                 # and the global retention days setting is None,
                                 # so this backup should not be deleted.
-                                agents_for_backup_to_delete.discard(agent_id)
+                                delete_from_agents.discard(agent_id)
                                 continue
                             days = global_days
                         elif (agent_days := agent_retention.days) is None:
                             # This agent has a retention setting
                             # where days is set to None,
                             # so the backup should not be deleted.
-                            agents_for_backup_to_delete.discard(agent_id)
+                            delete_from_agents.discard(agent_id)
                             continue
                         else:
                             # This agent has a retention setting
@@ -400,14 +400,14 @@ class RetentionConfig(BaseRetentionConfig):
                         if backup_date + timedelta(days=days) >= now:
                             # This backup is not older than the retention days,
                             # so this agent should not be deleted.
-                            agents_for_backup_to_delete.discard(agent_id)
+                            delete_from_agents.discard(agent_id)
 
                     filtered_backup = replace(
                         backup,
                         agents={
                             agent_id: agent_backup_status
                             for agent_id, agent_backup_status in backup.agents.items()
-                            if agent_id in agents_for_backup_to_delete
+                            if agent_id in delete_from_agents
                         },
                     )
                     backups_to_delete[backup_id] = filtered_backup
