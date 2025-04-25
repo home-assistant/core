@@ -6,7 +6,9 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency: done
+  dependency-transparency:
+    status: todo
+    comment: huawei-lte-api and stringcase are not built and published to PyPI from a public CI pipeline.
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
