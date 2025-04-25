@@ -21,8 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA: Final = vol.Schema(
     {
-        vol.Required(CONF_USERNAME, default=""): str,
-        vol.Required(CONF_TOKEN, default=""): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_TOKEN): str,
     }
 )
 
@@ -32,9 +32,12 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    username: str | None = None
-    token: str | None = None
-    discovered_devices: dict[str, SwitcherBase] = {}
+    def __init__(self) -> None:
+        """Init the config flow."""
+        super().__init__()
+        self.discovered_devices: dict[str, SwitcherBase] = {}
+        self.username: str | None = None
+        self.token: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
