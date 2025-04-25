@@ -157,6 +157,17 @@
           "waiting_to_start": "Waiting to start"
         }
       }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "supercooling": {
+        "name": "Supercooling"
+      },
+      "superfreezing": {
+        "name": "Superfreezing"
+      }
     }
   },
   "exceptions": {
