@@ -786,7 +786,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Runtime since last maintenance',
     'platform': 'kem',
@@ -800,6 +800,7 @@
 # name: test_sensors[sensor.generator_1_runtime_since_last_maintenance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Generator 1 Runtime since last maintenance',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -985,7 +986,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total runtime',
     'platform': 'kem',
@@ -999,6 +1000,7 @@
 # name: test_sensors[sensor.generator_1_total_runtime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Generator 1 Total runtime',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
