@@ -164,7 +164,6 @@ async def test_water_heater_boostmode(
         node_id=matter_node.node_id,
         endpoint_id=2,
         command=clusters.WaterHeaterManagement.Commands.Boost(boostInfo=boost_info),
-        timed_request_timeout_ms=3000,
     )
 
 
@@ -224,6 +223,8 @@ async def test_water_heater_turn_on_off(
         ),
         value=0,
     )
+
+    matter_client.write_attribute.reset_mock()
 
     # turn_on water_heater
     await hass.services.async_call(
