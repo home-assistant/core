@@ -93,3 +93,5 @@ STT_ENTITY_UNIQUE_ID = "cloud-speech-to-text"
 TTS_ENTITY_UNIQUE_ID = "cloud-text-to-speech"
 
 LOGIN_MFA_TIMEOUT = 60
+
+VOICE_STYLE_SEPERATOR = "||"

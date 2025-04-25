@@ -190,6 +190,30 @@
       },
       "located_at_favorite": {
         "name": "Located at favorite"
+      },
+      "charge_enable_request": {
+        "name": "Charge enable request"
+      },
+      "defrost_for_preconditioning": {
+        "name": "Defrost for preconditioning"
+      },
+      "lights_high_beams": {
+        "name": "High beams"
+      },
+      "seat_vent_enabled": {
+        "name": "Seat vent enabled"
+      },
+      "speed_limit_mode": {
+        "name": "Speed limited"
+      },
+      "remote_start_enabled": {
+        "name": "Remote start"
+      },
+      "hvil": {
+        "name": "High voltage interlock loop fault"
+      },
+      "hvac_auto_mode": {
+        "name": "HVAC auto mode"
       }
     },
     "button": {
