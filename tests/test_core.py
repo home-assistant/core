@@ -1368,9 +1368,6 @@ def test_state_init() -> None:
     with pytest.raises(InvalidEntityFormatError):
         ha.State("invalid_entity_format", "test_state")
 
-    with pytest.raises(InvalidStateError):
-        ha.State("domain.long_state", "t" * 256)
-
 
 def test_state_domain() -> None:
     """Test domain."""
@@ -1438,6 +1435,15 @@ def test_state_repr() -> None:
         )
         == "<state happy.happy=on; brightness=144 @ 1984-12-08T12:00:00+00:00>"
     )
+
+
+async def test_statemachine_async_set_invalid_state(hass: HomeAssistant) -> None:
+    """Test setting an invalid state with the async_set method."""
+    with pytest.raises(
+        InvalidStateError,
+        match="Invalid state with length 256. State max length is 255 characters.",
+    ):
+        hass.states.async_set("light.bowl", "o" * 256, {})
 
 
 async def test_statemachine_is_state(hass: HomeAssistant) -> None:

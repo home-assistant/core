@@ -1794,18 +1794,13 @@ class State:
     ) -> None:
         """Initialize a new state."""
         self._cache: dict[str, Any] = {}
-        state = str(state)
-
         if validate_entity_id and not valid_entity_id(entity_id):
             raise InvalidEntityFormatError(
                 f"Invalid entity id encountered: {entity_id}. "
                 "Format should be <domain>.<object_id>"
             )
-
-        validate_state(state)
-
         self.entity_id = entity_id
-        self.state = state
+        self.state = state if type(state) is str else str(state)
         # State only creates and expects a ReadOnlyDict so
         # there is no need to check for subclassing with
         # isinstance here so we can use the faster type check.
@@ -2271,9 +2266,11 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
+        state = str(new_state)
+        validate_state(state)
         self.async_set_internal(
             entity_id.lower(),
-            str(new_state),
+            state,
             attributes or {},
             force_update,
             context,
@@ -2298,6 +2295,9 @@ class StateMachine:
         and should not be considered a stable API. We will make
         breaking changes to this function in the future and it
         should not be used in integrations.
+
+        Callers are responsible for ensuring the entity_id is lower case.
+        Callers are responsible for ensuring the state is a valid state.
 
         This method must be run in the event loop.
         """
