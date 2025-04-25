@@ -14,6 +14,6 @@ LAST_POLL_TIMESTAMP = "last_poll_timestamp"
 REFRESH_TOKEN_EXPIRY_TIME = timedelta(days=30)
 UPDATE_INTERVAL = timedelta(days=1)
 
-SERVICE_FORCE_POLL = "force_poll"
+SERVICE_POLL_NOW = "poll_now"
 
 INTEGRATION_DEVICE_NAME = "Aquacell Integration"

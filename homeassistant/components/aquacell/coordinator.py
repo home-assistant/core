@@ -100,6 +100,6 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
 
         self.hass.config_entries.async_update_entry(self.config_entry, data=data)
 
-    async def async_force_poll(self) -> None:
+    async def async_poll_now(self) -> None:
         """Force a data poll from the API."""
         await self.async_refresh()

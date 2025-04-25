@@ -2,19 +2,15 @@
 
 from __future__ import annotations
 
-import logging
-
-from aioaquacell import AquacellApi, AquacellApiException, AuthenticationFailed
+from aioaquacell import AquacellApi
 from aioaquacell.const import Brand
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_BRAND, DOMAIN, SERVICE_FORCE_POLL
+from .const import CONF_BRAND, DOMAIN, SERVICE_POLL_NOW
 from .coordinator import AquacellConfigEntry, AquacellCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 
@@ -34,15 +30,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def handle_force_poll(call: ServiceCall) -> None:
+    async def handle_poll_now(call: ServiceCall) -> None:
         """Handle force poll service."""
         coordinator: AquacellCoordinator = entry.runtime_data
-        try:
-            await coordinator.async_force_poll()
-        except (AquacellApiException, AuthenticationFailed, TimeoutError) as err:
-            _LOGGER.error("Force poll failed: %s", err)
+        await coordinator.async_poll_now()
 
-    hass.services.async_register(DOMAIN, SERVICE_FORCE_POLL, handle_force_poll)
+    hass.services.async_register(DOMAIN, SERVICE_POLL_NOW, handle_poll_now)
     return True
 
 

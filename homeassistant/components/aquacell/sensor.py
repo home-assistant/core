@@ -128,6 +128,7 @@ class AquacellLastPollSensor(AquacellEntity, SensorEntity):
     _attr_name = "Last Poll"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_unique_id = "last_poll"
+    _attr_translation_key = "last_poll"
 
     def __init__(
         self, coordinator: AquacellCoordinator, config_entry: ConfigEntry
