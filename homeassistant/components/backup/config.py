@@ -395,7 +395,7 @@ class RetentionConfig(BaseRetentionConfig):
                         else:
                             # This agent has a retention setting
                             # where days is set to a number,
-                            # so the backup should be deleted.
+                            # so that setting should be used.
                             days = agent_days
                         if backup_date + timedelta(days=days) >= now:
                             # This backup is not older than the retention days,
@@ -733,17 +733,17 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
                 if global_copies is None:
                     # This agent does not have a retention setting
                     # and the global retention copies setting is None,
-                    # so this backup should not be deleted.
+                    # so backups should not be deleted.
                     continue
-                # This backup and agent combination should be deleted.
+                # The global retention setting will be used.
                 copies = global_copies
             elif (agent_copies := agent_retention.copies) is None:
                 # This agent has a retention setting
                 # where copies is set to None,
-                # so the backup should not be deleted.
+                # so backups should not be deleted.
                 continue
             else:
-                # This backup and agent combination should be deleted.
+                # This agent retention setting will be used.
                 copies = agent_copies
 
             backups_to_delete_by_agent[agent_id] = dict(
