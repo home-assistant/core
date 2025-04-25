@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import partial
 import logging
 from types import MappingProxyType
@@ -175,7 +176,7 @@ class AnthropicOptionsFlow(OptionsFlow):
 
 def anthropic_config_option_schema(
     hass: HomeAssistant,
-    options: dict[str, Any] | MappingProxyType[str, Any],
+    options: Mapping[str, Any],
 ) -> dict:
     """Return a schema for Anthropic completion options."""
     hass_apis: list[SelectOptionDict] = [

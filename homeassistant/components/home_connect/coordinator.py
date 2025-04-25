@@ -47,8 +47,8 @@ from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_EXECUTIONS_TIME_WINDOW = 15 * 60  # 15 minutes
-MAX_EXECUTIONS = 5
+MAX_EXECUTIONS_TIME_WINDOW = 60 * 60  # 1 hour
+MAX_EXECUTIONS = 8
 
 type HomeConnectConfigEntry = ConfigEntry[HomeConnectCoordinator]
 

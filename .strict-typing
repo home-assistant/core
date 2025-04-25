@@ -363,6 +363,7 @@ homeassistant.components.no_ip.*
 homeassistant.components.nordpool.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
+homeassistant.components.ntfy.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
 homeassistant.components.ohme.*
@@ -385,6 +386,7 @@ homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*
+homeassistant.components.pegel_online.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.person.*
 homeassistant.components.pi_hole.*

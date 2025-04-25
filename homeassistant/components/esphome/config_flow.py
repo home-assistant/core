@@ -177,7 +177,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by a reconfig request."""
         self._reconfig_entry = self._get_reconfigure_entry()
@@ -323,7 +323,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         ):
             return
         assert conflict_entry.unique_id is not None
-        if updates:
+        if self.source == SOURCE_RECONFIGURE:
+            error = "reconfigure_already_configured"
+        elif updates:
             error = "already_configured_updates"
         else:
             error = "already_configured_detailed"
@@ -662,10 +664,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return ERROR_REQUIRES_ENCRYPTION_KEY
         except InvalidEncryptionKeyAPIError as ex:
             if ex.received_name:
+                device_name_changed = self._device_name != ex.received_name
                 self._device_name = ex.received_name
                 if ex.received_mac:
                     self._device_mac = format_mac(ex.received_mac)
-                self._name = ex.received_name
+                if not self._name or device_name_changed:
+                    self._name = ex.received_name
             return ERROR_INVALID_ENCRYPTION_KEY
         except ResolveAPIError:
             return "resolve_error"
