@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -12,8 +10,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, INTEGRATION_DEVICE_NAME, SERVICE_FORCE_POLL
 from .coordinator import AquacellConfigEntry, AquacellCoordinator
 from .entity import AquacellEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
