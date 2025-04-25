@@ -139,7 +139,9 @@ class DeviceConnectivity(SurePetcareBinarySensor):
         self._attr_extra_state_attributes = {}
         if online:
             device_rssi = state.get("signal", {}).get("device_rssi")
-            self._attr_extra_state_attributes["device_rssi"] = f"{device_rssi:.2f}" if device_rssi else "Unknown"
+            self._attr_extra_state_attributes["device_rssi"] = (
+                f"{device_rssi:.2f}" if device_rssi else "Unknown"
+            )
             hub_rssi = state.get("signal", {}).get("hub_rssi")
             if hub_rssi is not None:
                 self._attr_extra_state_attributes["hub_rssi"] = f"{hub_rssi:.2f}"
