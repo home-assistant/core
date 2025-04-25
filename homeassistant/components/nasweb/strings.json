@@ -50,11 +50,11 @@
       "sensor_input": {
         "name": "Input {index}",
         "state": {
-          "fault": "Fault",
-          "tamper": "Tamper",
           "undefined": "Undefined",
-          "vigil": "Ready",
-          "violation": "Violation"
+          "tamper": "Tamper",
+          "active": "Active",
+          "normal": "Normal",
+          "problem": "Problem"
         }
       }
     }

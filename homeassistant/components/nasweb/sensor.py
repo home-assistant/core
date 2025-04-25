@@ -29,11 +29,11 @@ from . import NASwebConfigEntry
 from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
 
 SENSOR_INPUT_TRANSLATION_KEY = "sensor_input"
-STATE_FAULT = "fault"
-STATE_TAMPER = "tamper"
 STATE_UNDEFINED = "undefined"
-STATE_VIGIL = "vigil"
-STATE_VIOLATION = "violation"
+STATE_TAMPER = "tamper"
+STATE_ACTIVE = "active"
+STATE_NORMAL = "normal"
+STATE_PROBLEM = "problem"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,11 +123,11 @@ class InputStateSensor(BaseSensorEntity):
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options: list[str] = [
-        STATE_FAULT,
-        STATE_TAMPER,
         STATE_UNDEFINED,
-        STATE_VIGIL,
-        STATE_VIOLATION,
+        STATE_TAMPER,
+        STATE_ACTIVE,
+        STATE_NORMAL,
+        STATE_PROBLEM,
     ]
     _attr_icon = "mdi:import"
     _attr_translation_key = SENSOR_INPUT_TRANSLATION_KEY
