@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 from pynecil import IronOSUpdate, Pynecil
 
-from homeassistant.components import bluetooth
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -58,11 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bo
     """Set up IronOS from a config entry."""
     if TYPE_CHECKING:
         assert entry.unique_id
-    ble_device = bluetooth.async_ble_device_from_address(
-        hass, entry.unique_id, connectable=True
-    )
 
-    device = Pynecil(ble_device or entry.unique_id)
+    device = Pynecil(entry.unique_id)
 
     live_data = IronOSLiveDataCoordinator(hass, entry, device)
     await live_data.async_config_entry_first_refresh()
