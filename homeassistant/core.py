@@ -2357,7 +2357,7 @@ class StateMachine:
                 assert old_state is not None
             attributes = old_state.attributes
 
-        if len(new_state) > MAX_LENGTH_STATE_STATE:
+        if not same_state and len(new_state) > MAX_LENGTH_STATE_STATE:
             _LOGGER.error(
                 "State %s for %s is longer than %s, falling back to %s",
                 new_state,
