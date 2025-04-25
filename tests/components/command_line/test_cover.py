@@ -407,7 +407,7 @@ async def test_availability(
     entity_state = hass.states.get("cover.test")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
-    assert entity_state.attributes.get("icon") is None
+    assert "icon" not in entity_state.attributes
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
@@ -483,7 +483,7 @@ async def test_icon_template(hass: HomeAssistant) -> None:
                         "command_state": "echo 10",
                         "name": "Test",
                         "value_template": "{{ x - 1 }}",
-                        "availability": "{{ x is defined }}",
+                        "availability": "{{ value == '50' }}",
                     },
                 }
             ]
@@ -497,14 +497,23 @@ async def test_availability_blocks_value_template(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test availability blocks value_template from rendering."""
+    error = "Error parsing value for cover.test: 'x' is undefined"
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"51\n"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert error not in caplog.text
+
+    entity_state = hass.states.get("cover.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+
     await hass.async_block_till_done()
     with mock_asyncio_subprocess_run(b"50\n"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Error parsing value for cover.test: 'x' is undefined" not in caplog.text
-
-    entity_state = hass.states.get("cover.test")
-    assert entity_state
-    assert entity_state.state == STATE_UNAVAILABLE
+    assert error in caplog.text

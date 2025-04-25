@@ -537,8 +537,8 @@ async def test_availability(
     state = hass.states.get("switch.rest_switch")
     assert state
     assert state.state == STATE_UNAVAILABLE
-    assert state.attributes.get("icon") is None
-    assert state.attributes.get("entity_picture") is None
+    assert "icon" not in state.attributes
+    assert "entity_picture" not in state.attributes
 
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
@@ -565,7 +565,8 @@ async def test_availability_blocks_is_on_template(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test availability blocks is_on_template from rendering."""
-    respx.get(RESOURCE) % HTTPStatus.OK
+    error = "Error parsing value for switch.block_template: 'x' is undefined"
+    respx.get(RESOURCE).respond(status_code=HTTPStatus.OK, content="51")
     config = {
         SWITCH_DOMAIN: {
             # REST configuration
@@ -573,20 +574,31 @@ async def test_availability_blocks_is_on_template(
             CONF_METHOD: "POST",
             CONF_RESOURCE: "http://localhost",
             # Entity configuration
-            CONF_NAME: "{{'REST' + ' ' + 'Switch'}}",
+            CONF_NAME: "block_template",
             "is_on_template": "{{ x - 1 }}",
-            "availability": "{{ x is defined }}",
+            "availability": "{{ value == '50' }}",
         },
     }
 
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
 
-    assert (
-        "Error parsing value for switch.rest_switch: 'x' is undefined"
-        not in caplog.text
-    )
+    assert error not in caplog.text
 
-    state = hass.states.get("switch.rest_switch")
+    state = hass.states.get("switch.block_template")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+    respx.clear()
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, content="50")
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["switch.block_template"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert error in caplog.text

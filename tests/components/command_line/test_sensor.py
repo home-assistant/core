@@ -812,8 +812,8 @@ async def test_availability_json_attributes_without_value_template(
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
-    assert entity_state.attributes.get("key") is None
-    assert entity_state.attributes.get("icon") is None
+    assert "key" not in entity_state.attributes
+    assert "icon" not in entity_state.attributes
 
     hass.states.async_set("sensor.input1", "on")
     async_fire_time_changed(hass)
@@ -876,7 +876,7 @@ async def test_availability_with_value_template(
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
-    assert entity_state.attributes.get("icon") is None
+    assert "icon" not in entity_state.attributes
 
 
 async def test_template_render_with_availability_syntax_error(
@@ -939,10 +939,10 @@ async def test_template_render_with_availability_syntax_error(
         }
     ],
 )
-async def test_template_render_not_break_for_availability(
+async def test_command_template_render_with_availability(
     hass: HomeAssistant, load_yaml_integration: None
 ) -> None:
-    """Ensure command with templates get rendered properly."""
+    """Test command template is rendered properly with availability."""
     hass.states.async_set("sensor.input_sensor", "sensor_value")
 
     # Give time for template to load
@@ -980,7 +980,7 @@ async def test_template_render_not_break_for_availability(
                         "name": "Test",
                         "command": "echo 0",
                         "value_template": "{{ x - 1 }}",
-                        "availability": "{{ x is defined }}",
+                        "availability": "{{ value == '50' }}",
                     },
                 }
             ]
@@ -994,14 +994,23 @@ async def test_availability_blocks_value_template(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test availability blocks value_template from rendering."""
+    error = "Error parsing value for sensor.test: 'x' is undefined"
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"51\n"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert error not in caplog.text
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+
     await hass.async_block_till_done()
     with mock_asyncio_subprocess_run(b"50\n"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Error parsing value for sensor.test: 'x' is undefined" not in caplog.text
-
-    entity_state = hass.states.get("sensor.test")
-    assert entity_state
-    assert entity_state.state == STATE_UNAVAILABLE
+    assert error in caplog.text
