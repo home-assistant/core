@@ -73,6 +73,8 @@ async def test_binary_sensors_streaming(
             "data": {
                 Signal.FD_WINDOW: "WindowStateOpened",
                 Signal.FP_WINDOW: "INVALID_VALUE",
+                Signal.RD_WINDOW: "WindowStateClosed",
+                Signal.RP_WINDOW: "WindowStatePartiallyOpen",
                 Signal.DOOR_STATE: {
                     "DoorState": {
                         "DriverFront": True,
@@ -98,6 +100,8 @@ async def test_binary_sensors_streaming(
     for entity_id in (
         "binary_sensor.test_front_driver_window",
         "binary_sensor.test_front_passenger_window",
+        "binary_sensor.test_rear_driver_window",
+        "binary_sensor.test_rear_passenger_window",
         "binary_sensor.test_front_driver_door",
         "binary_sensor.test_front_passenger_door",
         "binary_sensor.test_driver_seat_belt",

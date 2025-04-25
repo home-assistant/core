@@ -33,7 +33,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-output1',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-output1',
     'unit_of_measurement': None,
   })
 # ---
@@ -90,7 +90,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-output2',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-output2',
     'unit_of_measurement': None,
   })
 # ---
@@ -146,7 +146,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-relay1',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-relay1',
     'unit_of_measurement': None,
   })
 # ---

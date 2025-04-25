@@ -3329,7 +3329,7 @@
       "name": "La Marzocco",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "lametric": {
       "name": "LaMetric",
@@ -3721,6 +3721,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "maytag": {
+      "name": "Maytag",
+      "integration_type": "virtual",
+      "supported_by": "whirlpool"
     },
     "mcp": {
       "name": "Model Context Protocol",
@@ -4430,6 +4435,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "ntfy": {
+      "name": "ntfy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "nuheat": {
       "name": "NuHeat",
       "integration_type": "hub",
@@ -4437,7 +4448,7 @@
       "iot_class": "cloud_polling"
     },
     "nuki": {
-      "name": "Nuki",
+      "name": "Nuki Bridge",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
