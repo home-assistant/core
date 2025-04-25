@@ -2234,7 +2234,6 @@ class StateMachine:
         This avoids a race condition where multiple entities with the same
         entity_id are added.
         """
-        entity_id = entity_id.lower()
         if entity_id in self._states_data or entity_id in self._reservations:
             raise HomeAssistantError(
                 "async_reserve must not be called once the state is in the state"
