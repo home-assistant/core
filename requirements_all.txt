@@ -210,6 +210,7 @@ aioazuredevops==2.2.1
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
+# homeassistant.components.s3
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
