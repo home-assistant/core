@@ -108,6 +108,12 @@
   "exceptions": {
     "update_retry_failed": {
       "message": "Updating data failed after retries."
+    },
+    "invalid_auth": {
+      "message": "Authentication failed for username {user_name}."
+    },
+    "cannot_connect": {
+      "message": "Can not connect to Kohler servers."
     }
   }
 }

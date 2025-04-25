@@ -7,7 +7,7 @@ import logging
 from aiokem import AuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -34,10 +34,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await kem.login()
     except AuthenticationError as ex:
-        raise ConfigEntryAuthFailed from ex
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+            translation_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+        ) from ex
     except CONNECTION_EXCEPTIONS as ex:
-        raise ConfigEntryNotReady from ex
-
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from ex
     coordinators: dict[int, KemUpdateCoordinator] = {}
     homes = await kem.get_homes()
 
