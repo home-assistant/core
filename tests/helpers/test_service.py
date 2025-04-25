@@ -49,6 +49,7 @@ from tests.common import (
     MockEntity,
     MockModule,
     MockUser,
+    RegistryEntryWithDefaults,
     async_mock_service,
     mock_area_registry,
     mock_device_registry,
@@ -158,94 +159,94 @@ def floor_area_mock(hass: HomeAssistant) -> None:
         },
     )
 
-    entity_in_own_area = er.RegistryEntry(
+    entity_in_own_area = RegistryEntryWithDefaults(
         entity_id="light.in_own_area",
         unique_id="in-own-area-id",
         platform="test",
         area_id="own-area",
     )
-    config_entity_in_own_area = er.RegistryEntry(
+    config_entity_in_own_area = RegistryEntryWithDefaults(
         entity_id="light.config_in_own_area",
         unique_id="config-in-own-area-id",
         platform="test",
         area_id="own-area",
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_in_own_area = er.RegistryEntry(
+    hidden_entity_in_own_area = RegistryEntryWithDefaults(
         entity_id="light.hidden_in_own_area",
         unique_id="hidden-in-own-area-id",
         platform="test",
         area_id="own-area",
         hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_in_area = er.RegistryEntry(
+    entity_in_area = RegistryEntryWithDefaults(
         entity_id="light.in_area",
         unique_id="in-area-id",
         platform="test",
         device_id=device_in_area.id,
     )
-    config_entity_in_area = er.RegistryEntry(
+    config_entity_in_area = RegistryEntryWithDefaults(
         entity_id="light.config_in_area",
         unique_id="config-in-area-id",
         platform="test",
         device_id=device_in_area.id,
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_in_area = er.RegistryEntry(
+    hidden_entity_in_area = RegistryEntryWithDefaults(
         entity_id="light.hidden_in_area",
         unique_id="hidden-in-area-id",
         platform="test",
         device_id=device_in_area.id,
         hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_in_other_area = er.RegistryEntry(
+    entity_in_other_area = RegistryEntryWithDefaults(
         entity_id="light.in_other_area",
         unique_id="in-area-a-id",
         platform="test",
         device_id=device_in_area.id,
         area_id="other-area",
     )
-    entity_assigned_to_area = er.RegistryEntry(
+    entity_assigned_to_area = RegistryEntryWithDefaults(
         entity_id="light.assigned_to_area",
         unique_id="assigned-area-id",
         platform="test",
         device_id=device_in_area.id,
         area_id="test-area",
     )
-    entity_no_area = er.RegistryEntry(
+    entity_no_area = RegistryEntryWithDefaults(
         entity_id="light.no_area",
         unique_id="no-area-id",
         platform="test",
         device_id=device_no_area.id,
     )
-    config_entity_no_area = er.RegistryEntry(
+    config_entity_no_area = RegistryEntryWithDefaults(
         entity_id="light.config_no_area",
         unique_id="config-no-area-id",
         platform="test",
         device_id=device_no_area.id,
         entity_category=EntityCategory.CONFIG,
     )
-    hidden_entity_no_area = er.RegistryEntry(
+    hidden_entity_no_area = RegistryEntryWithDefaults(
         entity_id="light.hidden_no_area",
         unique_id="hidden-no-area-id",
         platform="test",
         device_id=device_no_area.id,
         hidden_by=er.RegistryEntryHider.USER,
     )
-    entity_diff_area = er.RegistryEntry(
+    entity_diff_area = RegistryEntryWithDefaults(
         entity_id="light.diff_area",
         unique_id="diff-area-id",
         platform="test",
         device_id=device_diff_area.id,
     )
-    entity_in_area_a = er.RegistryEntry(
+    entity_in_area_a = RegistryEntryWithDefaults(
         entity_id="light.in_area_a",
         unique_id="in-area-a-id",
         platform="test",
         device_id=device_area_a.id,
         area_id="area-a",
     )
-    entity_in_area_b = er.RegistryEntry(
+    entity_in_area_b = RegistryEntryWithDefaults(
         entity_id="light.in_area_b",
         unique_id="in-area-b-id",
         platform="test",
@@ -329,53 +330,53 @@ def label_mock(hass: HomeAssistant) -> None:
         },
     )
 
-    entity_with_my_label = er.RegistryEntry(
+    entity_with_my_label = RegistryEntryWithDefaults(
         entity_id="light.with_my_label",
         unique_id="with_my_label",
         platform="test",
         labels={"my-label"},
     )
-    hidden_entity_with_my_label = er.RegistryEntry(
+    hidden_entity_with_my_label = RegistryEntryWithDefaults(
         entity_id="light.hidden_with_my_label",
         unique_id="hidden_with_my_label",
         platform="test",
         labels={"my-label"},
         hidden_by=er.RegistryEntryHider.USER,
     )
-    config_entity_with_my_label = er.RegistryEntry(
+    config_entity_with_my_label = RegistryEntryWithDefaults(
         entity_id="light.config_with_my_label",
         unique_id="config_with_my_label",
         platform="test",
         labels={"my-label"},
         entity_category=EntityCategory.CONFIG,
     )
-    entity_with_label1_from_device = er.RegistryEntry(
+    entity_with_label1_from_device = RegistryEntryWithDefaults(
         entity_id="light.with_label1_from_device",
         unique_id="with_label1_from_device",
         platform="test",
         device_id=device_has_label1.id,
     )
-    entity_with_label1_from_device_and_different_area = er.RegistryEntry(
+    entity_with_label1_from_device_and_different_area = RegistryEntryWithDefaults(
         entity_id="light.with_label1_from_device_diff_area",
         unique_id="with_label1_from_device_diff_area",
         platform="test",
         device_id=device_has_label1.id,
         area_id=area_without_labels.id,
     )
-    entity_with_label1_and_label2_from_device = er.RegistryEntry(
+    entity_with_label1_and_label2_from_device = RegistryEntryWithDefaults(
         entity_id="light.with_label1_and_label2_from_device",
         unique_id="with_label1_and_label2_from_device",
         platform="test",
         labels={"label1"},
         device_id=device_has_label2.id,
     )
-    entity_with_labels_from_device = er.RegistryEntry(
+    entity_with_labels_from_device = RegistryEntryWithDefaults(
         entity_id="light.with_labels_from_device",
         unique_id="with_labels_from_device",
         platform="test",
         device_id=device_has_labels.id,
     )
-    entity_with_no_labels = er.RegistryEntry(
+    entity_with_no_labels = RegistryEntryWithDefaults(
         entity_id="light.no_labels",
         unique_id="no_labels",
         platform="test",
@@ -1697,7 +1698,7 @@ async def test_domain_control_unauthorized(
     mock_registry(
         hass,
         {
-            "light.kitchen": er.RegistryEntry(
+            "light.kitchen": RegistryEntryWithDefaults(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",
@@ -1738,7 +1739,7 @@ async def test_domain_control_admin(
     mock_registry(
         hass,
         {
-            "light.kitchen": er.RegistryEntry(
+            "light.kitchen": RegistryEntryWithDefaults(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",
@@ -1776,7 +1777,7 @@ async def test_domain_control_no_user(hass: HomeAssistant) -> None:
     mock_registry(
         hass,
         {
-            "light.kitchen": er.RegistryEntry(
+            "light.kitchen": RegistryEntryWithDefaults(
                 entity_id="light.kitchen",
                 unique_id="kitchen",
                 platform="test_domain",
