@@ -7165,6 +7165,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "vrm_forecasts": {
+      "name": "Victron VRM Forecasts",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "vulcan": {
       "name": "Uonet+ Vulcan",
       "integration_type": "hub",

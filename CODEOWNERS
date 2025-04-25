@@ -1679,6 +1679,8 @@ build.json @home-assistant/supervisor
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvooncall/ @molobrakos
 /tests/components/volvooncall/ @molobrakos
+/homeassistant/components/vrm_forecasts/ @AndyTempel
+/tests/components/vrm_forecasts/ @AndyTempel
 /homeassistant/components/vulcan/ @Antoni-Czaplicki
 /tests/components/vulcan/ @Antoni-Czaplicki
 /homeassistant/components/wake_on_lan/ @ntilley905
