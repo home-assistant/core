@@ -72,7 +72,7 @@ class NtfyNotifyEntity(NotifyEntity):
         )
 
         self.config_entry = config_entry
-        self.ntfy = config_entry.runtime_data.ntfy
+        self.ntfy = config_entry.runtime_data
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Publish a message to a topic."""
