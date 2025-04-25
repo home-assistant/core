@@ -327,7 +327,7 @@ class AbstractTemplateLight(LightEntity):
             (CONF_RGBW_ACTION, ColorMode.RGBW),
             (CONF_RGBWW_ACTION, ColorMode.RGBWW),
         ):
-            if action_config := config.get(action_id):
+            if (action_config := config.get(action_id)) is not None:
                 self._registered_scripts.append(action_id)
                 yield (action_id, action_config, color_mode)
 
