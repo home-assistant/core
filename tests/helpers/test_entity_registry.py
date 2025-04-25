@@ -2017,7 +2017,9 @@ async def test_disabled_entities_excluded_from_entity_list(
     ) == [entry1, entry2]
 
 
-async def test_entity_max_length_exceeded(entity_registry: er.EntityRegistry) -> None:
+async def test_entity_max_length_exceeded(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that an exception is raised when the max character length is exceeded."""
 
     long_domain_name = (
@@ -2042,20 +2044,13 @@ async def test_entity_max_length_exceeded(entity_registry: er.EntityRegistry) ->
         "1234567890123456789012345678901234567"
     )
 
-    known = []
-    new_id = entity_registry.async_generate_entity_id(
-        "sensor", long_entity_id_name, known
-    )
+    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7]
-    known.append(new_id)
-    new_id = entity_registry.async_generate_entity_id(
-        "sensor", long_entity_id_name, known
-    )
+    hass.states.async_reserve(new_id)
+    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_2"
-    known.append(new_id)
-    new_id = entity_registry.async_generate_entity_id(
-        "sensor", long_entity_id_name, known
-    )
+    hass.states.async_reserve(new_id)
+    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_3"
 
 
