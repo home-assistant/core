@@ -15,7 +15,7 @@
           "mac": "MAC address of the device to wake up.",
           "broadcast_address": "The IP address of the host to send the magic packet to. Defaults to `255.255.255.255` and is normally not changed.",
           "broadcast_port": "The port to send the magic packet to. Defaults to `9` and is normally not changed.",
-          "if": "The ip address of the network adapter to route the magic packet through. Defaults to None"
+          "if": "The IP address of the network adapter to route the magic packet through. Defaults to None"
         }
       }
     }
