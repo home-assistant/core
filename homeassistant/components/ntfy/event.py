@@ -9,21 +9,18 @@ from typing import TYPE_CHECKING
 
 from aiontfy import Event, Notification
 from aiontfy.exceptions import NtfyConnectionError, NtfyHTTPError, NtfyTimeoutError
-from yarl import URL
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NtfyConfigEntry
-from .const import CONF_TOPIC, DOMAIN
+from .entity import NtfyBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 10
+PARALLEL_UPDATES = 0
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -41,15 +38,13 @@ async def async_setup_entry(
         )
 
 
-class NtfyEventEntity(EventEntity):
+class NtfyEventEntity(NtfyBaseEntity, EventEntity):
     """An event entity."""
 
-    _attr_has_entity_name = True
     entity_description = EventEntityDescription(
         key="subscribe",
         translation_key="subscribe",
         name=None,
-        has_entity_name=True,
         event_types=["triggered"],
     )
 
@@ -59,22 +54,9 @@ class NtfyEventEntity(EventEntity):
         subentry: ConfigSubentry,
     ) -> None:
         """Initialize the entity."""
-        self.topic = subentry.data[CONF_TOPIC]
-
-        self._attr_unique_id = f"{config_entry.entry_id}_{subentry.subentry_id}_{self.entity_description.key}"
-
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="ntfy LLC",
-            model="ntfy",
-            name=subentry.data.get(CONF_NAME, self.topic),
-            configuration_url=URL(config_entry.data[CONF_URL]) / self.topic,
-            identifiers={(DOMAIN, f"{config_entry.entry_id}_{subentry.subentry_id}")},
-        )
-        self.ntfy = config_entry.runtime_data
+        super().__init__(config_entry, subentry)
         self._ws: asyncio.Task | None = None
-        self.config_entry = config_entry
-        self._connectivity_check = False
+        self._connectivity_check = True
 
     @callback
     def _async_handle_event(self, notification: Notification) -> None:
@@ -124,7 +106,6 @@ class NtfyEventEntity(EventEntity):
                     "Failed to connect to ntfy service due to a connection timeout"
                 )
             self._connectivity_check = False
-
         finally:
             if self._ws is None or self._ws.done():
                 self._ws = self.config_entry.async_create_background_task(
@@ -134,7 +115,6 @@ class NtfyEventEntity(EventEntity):
                     ),
                     name="ntfy_websocket",
                 )
-        await super().async_added_to_hass()
 
     @property
     def entity_picture(self) -> str | None:
