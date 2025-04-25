@@ -816,6 +816,14 @@ async def test_availability_json_attributes_without_value_template(
     assert "icon" not in entity_state.attributes
 
     hass.states.async_set("sensor.input1", "on")
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"Not A Number"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Unable to parse output as JSON" in caplog.text
+
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     with mock_asyncio_subprocess_run(b'{ "key": "value" }'):
