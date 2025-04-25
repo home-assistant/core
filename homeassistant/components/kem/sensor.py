@@ -194,18 +194,19 @@ async def async_setup_entry(
 
     homes = config_entry.runtime_data.homes
     coordinators = config_entry.runtime_data.coordinators
-    entities = [
-        KemSensorEntity(
-            coordinators[device_data[DEVICE_DATA_ID]],
-            device_data[DEVICE_DATA_ID],
-            device_data,
-            sensor_description,
-        )
-        for home_data in homes
-        for device_data in home_data[DEVICE_DATA_DEVICES]
-        for sensor_description in SENSORS
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            KemSensorEntity(
+                coordinators[device_data[DEVICE_DATA_ID]],
+                device_data[DEVICE_DATA_ID],
+                device_data,
+                sensor_description,
+            )
+            for home_data in homes
+            for device_data in home_data[DEVICE_DATA_DEVICES]
+            for sensor_description in SENSORS
+        ]
+    )
 
 
 class KemSensorEntity(KemEntity, SensorEntity):
