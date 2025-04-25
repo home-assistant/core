@@ -1,5 +1,6 @@
 """Test the Teslemetry calendar platform."""
 
+from datetime import datetime
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -28,9 +29,10 @@ async def test_calandar(
     freezer: FrozenDateTimeFactory,
     mock_legacy: AsyncMock,
 ) -> None:
-    """Tests that the climate entity is correct."""
+    """Tests that the calendar entity is correct."""
 
-    freezer.move_to("2024-01-01 00:00:00+00:00")
+    TZ = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=TZ))
 
     entry = await setup_platform(hass, [Platform.CALENDAR])
 
@@ -57,7 +59,8 @@ async def test_calandar_events(
 ) -> None:
     """Tests that the climate entity is correct."""
 
-    freezer.move_to("2024-01-01 00:00:00+00:00")
+    TZ = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=TZ))
 
     await setup_platform(hass, [Platform.CALENDAR])
     result = await hass.services.async_call(
