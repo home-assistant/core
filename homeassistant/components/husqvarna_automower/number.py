@@ -43,9 +43,9 @@ async def async_set_work_area_cutting_height(
     work_area_id: int,
 ) -> None:
     """Set cutting height for work area."""
-    await coordinator.api.commands.workarea_settings(
-        mower_id, work_area_id, cutting_height=int(cheight)
-    )
+    # await coordinator.api.commands.workarea_settings(
+    #     mower_id, work_area_id, cutting_height=int(cheight)
+    # )
 
 
 async def async_set_cutting_height(

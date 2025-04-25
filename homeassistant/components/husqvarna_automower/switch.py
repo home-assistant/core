@@ -205,13 +205,13 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
     @handle_sending_exception(poll_after_sending=True)
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.api.commands.workarea_settings(
-            self.mower_id, self.work_area_id, enabled=False
-        )
+        # await self.coordinator.api.commands.workarea_settings(
+        #     self.mower_id, self.work_area_id, enabled=False
+        # )
 
     @handle_sending_exception(poll_after_sending=True)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.api.commands.workarea_settings(
-            self.mower_id, self.work_area_id, enabled=True
-        )
+        # await self.coordinator.api.commands.workarea_settings(
+        #     self.mower_id, self.work_area_id, enabled=True
+        # )
