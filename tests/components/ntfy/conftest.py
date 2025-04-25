@@ -1,5 +1,6 @@
 """Common fixtures for the ntfy tests."""
 
+import asyncio
 from collections.abc import Callable, Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -77,6 +78,8 @@ def mock_aiontfy() -> Generator[AsyncMock]:
 
         async def mock_ws(topics: list[str], callback: Callable[[Notification], None]):
             callback(resp)
+            while True:
+                await asyncio.sleep(1)
 
         client.subscribe.side_effect = mock_ws
 
