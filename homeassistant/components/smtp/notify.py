@@ -11,6 +11,9 @@ import logging
 import os
 from pathlib import Path
 import smtplib
+import socket
+import ssl
+from typing import Any
 
 import voluptuous as vol
 
@@ -113,19 +116,19 @@ class MailNotificationService(BaseNotificationService):
 
     def __init__(
         self,
-        server,
-        port,
-        timeout,
-        sender,
-        encryption,
-        username,
-        password,
-        recipients,
-        sender_name,
-        debug,
-        verify_ssl,
-        ssl_context,
-    ):
+        server: str,
+        port: int,
+        timeout: int,
+        sender: str,
+        encryption: str,
+        username: str | None,
+        password: str | None,
+        recipients: list[str],
+        sender_name: str | None,
+        debug: bool,
+        verify_ssl: bool,
+        ssl_context: ssl.SSLContext | None,
+    ) -> None:
         """Initialize the SMTP service."""
         self._server = server
         self._port = port
@@ -141,8 +144,9 @@ class MailNotificationService(BaseNotificationService):
         self.tries = 2
         self._ssl_context = ssl_context
 
-    def connect(self):
+    def connect(self) -> smtplib.SMTP_SSL | smtplib.SMTP:
         """Connect/authenticate to SMTP Server."""
+        mail: smtplib.SMTP_SSL | smtplib.SMTP
         if self.encryption == "tls":
             mail = smtplib.SMTP_SSL(
                 self._server,
@@ -161,12 +165,12 @@ class MailNotificationService(BaseNotificationService):
             mail.login(self.username, self.password)
         return mail
 
-    def connection_is_valid(self):
+    def connection_is_valid(self) -> bool:
         """Check for valid config, verify connectivity."""
         server = None
         try:
             server = self.connect()
-        except (smtplib.socket.gaierror, ConnectionRefusedError):
+        except (socket.gaierror, ConnectionRefusedError):
             _LOGGER.exception(
                 (
                     "SMTP server not found or refused connection (%s:%s). Please check"
@@ -188,7 +192,7 @@ class MailNotificationService(BaseNotificationService):
 
         return True
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str, **kwargs: Any) -> None:
         """Build and send a message to a user.
 
         Will send plain text normally, with pictures as attachments if images config is
@@ -196,6 +200,7 @@ class MailNotificationService(BaseNotificationService):
         """
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
+        msg: MIMEMultipart | MIMEText
         if data := kwargs.get(ATTR_DATA):
             if ATTR_HTML in data:
                 msg = _build_html_msg(
@@ -213,20 +218,24 @@ class MailNotificationService(BaseNotificationService):
 
         msg["Subject"] = subject
 
-        if not (recipients := kwargs.get(ATTR_TARGET)):
+        if targets := kwargs.get(ATTR_TARGET):
+            recipients: list[str] = targets  # ensured by NOTIFY_SERVICE_SCHEMA
+        else:
             recipients = self.recipients
-        msg["To"] = recipients if isinstance(recipients, str) else ",".join(recipients)
+        msg["To"] = ",".join(recipients)
+
         if self._sender_name:
             msg["From"] = f"{self._sender_name} <{self._sender}>"
         else:
             msg["From"] = self._sender
+
         msg["X-Mailer"] = "Home Assistant"
         msg["Date"] = email.utils.format_datetime(dt_util.now())
         msg["Message-Id"] = email.utils.make_msgid()
 
-        return self._send_email(msg, recipients)
+        self._send_email(msg, recipients)
 
-    def _send_email(self, msg, recipients):
+    def _send_email(self, msg: MIMEMultipart | MIMEText, recipients: list[str]) -> None:
         """Send the message."""
         mail = self.connect()
         for _ in range(self.tries):
@@ -246,13 +255,15 @@ class MailNotificationService(BaseNotificationService):
         mail.quit()
 
 
-def _build_text_msg(message):
+def _build_text_msg(message: str) -> MIMEText:
     """Build plaintext email."""
     _LOGGER.debug("Building plain text email")
     return MIMEText(message)
 
 
-def _attach_file(hass, atch_name, content_id=""):
+def _attach_file(
+    hass: HomeAssistant, atch_name: str, content_id: str | None = None
+) -> MIMEImage | MIMEApplication | None:
     """Create a message attachment.
 
     If MIMEImage is successful and content_id is passed (HTML), add images in-line.
@@ -271,7 +282,7 @@ def _attach_file(hass, atch_name, content_id=""):
                 translation_key="remote_path_not_allowed",
                 translation_placeholders={
                     "allow_list": allow_list,
-                    "file_path": file_path,
+                    "file_path": str(file_path),
                     "file_name": file_name,
                     "url": url,
                 },
@@ -282,6 +293,7 @@ def _attach_file(hass, atch_name, content_id=""):
         _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
         return None
 
+    attachment: MIMEImage | MIMEApplication
     try:
         attachment = MIMEImage(file_bytes)
     except TypeError:
@@ -305,7 +317,9 @@ def _attach_file(hass, atch_name, content_id=""):
     return attachment
 
 
-def _build_multipart_msg(hass, message, images):
+def _build_multipart_msg(
+    hass: HomeAssistant, message: str, images: list[str]
+) -> MIMEMultipart:
     """Build Multipart message with images as attachments."""
     _LOGGER.debug("Building multipart email with image attachme_build_html_msgnt(s)")
     msg = MIMEMultipart()
@@ -320,7 +334,9 @@ def _build_multipart_msg(hass, message, images):
     return msg
 
 
-def _build_html_msg(hass, text, html, images):
+def _build_html_msg(
+    hass: HomeAssistant, text: str, html: str, images: list[str]
+) -> MIMEMultipart:
     """Build Multipart message with in-line images and rich HTML (UTF-8)."""
     _LOGGER.debug("Building HTML rich email")
     msg = MIMEMultipart("related")
