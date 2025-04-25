@@ -12,16 +12,18 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import NtfyConfigEntry, NtfyDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.EVENT, Platform.NOTIFY]
+
+type NtfyConfigEntry = ConfigEntry[Ntfy]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool:
@@ -56,9 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool
             translation_key="timeout_error",
         ) from e
 
-    coordinator = NtfyDataUpdateCoordinator(hass, entry, ntfy)
+    # coordinator = NtfyDataUpdateCoordinator(hass, entry, ntfy)
 
-    entry.runtime_data = coordinator
+    entry.runtime_data = ntfy
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
