@@ -785,6 +785,25 @@ def test_as_function(hass: HomeAssistant) -> None:
         hass,
     ).async_render() == [2, 4, 6]
 
+    # Test macro bails early when returning
+    assert (
+        template.Template(
+            """
+        {%- macro macro_find(arr, item, returns) -%}
+            {%- for i in arr -%}
+                {%- if arr[i] == item -%}
+                    {%- do returns(i) -%}
+                {%- endif -%}
+            {%- endfor -%}
+        {%- endmacro -%}
+        {%- set find = macro_find | as_function -%}
+        {{ find([1, 2, 3], 2) }}
+        """,
+            hass,
+        ).async_render()
+        == 1
+    )
+
 
 def test_apply(hass: HomeAssistant) -> None:
     """Test apply."""
