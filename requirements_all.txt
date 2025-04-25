@@ -267,7 +267,7 @@ aiohasupervisor==0.3.0
 aiohomeconnect==0.16.3
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.13
+aiohomekit==3.2.14
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -784,7 +784,7 @@ devolo-home-control-api==0.18.3
 devolo-plc-api==1.5.1
 
 # homeassistant.components.chacon_dio
-dio-chacon-wifi-api==1.2.1
+dio-chacon-wifi-api==1.2.2
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -2319,7 +2319,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.0.4
+pysmartthings==3.0.5
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
