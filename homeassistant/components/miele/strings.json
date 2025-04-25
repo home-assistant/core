@@ -114,6 +114,17 @@
     }
   },
   "entity": {
+    "button": {
+      "start": {
+        "name": "[%key:common::action::start%]"
+      },
+      "stop": {
+        "name": "[%key:common::action::stop%]"
+      },
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      }
+    },
     "light": {
       "ambient_light": {
         "name": "Ambient light"
