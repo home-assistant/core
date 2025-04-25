@@ -83,6 +83,9 @@
       },
       "water_tank": {
         "name": "Water tank empty"
+      },
+      "websocket_connected": {
+        "name": "WebSocket connected"
       }
     },
     "button": {
@@ -101,6 +104,15 @@
       },
       "smart_standby_time": {
         "name": "Smart standby time"
+      },
+      "preinfusion_time": {
+        "name": "Preinfusion time"
+      },
+      "prebrew_time_on": {
+        "name": "Prebrew on time"
+      },
+      "prebrew_time_off": {
+        "name": "Prebrew off time"
       }
     },
     "select": {
@@ -126,6 +138,17 @@
           "2": "2",
           "3": "3"
         }
+      }
+    },
+    "sensor": {
+      "coffee_boiler_ready_time": {
+        "name": "Coffee boiler ready time"
+      },
+      "steam_boiler_ready_time": {
+        "name": "Steam boiler ready time"
+      },
+      "last_cleaning_time": {
+        "name": "Last cleaning time"
       }
     },
     "switch": {

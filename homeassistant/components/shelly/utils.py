@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
@@ -546,7 +545,7 @@ def is_rpc_wifi_stations_disabled(
     return True
 
 
-def get_http_port(data: MappingProxyType[str, Any]) -> int:
+def get_http_port(data: Mapping[str, Any]) -> int:
     """Get port from config entry data."""
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
 

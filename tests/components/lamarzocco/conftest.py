@@ -1,7 +1,7 @@
 """Lamarzocco session fixtures."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 from pylamarzocco.const import ModelName
@@ -20,15 +20,6 @@ from homeassistant.core import HomeAssistant
 from . import SERIAL_DICT, USER_INPUT, async_init_integration
 
 from tests.common import MockConfigEntry, load_json_object_fixture
-
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.lamarzocco.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
 
 
 @pytest.fixture

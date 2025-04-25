@@ -35,7 +35,6 @@ from tests.common import MockConfigEntry
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_lamarzocco: MagicMock,
 ) -> None:
     """Test loading and unloading the integration."""
     await async_init_integration(hass, mock_config_entry)
@@ -54,6 +53,7 @@ async def test_config_entry_not_ready(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test the La Marzocco configuration entry not ready."""
+    mock_lamarzocco.websocket.connected = False
     mock_lamarzocco.get_dashboard.side_effect = RequestNotSuccessful("")
 
     await async_init_integration(hass, mock_config_entry)
@@ -91,6 +91,7 @@ async def test_invalid_auth(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test auth error during setup."""
+    mock_lamarzocco.websocket.connected = False
     mock_lamarzocco.get_dashboard.side_effect = AuthFail("")
     await async_init_integration(hass, mock_config_entry)
 
@@ -111,7 +112,6 @@ async def test_invalid_auth(
 
 async def test_v1_migration_fails(
     hass: HomeAssistant,
-    mock_cloud_client: MagicMock,
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test v1 -> v2 Migration."""
@@ -131,7 +131,6 @@ async def test_v1_migration_fails(
 
 async def test_v2_migration(
     hass: HomeAssistant,
-    mock_cloud_client: MagicMock,
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test v2 -> v3 Migration."""
@@ -256,7 +255,6 @@ async def test_websocket_closed_on_unload(
 async def test_gateway_version_issue(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_lamarzocco: MagicMock,
     mock_cloud_client: MagicMock,
     version: str,
     issue_exists: bool,
