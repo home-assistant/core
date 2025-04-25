@@ -744,7 +744,7 @@ energyzero==2.1.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.10.1
+env-canada==0.10.2
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -2134,7 +2134,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.9
+renault-api==0.3.0
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2400,7 +2400,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.5.3
+uiprotect==7.5.5
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
