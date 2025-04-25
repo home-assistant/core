@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -22,7 +22,7 @@ from .const import (
 from .coordinator import KemUpdateCoordinator
 
 
-class KemEntity(CoordinatorEntity[KemUpdateCoordinator], Entity):
+class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
     """Representation of an KEM entity."""
 
     _attr_has_entity_name = True
