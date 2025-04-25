@@ -59,6 +59,16 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
     control_result: bool | None = None
     _light_id: int
 
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        light_id: int,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._light_id = light_id
+        self.control_result: bool | None = None
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """When device updates, clear control result that overrides state."""
@@ -98,9 +108,7 @@ class SwitcherSingleLightEntity(SwitcherBaseLightEntity):
         light_id: int,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
-        self._light_id = light_id
-        self.control_result: bool | None = None
+        super().__init__(coordinator, light_id)
 
         # Entity class attributes
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
@@ -117,9 +125,7 @@ class SwitcherMultiLightEntity(SwitcherBaseLightEntity):
         light_id: int,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
-        self._light_id = light_id
-        self.control_result: bool | None = None
+        super().__init__(coordinator, light_id)
 
         # Entity class attributes
         self._attr_translation_placeholders = {"light_id": str(light_id + 1)}
