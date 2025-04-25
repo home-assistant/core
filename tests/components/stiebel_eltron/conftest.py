@@ -55,6 +55,16 @@ def mock_modbus() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_async_init() -> Generator[MagicMock]:
+    """Mock hass.config_entries.flow.async_init."""
+    with patch(
+        "homeassistant.config_entries.ConfigEntriesFlowManager.async_init",
+        new_callable=AsyncMock,
+    ) as mock_async_init:
+        yield mock_async_init
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
