@@ -214,6 +214,9 @@
       },
       "hvac_auto_mode": {
         "name": "HVAC auto mode"
+      },
+      "grid_status": {
+        "name": "Grid status"
       }
     },
     "button": {
@@ -553,7 +556,7 @@
         "name": "Tire pressure rear right"
       },
       "version": {
-        "name": "version"
+        "name": "Version"
       },
       "vin": {
         "name": "Vehicle",

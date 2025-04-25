@@ -415,16 +415,26 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
 )
 
 
-ENERGY_LIVE_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(key="backup_capable"),
-    BinarySensorEntityDescription(key="grid_services_active"),
-    BinarySensorEntityDescription(key="storm_mode_active"),
+ENERGY_LIVE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
+    TeslemetryBinarySensorEntityDescription(
+        key="grid_status",
+        polling_value_fn=lambda x: x == "Active",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="backup_capable", entity_category=EntityCategory.DIAGNOSTIC
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="grid_services_active", entity_category=EntityCategory.DIAGNOSTIC
+    ),
+    TeslemetryBinarySensorEntityDescription(key="storm_mode_active"),
 )
 
 
-ENERGY_INFO_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
+ENERGY_INFO_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
+    TeslemetryBinarySensorEntityDescription(
         key="components_grid_services_enabled",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -535,12 +545,12 @@ class TeslemetryEnergyLiveBinarySensorEntity(
 ):
     """Base class for Teslemetry energy live binary sensors."""
 
-    entity_description: BinarySensorEntityDescription
+    entity_description: TeslemetryBinarySensorEntityDescription
 
     def __init__(
         self,
         data: TeslemetryEnergyData,
-        description: BinarySensorEntityDescription,
+        description: TeslemetryBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
@@ -548,7 +558,7 @@ class TeslemetryEnergyLiveBinarySensorEntity(
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
-        self._attr_is_on = self._value
+        self._attr_is_on = self.entity_description.polling_value_fn(self._value)
 
 
 class TeslemetryEnergyInfoBinarySensorEntity(
@@ -556,12 +566,12 @@ class TeslemetryEnergyInfoBinarySensorEntity(
 ):
     """Base class for Teslemetry energy info binary sensors."""
 
-    entity_description: BinarySensorEntityDescription
+    entity_description: TeslemetryBinarySensorEntityDescription
 
     def __init__(
         self,
         data: TeslemetryEnergyData,
-        description: BinarySensorEntityDescription,
+        description: TeslemetryBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
@@ -569,4 +579,4 @@ class TeslemetryEnergyInfoBinarySensorEntity(
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
-        self._attr_is_on = self._value
+        self._attr_is_on = self.entity_description.polling_value_fn(self._value)
