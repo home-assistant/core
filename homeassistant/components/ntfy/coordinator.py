@@ -42,7 +42,6 @@ class NtfyDataUpdateCoordinator(DataUpdateCoordinator[Notification | None]):
             update_interval=SCAN_INTERVAL,
         )
         self.ntfy = ntfy
-        self.topics: set[str] | None = None
         self._ws: Task | None = None
 
     async def _async_update_data(self) -> None:
@@ -83,5 +82,3 @@ class NtfyDataUpdateCoordinator(DataUpdateCoordinator[Notification | None]):
                     ),
                     name="ntfy_websocket",
                 )
-
-                self.topics = topics
