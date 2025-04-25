@@ -6,7 +6,6 @@ import logging
 
 from aiokem import AuthenticationError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -21,13 +20,13 @@ from .const import (
 )
 from .coordinator import KemUpdateCoordinator
 from .data import HAAioKem
-from .types import KemRuntimeData
+from .types import KemConfigEntry, KemRuntimeData
 
 PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: KemConfigEntry) -> bool:
     """Set up KEM from a config entry."""
     websession = async_get_clientsession(hass)
     kem = HAAioKem(session=websession, hass=hass, config_entry=entry)
@@ -75,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: KemConfigEntry) -> bool:
     """Unload a config entry."""
     if hasattr(entry, "runtime_data") and hasattr(entry.runtime_data, "kem"):
         await entry.runtime_data.kem.close()
