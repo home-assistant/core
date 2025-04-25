@@ -39,7 +39,6 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
     SoftenerSensorEntityDescription(
         key="salt_left_side_percentage",
         translation_key="salt_left_side_percentage",
-        name="Salt Left Side Percentage",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda softener: softener.salt.leftPercent,
@@ -47,7 +46,6 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
     SoftenerSensorEntityDescription(
         key="salt_right_side_percentage",
         translation_key="salt_right_side_percentage",
-        name="Salt Right Side Percentage",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda softener: softener.salt.rightPercent,
@@ -55,23 +53,19 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
     SoftenerSensorEntityDescription(
         key="salt_left_side_time_remaining",
         translation_key="salt_left_side_time_remaining",
-        name="Salt Left Side Time Remaining",
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=lambda softener: softener.salt.leftDays,
     ),
     SoftenerSensorEntityDescription(
         key="salt_right_side_time_remaining",
         translation_key="salt_right_side_time_remaining",
-        name="Salt Right Side Time Remaining",
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=lambda softener: softener.salt.rightDays,
     ),
     SoftenerSensorEntityDescription(
         key="battery",
-        translation_key="battery",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda softener: softener.battery,
@@ -79,10 +73,9 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
     SoftenerSensorEntityDescription(
         key="wi_fi_strength",
         translation_key="wi_fi_strength",
-        name="Wi-Fi Strength",
+        value_fn=lambda softener: softener.wifiLevel,
         device_class=SensorDeviceClass.ENUM,
         options=["high", "medium", "low"],
-        value_fn=lambda softener: softener.wifiLevel,
     ),
 )
 
