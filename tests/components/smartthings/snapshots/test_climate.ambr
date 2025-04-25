@@ -1,4 +1,68 @@
 # serializer version: 1
+# name: test_all_entities[aux_ac][climate.aux_a_c_on_off-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': None,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.aux_a_c_on_off',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 393>,
+    'translation_key': None,
+    'unique_id': 'bf53a150-f8a4-45d1-aac4-86252475d551_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[aux_ac][climate.aux_a_c_on_off-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'fan_mode': 'auto',
+      'fan_modes': None,
+      'friendly_name': 'AUX A/C on-off',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 393>,
+      'temperature': 20.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.aux_a_c_on_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[bosch_radiator_thermostat_ii][climate.radiator_thermostat_ii_m_wohnzimmer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6,6 +70,7 @@
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35,
@@ -35,7 +100,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 387>,
     'translation_key': None,
-    'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5',
+    'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -45,6 +110,7 @@
       'current_temperature': 23.9,
       'friendly_name': 'Radiator Thermostat II [+M] Wohnzimmer',
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35,
@@ -114,7 +180,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 441>,
     'translation_key': None,
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d',
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -145,7 +211,7 @@
       ]),
       'max_temp': 35,
       'min_temp': 7,
-      'preset_mode': None,
+      'preset_mode': 'windFree',
       'preset_modes': list([
         'windFree',
       ]),
@@ -160,6 +226,112 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][climate.office_airfree-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+        'turbo',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_modes': list([
+        'windFree',
+      ]),
+      'swing_modes': list([
+        'off',
+        'both',
+        'vertical',
+        'horizontal',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.office_airfree',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 441>,
+    'translation_key': None,
+    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][climate.office_airfree-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 26,
+      'drlc_status_duration': 0,
+      'drlc_status_override': False,
+      'fan_mode': 'low',
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+        'turbo',
+      ]),
+      'friendly_name': 'Office AirFree',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': None,
+      'preset_modes': list([
+        'windFree',
+      ]),
+      'supported_features': <ClimateEntityFeature: 441>,
+      'swing_mode': 'off',
+      'swing_modes': list([
+        'off',
+        'both',
+        'vertical',
+        'horizontal',
+      ]),
+      'temperature': 24,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.office_airfree',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
   })
 # ---
 # name: test_all_entities[da_ac_rac_01001][climate.aire_dormitorio_principal-entry]
@@ -219,7 +391,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 441>,
     'translation_key': None,
-    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -319,7 +491,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 393>,
     'translation_key': None,
-    'unique_id': 'F8042E25-0E53-0000-0000-000000000000',
+    'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -367,6 +539,7 @@
         'auto',
       ]),
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -397,7 +570,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 395>,
     'translation_key': None,
-    'unique_id': '028469cb-6e89-4f14-8d9a-bfbca5e0fbfc',
+    'unique_id': '028469cb-6e89-4f14-8d9a-bfbca5e0fbfc_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -414,6 +587,7 @@
       'friendly_name': 'Main Floor',
       'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -430,6 +604,70 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat',
+  })
+# ---
+# name: test_all_entities[ecobee_thermostat_offline][climate.downstairs-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': None,
+      'hvac_modes': list([
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.downstairs',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 395>,
+    'translation_key': None,
+    'unique_id': '1888b38f-6246-4f1e-911b-bfcfb66999db_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[ecobee_thermostat_offline][climate.downstairs-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'fan_mode': None,
+      'fan_modes': None,
+      'friendly_name': 'Downstairs',
+      'hvac_modes': list([
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 395>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.downstairs',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[generic_ef00_v1][climate.thermostat_kuche-entry]
@@ -467,7 +705,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 387>,
     'translation_key': None,
-    'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a',
+    'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -500,6 +738,7 @@
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35,
@@ -529,7 +768,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 387>,
     'translation_key': None,
-    'unique_id': '69a271f6-6537-4982-8cd9-979866872692',
+    'unique_id': '69a271f6-6537-4982-8cd9-979866872692_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -540,6 +779,7 @@
       'friendly_name': 'Hall thermostat',
       'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35,
@@ -567,6 +807,7 @@
         'on',
       ]),
       'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 7.0,
@@ -595,7 +836,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 395>,
     'translation_key': None,
-    'unique_id': '2894dc93-0f11-49cc-8a81-3a684cebebf6',
+    'unique_id': '2894dc93-0f11-49cc-8a81-3a684cebebf6_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -610,6 +851,7 @@
       'friendly_name': 'asd',
       'hvac_action': <HVACAction.COOLING: 'cooling'>,
       'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 7.0,

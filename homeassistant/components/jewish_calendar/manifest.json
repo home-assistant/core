@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/jewish_calendar",
   "iot_class": "calculated",
   "loggers": ["hdate"],
-  "requirements": ["hdate==0.11.1"],
+  "requirements": ["hdate[astral]==1.0.3"],
   "single_config_entry": true
 }

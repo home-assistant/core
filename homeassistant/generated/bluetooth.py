@@ -359,12 +359,32 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "inkbird",
+        "local_name": "ITH-11-B",
+    },
+    {
+        "connectable": False,
+        "domain": "inkbird",
         "local_name": "ITH-13-B",
     },
     {
         "connectable": False,
         "domain": "inkbird",
         "local_name": "ITH-21-B",
+    },
+    {
+        "connectable": True,
+        "domain": "inkbird",
+        "local_name": "Ink@IAM-T1",
+    },
+    {
+        "connectable": True,
+        "domain": "inkbird",
+        "manufacturer_data_start": [
+            65,
+            67,
+            45,
+        ],
+        "manufacturer_id": 12628,
     },
     {
         "connectable": True,
@@ -383,6 +403,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "keymitt_ble",
         "local_name": "mib*",
+    },
+    {
+        "domain": "kulersky",
+        "service_uuid": "8d96a001-0002-64c2-0001-9acc4838521c",
     },
     {
         "domain": "lamarzocco",

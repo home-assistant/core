@@ -12,10 +12,13 @@ from homeassistant.components.blueprint import (
     is_blueprint_instance_config,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
@@ -35,10 +38,13 @@ from homeassistant.setup import async_notify_setup_error
 from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
+    cover as cover_platform,
     image as image_platform,
+    light as light_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
+    switch as switch_platform,
     weather as weather_platform,
 )
 from .const import (
@@ -104,11 +110,22 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
             vol.Optional(IMAGE_DOMAIN): vol.All(
                 cv.ensure_list, [image_platform.IMAGE_SCHEMA]
             ),
+            vol.Optional(LIGHT_DOMAIN): vol.All(
+                cv.ensure_list, [light_platform.LIGHT_SCHEMA]
+            ),
             vol.Optional(WEATHER_DOMAIN): vol.All(
                 cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
             ),
+            vol.Optional(SWITCH_DOMAIN): vol.All(
+                cv.ensure_list, [switch_platform.SWITCH_SCHEMA]
+            ),
+            vol.Optional(COVER_DOMAIN): vol.All(
+                cv.ensure_list, [cover_platform.COVER_SCHEMA]
+            ),
         },
-        ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN),
+        ensure_domains_do_not_have_trigger_or_action(
+            BUTTON_DOMAIN, COVER_DOMAIN, LIGHT_DOMAIN, SWITCH_DOMAIN
+        ),
     )
 )
 

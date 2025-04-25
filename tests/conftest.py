@@ -67,7 +67,12 @@ from homeassistant.components.websocket_api.auth import (
 # pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
-from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import (
+    ConfigEntries,
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.const import BASE_PLATFORMS, HASSIO_USER_NAME
 from homeassistant.core import (
     Context,
@@ -114,7 +119,9 @@ from .typing import (
 if TYPE_CHECKING:
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
+    from homeassistant.auth.models import RefreshToken
     from homeassistant.components import recorder
+
 
 pytest.register_assert_rewrite("tests.common")
 
@@ -847,7 +854,7 @@ def hass_client_no_auth(
 @pytest.fixture
 def current_request() -> Generator[MagicMock]:
     """Mock current request."""
-    with patch("homeassistant.components.http.current_request") as mock_request_context:
+    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mocked_request = make_mocked_request(
             "GET",
             "/some/request",
@@ -947,6 +954,12 @@ def mqtt_config_entry_data() -> dict[str, Any] | None:
 
 
 @pytest.fixture
+def mqtt_config_subentries_data() -> tuple[ConfigSubentryData] | None:
+    """Fixture to allow overriding MQTT subentries data."""
+    return None
+
+
+@pytest.fixture
 def mqtt_config_entry_options() -> dict[str, Any] | None:
     """Fixture to allow overriding MQTT entry options."""
     return None
@@ -1032,6 +1045,7 @@ async def mqtt_mock(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
     mqtt_config_entry_options: dict[str, Any] | None,
+    mqtt_config_subentries_data: tuple[ConfigSubentryData] | None,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> AsyncGenerator[MqttMockHAClient]:
     """Fixture to mock MQTT component."""
@@ -1044,6 +1058,7 @@ async def _mqtt_mock_entry(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
     mqtt_config_entry_options: dict[str, Any] | None,
+    mqtt_config_subentries_data: tuple[ConfigSubentryData] | None,
 ) -> AsyncGenerator[MqttMockHAClientGenerator]:
     """Fixture to mock a delayed setup of the MQTT config entry."""
     # Local import to avoid processing MQTT modules when running a testcase
@@ -1060,6 +1075,7 @@ async def _mqtt_mock_entry(
     entry = MockConfigEntry(
         data=mqtt_config_entry_data,
         options=mqtt_config_entry_options,
+        subentries_data=mqtt_config_subentries_data,
         domain=mqtt.DOMAIN,
         title="MQTT",
         version=1,
@@ -1174,6 +1190,7 @@ async def mqtt_mock_entry(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
     mqtt_config_entry_options: dict[str, Any] | None,
+    mqtt_config_subentries_data: tuple[ConfigSubentryData] | None,
 ) -> AsyncGenerator[MqttMockHAClientGenerator]:
     """Set up an MQTT config entry."""
 
@@ -1190,7 +1207,11 @@ async def mqtt_mock_entry(
         return await mqtt_mock_entry(_async_setup_config_entry)
 
     async with _mqtt_mock_entry(
-        hass, mqtt_client_mock, mqtt_config_entry_data, mqtt_config_entry_options
+        hass,
+        mqtt_client_mock,
+        mqtt_config_entry_data,
+        mqtt_config_entry_options,
+        mqtt_config_subentries_data,
     ) as mqtt_mock_entry:
         yield _setup_mqtt_entry
 
@@ -1325,7 +1346,10 @@ def mock_zeroconf() -> Generator[MagicMock]:
 
     with (
         patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True) as mock_zc,
-        patch("homeassistant.components.zeroconf.AsyncServiceBrowser", autospec=True),
+        patch(
+            "homeassistant.components.zeroconf.discovery.AsyncServiceBrowser",
+            autospec=True,
+        ),
     ):
         zc = mock_zc.return_value
         # DNSCache has strong Cython type checks, and MagicMock does not work
@@ -1873,6 +1897,67 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
         patch.object(bluetooth_scanner, "HaScanner"),
     ):
         yield mock_bleak_scanner_start
+
+
+@pytest.fixture
+def hassio_env(supervisor_is_connected: AsyncMock) -> Generator[None]:
+    """Fixture to inject hassio env."""
+    from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
+        HassioAPIError,
+    )
+
+    from .components.hassio import (  # pylint: disable=import-outside-toplevel
+        SUPERVISOR_TOKEN,
+    )
+
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            Mock(side_effect=HassioAPIError()),
+        ),
+    ):
+        yield
+
+
+@pytest.fixture
+async def hassio_stubs(
+    hassio_env: None,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
+) -> RefreshToken:
+    """Create mock hassio http client."""
+    from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
+        HassioAPIError,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.hassio.HassIO.update_hass_api",
+            return_value={"result": "ok"},
+        ) as hass_api,
+        patch(
+            "homeassistant.components.hassio.HassIO.update_hass_timezone",
+            return_value={"result": "ok"},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            side_effect=HassioAPIError(),
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_ingress_panels",
+            return_value={"panels": []},
+        ),
+        patch(
+            "homeassistant.components.hassio.issues.SupervisorIssues.setup",
+        ),
+    ):
+        await async_setup_component(hass, "hassio", {})
+
+    return hass_api.call_args[0][1]
 
 
 @pytest.fixture

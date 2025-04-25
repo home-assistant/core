@@ -6,5 +6,5 @@
   "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/duke_energy",
   "iot_class": "cloud_polling",
-  "requirements": ["aiodukeenergy==0.2.2"]
+  "requirements": ["aiodukeenergy==0.3.0"]
 }

@@ -522,8 +522,14 @@ class EntityPlatform:
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform async."""
+        entities: list[Entity] = (
+            new_entities if type(new_entities) is list else list(new_entities)
+        )
+        # handle empty list from component/platform
+        if not entities:
+            return
         task = self.hass.async_create_task_internal(
-            self.async_add_entities(new_entities, update_before_add=update_before_add),
+            self.async_add_entities(entities, update_before_add=update_before_add),
             f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
             eager_start=True,
         )
@@ -541,10 +547,16 @@ class EntityPlatform:
     ) -> None:
         """Schedule adding entities for a single platform async and track the task."""
         assert self.config_entry
+        entities: list[Entity] = (
+            new_entities if type(new_entities) is list else list(new_entities)
+        )
+        # handle empty list from component/platform
+        if not entities:
+            return
         task = self.config_entry.async_create_task(
             self.hass,
             self.async_add_entities(
-                new_entities,
+                entities,
                 update_before_add=update_before_add,
                 config_subentry_id=config_subentry_id,
             ),
@@ -573,9 +585,9 @@ class EntityPlatform:
 
     async def _async_add_and_update_entities(
         self,
-        coros: list[Coroutine[Any, Any, None]],
         entities: list[Entity],
         timeout: float,
+        config_subentry_id: str | None,
     ) -> None:
         """Add entities for a single platform and update them.
 
@@ -585,10 +597,21 @@ class EntityPlatform:
         event loop and will finish faster if we run them concurrently.
         """
         results: list[BaseException | None] | None = None
-        tasks = [create_eager_task(coro, loop=self.hass.loop) for coro in coros]
+        entity_registry = ent_reg.async_get(self.hass)
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
-                results = await asyncio.gather(*tasks, return_exceptions=True)
+                results = await asyncio.gather(
+                    *(
+                        create_eager_task(
+                            self._async_add_entity(
+                                entity, True, entity_registry, config_subentry_id
+                            ),
+                            loop=self.hass.loop,
+                        )
+                        for entity in entities
+                    ),
+                    return_exceptions=True,
+                )
         except TimeoutError:
             self.logger.warning(
                 "Timed out adding entities for domain %s with platform %s after %ds",
@@ -615,9 +638,9 @@ class EntityPlatform:
 
     async def _async_add_entities(
         self,
-        coros: list[Coroutine[Any, Any, None]],
         entities: list[Entity],
         timeout: float,
+        config_subentry_id: str | None,
     ) -> None:
         """Add entities for a single platform without updating.
 
@@ -626,13 +649,15 @@ class EntityPlatform:
         to the event loop so we can await the coros directly without
         scheduling them as tasks.
         """
+        entity_registry = ent_reg.async_get(self.hass)
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
-                for idx, coro in enumerate(coros):
+                for entity in entities:
                     try:
-                        await coro
+                        await self._async_add_entity(
+                            entity, False, entity_registry, config_subentry_id
+                        )
                     except Exception as ex:
-                        entity = entities[idx]
                         self.logger.exception(
                             "Error adding entity %s for domain %s with platform %s",
                             entity.entity_id,
@@ -670,33 +695,16 @@ class EntityPlatform:
                 f"entry {self.config_entry.entry_id if self.config_entry else None}"
             )
 
-        # handle empty list from component/platform
-        if not new_entities:  # type: ignore[truthy-iterable]
-            return
-
-        hass = self.hass
-        entity_registry = ent_reg.async_get(hass)
-        coros: list[Coroutine[Any, Any, None]] = []
-        entities: list[Entity] = []
-        for entity in new_entities:
-            coros.append(
-                self._async_add_entity(
-                    entity, update_before_add, entity_registry, config_subentry_id
-                )
-            )
-            entities.append(entity)
-
-        # No entities for processing
-        if not coros:
-            return
-
-        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(coros), SLOW_ADD_MIN_TIMEOUT)
+        entities: list[Entity] = (
+            new_entities if type(new_entities) is list else list(new_entities)
+        )
+        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(entities), SLOW_ADD_MIN_TIMEOUT)
         if update_before_add:
-            add_func = self._async_add_and_update_entities
+            await self._async_add_and_update_entities(
+                entities, timeout, config_subentry_id
+            )
         else:
-            add_func = self._async_add_entities
-
-        await add_func(coros, entities, timeout)
+            await self._async_add_entities(entities, timeout, config_subentry_id)
 
         if (
             (self.config_entry and self.config_entry.pref_disable_polling)

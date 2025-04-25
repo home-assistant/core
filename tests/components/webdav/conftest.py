@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.webdav.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
-from .const import BACKUP_METADATA, MOCK_LIST_WITH_PROPERTIES
+from .const import BACKUP_METADATA, MOCK_LIST_FILES
 
 from tests.common import MockConfigEntry
 
@@ -58,8 +58,9 @@ def mock_webdav_client() -> Generator[AsyncMock]:
         mock = mock_webdav_client.return_value
         mock.check.return_value = True
         mock.mkdir.return_value = True
-        mock.list_with_properties.return_value = MOCK_LIST_WITH_PROPERTIES
+        mock.list_files.return_value = MOCK_LIST_FILES
         mock.download_iter.side_effect = _download_mock
         mock.upload_iter.return_value = None
         mock.clean.return_value = None
+        mock.move.return_value = None
         yield mock
