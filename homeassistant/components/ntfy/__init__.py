@@ -58,8 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool
             translation_key="timeout_error",
         ) from e
 
-    # coordinator = NtfyDataUpdateCoordinator(hass, entry, ntfy)
-
     entry.runtime_data = ntfy
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
