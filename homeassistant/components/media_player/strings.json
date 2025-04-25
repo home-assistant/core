@@ -248,7 +248,7 @@
         },
         "media_content_type": {
           "name": "Content type",
-          "description": "The type of the content to play. Such as image, music, tv show, video, episode, channel, or playlist."
+          "description": "The type of the content to play, such as image, music, tv show, video, episode, channel, or playlist."
         },
         "enqueue": {
           "name": "Enqueue",
@@ -271,6 +271,28 @@
         "media_content_type": {
           "name": "Content type",
           "description": "The type of the content to browse, such as image, music, tv show, video, episode, channel, or playlist."
+        }
+      }
+    },
+    "search_media": {
+      "name": "Search media",
+      "description": "Searches the available media.",
+      "fields": {
+        "media_content_id": {
+          "name": "[%key:component::media_player::services::browse_media::fields::media_content_id::name%]",
+          "description": "[%key:component::media_player::services::browse_media::fields::media_content_id::description%]"
+        },
+        "media_content_type": {
+          "name": "[%key:component::media_player::services::browse_media::fields::media_content_type::name%]",
+          "description": "[%key:component::media_player::services::browse_media::fields::media_content_type::description%]"
+        },
+        "search_query": {
+          "name": "Search query",
+          "description": "The term to search for."
+        },
+        "media_filter_classes": {
+          "name": "Media filter classes",
+          "description": "List of media classes to filter the search results by."
         }
       }
     },
@@ -299,22 +321,22 @@
       "description": "Removes all items from the playlist."
     },
     "shuffle_set": {
-      "name": "Shuffle",
-      "description": "Playback mode that selects the media in randomized order.",
+      "name": "Set shuffle",
+      "description": "Enables or disables the shuffle mode.",
       "fields": {
         "shuffle": {
-          "name": "Shuffle",
-          "description": "Whether or not shuffle mode is enabled."
+          "name": "Shuffle mode",
+          "description": "Whether the media should be played in randomized order or not."
         }
       }
     },
     "repeat_set": {
-      "name": "Repeat",
-      "description": "Playback mode that plays the media in a loop.",
+      "name": "Set repeat",
+      "description": "Sets the repeat mode.",
       "fields": {
         "repeat": {
           "name": "Repeat mode",
-          "description": "Repeat mode to set."
+          "description": "Whether the media (one or all) should be played in a loop or not."
         }
       }
     },
@@ -344,7 +366,7 @@
     },
     "repeat": {
       "options": {
-        "off": "Off",
+        "off": "[%key:common::state::off%]",
         "all": "Repeat all",
         "one": "Repeat one"
       }

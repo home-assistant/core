@@ -6,106 +6,28 @@
       tuple(
       ),
       dict({
-        'generation_config': dict({
-          'max_output_tokens': 150,
-          'temperature': 1.0,
-          'top_k': 64,
-          'top_p': 0.95,
-        }),
-        'model_name': 'models/gemini-2.0-flash',
-        'safety_settings': dict({
-          'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
-          'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
-          'HATE': 'BLOCK_MEDIUM_AND_ABOVE',
-          'SEXUAL': 'BLOCK_MEDIUM_AND_ABOVE',
-        }),
-        'system_instruction': '''
-          Current time is 05:00:00. Today's date is 2024-05-24.
-          You are a voice assistant for Home Assistant.
-          Answer questions about the world truthfully.
-          Answer in plain text. Keep it simple and to the point.
-          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
-        ''',
-        'tools': list([
-          function_declarations {
-    name: "test_tool"
-    description: "Test function"
-    parameters {
-      type_: OBJECT
-      properties {
-        key: "param3"
-        value {
-          type_: OBJECT
-          properties {
-            key: "json"
-            value {
-              type_: STRING
-            }
-          }
-        }
-      }
-      properties {
-        key: "param2"
-        value {
-          type_: NUMBER
-        }
-      }
-      properties {
-        key: "param1"
-        value {
-          type_: ARRAY
-          description: "Test parameters"
-          items {
-            type_: STRING
-          }
-        }
-      }
-    }
-  }
-  ,
-        ]),
-      }),
-    ),
-    tuple(
-      '().start_chat',
-      tuple(
-      ),
-      dict({
+        'config': GenerateContentConfig(http_options=None, system_instruction="You are a voice assistant for Home Assistant.\nAnswer questions about the world truthfully.\nAnswer in plain text. Keep it simple and to the point.\nOnly if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.\nCurrent time is 05:00:00. Today's date is 2024-05-24.", temperature=1.0, top_p=0.95, top_k=64.0, candidate_count=None, max_output_tokens=150, stop_sequences=None, response_logprobs=None, logprobs=None, presence_penalty=None, frequency_penalty=None, seed=None, response_mime_type=None, response_schema=None, routing_config=None, safety_settings=[SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_HATE_SPEECH: 'HARM_CATEGORY_HATE_SPEECH'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>), SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_HARASSMENT: 'HARM_CATEGORY_HARASSMENT'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>), SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: 'HARM_CATEGORY_DANGEROUS_CONTENT'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>), SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: 'HARM_CATEGORY_SEXUALLY_EXPLICIT'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>)], tools=[Tool(function_declarations=[FunctionDeclaration(response=None, description='Test function', name='test_tool', parameters=Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description=None, enum=None, format=None, items=None, max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties={'param1': Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description='Test parameters', enum=None, format=None, items=Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description=None, enum=None, format=None, items=None, max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties=None, property_ordering=None, required=None, type=<Type.STRING: 'STRING'>), max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties=None, property_ordering=None, required=None, type=<Type.ARRAY: 'ARRAY'>), 'param2': Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description=None, enum=None, format=None, items=None, max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties=None, property_ordering=None, required=None, type=None), 'param3': Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description=None, enum=None, format=None, items=None, max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties={'json': Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description=None, enum=None, format=None, items=None, max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties=None, property_ordering=None, required=None, type=<Type.STRING: 'STRING'>)}, property_ordering=None, required=[], type=<Type.OBJECT: 'OBJECT'>)}, property_ordering=None, required=[], type=<Type.OBJECT: 'OBJECT'>))], retrieval=None, google_search=None, google_search_retrieval=None, code_execution=None)], tool_config=None, labels=None, cached_content=None, response_modalities=None, media_resolution=None, speech_config=None, audio_timestamp=None, automatic_function_calling=AutomaticFunctionCallingConfig(disable=True, maximum_remote_calls=None, ignore_call_history=None), thinking_config=None),
         'history': list([
-          dict({
-            'parts': 'Please call the test function',
-            'role': 'user',
-          }),
         ]),
+        'model': 'models/gemini-2.0-flash',
       }),
     ),
     tuple(
-      '().start_chat().send_message_async',
+      '().send_message',
       tuple(
-        'Please call the test function',
       ),
       dict({
+        'message': 'Please call the test function',
       }),
     ),
     tuple(
-      '().start_chat().send_message_async',
+      '().send_message',
       tuple(
-        parts {
-    function_response {
-      name: "test_tool"
-      response {
-        fields {
-          key: "result"
-          value {
-            string_value: "Test response"
-          }
-        }
-      }
-    }
-  }
-  ,
       ),
       dict({
+        'message': list([
+          Part(video_metadata=None, thought=None, code_execution_result=None, executable_code=None, file_data=None, function_call=None, function_response=FunctionResponse(id=None, name='test_tool', response={'result': 'Test response'}), inline_data=None, text=None),
+        ]),
       }),
     ),
   ])
@@ -117,75 +39,61 @@
       tuple(
       ),
       dict({
-        'generation_config': dict({
-          'max_output_tokens': 150,
-          'temperature': 1.0,
-          'top_k': 64,
-          'top_p': 0.95,
-        }),
-        'model_name': 'models/gemini-2.0-flash',
-        'safety_settings': dict({
-          'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
-          'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
-          'HATE': 'BLOCK_MEDIUM_AND_ABOVE',
-          'SEXUAL': 'BLOCK_MEDIUM_AND_ABOVE',
-        }),
-        'system_instruction': '''
-          Current time is 05:00:00. Today's date is 2024-05-24.
-          You are a voice assistant for Home Assistant.
-          Answer questions about the world truthfully.
-          Answer in plain text. Keep it simple and to the point.
-          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
-        ''',
-        'tools': list([
-          function_declarations {
-    name: "test_tool"
-    description: "Test function"
-  }
-  ,
-        ]),
-      }),
-    ),
-    tuple(
-      '().start_chat',
-      tuple(
-      ),
-      dict({
+        'config': GenerateContentConfig(http_options=None, system_instruction="You are a voice assistant for Home Assistant.\nAnswer questions about the world truthfully.\nAnswer in plain text. Keep it simple and to the point.\nOnly if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.\nCurrent time is 05:00:00. Today's date is 2024-05-24.", temperature=1.0, top_p=0.95, top_k=64.0, candidate_count=None, max_output_tokens=150, stop_sequences=None, response_logprobs=None, logprobs=None, presence_penalty=None, frequency_penalty=None, seed=None, response_mime_type=None, response_schema=None, routing_config=None, safety_settings=[SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_HATE_SPEECH: 'HARM_CATEGORY_HATE_SPEECH'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>), SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_HARASSMENT: 'HARM_CATEGORY_HARASSMENT'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>), SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: 'HARM_CATEGORY_DANGEROUS_CONTENT'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>), SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: 'HARM_CATEGORY_SEXUALLY_EXPLICIT'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>)], tools=[Tool(function_declarations=[FunctionDeclaration(response=None, description='Test function', name='test_tool', parameters=None)], retrieval=None, google_search=None, google_search_retrieval=None, code_execution=None)], tool_config=None, labels=None, cached_content=None, response_modalities=None, media_resolution=None, speech_config=None, audio_timestamp=None, automatic_function_calling=AutomaticFunctionCallingConfig(disable=True, maximum_remote_calls=None, ignore_call_history=None), thinking_config=None),
         'history': list([
-          dict({
-            'parts': 'Please call the test function',
-            'role': 'user',
-          }),
+        ]),
+        'model': 'models/gemini-2.0-flash',
+      }),
+    ),
+    tuple(
+      '().send_message',
+      tuple(
+      ),
+      dict({
+        'message': 'Please call the test function',
+      }),
+    ),
+    tuple(
+      '().send_message',
+      tuple(
+      ),
+      dict({
+        'message': list([
+          Part(video_metadata=None, thought=None, code_execution_result=None, executable_code=None, file_data=None, function_call=None, function_response=FunctionResponse(id=None, name='test_tool', response={'result': 'Test response'}), inline_data=None, text=None),
         ]),
       }),
     ),
+  ])
+# ---
+# name: test_use_google_search
+  list([
     tuple(
-      '().start_chat().send_message_async',
+      '',
       tuple(
-        'Please call the test function',
       ),
       dict({
+        'config': GenerateContentConfig(http_options=None, system_instruction="You are a voice assistant for Home Assistant.\nAnswer questions about the world truthfully.\nAnswer in plain text. Keep it simple and to the point.\nOnly if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.\nCurrent time is 05:00:00. Today's date is 2024-05-24.", temperature=1.0, top_p=0.95, top_k=64.0, candidate_count=None, max_output_tokens=150, stop_sequences=None, response_logprobs=None, logprobs=None, presence_penalty=None, frequency_penalty=None, seed=None, response_mime_type=None, response_schema=None, routing_config=None, safety_settings=[SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_HATE_SPEECH: 'HARM_CATEGORY_HATE_SPEECH'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>), SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_HARASSMENT: 'HARM_CATEGORY_HARASSMENT'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>), SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: 'HARM_CATEGORY_DANGEROUS_CONTENT'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>), SafetySetting(method=None, category=<HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: 'HARM_CATEGORY_SEXUALLY_EXPLICIT'>, threshold=<HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE: 'BLOCK_MEDIUM_AND_ABOVE'>)], tools=[Tool(function_declarations=[FunctionDeclaration(response=None, description='Test function', name='test_tool', parameters=Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description=None, enum=None, format=None, items=None, max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties={'param1': Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description='Test parameters', enum=None, format=None, items=Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description=None, enum=None, format=None, items=None, max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties=None, property_ordering=None, required=None, type=<Type.STRING: 'STRING'>), max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties=None, property_ordering=None, required=None, type=<Type.ARRAY: 'ARRAY'>), 'param2': Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description=None, enum=None, format=None, items=None, max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties=None, property_ordering=None, required=None, type=None), 'param3': Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description=None, enum=None, format=None, items=None, max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties={'json': Schema(example=None, pattern=None, default=None, max_length=None, title=None, min_length=None, min_properties=None, max_properties=None, any_of=None, description=None, enum=None, format=None, items=None, max_items=None, maximum=None, min_items=None, minimum=None, nullable=None, properties=None, property_ordering=None, required=None, type=<Type.STRING: 'STRING'>)}, property_ordering=None, required=[], type=<Type.OBJECT: 'OBJECT'>)}, property_ordering=None, required=[], type=<Type.OBJECT: 'OBJECT'>))], retrieval=None, google_search=None, google_search_retrieval=None, code_execution=None), Tool(function_declarations=None, retrieval=None, google_search=GoogleSearch(), google_search_retrieval=None, code_execution=None)], tool_config=None, labels=None, cached_content=None, response_modalities=None, media_resolution=None, speech_config=None, audio_timestamp=None, automatic_function_calling=AutomaticFunctionCallingConfig(disable=True, maximum_remote_calls=None, ignore_call_history=None), thinking_config=None),
+        'history': list([
+        ]),
+        'model': 'models/gemini-2.0-flash',
       }),
     ),
     tuple(
-      '().start_chat().send_message_async',
+      '().send_message',
       tuple(
-        parts {
-    function_response {
-      name: "test_tool"
-      response {
-        fields {
-          key: "result"
-          value {
-            string_value: "Test response"
-          }
-        }
-      }
-    }
-  }
-  ,
       ),
       dict({
+        'message': 'Please call the test function',
+      }),
+    ),
+    tuple(
+      '().send_message',
+      tuple(
+      ),
+      dict({
+        'message': list([
+          Part(video_metadata=None, thought=None, code_execution_result=None, executable_code=None, file_data=None, function_call=None, function_response=FunctionResponse(id=None, name='test_tool', response={'result': 'Test response'}), inline_data=None, text=None),
+        ]),
       }),
     ),
   ])

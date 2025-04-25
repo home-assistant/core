@@ -8,16 +8,17 @@ from contextlib import suppress
 import dataclasses
 from functools import wraps
 from http import HTTPStatus
+import json
 import logging
 import time
-from typing import Any, Concatenate
+from typing import Any, Concatenate, cast
 
 import aiohttp
 from aiohttp import web
 import attr
-from hass_nabucasa import Cloud, auth, thingtalk
+from hass_nabucasa import AlreadyConnectedError, Cloud, auth, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
-from hass_nabucasa.voice import TTS_VOICES
+from hass_nabucasa.voice_data import TTS_VOICES
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -56,6 +57,7 @@ from .const import (
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
+    VOICE_STYLE_SEPERATOR,
 )
 from .google_config import CLOUD_GOOGLE
 from .repairs import async_manage_legacy_subscription_issue
@@ -64,7 +66,9 @@ from .subscription import async_subscription_info
 _LOGGER = logging.getLogger(__name__)
 
 
-_CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
+_CLOUD_ERRORS: dict[
+    type[Exception], tuple[HTTPStatus, Callable[[Exception], str] | str]
+] = {
     TimeoutError: (
         HTTPStatus.BAD_GATEWAY,
         "Unable to reach the Home Assistant cloud.",
@@ -133,6 +137,10 @@ def async_setup(hass: HomeAssistant) -> None:
                 HTTPStatus.BAD_REQUEST,
                 "Multi-factor authentication expired, or not started. Please try again.",
             ),
+            AlreadyConnectedError: (
+                HTTPStatus.CONFLICT,
+                lambda x: json.dumps(cast(AlreadyConnectedError, x).details),
+            ),
         }
     )
 
@@ -197,7 +205,11 @@ def _process_cloud_exception(exc: Exception, where: str) -> tuple[HTTPStatus, st
 
     for err, value_info in _CLOUD_ERRORS.items():
         if isinstance(exc, err):
-            err_info = value_info
+            status, content = value_info
+            err_info = (
+                status,
+                content if isinstance(content, str) else content(exc),
+            )
             break
 
     if err_info is None:
@@ -234,12 +246,17 @@ class CloudLoginView(HomeAssistantView):
     name = "api:cloud:login"
 
     @require_admin
+    async def post(self, request: web.Request) -> web.Response:
+        """Handle login request."""
+        return await self._post(request)
+
     @_handle_cloud_errors
     @RequestDataValidator(
         vol.Schema(
             vol.All(
                 {
                     vol.Required("email"): str,
+                    vol.Optional("check_connection", default=False): bool,
                     vol.Exclusive("password", "login"): str,
                     vol.Exclusive("code", "login"): str,
                 },
@@ -247,7 +264,7 @@ class CloudLoginView(HomeAssistantView):
             )
         )
     )
-    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+    async def _post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle login request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
@@ -258,7 +275,11 @@ class CloudLoginView(HomeAssistantView):
             code = data.get("code")
 
             if email and password:
-                await cloud.login(email, password)
+                await cloud.login(
+                    email,
+                    password,
+                    check_connection=data["check_connection"],
+                )
 
             else:
                 if (
@@ -270,7 +291,12 @@ class CloudLoginView(HomeAssistantView):
                 # Voluptuous should ensure that code is not None because password is
                 assert code is not None
 
-                await cloud.login_verify_totp(email, code, self._mfa_tokens)
+                await cloud.login_verify_totp(
+                    email,
+                    code,
+                    self._mfa_tokens,
+                    check_connection=data["check_connection"],
+                )
                 self._mfa_tokens = {}
                 self._mfa_tokens_set_time = 0
 
@@ -295,8 +321,12 @@ class CloudLogoutView(HomeAssistantView):
     name = "api:cloud:logout"
 
     @require_admin
-    @_handle_cloud_errors
     async def post(self, request: web.Request) -> web.Response:
+        """Handle logout request."""
+        return await self._post(request)
+
+    @_handle_cloud_errors
+    async def _post(self, request: web.Request) -> web.Response:
         """Handle logout request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
@@ -379,9 +409,13 @@ class CloudForgotPasswordView(HomeAssistantView):
     name = "api:cloud:forgot_password"
 
     @require_admin
+    async def post(self, request: web.Request) -> web.Response:
+        """Handle forgot password request."""
+        return await self._post(request)
+
     @_handle_cloud_errors
     @RequestDataValidator(vol.Schema({vol.Required("email"): str}))
-    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+    async def _post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle forgot password request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
@@ -558,10 +592,21 @@ async def websocket_subscription(
 def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
     """Validate language and voice."""
     language, voice = value
+    style: str | None
+    voice, _, style = voice.partition(VOICE_STYLE_SEPERATOR)
+    if not style:
+        style = None
     if language not in TTS_VOICES:
         raise vol.Invalid(f"Invalid language {language}")
-    if voice not in TTS_VOICES[language]:
+    if voice not in (language_info := TTS_VOICES[language]):
         raise vol.Invalid(f"Invalid voice {voice} for language {language}")
+    voice_info = language_info[voice]
+    if style and (
+        isinstance(voice_info, str) or style not in voice_info.get("variants", [])
+    ):
+        raise vol.Invalid(
+            f"Invalid style {style} for voice {voice} in language {language}"
+        )
     return value
 
 
@@ -979,13 +1024,24 @@ def tts_info(
     msg: dict[str, Any],
 ) -> None:
     """Fetch available tts info."""
-    connection.send_result(
-        msg["id"],
-        {
-            "languages": [
-                (language, voice)
-                for language, voices in TTS_VOICES.items()
-                for voice in voices
-            ]
-        },
-    )
+    result = []
+    for language, voices in TTS_VOICES.items():
+        for voice_id, voice_info in voices.items():
+            if isinstance(voice_info, str):
+                result.append((language, voice_id, voice_info))
+                continue
+
+            name = voice_info["name"]
+            result.append((language, voice_id, name))
+            result.extend(
+                [
+                    (
+                        language,
+                        f"{voice_id}{VOICE_STYLE_SEPERATOR}{variant}",
+                        f"{name} ({variant})",
+                    )
+                    for variant in voice_info.get("variants", [])
+                ]
+            )
+
+    connection.send_result(msg["id"], {"languages": result})

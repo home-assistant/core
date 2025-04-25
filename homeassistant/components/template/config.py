@@ -1,5 +1,6 @@
 """Template config validator."""
 
+from collections.abc import Callable
 from contextlib import suppress
 import logging
 
@@ -11,10 +12,13 @@ from homeassistant.components.blueprint import (
     is_blueprint_instance_config,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
@@ -34,10 +38,13 @@ from homeassistant.setup import async_notify_setup_error
 from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
+    cover as cover_platform,
     image as image_platform,
+    light as light_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
+    switch as switch_platform,
     weather as weather_platform,
 )
 from .const import (
@@ -52,41 +59,74 @@ from .helpers import async_get_blueprints
 
 PACKAGE_MERGE_HINT = "list"
 
+
+def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict], dict]:
+    """Validate that config does not contain trigger and action."""
+    domains = set(keys)
+
+    def validate(obj: dict):
+        options = set(obj.keys())
+        if found_domains := domains.intersection(options):
+            invalid = {CONF_TRIGGER, CONF_ACTION}
+            if found_invalid := invalid.intersection(set(obj.keys())):
+                raise vol.Invalid(
+                    f"Unsupported option(s) found for domain {found_domains.pop()}, please remove ({', '.join(found_invalid)}) from your configuration",
+                )
+
+        return obj
+
+    return validate
+
+
 CONFIG_SECTION_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
-        vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
-        vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-        vol.Optional(NUMBER_DOMAIN): vol.All(
-            cv.ensure_list, [number_platform.NUMBER_SCHEMA]
+    vol.All(
+        {
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
+            vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
+            vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            vol.Optional(NUMBER_DOMAIN): vol.All(
+                cv.ensure_list, [number_platform.NUMBER_SCHEMA]
+            ),
+            vol.Optional(SENSOR_DOMAIN): vol.All(
+                cv.ensure_list, [sensor_platform.SENSOR_SCHEMA]
+            ),
+            vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
+                sensor_platform.LEGACY_SENSOR_SCHEMA
+            ),
+            vol.Optional(BINARY_SENSOR_DOMAIN): vol.All(
+                cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_SCHEMA]
+            ),
+            vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
+                binary_sensor_platform.LEGACY_BINARY_SENSOR_SCHEMA
+            ),
+            vol.Optional(SELECT_DOMAIN): vol.All(
+                cv.ensure_list, [select_platform.SELECT_SCHEMA]
+            ),
+            vol.Optional(BUTTON_DOMAIN): vol.All(
+                cv.ensure_list, [button_platform.BUTTON_SCHEMA]
+            ),
+            vol.Optional(IMAGE_DOMAIN): vol.All(
+                cv.ensure_list, [image_platform.IMAGE_SCHEMA]
+            ),
+            vol.Optional(LIGHT_DOMAIN): vol.All(
+                cv.ensure_list, [light_platform.LIGHT_SCHEMA]
+            ),
+            vol.Optional(WEATHER_DOMAIN): vol.All(
+                cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
+            ),
+            vol.Optional(SWITCH_DOMAIN): vol.All(
+                cv.ensure_list, [switch_platform.SWITCH_SCHEMA]
+            ),
+            vol.Optional(COVER_DOMAIN): vol.All(
+                cv.ensure_list, [cover_platform.COVER_SCHEMA]
+            ),
+        },
+        ensure_domains_do_not_have_trigger_or_action(
+            BUTTON_DOMAIN, COVER_DOMAIN, LIGHT_DOMAIN, SWITCH_DOMAIN
         ),
-        vol.Optional(SENSOR_DOMAIN): vol.All(
-            cv.ensure_list, [sensor_platform.SENSOR_SCHEMA]
-        ),
-        vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
-            sensor_platform.LEGACY_SENSOR_SCHEMA
-        ),
-        vol.Optional(BINARY_SENSOR_DOMAIN): vol.All(
-            cv.ensure_list, [binary_sensor_platform.BINARY_SENSOR_SCHEMA]
-        ),
-        vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
-            binary_sensor_platform.LEGACY_BINARY_SENSOR_SCHEMA
-        ),
-        vol.Optional(SELECT_DOMAIN): vol.All(
-            cv.ensure_list, [select_platform.SELECT_SCHEMA]
-        ),
-        vol.Optional(BUTTON_DOMAIN): vol.All(
-            cv.ensure_list, [button_platform.BUTTON_SCHEMA]
-        ),
-        vol.Optional(IMAGE_DOMAIN): vol.All(
-            cv.ensure_list, [image_platform.IMAGE_SCHEMA]
-        ),
-        vol.Optional(WEATHER_DOMAIN): vol.All(
-            cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
-        ),
-    },
+    )
 )
 
 TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA = vol.Schema(
@@ -122,9 +162,15 @@ async def _async_resolve_blueprints(
             raise vol.Invalid("more than one platform defined per blueprint")
         if len(platforms) == 1:
             platform = platforms.pop()
-            for prop in (CONF_NAME, CONF_UNIQUE_ID, CONF_VARIABLES):
+            for prop in (CONF_NAME, CONF_UNIQUE_ID):
                 if prop in config:
                     config[platform][prop] = config.pop(prop)
+            # For regular template entities, CONF_VARIABLES should be removed because they just
+            # house input results for template entities.  For Trigger based template entities
+            # CONF_VARIABLES should not be removed because the variables are always
+            # executed between the trigger and action.
+            if CONF_TRIGGER not in config and CONF_VARIABLES in config:
+                config[platform][CONF_VARIABLES] = config.pop(CONF_VARIABLES)
         raw_config = dict(config)
 
     template_config = TemplateConfig(CONFIG_SECTION_SCHEMA(config))

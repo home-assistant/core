@@ -253,9 +253,8 @@ async def async_setup_entry(
 
         entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
         nonlocal added_devices
-        new_devices, remove_devices, added_devices = coordinator.get_devices(
-            added_devices
-        )
+        new_devices, _, new_added_devices = coordinator.get_devices(added_devices)
+        added_devices = new_added_devices
 
         if new_devices:
             entities.extend(

@@ -1,0 +1,218 @@
+{
+  "application_credentials": {
+    "description": "Navigate to [\"Get involved\" at Miele developer site]({register_url}) to request credentials then enter them below."
+  },
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Miele integration needs to re-authenticate your account"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "account_mismatch": "The used account does not match the original account",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "device": {
+    "coffee_system": {
+      "name": "Coffee system"
+    },
+    "dishwasher": {
+      "name": "Dishwasher"
+    },
+    "tumble_dryer": {
+      "name": "Tumble dryer"
+    },
+    "fridge_freezer": {
+      "name": "Fridge freezer"
+    },
+    "induction_hob": {
+      "name": "Induction hob"
+    },
+    "oven": {
+      "name": "Oven"
+    },
+    "oven_microwave": {
+      "name": "Oven microwave"
+    },
+    "hob_highlight": {
+      "name": "Hob highlight"
+    },
+    "steam_oven": {
+      "name": "Steam oven"
+    },
+    "microwave": {
+      "name": "Microwave"
+    },
+    "hood": {
+      "name": "Hood"
+    },
+    "warming_drawer": {
+      "name": "Warming drawer"
+    },
+    "steam_oven_combi": {
+      "name": "Steam oven combi"
+    },
+    "wine_cabinet": {
+      "name": "Wine cabinet"
+    },
+    "wine_conditioning_unit": {
+      "name": "Wine conditioning unit"
+    },
+    "wine_unit": {
+      "name": "Wine unit"
+    },
+    "refrigerator": {
+      "name": "Refrigerator"
+    },
+    "freezer": {
+      "name": "Freezer"
+    },
+    "robot_vacuum_cleander": {
+      "name": "Robot vacuum cleaner"
+    },
+    "steam_oven_microwave": {
+      "name": "Steam oven micro"
+    },
+    "dialog_oven": {
+      "name": "Dialog oven"
+    },
+    "wine_cabinet_freezer": {
+      "name": "Wine cabinet freezer"
+    },
+    "hob_extraction": {
+      "name": "Hob with extraction"
+    },
+    "washer_dryer": {
+      "name": "Washer dryer"
+    },
+    "washing_machine": {
+      "name": "Washing machine"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "notification_active": {
+        "name": "Notification active"
+      },
+      "mobile_start": {
+        "name": "Mobile start"
+      },
+      "remote_control": {
+        "name": "Remote control"
+      },
+      "smart_grid": {
+        "name": "Smart grid"
+      }
+    },
+    "button": {
+      "start": {
+        "name": "[%key:common::action::start%]"
+      },
+      "stop": {
+        "name": "[%key:common::action::stop%]"
+      },
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      }
+    },
+    "light": {
+      "ambient_light": {
+        "name": "Ambient light"
+      },
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "climate": {
+      "freezer": {
+        "name": "[%key:component::miele::device::freezer::name%]"
+      },
+      "refrigerator": {
+        "name": "[%key:component::miele::device::refrigerator::name%]"
+      },
+      "wine_cabinet": {
+        "name": "[%key:component::miele::device::wine_cabinet::name%]"
+      },
+      "zone_1": {
+        "name": "Zone 1"
+      },
+      "zone_2": {
+        "name": "Zone 2"
+      },
+      "zone_3": {
+        "name": "Zone 3"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "autocleaning": "Automatic cleaning",
+          "failure": "Failure",
+          "idle": "[%key:common::state::idle%]",
+          "not_connected": "Not connected",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "pause": "Pause",
+          "program_ended": "Program ended",
+          "program_interrupted": "Program interrupted",
+          "programmed": "Programmed",
+          "rinse_hold": "Rinse hold",
+          "in_use": "In use",
+          "service": "Service",
+          "supercooling": "Supercooling",
+          "supercooling_superfreezing": "Supercooling/superfreezing",
+          "superfreezing": "Superfreezing",
+          "superheating": "Superheating",
+          "waiting_to_start": "Waiting to start"
+        }
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "supercooling": {
+        "name": "Supercooling"
+      },
+      "superfreezing": {
+        "name": "Superfreezing"
+      }
+    }
+  },
+  "exceptions": {
+    "config_entry_auth_failed": {
+      "message": "Authentication failed. Please log in again."
+    },
+    "config_entry_not_ready": {
+      "message": "Error while loading the integration."
+    },
+    "set_state_error": {
+      "message": "Failed to set state for {entity}."
+    }
+  }
+}

@@ -1,0 +1,187 @@
+{
+  "config": {
+    "flow_title": "Imeon {model} ({serial})",
+    "step": {
+      "user": {
+        "title": "Add Imeon inverter",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP of your inverter",
+          "username": "The username of your OS One account",
+          "password": "The password of your OS One account"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_route": "Unable to request the API, make sure 'API Module' is enabled on your device",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_autonomy": {
+        "name": "Battery autonomy"
+      },
+      "battery_charge_time": {
+        "name": "Battery charge time"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_soc": {
+        "name": "Battery state of charge"
+      },
+      "battery_stored": {
+        "name": "Battery stored"
+      },
+      "grid_current_l1": {
+        "name": "Grid current L1"
+      },
+      "grid_current_l2": {
+        "name": "Grid current L2"
+      },
+      "grid_current_l3": {
+        "name": "Grid current L3"
+      },
+      "grid_frequency": {
+        "name": "Grid frequency"
+      },
+      "grid_voltage_l1": {
+        "name": "Grid voltage L1"
+      },
+      "grid_voltage_l2": {
+        "name": "Grid voltage L2"
+      },
+      "grid_voltage_l3": {
+        "name": "Grid voltage L3"
+      },
+      "input_power_l1": {
+        "name": "Input power L1"
+      },
+      "input_power_l2": {
+        "name": "Input power L2"
+      },
+      "input_power_l3": {
+        "name": "Input power L3"
+      },
+      "input_power_total": {
+        "name": "Input power total"
+      },
+      "inverter_charging_current_limit": {
+        "name": "Charging current limit"
+      },
+      "inverter_injection_power_limit": {
+        "name": "Injection power limit"
+      },
+      "meter_power": {
+        "name": "Meter power"
+      },
+      "meter_power_protocol": {
+        "name": "Meter power protocol"
+      },
+      "output_current_l1": {
+        "name": "Output current L1"
+      },
+      "output_current_l2": {
+        "name": "Output current L2"
+      },
+      "output_current_l3": {
+        "name": "Output current L3"
+      },
+      "output_frequency": {
+        "name": "Output frequency"
+      },
+      "output_power_l1": {
+        "name": "Output power L1"
+      },
+      "output_power_l2": {
+        "name": "Output power L2"
+      },
+      "output_power_l3": {
+        "name": "Output power L3"
+      },
+      "output_power_total": {
+        "name": "Output power total"
+      },
+      "output_voltage_l1": {
+        "name": "Output voltage L1"
+      },
+      "output_voltage_l2": {
+        "name": "Output voltage L2"
+      },
+      "output_voltage_l3": {
+        "name": "Output voltage L3"
+      },
+      "pv_consumed": {
+        "name": "PV consumed"
+      },
+      "pv_injected": {
+        "name": "PV injected"
+      },
+      "pv_power_1": {
+        "name": "PV power 1"
+      },
+      "pv_power_2": {
+        "name": "PV power 2"
+      },
+      "pv_power_total": {
+        "name": "PV power total"
+      },
+      "temp_air_temperature": {
+        "name": "Air temperature"
+      },
+      "temp_component_temperature": {
+        "name": "Component temperature"
+      },
+      "monitoring_building_consumption": {
+        "name": "Monitoring building consumption"
+      },
+      "monitoring_economy_factor": {
+        "name": "Monitoring economy factor"
+      },
+      "monitoring_grid_consumption": {
+        "name": "Monitoring grid consumption"
+      },
+      "monitoring_grid_injection": {
+        "name": "Monitoring grid injection"
+      },
+      "monitoring_grid_power_flow": {
+        "name": "Monitoring grid power flow"
+      },
+      "monitoring_self_consumption": {
+        "name": "Monitoring self consumption"
+      },
+      "monitoring_self_sufficiency": {
+        "name": "Monitoring self sufficiency"
+      },
+      "monitoring_solar_production": {
+        "name": "Monitoring solar production"
+      },
+      "monitoring_minute_building_consumption": {
+        "name": "Monitoring building consumption (minute)"
+      },
+      "monitoring_minute_grid_consumption": {
+        "name": "Monitoring grid consumption (minute)"
+      },
+      "monitoring_minute_grid_injection": {
+        "name": "Monitoring grid injection (minute)"
+      },
+      "monitoring_minute_grid_power_flow": {
+        "name": "Monitoring grid power flow (minute)"
+      },
+      "monitoring_minute_solar_production": {
+        "name": "Monitoring solar production (minute)"
+      }
+    }
+  }
+}

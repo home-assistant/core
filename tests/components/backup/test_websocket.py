@@ -27,12 +27,17 @@ from homeassistant.components.backup.manager import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.backup import async_initialize_backup
+from homeassistant.setup import async_setup_component
 
 from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
+    mock_backup_agent,
     setup_backup_integration,
+    setup_backup_platform,
 )
 
 from tests.common import async_fire_time_changed, async_mock_service
@@ -42,10 +47,10 @@ BACKUP_CALL = call(
     agent_ids=["test.test-agent"],
     backup_name="test-name",
     extra_metadata={"instance_id": ANY, "with_automatic_settings": True},
-    include_addons=["test-addon"],
+    include_addons=[],
     include_all_addons=False,
     include_database=True,
-    include_folders=["media"],
+    include_folders=None,
     include_homeassistant=True,
     password="test-password",
     on_progress=ANY,
@@ -55,6 +60,7 @@ DEFAULT_STORAGE_DATA: dict[str, Any] = {
     "backups": [],
     "config": {
         "agents": {},
+        "automatic_backups_configured": False,
         "create_backup": {
             "agent_ids": [],
             "include_addons": None,
@@ -226,6 +232,31 @@ async def test_details_with_errors(
             {"type": "backup/details", "backup_id": "abc123"}
         )
         assert await client.receive_json() == snapshot
+
+
+async def test_details_get_backup_returns_none(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting backup info when the agent returns None from get_backup."""
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    mock_agents["test.remote"].async_get_backup.return_value = None
+    mock_agents["test.remote"].async_get_backup.side_effect = None
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    with patch("pathlib.Path.exists", return_value=True):
+        await client.send_json_auto_id(
+            {"type": "backup/details", "backup_id": "abc123"}
+        )
+        assert await client.receive_json() == snapshot
+    assert (
+        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -718,6 +749,36 @@ async def test_restore_remote_agent(
     assert len(restart_calls) == snapshot
 
 
+async def test_restore_remote_agent_get_backup_returns_none(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test calling the restore command when the agent returns None from get_backup."""
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    mock_agents["test.remote"].async_get_backup.return_value = None
+    mock_agents["test.remote"].async_get_backup.side_effect = None
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/restore",
+            "backup_id": "abc123",
+            "agent_id": "test.remote",
+        }
+    )
+    assert await client.receive_json() == snapshot
+    assert len(restart_calls) == 0
+    assert (
+        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
+        in caplog.text
+    )
+
+
 async def test_restore_wrong_password(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -907,6 +968,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": ["test-addon"],
@@ -938,6 +1000,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": True,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -969,6 +1032,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1000,6 +1064,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1031,6 +1096,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1062,6 +1128,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1096,6 +1163,7 @@ async def test_agents_info(
                             "test-agent1": {"protected": True},
                             "test-agent2": {"protected": False},
                         },
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1121,25 +1189,98 @@ async def test_agents_info(
                 "minor_version": store.STORAGE_VERSION_MINOR,
             },
         },
+        {
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "agents": {},
+                        "automatic_backups_configured": True,
+                        "create_backup": {
+                            "agent_ids": ["hassio.local", "hassio.share", "test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {
+                            "days": [],
+                            "recurrence": "never",
+                            "state": "never",
+                            "time": None,
+                        },
+                    },
+                },
+                "key": DOMAIN,
+                "version": store.STORAGE_VERSION,
+                "minor_version": store.STORAGE_VERSION_MINOR,
+            },
+        },
+        {
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "agents": {},
+                        "automatic_backups_configured": True,
+                        "create_backup": {
+                            "agent_ids": ["backup.local", "test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {
+                            "days": [],
+                            "recurrence": "never",
+                            "state": "never",
+                            "time": None,
+                        },
+                    },
+                },
+                "key": DOMAIN,
+                "version": store.STORAGE_VERSION,
+                "minor_version": store.STORAGE_VERSION_MINOR,
+            },
+        },
     ],
 )
+@pytest.mark.parametrize(
+    ("with_hassio"),
+    [
+        pytest.param(True, id="with_hassio"),
+        pytest.param(False, id="without_hassio"),
+    ],
+)
+@pytest.mark.usefixtures("supervisor_client")
 @patch("homeassistant.components.backup.config.random.randint", Mock(return_value=600))
-async def test_config_info(
+async def test_config_load_config_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     hass_storage: dict[str, Any],
+    with_hassio: bool,
     storage_data: dict[str, Any] | None,
 ) -> None:
-    """Test getting backup config info."""
+    """Test loading stored backup config and reading it via config/info."""
     client = await hass_ws_client(hass)
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-13T12:01:00+01:00")
 
     hass_storage.update(storage_data)
 
-    await setup_backup_integration(hass)
+    await setup_backup_integration(hass, with_hassio=with_hassio)
     await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/config/info"})
@@ -1272,6 +1413,18 @@ async def test_config_info(
                 },
             },
         ],
+        [
+            {
+                "type": "backup/config/update",
+                "automatic_backups_configured": False,
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "automatic_backups_configured": True,
+            }
+        ],
     ],
 )
 @patch("homeassistant.components.backup.config.random.randint", Mock(return_value=600))
@@ -1360,6 +1513,14 @@ async def test_config_update(
         {
             "type": "backup/config/update",
             "agents": {"test-agent1": {"favorite": True}},
+        },
+        {
+            "type": "backup/config/update",
+            "retention": {"copies": 0},
+        },
+        {
+            "type": "backup/config/update",
+            "retention": {"days": 0},
         },
     ],
 )
@@ -1695,12 +1856,13 @@ async def test_config_schedule_logic(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test.test-agent"],
-                "include_addons": ["test-addon"],
+                "include_addons": [],
                 "include_all_addons": False,
                 "include_database": True,
-                "include_folders": ["media"],
+                "include_folders": [],
                 "name": "test-name",
                 "password": "test-password",
             },
@@ -2158,7 +2320,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test.test-agent"]},
-                "retention": {"copies": 0, "days": None},
+                "retention": {"copies": 1, "days": None},
                 "schedule": {"recurrence": "daily"},
             },
             {
@@ -2232,7 +2394,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test.test-agent"]},
-                "retention": {"copies": 0, "days": None},
+                "retention": {"copies": 1, "days": None},
                 "schedule": {"recurrence": "daily"},
             },
             {
@@ -2301,7 +2463,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test.test-agent"]},
-                "retention": {"copies": 0, "days": None},
+                "retention": {"copies": 1, "days": None},
                 "schedule": {"recurrence": "daily"},
             },
             {
@@ -2357,6 +2519,7 @@ async def test_config_retention_copies_logic(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],
@@ -2635,6 +2798,7 @@ async def test_config_retention_copies_logic_manual_backup(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],
@@ -3019,7 +3183,7 @@ async def test_config_retention_copies_logic_manual_backup(
                 {
                     "type": "backup/config/update",
                     "create_backup": {"agent_ids": ["test-agent"]},
-                    "retention": {"copies": None, "days": 0},
+                    "retention": {"copies": None, "days": 1},
                     "schedule": {"recurrence": "never"},
                 }
             ],
@@ -3082,6 +3246,7 @@ async def test_config_retention_days_logic(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],
@@ -3137,6 +3302,185 @@ async def test_config_retention_days_logic(
     await hass.async_block_till_done()
 
 
+async def test_configured_agents_unavailable_repair(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test creating and deleting repair issue for configured unavailable agents."""
+    issue_id = "automatic_backup_agents_unavailable_test.agent"
+    ws_client = await hass_ws_client(hass)
+    hass_storage.update(
+        {
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "agents": {},
+                        "automatic_backups_configured": True,
+                        "create_backup": {
+                            "agent_ids": ["test.agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {
+                            "days": ["mon"],
+                            "recurrence": "custom_days",
+                            "state": "never",
+                            "time": None,
+                        },
+                    },
+                },
+                "key": DOMAIN,
+                "version": store.STORAGE_VERSION,
+                "minor_version": store.STORAGE_VERSION_MINOR,
+            },
+        }
+    )
+
+    await setup_backup_integration(hass)
+    get_agents_mock = AsyncMock(return_value=[mock_backup_agent("agent")])
+    register_listener_mock = Mock()
+    await setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=get_agents_mock,
+            async_register_backup_agents_listener=register_listener_mock,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    reload_backup_agents = register_listener_mock.call_args[1]["listener"]
+
+    await ws_client.send_json_auto_id({"type": "backup/agents/info"})
+    resp = await ws_client.receive_json()
+    assert resp["result"]["agents"] == [
+        {"agent_id": "backup.local", "name": "local"},
+        {"agent_id": "test.agent", "name": "agent"},
+    ]
+
+    assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+
+    # Reload the agents with no agents returned.
+
+    get_agents_mock.return_value = []
+    reload_backup_agents()
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id({"type": "backup/agents/info"})
+    resp = await ws_client.receive_json()
+    assert resp["result"]["agents"] == [
+        {"agent_id": "backup.local", "name": "local"},
+    ]
+
+    assert issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+
+    await ws_client.send_json_auto_id({"type": "backup/config/info"})
+    result = await ws_client.receive_json()
+    assert result["result"]["config"]["create_backup"]["agent_ids"] == ["test.agent"]
+
+    # Update the automatic backup configuration removing the unavailable agent.
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["backup.local"]},
+        }
+    )
+    result = await ws_client.receive_json()
+
+    assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+
+    await ws_client.send_json_auto_id({"type": "backup/config/info"})
+    result = await ws_client.receive_json()
+    assert result["result"]["config"]["create_backup"]["agent_ids"] == ["backup.local"]
+
+    # Reload the agents with one agent returned
+    # but not configured for automatic backups.
+
+    get_agents_mock.return_value = [mock_backup_agent("agent")]
+    reload_backup_agents()
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id({"type": "backup/agents/info"})
+    resp = await ws_client.receive_json()
+    assert resp["result"]["agents"] == [
+        {"agent_id": "backup.local", "name": "local"},
+        {"agent_id": "test.agent", "name": "agent"},
+    ]
+
+    assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+
+    await ws_client.send_json_auto_id({"type": "backup/config/info"})
+    result = await ws_client.receive_json()
+    assert result["result"]["config"]["create_backup"]["agent_ids"] == ["backup.local"]
+
+    # Update the automatic backup configuration and configure the test agent.
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["backup.local", "test.agent"]},
+        }
+    )
+    result = await ws_client.receive_json()
+
+    assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+
+    await ws_client.send_json_auto_id({"type": "backup/config/info"})
+    result = await ws_client.receive_json()
+    assert result["result"]["config"]["create_backup"]["agent_ids"] == [
+        "backup.local",
+        "test.agent",
+    ]
+
+    # Reload the agents with no agents returned again.
+
+    get_agents_mock.return_value = []
+    reload_backup_agents()
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id({"type": "backup/agents/info"})
+    resp = await ws_client.receive_json()
+    assert resp["result"]["agents"] == [
+        {"agent_id": "backup.local", "name": "local"},
+    ]
+
+    assert issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+
+    await ws_client.send_json_auto_id({"type": "backup/config/info"})
+    result = await ws_client.receive_json()
+    assert result["result"]["config"]["create_backup"]["agent_ids"] == [
+        "backup.local",
+        "test.agent",
+    ]
+
+    # Update the automatic backup configuration removing all agents.
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": []},
+        }
+    )
+    result = await ws_client.receive_json()
+
+    assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+
+    await ws_client.send_json_auto_id({"type": "backup/config/info"})
+    result = await ws_client.receive_json()
+    assert result["result"]["config"]["create_backup"]["agent_ids"] == []
+
+
 async def test_subscribe_event(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -3152,6 +3496,29 @@ async def test_subscribe_event(
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
     assert await client.receive_json() == snapshot
     assert await client.receive_json() == snapshot
+
+    manager.async_on_backup_event(
+        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS, reason=None)
+    )
+    assert await client.receive_json() == snapshot
+
+
+async def test_subscribe_event_early(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test subscribe event before backup integration has started."""
+    async_initialize_backup(hass)
+    await setup_backup_integration(hass, with_hassio=False)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    assert await client.receive_json() == snapshot
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    manager = hass.data[DATA_MANAGER]
 
     manager.async_on_backup_event(
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS, reason=None)
@@ -3231,3 +3598,32 @@ async def test_can_decrypt_on_download_with_agent_error(
         }
     )
     assert await client.receive_json() == snapshot
+
+
+@pytest.mark.usefixtures("mock_backups")
+async def test_can_decrypt_on_download_get_backup_returns_none(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test can decrypt on download when the agent returns None from get_backup."""
+
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    mock_agents["test.remote"].async_get_backup.return_value = None
+    mock_agents["test.remote"].async_get_backup.side_effect = None
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "backup/can_decrypt_on_download",
+            "backup_id": TEST_BACKUP_ABC123.backup_id,
+            "agent_id": "test.remote",
+            "password": "hunter2",
+        }
+    )
+    assert await client.receive_json() == snapshot
+    assert (
+        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
+        in caplog.text
+    )

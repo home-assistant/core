@@ -1,0 +1,5 @@
+{
+  "domain": "sensorpush",
+  "name": "SensorPush",
+  "integrations": ["sensorpush", "sensorpush_cloud"]
+}

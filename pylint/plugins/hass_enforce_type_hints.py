@@ -597,6 +597,16 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
             ],
         ),
+        ClassTypeHintMatch(
+            base_class="ConfigSubentryFlow",
+            matches=[
+                TypeHintMatch(
+                    function_name="async_step_*",
+                    arg_types={},
+                    return_type="SubentryFlowResult",
+                ),
+            ],
+        ),
     ],
 }
 # Overriding properties and functions are normally checked by mypy, and will only
@@ -1364,7 +1374,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="location_accuracy",
-                    return_type="int",
+                    return_type="float",
                 ),
                 TypeHintMatch(
                     function_name="location_name",
@@ -1408,6 +1418,16 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type="bool",
                 ),
             ],
+        ),
+    ],
+    "entity": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
     ],
     "fan": [
@@ -2558,7 +2578,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="in_progress",
-                    return_type=["bool", "int", None],
+                    return_type=["bool", None],
                 ),
                 TypeHintMatch(
                     function_name="latest_version",
@@ -2579,6 +2599,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="title",
                     return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="update_percentage",
+                    return_type=["int", "float", None],
                 ),
                 TypeHintMatch(
                     function_name="install",

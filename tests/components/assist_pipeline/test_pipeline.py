@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import ANY, patch
 
+from hassil.recognize import Intent, IntentData, RecognizeResult
 import pytest
 
 from homeassistant.components import conversation
@@ -16,6 +17,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
     PipelineData,
     PipelineStorageCollection,
     PipelineStore,
+    _async_local_fallback_intent_filter,
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
@@ -23,6 +25,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
     async_update_pipeline,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
 from . import MANY_LANGUAGES
@@ -657,3 +660,40 @@ async def test_migrate_after_load(hass: HomeAssistant) -> None:
 
     assert pipeline_updated.stt_engine == "stt.test"
     assert pipeline_updated.tts_engine == "tts.test"
+
+
+def test_fallback_intent_filter() -> None:
+    """Test that we filter the right things."""
+    assert (
+        _async_local_fallback_intent_filter(
+            RecognizeResult(
+                intent=Intent(intent.INTENT_GET_STATE),
+                intent_data=IntentData([]),
+                entities={},
+                entities_list=[],
+            )
+        )
+        is True
+    )
+    assert (
+        _async_local_fallback_intent_filter(
+            RecognizeResult(
+                intent=Intent(intent.INTENT_NEVERMIND),
+                intent_data=IntentData([]),
+                entities={},
+                entities_list=[],
+            )
+        )
+        is False
+    )
+    assert (
+        _async_local_fallback_intent_filter(
+            RecognizeResult(
+                intent=Intent(intent.INTENT_TURN_ON),
+                intent_data=IntentData([]),
+                entities={},
+                entities_list=[],
+            )
+        )
+        is False
+    )

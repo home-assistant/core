@@ -18,7 +18,7 @@
         "data_description": {
           "kamereon_account_id": "The Kamereon account ID associated with your vehicle"
         },
-        "title": "Kamereon Account ID",
+        "title": "Kamereon account ID",
         "description": "You have multiple Kamereon accounts associated to this email, please select one"
       },
       "reauth_confirm": {
@@ -118,7 +118,7 @@
           "charge_ended": "Charge ended",
           "waiting_for_current_charge": "Waiting for current charge",
           "energy_flap_opened": "Energy flap opened",
-          "charge_in_progress": "Charging",
+          "charge_in_progress": "[%key:common::state::charging%]",
           "charge_error": "Not charging or plugged in",
           "unavailable": "Unavailable"
         }
@@ -228,10 +228,13 @@
   },
   "exceptions": {
     "invalid_device_id": {
-      "message": "No device with id {device_id} was found"
+      "message": "No device with ID {device_id} was found"
     },
     "no_config_entry_for_device": {
-      "message": "No loaded config entry was found for device with id {device_id}"
+      "message": "No loaded config entry was found for device with ID {device_id}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Renault servers: {error}"
     }
   }
 }

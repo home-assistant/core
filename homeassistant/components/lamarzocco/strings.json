@@ -32,13 +32,11 @@
         }
       },
       "machine_selection": {
-        "description": "Select the machine you want to integrate. Set the \"IP\" to get access to shot time related sensors.",
+        "description": "Select the machine you want to integrate.",
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]",
           "machine": "Machine"
         },
         "data_description": {
-          "host": "Local IP address of the machine",
           "machine": "Select the machine you want to integrate"
         }
       },
@@ -85,6 +83,9 @@
       },
       "water_tank": {
         "name": "Water tank empty"
+      },
+      "websocket_connected": {
+        "name": "WebSocket connected"
       }
     },
     "button": {
@@ -101,52 +102,24 @@
       "coffee_temp": {
         "name": "Coffee target temperature"
       },
-      "dose_key": {
-        "name": "Dose Key {key}"
-      },
-      "prebrew_on": {
-        "name": "Prebrew on time"
-      },
-      "prebrew_on_key": {
-        "name": "Prebrew on time Key {key}"
-      },
-      "prebrew_off": {
-        "name": "Prebrew off time"
-      },
-      "prebrew_off_key": {
-        "name": "Prebrew off time Key {key}"
-      },
-      "preinfusion_off": {
-        "name": "Preinfusion time"
-      },
-      "preinfusion_off_key": {
-        "name": "Preinfusion time Key {key}"
-      },
-      "scale_target_key": {
-        "name": "Brew by weight target {key}"
-      },
       "smart_standby_time": {
         "name": "Smart standby time"
       },
-      "steam_temp": {
-        "name": "Steam target temperature"
+      "preinfusion_time": {
+        "name": "Preinfusion time"
       },
-      "tea_water_duration": {
-        "name": "Tea water duration"
+      "prebrew_time_on": {
+        "name": "Prebrew on time"
+      },
+      "prebrew_time_off": {
+        "name": "Prebrew off time"
       }
     },
     "select": {
-      "active_bbw": {
-        "name": "Active brew by weight recipe",
-        "state": {
-          "a": "Recipe A",
-          "b": "Recipe B"
-        }
-      },
       "prebrew_infusion_select": {
         "name": "Prebrew/-infusion mode",
         "state": {
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "prebrew": "Prebrew",
           "preinfusion": "Preinfusion"
         }
@@ -168,26 +141,14 @@
       }
     },
     "sensor": {
-      "current_temp_coffee": {
-        "name": "Current coffee temperature"
+      "coffee_boiler_ready_time": {
+        "name": "Coffee boiler ready time"
       },
-      "current_temp_steam": {
-        "name": "Current steam temperature"
+      "steam_boiler_ready_time": {
+        "name": "Steam boiler ready time"
       },
-      "drink_stats_coffee": {
-        "name": "Total coffees made",
-        "unit_of_measurement": "coffees"
-      },
-      "drink_stats_coffee_key": {
-        "name": "Coffees made Key {key}",
-        "unit_of_measurement": "coffees"
-      },
-      "drink_stats_flushing": {
-        "name": "Total flushes made",
-        "unit_of_measurement": "flushes"
-      },
-      "shot_timer": {
-        "name": "Shot timer"
+      "last_cleaning_time": {
+        "name": "Last cleaning time"
       }
     },
     "switch": {
@@ -231,9 +192,6 @@
     },
     "number_exception": {
       "message": "Error while setting value {value} for number {key}"
-    },
-    "number_exception_key": {
-      "message": "Error while setting value {value} for number {key}, key {physical_key}"
     },
     "select_option_error": {
       "message": "Error while setting select option {option} for {key}"

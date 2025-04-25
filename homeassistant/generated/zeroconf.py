@@ -803,6 +803,11 @@ ZEROCONF = {
             "domain": "russound_rio",
         },
     ],
+    "_shelly._tcp.local.": [
+        {
+            "domain": "shelly",
+        },
+    ],
     "_sideplay._tcp.local.": [
         {
             "domain": "ecobee",

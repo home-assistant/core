@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import aiohttp_client
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, get_schema_suggested_value, load_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -66,6 +66,11 @@ async def test_config_flow_single_account(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
+
+    data_schema = result["data_schema"].schema
+    assert get_schema_suggested_value(data_schema, CONF_LOCALE) == "fr_FR"
+    assert get_schema_suggested_value(data_schema, CONF_USERNAME) == "email@test.com"
+    assert get_schema_suggested_value(data_schema, CONF_PASSWORD) == "test"
 
     renault_account = AsyncMock()
     type(renault_account).account_id = PropertyMock(return_value="account_id_1")

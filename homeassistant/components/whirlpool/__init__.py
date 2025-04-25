@@ -1,6 +1,5 @@
 """The Whirlpool Appliances integration."""
 
-from dataclasses import dataclass
 import logging
 
 from aiohttp import ClientError
@@ -20,13 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
-type WhirlpoolConfigEntry = ConfigEntry[WhirlpoolData]
+type WhirlpoolConfigEntry = ConfigEntry[AppliancesManager]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) -> bool:
     """Set up Whirlpool Sixth Sense from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     session = async_get_clientsession(hass)
     region = CONF_REGIONS_MAP[entry.data.get(CONF_REGION, "EU")]
     brand = CONF_BRANDS_MAP[entry.data.get(CONF_BRAND, "Whirlpool")]
@@ -50,10 +47,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
 
     appliances_manager = AppliancesManager(backend_selector, auth, session)
     if not await appliances_manager.fetch_appliances():
-        _LOGGER.error("Cannot fetch appliances")
-        return False
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="appliances_fetch_failed"
+        )
+    await appliances_manager.connect()
 
-    entry.runtime_data = WhirlpoolData(appliances_manager, auth, backend_selector)
+    entry.runtime_data = appliances_manager
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -61,13 +60,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) -> bool:
     """Unload a config entry."""
+    await entry.runtime_data.disconnect()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-@dataclass
-class WhirlpoolData:
-    """Whirlpool integaration shared data."""
-
-    appliances_manager: AppliancesManager
-    auth: Auth
-    backend_selector: BackendSelector

@@ -63,7 +63,7 @@ class LutronCasetaEntity(Entity):
             info[ATTR_SUGGESTED_AREA] = area
         self._attr_device_info = info
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._smartbridge.add_subscriber(self.device_id, self.async_write_ha_state)
 

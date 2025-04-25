@@ -17,6 +17,7 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
+    FirmwareInfo,
     get_otbr_addon_manager,
     get_zigbee_flasher_addon_manager,
 )
@@ -65,13 +66,13 @@ class FakeFirmwareConfigFlow(BaseFirmwareConfigFlow, domain=TEST_DOMAIN):
         """Create the config entry."""
         assert self._device is not None
         assert self._hardware_name is not None
-        assert self._probed_firmware_type is not None
+        assert self._probed_firmware_info is not None
 
         return self.async_create_entry(
             title=self._hardware_name,
             data={
                 "device": self._device,
-                "firmware": self._probed_firmware_type.value,
+                "firmware": self._probed_firmware_info.firmware_type.value,
                 "hardware": self._hardware_name,
             },
         )
@@ -87,18 +88,26 @@ class FakeFirmwareOptionsFlowHandler(BaseFirmwareOptionsFlow):
         self._device = self.config_entry.data["device"]
         self._hardware_name = self.config_entry.data["hardware"]
 
+        self._probed_firmware_info = FirmwareInfo(
+            device=self._device,
+            firmware_type=ApplicationType(self.config_entry.data["firmware"]),
+            firmware_version=None,
+            source="guess",
+            owners=[],
+        )
+
         # Regenerate the translation placeholders
         self._get_translation_placeholders()
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
-        assert self._probed_firmware_type is not None
+        assert self._probed_firmware_info is not None
 
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                "firmware": self._probed_firmware_type.value,
+                "firmware": self._probed_firmware_info.firmware_type.value,
             },
             options=self.config_entry.options,
         )
@@ -142,7 +151,7 @@ def mock_addon_info(
     hass: HomeAssistant,
     *,
     is_hassio: bool = True,
-    app_type: ApplicationType = ApplicationType.EZSP,
+    app_type: ApplicationType | None = ApplicationType.EZSP,
     otbr_addon_info: AddonInfo = AddonInfo(
         available=True,
         hostname=None,
@@ -187,6 +196,17 @@ def mock_addon_info(
     )
     mock_otbr_manager.async_get_addon_info.return_value = otbr_addon_info
 
+    if app_type is None:
+        firmware_info_result = None
+    else:
+        firmware_info_result = FirmwareInfo(
+            device="/dev/ttyUSB0",  # Not used
+            firmware_type=app_type,
+            firmware_version=None,
+            owners=[],
+            source="probe",
+        )
+
     with (
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.get_otbr_addon_manager",
@@ -209,8 +229,8 @@ def mock_addon_info(
             return_value=is_hassio,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_type",
-            return_value=app_type,
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            return_value=firmware_info_result,
         ),
     ):
         yield mock_otbr_manager, mock_flasher_manager
@@ -274,10 +294,14 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm_zigbee"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    with mock_addon_info(
+        hass,
+        app_type=ApplicationType.EZSP,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
     config_entry = result["result"]
     assert config_entry.data == {
@@ -347,10 +371,40 @@ async def test_config_flow_zigbee_skip_step_if_installed(hass: HomeAssistant) ->
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Done
-    await hass.async_block_till_done(wait_background_tasks=True)
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm_zigbee"
+    with mock_addon_info(
+        hass,
+        app_type=ApplicationType.EZSP,
+    ):
+        await hass.async_block_till_done(wait_background_tasks=True)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm_zigbee"
+
+
+async def test_config_flow_auto_confirm_if_running(hass: HomeAssistant) -> None:
+    """Test the config flow skips the confirmation step the hardware is already used."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.firmware_config_flow.guess_firmware_info",
+        return_value=FirmwareInfo(
+            device=TEST_DEVICE,
+            firmware_type=ApplicationType.EZSP,
+            firmware_version="7.4.4.0",
+            owners=[Mock(is_running=AsyncMock(return_value=True))],
+            source="guess",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": "hardware"}
+        )
+
+    # There are no steps, the config entry is automatically created
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    config_entry = result["result"]
+    assert config_entry.data == {
+        "firmware": "ezsp",
+        "device": TEST_DEVICE,
+        "hardware": TEST_HARDWARE_NAME,
+    }
 
 
 async def test_config_flow_thread(hass: HomeAssistant) -> None:
@@ -419,17 +473,21 @@ async def test_config_flow_thread(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm_otbr"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    with mock_addon_info(
+        hass,
+        app_type=ApplicationType.SPINEL,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    config_entry = result["result"]
-    assert config_entry.data == {
-        "firmware": "spinel",
-        "device": TEST_DEVICE,
-        "hardware": TEST_HARDWARE_NAME,
-    }
+        config_entry = result["result"]
+        assert config_entry.data == {
+            "firmware": "spinel",
+            "device": TEST_DEVICE,
+            "hardware": TEST_HARDWARE_NAME,
+        }
 
 
 async def test_config_flow_thread_addon_already_installed(hass: HomeAssistant) -> None:
@@ -477,10 +535,14 @@ async def test_config_flow_thread_addon_already_installed(hass: HomeAssistant) -
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm_otbr"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    with mock_addon_info(
+        hass,
+        app_type=ApplicationType.SPINEL,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_zigbee_not_hassio(hass: HomeAssistant) -> None:
@@ -501,10 +563,10 @@ async def test_config_flow_zigbee_not_hassio(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm_zigbee"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
     config_entry = result["result"]
     assert config_entry.data == {
@@ -522,6 +584,7 @@ async def test_config_flow_zigbee_not_hassio(hass: HomeAssistant) -> None:
     assert zha_flow["step_id"] == "confirm"
 
 
+@pytest.mark.usefixtures("addon_store_info")
 async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
     """Test the options flow, migrating Zigbee to Thread."""
     config_entry = MockConfigEntry(
@@ -538,17 +601,17 @@ async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    # First step is confirmation
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "pick_firmware"
-    assert result["description_placeholders"]["firmware_type"] == "ezsp"
-    assert result["description_placeholders"]["model"] == TEST_HARDWARE_NAME
-
     with mock_addon_info(
         hass,
         app_type=ApplicationType.EZSP,
     ) as (mock_otbr_manager, mock_flasher_manager):
+        # First step is confirmation
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "pick_firmware"
+        assert result["description_placeholders"]["firmware_type"] == "ezsp"
+        assert result["description_placeholders"]["model"] == TEST_HARDWARE_NAME
+
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
@@ -599,16 +662,21 @@ async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm_otbr"
 
-    # We are now done
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    with mock_addon_info(
+        hass,
+        app_type=ApplicationType.SPINEL,
+    ):
+        # We are now done
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    # The firmware type has been updated
-    assert config_entry.data["firmware"] == "spinel"
+        # The firmware type has been updated
+        assert config_entry.data["firmware"] == "spinel"
 
 
+@pytest.mark.usefixtures("addon_store_info")
 async def test_options_flow_thread_to_zigbee(hass: HomeAssistant) -> None:
     """Test the options flow, migrating Thread to Zigbee."""
     config_entry = MockConfigEntry(
@@ -680,11 +748,15 @@ async def test_options_flow_thread_to_zigbee(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm_zigbee"
 
-    # We are now done
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    with mock_addon_info(
+        hass,
+        app_type=ApplicationType.EZSP,
+    ):
+        # We are now done
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    # The firmware type has been updated
-    assert config_entry.data["firmware"] == "ezsp"
+        # The firmware type has been updated
+        assert config_entry.data["firmware"] == "ezsp"

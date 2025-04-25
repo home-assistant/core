@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import mimetypes
 from typing import TypedDict
 
 from yarl import URL
@@ -73,7 +72,7 @@ class MediaSourceOptions(TypedDict):
     message: str
     language: str | None
     options: dict | None
-    cache: bool | None
+    use_file_cache: bool | None
 
 
 @callback
@@ -98,10 +97,10 @@ def media_source_id_to_kwargs(media_source_id: str) -> MediaSourceOptions:
         "message": parsed.query["message"],
         "language": parsed.query.get("language"),
         "options": options,
-        "cache": None,
+        "use_file_cache": None,
     }
     if "cache" in parsed.query:
-        kwargs["cache"] = parsed.query["cache"] == "true"
+        kwargs["use_file_cache"] = parsed.query["cache"] == "true"
 
     return kwargs
 
@@ -119,7 +118,7 @@ class TTSMediaSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         try:
-            url = await self.hass.data[DATA_TTS_MANAGER].async_get_url_path(
+            stream = self.hass.data[DATA_TTS_MANAGER].async_create_result_stream(
                 **media_source_id_to_kwargs(item.identifier)
             )
         except Unresolvable:
@@ -127,9 +126,7 @@ class TTSMediaSource(MediaSource):
         except HomeAssistantError as err:
             raise Unresolvable(str(err)) from err
 
-        mime_type = mimetypes.guess_type(url)[0] or "audio/mpeg"
-
-        return PlayMedia(url, mime_type)
+        return PlayMedia(stream.url, stream.content_type)
 
     async def async_browse_media(
         self,

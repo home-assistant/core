@@ -22,7 +22,7 @@
     "error": {
       "unauthorized_error": "The credentials are incorrect.",
       "network_error": "The Mastodon instance was not found.",
-      "unknown": "Unknown error occured when connecting to the Mastodon instance."
+      "unknown": "Unknown error occurred when connecting to the Mastodon instance."
     }
   },
   "exceptions": {
