@@ -255,8 +255,12 @@ async def test_zeroconf_flow(
         },
     )
 
-    await hass.config_entries.flow.async_configure(result["flow_id"])
-
     assert result.get("type") is FlowResultType.EXTERNAL_STEP
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.domain == "miele"
