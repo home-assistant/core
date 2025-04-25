@@ -627,8 +627,8 @@ async def test_availability(
 
     state = hass.states.get("sensor.current_version")
     assert state.state == STATE_UNAVAILABLE
-    assert state.attributes.get("icon") is None
-    assert state.attributes.get("entity_picture") is None
+    assert "icon" not in state.attributes
+    assert "entity_picture" not in state.attributes
 
 
 async def test_template_render_with_availability_syntax_error(
@@ -673,6 +673,7 @@ async def test_availability_blocks_value_template(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test availability blocks value_template from rendering."""
+    error = "Error parsing value for sensor.current_version: 'x' is undefined"
     config = {
         DOMAIN: [
             return_integration_config(
@@ -682,12 +683,15 @@ async def test_availability_blocks_value_template(
                         "name": "Current version",
                         "unique_id": "ha_version_unique_id",
                         CONF_VALUE_TEMPLATE: "{{ x - 1 }}",
-                        CONF_AVAILABILITY: "{{ x is defined }}",
+                        CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
                     }
                 ]
             )
         ]
     }
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
@@ -697,11 +701,19 @@ async def test_availability_blocks_value_template(
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    assert (
-        "Error parsing value for binary_sensor.test: 'x' is undefined"
-        not in caplog.text
-    )
+    assert error not in caplog.text
 
     state = hass.states.get("sensor.current_version")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set("sensor.input1", "on")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=10),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert error in caplog.text
