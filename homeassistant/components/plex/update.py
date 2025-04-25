@@ -76,7 +76,7 @@ class PlexUpdate(UpdateEntity):
             raise HomeAssistantError(str(exc)) from exc
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._server.machine_identifier)},
