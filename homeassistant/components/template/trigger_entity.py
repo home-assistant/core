@@ -70,7 +70,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         self._state_render_error = False
         rendered = dict(self._static_rendered)
 
-        # If state fails to render, the entity should go unavailable.  Render the
+        # If state fails to render, the entity should go unavailable. Render the
         # state as a simple template because the result should always be a string or None.
         if CONF_STATE in self._to_render_simple:
             if (
