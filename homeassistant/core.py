@@ -72,6 +72,7 @@ from .const import (
     MAX_EXPECTED_ENTITY_IDS,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
+    STATE_UNKNOWN,
     __version__,
 )
 from .exceptions import (
@@ -2297,7 +2298,6 @@ class StateMachine:
         should not be used in integrations.
 
         Callers are responsible for ensuring the entity_id is lower case.
-        Callers are responsible for ensuring the state is a valid state.
 
         This method must be run in the event loop.
         """
@@ -2356,6 +2356,16 @@ class StateMachine:
             if TYPE_CHECKING:
                 assert old_state is not None
             attributes = old_state.attributes
+
+        if len(new_state) > MAX_LENGTH_STATE_STATE:
+            _LOGGER.error(
+                "State %s for %s is longer than %s, falling back to %s",
+                new_state,
+                entity_id,
+                MAX_LENGTH_STATE_STATE,
+                STATE_UNKNOWN,
+            )
+            new_state = STATE_UNKNOWN
 
         # This is intentionally called with positional only arguments for performance
         # reasons

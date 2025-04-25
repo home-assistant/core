@@ -35,6 +35,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     MATCH_ALL,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     CoreState,
@@ -1444,6 +1445,29 @@ async def test_statemachine_async_set_invalid_state(hass: HomeAssistant) -> None
         match="Invalid state with length 256. State max length is 255 characters.",
     ):
         hass.states.async_set("light.bowl", "o" * 256, {})
+
+
+async def test_statemachine_async_set_internal_invalid_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setting an invalid state with the async_set_internal method."""
+    long_state = "o" * 256
+    hass.states.async_set_internal(
+        "light.bowl",
+        long_state,
+        {},
+        force_update=False,
+        context=None,
+        state_info=None,
+        timestamp=time.time(),
+    )
+    assert hass.states.get("light.bowl").state == STATE_UNKNOWN
+    assert (
+        "homeassistant.core",
+        logging.ERROR,
+        f"State {long_state} for light.bowl is longer than 255, "
+        f"falling back to {STATE_UNKNOWN}",
+    ) in caplog.record_tuples
 
 
 async def test_statemachine_is_state(hass: HomeAssistant) -> None:
