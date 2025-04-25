@@ -198,6 +198,7 @@ aioazuredevops==2.2.1
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
+# homeassistant.components.s3
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
@@ -1599,7 +1600,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.25.5
+pyenphase==1.26.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
