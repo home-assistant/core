@@ -46,37 +46,61 @@ BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
         key="client_supports_hair_pinning",
         translation_key="client_supports_hair_pinning",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.hair_pinning,
+        is_on_fn=lambda device: (
+            device.client_connectivity.client_supports.hair_pinning
+            if device.client_connectivity is not None
+            else None
+        ),
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_ipv6",
         translation_key="client_supports_ipv6",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.ipv6,
+        is_on_fn=lambda device: (
+            device.client_connectivity.client_supports.ipv6
+            if device.client_connectivity is not None
+            else None
+        ),
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_pcp",
         translation_key="client_supports_pcp",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.pcp,
+        is_on_fn=lambda device: (
+            device.client_connectivity.client_supports.pcp
+            if device.client_connectivity is not None
+            else None
+        ),
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_pmp",
         translation_key="client_supports_pmp",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.pmp,
+        is_on_fn=lambda device: (
+            device.client_connectivity.client_supports.pmp
+            if device.client_connectivity is not None
+            else None
+        ),
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_udp",
         translation_key="client_supports_udp",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.udp,
+        is_on_fn=lambda device: (
+            device.client_connectivity.client_supports.udp
+            if device.client_connectivity is not None
+            else None
+        ),
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_upnp",
         translation_key="client_supports_upnp",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.upnp,
+        is_on_fn=lambda device: (
+            device.client_connectivity.client_supports.upnp
+            if device.client_connectivity is not None
+            else None
+        ),
     ),
 )
 
