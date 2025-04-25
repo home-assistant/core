@@ -201,7 +201,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2025.4.3b0
+aioautomower==2025.4.4
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
