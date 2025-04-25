@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
+from .utils import bridge_api_call
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -154,6 +155,7 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
         self._update_attributes()
         super()._handle_coordinator_update()
 
+    @bridge_api_call
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if not self._attr_is_on:
@@ -171,6 +173,7 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
         self._attr_target_humidity = humidity
         self.async_write_ha_state()
 
+    @bridge_api_call
     async def async_set_mode(self, mode: str) -> None:
         """Set humidifier mode."""
         await self.coordinator.api.set_humidity_status(
@@ -179,6 +182,7 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
         self._attr_mode = mode
         self.async_write_ha_state()
 
+    @bridge_api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         await self.coordinator.api.set_humidity_status(
@@ -187,6 +191,7 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @bridge_api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self.coordinator.api.set_humidity_status(
