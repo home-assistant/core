@@ -117,7 +117,7 @@ class ValueTemplate(Template):
     ) -> Any:
         """Render template that requires 'value' and optionally 'value_json'.
 
-        Template errors will be supprested when an error_value is supplied.
+        Template errors will be suppressed when an error_value is supplied.
 
         This method must be run in the event loop.
         """
