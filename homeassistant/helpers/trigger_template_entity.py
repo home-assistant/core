@@ -287,7 +287,7 @@ class TriggerBaseEntity(Entity):
 
         except TemplateError as err:
             # The entity will be available when an error is rendered. This
-            # ensures functionality is conistent between template and trigger template
+            # ensures functionality is consistent between template and trigger template
             # entities.
             self._available = True
             log_triggered_template_error(self.entity_id, err, key=CONF_AVAILABILITY)
