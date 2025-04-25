@@ -96,7 +96,7 @@ class WallboxSelect(WallboxEntity, SelectEntity):
         """Handle the selection of an option."""
         try:
             await self.entity_description.select_option_fn(self.coordinator, option)
-        except Exception as e:
+        except ConnectionError as e:
             raise HomeAssistantError(
                 translation_key="api_failed", translation_domain=DOMAIN
             ) from e

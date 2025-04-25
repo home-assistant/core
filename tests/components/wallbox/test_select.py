@@ -97,6 +97,10 @@ async def test_wallbox_select_class_connection_error(
             "homeassistant.components.wallbox.Wallbox.disableEcoSmart",
             new=Mock(side_effect=http_404_error),
         ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.enableEcoSmart",
+            new=Mock(side_effect=http_404_error),
+        ),
         pytest.raises(HomeAssistantError),
     ):
         # Test behavior when a connection error occurs
@@ -126,6 +130,10 @@ async def test_wallbox_select_class_authentication_error(
         ),
         patch(
             "homeassistant.components.wallbox.Wallbox.disableEcoSmart",
+            new=Mock(side_effect=ConnectionError),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.enableEcoSmart",
             new=Mock(side_effect=ConnectionError),
         ),
         pytest.raises(HomeAssistantError),
