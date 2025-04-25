@@ -44,9 +44,13 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
+from .conftest import MockGenericDeviceEntryType
+
 
 async def test_climate_entity(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic climate entity."""
     entity_info = [
@@ -94,7 +98,9 @@ async def test_climate_entity(
 
 
 async def test_climate_entity_with_step_and_two_point(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic climate entity."""
     entity_info = [
@@ -168,7 +174,9 @@ async def test_climate_entity_with_step_and_two_point(
 
 
 async def test_climate_entity_with_step_and_target_temp(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic climate entity."""
     entity_info = [
@@ -318,7 +326,9 @@ async def test_climate_entity_with_step_and_target_temp(
 
 
 async def test_climate_entity_with_humidity(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic climate entity with humidity."""
     entity_info = [
@@ -378,7 +388,9 @@ async def test_climate_entity_with_humidity(
 
 
 async def test_climate_entity_with_inf_value(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic climate entity with infinite temp."""
     entity_info = [
@@ -433,7 +445,7 @@ async def test_climate_entity_with_inf_value(
 async def test_climate_entity_attributes(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test a climate entity sets correct attributes."""
@@ -489,7 +501,7 @@ async def test_climate_entity_attributes(
 async def test_climate_entity_attribute_current_temperature_unsupported(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a climate entity with current temperature unsupported."""
     entity_info = [

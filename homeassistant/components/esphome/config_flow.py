@@ -177,7 +177,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by a reconfig request."""
         self._reconfig_entry = self._get_reconfigure_entry()
@@ -323,7 +323,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         ):
             return
         assert conflict_entry.unique_id is not None
-        if updates:
+        if self.source == SOURCE_RECONFIGURE:
+            error = "reconfigure_already_configured"
+        elif updates:
             error = "already_configured_updates"
         else:
             error = "already_configured_detailed"
