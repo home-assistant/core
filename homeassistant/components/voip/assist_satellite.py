@@ -101,6 +101,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     entity_description = AssistSatelliteEntityDescription(key="assist_satellite")
     _attr_translation_key = "assist_satellite"
     _attr_name = None
+    _attr_icon = "mdi:phone-classic"
     _attr_supported_features = (
         AssistSatelliteEntityFeature.ANNOUNCE
         | AssistSatelliteEntityFeature.START_CONVERSATION
