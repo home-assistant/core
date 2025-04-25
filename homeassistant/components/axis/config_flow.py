@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from ipaddress import ip_address
-from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -88,7 +87,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 
         if user_input is not None:
             try:
-                api = await get_axis_api(self.hass, MappingProxyType(user_input))
+                api = await get_axis_api(self.hass, user_input)
 
             except AuthenticationRequired:
                 errors["base"] = "invalid_auth"

@@ -62,9 +62,9 @@
       "speed": {
         "name": "Speed",
         "state": {
-          "1": "Low",
-          "2": "Medium",
-          "3": "High"
+          "1": "[%key:common::state::low%]",
+          "2": "[%key:common::state::medium%]",
+          "3": "[%key:common::state::high%]"
         }
       }
     },
