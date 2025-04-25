@@ -7,8 +7,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "The username used to login to the Kohler application.",
-          "password": "The password used to login to the Kohler application."
+          "username": "The username used to log in to the Kohler application.",
+          "password": "The password used to log in to the Kohler application."
         }
       },
       "reauth_confirm": {
