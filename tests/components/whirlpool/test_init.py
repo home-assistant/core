@@ -129,7 +129,7 @@ async def test_setup_fetch_appliances_failed(
     mock_appliances_manager_api.return_value.fetch_appliances.return_value = False
     entry = await init_integration(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

@@ -31,6 +31,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
+    MAX_LENGTH_STATE_STATE,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -49,11 +50,7 @@ from homeassistant.core import (
     get_release_channel,
 )
 from homeassistant.core_config import DATA_CUSTOMIZE
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    InvalidStateError,
-    NoEntitySpecifiedError,
-)
+from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
@@ -1223,23 +1220,26 @@ class Entity(
             self._context = None
             self._context_set = None
 
-        try:
-            hass.states.async_set_internal(
-                entity_id,
+        if len(state) > MAX_LENGTH_STATE_STATE:
+            _LOGGER.error(
+                "State %s for %s is longer than %s, falling back to %s",
                 state,
-                attr,
-                self.force_update,
-                self._context,
-                self._state_info,
-                time_now,
+                entity_id,
+                MAX_LENGTH_STATE_STATE,
+                STATE_UNKNOWN,
             )
-        except InvalidStateError:
-            _LOGGER.exception(
-                "Failed to set state for %s, fall back to %s", entity_id, STATE_UNKNOWN
-            )
-            hass.states.async_set(
-                entity_id, STATE_UNKNOWN, {}, self.force_update, self._context
-            )
+            state = STATE_UNKNOWN
+
+        # Intentionally called with positional args for performance reasons
+        hass.states.async_set_internal(
+            entity_id,
+            state,
+            attr,
+            self.force_update,
+            self._context,
+            self._state_info,
+            time_now,
+        )
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.

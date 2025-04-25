@@ -428,9 +428,6 @@ class HomeAssistant:
     def __init__(self, config_dir: str) -> None:
         """Initialize new Home Assistant object."""
         # pylint: disable-next=import-outside-toplevel
-        from . import loader
-
-        # pylint: disable-next=import-outside-toplevel
         from .core_config import Config
 
         # This is a dictionary that any component can store any data on.
@@ -443,8 +440,6 @@ class HomeAssistant:
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config(self, config_dir)
         self.config.async_initialize()
-        self.components = loader.Components(self)
-        self.helpers = loader.Helpers(self)
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
         # If not None, use to signal end-of-loop
