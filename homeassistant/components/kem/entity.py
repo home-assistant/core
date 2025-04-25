@@ -51,7 +51,6 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
         split_key = self.entity_description.key.split(":")
         self._use_device_key = len(split_key) > 1
         self.key = split_key[1] if self._use_device_key else self.entity_description.key
-        self._attr_translation_key = self.entity_description.translation_key
 
         try:
             mac_address_hex = device_data[DEVICE_DATA_MAC_ADDRESS].replace(":", "")
