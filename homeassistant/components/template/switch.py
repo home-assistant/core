@@ -328,7 +328,7 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
             self.add_script(CONF_TURN_ON, on_action, name, DOMAIN)
         if off_action := config.get(CONF_TURN_OFF):
             self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
-        self._state: bool | None = None
+
         self._attr_assumed_state = self._template is None
         if not self._attr_assumed_state:
             self._to_render_simple.append(CONF_STATE)
@@ -347,9 +347,9 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             # The trigger might have fired already while we waited for stored data,
             # then we should not restore state
-            and self._state is None
+            and self.is_on is None
         ):
-            self._state = last_state.state == STATE_ON
+            self._attr_is_on = last_state.state == STATE_ON
             self.restore_attributes(last_state)
 
     @callback
@@ -363,7 +363,7 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
 
         if not self._attr_assumed_state:
             raw = self._rendered.get(CONF_STATE)
-            self._state = template.result_as_boolean(raw)
+            self._attr_is_on = template.result_as_boolean(raw)
 
             self.async_set_context(self.coordinator.data["context"])
             self.async_write_ha_state()
@@ -372,17 +372,12 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
             # states does not
             self.async_write_ha_state()
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return self._state
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Fire the on action."""
         if on_script := self._action_scripts.get(CONF_TURN_ON):
             await self.async_run_script(on_script, context=self._context)
         if self._template is None:
-            self._state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -390,5 +385,5 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
         if off_script := self._action_scripts.get(CONF_TURN_OFF):
             await self.async_run_script(off_script, context=self._context)
         if self._template is None:
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
