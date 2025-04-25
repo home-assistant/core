@@ -10,7 +10,6 @@ from urllib.parse import urlparse
 import getmac
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -66,7 +65,7 @@ def _async_get_device_bridge(
 class DebouncedEntryReloader:
     """Reload only after the timer expires."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: SamsungTVConfigEntry) -> None:
         """Init the debounced entry reloader."""
         self.hass = hass
         self.entry = entry
@@ -79,7 +78,9 @@ class DebouncedEntryReloader:
             function=self._async_reload_entry,
         )
 
-    async def async_call(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    async def async_call(
+        self, hass: HomeAssistant, entry: SamsungTVConfigEntry
+    ) -> None:
         """Start the countdown for a reload."""
         if (new_token := entry.data.get(CONF_TOKEN)) != self.token:
             LOGGER.debug("Skipping reload as its a token update")
@@ -99,7 +100,9 @@ class DebouncedEntryReloader:
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
 
-async def _async_update_ssdp_locations(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_ssdp_locations(
+    hass: HomeAssistant, entry: SamsungTVConfigEntry
+) -> None:
     """Update ssdp locations from discovery cache."""
     updates = {}
     for ssdp_st, key in (
@@ -171,7 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
 
 
 async def _async_create_bridge_with_updated_data(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: SamsungTVConfigEntry
 ) -> SamsungTVBridge:
     """Create a bridge object and update any missing data in the config entry."""
     updated_data: dict[str, str | int] = {}

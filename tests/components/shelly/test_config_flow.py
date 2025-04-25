@@ -348,8 +348,8 @@ async def test_form_missing_model_key(
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "firmware_not_fully_provisioned"
 
 
 async def test_form_missing_model_key_auth_enabled(
@@ -378,8 +378,8 @@ async def test_form_missing_model_key_auth_enabled(
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"], {CONF_PASSWORD: "1234"}
     )
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["errors"] == {"base": "firmware_not_fully_provisioned"}
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "firmware_not_fully_provisioned"
 
 
 async def test_form_missing_model_key_zeroconf(
@@ -398,15 +398,8 @@ async def test_form_missing_model_key_zeroconf(
             data=DISCOVERY_INFO,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "firmware_not_fully_provisioned"}
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "firmware_not_fully_provisioned"
 
 
 @pytest.mark.parametrize(

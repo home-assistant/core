@@ -72,13 +72,14 @@ async def test_service_set_ac_cancel(
         ATTR_VEHICLE: get_device_id(hass),
     }
 
-    with (
-        patch(
-            "renault_api.renault_vehicle.RenaultVehicle.set_ac_stop",
-            side_effect=RenaultException("Didn't work"),
-        ) as mock_action,
-        pytest.raises(HomeAssistantError, match="Didn't work"),
-    ):
+    with patch(
+        "renault_api.renault_vehicle.RenaultVehicle.set_ac_stop",
+        return_value=(
+            schemas.KamereonVehicleHvacStartActionDataSchema.loads(
+                load_fixture("renault/action.set_ac_stop.json")
+            )
+        ),
+    ) as mock_action:
         await hass.services.async_call(
             DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
         )
@@ -158,11 +159,12 @@ async def test_service_set_charge_schedule(
     }
 
     with (
+        patch("renault_api.renault_vehicle.RenaultVehicle.get_full_endpoint"),
         patch(
-            "renault_api.renault_vehicle.RenaultVehicle.get_charging_settings",
-            return_value=schemas.KamereonVehicleDataResponseSchema.loads(
+            "renault_api.renault_vehicle.RenaultVehicle.http_get",
+            return_value=schemas.KamereonResponseSchema.loads(
                 load_fixture("renault/charging_settings.json")
-            ).get_attributes(schemas.KamereonVehicleChargingSettingsDataSchema),
+            ),
         ),
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.set_charge_schedules",
@@ -207,11 +209,12 @@ async def test_service_set_charge_schedule_multi(
     }
 
     with (
+        patch("renault_api.renault_vehicle.RenaultVehicle.get_full_endpoint"),
         patch(
-            "renault_api.renault_vehicle.RenaultVehicle.get_charging_settings",
-            return_value=schemas.KamereonVehicleDataResponseSchema.loads(
+            "renault_api.renault_vehicle.RenaultVehicle.http_get",
+            return_value=schemas.KamereonResponseSchema.loads(
                 load_fixture("renault/charging_settings.json")
-            ).get_attributes(schemas.KamereonVehicleChargingSettingsDataSchema),
+            ),
         ),
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.set_charge_schedules",
@@ -380,3 +383,28 @@ async def test_service_invalid_device_id2(
         )
     assert err.value.translation_key == "no_config_entry_for_device"
     assert err.value.translation_placeholders == {"device_id": "REG-NUMBER"}
+
+
+async def test_service_exception(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that service invokes renault_api with correct data."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {
+        ATTR_VEHICLE: get_device_id(hass),
+    }
+
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.set_ac_stop",
+            side_effect=RenaultException("Didn't work"),
+        ) as mock_action,
+        pytest.raises(HomeAssistantError, match="Didn't work"),
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
+        )
+    assert len(mock_action.mock_calls) == 1
+    assert mock_action.mock_calls[0][1] == ()

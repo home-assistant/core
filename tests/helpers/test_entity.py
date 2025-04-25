@@ -44,6 +44,7 @@ from tests.common import (
     MockEntityPlatform,
     MockModule,
     MockPlatform,
+    RegistryEntryWithDefaults,
     mock_integration,
     mock_registry,
 )
@@ -683,7 +684,7 @@ async def test_warn_disabled(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we warn once if we write to a disabled entity."""
-    entry = er.RegistryEntry(
+    entry = RegistryEntryWithDefaults(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
@@ -710,7 +711,7 @@ async def test_warn_disabled(
 
 async def test_disabled_in_entity_registry(hass: HomeAssistant) -> None:
     """Test entity is removed if we disable entity registry entry."""
-    entry = er.RegistryEntry(
+    entry = RegistryEntryWithDefaults(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
@@ -1705,13 +1706,15 @@ async def test_invalid_state(
     assert hass.states.get("test.test").state == "x" * 255
 
     caplog.clear()
-    ent._attr_state = "x" * 256
+    long_state = "x" * 256
+    ent._attr_state = long_state
     ent.async_write_ha_state()
     assert hass.states.get("test.test").state == STATE_UNKNOWN
     assert (
         "homeassistant.helpers.entity",
         logging.ERROR,
-        f"Failed to set state for test.test, fall back to {STATE_UNKNOWN}",
+        f"State {long_state} for test.test is longer than 255, "
+        f"falling back to {STATE_UNKNOWN}",
     ) in caplog.record_tuples
 
     ent._attr_state = "x" * 255
