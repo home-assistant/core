@@ -164,7 +164,7 @@ def _protect_entity_options(
     return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
 
 
-@attr.s(frozen=True, slots=True)
+@attr.s(frozen=True, kw_only=True, slots=True)
 class RegistryEntry:
     """Entity Registry Entry."""
 
@@ -175,35 +175,32 @@ class RegistryEntry:
     aliases: set[str] = attr.ib(factory=set)
     area_id: str | None = attr.ib(default=None)
     categories: dict[str, str] = attr.ib(factory=dict)
-    capabilities: Mapping[str, Any] | None = attr.ib(default=None)
-    config_entry_id: str | None = attr.ib(default=None)
-    config_subentry_id: str | None = attr.ib(default=None)
-    created_at: datetime = attr.ib(factory=utcnow)
+    capabilities: Mapping[str, Any] | None = attr.ib()
+    config_entry_id: str | None = attr.ib()
+    config_subentry_id: str | None = attr.ib()
+    created_at: datetime = attr.ib()
     device_class: str | None = attr.ib(default=None)
-    device_id: str | None = attr.ib(default=None)
+    device_id: str | None = attr.ib()
     domain: str = attr.ib(init=False, repr=False)
-    disabled_by: RegistryEntryDisabler | None = attr.ib(default=None)
-    entity_category: EntityCategory | None = attr.ib(default=None)
-    hidden_by: RegistryEntryHider | None = attr.ib(default=None)
+    disabled_by: RegistryEntryDisabler | None = attr.ib()
+    entity_category: EntityCategory | None = attr.ib()
+    has_entity_name: bool = attr.ib()
+    hidden_by: RegistryEntryHider | None = attr.ib()
     icon: str | None = attr.ib(default=None)
     id: str = attr.ib(
-        default=None,
-        converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex),  # type: ignore[misc]
+        converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex)  # type: ignore[misc]
     )
-    has_entity_name: bool = attr.ib(default=False)
     labels: set[str] = attr.ib(factory=set)
     modified_at: datetime = attr.ib(factory=utcnow)
     name: str | None = attr.ib(default=None)
-    options: ReadOnlyEntityOptionsType = attr.ib(
-        default=None, converter=_protect_entity_options
-    )
+    options: ReadOnlyEntityOptionsType = attr.ib(converter=_protect_entity_options)
     # As set by integration
-    original_device_class: str | None = attr.ib(default=None)
-    original_icon: str | None = attr.ib(default=None)
-    original_name: str | None = attr.ib(default=None)
-    supported_features: int = attr.ib(default=0)
-    translation_key: str | None = attr.ib(default=None)
-    unit_of_measurement: str | None = attr.ib(default=None)
+    original_device_class: str | None = attr.ib()
+    original_icon: str | None = attr.ib()
+    original_name: str | None = attr.ib()
+    supported_features: int = attr.ib()
+    translation_key: str | None = attr.ib()
+    unit_of_measurement: str | None = attr.ib()
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default

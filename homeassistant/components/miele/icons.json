@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "button": {
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      },
+      "pause": {
+        "default": "mdi:pause"
+      }
+    },
+    "switch": {
+      "power": {
+        "default": "mdi:power"
+      },
+      "supercooling": {
+        "default": "mdi:snowflake-variant"
+      },
+      "superfreezing": {
+        "default": "mdi:snowflake"
+      }
+    }
+  }
+}
