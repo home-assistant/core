@@ -22,7 +22,7 @@ class SmartThingsSelectDescription(SelectEntityDescription):
     """Class describing SmartThings select entities."""
 
     key: Capability
-    requires_remote_control_status: bool = False
+    requires_remote_control_status = False
     options_attribute: Attribute
     status_attribute: Attribute
     command: Command
