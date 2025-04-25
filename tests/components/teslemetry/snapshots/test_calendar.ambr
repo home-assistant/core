@@ -143,7 +143,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_calandar[calendar.test_precondition_schedule-entry]
@@ -183,7 +183,13 @@
 # name: test_calandar[calendar.test_precondition_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'all_day': False,
+      'description': '-30.222626,-97.6236871',
+      'end_time': '2024-01-05 08:30:00',
       'friendly_name': 'Test Precondition schedule',
+      'location': '-30.222626,-97.6236871',
+      'message': 'Precondition scheduled for Test',
+      'start_time': '2024-01-05 08:30:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.test_precondition_schedule',
@@ -502,9 +508,23 @@
         }),
         dict({
           'description': '-30.222626,-97.6236871',
+          'end': '2024-01-02T06:00:00-08:00',
+          'location': '-30.222626,-97.6236871',
+          'start': '2024-01-02T06:00:00-08:00',
+          'summary': 'Charge scheduled for Test',
+        }),
+        dict({
+          'description': '-30.222626,-97.6236871',
           'end': '2024-01-02T16:00:00-08:00',
           'location': '-30.222626,-97.6236871',
           'start': '2024-01-02T09:00:00-08:00',
+          'summary': 'Charge scheduled for Test',
+        }),
+        dict({
+          'description': '-30.222626,-97.6236871',
+          'end': '2024-01-03T06:00:00-08:00',
+          'location': '-30.222626,-97.6236871',
+          'start': '2024-01-03T06:00:00-08:00',
           'summary': 'Charge scheduled for Test',
         }),
         dict({
@@ -516,6 +536,13 @@
         }),
         dict({
           'description': '-30.222626,-97.6236871',
+          'end': '2024-01-04T06:00:00-08:00',
+          'location': '-30.222626,-97.6236871',
+          'start': '2024-01-03T22:00:00-08:00',
+          'summary': 'Charge scheduled for Test',
+        }),
+        dict({
+          'description': '-30.222626,-97.6236871',
           'end': '2024-01-04T16:00:00-08:00',
           'location': '-30.222626,-97.6236871',
           'start': '2024-01-04T09:00:00-08:00',
@@ -523,9 +550,23 @@
         }),
         dict({
           'description': '-30.222626,-97.6236871',
+          'end': '2024-01-05T06:00:00-08:00',
+          'location': '-30.222626,-97.6236871',
+          'start': '2024-01-04T22:00:00-08:00',
+          'summary': 'Charge scheduled for Test',
+        }),
+        dict({
+          'description': '-30.222626,-97.6236871',
           'end': '2024-01-05T16:00:00-08:00',
           'location': '-30.222626,-97.6236871',
           'start': '2024-01-05T09:00:00-08:00',
+          'summary': 'Charge scheduled for Test',
+        }),
+        dict({
+          'description': '-30.222626,-97.6236871',
+          'end': '2024-01-06T06:00:00-08:00',
+          'location': '-30.222626,-97.6236871',
+          'start': '2024-01-05T22:00:00-08:00',
           'summary': 'Charge scheduled for Test',
         }),
         dict({
@@ -543,6 +584,20 @@
   dict({
     'calendar.test_precondition_schedule': dict({
       'events': list([
+        dict({
+          'description': '-30.222626,-97.6236871',
+          'end': '2024-01-05T08:30:00-08:00',
+          'location': '-30.222626,-97.6236871',
+          'start': '2024-01-05T08:30:00-08:00',
+          'summary': 'Precondition scheduled for Test',
+        }),
+        dict({
+          'description': '-30.222626,-97.6236871',
+          'end': '2024-01-06T08:30:00-08:00',
+          'location': '-30.222626,-97.6236871',
+          'start': '2024-01-06T08:30:00-08:00',
+          'summary': 'Precondition scheduled for Test',
+        }),
       ]),
     }),
   })
