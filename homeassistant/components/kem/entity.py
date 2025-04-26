@@ -33,6 +33,7 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
         device_id: int,
         device_data: dict,
         description: EntityDescription,
+        use_device_key: bool = False,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -47,10 +48,7 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
             model=device_data[DEVICE_DATA_MODEL_NAME],
             manufacturer=KOHLER,
         )
-        # The format of the key is device:key or key. Parse it.
-        split_key = self.entity_description.key.split(":")
-        self._use_device_key = len(split_key) > 1
-        self.key = split_key[1] if self._use_device_key else self.entity_description.key
+        self._use_device_key = use_device_key
 
         try:
             mac_address_hex = device_data[DEVICE_DATA_MAC_ADDRESS].replace(":", "")
@@ -69,8 +67,8 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
     def _kem_value(self) -> str:
         """Return the sensor value."""
         if self._use_device_key:
-            return self._device_data[self.key]
-        return self.coordinator.data[self.key]
+            return self._device_data[self.entity_description.key]
+        return self.coordinator.data[self.entity_description.key]
 
     @property
     def available(self) -> bool:
