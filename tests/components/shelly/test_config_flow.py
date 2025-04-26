@@ -104,15 +104,15 @@ async def test_form(
             },
         ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_PORT: port},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Test name"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: port,
         CONF_MODEL: model,
@@ -160,22 +160,22 @@ async def test_user_flow_overrides_existing_discovery(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {}
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Test name"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 80,
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
     }
-    assert result2["context"]["unique_id"] == "AABBCCDDEEFF"
+    assert result["context"]["unique_id"] == "AABBCCDDEEFF"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -206,33 +206,33 @@ async def test_form_gen1_custom_port(
             side_effect=CustomPortNotSupported,
         ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_PORT: "1100"},
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"]["base"] == "custom_port_not_supported"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "custom_port_not_supported"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": MODEL_1, "gen": 1},
     ):
-        result3 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTP_PORT},
         )
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Test name"
-    assert result3["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_MODEL: MODEL_1,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 1,
     }
-    assert result3["context"]["unique_id"] == "test-mac"
+    assert result["context"]["unique_id"] == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -282,22 +282,22 @@ async def test_form_auth(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": MODEL_1, "auth": True, "gen": gen},
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result2["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"], user_input
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Test name"
-    assert result3["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_MODEL: model,
@@ -332,33 +332,33 @@ async def test_form_errors_get_info(
     )
 
     with patch("homeassistant.components.shelly.config_flow.get_info", side_effect=exc):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": base_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": base_error}
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": MODEL_1, "gen": 1},
     ):
-        result3 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Test name"
-    assert result3["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_MODEL: MODEL_1,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 1,
     }
-    assert result3["context"]["unique_id"] == "test-mac"
+    assert result["context"]["unique_id"] == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -375,13 +375,13 @@ async def test_form_missing_model_key(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": False, "gen": "2"},
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "firmware_not_fully_provisioned"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "firmware_not_fully_provisioned"
 
 
 async def test_form_missing_model_key_auth_enabled(
@@ -398,20 +398,20 @@ async def test_form_missing_model_key_auth_enabled(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": True, "gen": 2},
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result2["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     monkeypatch.setattr(mock_rpc_device, "shelly", {"gen": 2})
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"], {CONF_PASSWORD: "1234"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "1234"}
     )
-    assert result3["type"] is FlowResultType.ABORT
-    assert result3["reason"] == "firmware_not_fully_provisioned"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "firmware_not_fully_provisioned"
 
 
 async def test_form_missing_model_key_zeroconf(
@@ -465,33 +465,33 @@ async def test_form_errors_test_connection(
             "aioshelly.block_device.BlockDevice.create", new=AsyncMock(side_effect=exc)
         ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": base_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": base_error}
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": False},
     ):
-        result3 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Test name"
-    assert result3["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_MODEL: MODEL_1,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 1,
     }
-    assert result3["context"]["unique_id"] == "test-mac"
+    assert result["context"]["unique_id"] == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -512,13 +512,13 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": MODEL_1, "auth": False},
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
     assert entry.data[CONF_HOST] == "1.1.1.1"
@@ -548,12 +548,12 @@ async def test_user_setup_ignored_device(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": MODEL_1, "auth": False},
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # Test config entry got updated with latest IP
     assert entry.data[CONF_HOST] == "1.1.1.1"
@@ -587,7 +587,7 @@ async def test_form_auth_errors_test_connection_gen1(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": True},
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
@@ -596,25 +596,25 @@ async def test_form_auth_errors_test_connection_gen1(
         "aioshelly.block_device.BlockDevice.create",
         side_effect=exc,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
             {CONF_USERNAME: "test username", CONF_PASSWORD: "test password"},
         )
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["errors"] == {"base": base_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": base_error}
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": True},
     ):
-        result4 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
             {CONF_USERNAME: "test username", CONF_PASSWORD: "test password"},
         )
 
-    assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert result4["title"] == "Test name"
-    assert result4["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_MODEL: MODEL_1,
@@ -623,7 +623,7 @@ async def test_form_auth_errors_test_connection_gen1(
         CONF_USERNAME: "test username",
         CONF_PASSWORD: "test password",
     }
-    assert result4["context"]["unique_id"] == "test-mac"
+    assert result["context"]["unique_id"] == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -654,7 +654,7 @@ async def test_form_auth_errors_test_connection_gen2(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": True, "gen": 2},
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
@@ -663,24 +663,24 @@ async def test_form_auth_errors_test_connection_gen2(
         "aioshelly.rpc_device.RpcDevice.create",
         side_effect=exc,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"], {CONF_PASSWORD: "test password"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "test password"}
         )
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["errors"] == {"base": base_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": base_error}
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": True, "gen": 2},
     ):
-        result4 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
             {CONF_PASSWORD: "test password"},
         )
 
-    assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert result4["title"] == "Test name"
-    assert result4["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_MODEL: "SNSW-002P16EU",
@@ -689,7 +689,7 @@ async def test_form_auth_errors_test_connection_gen2(
         CONF_USERNAME: "admin",
         CONF_PASSWORD: "test password",
     }
-    assert result4["context"]["unique_id"] == "test-mac"
+    assert result["context"]["unique_id"] == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -744,15 +744,15 @@ async def test_zeroconf(
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
         assert context["confirm_only"] is True
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {},
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Test name"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_MODEL: model,
         CONF_SLEEP_PERIOD: 0,
@@ -798,15 +798,15 @@ async def test_zeroconf_sleeping_device(
         )
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {},
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Test name"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_MODEL: MODEL_1,
         CONF_SLEEP_PERIOD: 600,
@@ -989,15 +989,15 @@ async def test_zeroconf_require_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_USERNAME: "test username", CONF_PASSWORD: "test password"},
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Test name"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_MODEL: MODEL_1,
