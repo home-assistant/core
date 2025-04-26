@@ -725,7 +725,7 @@ async def test_hmip_esi_led_energy_counter_usage_high_tariff(
 async def test_hmip_absolute_humidity_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
-    """Test WheaterChannel absolute humidity sensor (vaporAmount)."""
+    """Test absolute humidity sensor (vaporAmount)."""
     entity_id = "sensor.elvshctv_absolute_humidity"
     entity_name = "elvshctv Absolute Humidity"
     device_model = "ELV-SH-CTH"
@@ -743,7 +743,7 @@ async def test_hmip_absolute_humidity_sensor(
 async def test_hmip_absolute_humidity_sensor_invalid_value(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
-    """Test WheaterChannel absolute humidity sensor with invalid value for vaporAmount."""
+    """Test absolute humidity sensor with invalid value for vaporAmount."""
     entity_id = "sensor.elvshctv_absolute_humidity"
     entity_name = "elvshctv Absolute Humidity"
     device_model = "ELV-SH-CTH"
