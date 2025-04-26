@@ -63,7 +63,7 @@ from .const import (
 from .entity import TextToSpeechEntity, TTSAudioRequest
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
-from .media_source import generate_media_source_id, media_source_id_to_kwargs
+from .media_source import generate_media_source_id, parse_media_source_id
 from .models import Voice
 
 __all__ = [
@@ -272,12 +272,11 @@ async def async_get_media_source_audio(
     media_source_id: str,
 ) -> tuple[str, bytes]:
     """Get TTS audio as extension, data."""
-    manager = hass.data[DATA_TTS_MANAGER]
-    cache = manager.async_cache_message_in_memory(
-        **media_source_id_to_kwargs(media_source_id)
-    )
-    data = b"".join([chunk async for chunk in cache.async_stream_data()])
-    return cache.extension, data
+    parsed = parse_media_source_id(media_source_id)
+    stream = hass.data[DATA_TTS_MANAGER].async_create_result_stream(**parsed["options"])
+    stream.async_set_message(parsed["message"])
+    data = b"".join([chunk async for chunk in stream.async_stream_result()])
+    return stream.extension, data
 
 
 @callback
@@ -711,41 +710,17 @@ class SpeechManager:
         self,
         engine: str,
         message: str,
-        use_file_cache: bool | None = None,
-        language: str | None = None,
-        options: dict | None = None,
-    ) -> TTSCache:
-        """Make sure a message is cached in memory and returns cache key."""
-        if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
-
-        language, options = self.process_options(engine_instance, language, options)
-        if use_file_cache is None:
-            use_file_cache = self.use_file_cache
-
-        return self._async_ensure_cached_in_memory(
-            engine=engine,
-            engine_instance=engine_instance,
-            message=message,
-            use_file_cache=use_file_cache,
-            language=language,
-            options=options,
-        )
-
-    @callback
-    def _async_ensure_cached_in_memory(
-        self,
-        engine: str,
-        engine_instance: TextToSpeechEntity | Provider,
-        message: str,
         use_file_cache: bool,
         language: str,
         options: dict,
     ) -> TTSCache:
-        """Ensure a message is cached.
+        """Make sure a message is cached in memory and returns cache key.
 
         Requires options, language to be processed.
         """
+        if (engine_instance := get_engine_instance(self.hass, engine)) is None:
+            raise HomeAssistantError(f"Provider {engine} not found")
+
         options_key = _hash_options(options) if options else "-"
         msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
         cache_key = KEY_PATTERN.format(
