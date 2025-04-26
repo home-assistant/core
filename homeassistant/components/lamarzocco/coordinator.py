@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from asyncio import sleep
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -19,10 +20,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
+WS_AUTO_RECONNECT_INTERVAL = 1800
+
 SCAN_INTERVAL = timedelta(seconds=15)
 SETTINGS_UPDATE_INTERVAL = timedelta(hours=1)
 SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=5)
 STATISTICS_UPDATE_INTERVAL = timedelta(minutes=15)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -103,8 +107,20 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         )
 
         async def websocket_close(_: Any | None = None) -> None:
-            if self.device.websocket.connected:
-                await self.device.websocket.disconnect()
+            await self.device.websocket.disconnect()
+
+        async def reconnect_websocket() -> None:
+            """Reconnect the websocket every 30 minutes."""
+            await sleep(WS_AUTO_RECONNECT_INTERVAL)
+            _LOGGER.debug("Auto reconnecting WebSocket")
+            await websocket_close()
+            await self.async_request_refresh()
+
+        self.config_entry.async_create_background_task(
+            hass=self.hass,
+            target=reconnect_websocket(),
+            name="lm_websocket_reconnect_task",
+        )
 
         self.config_entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, websocket_close)
