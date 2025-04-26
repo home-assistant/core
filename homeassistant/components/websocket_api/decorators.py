@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -133,7 +133,7 @@ def ws_require_user(
 def websocket_command(
     schema: VolDictType | vol.All,
 ) -> Callable[
-    [const.WebSocketCommandHandlerWithCommandSchema],
+    [const.WebSocketCommandHandler],
     const.WebSocketCommandHandlerWithCommandSchema,
 ]:
     """Tag a function as a websocket command.
@@ -147,9 +147,10 @@ def websocket_command(
         command = schema.validators[0].schema["type"]
 
     def decorate(
-        func: const.WebSocketCommandHandlerWithCommandSchema,
+        func: const.WebSocketCommandHandler,
     ) -> const.WebSocketCommandHandlerWithCommandSchema:
         """Decorate ws command function."""
+        func = cast(const.WebSocketCommandHandlerWithCommandSchema, func)
         if is_dict and len(schema) == 1:  # type: ignore[arg-type]  # type only empty schema
             func._ws_schema = False  # noqa: SLF001
         elif is_dict:

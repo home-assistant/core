@@ -35,7 +35,10 @@ type AsyncWebSocketCommandHandler = Callable[
 
 DOMAIN: Final = "websocket_api"
 DATA_DOMAIN: HassKey[
-    dict[str, tuple[WebSocketCommandHandler, VolSchemaType | Literal[False]]]
+    dict[
+        str,
+        tuple[WebSocketCommandHandlerWithCommandSchema, VolSchemaType | Literal[False]],
+    ]
 ] = HassKey(DOMAIN)
 URL: Final = "/api/websocket"
 PENDING_MSG_PEAK: Final = 1024

@@ -1,4 +1,4 @@
-"""Commands part of Websocket API."""
+"""Commands of the Websocket API."""
 
 from __future__ import annotations
 
