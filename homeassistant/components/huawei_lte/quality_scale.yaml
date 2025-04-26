@@ -11,7 +11,7 @@ rules:
     comment: Use mock calls to check test_urlize_plain_host instead of user_input mod checks, combine test_show_set_form with a happy path flow, finish test_connection_errors and test_login_error with CREATE_ENTRY to check error recovery, move test_success to top and assert unique id in it, split test_reauth to two so we can test incorrect password recovery.
   config-flow:
     status: todo
-    comment: Rename ConfigFlowHandler to HuaweiLteConfigFlow.
+    comment: Rename ConfigFlowHandler to HuaweiLteConfigFlow, see if we can catch more specific exceptions in get_device_info.
   dependency-transparency:
     status: todo
     comment: huawei-lte-api and stringcase are not built and published to PyPI from a public CI pipeline.
