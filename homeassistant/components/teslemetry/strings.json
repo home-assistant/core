@@ -665,7 +665,7 @@
           "charge": "Charge",
           "full_electric_in_motion": "Full electric in motion",
           "clear_fault": "Clear fault",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "weld": "Weld",
           "test": "Test",
           "system_not_available": "System not available"
@@ -751,7 +751,7 @@
         "state": {
           "unavailable": "Unavailable",
           "standby": "[%key:common::state::standby%]",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "abort": "Abort",
           "enabled": "[%key:common::state::enabled%]"
         }
@@ -939,7 +939,7 @@
           "none": "None",
           "soc_too_low": "SOC too low",
           "retry": "Retry",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "user": "User",
           "reconnecting": "Reconnecting",
           "authentication": "Authentication"
