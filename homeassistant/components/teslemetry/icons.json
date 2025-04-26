@@ -99,12 +99,14 @@
       },
       "grid_services_active": {
         "state": {
-          "on": "mdi:sine-wave"
+          "on": "mdi:sine-wave",
+          "off": "mdi:transmission-tower-off"
         }
       },
       "components_grid_services_enabled": {
         "state": {
-          "on": "mdi:sine-wave"
+          "on": "mdi:sine-wave",
+          "off": "mdi:transmission-tower-off"
         }
       }
     },
