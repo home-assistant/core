@@ -202,6 +202,28 @@
       "superfreezing": {
         "name": "Superfreezing"
       }
+    },
+    "vacuum": {
+      "vacuum": {
+        "name": "Vacuum",
+        "state_attributes": {
+          "status": {
+            "name": "Status",
+            "state": {
+              "blocked_brushes": "Brushes blocked",
+              "blocked_drive_wheels": "Drive wheels blocked",
+              "blocked_front_wheel": "Front wheel blocked",
+              "check_dust_box_and_filter": "Check dust box and filter",
+              "dirty_sensors": "Dirty sensors",
+              "dust_box_missing": "Missing dust box",
+              "going_to_target_area": "Going to target area",
+              "internal_fault_reboot": "Internal fault - Reboot",
+              "remote_controlled": "Remote controlled",
+              "wheel_lifted": "Wheel lifted"
+            }
+          }
+        }
+      }
     }
   },
   "exceptions": {

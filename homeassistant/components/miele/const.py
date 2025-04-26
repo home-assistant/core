@@ -9,6 +9,7 @@ ACTIONS = "actions"
 POWER_ON = "powerOn"
 POWER_OFF = "powerOff"
 PROCESS_ACTION = "processAction"
+PROGRAM_ID = "programId"
 DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
