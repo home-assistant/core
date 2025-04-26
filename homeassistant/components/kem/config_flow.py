@@ -33,15 +33,9 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not (errors := await self._async_validate_or_error(user_input)):
                 username: str = user_input[CONF_USERNAME]
-                password: str = user_input[CONF_PASSWORD]
                 normalized_username = username.lower()
                 await self.async_set_unique_id(normalized_username)
-                self._abort_if_unique_id_configured(
-                    updates={
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    }
-                )
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=normalized_username, data=user_input
                 )
