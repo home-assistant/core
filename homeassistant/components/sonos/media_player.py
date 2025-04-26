@@ -460,11 +460,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     def _play_favorite(self, favorite: DidlFavorite) -> None:
         """Play a favorite."""
-        uri = (
-            favorite.reference.get_uri()
-            if hasattr(favorite, 'reference')
-            else favorite.get_uri()
-        )
+        uri = favorite.reference.get_uri()
         soco = self.coordinator.soco
         if (
             soco.music_source_from_uri(uri)
@@ -482,10 +478,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
         else:
             soco.clear_queue()
-            soco.add_to_queue(
-                favorite.reference if hasattr(favorite, 'reference') else favorite, 
-                timeout=LONG_SERVICE_TIMEOUT,
-            )
+            soco.add_to_queue(favorite.reference, timeout=LONG_SERVICE_TIMEOUT)
             soco.play_from_queue(0)
 
     @property

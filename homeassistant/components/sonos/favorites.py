@@ -134,11 +134,21 @@ class SonosFavorites(SonosHouseholdCoordinator):
             except SoCoException as ex:
                 # Skip unknown types
                 _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
-        for fav in new_playlists:
+        for playlist in new_playlists:
+            playlist_reference = DidlFavorite(
+                title=playlist.title,
+                parent_id=playlist.parent_id,
+                item_id=playlist.item_id,
+                resources=playlist.resources,
+                desc=playlist.desc,
+            )
+            playlist_reference.reference = playlist
             try:
-                self._favorites.append(fav)
+                self._favorites.append(playlist_reference)
             except SoCoException as ex:
-                _LOGGER.error("Unhandled favorite: '%s': %s", fav.title, ex)
+                _LOGGER.error(
+                    "Unhandled favorite: '%s': %s", playlist_reference.title, ex
+                )
 
         _LOGGER.debug(
             "Cached %s favorites for household %s using %s",
