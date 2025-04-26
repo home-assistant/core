@@ -77,6 +77,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: KemConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: KemConfigEntry) -> bool:
     """Unload a config entry."""
-    if hasattr(entry, "runtime_data") and hasattr(entry.runtime_data, "kem"):
-        await entry.runtime_data.kem.close()
+    await entry.runtime_data.kem.close()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
