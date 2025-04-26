@@ -1,7 +1,7 @@
 {
   "domain": "esphome",
   "name": "ESPHome",
-  "after_dependencies": ["zeroconf", "tag"],
+  "after_dependencies": ["hassio", "zeroconf", "tag"],
   "codeowners": ["@OttoWinter", "@jesserockz", "@kbx81", "@bdraco"],
   "config_flow": true,
   "dependencies": ["assist_pipeline", "bluetooth", "intent", "ffmpeg", "http"],
@@ -15,9 +15,10 @@
   "iot_class": "local_push",
   "loggers": ["aioesphomeapi", "noiseprotocol", "bleak_esphome"],
   "mqtt": ["esphome/discover/#"],
+  "quality_scale": "platinum",
   "requirements": [
-    "aioesphomeapi==29.9.0",
-    "esphome-dashboard-api==1.2.3",
+    "aioesphomeapi==30.0.1",
+    "esphome-dashboard-api==1.3.0",
     "bleak-esphome==2.13.1"
   ],
   "zeroconf": ["_esphomelib._tcp.local."]

@@ -265,21 +265,21 @@ async def _transform_stream(
             if current_block is None:
                 raise ValueError("Unexpected stop event without a current block")
             if current_block["type"] == "tool_use":
-                tool_block = cast(ToolUseBlockParam, current_block)
+                # tool block
                 tool_args = json.loads(current_tool_args) if current_tool_args else {}
-                tool_block["input"] = tool_args
+                current_block["input"] = tool_args
                 yield {
                     "tool_calls": [
                         llm.ToolInput(
-                            id=tool_block["id"],
-                            tool_name=tool_block["name"],
+                            id=current_block["id"],
+                            tool_name=current_block["name"],
                             tool_args=tool_args,
                         )
                     ]
                 }
             elif current_block["type"] == "thinking":
-                thinking_block = cast(ThinkingBlockParam, current_block)
-                LOGGER.debug("Thinking: %s", thinking_block["thinking"])
+                # thinking block
+                LOGGER.debug("Thinking: %s", current_block["thinking"])
 
             if current_message is None:
                 raise ValueError("Unexpected stop event without a current message")

@@ -28,8 +28,8 @@ MINOR_VERSION: Final = 5
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
@@ -766,8 +766,11 @@ class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
 
     CUBIC_METERS_PER_HOUR = "m³/h"
+    CUBIC_METERS_PER_SECOND = "m³/s"
     CUBIC_FEET_PER_MINUTE = "ft³/min"
+    LITERS_PER_HOUR = "L/h"
     LITERS_PER_MINUTE = "L/min"
+    LITERS_PER_SECOND = "L/s"
     GALLONS_PER_MINUTE = "gal/min"
     MILLILITERS_PER_SECOND = "mL/s"
 

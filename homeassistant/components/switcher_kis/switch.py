@@ -6,8 +6,13 @@ from datetime import timedelta
 import logging
 from typing import Any, cast
 
-from aioswitcher.api import Command, ShutterChildLock
-from aioswitcher.device import DeviceCategory, DeviceState, SwitcherShutter
+from aioswitcher.api import Command
+from aioswitcher.device import (
+    DeviceCategory,
+    DeviceState,
+    ShutterChildLock,
+    SwitcherShutter,
+)
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
@@ -83,11 +88,11 @@ async def async_setup_entry(
             number_of_covers = len(cast(SwitcherShutter, coordinator.data).position)
             if number_of_covers == 1:
                 entities.append(
-                    SwitchereShutterChildLockSingleSwitchEntity(coordinator, 0)
+                    SwitcherShutterChildLockSingleSwitchEntity(coordinator, 0)
                 )
             else:
                 entities.extend(
-                    SwitchereShutterChildLockMultiSwitchEntity(coordinator, i)
+                    SwitcherShutterChildLockMultiSwitchEntity(coordinator, i)
                     for i in range(number_of_covers)
                 )
         async_add_entities(entities)
@@ -176,7 +181,7 @@ class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
         self.async_write_ha_state()
 
 
-class SwitchereShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
+class SwitcherShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
     """Representation of a Switcher shutter base switch entity."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
@@ -221,8 +226,8 @@ class SwitchereShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
         self.async_write_ha_state()
 
 
-class SwitchereShutterChildLockSingleSwitchEntity(
-    SwitchereShutterChildLockBaseSwitchEntity
+class SwitcherShutterChildLockSingleSwitchEntity(
+    SwitcherShutterChildLockBaseSwitchEntity
 ):
     """Representation of a Switcher runner child lock single switch entity."""
 
@@ -242,8 +247,8 @@ class SwitchereShutterChildLockSingleSwitchEntity(
         )
 
 
-class SwitchereShutterChildLockMultiSwitchEntity(
-    SwitchereShutterChildLockBaseSwitchEntity
+class SwitcherShutterChildLockMultiSwitchEntity(
+    SwitcherShutterChildLockBaseSwitchEntity
 ):
     """Representation of a Switcher runner child lock multiple switch entity."""
 

@@ -191,6 +191,7 @@ async def async_setup_entry(
                 TessieEnergyLiveBinarySensorEntity(energy, description)
                 for energy in entry.runtime_data.energysites
                 for description in ENERGY_LIVE_DESCRIPTIONS
+                if energy.live_coordinator is not None
             ),
             (
                 TessieEnergyInfoBinarySensorEntity(vehicle, description)
@@ -233,6 +234,7 @@ class TessieEnergyLiveBinarySensorEntity(TessieEnergyEntity, BinarySensorEntity)
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
+        assert data.live_coordinator is not None
         super().__init__(data, data.live_coordinator, description.key)
 
     def _async_update_attrs(self) -> None:

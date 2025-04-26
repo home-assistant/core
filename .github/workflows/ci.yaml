@@ -249,7 +249,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -294,7 +294,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -334,7 +334,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -374,7 +374,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -484,7 +484,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -587,7 +587,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -620,7 +620,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -677,7 +677,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -720,7 +720,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -767,7 +767,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -812,7 +812,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -889,7 +889,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -949,7 +949,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -968,7 +968,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           name: pytest_buckets
       - name: Compile English translations
@@ -1074,7 +1074,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1208,7 +1208,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1312,12 +1312,12 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v5.4.0
+        uses: codecov/codecov-action@v5.4.2
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1359,7 +1359,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1454,12 +1454,12 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v5.4.0
+        uses: codecov/codecov-action@v5.4.2
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -1479,7 +1479,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov
