@@ -210,6 +210,7 @@ aioazuredevops==2.2.1
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
+# homeassistant.components.s3
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
@@ -261,7 +262,7 @@ aioguardian==2022.07.0
 aioharmony==0.5.2
 
 # homeassistant.components.hassio
-aiohasupervisor==0.3.1b1
+aiohasupervisor==0.3.1
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.17.0
@@ -874,7 +875,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.10.1
+env-canada==0.10.2
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1120,7 +1121,7 @@ habiticalib==0.3.7
 habluetooth==3.39.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.94.0
+hass-nabucasa==0.96.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1166,7 +1167,7 @@ home-assistant-frontend==20250411.0
 home-assistant-intents==2025.3.28
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.0
+homematicip==2.0.1
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1954,7 +1955,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.25.5
+pyenphase==1.26.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2630,7 +2631,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.9
+renault-api==0.3.0
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2974,7 +2975,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.5.3
+uiprotect==7.5.5
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

@@ -25,6 +25,9 @@
           'powerOff': False,
           'powerOn': True,
           'processAction': list([
+            1,
+            2,
+            3,
           ]),
           'programId': list([
           ]),
@@ -50,6 +53,9 @@
           'powerOff': False,
           'powerOn': True,
           'processAction': list([
+            1,
+            2,
+            3,
           ]),
           'programId': list([
           ]),
@@ -75,6 +81,9 @@
           'powerOff': False,
           'powerOn': True,
           'processAction': list([
+            1,
+            2,
+            3,
           ]),
           'programId': list([
           ]),
@@ -100,6 +109,9 @@
           'powerOff': False,
           'powerOn': True,
           'processAction': list([
+            1,
+            2,
+            3,
           ]),
           'programId': list([
           ]),
@@ -663,6 +675,9 @@
           'powerOff': False,
           'powerOn': True,
           'processAction': list([
+            1,
+            2,
+            3,
           ]),
           'programId': list([
           ]),
