@@ -388,7 +388,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:speedometer',
+    'original_icon': None,
     'original_name': 'Engine speed',
     'platform': 'kem',
     'previous_unique_id': None,
@@ -402,7 +402,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Generator 1 Engine speed',
-      'icon': 'mdi:speedometer',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'rpm',
     }),

@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "engine_speed": {
+        "default": "mdi:speedometer"
+      }
+    }
+  }
+}
