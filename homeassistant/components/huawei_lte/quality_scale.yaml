@@ -83,4 +83,4 @@ rules:
     comment: Underlying huawei-lte-api does not use aiohttp or httpx, so not sure if we can do anything about this.
   strict-typing:
     status: todo
-    comment: Integration is strictly typechecked already, but stringcase and url-normalize deps are not typed.
+    comment: Integration is strictly typechecked already, and huawei-lte-api is in order. stringcase is not typed, and url-normalize as of 2.2.0 is missing the py.typed marker, https://github.com/niksite/url-normalize/pull/41
