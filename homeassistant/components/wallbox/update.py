@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.update import (
+    UpdateDeviceClass,
     UpdateEntity,
-    UpdateEntityDescription,
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -27,11 +26,6 @@ from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
 
 
-@dataclass(frozen=True, kw_only=True)
-class WallboxUpdateEntityDescription(UpdateEntityDescription):
-    """Describes Wallbox update entity."""
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -39,14 +33,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up Wallbox update entities."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
-    description = WallboxUpdateEntityDescription(
-        key=CHARGER_SOFTWARE_KEY,
-        translation_key="firmware",
+
+    async_add_entities(
+        [
+            WallboxBoxUpdateEntity(
+                coordinator,
+                key=CHARGER_SOFTWARE_KEY,
+                device_class=UpdateDeviceClass.FIRMWARE,
+            )
+        ]
     )
-
-    entities = [WallboxBoxUpdateEntity(coordinator, description)]
-
-    async_add_entities(entities)
 
 
 class WallboxBoxUpdateEntity(WallboxEntity, UpdateEntity):
@@ -54,18 +50,19 @@ class WallboxBoxUpdateEntity(WallboxEntity, UpdateEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_supported_features = UpdateEntityFeature.INSTALL
-    entity_description: WallboxUpdateEntityDescription
 
     def __init__(
         self,
         coordinator: WallboxCoordinator,
-        description: WallboxUpdateEntityDescription,
+        key: str,
+        device_class: UpdateDeviceClass | None = None,
     ) -> None:
         """Init Wallbox connectivity class."""
         super().__init__(coordinator)
-        self.entity_description = description
-        self._coordinator = coordinator
-        self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        self._attr_device_class = device_class
+        self._attr_unique_id = (
+            f"{key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        )
 
     @property
     def installed_version(self) -> str | None:
