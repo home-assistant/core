@@ -761,7 +761,7 @@
         "state": {
           "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
           "standby": "[%key:common::state::standby%]",
-          "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
+          "fault": "[%key:common::state::fault%]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
           "enabled": "[%key:common::state::enabled%]"
         }
@@ -771,7 +771,7 @@
         "state": {
           "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
           "standby": "[%key:common::state::standby%]",
-          "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
+          "fault": "[%key:common::state::fault%]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
           "enabled": "[%key:common::state::enabled%]"
         }
@@ -781,7 +781,7 @@
         "state": {
           "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
           "standby": "[%key:common::state::standby%]",
-          "fault": "[%key:component::teslemetry:sensor:di_state_f:fault]",
+          "fault": "[%key:common::state::fault%]",
           "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
           "enabled": "[%key:common::state::enabled%]"
         }
