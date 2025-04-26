@@ -57,7 +57,9 @@ rules:
   docs-use-cases: todo
   dynamic-devices: done
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: todo
+    comment: Add BinarySensorDeviceClass.CONNECTIVITY to mobile connection and Wi-Fi binary sensors.
   entity-disabled-by-default: done
   entity-translations:
     status: todo
