@@ -56,11 +56,6 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         """Return the api object."""
         return self.coordinator.api
 
-    @api.setter
-    def api(self, value: AsyncConfigEntryAuth) -> None:
-        """Set the api object."""
-        self.coordinator.api = value
-
     @property
     def available(self) -> bool:
         """Return the availability of the entity."""

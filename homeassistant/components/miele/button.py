@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, PROCESS_ACTION, MieleActions, MieleAppliance
-from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
+from .coordinator import MieleConfigEntry
 from .entity import MieleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,16 +124,6 @@ class MieleButton(MieleEntity, ButtonEntity):
     """Representation of a Button."""
 
     entity_description: MieleButtonDescription
-
-    def __init__(
-        self,
-        coordinator: MieleDataUpdateCoordinator,
-        device_id: str,
-        description: MieleButtonDescription,
-    ) -> None:
-        """Initialize the button."""
-        super().__init__(coordinator, device_id, description)
-        self.api = coordinator.api
 
     @property
     def available(self) -> bool:
