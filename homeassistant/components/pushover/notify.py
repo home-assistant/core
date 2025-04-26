@@ -19,21 +19,20 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
-     ATTR_ATTACHMENT,
-     ATTR_URL,
-     ATTR_URL_TITLE,
-     ATTR_PRIORITY,
-     ATTR_RETRY,
-     ATTR_SOUND,
-     ATTR_HTML,
-     ATTR_CALLBACK_URL,
-     ATTR_EXPIRE,
-     ATTR_TTL,
-     ATTR_TIMESTAMP,
-     CONF_USER_KEY,
-     DOMAIN,
- )
-
+    ATTR_ATTACHMENT,
+    ATTR_CALLBACK_URL,
+    ATTR_EXPIRE,
+    ATTR_HTML,
+    ATTR_PRIORITY,
+    ATTR_RETRY,
+    ATTR_SOUND,
+    ATTR_TIMESTAMP,
+    ATTR_TTL,
+    ATTR_URL,
+    ATTR_URL_TITLE,
+    CONF_USER_KEY,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,9 +55,24 @@ class PushoverNotificationService(BaseNotificationService):
     """Implement the notification service for Pushover."""
 
     def __init__(
-        self, hass: HomeAssistant, pushover: PushoverAPI, user_key: str
+        self, hass: HomeAssistant, arg2: Any, arg3: Any = None, arg4: Any = None
     ) -> None:
-        """Initialize the service."""
+        """Initialize the service.
+
+        Supports both new-style (hass, PushoverAPI, user_key)
+        and legacy (hass, entry, creds, platform) signatures.
+        """
+        # New (config-entry) style: arg2 is already a PushoverAPI instance
+        if isinstance(arg2, PushoverAPI):
+            pushover = arg2
+            user_key = arg3
+        else:
+            # Legacy style: arg2 is entry (unused), arg3 is creds dict
+            creds = arg3 or {}
+            app_token = creds.get("app_token")
+            user_key = creds.get("user_key")
+            pushover = PushoverAPI(app_token) if app_token is not None else None
+
         self._hass = hass
         self._user_key = user_key
         self.pushover = pushover
@@ -79,7 +93,6 @@ class PushoverNotificationService(BaseNotificationService):
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
-
 
         # Check for attachment
         if (image := data.get(ATTR_ATTACHMENT)) is not None:
