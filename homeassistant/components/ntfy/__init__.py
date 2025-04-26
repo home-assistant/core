@@ -15,7 +15,7 @@ from aiontfy.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool
     try:
         await ntfy.account()
     except NtfyUnauthorizedAuthenticationError as e:
-        raise ConfigEntryNotReady(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_error",
         ) from e
