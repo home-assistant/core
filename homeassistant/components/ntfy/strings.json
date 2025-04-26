@@ -41,6 +41,20 @@
           "password": "Enter the password corresponding to the aforementioned username to automatically create an access token",
           "token": "Enter a new access token. To create a new access token navigate to Account → Access tokens and click create access token"
         }
+      },
+      "reconfigure": {
+        "title": "Configuration for {name}",
+        "description": "Log in with your **ntfy** username and password. Home Assistant will automatically generate an access token to authenticate with **ntfy**. You can also enter an existing token manually",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "username": "[%key:component::ntfy::config::step::user::sections::auth::data_description::username%]",
+          "password": "[%key:component::ntfy::config::step::user::sections::auth::data_description::password%]",
+          "token": "Enter an existing ntfy access token instead of logging in"
+        }
       }
     },
     "error": {
@@ -51,7 +65,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "account_mismatch": "The provided access token corresponds to the account {wrong_username}. Please re-authenticate with the account **{username}**"
+      "account_mismatch": "The provided access token corresponds to the account {wrong_username}. Please re-authenticate with the account **{username}**",
+      "nothing_to_reconfigure": "There are no configuration options available for this entry",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "config_subentries": {
