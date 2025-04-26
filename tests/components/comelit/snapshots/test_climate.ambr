@@ -21,7 +21,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'climate',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'climate.climate0',
     'has_entity_name': True,
     'hidden_by': None,

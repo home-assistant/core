@@ -15,7 +15,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'light',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'light.light0',
     'has_entity_name': True,
     'hidden_by': None,

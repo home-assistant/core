@@ -99,7 +99,6 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
     _attr_available_modes = [MODE_NORMAL, MODE_AUTO]
     _attr_min_humidity = 10
     _attr_max_humidity = 90
-    _attr_has_entity_name = True
 
     def __init__(
         self,
