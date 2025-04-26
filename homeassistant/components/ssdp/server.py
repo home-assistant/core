@@ -1,4 +1,4 @@
-"""The SSDP integration."""
+"""The SSDP integration server."""
 
 from __future__ import annotations
 
