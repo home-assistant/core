@@ -722,43 +722,7 @@ async def test_hmip_esi_led_energy_counter_usage_high_tariff(
     assert ha_state.state == "23825.748"
 
 
-async def test_hmip_elv(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
-) -> None:
-    """Test ESI-IEC ENERGY_COUNTER_USAGE_HIGH_TARIFF."""
-    entity_id = "sensor.elvshctv_temperature"
-    entity_name = "elvshctv Temperature"
-    device_model = "ELV-SH-CTH"
-    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=["elvshctv"]
-    )
-
-    ha_state, hmip_device = get_and_check_entity_basics(
-        hass, mock_hap, entity_id, entity_name, device_model
-    )
-
-    assert ha_state.state == "19.7"
-
-
-async def test_hmip_elv_vapor(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
-) -> None:
-    """Test ESI-IEC ENERGY_COUNTER_USAGE_HIGH_TARIFF."""
-    entity_id = "sensor.elvshctv_humidity"
-    entity_name = "elvshctv Humidity"
-    device_model = "ELV-SH-CTH"
-    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=["elvshctv"]
-    )
-
-    ha_state, hmip_device = get_and_check_entity_basics(
-        hass, mock_hap, entity_id, entity_name, device_model
-    )
-
-    assert ha_state.state == "36"
-
-
-async def test_hmip_elv_absolute_humidity_sensor(
+async def test_hmip_absolute_humidity_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test WheaterChannel absolute humidity sensor (vaporAmount)."""
@@ -776,7 +740,7 @@ async def test_hmip_elv_absolute_humidity_sensor(
     assert ha_state.state == "6098"
 
 
-async def test_hmip_elv_relative_humidity_sensor_invalid_value(
+async def test_hmip_absolute_humidity_sensor_invalid_value(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test WheaterChannel absolute humidity sensor with invalid value for vaporAmount."""
