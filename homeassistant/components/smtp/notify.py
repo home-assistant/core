@@ -233,7 +233,7 @@ class MailNotificationService(BaseNotificationService):
         msg["Date"] = email.utils.format_datetime(dt_util.now())
         msg["Message-Id"] = email.utils.make_msgid()
 
-        self._send_email(msg, recipients)
+        return self._send_email(msg, recipients)
 
     def _send_email(self, msg: MIMEMultipart | MIMEText, recipients: list[str]) -> None:
         """Send the message."""
