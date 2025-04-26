@@ -108,7 +108,6 @@ async def test_form(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_PORT: port},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
@@ -164,7 +163,6 @@ async def test_user_flow_overrides_existing_discovery(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
@@ -293,7 +291,6 @@ async def test_form_auth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
@@ -748,7 +745,6 @@ async def test_zeroconf(
         result["flow_id"],
         {},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
@@ -802,7 +798,6 @@ async def test_zeroconf_sleeping_device(
         result["flow_id"],
         {},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
@@ -993,7 +988,6 @@ async def test_zeroconf_require_auth(
         result["flow_id"],
         {CONF_USERNAME: "test username", CONF_PASSWORD: "test password"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
@@ -1207,7 +1201,6 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
             CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.DISABLED
@@ -1223,7 +1216,6 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
             CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.ACTIVE
@@ -1239,7 +1231,6 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
             CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.PASSIVE
@@ -1601,7 +1592,6 @@ async def test_sleeping_device_gen2_with_new_firmware(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
