@@ -5,24 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohttp.client_exceptions import ClientConnectorError
-from aiokem import AioKem, AuthenticationError, CommunicationError, ServerError
+from aiokem import AioKem, CommunicationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL_MINUTES
-
-RETRY_EXCEPTIONS = (
-    CommunicationError,
-    ServerError,
-    ClientConnectorError,
-)
-
-AUTHORIZATION_EXCEPTIONS = (AuthenticationError,)
-
-RETRY_DELAY = [5000, 10000, 20000]
 
 _LOGGER = logging.getLogger(__name__)
 
