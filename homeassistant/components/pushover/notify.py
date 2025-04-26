@@ -74,6 +74,7 @@ class PushoverNotificationService(BaseNotificationService):
             user_key = creds_dict.get("user_key")
             pushover = PushoverAPI(app_token) if app_token is not None else None
         # After determining pushover and user_key, save them for send_message
+        self.hass = hass
         self._hass = hass
         self._user_key = user_key
         self.pushover = pushover
@@ -126,11 +127,11 @@ class PushoverNotificationService(BaseNotificationService):
                 priority,
                 retry,
                 expire,
+                ttl,
                 callback_url,
                 timestamp,
                 sound,
                 html,
-                ttl,
             )
 
         except BadAPIRequestError as err:
