@@ -67,9 +67,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry
 ) -> bool:
     """Set up Reolink from a config entry."""
-    host = ReolinkHost(
-        hass, config_entry.data, config_entry.options, config_entry.entry_id
-    )
+    host = ReolinkHost(hass, config_entry.data, config_entry.options, config_entry)
 
     try:
         await host.async_init()
@@ -373,6 +371,9 @@ def migrate_entity_ids(
                 new_device_id = f"{host.unique_id}"
             else:
                 new_device_id = f"{host.unique_id}_{device_uid[1]}"
+            _LOGGER.debug(
+                "Updating Reolink device UID from %s to %s", device_uid, new_device_id
+            )
             new_identifiers = {(DOMAIN, new_device_id)}
             device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
 
@@ -385,6 +386,9 @@ def migrate_entity_ids(
                 new_device_id = f"{host.unique_id}_{host.api.camera_uid(ch)}"
             else:
                 new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
+            _LOGGER.debug(
+                "Updating Reolink device UID from %s to %s", device_uid, new_device_id
+            )
             new_identifiers = {(DOMAIN, new_device_id)}
             existing_device = device_reg.async_get_device(identifiers=new_identifiers)
             if existing_device is None:
@@ -417,13 +421,31 @@ def migrate_entity_ids(
             host.unique_id
         ):
             new_id = f"{host.unique_id}_{entity.unique_id.split('_', 1)[1]}"
+            _LOGGER.debug(
+                "Updating Reolink entity unique_id from %s to %s",
+                entity.unique_id,
+                new_id,
+            )
             entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
 
         if entity.device_id in ch_device_ids:
             ch = ch_device_ids[entity.device_id]
             id_parts = entity.unique_id.split("_", 2)
+            if len(id_parts) < 3:
+                _LOGGER.warning(
+                    "Reolink channel %s entity has unexpected unique_id format %s, with device id %s",
+                    ch,
+                    entity.unique_id,
+                    entity.device_id,
+                )
+                continue
             if host.api.supported(ch, "UID") and id_parts[1] != host.api.camera_uid(ch):
                 new_id = f"{host.unique_id}_{host.api.camera_uid(ch)}_{id_parts[2]}"
+                _LOGGER.debug(
+                    "Updating Reolink entity unique_id from %s to %s",
+                    entity.unique_id,
+                    new_id,
+                )
                 existing_entity = entity_reg.async_get_entity_id(
                     entity.domain, entity.platform, new_id
                 )

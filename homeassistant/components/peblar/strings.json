@@ -108,7 +108,7 @@
         "name": "State",
         "state": {
           "charging": "[%key:common::state::charging%]",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "fault": "Fault",
           "invalid": "Invalid",
           "no_ev_connected": "No EV connected",

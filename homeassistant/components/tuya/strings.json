@@ -14,7 +14,7 @@
         }
       },
       "scan": {
-        "description": "Use Smart Life app or Tuya Smart app to scan the following QR-code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
+        "description": "Use the Smart Life app or Tuya Smart app to scan the following QR code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
       }
     },
     "error": {
@@ -297,9 +297,9 @@
       "motion_sensitivity": {
         "name": "Motion detection sensitivity",
         "state": {
-          "0": "Low sensitivity",
-          "1": "Medium sensitivity",
-          "2": "High sensitivity"
+          "0": "[%key:common::state::low%]",
+          "1": "[%key:common::state::medium%]",
+          "2": "[%key:common::state::high%]"
         }
       },
       "record_mode": {
@@ -330,9 +330,9 @@
       "vacuum_cistern": {
         "name": "Water tank adjustment",
         "state": {
-          "low": "Low",
+          "low": "[%key:common::state::low%]",
           "middle": "Middle",
-          "high": "High",
+          "high": "[%key:common::state::high%]",
           "closed": "[%key:common::state::closed%]"
         }
       },
@@ -413,7 +413,7 @@
       "humidifier_spray_mode": {
         "name": "Spray mode",
         "state": {
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "health": "Health",
           "sleep": "Sleep",
           "humidity": "Humidity",

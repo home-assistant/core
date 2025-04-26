@@ -263,6 +263,27 @@ async def test_init_error(
             0,
         ),
         (
+            {"prompt": "Picture of a dog", "filenames": ["/a/b/c.pdf"]},
+            {
+                "input": [
+                    {
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": "Picture of a dog",
+                            },
+                            {
+                                "type": "input_file",
+                                "file_data": "data:application/pdf;base64,BASE64IMAGE1",
+                                "filename": "/a/b/c.pdf",
+                            },
+                        ],
+                    },
+                ],
+            },
+            1,
+        ),
+        (
             {"prompt": "Picture of a dog", "filenames": ["/a/b/c.jpg"]},
             {
                 "input": [
@@ -415,8 +436,8 @@ async def test_generate_content_service(
             [True, False],
         ),
         (
-            {"prompt": "Not a picture of a dog", "filenames": ["/a/b/c.pdf"]},
-            "Only images are supported by the OpenAI API,`/a/b/c.pdf` is not an image file",
+            {"prompt": "Not a picture of a dog", "filenames": ["/a/b/c.mov"]},
+            "Only images and PDF are supported by the OpenAI API,`/a/b/c.mov` is not an image file or PDF",
             1,
             [True],
             [True],

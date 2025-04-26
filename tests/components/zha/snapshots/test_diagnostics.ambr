@@ -179,7 +179,16 @@
               }),
               '0x0010': dict({
                 'attribute': "ZCLAttributeDef(id=0x0010, name='cie_addr', type=<class 'zigpy.types.named.EUI64'>, zcl_type=<DataTypeId.EUI64: 240>, access=<ZCLAttributeAccess.Read|Write: 3>, mandatory=True, is_manufacturer_specific=False)",
-                'value': None,
+                'value': list([
+                  50,
+                  79,
+                  50,
+                  2,
+                  0,
+                  141,
+                  21,
+                  0,
+                ]),
               }),
               '0x0011': dict({
                 'attribute': "ZCLAttributeDef(id=0x0011, name='zone_id', type=<class 'zigpy.types.basic.uint8_t'>, zcl_type=<DataTypeId.uint8: 32>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",

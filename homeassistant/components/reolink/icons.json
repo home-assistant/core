@@ -217,6 +217,21 @@
       "ai_animal_sensitivity": {
         "default": "mdi:paw"
       },
+      "crossline_sensitivity": {
+        "default": "mdi:fence"
+      },
+      "intrusion_sensitivity": {
+        "default": "mdi:location-enter"
+      },
+      "linger_sensitivity": {
+        "default": "mdi:account-switch"
+      },
+      "forgotten_item_sensitivity": {
+        "default": "mdi:package-variant-closed-plus"
+      },
+      "taken_item_sensitivity": {
+        "default": "mdi:package-variant-closed-minus"
+      },
       "ai_face_delay": {
         "default": "mdi:face-recognition"
       },
@@ -234,6 +249,18 @@
       },
       "ai_animal_delay": {
         "default": "mdi:paw"
+      },
+      "intrusion_delay": {
+        "default": "mdi:location-enter"
+      },
+      "linger_delay": {
+        "default": "mdi:account-switch"
+      },
+      "forgotten_item_delay": {
+        "default": "mdi:package-variant-closed-plus"
+      },
+      "taken_item_delay": {
+        "default": "mdi:package-variant-closed-minus"
       },
       "auto_quick_reply_time": {
         "default": "mdi:message-reply-text-outline"
@@ -350,6 +377,12 @@
       },
       "sub_bit_rate": {
         "default": "mdi:play-speed"
+      },
+      "scene_mode": {
+        "default": "mdi:view-list"
+      },
+      "packing_time": {
+        "default": "mdi:record-rec"
       }
     },
     "sensor": {
@@ -364,6 +397,9 @@
       },
       "battery_state": {
         "default": "mdi:battery-charging"
+      },
+      "day_night_state": {
+        "default": "mdi:theme-light-dark"
       },
       "wifi_signal": {
         "default": "mdi:wifi"

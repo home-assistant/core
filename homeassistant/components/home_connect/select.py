@@ -1,8 +1,8 @@
 """Provides a select platform for Home Connect."""
 
 from collections.abc import Callable, Coroutine
-import contextlib
 from dataclasses import dataclass
+import logging
 from typing import Any, cast
 
 from aiohomeconnect.client import Client as HomeConnectClient
@@ -17,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
 from .const import (
-    APPLIANCES_WITH_PROGRAMS,
     AVAILABLE_MAPS_ENUM,
     BEAN_AMOUNT_OPTIONS,
     BEAN_CONTAINER_OPTIONS,
@@ -31,11 +30,6 @@ from .const import (
     INTENSIVE_LEVEL_OPTIONS,
     PROGRAMS_TRANSLATION_KEYS_MAP,
     SPIN_SPEED_OPTIONS,
-    SVE_TRANSLATION_KEY_SET_SETTING,
-    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
-    SVE_TRANSLATION_PLACEHOLDER_KEY,
-    SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
-    SVE_TRANSLATION_PLACEHOLDER_VALUE,
     TEMPERATURE_OPTIONS,
     TRANSLATION_KEYS_PROGRAMS_MAP,
     VARIO_PERFECT_OPTIONS,
@@ -47,8 +41,10 @@ from .coordinator import (
     HomeConnectConfigEntry,
     HomeConnectCoordinator,
 )
-from .entity import HomeConnectEntity, HomeConnectOptionEntity
+from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -316,7 +312,7 @@ def _get_entities_for_appliance(
                 HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
                 for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
             ]
-            if appliance.info.type in APPLIANCES_WITH_PROGRAMS
+            if appliance.programs
             else []
         ),
         *[
@@ -404,7 +400,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 translation_key=self.entity_description.error_translation_key,
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_PROGRAM: program_key.value,
+                    "program": program_key.value,
                 },
             ) from err
 
@@ -441,12 +437,12 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
         except HomeConnectError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=SVE_TRANSLATION_KEY_SET_SETTING,
+                translation_key="set_setting_entity",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
-                    SVE_TRANSLATION_PLACEHOLDER_VALUE: value,
+                    "entity_id": self.entity_id,
+                    "key": self.bsh_key,
+                    "value": value,
                 },
             ) from err
 
@@ -460,17 +456,21 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+        await self.async_fetch_options()
+
+    @constraint_fetcher
+    async def async_fetch_options(self) -> None:
+        """Fetch options from the API."""
         setting = self.appliance.settings.get(cast(SettingKey, self.bsh_key))
         if (
             not setting
             or not setting.constraints
             or not setting.constraints.allowed_values
         ):
-            with contextlib.suppress(HomeConnectError):
-                setting = await self.coordinator.client.get_setting(
-                    self.appliance.info.ha_id,
-                    setting_key=cast(SettingKey, self.bsh_key),
-                )
+            setting = await self.coordinator.client.get_setting(
+                self.appliance.info.ha_id,
+                setting_key=cast(SettingKey, self.bsh_key),
+            )
 
         if setting and setting.constraints and setting.constraints.allowed_values:
             self._original_option_keys = set(setting.constraints.allowed_values)
