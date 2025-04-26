@@ -256,17 +256,6 @@ MOCK_VEHICLES = {
                 ATTR_STATE: "plugged",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_plug_state",
             },
-            {
-                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start",
-                ATTR_STATE: STATE_UNKNOWN,
-                ATTR_UNIQUE_ID: "vf1aaaaa555777999_res_state",
-            },
-            {
-                ATTR_DEFAULT_DISABLED: True,
-                ATTR_ENTITY_ID: "sensor.reg_number_remote_engine_start_code",
-                ATTR_STATE: STATE_UNKNOWN,
-                ATTR_UNIQUE_ID: "vf1aaaaa555777999_res_state_code",
-            },
         ],
     },
     "zoe_50": {

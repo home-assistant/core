@@ -13,11 +13,8 @@ from homeassistant.components.local_file.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
-from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
@@ -212,76 +209,3 @@ async def test_update_file_path(
             service_data,
             blocking=True,
         )
-
-
-async def test_import_from_yaml_success(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test import."""
-
-    with (
-        patch("os.path.isfile", Mock(return_value=True)),
-        patch("os.access", Mock(return_value=True)),
-        patch(
-            "homeassistant.components.local_file.camera.mimetypes.guess_type",
-            Mock(return_value=(None, None)),
-        ),
-    ):
-        await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "local_file",
-                    "file_path": "mock.file",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert hass.config_entries.async_has_entries(DOMAIN)
-    state = hass.states.get("camera.config_test")
-    assert state.attributes.get("file_path") == "mock.file"
-
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-    assert issue
-    assert issue.translation_key == "deprecated_yaml"
-
-
-async def test_import_from_yaml_fails(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test import fails due to not accessible file."""
-
-    with (
-        patch("os.path.isfile", Mock(return_value=True)),
-        patch("os.access", Mock(return_value=False)),
-        patch(
-            "homeassistant.components.local_file.camera.mimetypes.guess_type",
-            Mock(return_value=(None, None)),
-        ),
-    ):
-        await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "local_file",
-                    "file_path": "mock.file",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert not hass.config_entries.async_has_entries(DOMAIN)
-    assert not hass.states.get("camera.config_test")
-
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"no_access_path_{slugify('mock.file')}"
-    )
-    assert issue
-    assert issue.translation_key == "no_access_path"

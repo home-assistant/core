@@ -299,3 +299,44 @@ async def test_washer_dryer_door_open_state(
     await trigger_attr_callback(hass, mock_instance)
     state = hass.states.get(entity_id)
     assert state.state == "running_maincycle"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "mock_fixture", "mock_method_name", "values"),
+    [
+        (
+            "sensor.washer_detergent_level",
+            "mock_washer_api",
+            "get_dispense_1_level",
+            [
+                (0, STATE_UNKNOWN),
+                (1, "empty"),
+                (2, "25"),
+                (3, "50"),
+                (4, "100"),
+                (5, "active"),
+            ],
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_simple_enum_sensors(
+    hass: HomeAssistant,
+    entity_id: str,
+    mock_fixture: str,
+    mock_method_name: str,
+    values: list[tuple[int, str]],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test simple enum sensors where state maps directly from a single API value."""
+    await init_integration(hass)
+
+    mock_instance = request.getfixturevalue(mock_fixture)
+    mock_method = getattr(mock_instance, mock_method_name)
+    for raw_value, expected_state in values:
+        mock_method.return_value = raw_value
+
+        await trigger_attr_callback(hass, mock_instance)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected_state

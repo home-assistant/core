@@ -1053,6 +1053,8 @@ build.json @home-assistant/supervisor
 /tests/components/nsw_fuel_station/ @nickw444
 /homeassistant/components/nsw_rural_fire_service_feed/ @exxamalte
 /tests/components/nsw_rural_fire_service_feed/ @exxamalte
+/homeassistant/components/ntfy/ @tr4nt0r
+/tests/components/ntfy/ @tr4nt0r
 /homeassistant/components/nuheat/ @tstabrawa
 /tests/components/nuheat/ @tstabrawa
 /homeassistant/components/nuki/ @pschmitt @pvizeli @pree
@@ -1318,6 +1320,8 @@ build.json @home-assistant/supervisor
 /tests/components/ruuvitag_ble/ @akx
 /homeassistant/components/rympro/ @OnFreund @elad-bar @maorcc
 /tests/components/rympro/ @OnFreund @elad-bar @maorcc
+/homeassistant/components/s3/ @tomasbedrich
+/tests/components/s3/ @tomasbedrich
 /homeassistant/components/sabnzbd/ @shaiu @jpbede
 /tests/components/sabnzbd/ @shaiu @jpbede
 /homeassistant/components/saj/ @fredericvl

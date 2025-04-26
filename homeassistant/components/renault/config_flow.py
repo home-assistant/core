@@ -64,9 +64,10 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 if login_success:
                     return await self.async_step_kamereon()
                 errors["base"] = "invalid_credentials"
+
         return self.async_show_form(
             step_id="user",
-            data_schema=USER_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, user_input),
             errors=errors,
         )
 
