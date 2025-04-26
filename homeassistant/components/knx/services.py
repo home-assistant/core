@@ -126,7 +126,7 @@ async def service_event_register_modify(call: ServiceCall) -> None:
         transcoder := DPTBase.parse_transcoder(dpt)
     ):
         knx_module.group_address_transcoder.update(
-            {_address: transcoder for _address in group_addresses}
+            dict.fromkeys(group_addresses, transcoder)
         )
     for group_address in group_addresses:
         if group_address in knx_module.knx_event_callback.group_addresses:

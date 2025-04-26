@@ -22,6 +22,7 @@ from . import AnthemavConfigEntry
 from .const import ANTHEMAV_UPDATE_SIGNAL, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
+VOLUME_STEP = 0.01
 
 
 async def async_setup_entry(
@@ -60,6 +61,7 @@ class AnthemAVR(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_volume_step = VOLUME_STEP
 
     def __init__(
         self,

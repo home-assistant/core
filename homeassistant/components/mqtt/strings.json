@@ -1,8 +1,12 @@
 {
   "issues": {
     "invalid_platform_config": {
-      "title": "Invalid config found for mqtt {domain} item",
+      "title": "Invalid config found for MQTT {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
+    },
+    "invalid_unit_of_measurement": {
+      "title": "Sensor with invalid unit of measurement",
+      "description": "Manual configured Sensor entity **{entity_id}** has a configured unit of measurement **{uom}** which is not valid with configured device class **{device_class}**. Make sure a valid unit of measurement is configured or remove the device class, and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
     }
   },
   "config": {
@@ -39,8 +43,8 @@
         "data_description": {
           "broker": "The hostname or IP address of your MQTT broker.",
           "port": "The port your MQTT broker listens to. For example 1883.",
-          "username": "The username to login to your MQTT broker.",
-          "password": "The password to login to your MQTT broker.",
+          "username": "The username to log in to your MQTT broker.",
+          "password": "The password to log in to your MQTT broker.",
           "advanced_options": "Enable and select **Next** to set advanced options.",
           "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
           "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
@@ -64,7 +68,7 @@
         "title": "Starting add-on"
       },
       "hassio_confirm": {
-        "title": "MQTT Broker via Home Assistant add-on",
+        "title": "MQTT broker via Home Assistant add-on",
         "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?"
       },
       "reauth_confirm": {
@@ -102,6 +106,189 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_inclusion": "The client certificate and private key must be configured together"
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "initiate_flow": {
+        "user": "Add MQTT Device",
+        "reconfigure": "Reconfigure MQTT Device"
+      },
+      "entry_type": "MQTT Device",
+      "step": {
+        "availability": {
+          "title": "Availability options",
+          "description": "The availability feature allows a device to report it's availability.",
+          "data": {
+            "availability_topic": "Availability topic",
+            "availability_template": "Availability template",
+            "payload_available": "Payload available",
+            "payload_not_available": "Payload not available"
+          },
+          "data_description": {
+            "availability_topic": "Topic to receive the availability payload on",
+            "availability_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-templates-with-the-mqtt-integration) to render the availability payload received on the availability topic",
+            "payload_available": "The payload that indicates the device is available (defaults to 'online')",
+            "payload_not_available": "The payload that indicates the device is not available (defaults to 'offline')"
+          }
+        },
+        "device": {
+          "title": "Configure MQTT device details",
+          "description": "Enter the MQTT device details:",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "configuration_url": "Configuration URL",
+            "sw_version": "Software version",
+            "hw_version": "Hardware version",
+            "model": "Model",
+            "model_id": "Model ID"
+          },
+          "data_description": {
+            "name": "The name of the manually added MQTT device.",
+            "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a 'http://', 'https://' or an internal 'homeassistant://' URL.",
+            "sw_version": "The software version of the device. E.g. '2025.1.0'.",
+            "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
+            "model": "E.g. 'Cleanmaster Pro'.",
+            "model_id": "E.g. '123NK2PRO'."
+          },
+          "sections": {
+            "mqtt_settings": {
+              "name": "MQTT settings",
+              "data": {
+                "qos": "QoS"
+              },
+              "data_description": {
+                "qos": "The Quality of Service value the device's entities should use."
+              }
+            }
+          }
+        },
+        "summary_menu": {
+          "title": "Reconfigure \"{mqtt_device}\"",
+          "description": "Entities set up:\n{mqtt_items}\n\nDecide what to do next:",
+          "menu_options": {
+            "entity": "Add another entity to \"{mqtt_device}\"",
+            "update_entity": "Update entity properties",
+            "delete_entity": "Delete an entity",
+            "availability": "Configure availability",
+            "device": "Update device properties",
+            "save_changes": "Save changes"
+          }
+        },
+        "entity": {
+          "title": "Configure MQTT device \"{mqtt_device}\"",
+          "description": "Configure the basic {platform_label}entity settings{entity_name_label}",
+          "data": {
+            "platform": "Type of entity",
+            "name": "Entity name",
+            "entity_picture": "Entity picture"
+          },
+          "data_description": {
+            "platform": "The type of the entity to configure.",
+            "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device](https://www.home-assistant.io/integrations/mqtt/#naming-of-mqtt-entities).",
+            "entity_picture": "An URL to a picture to be assigned."
+          }
+        },
+        "delete_entity": {
+          "title": "Delete entity",
+          "description": "Delete an entity. The entity will be removed from the device. Removing an entity will break any automations or scripts that depend on it.",
+          "data": {
+            "component": "Entity"
+          },
+          "data_description": {
+            "component": "Select the entity you want to delete. Minimal one entity is required."
+          }
+        },
+        "update_entity": {
+          "title": "Select entity",
+          "description": "Select the entity you want to update",
+          "data": {
+            "component": "Entity"
+          },
+          "data_description": {
+            "component": "Select the entity you want to update."
+          }
+        },
+        "entity_platform_config": {
+          "title": "Configure MQTT device \"{mqtt_device}\"",
+          "description": "Please configure specific details for {platform} entity \"{entity}\":",
+          "data": {
+            "device_class": "Device class",
+            "state_class": "State class",
+            "unit_of_measurement": "Unit of measurement",
+            "options": "Add option"
+          },
+          "data_description": {
+            "device_class": "The Device class of the {platform} entity. [Learn more.]({url}#device_class)",
+            "state_class": "The [State class](https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes) of the sensor. [Learn more.]({url}#state_class)",
+            "unit_of_measurement": "Defines the unit of measurement of the sensor, if any.",
+            "options": "Options for allowed sensor state values. The sensor’s Device class must be set to Enumeration. The 'Options' setting cannot be used together with State class or Unit of measurement."
+          },
+          "sections": {
+            "advanced_settings": {
+              "name": "Advanced options",
+              "data": {
+                "suggested_display_precision": "Suggested display precision"
+              },
+              "data_description": {
+                "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more.]({url}#suggested_display_precision)"
+              }
+            }
+          }
+        },
+        "mqtt_platform_config": {
+          "title": "Configure MQTT device \"{mqtt_device}\"",
+          "description": "Please configure MQTT specific details for {platform} entity \"{entity}\":",
+          "data": {
+            "command_topic": "Command topic",
+            "command_template": "Command template",
+            "state_topic": "State topic",
+            "value_template": "Value template",
+            "last_reset_value_template": "Last reset value template",
+            "force_update": "Force update",
+            "optimistic": "Optimistic",
+            "retain": "Retain"
+          },
+          "data_description": {
+            "command_topic": "The publishing topic that will be used to control the {platform} entity. [Learn more.]({url}#command_topic)",
+            "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
+            "state_topic": "The MQTT topic subscribed to receive {platform} state values. [Learn more.]({url}#state_topic)",
+            "value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the {platform} entity value.",
+            "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
+            "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
+            "optimistic": "Flag that defines if the {platform} entity works in optimistic mode. [Learn more.]({url}#optimistic)",
+            "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker."
+          },
+          "sections": {
+            "advanced_settings": {
+              "name": "Advanced settings",
+              "data": {
+                "expire_after": "Expire after"
+              },
+              "data_description": {
+                "expire_after": "If set, it defines the number of seconds after the sensor’s state expires, if it’s not updated. After expiry, the sensor’s state becomes unavailable. If not set, the sensor's state never expires. [Learn more.]({url}#expire_after)"
+              }
+            }
+          }
+        }
+      },
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "create_entry": {
+        "default": "MQTT device with {platform} entity \"{entity}\" was set up successfully.\n\nNote that you can reconfigure the MQTT device at any time, e.g. to add more entities."
+      },
+      "error": {
+        "invalid_input": "Invalid value",
+        "invalid_subscribe_topic": "Invalid subscribe topic",
+        "invalid_template": "Invalid template",
+        "invalid_uom": "The unit of measurement \"{unit_of_measurement}\" is not supported by the selected device class, please either remove the device class, select a device class which supports \"{unit_of_measurement}\", or pick a supported unit of measurement from the list",
+        "invalid_url": "Invalid URL",
+        "options_not_allowed_with_state_class_or_uom": "The 'Options' setting is not allowed when state class or unit of measurement are used",
+        "options_device_class_enum": "The 'Options' setting must be used with the Enumeration device class. If you continue, the existing options will be reset",
+        "options_with_enum_device_class": "Configure options for the enumeration sensor",
+        "uom_required_for_device_class": "The selected device class requires a unit"
+      }
     }
   },
   "device_automation": {
@@ -217,11 +404,91 @@
     }
   },
   "selector": {
+    "device_class_sensor": {
+      "options": {
+        "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
+        "area": "[%key:component::sensor::entity_component::area::name%]",
+        "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
+        "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
+        "battery": "[%key:component::sensor::entity_component::battery::name%]",
+        "blood_glucose_concentration": "[%key:component::sensor::entity_component::blood_glucose_concentration::name%]",
+        "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+        "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+        "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
+        "current": "[%key:component::sensor::entity_component::current::name%]",
+        "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
+        "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
+        "date": "[%key:component::sensor::entity_component::date::name%]",
+        "distance": "[%key:component::sensor::entity_component::distance::name%]",
+        "duration": "[%key:component::sensor::entity_component::duration::name%]",
+        "energy": "[%key:component::sensor::entity_component::energy::name%]",
+        "energy_distance": "[%key:component::sensor::entity_component::energy_distance::name%]",
+        "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
+        "enum": "Enumeration",
+        "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
+        "gas": "[%key:component::sensor::entity_component::gas::name%]",
+        "humidity": "[%key:component::sensor::entity_component::humidity::name%]",
+        "illuminance": "[%key:component::sensor::entity_component::illuminance::name%]",
+        "irradiance": "[%key:component::sensor::entity_component::irradiance::name%]",
+        "moisture": "[%key:component::sensor::entity_component::moisture::name%]",
+        "monetary": "[%key:component::sensor::entity_component::monetary::name%]",
+        "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+        "nitrogen_monoxide": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
+        "nitrous_oxide": "[%key:component::sensor::entity_component::nitrous_oxide::name%]",
+        "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
+        "ph": "[%key:component::sensor::entity_component::ph::name%]",
+        "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+        "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+        "power": "[%key:component::sensor::entity_component::power::name%]",
+        "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
+        "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
+        "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
+        "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
+        "reactive_power": "[%key:component::sensor::entity_component::reactive_power::name%]",
+        "signal_strength": "[%key:component::sensor::entity_component::signal_strength::name%]",
+        "sound_pressure": "[%key:component::sensor::entity_component::sound_pressure::name%]",
+        "speed": "[%key:component::sensor::entity_component::speed::name%]",
+        "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
+        "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+        "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
+        "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
+        "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
+        "volume": "[%key:component::sensor::entity_component::volume::name%]",
+        "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
+        "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
+        "water": "[%key:component::sensor::entity_component::water::name%]",
+        "weight": "[%key:component::sensor::entity_component::weight::name%]",
+        "wind_direction": "[%key:component::sensor::entity_component::wind_direction::name%]",
+        "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
+      }
+    },
+    "device_class_switch": {
+      "options": {
+        "outlet": "[%key:component::switch::entity_component::outlet::name%]",
+        "switch": "[%key:component::switch::title%]"
+      }
+    },
+    "platform": {
+      "options": {
+        "notify": "[%key:component::notify::title%]",
+        "sensor": "[%key:component::sensor::title%]",
+        "switch": "[%key:component::switch::title%]"
+      }
+    },
     "set_ca_cert": {
       "options": {
         "off": "[%key:common::state::off%]",
-        "auto": "Auto",
+        "auto": "[%key:common::state::auto%]",
         "custom": "Custom"
+      }
+    },
+    "state_class": {
+      "options": {
+        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+        "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
+        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
       }
     }
   },
@@ -232,7 +499,7 @@
       "fields": {
         "evaluate_payload": {
           "name": "Evaluate payload",
-          "description": "When `payload` is a Python bytes literal, evaluate the bytes literal and publish the raw data."
+          "description": "If 'Payload' is a Python bytes literal, evaluate the bytes literal and publish the raw data."
         },
         "topic": {
           "name": "Topic",

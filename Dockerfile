@@ -25,13 +25,13 @@ RUN \
         "armv7") go2rtc_suffix='arm' ;; \
         *) go2rtc_suffix=${BUILD_ARCH} ;; \
     esac \
-    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.8/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
+    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.9/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
     && chmod +x /bin/go2rtc \
     # Verify go2rtc can be executed
     && go2rtc --version
 
 # Install uv
-RUN pip3 install uv==0.6.1
+RUN pip3 install uv==0.6.10
 
 WORKDIR /usr/src
 

@@ -5,12 +5,7 @@ from typing import Final
 
 from aiohttp.client_exceptions import ClientResponseError
 import jwt
-from tesla_fleet_api import (
-    EnergySpecific,
-    TeslaFleetApi,
-    VehicleSigned,
-    VehicleSpecific,
-)
+from tesla_fleet_api import TeslaFleetApi
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     InvalidRegion,
@@ -128,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     vehicles: list[TeslaFleetVehicleData] = []
     energysites: list[TeslaFleetEnergyData] = []
     for product in products:
-        if "vin" in product and hasattr(tesla, "vehicle"):
+        if "vin" in product and Scope.VEHICLE_DEVICE_DATA in scopes:
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
@@ -136,9 +131,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             if signing:
                 if not tesla.private_key:
                     await tesla.get_private_key(hass.config.path("tesla_fleet.key"))
-                api = VehicleSigned(tesla.vehicle, vin)
+                api = tesla.vehicles.createSigned(vin)
             else:
-                api = VehicleSpecific(tesla.vehicle, vin)
+                api = tesla.vehicles.createFleet(vin)
             coordinator = TeslaFleetVehicleDataCoordinator(hass, entry, api, product)
 
             await coordinator.async_config_entry_first_refresh()
@@ -160,7 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                     signing=signing,
                 )
             )
-        elif "energy_site_id" in product and hasattr(tesla, "energy"):
+        elif "energy_site_id" in product and Scope.ENERGY_DEVICE_DATA in scopes:
             site_id = product["energy_site_id"]
             if not (
                 product["components"]["battery"]
@@ -173,7 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 )
                 continue
 
-            api = EnergySpecific(tesla.energy, site_id)
+            api = tesla.energySites.create(site_id)
 
             live_coordinator = TeslaFleetEnergySiteLiveCoordinator(hass, entry, api)
             history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
@@ -227,7 +222,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     # Setup Platforms
     entry.runtime_data = TeslaFleetData(vehicles, energysites, scopes)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 

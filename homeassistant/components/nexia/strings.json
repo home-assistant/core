@@ -53,6 +53,12 @@
       },
       "zone_setpoint_status": {
         "name": "Zone setpoint status"
+      },
+      "get_humidify_setpoint": {
+        "name": "Heating humidify setpoint"
+      },
+      "get_dehumidify_setpoint": {
+        "name": "Cooling dehumidify setpoint"
       }
     },
     "switch": {
@@ -76,18 +82,28 @@
       }
     },
     "set_humidify_setpoint": {
-      "name": "Set humidify set point",
-      "description": "Sets the target humidity.",
+      "name": "Set humidify setpoint",
+      "description": "Sets the target humidity for heating.",
       "fields": {
         "humidity": {
           "name": "Humidity",
-          "description": "The humidification setpoint."
+          "description": "The setpoint for humidification when heating."
+        }
+      }
+    },
+    "set_dehumidify_setpoint": {
+      "name": "Set dehumidify setpoint",
+      "description": "Sets the target humidity for cooling.",
+      "fields": {
+        "humidity": {
+          "name": "Humidity",
+          "description": "The setpoint for dehumidification when cooling."
         }
       }
     },
     "set_hvac_run_mode": {
-      "name": "Set hvac run mode",
-      "description": "Sets the HVAC operation mode.",
+      "name": "Set HVAC run mode",
+      "description": "Sets the run and/or operation mode of the HVAC system.",
       "fields": {
         "run_mode": {
           "name": "Run mode",

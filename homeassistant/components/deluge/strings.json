@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "To be able to use this integration, you have to enable the following option in deluge settings: Daemon > Allow remote controls",
+        "description": "To be able to use this integration, you have to enable the following option in Deluge settings: Daemon > Allow remote controls",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",

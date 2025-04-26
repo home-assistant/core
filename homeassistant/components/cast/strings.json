@@ -6,9 +6,11 @@
       },
       "config": {
         "title": "Google Cast configuration",
-        "description": "Known Hosts - A comma-separated list of hostnames or IP-addresses of cast devices, use if mDNS discovery is not working.",
         "data": {
-          "known_hosts": "Known hosts"
+          "known_hosts": "Add known host"
+        },
+        "data_description": {
+          "known_hosts": "Hostnames or IP-addresses of cast devices, use if mDNS discovery is not working"
         }
       }
     },
@@ -20,9 +22,11 @@
     "step": {
       "basic_options": {
         "title": "[%key:component::cast::config::step::config::title%]",
-        "description": "[%key:component::cast::config::step::config::description%]",
         "data": {
           "known_hosts": "[%key:component::cast::config::step::config::data::known_hosts%]"
+        },
+        "data_description": {
+          "known_hosts": "[%key:component::cast::config::step::config::data_description::known_hosts%]"
         }
       },
       "advanced_options": {
@@ -49,7 +53,7 @@
         },
         "dashboard_path": {
           "name": "Dashboard path",
-          "description": "The URL path of the dashboard to show."
+          "description": "The URL path of the dashboard to show, defaults to lovelace if not specified."
         },
         "view_path": {
           "name": "View path",

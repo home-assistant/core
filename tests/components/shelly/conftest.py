@@ -1,5 +1,6 @@
 """Test configuration for Shelly."""
 
+from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
@@ -102,12 +103,14 @@ MOCK_BLOCKS = [
             "power": 53.4,
             "energy": 1234567.89,
             "output": True,
+            "totalWorkTime": 3600,
         },
         channel="0",
         type="relay",
         overpower=0,
         power=53.4,
         energy=1234567.89,
+        totalWorkTime=3600,
         description="relay_0",
         set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     ),
@@ -134,11 +137,20 @@ MOCK_BLOCKS = [
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
-        sensor_ids={"motion": 0, "temp": 22.1, "gas": "mild", "motionActive": 1},
+        sensor_ids={
+            "motion": 0,
+            "temp": 22.1,
+            "gas": "mild",
+            "motionActive": 1,
+            "sensorOp": "normal",
+            "selfTest": "pending",
+        },
         channel="0",
         motion=0,
         temp=22.1,
         gas="mild",
+        sensorOp="normal",
+        selfTest="pending",
         targetTemp=4,
         description="sensor_0",
         type="sensor",
@@ -481,7 +493,9 @@ def _mock_rpc_device(version: str | None = None):
         initialized=True,
         connected=True,
         script_getcode=AsyncMock(
-            side_effect=lambda script_id: {"data": MOCK_SCRIPTS[script_id - 1]}
+            side_effect=lambda script_id, bytes_to_read: {
+                "data": MOCK_SCRIPTS[script_id - 1]
+            }
         ),
         xmod_info={},
     )
@@ -502,6 +516,12 @@ def _mock_blu_rtv_device(version: str | None = None):
         firmware_version="some fw string",
         initialized=True,
         connected=True,
+        script_getcode=AsyncMock(
+            side_effect=lambda script_id, bytes_to_read: {
+                "data": MOCK_SCRIPTS[script_id - 1]
+            }
+        ),
+        xmod_info={},
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -671,3 +691,21 @@ async def mock_sleepy_rpc_device():
         rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
 
         yield rpc_device_mock.return_value
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.shelly.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_setup() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.shelly.async_setup", return_value=True
+    ) as mock_setup:
+        yield mock_setup
