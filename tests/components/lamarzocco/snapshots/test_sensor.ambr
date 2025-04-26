@@ -176,7 +176,7 @@
     'supported_features': 0,
     'translation_key': 'total_coffees_made',
     'unique_id': 'GS012345_drink_stats_coffee',
-    'unit_of_measurement': 'cups',
+    'unit_of_measurement': 'coffees',
   })
 # ---
 # name: test_sensors[sensor.gs012345_total_coffees_made-state]
@@ -184,7 +184,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS012345 Total coffees made',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'cups',
+      'unit_of_measurement': 'coffees',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_total_coffees_made',
