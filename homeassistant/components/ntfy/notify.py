@@ -18,7 +18,7 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -70,6 +70,7 @@ class NtfyNotifyEntity(NotifyEntity):
             configuration_url=URL(config_entry.data[CONF_URL]) / self.topic,
             identifiers={(DOMAIN, f"{config_entry.entry_id}_{subentry.subentry_id}")},
         )
+        self.config_entry = config_entry
         self.ntfy = config_entry.runtime_data
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
@@ -78,7 +79,8 @@ class NtfyNotifyEntity(NotifyEntity):
         try:
             await self.ntfy.publish(msg)
         except NtfyUnauthorizedAuthenticationError as e:
-            raise ConfigEntryAuthFailed(
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="authentication_error",
             ) from e
