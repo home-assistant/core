@@ -46,7 +46,9 @@ rules:
     comment: Get percentage up there, add missing actual action press invocations in button tests' suspended state tests, rename test_switch.py to test_switch.py + make its functions receive hass as first parameter where applicable.
 
   # Gold
-  devices: done
+  devices:
+    status: todo
+    comment: Prefer SSDP modelName over friendlyName, that tends to be better info and is more in line with what we get over the API as device name.
   diagnostics:
     status: todo
     comment: https://github.com/home-assistant/core/pull/131085
