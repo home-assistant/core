@@ -159,11 +159,12 @@ async def test_service_set_charge_schedule(
     }
 
     with (
+        patch("renault_api.renault_vehicle.RenaultVehicle.get_full_endpoint"),
         patch(
-            "renault_api.renault_vehicle.RenaultVehicle.get_charging_settings",
-            return_value=schemas.KamereonVehicleDataResponseSchema.loads(
+            "renault_api.renault_vehicle.RenaultVehicle.http_get",
+            return_value=schemas.KamereonResponseSchema.loads(
                 load_fixture("renault/charging_settings.json")
-            ).get_attributes(schemas.KamereonVehicleChargingSettingsDataSchema),
+            ),
         ),
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.set_charge_schedules",
@@ -208,11 +209,12 @@ async def test_service_set_charge_schedule_multi(
     }
 
     with (
+        patch("renault_api.renault_vehicle.RenaultVehicle.get_full_endpoint"),
         patch(
-            "renault_api.renault_vehicle.RenaultVehicle.get_charging_settings",
-            return_value=schemas.KamereonVehicleDataResponseSchema.loads(
+            "renault_api.renault_vehicle.RenaultVehicle.http_get",
+            return_value=schemas.KamereonResponseSchema.loads(
                 load_fixture("renault/charging_settings.json")
-            ).get_attributes(schemas.KamereonVehicleChargingSettingsDataSchema),
+            ),
         ),
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.set_charge_schedules",
