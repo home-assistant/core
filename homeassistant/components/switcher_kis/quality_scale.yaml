@@ -57,7 +57,9 @@ rules:
   docs-use-cases: done
   dynamic-devices: done
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: todo
+    comment: Migrate time sensors to timestamp or a duration device class
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
