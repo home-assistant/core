@@ -32,7 +32,7 @@ DEVICE_SENSORS_TUPLE = (
     (
         DUMMY_THERMOSTAT_DEVICE,
         [
-            ("current_temperature", "temperature"),
+            ("temperature", "temperature"),
         ],
     ),
 )
