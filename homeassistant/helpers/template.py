@@ -2027,22 +2027,17 @@ def apply(value, fn, *args, **kwargs):
 def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
     """Turn a macro with a 'returns' keyword argument into a function that returns what that argument is called with."""
 
-    class MacroReturnException(Exception):
-        """Exception to raise when the macro returns a value."""
-
-        def __init__(self, value):
-            super().__init__(value)
-            self.value = value
-
     def wrapper(value, *args, **kwargs):
+        return_value = None
+
         def returns(value):
-            raise MacroReturnException(value)
+            nonlocal return_value
+            return_value = value
+            return value
 
         # Call the callable with the value and other args
-        try:
-            macro(value, *args, **kwargs, returns=returns)
-        except MacroReturnException as ex:
-            return ex.value
+        macro(value, *args, **kwargs, returns=returns)
+        return return_value
 
     # Remove "macro_" from the macro's name to avoid confusion in the wrapper's name
     trimmed_name = macro.name.removeprefix("macro_")
