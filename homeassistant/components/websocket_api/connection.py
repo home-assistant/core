@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 import voluptuous as vol
@@ -71,9 +71,7 @@ class ActiveConnection:
         self.last_id = 0
         self.can_coalesce = False
         self.supported_features: dict[str, float] = {}
-        self.handlers: dict[str, tuple[MessageHandler, vol.Schema | Literal[False]]] = (
-            self.hass.data[const.DOMAIN]
-        )
+        self.handlers = self.hass.data[const.DATA_DOMAIN]
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 

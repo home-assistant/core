@@ -3,22 +3,40 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, Literal, Protocol
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import VolSchemaType
+from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from .connection import ActiveConnection
 
 
-type WebSocketCommandHandler = Callable[
-    [HomeAssistant, ActiveConnection, dict[str, Any]], None
-]
+class WebSocketCommandHandler(Protocol):
+    """Protocol for websocket command handler."""
+
+    def __call__(
+        self, hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
+        """Handle a websocket command."""
+
+
+class WebSocketCommandHandlerWithCommandSchema(WebSocketCommandHandler):
+    """Protocol for websocket command handler with internal attributes."""
+
+    _ws_command: str
+    _ws_schema: VolSchemaType | Literal[False]
+
+
 type AsyncWebSocketCommandHandler = Callable[
     [HomeAssistant, ActiveConnection, dict[str, Any]], Awaitable[None]
 ]
 
 DOMAIN: Final = "websocket_api"
+DATA_DOMAIN: HassKey[
+    dict[str, tuple[WebSocketCommandHandler, VolSchemaType | Literal[False]]]
+] = HassKey(DOMAIN)
 URL: Final = "/api/websocket"
 PENDING_MSG_PEAK: Final = 1024
 PENDING_MSG_PEAK_TIME: Final = 10

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Final, cast
+from typing import TYPE_CHECKING, Final, Literal, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -53,18 +53,22 @@ def async_register_command(
     hass: HomeAssistant,
     command_or_handler: str | const.WebSocketCommandHandler,
     handler: const.WebSocketCommandHandler | None = None,
-    schema: VolSchemaType | None = None,
+    schema: VolSchemaType | Literal[False] | None = None,
 ) -> None:
     """Register a websocket command."""
     if handler is None:
-        handler = cast(const.WebSocketCommandHandler, command_or_handler)
-        command = handler._ws_command  # type: ignore[attr-defined]  # noqa: SLF001
-        schema = handler._ws_schema  # type: ignore[attr-defined]  # noqa: SLF001
+        handler = cast(
+            const.WebSocketCommandHandlerWithCommandSchema, command_or_handler
+        )
+        command = handler._ws_command  # noqa: SLF001
+        schema = handler._ws_schema  # noqa: SLF001
     else:
+        if TYPE_CHECKING:
+            assert isinstance(command_or_handler, str)
         command = command_or_handler
-    if (handlers := hass.data.get(DOMAIN)) is None:
-        handlers = hass.data[DOMAIN] = {}
-    handlers[command] = (handler, schema)
+    if (handlers := hass.data.get(const.DATA_DOMAIN)) is None:
+        handlers = hass.data[const.DATA_DOMAIN] = {}
+    handlers[command] = (handler, False if schema is None else schema)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
