@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
     HVACMode,
     UnitOfTemperature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, EntityCategory
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -103,7 +103,6 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
     _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
-    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,

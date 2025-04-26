@@ -8,7 +8,6 @@ from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import COVER, STATE_COVER, STATE_OFF, STATE_ON
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity, CoverState
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -40,7 +39,6 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
 
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_name = None
-    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,

@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_TYPE, EntityCategory, UnitOfPower
+from homeassistant.const import CONF_TYPE, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -100,7 +100,6 @@ class ComelitBridgeSensorEntity(ComelitBridgeBaseEntity, SensorEntity):
     """Sensor device."""
 
     _attr_name = None
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
