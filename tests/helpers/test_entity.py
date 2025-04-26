@@ -1711,7 +1711,7 @@ async def test_invalid_state(
     ent.async_write_ha_state()
     assert hass.states.get("test.test").state == STATE_UNKNOWN
     assert (
-        "homeassistant.helpers.entity",
+        "homeassistant.core",
         logging.ERROR,
         f"State {long_state} for test.test is longer than 255, "
         f"falling back to {STATE_UNKNOWN}",
