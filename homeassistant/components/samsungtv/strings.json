@@ -69,7 +69,7 @@
       "message": "Entity {entity} does not support this action."
     },
     "encrypted_mode_auth_failed": {
-      "message": "Token and session id are required in encrypted mode."
+      "message": "Token and session ID are required in encrypted mode."
     },
     "failed_to_determine_connection_method": {
       "message": "Failed to determine connection method, make sure the device is on."
