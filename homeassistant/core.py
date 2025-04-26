@@ -72,6 +72,7 @@ from .const import (
     MAX_EXPECTED_ENTITY_IDS,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
+    STATE_UNKNOWN,
     __version__,
 )
 from .exceptions import (
@@ -1794,18 +1795,13 @@ class State:
     ) -> None:
         """Initialize a new state."""
         self._cache: dict[str, Any] = {}
-        state = str(state)
-
         if validate_entity_id and not valid_entity_id(entity_id):
             raise InvalidEntityFormatError(
                 f"Invalid entity id encountered: {entity_id}. "
                 "Format should be <domain>.<object_id>"
             )
-
-        validate_state(state)
-
         self.entity_id = entity_id
-        self.state = state
+        self.state = state if type(state) is str else str(state)
         # State only creates and expects a ReadOnlyDict so
         # there is no need to check for subclassing with
         # isinstance here so we can use the faster type check.
@@ -2270,9 +2266,11 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
+        state = str(new_state)
+        validate_state(state)
         self.async_set_internal(
             entity_id.lower(),
-            str(new_state),
+            state,
             attributes or {},
             force_update,
             context,
@@ -2297,6 +2295,8 @@ class StateMachine:
         and should not be considered a stable API. We will make
         breaking changes to this function in the future and it
         should not be used in integrations.
+
+        Callers are responsible for ensuring the entity_id is lower case.
 
         This method must be run in the event loop.
         """
@@ -2355,6 +2355,16 @@ class StateMachine:
             if TYPE_CHECKING:
                 assert old_state is not None
             attributes = old_state.attributes
+
+        if not same_state and len(new_state) > MAX_LENGTH_STATE_STATE:
+            _LOGGER.error(
+                "State %s for %s is longer than %s, falling back to %s",
+                new_state,
+                entity_id,
+                MAX_LENGTH_STATE_STATE,
+                STATE_UNKNOWN,
+            )
+            new_state = STATE_UNKNOWN
 
         # This is intentionally called with positional only arguments for performance
         # reasons
