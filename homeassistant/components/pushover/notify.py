@@ -112,11 +112,12 @@ class PushoverNotificationService(BaseNotificationService):
                 priority,
                 retry,
                 expire,
-                ttl,
                 callback_url,
                 timestamp,
                 sound,
                 html,
+                ttl,
             )
+
         except BadAPIRequestError as err:
             raise HomeAssistantError(str(err)) from err
