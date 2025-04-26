@@ -102,11 +102,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="power_source",
     ),
     SensorEntityDescription(
-        key="switchState",
-        icon="mdi:home-lightning-bolt",
-        translation_key="switch_state",
-    ),
-    SensorEntityDescription(
         key="totalOperationHours",
         translation_key="total_operation",
         device_class=SensorDeviceClass.DURATION,
