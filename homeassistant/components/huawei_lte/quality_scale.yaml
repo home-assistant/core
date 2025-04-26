@@ -3,7 +3,9 @@ rules:
   action-setup: done
   appropriate-polling: done
   brands: done
-  common-modules: done
+  common-modules:
+    status: done
+    comment: When we refactor to use a coordinator, be sure to place it in coordinator.py.
   config-flow-test-coverage: done
   config-flow:
     status: todo
