@@ -22,6 +22,15 @@ from .const import (
 from .coordinator import KemUpdateCoordinator
 
 
+def _get_device_connections(mac_address: str) -> set[tuple[str, str]]:
+    """Get device connections."""
+    try:
+        mac_address_hex = mac_address.replace(":", "")
+    except ValueError:  # MacAddress may be invalid if the gateway is offline
+        return set()
+    return {(dr.CONNECTION_NETWORK_MAC, mac_address_hex)}
+
+
 class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
     """Representation of an KEM entity."""
 
@@ -49,14 +58,9 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
             manufacturer=KOHLER,
         )
         self._use_device_key = use_device_key
-
-        try:
-            mac_address_hex = device_data[DEVICE_DATA_MAC_ADDRESS].replace(":", "")
-        except ValueError:  # MacAddress may be invalid if the gateway is offline
-            return
-        self._attr_device_info[ATTR_CONNECTIONS] = {
-            (dr.CONNECTION_NETWORK_MAC, mac_address_hex)
-        }
+        self._attr_device_info[ATTR_CONNECTIONS] = _get_device_connections(
+            device_data[DEVICE_DATA_MAC_ADDRESS]
+        )
 
     @property
     def _device_data(self) -> dict:
