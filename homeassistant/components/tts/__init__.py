@@ -481,11 +481,6 @@ class ResultStream:
         return asyncio.Future()
 
     @callback
-    def async_set_message_cache(self, cache: TTSCache) -> None:
-        """Set cache containing message audio to be streamed."""
-        self._result_cache.set_result(cache)
-
-    @callback
     def async_set_message(self, message: str) -> None:
         """Set message to be generated."""
         self._result_cache.set_result(
@@ -683,7 +678,6 @@ class SpeechManager:
     def async_create_result_stream(
         self,
         engine: str,
-        message: str | None = None,
         use_file_cache: bool | None = None,
         language: str | None = None,
         options: dict | None = None,
@@ -710,23 +704,6 @@ class SpeechManager:
             _manager=self,
         )
         self.token_to_stream[token] = result_stream
-
-        if message is None:
-            return result_stream
-
-        # We added this method as an alternative to stream.async_set_message
-        # to avoid the options being processed twice
-        result_stream.async_set_message_cache(
-            self._async_ensure_cached_in_memory(
-                engine=engine,
-                engine_instance=engine_instance,
-                message=message,
-                use_file_cache=use_file_cache,
-                language=language,
-                options=options,
-            )
-        )
-
         return result_stream
 
     @callback
@@ -1096,7 +1073,6 @@ class TextToSpeechUrlView(HomeAssistantView):
         try:
             stream = self.manager.async_create_result_stream(
                 engine,
-                message,
                 use_file_cache=use_file_cache,
                 language=language,
                 options=options,
@@ -1104,6 +1080,8 @@ class TextToSpeechUrlView(HomeAssistantView):
         except HomeAssistantError as err:
             _LOGGER.error("Error on init tts: %s", err)
             return self.json({"error": err}, HTTPStatus.BAD_REQUEST)
+
+        stream.async_set_message(message)
 
         base = get_url(self.manager.hass)
         url = base + stream.url
