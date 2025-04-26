@@ -87,7 +87,7 @@ async def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
 class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Jewish calendar."""
 
-    VERSION = 2
+    VERSION = 3
 
     @staticmethod
     @callback
