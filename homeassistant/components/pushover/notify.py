@@ -62,8 +62,9 @@ class PushoverNotificationService(BaseNotificationService):
         Supports new-style (hass, PushoverAPI, user_key)
         and legacy (hass, entry, creds, platform) signatures.
         """
-        # New (config-entry) style: entry is a PushoverAPI instance
-        if isinstance(entry, PushoverAPI):
+        # New vs legacy: creds is a dict in legacy mode
+        if not isinstance(creds, dict):
+            # New (config-entry) style: entry is PushoverAPI, creds is user_key
             pushover = entry
             user_key = creds
         else:
@@ -72,7 +73,7 @@ class PushoverNotificationService(BaseNotificationService):
             app_token = creds_dict.get("app_token")
             user_key = creds_dict.get("user_key")
             pushover = PushoverAPI(app_token) if app_token is not None else None
-
+        # After determining pushover and user_key, save them for send_message
         self._hass = hass
         self._user_key = user_key
         self.pushover = pushover
