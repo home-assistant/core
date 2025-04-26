@@ -407,11 +407,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
         return new_data
 
-    async def force_info_update_supervisor(self) -> None:
-        """Force update of the supervisor info."""
-        self.hass.data[DATA_SUPERVISOR_INFO] = await self.hassio.get_supervisor_info()
-        await self.async_refresh()
-
     async def get_changelog(self, addon_slug: str) -> str | None:
         """Get the changelog for an add-on."""
         try:
