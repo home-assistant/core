@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -10,7 +9,6 @@ from aiohttp.client_exceptions import ClientConnectorError
 from aiokem import AioKem, AuthenticationError, CommunicationError, ServerError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,7 +22,6 @@ RETRY_EXCEPTIONS = (
 
 AUTHORIZATION_EXCEPTIONS = (AuthenticationError,)
 
-MAX_RETRIES = 3
 RETRY_DELAY = [5000, 10000, 20000]
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,37 +56,14 @@ class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=SCAN_INTERVAL_MINUTES,
         )
 
-    async def _async_retry_auth(self) -> bool:
-        """Retry authentication."""
-        _LOGGER.debug("Retrying authentication %s", self.name)
-        try:
-            await self.kem.authenticate(
-                self.config_entry.data[CONF_USERNAME],
-                self.config_entry.data[CONF_PASSWORD],
-            )
-        except AuthenticationError as error:
-            _LOGGER.error("Authentication failed: %s %s", self.name, error)
-            return False
-        return True
-
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         result = {}
-        for i in range(MAX_RETRIES):
-            try:
-                result = await self.kem.get_generator_data(self.device_id)
-                break
-            except RETRY_EXCEPTIONS as error:
-                _LOGGER.warning("Error communicating with KEM: %s", error)
-            except AUTHORIZATION_EXCEPTIONS as error:
-                _LOGGER.warning("Authorization error communicating with KEM: %s", error)
-                if not await self._async_retry_auth():
-                    break
-            await asyncio.sleep(RETRY_DELAY[i])
-        if not result:
-            _LOGGER.error("Failed to get data after %s retries", MAX_RETRIES)
+        try:
+            result = await self.kem.get_generator_data(self.device_id)
+        except CommunicationError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="update_retry_failed",
-            )
+                translation_key="update_failed",
+            ) from error
         return result

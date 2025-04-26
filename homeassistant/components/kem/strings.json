@@ -106,7 +106,7 @@
     }
   },
   "exceptions": {
-    "update_retry_failed": {
+    "update_failed": {
       "message": "Updating data failed after retries."
     },
     "invalid_auth": {

@@ -17,6 +17,29 @@ from .const import CONF_REFRESH_TOKEN
 _LOGGER = logging.getLogger(__name__)
 
 
+class ConfigFlowAioKem(AioKem):
+    """Custom AioKem class to handle config flow connectivity test."""
+
+    def __init__(
+        self,
+        username: str,
+        password: str,
+        session: ClientSession,
+    ) -> None:
+        """Initialize the HAAioKem class."""
+        super().__init__(session=session)
+        self.username = username
+        self.password = password
+
+    def get_username(self) -> str:
+        """Implement in the derived class."""
+        return self.username
+
+    def get_password(self) -> str:
+        """Implement in the derived class."""
+        return self.password
+
+
 class HAAioKem(AioKem):
     """Custom AioKem class to handle refresh token updates."""
 
@@ -31,13 +54,23 @@ class HAAioKem(AioKem):
         self.hass = hass
         super().__init__(session=session)
 
+    def get_username(self) -> str:
+        """Implement in the derived class."""
+        return self.config_entry.data[CONF_USERNAME]
+
+    def get_password(self) -> str:
+        """Implement in the derived class."""
+        return self.config_entry.data[CONF_PASSWORD]
+
     async def on_refresh_token_update(self, refresh_token: str):
         """Handle refresh token update."""
         _LOGGER.debug("Saving refresh token")
-        self.hass.config_entries.async_update_entry(
-            self.config_entry,
-            data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
-        )
+        if self.config_entry:
+            # Update the config entry with the new refresh token`
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
+            )
         return await super().on_refresh_token_update(refresh_token)
 
     async def login(self):

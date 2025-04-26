@@ -285,7 +285,7 @@ aiokafka==0.10.0
 aiokef==0.2.16
 
 # homeassistant.components.kem
-aiokem==0.5.1
+aiokem==0.5.3
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2

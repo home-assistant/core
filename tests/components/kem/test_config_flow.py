@@ -22,7 +22,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with (
-        patch("homeassistant.components.kem.config_flow.AioKem.authenticate"),
+        patch("homeassistant.components.kem.data.AioKem.authenticate"),
         patch(
             "homeassistant.components.kem.async_setup_entry",
             return_value=True,
@@ -55,7 +55,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.kem.config_flow.AioKem.authenticate",
+        "homeassistant.components.kem.data.AioKem.authenticate",
         side_effect=AuthenticationCredentialsError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -77,7 +77,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.kem.config_flow.AioKem.authenticate",
+        "homeassistant.components.kem.data.AioKem.authenticate",
         side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -99,7 +99,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.kem.config_flow.AioKem.authenticate",
+        "homeassistant.components.kem.data.AioKem.authenticate",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -130,7 +130,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("homeassistant.components.kem.config_flow.AioKem.authenticate"):
+    with patch("homeassistant.components.kem.data.AioKem.authenticate"):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -160,7 +160,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     flow = flows[0]
 
     with patch(
-        "homeassistant.components.kem.config_flow.AioKem.authenticate",
+        "homeassistant.components.kem.data.AioKem.authenticate",
         side_effect=AuthenticationCredentialsError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -174,7 +174,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"password": "invalid_auth"}
 
     with (
-        patch("homeassistant.components.kem.config_flow.AioKem.authenticate"),
+        patch("homeassistant.components.kem.data.AioKem.authenticate"),
         patch(
             "homeassistant.components.kem.async_setup_entry",
             return_value=True,

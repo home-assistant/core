@@ -30,6 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KemConfigEntry) -> bool:
     """Set up KEM from a config entry."""
     websession = async_get_clientsession(hass)
     kem = HAAioKem(session=websession, hass=hass, config_entry=entry)
+    kem.set_retry_policy(retry_count=3, retry_delays=[5, 10, 20])
     try:
         await kem.login()
     except AuthenticationError as ex:
