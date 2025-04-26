@@ -1,7 +1,8 @@
 {
   "common": {
     "topic": "Topic",
-    "add_topic_description": "Set up a topic for notifications."
+    "add_topic_description": "Set up a topic for notifications.",
+    "display_name": "Display name"
   },
   "config": {
     "step": {
@@ -121,6 +122,16 @@
               "description": "Apply filters to narrow down the messages received when Home Assistant subscribes to the topic. Filters apply only to the event entity."
             }
           }
+        },
+        "reconfigure": {
+          "title": "[%key:component::ntfy::common::topic%]",
+          "description": "Update configuration for topic **{topic}**",
+          "data": {
+            "name": "[%key:component::ntfy::config_subentries::topic::step::add_topic::data::name%]"
+          },
+          "data_description": {
+            "name": "[%key:component::ntfy::config_subentries::topic::step::add_topic::data_description::name%]"
+          }
         }
       },
       "initiate_flow": {
@@ -134,7 +145,8 @@
         "invalid_topic": "Invalid topic. Only letters, numbers, underscores, or dashes allowed."
       },
       "abort": {
-        "already_configured": "Topic is already configured"
+        "already_configured": "Topic is already configured",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       }
     }
   },
