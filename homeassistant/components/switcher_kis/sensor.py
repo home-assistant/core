@@ -71,7 +71,6 @@ TIME_SENSORS: list[SwitcherSensorEntityDescription] = [
 TEMPERATURE_SENSORS: list[SwitcherSensorEntityDescription] = [
     SwitcherSensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
