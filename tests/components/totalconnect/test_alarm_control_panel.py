@@ -86,6 +86,13 @@ async def test_attributes(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
+def _pick_domain(action: str) -> str:
+    """Pick the right domain for the action/service call."""
+    if action in (SERVICE_ALARM_ARM_AWAY_INSTANT, SERVICE_ALARM_ARM_HOME_INSTANT):
+        return DOMAIN
+    return ALARM_DOMAIN
+
+
 async def assert_state(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -111,11 +118,13 @@ async def assert_usercode_invalid(
     alarm_state: AlarmControlPanelState,
 ):
     """Invalid usercode with this service should cause re-auth."""
+    domain = _pick_domain(action)
     with (
-        patch(ARMING_HELPER, side_effect=UsercodeInvalid),
+        patch(ARMING_HELPER, side_effect=UsercodeInvalid) as arming_mock,
         pytest.raises(HomeAssistantError),
     ):
-        await hass.services.async_call(ALARM_DOMAIN, action, DATA, blocking=True)
+        await hass.services.async_call(domain, action, DATA, blocking=True)
+    arming_mock.assert_called_once()
     await assert_state(hass, freezer, result, alarm_state)
     # should have started a re-auth flow
     assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
@@ -124,16 +133,17 @@ async def assert_usercode_invalid(
 async def assert_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    action,
+    action: str,
     result,
     alarm_state: AlarmControlPanelState,
 ):
     """TotalConnect failure raises HomeAssistantError."""
+    domain = _pick_domain(action)
     with (
         patch(ARMING_HELPER, side_effect=BadResultCodeError),
         pytest.raises(HomeAssistantError),
     ):
-        await hass.services.async_call(ALARM_DOMAIN, action, DATA, blocking=True)
+        await hass.services.async_call(domain, action, DATA, blocking=True)
     await assert_state(hass, freezer, result, alarm_state)
 
 
@@ -146,9 +156,10 @@ async def assert_success(
     data: Any = None,
 ):
     """Assert that alarm successfully gets to the given state."""
+    domain = _pick_domain(action)
     data = data or DATA
     with patch(ARMING_HELPER, side_effect=None):
-        await hass.services.async_call(ALARM_DOMAIN, action, data, blocking=True)
+        await hass.services.async_call(domain, action, data, blocking=True)
     await assert_state(hass, freezer, result, alarm_state)
 
 
