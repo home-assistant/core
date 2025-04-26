@@ -114,12 +114,57 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "notification_active": {
+        "name": "Notification active"
+      },
+      "mobile_start": {
+        "name": "Mobile start"
+      },
+      "remote_control": {
+        "name": "Remote control"
+      },
+      "smart_grid": {
+        "name": "Smart grid"
+      }
+    },
+    "button": {
+      "start": {
+        "name": "[%key:common::action::start%]"
+      },
+      "stop": {
+        "name": "[%key:common::action::stop%]"
+      },
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      }
+    },
     "light": {
       "ambient_light": {
         "name": "Ambient light"
       },
       "light": {
         "name": "[%key:component::light::title%]"
+      }
+    },
+    "climate": {
+      "freezer": {
+        "name": "[%key:component::miele::device::freezer::name%]"
+      },
+      "refrigerator": {
+        "name": "[%key:component::miele::device::refrigerator::name%]"
+      },
+      "wine_cabinet": {
+        "name": "[%key:component::miele::device::wine_cabinet::name%]"
+      },
+      "zone_1": {
+        "name": "Zone 1"
+      },
+      "zone_2": {
+        "name": "Zone 2"
+      },
+      "zone_3": {
+        "name": "Zone 3"
       }
     },
     "sensor": {
@@ -145,6 +190,17 @@
           "superheating": "Superheating",
           "waiting_to_start": "Waiting to start"
         }
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "supercooling": {
+        "name": "Supercooling"
+      },
+      "superfreezing": {
+        "name": "Superfreezing"
       }
     }
   },
