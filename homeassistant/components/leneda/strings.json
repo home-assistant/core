@@ -1,0 +1,207 @@
+{
+  "common": {
+    "electricity_consumption_active": "Electricity Consumption (Active)",
+    "electricity_consumption_reactive": "Electricity Consumption (Reactive)",
+    "electricity_consumption_covered_layer1": "Electricity Consumption (Covered Layer 1 - AIR)",
+    "electricity_consumption_covered_layer2": "Electricity Consumption (Covered Layer 2 - ACR/ACF/AC1)",
+    "electricity_consumption_covered_layer3": "Electricity Consumption (Covered Layer 3 - CEL)",
+    "electricity_consumption_covered_layer4": "Electricity Consumption (Covered Layer 4 - APS/CER/CEN)",
+    "electricity_consumption_remaining": "Electricity Consumption (Remaining after sharing invoiced by supplier)",
+    "electricity_production_active": "Electricity Production (Active)",
+    "electricity_production_reactive": "Electricity Production (Reactive)",
+    "electricity_production_shared_layer1": "Electricity Production (Shared Layer 1 - AIR)",
+    "electricity_production_shared_layer2": "Electricity Production (Shared Layer 2 - ACR/ACF/AC1)",
+    "electricity_production_shared_layer3": "Electricity Production (Shared Layer 3 - CEL)",
+    "electricity_production_shared_layer4": "Electricity Production (Shared Layer 4 - APS/CER/CEN)",
+    "electricity_production_remaining": "Electricity Production (Remaining after sharing sold to market)",
+    "gas_consumption_volume": "Gas Consumption (Volume)",
+    "gas_consumption_standard_volume": "Gas Consumption (Standard Volume)",
+    "gas_consumption_energy": "Gas Consumption (Energy)"
+  },
+  "config": {
+    "step": {
+      "user": {
+        "description": "Configure your Leneda integration",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_key%]",
+          "energy_id": "Energy ID"
+        },
+        "data_description": {
+          "api_token": "Your Leneda API key",
+          "energy_id": "Your Leneda Energy ID"
+        },
+        "menu_options": {
+          "new_credentials": "Add with new Energy ID",
+          "select_existing": "Add using existing Energy ID"
+        }
+      },
+      "new_credentials": {
+        "title": "New Credentials",
+        "description": "Enter your Leneda credentials",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_key%]",
+          "energy_id": "[%key:component::leneda::config::step::user::data::energy_id%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::leneda::config::step::user::data_description::api_token%]",
+          "energy_id": "[%key:component::leneda::config::step::user::data_description::energy_id%]"
+        }
+      },
+      "select_existing": {
+        "title": "Select Existing Configuration",
+        "description": "Select an existing Leneda configuration to add metering points to",
+        "data": {
+          "existing_energy_id": "Existing Energy ID"
+        },
+        "data_description": {
+          "existing_energy_id": "Select the Energy ID to add metering points to"
+        }
+      },
+      "add_metering_point": {
+        "title": "Add Metering Point",
+        "description": "Enter the metering point ID to monitor",
+        "data": {
+          "metering_point": "Metering Point ID"
+        },
+        "data_description": {
+          "metering_point": "The ID of your metering point"
+        }
+      },
+      "setup_type": {
+        "title": "Setup Type",
+        "description": "Choose how you want to set up your metering points",
+        "data": {
+          "setup_type": "Setup Type"
+        },
+        "data_description": {
+          "setup_type": "Choose between automatic probing or manual setup"
+        },
+        "menu_options": {
+          "probe": "Automatic Setup (Probe for sensors)",
+          "manual": "Manual Setup (Select sensors)"
+        }
+      },
+      "metering_points": {
+        "title": "Configure Metering Points",
+        "description": "Configure the metering points to monitor",
+        "data": {
+          "metering_point": "Metering Point ID"
+        }
+      },
+      "metering_points_summary": {
+        "title": "Metering Points Summary",
+        "description": "Review and confirm your metering points configuration\n\n{summary}",
+        "menu_options": {
+          "add_metering_point": "Add another metering point",
+          "finish": "Finish adding metering points"
+        }
+      },
+      "probe_no_sensors": {
+        "title": "No Sensors Detected",
+        "description": "No sensors detected for metering point {metering_point}. The metering point might be invalid or not accessible. You can still continue to manual setup.",
+        "menu_options": {
+          "manual": "Continue to manual setup"
+        }
+      },
+      "manual": {
+        "title": "Manual Setup",
+        "description": "Select the sensors to monitor for {metering_point}{probed_text}",
+        "data": {
+          "sensors": "Sensors"
+        },
+        "data_description": {
+          "sensors": "Select which sensors to enable"
+        }
+      },
+      "reauth_confirm": {
+        "description": "The Leneda integration needs to re-authenticate your account {energy_id}.",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_token": "Your new Leneda API token"
+        }
+      }
+    },
+    "progress": {
+      "fetch_obis": "Probing metering point for supported sensors"
+    },
+    "error": {
+      "invalid_metering_point": "The indicated metering point seems to be invalid",
+      "select_at_least_one": "Please select at least one sensor type",
+      "unknown": "Unknown error occurred",
+      "invalid_credentials": "Invalid credentials",
+      "connection_error": "Connection error",
+      "invalid_metering_points": "Invalid metering points",
+      "duplicate_metering_point": "This metering point is already configured under a different Energy ID",
+      "forbidden": "The access to the Leneda API is forbidden. This may be due to Leneda's geoblocking or other access restrictions",
+      "unauthorized": "The supplied API token and/or Energy ID were rejected",
+      "no_obis_codes": "No sensors detected. The metering point might be invalid or not accessible. You can continue to manual setup."
+    },
+    "abort": {
+      "already_configured": "This energy ID is already configured",
+      "invalid_auth": "Invalid authentication",
+      "config_updated": "Configuration updated successfully",
+      "existing_config_not_found": "Existing configuration not found",
+      "no_metering_points": "No metering points available to configure",
+      "reauth_successful": "Re-authentication successful",
+      "reauth_failed": "Re-authentication failed",
+      "unknown": "[%key:component::leneda::config::error::unknown%]",
+      "unauthorized": "[%key:component::leneda::config::error::unauthorized%]",
+      "forbidden": "[%key:component::leneda::config::error::forbidden%]"
+    }
+  },
+  "selector": {
+    "sensors": {
+      "options": {
+        "electricity_consumption_active": "[%key:component::leneda::common::electricity_consumption_active%]",
+        "electricity_consumption_reactive": "[%key:component::leneda::common::electricity_consumption_reactive%]",
+        "electricity_consumption_covered_layer1": "[%key:component::leneda::common::electricity_consumption_covered_layer1%]",
+        "electricity_consumption_covered_layer2": "[%key:component::leneda::common::electricity_consumption_covered_layer2%]",
+        "electricity_consumption_covered_layer3": "[%key:component::leneda::common::electricity_consumption_covered_layer3%]",
+        "electricity_consumption_covered_layer4": "[%key:component::leneda::common::electricity_consumption_covered_layer4%]",
+        "electricity_consumption_remaining": "[%key:component::leneda::common::electricity_consumption_remaining%]",
+        "electricity_production_active": "[%key:component::leneda::common::electricity_production_active%]",
+        "electricity_production_reactive": "[%key:component::leneda::common::electricity_production_reactive%]",
+        "electricity_production_shared_layer1": "[%key:component::leneda::common::electricity_production_shared_layer1%]",
+        "electricity_production_shared_layer2": "[%key:component::leneda::common::electricity_production_shared_layer2%]",
+        "electricity_production_shared_layer3": "[%key:component::leneda::common::electricity_production_shared_layer3%]",
+        "electricity_production_shared_layer4": "[%key:component::leneda::common::electricity_production_shared_layer4%]",
+        "electricity_production_remaining": "[%key:component::leneda::common::electricity_production_remaining%]",
+        "gas_consumption_volume": "[%key:component::leneda::common::gas_consumption_volume%]",
+        "gas_consumption_standard_volume": "[%key:component::leneda::common::gas_consumption_standard_volume%]",
+        "gas_consumption_energy": "[%key:component::leneda::common::gas_consumption_energy%]"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Leneda",
+        "description": "Select a metering point to manage its sensors",
+        "data": {
+          "metering_point": "Metering Point"
+        }
+      },
+      "manage_sensors": {
+        "title": "Manage Sensors",
+        "description": "Select the sensors to monitor for {metering_point}",
+        "data": {
+          "sensors": "Sensors"
+        }
+      }
+    },
+    "error": {
+      "select_at_least_one": "[%key:component::leneda::config::error::select_at_least_one%]",
+      "unknown": "[%key:component::leneda::config::error::unknown%]"
+    },
+    "abort": {
+      "no_metering_points": "[%key:component::leneda::config::abort::no_metering_points%]"
+    }
+  },
+  "device_automation": {
+    "action_type": {
+      "select_metering_point": "Select metering point"
+    }
+  }
+}
