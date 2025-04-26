@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 7>,
     'translation_key': None,
-    'unique_id': '123456',
+    'unique_id': '1234567',
     'unit_of_measurement': None,
   })
 # ---
@@ -40,6 +40,10 @@
       'code_arm_required': False,
       'code_format': None,
       'friendly_name': 'test',
+      'location_id': 1234567,
+      'location_name': 'test',
+      'low_battery': False,
+      'partition': 1,
       'supported_features': <AlarmControlPanelEntityFeature: 7>,
     }),
     'context': <ANY>,
@@ -80,7 +84,7 @@
     'previous_unique_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 7>,
     'translation_key': 'partition',
-    'unique_id': '123456_2',
+    'unique_id': '1234567_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -91,6 +95,10 @@
       'code_arm_required': False,
       'code_format': None,
       'friendly_name': 'test Partition 2',
+      'location_id': 1234567,
+      'location_name': 'test partition 2',
+      'low_battery': False,
+      'partition': 2,
       'supported_features': <AlarmControlPanelEntityFeature: 7>,
     }),
     'context': <ANY>,
