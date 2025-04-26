@@ -35,6 +35,7 @@ from .const import (
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
+    DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
     LEGACY_PORT,
     LOGGER,
@@ -126,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
     if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
         if not entry.data.get(CONF_TOKEN) or not entry.data.get(CONF_SESSION_ID):
             raise ConfigEntryAuthFailed(
-                "Token and session id are required in encrypted mode"
+                translation_domain=DOMAIN, translation_key="encrypted_mode_auth_failed"
             )
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
 
@@ -195,7 +196,8 @@ async def _async_create_bridge_with_updated_data(
             load_info_attempted = True
             if not port or not method:
                 raise ConfigEntryNotReady(
-                    "Failed to determine connection method, make sure the device is on."
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_determine_connection_method",
                 )
 
         LOGGER.debug("Updated port to %s and method to %s for %s", port, method, host)
