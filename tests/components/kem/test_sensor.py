@@ -16,7 +16,6 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 DISABLED_ENTITIES = [
-    "sensor.generator_1_firmware_version",
     "sensor.generator_1_total_operation",
     "sensor.generator_1_total_runtime",
     "sensor.generator_1_runtime_since_last_maintenance",

@@ -28,13 +28,6 @@ from .types import KemConfigEntry
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="device:firmwareVersion",
-        translation_key="firmware_version",
-        icon="mdi:update",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SensorEntityDescription(
         key="engineSpeedRpm",
         translation_key="engine_speed",
         icon="mdi:speedometer",
