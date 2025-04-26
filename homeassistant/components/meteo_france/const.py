@@ -88,7 +88,15 @@ CONDITION_CLASSES_HOURLY: dict[str, list[str]] = {
         "Averses de neige faible",
         "Quelques flocons",
     ],
+<<<<<<< HEAD
     ATTR_CONDITION_SNOWY_RAINY: ["Pluie et neige", "Pluie verglaçante", "Averses de pluie et neige"],
+=======
+    ATTR_CONDITION_SNOWY_RAINY: [
+        "Pluie et neige",
+        "Pluie verglaçante",
+        "Averses de pluie et neige",
+    ],
+>>>>>>> 7668b5a5a09 (2nd attempt adding : Averses de pluie et neige)
     ATTR_CONDITION_SUNNY: ["Ensoleillé"],
     ATTR_CONDITION_WINDY: [],
     ATTR_CONDITION_WINDY_VARIANT: [],
@@ -143,7 +151,15 @@ CONDITION_CLASSES_DAILY: dict[str, list[str]] = {
         "Averses de neige faible",
         "Quelques flocons",
     ],
+<<<<<<< HEAD
     ATTR_CONDITION_SNOWY_RAINY: ["Pluie et neige", "Pluie verglaçante", "Averses de pluie et neige"],
+=======
+    ATTR_CONDITION_SNOWY_RAINY: [
+        "Pluie et neige",
+        "Pluie verglaçante",
+        "Averses de pluie et neige",
+    ],
+>>>>>>> 7668b5a5a09 (2nd attempt adding : Averses de pluie et neige)
     ATTR_CONDITION_SUNNY: ["Ensoleillé", "Ciel clair"],
     ATTR_CONDITION_WINDY: [],
     ATTR_CONDITION_WINDY_VARIANT: [],
