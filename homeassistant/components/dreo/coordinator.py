@@ -33,14 +33,9 @@ class DreoFanDeviceData(DreoGenericDeviceData):
 
     mode: NotRequired[str]
     oscillate: NotRequired[bool]
-    speed: NotRequired[int]
+    speed_percentage: NotRequired[int]
 
 
-# Add other device type in the future
-# class DreoHeaterDeviceData(DreoBaseDeviceData):
-#     """Data specific to Dreo heater devices."""
-#     temperature: NotRequired[float | None]
-#     mode: NotRequired[str | None]
 DreoDeviceData = DreoFanDeviceData | DreoGenericDeviceData
 
 
@@ -94,7 +89,7 @@ class FanDataStrategy:
             if speed_range:
                 # Direct conversion to integer
                 speed_value = float(status.get("speed", 0))
-                fan_data["speed"] = int(
+                fan_data["speed_percentage"] = int(
                     ranged_value_to_percentage(speed_range, speed_value)
                 )
 
