@@ -96,6 +96,11 @@ STEP_USER_TOPIC_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME): str,
     }
 )
+STEP_RECONFIGURE_TOPIC_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME, default=""): str,
+    }
+)
 
 RE_TOPIC = re.compile("^[-_a-zA-Z0-9]{1,64}$")
 
@@ -302,4 +307,28 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
                 data_schema=STEP_USER_TOPIC_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure flow to modify an existing topic."""
+        entry = self._get_entry()
+        subentry = self._get_reconfigure_subentry()
+        subentry_data = entry.subentries[subentry.subentry_id].data
+
+        if user_input is not None:
+            return self.async_update_and_abort(
+                entry=entry,
+                subentry=subentry,
+                title=user_input[CONF_NAME] or subentry_data[CONF_TOPIC],
+                data_updates=user_input,
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_RECONFIGURE_TOPIC_SCHEMA,
+                suggested_values=subentry_data,
+            ),
         )
