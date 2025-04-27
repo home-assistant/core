@@ -60,7 +60,7 @@ from .const import (
     DOMAIN,
     TtsAudioType,
 )
-from .entity import TextToSpeechEntity, TTSAudioRequest
+from .entity import TextToSpeechEntity, TTSAudioRequest, TTSAudioResponse
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, parse_media_source_id
@@ -79,6 +79,7 @@ __all__ = [
     "Provider",
     "ResultStream",
     "SampleFormat",
+    "TTSAudioResponse",
     "TextToSpeechEntity",
     "TtsAudioType",
     "Voice",
