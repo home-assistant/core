@@ -1,6 +1,7 @@
 """Dreo device base entity."""
 
 from functools import partial
+import logging
 from typing import Any
 
 from hscloud.hscloudexception import (
@@ -17,11 +18,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import DreoDataUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
     """Representation of a base Dreo Entity."""
 
     _attr_has_entity_name = True
+    _attr_available = True
 
     def __init__(
         self,

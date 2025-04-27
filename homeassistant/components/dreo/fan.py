@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import math
 from typing import Any
 
@@ -9,7 +10,6 @@ from hscloud.const import DEVICE_TYPE, FAN_DEVICE
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import percentage_to_ranged_value
 
@@ -24,6 +24,8 @@ from .const import (
 from .coordinator import DreoDataUpdateCoordinator
 from .entity import DreoEntity
 
+_LOGGER = logging.getLogger(__name__)
+# Fan constants
 FAN_SUFFIX = "fan"
 
 
@@ -33,43 +35,48 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fan from a config entry."""
-    # Simple cleanup of stale entities
-    device_ids = {
-        str(d.get("deviceSn", ""))
-        for d in config_entry.runtime_data.devices
-        if d.get("deviceSn")
-    }
-    entity_registry = er.async_get(hass)
 
-    [
-        entity_registry.async_remove(entry.entity_id)
-        for entry in entity_registry.entities.values()
-        if entry.config_entry_id == config_entry.entry_id
-        and entry.domain == "fan"
-        and (
-            entry.unique_id.split("_")[0] if "_" in entry.unique_id else entry.unique_id
-        )
-        not in device_ids
-    ]
+    @callback
+    def async_add_fan_devices() -> None:
+        """Add fan devices."""
+        new_fans = []
 
-    # Add current devices
-    fan_devices = []
-    for device in config_entry.runtime_data.devices:
-        device_model = device.get("model")
-        if DEVICE_TYPE.get(device_model) is None:
-            continue
+        # Check all devices and add new ones
+        for device in config_entry.runtime_data.devices:
+            device_model = device.get("model")
+            # Check if device type is a fan
+            if DEVICE_TYPE.get(device_model) is None:
+                continue
 
-        device_id = str(device.get("deviceSn", ""))
-        if not device_id:
-            continue
+            if FAN_DEVICE.get("type") != DEVICE_TYPE.get(device_model):
+                continue
 
-        coordinator = config_entry.runtime_data.coordinators.get(device_id)
-        if not coordinator:
-            continue
+            device_id = str(device.get("deviceSn", ""))
+            if not device_id:
+                continue
 
-        fan_devices.append(DreoFan(device, coordinator))
+            coordinator = config_entry.runtime_data.coordinators.get(device_id)
+            if not coordinator:
+                continue
 
-    async_add_entities(fan_devices)
+            # Create new fan entity
+            fan = DreoFan(device, coordinator)
+            new_fans.append(fan)
+
+        # Add all new devices at once
+        if new_fans:
+            async_add_entities(new_fans)
+
+    # Initial setup
+    async_add_fan_devices()
+
+    # Register callback to respond to device changes
+    @callback
+    def update_listener(_hass, _entry):
+        """Handle device update."""
+        async_add_fan_devices()
+
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
 
 class DreoFan(DreoEntity, FanEntity):
