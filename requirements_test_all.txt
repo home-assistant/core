@@ -1351,7 +1351,7 @@ openhomedevice==2.2.0
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.11.1
+opower==0.12.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2464,7 +2464,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.8.0
+wallbox==0.9.0
 
 # homeassistant.components.folder_watcher
 watchdog==6.0.0
