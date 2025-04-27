@@ -81,9 +81,13 @@
           "name": "Quality",
           "description": "The quality of the image that will be generated"
         },
-        "style": {
-          "name": "Style",
-          "description": "The style of the generated image"
+        "background": {
+          "name": "Background",
+          "description": "Allows to set transparency for the background of the generated image"
+        },
+        "moderation": {
+          "name": "Moderation",
+          "description": "Control the content-moderation level for generated images"
         }
       }
     },
@@ -104,6 +108,16 @@
           "description": "List of files to upload"
         }
       }
+    }
+  },
+  "issues": {
+    "organization_verification_required": {
+      "title": "Organization verification required",
+      "description": "Your organization must be verified to use the model `gpt-image-1`. Please go to: https://platform.openai.com/settings/organization/general and click on Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate."
+    },
+    "generate_image_deprecated_params": {
+      "title": "Deprecated parameters for image generation service",
+      "description": "OpenAI integration now uses `gpt-image-1` model to generate images when calling `openai_conversation.generate_image`, which supports different set of parameters.\nPlease update your scripts or automations."
     }
   },
   "exceptions": {

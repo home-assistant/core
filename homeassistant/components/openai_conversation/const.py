@@ -5,6 +5,9 @@ import logging
 DOMAIN = "openai_conversation"
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
+# How long our auth signature on the content should be valid for
+IMAGE_AUTH_EXPIRY_TIME = 60 * 60  # 1 hour
+
 CONF_CHAT_MODEL = "chat_model"
 CONF_FILENAMES = "filenames"
 CONF_MAX_TOKENS = "max_tokens"

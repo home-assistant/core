@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import base64
+from datetime import timedelta
+import hashlib
 from mimetypes import guess_file_type
 from pathlib import Path
 
@@ -19,6 +21,7 @@ from openai.types.responses import (
 )
 import voluptuous as vol
 
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import (
@@ -32,9 +35,15 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    selector,
+)
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import raise_if_invalid_path
 
 from .const import (
     CONF_CHAT_MODEL,
@@ -45,6 +54,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DOMAIN,
+    IMAGE_AUTH_EXPIRY_TIME,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
@@ -71,37 +81,140 @@ def encode_file(file_path: str) -> tuple[str, str]:
         return (mime_type, base64.b64encode(image_file.read()).decode("utf-8"))
 
 
+async def _render_image(call: ServiceCall) -> ServiceResponse:
+    """Render an image."""
+    entry_id = call.data["config_entry"]
+    entry = call.hass.config_entries.async_get_entry(entry_id)
+
+    if entry is None or entry.domain != DOMAIN:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_config_entry",
+            translation_placeholders={"config_entry": entry_id},
+        )
+
+    client: openai.AsyncClient = entry.runtime_data
+
+    model_args = {
+        "model": "gpt-image-1",
+        "prompt": call.data[CONF_PROMPT],
+        "background": call.data["background"],
+        "size": call.data["size"],
+        "quality": call.data["quality"],
+        "moderation": call.data["moderation"],
+        "output_format": "png",
+        "n": 1,
+    }
+    if call.context.user_id:
+        model_args["user"] = call.context.user_id
+
+    repair_issue = False
+    if model_args["size"] == "1024x1792":
+        model_args["size"] = "1024x1536"
+        repair_issue = True
+    elif model_args["size"] == "1792x1024":
+        model_args["size"] = "1536x1024"
+        repair_issue = True
+    if model_args["quality"] == "standard":
+        model_args["quality"] = "medium"
+        repair_issue = True
+    elif model_args["quality"] == "hd":
+        model_args["quality"] = "high"
+        repair_issue = True
+    if "style" in call.data:
+        repair_issue = True
+
+    try:
+        try:
+            response: ImagesResponse = await client.images.generate(**model_args)
+        except openai.PermissionDeniedError as err:
+            if "Verify Organization" not in str(err):
+                raise
+            LOGGER.debug("Permission denied error, fallback to dall-e-3")
+            ir.async_create_issue(
+                call.hass,
+                DOMAIN,
+                "organization_verification_required",
+                is_fixable=False,
+                is_persistent=True,
+                learn_more_url="https://openai.com/index/image-generation-api/#get-started",
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="organization_verification_required",
+            )
+            # Don't raise an issue about deprecated arguments
+            # when there is no permissions for the new model:
+            repair_issue = False
+
+            model_args["model"] = "dall-e-3"
+            model_args["style"] = call.data.get("style", "vivid")
+            model_args["response_format"] = "b64_json"
+            model_args.pop("output_format", None)
+            model_args.pop("background", None)
+            model_args.pop("moderation", None)
+            if call.data["quality"] in ("standard", "hd"):
+                model_args["quality"] = call.data["quality"]
+            elif model_args["quality"] in ("medium", "low"):
+                model_args["quality"] = "standard"
+            elif model_args["quality"] in ("high", "auto"):
+                model_args["quality"] = "hd"
+            if model_args["size"] == "1024x1536":
+                model_args["size"] = "1024x1792"
+            elif model_args["size"] == "1536x1024":
+                model_args["size"] = "1792x1024"
+            elif model_args["size"] == "auto":
+                model_args["size"] = "1024x1024"
+            response = await client.images.generate(**model_args)
+    except openai.OpenAIError as err:
+        raise HomeAssistantError(f"Error generating image: {err}") from err
+
+    if repair_issue:
+        ir.async_create_issue(
+            call.hass,
+            DOMAIN,
+            "generate_image_deprecated_params",
+            is_fixable=False,
+            is_persistent=True,
+            learn_more_url="https://www.home-assistant.io/integrations/openai_conversation/",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="generate_image_deprecated_params",
+        )
+
+    if not response.data or not response.data[0].b64_json:
+        raise HomeAssistantError("No image data returned")
+
+    base_path = call.hass.config.media_dirs["local"]
+    directory = Path(base_path, DOMAIN)
+    directory.mkdir(parents=True, exist_ok=True)
+    if len(call.data[CONF_PROMPT]) <= 32:
+        filename = f"{call.data[CONF_PROMPT].replace(' ', '_')}_{response.created}.png"
+    else:
+        filename = f"{hashlib.md5(call.data[CONF_PROMPT].encode('utf-8')).hexdigest()}_{response.created}.png"
+    file_path = directory / filename
+
+    raise_if_invalid_path(str(file_path))
+
+    def save_image(b64_json: str, path: Path) -> None:
+        """Save image to file."""
+        with open(path, "wb") as image_file:
+            image_file.write(base64.b64decode(b64_json))
+
+    await call.hass.async_add_executor_job(
+        save_image, response.data[0].b64_json, file_path
+    )
+
+    LOGGER.debug("Image saved to %s", file_path)
+
+    response.data[0].url = get_url(call.hass) + async_sign_path(
+        call.hass,
+        f"/media/local/{DOMAIN}/{filename}",
+        timedelta(seconds=IMAGE_AUTH_EXPIRY_TIME),
+    )
+
+    return response.data[0].model_dump(exclude={"b64_json"})
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up OpenAI Conversation."""
-
-    async def render_image(call: ServiceCall) -> ServiceResponse:
-        """Render an image with dall-e."""
-        entry_id = call.data["config_entry"]
-        entry = hass.config_entries.async_get_entry(entry_id)
-
-        if entry is None or entry.domain != DOMAIN:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_config_entry",
-                translation_placeholders={"config_entry": entry_id},
-            )
-
-        client: openai.AsyncClient = entry.runtime_data
-
-        try:
-            response: ImagesResponse = await client.images.generate(
-                model="dall-e-3",
-                prompt=call.data[CONF_PROMPT],
-                size=call.data["size"],
-                quality=call.data["quality"],
-                style=call.data["style"],
-                response_format="url",
-                n=1,
-            )
-        except openai.OpenAIError as err:
-            raise HomeAssistantError(f"Error generating image: {err}") from err
-
-        return response.data[0].model_dump(exclude={"b64_json"})
 
     async def send_prompt(call: ServiceCall) -> ServiceResponse:
         """Send a prompt to ChatGPT and return the response."""
@@ -217,7 +330,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN,
         SERVICE_GENERATE_IMAGE,
-        render_image,
+        _render_image,
         schema=vol.Schema(
             {
                 vol.Required("config_entry"): selector.ConfigEntrySelector(
@@ -226,11 +339,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     }
                 ),
                 vol.Required(CONF_PROMPT): cv.string,
-                vol.Optional("size", default="1024x1024"): vol.In(
-                    ("1024x1024", "1024x1792", "1792x1024")
+                vol.Optional("size", default="auto"): vol.In(
+                    (
+                        "1024x1024",
+                        "1536x1024",
+                        "1024x1536",
+                        "auto",
+                        "1024x1792",
+                        "1792x1024",
+                    )
                 ),
-                vol.Optional("quality", default="standard"): vol.In(("standard", "hd")),
-                vol.Optional("style", default="vivid"): vol.In(("vivid", "natural")),
+                vol.Optional("quality", default="auto"): vol.In(
+                    ("auto", "high", "medium", "low", "standard", "hd")
+                ),
+                vol.Optional("background", default="auto"): vol.In(
+                    ("transparent", "opaque", "auto")
+                ),
+                vol.Optional("style"): vol.In(("vivid", "natural")),
+                vol.Optional("moderation", default="auto"): vol.In(("low", "auto")),
             }
         ),
         supports_response=SupportsResponse.ONLY,
