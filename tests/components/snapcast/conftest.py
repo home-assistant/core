@@ -5,6 +5,14 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from snapcast.control.server import CONTROL_PORT
+
+from homeassistant.components.snapcast.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -24,6 +32,37 @@ def mock_create_server() -> Generator[AsyncMock]:
     mock_connection.stop = MagicMock()
     with patch("snapcast.control.create_server", return_value=mock_connection):
         yield mock_connection
+
+
+@pytest.fixture
+async def mock_config_entry(
+    hass: HomeAssistant,
+) -> MockConfigEntry:
+    """Set up the integration with a mock config entry."""
+
+    # Create a mock config entry
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: CONTROL_PORT,
+        },
+    )
+
+    # Patch Snapserver to prevent connection attempts
+    with (
+        patch("snapcast.control.server.Snapserver.start"),
+        patch("snapcast.control.server.Snapserver._request"),
+    ):
+        # Add mock config entry to HASS and setup integration
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.entry_id in hass.data[DOMAIN]
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    return config_entry
 
 
 @pytest.fixture
