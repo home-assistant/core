@@ -743,7 +743,7 @@ class SpeechManager:
         language: str,
         options: dict,
     ) -> TTSCache:
-        """Make sure a message is cached in memory and returns cache key.
+        """Make sure a message will be cached in memory and returns cache object.
 
         Requires options, language to be processed.
         """
@@ -784,7 +784,6 @@ class SpeechManager:
             extension=extension,
             data_gen=data_gen,
         )
-
         self.mem_cache[cache_key] = cache
         self.hass.async_create_background_task(
             self._load_data_into_cache(
