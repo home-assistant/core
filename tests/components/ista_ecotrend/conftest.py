@@ -80,7 +80,7 @@ def mock_ista() -> Generator[MagicMock]:
             "26e93f1a-c828-11ea-87d0-0242ac130003",
             "eaf5c5c8-889f-4a3c-b68c-e9a676505762",
         ]
-        client.get_consumption_data.return_value = get_consumption_data()
+        client.get_consumption_data.side_effect = get_consumption_data
 
         yield client
 

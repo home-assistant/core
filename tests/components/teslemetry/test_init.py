@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
@@ -10,6 +11,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
+from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -17,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
-from .const import VEHICLE_DATA_ALT
+from .const import PRODUCTS_MODERN, VEHICLE_DATA_ALT
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -169,3 +171,21 @@ async def test_no_live_status(
     await setup_platform(hass)
 
     assert hass.states.get("sensor.energy_site_grid_power") is None
+
+
+async def test_modern_no_poll(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_products: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that modern vehicles do not poll vehicle_data."""
+
+    mock_products.return_value = PRODUCTS_MODERN
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert mock_vehicle_data.called is False
+    freezer.tick(VEHICLE_INTERVAL)
+    assert mock_vehicle_data.called is False
+    freezer.tick(VEHICLE_INTERVAL)
+    assert mock_vehicle_data.called is False
