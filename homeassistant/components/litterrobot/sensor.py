@@ -131,8 +131,18 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             ],
             value_fn=(
                 lambda robot: (
-                    status.lower() if (status := robot.hopper_status) else None
+                    status.name.lower() if (status := robot.hopper_status) else None
                 )
+            ),
+            icon_fn=lambda state: (
+                {
+                    "enabled": "mdi:filter-check",
+                    "disabled": "mdi:filter-remove",
+                    "motor_fault_short": "mdi:flash-off",
+                    "motor_ot_amps": "mdi:flash-alert",
+                    "motor_disconnected": "mdi:engine-off",
+                    "empty": "mdi:filter-minus-outline",
+                }.get(state, "mdi:filter")
             ),
         ),
         RobotSensorEntityDescription[LitterRobot4](

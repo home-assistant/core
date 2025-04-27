@@ -34,6 +34,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "hopper_connected": {
+        "name": "Hopper connected"
+      },
       "sleeping": {
         "name": "Sleeping"
       },
@@ -60,10 +63,15 @@
         "name": "Food level"
       },
       "hopper_status": {
-        "name": "Hopper status"
-      },
-      "hopper_connected": {
-        "name": "Hopper connected"
+        "name": "Hopper status",
+        "state": {
+          "enabled": "Enabled",
+          "disabled": "Disabled",
+          "motor_fault_short": "Motor fault: Short",
+          "motor_ot_amps": "Motor OT amps",
+          "motor_disconnected": "Motor disconnected",
+          "empty": "Empty"
+        }
       },
       "last_seen": {
         "name": "Last seen"

@@ -6,6 +6,9 @@
       },
       "sleep_mode": {
         "default": "mdi:sleep"
+      },
+      "hopper_connected": {
+        "default": "mdi:filter-check"
       }
     },
     "button": {
