@@ -15,3 +15,10 @@
     'url': 'https://ntfy.sh/',
   })
 # ---
+# name: test_diagnostics_redacted_url
+  dict({
+    'topics': dict({
+    }),
+    'url': 'http://**redacted**/',
+  })
+# ---
