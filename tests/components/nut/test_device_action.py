@@ -112,7 +112,8 @@ async def test_no_actions_device_invalid(
     )
     device_entry = next(device for device in device_registry.devices.values())
 
-    entry.runtime_data = None
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
     platform = await device_automation.async_get_device_automation_platform(
         hass, DOMAIN, DeviceAutomationType.ACTION
@@ -316,7 +317,8 @@ async def test_action_exception_device_invalid(
     )
     device_entry = next(device for device in device_registry.devices.values())
 
-    entry.runtime_data = None
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
     platform = await device_automation.async_get_device_automation_platform(
         hass, DOMAIN, DeviceAutomationType.ACTION
