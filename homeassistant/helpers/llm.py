@@ -1049,8 +1049,8 @@ class TodoGetItemsTool(Tool):
                 vol.Optional(
                     "status",
                     description="Filter returned items by status, by default returns incomplete items",
-                    default=["needs_action"],
-                ): vol.Any(cv.ensure_list, [vol.In(["needs_action", "completed"])]),
+                    default="needs_action",
+                ): vol.In(["needs_action", "completed", "all"]),
             }
         )
 
@@ -1070,9 +1070,12 @@ class TodoGetItemsTool(Tool):
         if not result.is_match:
             return {"success": False, "error": "To-do list not found"}
         entity_id = result.states[0].entity_id
-        service_data = {"entity_id": entity_id}
-        if "status" in data:
-            service_data["status"] = data["status"]
+        service_data: dict[str, Any] = {"entity_id": entity_id}
+        if status := data.get("status"):
+            if status == "all":
+                service_data["status"] = ["needs_action", "completed"]
+            else:
+                service_data["status"] = [status]
         service_result = await hass.services.async_call(
             TODO_DOMAIN,
             TodoServices.GET_ITEMS,

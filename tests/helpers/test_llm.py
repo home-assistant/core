@@ -1416,7 +1416,7 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
         hass,
         llm.ToolInput(
             "todo_get_items",
-            {"todo_list": "Mock Todo List Name", "status": ["completed"]},
+            {"todo_list": "Mock Todo List Name", "status": "completed"},
         ),
         llm_context,
     )
@@ -1424,6 +1424,23 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     assert calls[0].data == {
         "entity_id": ["todo.test_list"],
         "status": ["completed"],
+    }
+
+    # Test that the status filter is passed correctly to the service call.
+    # We don't assert on the response since it is fixed above.
+    calls.clear()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            "todo_get_items",
+            {"todo_list": "Mock Todo List Name", "status": "all"},
+        ),
+        llm_context,
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": ["todo.test_list"],
+        "status": ["needs_action", "completed"],
     }
 
 
