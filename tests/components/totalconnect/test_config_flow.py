@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from total_connect_client import TotalConnectClient
 from total_connect_client.exceptions import AuthenticationError
+from total_connect_client.location import TotalConnectLocation
 
 from homeassistant.components.totalconnect.const import (
     AUTO_BYPASS,
@@ -35,7 +36,9 @@ async def test_user(hass: HomeAssistant) -> None:
 
 
 async def test_user_show_locations(
-    hass: HomeAssistant, mock_client: TotalConnectClient
+    hass: HomeAssistant,
+    mock_client: TotalConnectClient,
+    mock_location: TotalConnectLocation,
 ) -> None:
     """Test user locations form."""
     # user/pass provided, so check if valid then ask for usercodes on locations form
@@ -44,7 +47,6 @@ async def test_user_show_locations(
             "homeassistant.components.totalconnect.async_setup_entry", return_value=True
         ),
     ):
-        mock_client.return_value.get_number_locations.return_value = 1
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -56,6 +58,7 @@ async def test_user_show_locations(
         assert result["step_id"] == "locations"
 
         # user enters an invalid usercode
+        mock_location.return_value.set_usercode.return_value = False
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_USERCODES: "bad"},
@@ -64,6 +67,7 @@ async def test_user_show_locations(
         assert result2["step_id"] == "locations"
 
         # user enters a valid usercode
+        mock_location.return_value.set_usercode.return_value = True
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             user_input={CONF_USERCODES: "7890"},
@@ -71,9 +75,7 @@ async def test_user_show_locations(
         assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_abort_if_already_setup(
-    hass: HomeAssistant, mock_client: TotalConnectClient
-) -> None:
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test abort if the account is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
