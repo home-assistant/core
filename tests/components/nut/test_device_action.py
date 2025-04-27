@@ -21,7 +21,7 @@ from homeassistant.setup import async_setup_component
 
 from .util import async_init_integration
 
-from tests.common import async_get_device_automations
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_all_actions_for_specified_user(
@@ -269,6 +269,35 @@ async def test_action_exception_device_not_found(hass: HomeAssistant) -> None:
         await platform.async_call_action_from_config(
             hass,
             {CONF_TYPE: "beeper.enable", CONF_DEVICE_ID: device_id},
+            {},
+            None,
+        )
+
+
+async def test_action_exception_invalid_config(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test raises exception if no NUT config entry found."""
+
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "mock-identifier")},
+    )
+
+    platform = await device_automation.async_get_device_automation_platform(
+        hass, DOMAIN, DeviceAutomationType.ACTION
+    )
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await platform.async_call_action_from_config(
+            hass,
+            {CONF_TYPE: "beeper.enable", CONF_DEVICE_ID: device_entry.id},
             {},
             None,
         )
