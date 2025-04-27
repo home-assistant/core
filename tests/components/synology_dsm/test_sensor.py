@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from awesomeversion import AwesomeVersion
 import pytest
 from synology_dsm.api.core.external_usb import SynoCoreExternalUSBDevice
 
@@ -18,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .common import mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
@@ -35,11 +35,7 @@ def mock_dsm_with_usb():
         dsm.network = Mock(
             update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
         )
-        dsm.information = Mock(
-            update=AsyncMock(return_value=True),
-            awesome_version=AwesomeVersion("5.2"),
-            serial=SERIAL,
-        )
+        dsm.information = mock_dsm_information()
         dsm.file = Mock(get_shared_folders=AsyncMock(return_value=None))
         dsm.external_usb = Mock(
             update=AsyncMock(return_value=True),
@@ -114,11 +110,7 @@ def mock_dsm_without_usb():
         dsm.network = Mock(
             update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
         )
-        dsm.information = Mock(
-            update=AsyncMock(return_value=True),
-            awesome_version=AwesomeVersion("5.2"),
-            serial=SERIAL,
-        )
+        dsm.information = mock_dsm_information()
         dsm.file = Mock(get_shared_folders=AsyncMock(return_value=None))
         dsm.logout = AsyncMock(return_value=True)
         yield dsm
