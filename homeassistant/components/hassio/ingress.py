@@ -46,6 +46,8 @@ RESPONSE_HEADERS_FILTER = {
 MIN_COMPRESSED_SIZE = 128
 MAX_SIMPLE_RESPONSE_SIZE = 4194000
 
+DISABLED_TIMEOUT = ClientTimeout(total=None)
+
 
 @callback
 def async_setup_ingress_view(hass: HomeAssistant, host: str) -> None:
@@ -167,7 +169,7 @@ class HassIOIngress(HomeAssistantView):
             params=request.query,
             allow_redirects=False,
             data=request.content if request.method != "GET" else None,
-            timeout=ClientTimeout(total=None),
+            timeout=DISABLED_TIMEOUT,
             skip_auto_headers={hdrs.CONTENT_TYPE},
         ) as result:
             headers = _response_header(result)

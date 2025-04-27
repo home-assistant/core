@@ -35,5 +35,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/led_ble",
   "iot_class": "local_polling",
-  "requirements": ["bluetooth-data-tools==1.27.0", "led-ble==1.1.6"]
+  "requirements": ["bluetooth-data-tools==1.27.0", "led-ble==1.1.7"]
 }

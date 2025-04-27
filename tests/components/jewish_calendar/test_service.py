@@ -33,15 +33,15 @@ from tests.common import MockConfigEntry
 )
 async def test_get_omer_blessing(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    config_entry: MockConfigEntry,
     test_date: dt.date,
     nusach: str,
     language: Language,
     expected: str,
 ) -> None:
     """Test get omer blessing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     result = await hass.services.async_call(

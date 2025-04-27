@@ -12,6 +12,7 @@ from homeassistant.components.blueprint import (
     is_blueprint_instance_config,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -37,6 +38,7 @@ from homeassistant.setup import async_notify_setup_error
 from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
+    cover as cover_platform,
     image as image_platform,
     light as light_platform,
     number as number_platform,
@@ -117,9 +119,12 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
             vol.Optional(SWITCH_DOMAIN): vol.All(
                 cv.ensure_list, [switch_platform.SWITCH_SCHEMA]
             ),
+            vol.Optional(COVER_DOMAIN): vol.All(
+                cv.ensure_list, [cover_platform.COVER_SCHEMA]
+            ),
         },
         ensure_domains_do_not_have_trigger_or_action(
-            BUTTON_DOMAIN, LIGHT_DOMAIN, SWITCH_DOMAIN
+            BUTTON_DOMAIN, COVER_DOMAIN, LIGHT_DOMAIN, SWITCH_DOMAIN
         ),
     )
 )

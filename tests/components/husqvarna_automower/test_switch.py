@@ -190,7 +190,8 @@ async def test_work_area_switch_commands(
     )
     values[TEST_MOWER_ID].work_areas[TEST_AREA_ID].enabled = boolean
     mock_automower_client.get_status.return_value = values
-    mocked_method = mock_automower_client.commands.workarea_settings
+    mocked_method = AsyncMock()
+    mock_automower_client.commands.workarea_settings.return_value = mocked_method
     await hass.services.async_call(
         domain=SWITCH_DOMAIN,
         service=service,
@@ -200,12 +201,12 @@ async def test_work_area_switch_commands(
     freezer.tick(timedelta(seconds=EXECUTION_TIME_DELAY))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    mocked_method.assert_called_once_with(TEST_MOWER_ID, TEST_AREA_ID, enabled=boolean)
+    mocked_method.enabled.assert_called_once_with(enabled=boolean)
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == excepted_state
 
-    mocked_method.side_effect = ApiError("Test error")
+    mocked_method.enabled.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",
