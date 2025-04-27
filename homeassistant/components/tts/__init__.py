@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
-from dataclasses import dataclass
+from collections.abc import AsyncGenerator, MutableMapping
+from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
 from http import HTTPStatus
@@ -15,7 +15,7 @@ import os
 import re
 import secrets
 from time import monotonic
-from typing import Any, Final
+from typing import Any, Final, Generic, Protocol, TypeVar
 
 from aiohttp import web
 import mutagen
@@ -264,7 +264,7 @@ def async_create_stream(
 @callback
 def async_get_stream(hass: HomeAssistant, token: str) -> ResultStream | None:
     """Return a result stream given a token."""
-    return hass.data[DATA_TTS_MANAGER].token_to_stream.get(token)
+    return hass.data[DATA_TTS_MANAGER].async_get_result_stream(token)
 
 
 async def async_get_media_source_audio(
@@ -456,6 +456,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class ResultStream:
     """Class that will stream the result when available."""
 
+    last_used: float = field(default_factory=monotonic, init=False)
+
     # Streaming/conversion properties
     token: str
     extension: str
@@ -498,6 +500,8 @@ class ResultStream:
         async for chunk in cache.async_stream_data():
             yield chunk
 
+        self.last_used = monotonic()
+
 
 def _hash_options(options: dict) -> str:
     """Hashes an options dictionary."""
@@ -509,13 +513,25 @@ def _hash_options(options: dict) -> str:
     return opts_hash.hexdigest()
 
 
-class MemcacheCleanup:
+class HasLastUsed(Protocol):
+    """Protocol for objects that have a last_used attribute."""
+
+    last_used: float
+
+
+T = TypeVar("T", bound=HasLastUsed)
+
+
+class DictCleaning(Generic[T]):
     """Helper to clean up the stale sessions."""
 
     unsub: CALLBACK_TYPE | None = None
 
     def __init__(
-        self, hass: HomeAssistant, maxage: float, memcache: dict[str, TTSCache]
+        self,
+        hass: HomeAssistant,
+        maxage: float,
+        memcache: MutableMapping[str, T],
     ) -> None:
         """Initialize the cleanup."""
         self.hass = hass
@@ -582,8 +598,9 @@ class SpeechManager:
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
         self.token_to_stream: dict[str, ResultStream] = {}
-        self.memcache_cleanup = MemcacheCleanup(
-            hass, memory_cache_maxage, self.mem_cache
+        self.memcache_cleanup = DictCleaning(hass, memory_cache_maxage, self.mem_cache)
+        self.token_to_stream_cleanup = DictCleaning(
+            hass, memory_cache_maxage, self.token_to_stream
         )
 
     def _init_cache(self) -> dict[str, str]:
@@ -674,6 +691,17 @@ class SpeechManager:
         return language, merged_options
 
     @callback
+    def async_get_result_stream(
+        self,
+        token: str,
+    ) -> ResultStream | None:
+        """Return a result stream given a token."""
+        stream = self.token_to_stream.get(token, None)
+        if stream:
+            stream.last_used = monotonic()
+        return stream
+
+    @callback
     def async_create_result_stream(
         self,
         engine: str,
@@ -703,6 +731,7 @@ class SpeechManager:
             _manager=self,
         )
         self.token_to_stream[token] = result_stream
+        self.token_to_stream_cleanup.schedule()
         return result_stream
 
     @callback
