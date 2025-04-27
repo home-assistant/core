@@ -153,3 +153,42 @@ async def test_async_setup_import_failure(
     assert issue.is_persistent is False
     assert issue.translation_key == "deprecated_yaml_import_issue_unknown"
     assert issue.severity == ir.IssueSeverity.WARNING
+
+
+@pytest.mark.usefixtures("mock_modbus")
+async def test_async_setup_cannot_connect(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_stiebel_eltron_client: AsyncMock,
+) -> None:
+    """Test async_setup with import failure."""
+    config = {
+        DOMAIN: {
+            CONF_NAME: "Stiebel Eltron",
+            CONF_HUB: DEFAULT_HUB,
+        },
+        "modbus": [
+            {
+                CONF_NAME: DEFAULT_HUB,
+                CONF_HOST: "invalid_host",
+                CONF_PORT: 502,
+            }
+        ],
+    }
+
+    # Simulate a cannot connect error
+    mock_stiebel_eltron_client.update.return_value = False
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # Verify the issue is created
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue
+    assert issue.active is True
+    assert issue.is_fixable is False
+    assert issue.is_persistent is False
+    assert issue.translation_key == "deprecated_yaml_import_issue_cannot_connect"
+    assert issue.severity == ir.IssueSeverity.WARNING

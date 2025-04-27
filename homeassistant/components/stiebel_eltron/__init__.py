@@ -113,7 +113,7 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the STIEBEL ELTRON component."""
     if DOMAIN in config:
-        hass.create_task(_async_import(hass, config))
+        hass.async_create_task(_async_import(hass, config))
     return True
 
 
@@ -128,7 +128,7 @@ async def async_setup_entry(
         ModbusTcpClient(entry.data[CONF_HOST], port=entry.data[CONF_PORT]), 1
     )
 
-    success = hass.async_add_executor_job(client.update)
+    success = await hass.async_add_executor_job(client.update)
     if not success:
         raise ConfigEntryNotReady("Could not connect to device")
 

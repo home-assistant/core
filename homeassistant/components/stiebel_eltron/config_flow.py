@@ -56,7 +56,9 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+        self._async_abort_entries_match(
+            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+        )
         client = StiebelEltronAPI(
             ModbusTcpClient(user_input[CONF_HOST], port=user_input[CONF_PORT]), 1
         )
@@ -65,9 +67,10 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
-        else:
-            if not success:
-                return self.async_abort(reason="cannot_connect")
+
+        if not success:
+            return self.async_abort(reason="cannot_connect")
+
         return self.async_create_entry(
             title=user_input[CONF_NAME],
             data={
