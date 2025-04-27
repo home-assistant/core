@@ -88,7 +88,7 @@ class MieleFan(MieleEntity, FanEntity):
     )
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return current on/off state."""
         assert self.device.state_ventilation_step is not None
         return self.device.state_ventilation_step > 0
