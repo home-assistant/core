@@ -12,11 +12,8 @@ from google.genai.types import (
     AutomaticFunctionCallingConfig,
     Content,
     FunctionDeclaration,
-    GenerateContentConfig,
     GoogleSearch,
-    HarmCategory,
     Part,
-    SafetySetting,
     Schema,
     Tool,
 )
@@ -32,25 +29,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_CHAT_MODEL,
-    CONF_DANGEROUS_BLOCK_THRESHOLD,
-    CONF_HARASSMENT_BLOCK_THRESHOLD,
-    CONF_HATE_BLOCK_THRESHOLD,
-    CONF_MAX_TOKENS,
     CONF_PROMPT,
-    CONF_SEXUAL_BLOCK_THRESHOLD,
-    CONF_TEMPERATURE,
-    CONF_TOP_K,
-    CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_HARM_BLOCK_THRESHOLD,
-    RECOMMENDED_MAX_TOKENS,
-    RECOMMENDED_TEMPERATURE,
-    RECOMMENDED_TOP_K,
-    RECOMMENDED_TOP_P,
 )
+from .model_setup import get_content_config
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -371,50 +356,16 @@ class GoogleGenerativeAIConversationEntity(
 
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
-        generateContentConfig = GenerateContentConfig(
-            temperature=self.entry.options.get(
-                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-            ),
-            top_k=self.entry.options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
-            top_p=self.entry.options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-            max_output_tokens=self.entry.options.get(
-                CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
-            ),
-            safety_settings=[
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                    threshold=self.entry.options.get(
-                        CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
-                    ),
-                ),
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_HARASSMENT,
-                    threshold=self.entry.options.get(
-                        CONF_HARASSMENT_BLOCK_THRESHOLD,
-                        RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                    ),
-                ),
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                    threshold=self.entry.options.get(
-                        CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
-                    ),
-                ),
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                    threshold=self.entry.options.get(
-                        CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
-                    ),
-                ),
-            ],
-            tools=tools or None,
-            system_instruction=prompt if supports_system_instruction else None,
-            automatic_function_calling=AutomaticFunctionCallingConfig(
-                disable=True, maximum_remote_calls=None
-            ),
-        )
 
-        if not supports_system_instruction:
+        generateContentConfig = get_content_config(self.entry)
+        # Set additional config options that are only supported in conversation.
+        generateContentConfig.tools = tools
+        generateContentConfig.automatic_function_calling = (
+            AutomaticFunctionCallingConfig(disable=True, maximum_remote_calls=None)
+        )
+        if supports_system_instruction:
+            generateContentConfig.system_instruction = prompt
+        else:
             messages = [
                 Content(role="user", parts=[Part.from_text(text=prompt)]),
                 Content(role="model", parts=[Part.from_text(text="Ok")]),

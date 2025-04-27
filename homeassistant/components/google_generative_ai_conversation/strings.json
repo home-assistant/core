@@ -54,6 +54,10 @@
       "name": "Generate content",
       "description": "Generate content from a prompt consisting of text and optionally images",
       "fields": {
+        "config_entry": {
+          "name": "Config entry",
+          "description": "The config entry specifying model settings to use for this action"
+        },
         "prompt": {
           "name": "Prompt",
           "description": "The prompt",
@@ -76,6 +80,15 @@
     "deprecated_image_filename_parameter": {
       "title": "Deprecated 'image_filename' parameter",
       "description": "The 'image_filename' parameter in Google Generative AI actions is deprecated. Please edit scripts and automations to use 'filenames' instead."
+    },
+    "missing_config_entry_parameter": {
+      "title": "Missing 'config_entry' parameter",
+      "description": "The 'config_entry' parameter in Google Generative AI actions is required. Please edit scripts and automations to specify a config entry."
+    }
+  },
+  "exceptions": {
+    "invalid_config_entry": {
+      "message": "Invalid config entry `{config_entry}`"
     }
   }
 }
