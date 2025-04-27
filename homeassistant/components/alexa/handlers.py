@@ -1709,9 +1709,7 @@ async def async_api_changechannel(
     data: dict[str, Any] = {
         ATTR_ENTITY_ID: entity.entity_id,
         media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
-        media_player.const.ATTR_MEDIA_CONTENT_TYPE: (
-            media_player.const.MEDIA_TYPE_CHANNEL
-        ),
+        media_player.const.ATTR_MEDIA_CONTENT_TYPE: media_player.MediaType.CHANNEL,
     }
 
     await hass.services.async_call(
