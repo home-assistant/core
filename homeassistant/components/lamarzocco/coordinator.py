@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from asyncio import sleep
+from asyncio import Task, sleep
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -26,7 +26,6 @@ WS_SETTLE_IN_TIME = 1
 SCAN_INTERVAL = timedelta(seconds=15)
 SETTINGS_UPDATE_INTERVAL = timedelta(hours=1)
 SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=5)
-STATISTICS_UPDATE_INTERVAL = timedelta(minutes=15)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,21 +87,15 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
-    async def _async_setup(self) -> None:
-        """Set up the coordinator."""
-
-        async def reconnect_websocket() -> None:
-            """Reconnect the websocket every 30 minutes."""
-            await sleep(WS_AUTO_RECONNECT_INTERVAL)
-            _LOGGER.debug("Auto reconnecting WebSocket")
-            await self.device.websocket.disconnect()
-            await self.async_request_refresh()
-
-        self.config_entry.async_create_background_task(
-            hass=self.hass,
-            target=reconnect_websocket(),
-            name="lm_websocket_reconnect_task",
-        )
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: LaMarzoccoConfigEntry,
+        device: LaMarzoccoMachine,
+    ) -> None:
+        """Initialize coordinator."""
+        super().__init__(hass, entry, device)
+        self._ws_scheduled_reconnect_task: Task | None = None
 
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
@@ -120,6 +113,24 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
                 update_callback=lambda _: self.async_set_updated_data(None)
             ),
             name="lm_websocket_task",
+        )
+
+        async def schedule_reconnect_websocket() -> None:
+            """Reconnect the websocket every 30 minutes."""
+            await sleep(WS_AUTO_RECONNECT_INTERVAL)
+            _LOGGER.debug("Auto reconnecting WebSocket")
+            await self.device.websocket.disconnect()
+            await self.async_request_refresh()
+
+        if self._ws_scheduled_reconnect_task is not None:
+            self._ws_scheduled_reconnect_task.cancel()
+
+        self._ws_scheduled_reconnect_task = (
+            self.config_entry.async_create_background_task(
+                hass=self.hass,
+                target=schedule_reconnect_websocket(),
+                name="lm_websocket_scheduled_reconnect",
+            )
         )
 
         # Wait for the websocket to connect

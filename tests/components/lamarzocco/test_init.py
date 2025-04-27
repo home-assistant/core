@@ -249,6 +249,26 @@ async def test_websocket_closed_on_unload(
     mock_disconnect_callback.assert_called_once()
 
 
+async def test_websocket_auto_reconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Test the websocket gets automatically shut down after a certain time."""
+
+    mock_lamarzocco.websocket.connected = False
+
+    with patch(
+        "homeassistant.components.lamarzocco.coordinator.WS_AUTO_RECONNECT_INTERVAL",
+        new=0,
+    ):
+        await async_init_integration(hass, mock_config_entry)
+
+    assert mock_lamarzocco.get_dashboard.call_count == 2
+    assert mock_lamarzocco.connect_dashboard_websocket.call_count == 2
+    assert mock_lamarzocco.websocket.disconnect.call_count == 2
+
+
 @pytest.mark.parametrize(
     ("version", "issue_exists"), [("v3.5-rc6", True), ("v5.0.9", False)]
 )
