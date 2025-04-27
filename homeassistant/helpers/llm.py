@@ -1038,7 +1038,9 @@ class TodoGetItemsTool(Tool):
 
     name = "todo_get_items"
     description = (
-        "Get items from a to-do list. Returns items with optional status filtering."
+        "Query a to-do list to find out what items are on it. "
+        "Use this to answer questions like 'What's on my task list?' or 'Read my grocery list'. "
+        "Filters items by status (needs_action, completed, all)."
     )
 
     def __init__(self, todo_lists: list[str]) -> None:
