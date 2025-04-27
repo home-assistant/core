@@ -139,6 +139,11 @@
         "name": "[%key:common::action::pause%]"
       }
     },
+    "fan": {
+      "fan": {
+        "name": "Fan"
+      }
+    },
     "light": {
       "ambient_light": {
         "name": "Ambient light"
