@@ -88,6 +88,22 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+
+        async def reconnect_websocket() -> None:
+            """Reconnect the websocket every 30 minutes."""
+            await sleep(WS_AUTO_RECONNECT_INTERVAL)
+            _LOGGER.debug("Auto reconnecting WebSocket")
+            await self.device.websocket.disconnect()
+            await self.async_request_refresh()
+
+        self.config_entry.async_create_background_task(
+            hass=self.hass,
+            target=reconnect_websocket(),
+            name="lm_websocket_reconnect_task",
+        )
+
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
@@ -106,21 +122,10 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
             name="lm_websocket_task",
         )
 
+        await sleep(2)
+
         async def websocket_close(_: Any | None = None) -> None:
             await self.device.websocket.disconnect()
-
-        async def reconnect_websocket() -> None:
-            """Reconnect the websocket every 30 minutes."""
-            await sleep(WS_AUTO_RECONNECT_INTERVAL)
-            _LOGGER.debug("Auto reconnecting WebSocket")
-            await websocket_close()
-            await self.async_request_refresh()
-
-        self.config_entry.async_create_background_task(
-            hass=self.hass,
-            target=reconnect_websocket(),
-            name="lm_websocket_reconnect_task",
-        )
 
         self.config_entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, websocket_close)
