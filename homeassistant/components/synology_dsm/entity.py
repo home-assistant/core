@@ -139,6 +139,8 @@ class SynologyDSMDeviceEntity(
                 for partition in device.device_partitions.values():
                     if partition.partition_title == self._device_id:
                         self._device_name = partition.partition_title
+                        self._device_manufacturer = "Synology"
+                        self._device_model = partition.filesystem
                         break
 
         self._attr_unique_id += f"_{self._device_id}"
