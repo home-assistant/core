@@ -595,6 +595,7 @@
       'attributes': ReadOnlyDict({
         'device_class': 'voltage',
         'friendly_name': 'SFR Box Voltage',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
       }),
       'context': <ANY>,
@@ -608,6 +609,7 @@
       'attributes': ReadOnlyDict({
         'device_class': 'temperature',
         'friendly_name': 'SFR Box Temperature',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'context': <ANY>,
