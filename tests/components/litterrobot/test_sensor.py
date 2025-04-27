@@ -122,4 +122,4 @@ async def test_litterhopper_sensor(
     """Tests LitterHopper sensors."""
     await setup_integration(hass, mock_account_with_litterhopper, PLATFORM_DOMAIN)
     sensor = hass.states.get("sensor.test_hopper_status")
-    assert sensor.state == "ENABLED"
+    assert sensor.state == "enabled"
