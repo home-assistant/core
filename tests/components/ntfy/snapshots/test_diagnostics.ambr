@@ -1,0 +1,17 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'topics': dict({
+      'ABCDEF': dict({
+        'data': dict({
+          'topic': 'mytopic',
+        }),
+        'subentry_id': 'ABCDEF',
+        'subentry_type': 'topic',
+        'title': 'mytopic',
+        'unique_id': 'mytopic',
+      }),
+    }),
+    'url': 'https://ntfy.sh/',
+  })
+# ---
