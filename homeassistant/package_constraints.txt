@@ -70,7 +70,7 @@ typing-extensions>=4.13.0,<5.0
 ulid-transform==1.4.0
 urllib3>=1.26.5,<2
 uv==0.6.10
-voluptuous-openapi==0.0.6
+voluptuous-openapi==0.0.7
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
