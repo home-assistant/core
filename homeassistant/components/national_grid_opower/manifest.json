@@ -1,0 +1,6 @@
+{
+  "domain": "national_grid_opower",
+  "name": "National Grid - Opower",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

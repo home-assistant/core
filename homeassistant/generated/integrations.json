@@ -4228,8 +4228,8 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "national_grid": {
-      "name": "National Grid",
+    "national_grid_opower": {
+      "name": "National Grid - Opower",
       "integration_type": "virtual",
       "supported_by": "opower"
     },
