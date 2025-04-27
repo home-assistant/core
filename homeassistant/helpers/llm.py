@@ -1039,6 +1039,7 @@ class GetLiveContextTool(Tool):
         "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
         "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first)."
     )
+
     async def async_call(
         self,
         hass: HomeAssistant,
