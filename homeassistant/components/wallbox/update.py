@@ -20,7 +20,9 @@ from .const import (
     CHARGER_LATEST_VERSION_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_SOFTWARE_KEY,
+    CHARGER_STATUS_DESCRIPTION_KEY,
     DOMAIN,
+    ChargerStatus,
 )
 from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
@@ -39,7 +41,6 @@ async def async_setup_entry(
             WallboxBoxUpdateEntity(
                 coordinator,
                 key=CHARGER_SOFTWARE_KEY,
-                device_class=UpdateDeviceClass.FIRMWARE,
             )
         ]
     )
@@ -50,16 +51,15 @@ class WallboxBoxUpdateEntity(WallboxEntity, UpdateEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
 
     def __init__(
         self,
         coordinator: WallboxCoordinator,
         key: str,
-        device_class: UpdateDeviceClass | None = None,
     ) -> None:
         """Init Wallbox connectivity class."""
         super().__init__(coordinator)
-        self._attr_device_class = device_class
         self._attr_unique_id = (
             f"{key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
         )
@@ -76,6 +76,14 @@ class WallboxBoxUpdateEntity(WallboxEntity, UpdateEntity):
         """Latest version available for install."""
         return str(
             self.coordinator.data[CHARGER_SOFTWARE_KEY][CHARGER_LATEST_VERSION_KEY]
+        )
+
+    @property
+    def in_progress(self) -> bool:
+        """Check if an update is running."""
+        return bool(
+            self.coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY]
+            == ChargerStatus.UPDATING
         )
 
     async def async_install(
