@@ -1034,12 +1034,11 @@ class GetLiveContextTool(Tool):
 
     name = "GetLiveContext"
     description = (
-        "Use this tool when the user asks a question about the CURRENT state, "
-        "value, or mode of a specific device, sensor, entity, or area in the "
-        "smart home, and the answer can be improved with real-time data not "
-        "available in the static device overview list. "
+        "Provides real-time information about the CURRENT state, value, or mode of devices, sensors, entities, or areas. "
+        "Use this tool for: "
+        "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
+        "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first)."
     )
-
     async def async_call(
         self,
         hass: HomeAssistant,
