@@ -741,9 +741,13 @@ class SpeechManager:
             store_to_disk = False
         else:
             _LOGGER.debug("Generating audio for %s", message[0:32])
+
+            async def message_stream() -> AsyncGenerator[str]:
+                yield message
+
             extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
             data_gen = self._async_generate_tts_audio(
-                engine_instance, message, language, options
+                engine_instance, message_stream(), language, options
             )
 
         cache = TTSCache(
@@ -818,7 +822,7 @@ class SpeechManager:
     async def _async_generate_tts_audio(
         self,
         engine_instance: TextToSpeechEntity | Provider,
-        message: str,
+        message_stream: AsyncGenerator[str],
         language: str,
         options: dict[str, Any],
     ) -> AsyncGenerator[bytes]:
@@ -867,6 +871,7 @@ class SpeechManager:
             raise HomeAssistantError("TTS engine name is not set.")
 
         if isinstance(engine_instance, Provider):
+            message = "".join([chunk async for chunk in message_stream])
             extension, data = await engine_instance.async_get_tts_audio(
                 message, language, options
             )
@@ -882,12 +887,8 @@ class SpeechManager:
             data_gen = make_data_generator(data)
 
         else:
-
-            async def message_gen() -> AsyncGenerator[str]:
-                yield message
-
             tts_result = await engine_instance.internal_async_stream_tts_audio(
-                TTSAudioRequest(language, options, message_gen())
+                TTSAudioRequest(language, options, message_stream)
             )
             extension = tts_result.extension
             data_gen = tts_result.data_gen
