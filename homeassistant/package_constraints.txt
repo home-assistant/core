@@ -24,7 +24,7 @@ bleak-retry-connector==3.9.0
 bleak==0.22.3
 bluetooth-adapters==0.21.4
 bluetooth-auto-recovery==1.4.5
-bluetooth-data-tools==1.27.0
+bluetooth-data-tools==1.28.0
 cached-ipaddress==0.10.0
 certifi>=2021.5.30
 ciso8601==2.3.2
