@@ -1,6 +1,5 @@
 """Test the snapcast media player implementation."""
 
-from typing import Any
 from unittest.mock import patch
 
 from snapcast.control.server import CONTROL_PORT
@@ -25,15 +24,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 
-from .const import TEST_CLIENT_ENTITY_ID, TEST_GROUP_ENTITY_ID, TEST_STATE
+from .const import TEST_CLIENT_ENTITY_ID, TEST_GROUP_ENTITY_ID
 
 from tests.common import MockConfigEntry
-
-
-async def _call_service(hass: HomeAssistant, name: str, data: dict[str, Any]) -> None:
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, name, service_data=data, blocking=True
-    )
 
 
 async def _setup_integration(hass: HomeAssistant) -> MockConfigEntry:
@@ -64,9 +57,7 @@ async def _setup_integration(hass: HomeAssistant) -> MockConfigEntry:
     return mock_config_entry
 
 
-async def test_state(
-    hass: HomeAssistant,
-) -> None:
+async def test_state(hass: HomeAssistant, mock_server_state) -> None:
     """Test basic state information."""
 
     # Setup the integration
@@ -77,7 +68,7 @@ async def test_state(
     coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
 
     # Load the test server data manually
-    coordinator.server._on_server_update(TEST_STATE)
+    coordinator.server._on_server_update(mock_server_state)
 
     # Asset basic state matches in both client and group entities
     for entity_id in (TEST_CLIENT_ENTITY_ID, TEST_GROUP_ENTITY_ID):
@@ -94,9 +85,7 @@ async def test_state(
         ]
 
 
-async def test_metadata(
-    hass: HomeAssistant,
-) -> None:
+async def test_metadata(hass: HomeAssistant, mock_server_state) -> None:
     """Test metadata is parsed from Snapcast stream."""
 
     # Setup the integration
@@ -107,7 +96,7 @@ async def test_metadata(
     coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
 
     # Load the test server data manually
-    coordinator.server._on_server_update(TEST_STATE)
+    coordinator.server._on_server_update(mock_server_state)
 
     # Asset metadata matches in both client and group entities
     for entity_id in (TEST_CLIENT_ENTITY_ID, TEST_GROUP_ENTITY_ID):
@@ -123,9 +112,7 @@ async def test_metadata(
         assert state.attributes[ATTR_MEDIA_POSITION] == 30
 
 
-async def test_no_metadata(
-    hass: HomeAssistant,
-) -> None:
+async def test_no_metadata(hass: HomeAssistant, mock_server_state) -> None:
     """Test no metadata exists when a stream has no metadata."""
 
     # Setup the integration
@@ -136,13 +123,14 @@ async def test_no_metadata(
     coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
 
     # Load the test server data manually
-    coordinator.server._on_server_update(TEST_STATE)
+    coordinator.server._on_server_update(mock_server_state)
 
     # Switch to the stream without metadata
-    await _call_service(
-        hass,
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
-        {"entity_id": TEST_GROUP_ENTITY_ID, "source": "Test Stream 2"},
+        service_data={"entity_id": TEST_GROUP_ENTITY_ID, "source": "Test Stream 2"},
+        blocking=True,
     )
 
     # Manually update coordinator and entities
