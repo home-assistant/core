@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from elevenlabs import AsyncElevenLabs
@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-def to_voice_settings(options: MappingProxyType[str, Any]) -> VoiceSettings:
+def to_voice_settings(options: Mapping[str, Any]) -> VoiceSettings:
     """Return voice settings."""
     return VoiceSettings(
         stability=options.get(CONF_STABILITY, DEFAULT_STABILITY),

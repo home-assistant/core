@@ -232,7 +232,7 @@
           "charging_problem": "Charging problem",
           "paused": "[%key:common::state::paused%]",
           "spot_cleaning": "Spot cleaning",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "shutting_down": "Shutting down",
           "updating": "Updating",
           "docking": "Docking",

@@ -766,8 +766,11 @@ class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
 
     CUBIC_METERS_PER_HOUR = "m³/h"
+    CUBIC_METERS_PER_SECOND = "m³/s"
     CUBIC_FEET_PER_MINUTE = "ft³/min"
+    LITERS_PER_HOUR = "L/h"
     LITERS_PER_MINUTE = "L/min"
+    LITERS_PER_SECOND = "L/s"
     GALLONS_PER_MINUTE = "gal/min"
     MILLILITERS_PER_SECOND = "mL/s"
 
