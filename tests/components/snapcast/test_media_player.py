@@ -1,9 +1,5 @@
 """Test the snapcast media player implementation."""
 
-from unittest.mock import patch
-
-from snapcast.control.server import CONTROL_PORT
-
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -20,49 +16,14 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
 )
 from homeassistant.components.snapcast.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT, STATE_PLAYING
+from homeassistant.const import STATE_PLAYING
 from homeassistant.core import HomeAssistant
 
 from .const import TEST_CLIENT_ENTITY_ID, TEST_GROUP_ENTITY_ID
 
-from tests.common import MockConfigEntry
 
-
-async def _setup_integration(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up the integration with a mock config entry."""
-
-    # Create a mock config entry
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "127.0.0.1",
-            CONF_PORT: CONTROL_PORT,
-        },
-    )
-
-    # Patch Snapserver to prevent connection attempts
-    with (
-        patch("snapcast.control.server.Snapserver.start"),
-        patch("snapcast.control.server.Snapserver._request"),
-    ):
-        # Add mock config entry to HASS and setup integration
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.entry_id in hass.data[DOMAIN]
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    return mock_config_entry
-
-
-async def test_state(hass: HomeAssistant, mock_server_state) -> None:
+async def test_state(hass: HomeAssistant, mock_config_entry, mock_server_state) -> None:
     """Test basic state information."""
-
-    # Setup the integration
-    mock_config_entry = await _setup_integration(hass)
-    assert mock_config_entry
 
     # Fetch the coordinator
     coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
@@ -85,12 +46,10 @@ async def test_state(hass: HomeAssistant, mock_server_state) -> None:
         ]
 
 
-async def test_metadata(hass: HomeAssistant, mock_server_state) -> None:
+async def test_metadata(
+    hass: HomeAssistant, mock_config_entry, mock_server_state
+) -> None:
     """Test metadata is parsed from Snapcast stream."""
-
-    # Setup the integration
-    mock_config_entry = await _setup_integration(hass)
-    assert mock_config_entry
 
     # Fetch the coordinator
     coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
@@ -112,12 +71,10 @@ async def test_metadata(hass: HomeAssistant, mock_server_state) -> None:
         assert state.attributes[ATTR_MEDIA_POSITION] == 30
 
 
-async def test_no_metadata(hass: HomeAssistant, mock_server_state) -> None:
+async def test_no_metadata(
+    hass: HomeAssistant, mock_config_entry, mock_server_state
+) -> None:
     """Test no metadata exists when a stream has no metadata."""
-
-    # Setup the integration
-    mock_config_entry = await _setup_integration(hass)
-    assert mock_config_entry
 
     # Fetch the coordinator
     coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
