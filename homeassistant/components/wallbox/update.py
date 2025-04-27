@@ -74,12 +74,8 @@ class WallboxBoxUpdateEntity(WallboxEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        if self.coordinator.data[CHARGER_SOFTWARE_KEY][CHARGER_LATEST_VERSION_KEY]:
-            return str(
-                self.coordinator.data[CHARGER_SOFTWARE_KEY][CHARGER_LATEST_VERSION_KEY]
-            )
         return str(
-            self.coordinator.data[CHARGER_SOFTWARE_KEY][CHARGER_CURRENT_VERSION_KEY]
+            self.coordinator.data[CHARGER_SOFTWARE_KEY][CHARGER_LATEST_VERSION_KEY]
         )
 
     async def async_install(

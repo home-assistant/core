@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant, HomeAssistantError
 from . import (
     authorisation_response,
     http_404_error,
+    setup_integration,
     setup_integration_update_available,
     test_response,
 )
@@ -24,7 +25,7 @@ from .const import MOCK_UPDATE_ENTITY_ID
 from tests.common import MockConfigEntry
 
 
-async def test_wallbox_update_class(
+async def test_wallbox_update_available_class(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
     """Test wallbox update class."""
@@ -54,13 +55,21 @@ async def test_wallbox_update_class(
             blocking=True,
         )
 
-        state = hass.states.get(MOCK_UPDATE_ENTITY_ID)
-        assert state
-        assert state.state == STATE_OFF
-        assert (
-            state.attributes[ATTR_INSTALLED_VERSION]
-            == state.attributes[ATTR_LATEST_VERSION]
-        )
+
+async def test_wallbox_update__no_update_class(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox update class."""
+
+    await setup_integration(hass, entry)
+
+    state = hass.states.get(MOCK_UPDATE_ENTITY_ID)
+    assert state
+    assert state.state == STATE_OFF
+    assert (
+        state.attributes[ATTR_INSTALLED_VERSION]
+        == state.attributes[ATTR_LATEST_VERSION]
+    )
 
 
 async def test_wallbox_update_class_connection_error(
@@ -68,7 +77,7 @@ async def test_wallbox_update_class_connection_error(
 ) -> None:
     """Test wallbox update class connection error."""
 
-    await setup_integration_update_available(hass, entry)
+    await setup_integration(hass, entry)
 
     with (
         patch(
@@ -95,7 +104,7 @@ async def test_wallbox_update_class_authentication_error(
 ) -> None:
     """Test wallbox update class authentication error."""
 
-    await setup_integration_update_available(hass, entry)
+    await setup_integration(hass, entry)
 
     with (
         patch(
