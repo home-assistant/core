@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from asyncio import sleep
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -19,9 +20,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
+WS_AUTO_RECONNECT_INTERVAL = 1800
+WS_SETTLE_IN_TIME = 1
+
 SCAN_INTERVAL = timedelta(seconds=15)
 SETTINGS_UPDATE_INTERVAL = timedelta(hours=1)
 SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=5)
+STATISTICS_UPDATE_INTERVAL = timedelta(minutes=15)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -82,6 +88,22 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+
+        async def reconnect_websocket() -> None:
+            """Reconnect the websocket every 30 minutes."""
+            await sleep(WS_AUTO_RECONNECT_INTERVAL)
+            _LOGGER.debug("Auto reconnecting WebSocket")
+            await self.device.websocket.disconnect()
+            await self.async_request_refresh()
+
+        self.config_entry.async_create_background_task(
+            hass=self.hass,
+            target=reconnect_websocket(),
+            name="lm_websocket_reconnect_task",
+        )
+
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
@@ -100,9 +122,11 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
             name="lm_websocket_task",
         )
 
+        # Wait for the websocket to connect
+        await sleep(WS_SETTLE_IN_TIME)
+
         async def websocket_close(_: Any | None = None) -> None:
-            if self.device.websocket.connected:
-                await self.device.websocket.disconnect()
+            await self.device.websocket.disconnect()
 
         self.config_entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, websocket_close)

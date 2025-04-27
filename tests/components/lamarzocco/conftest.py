@@ -1,7 +1,7 @@
 """Lamarzocco session fixtures."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 from pylamarzocco.const import ModelName
@@ -111,6 +111,7 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
             "schedule": machine_mock.schedule.to_dict(),
             "settings": machine_mock.settings.to_dict(),
         }
+        machine_mock.websocket.disconnect = AsyncMock()
         yield machine_mock
 
 
@@ -125,3 +126,12 @@ def mock_ble_device() -> BLEDevice:
     return BLEDevice(
         "00:00:00:00:00:00", "GS_GS012345", details={"path": "path"}, rssi=50
     )
+
+
+@pytest.fixture(autouse=True)
+def mock_ws_settle_in() -> Generator:
+    """Auto mock websocket settle in."""
+    with patch(
+        "homeassistant.components.lamarzocco.coordinator.WS_SETTLE_IN_TIME", new=0
+    ):
+        yield
