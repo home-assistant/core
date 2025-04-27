@@ -120,7 +120,7 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
             await sleep(WS_AUTO_RECONNECT_INTERVAL)
             _LOGGER.debug("Auto reconnecting WebSocket")
             await self.device.websocket.disconnect()
-            await self.async_request_refresh()
+            await self.async_refresh()  # refresh to reconnect
 
         if self._ws_scheduled_reconnect_task is not None:
             self._ws_scheduled_reconnect_task.cancel()
