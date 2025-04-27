@@ -2,11 +2,11 @@
   "domain": "google",
   "name": "Google",
   "integrations": [
-    "gemini",
     "google_assistant",
     "google_assistant_sdk",
     "google_cloud",
     "google_drive",
+    "google_gemini",
     "google_generative_ai_conversation",
     "google_mail",
     "google_maps",
