@@ -257,6 +257,16 @@ async def test_websocket_auto_reconnect(
     """Test the websocket gets automatically shut down after a certain time."""
 
     mock_lamarzocco.websocket.connected = False
+    disconnect_counter = 0
+
+    async def dummy_disconnect() -> None:
+        """Disconnect function to change websocket status."""
+        nonlocal disconnect_counter
+        if disconnect_counter > 0:
+            mock_lamarzocco.websocket.connected = True
+        disconnect_counter += 1
+
+    mock_lamarzocco.websocket.disconnect = dummy_disconnect
 
     with patch(
         "homeassistant.components.lamarzocco.coordinator.WS_AUTO_RECONNECT_INTERVAL",
@@ -266,7 +276,7 @@ async def test_websocket_auto_reconnect(
 
     assert mock_lamarzocco.get_dashboard.call_count == 2
     assert mock_lamarzocco.connect_dashboard_websocket.call_count == 2
-    assert mock_lamarzocco.websocket.disconnect.call_count == 2
+    assert disconnect_counter == 2
 
 
 @pytest.mark.parametrize(
