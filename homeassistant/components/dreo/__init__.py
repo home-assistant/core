@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from hscloud.hscloud import HsCloud
-from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
+from hscloud.hscloudexception import HsCloudBusinessException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -37,8 +37,6 @@ async def async_login(hass: HomeAssistant, username: str, password: str) -> Dreo
 
     try:
         devices = await hass.async_add_executor_job(setup_client)
-    except HsCloudException as ex:
-        raise ConfigEntryNotReady("unable to connect") from ex
     except HsCloudBusinessException as ex:
         raise ConfigEntryNotReady("invalid username or password") from ex
 

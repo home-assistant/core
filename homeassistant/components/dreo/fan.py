@@ -9,6 +9,7 @@ from hscloud.const import DEVICE_TYPE, FAN_DEVICE
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import percentage_to_ranged_value
 
@@ -32,8 +33,27 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fan from a config entry."""
-    fan_devices = []
+    # Simple cleanup of stale entities
+    device_ids = {
+        str(d.get("deviceSn", ""))
+        for d in config_entry.runtime_data.devices
+        if d.get("deviceSn")
+    }
+    entity_registry = er.async_get(hass)
 
+    [
+        entity_registry.async_remove(entry.entity_id)
+        for entry in entity_registry.entities.values()
+        if entry.config_entry_id == config_entry.entry_id
+        and entry.domain == "fan"
+        and (
+            entry.unique_id.split("_")[0] if "_" in entry.unique_id else entry.unique_id
+        )
+        not in device_ids
+    ]
+
+    # Add current devices
+    fan_devices = []
     for device in config_entry.runtime_data.devices:
         device_model = device.get("model")
         if DEVICE_TYPE.get(device_model) is None:
@@ -43,7 +63,6 @@ async def async_setup_entry(
         if not device_id:
             continue
 
-        # Get the coordinator from runtime_data
         coordinator = config_entry.runtime_data.coordinators.get(device_id)
         if not coordinator:
             continue

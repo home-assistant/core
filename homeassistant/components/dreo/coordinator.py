@@ -73,21 +73,17 @@ class FanDataStrategy:
             is_on=base_data["is_on"],
         )
 
-        # Convert mode to string
         if "mode" in status:
             fan_data["mode"] = str(status.get("mode", ""))
 
-        # Convert oscillate to boolean
         if "oscillate" in status:
             fan_data["oscillate"] = bool(status.get("oscillate", False))
 
-        # Convert speed to integer
         if "speed" in status and status.get("speed") is not None:
             speed_range = (
                 FAN_DEVICE.get("config", {}).get(device_model, {}).get("speed_range")
             )
             if speed_range:
-                # Direct conversion to integer
                 speed_value = float(status.get("speed", 0))
                 fan_data["speed_percentage"] = int(
                     ranged_value_to_percentage(speed_range, speed_value)
