@@ -1846,6 +1846,9 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     assert stream.language == mock_tts_entity.default_language
     assert stream.options == (mock_tts_entity.default_options or {})
     assert tts.async_get_stream(hass, stream.token) is stream
+    stream.async_set_message("beer")
+    result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+    assert result_data == MOCK_DATA
 
     data = b"beer"
     stream2 = MockResultStream(hass, "wav", data)
