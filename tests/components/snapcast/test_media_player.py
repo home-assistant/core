@@ -62,8 +62,11 @@ async def test_metadata(
         state = hass.states.get(entity_id)
         assert state
 
-        assert state.attributes[ATTR_MEDIA_ARTIST] == "Test Artist 1"
-        assert state.attributes[ATTR_MEDIA_ALBUM_ARTIST] == "Test Album Artist 1"
+        assert state.attributes[ATTR_MEDIA_ARTIST] == "Test Artist 1, Test Artist 2"
+        assert (
+            state.attributes[ATTR_MEDIA_ALBUM_ARTIST]
+            == "Test Album Artist 1, Test Album Artist 2"
+        )
         assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Test Album"
         assert state.attributes[ATTR_MEDIA_TITLE] == "Test Title"
         assert state.attributes[ATTR_MEDIA_TRACK] == 10

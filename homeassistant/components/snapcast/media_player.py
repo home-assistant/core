@@ -303,7 +303,10 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        return self.metadata.get("artist", [None])[0]
+        if (value := self.metadata.get("artist")) is not None:
+            return ", ".join(value)
+
+        return None
 
     @property
     def media_album_name(self) -> str | None:
@@ -313,7 +316,10 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media, music track only."""
-        return self.metadata.get("albumArtist", [None])[0]
+        if (value := self.metadata.get("albumArtist")) is not None:
+            return ", ".join(value)
+
+        return None
 
     @property
     def media_track(self) -> int | None:
