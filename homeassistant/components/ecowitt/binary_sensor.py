@@ -26,6 +26,9 @@ ECOWITT_BINARYSENSORS_MAPPING: Final = {
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    EcoWittSensorTypes.RAIN_STATE: BinarySensorEntityDescription(
+        key="RAIN_STATE", device_class=BinarySensorDeviceClass.MOISTURE
+    ),
 }
 
 

@@ -74,10 +74,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             coordinator="battery",
             device_class=BinarySensorDeviceClass.PLUG,
             on_key="plugStatus",
-            on_value=[
-                PlugState.PLUGGED.value,
-                PlugState.PLUGGED_WAITING_FOR_CHARGE.value,
-            ],
+            on_value=PlugState.PLUGGED.value,
         ),
         RenaultBinarySensorEntityDescription(
             key="charging",

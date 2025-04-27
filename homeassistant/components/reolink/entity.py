@@ -178,8 +178,13 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             else:
                 self._dev_id = f"{self._host.unique_id}_ch{dev_ch}"
 
+            connections = set()
+            if mac := self._host.api.baichuan.mac_address(dev_ch):
+                connections.add((CONNECTION_NETWORK_MAC, mac))
+
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._dev_id)},
+                connections=connections,
                 via_device=(DOMAIN, self._host.unique_id),
                 name=self._host.api.camera_name(dev_ch),
                 model=self._host.api.camera_model(dev_ch),

@@ -127,7 +127,12 @@ async def test_no_calendar_events_global_disable(
 
     wake_up_sleep_entry_id = WAKE_UP_SLEEP_ENTRY_IDS[0]
 
-    mock_lamarzocco.config.wake_up_sleep_entries[wake_up_sleep_entry_id].enabled = False
+    wake_up_sleep_entry = mock_lamarzocco.schedule.smart_wake_up_sleep.schedules_dict[
+        wake_up_sleep_entry_id
+    ]
+
+    assert wake_up_sleep_entry
+    wake_up_sleep_entry.enabled = False
     test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.get_default_time_zone())
     freezer.move_to(test_time)
 

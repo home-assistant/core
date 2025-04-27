@@ -34,8 +34,8 @@
   ],
   "documentation": "https://www.home-assistant.io/integrations/lamarzocco",
   "integration_type": "device",
-  "iot_class": "cloud_polling",
+  "iot_class": "cloud_push",
   "loggers": ["pylamarzocco"],
   "quality_scale": "platinum",
-  "requirements": ["pylamarzocco==1.4.7"]
+  "requirements": ["pylamarzocco==2.0.0b3"]
 }

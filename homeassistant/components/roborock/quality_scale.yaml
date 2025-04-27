@@ -1,28 +1,16 @@
 rules:
   # Bronze
   action-setup: done
-  appropriate-polling:
-    status: todo
-    comment: |
-      The device currently polls every 30 seconds, which is a bit high when idle.
-      We should consider dynamic polling intervals (e.g. when cleaning) and
-      separate cloud vs local intervals.
+  appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow:
-    status: todo
-    comment: Not all fields have a data_description.
+  config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions:
-    status: todo
-    comment: |
-      The documentation for `roborock.get_maps` should be updated so it is next
-      to the other actions rather than only an example. All actions should be
-      updated to use the simple table format.
+  docs-actions: done
   docs-high-level-description: done
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -33,39 +21,30 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
-  reauthentication-flow: todo
+  parallel-updates: done
+  reauthentication-flow: done
   test-coverage: done
   # Gold
   devices: done
   diagnostics: done
-  discovery:
-    status: todo
-    comment: Determine if these devices can support discovery
+  discovery: done
   discovery-update-info:
     status: exempt
     comment: Devices do not support discovery.
-  docs-data-update:
-    status: todo
-    comment: |
-      The docs talk about device communication works (cloud vs local), but does
-      not yet describe data flow (e.g. polling). We should move into a separate
-      section.
-  docs-examples: todo
+  docs-data-update: done
+  docs-examples: done
   docs-known-limitations:
     status: todo
     comment: Documentation does not describe known limitations like rate limiting
   docs-supported-devices: todo
-  docs-supported-functions:
-    status: todo
-    comment: Mostly complete, but some documentation is outdated (e.g. maps/images)
+  docs-supported-functions: done
   docs-troubleshooting:
     status: todo
     comment: |
@@ -83,20 +62,14 @@ rules:
     status: exempt
     comment: There are no noisy entities.
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
     status: todo
     comment: The Cloud vs Local API warning should probably be a repair issue.
-  stale-devices:
-    status: todo
-    comment: |
-      The integration does not yet handle stale devices. The roborock app does
-      support deleting devices and this is a gap #132590
+  stale-devices: done
   # Platinum
   async-dependency: todo
-  inject-websession:
-    status: todo
-    comment: Web API uses aiohttp but does not yet inject web session.
-  strict-typing: todo
+  inject-websession: done
+  strict-typing: done

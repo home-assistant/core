@@ -18,9 +18,9 @@
     "bleak==0.22.3",
     "bleak-retry-connector==3.9.0",
     "bluetooth-adapters==0.21.4",
-    "bluetooth-auto-recovery==1.4.4",
-    "bluetooth-data-tools==1.25.0",
-    "dbus-fast==2.39.3",
-    "habluetooth==3.25.0"
+    "bluetooth-auto-recovery==1.4.5",
+    "bluetooth-data-tools==1.27.0",
+    "dbus-fast==2.43.0",
+    "habluetooth==3.39.0"
   ]
 }

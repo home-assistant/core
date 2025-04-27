@@ -85,6 +85,16 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "20A171*",
     },
     {
+        "domain": "bond",
+        "hostname": "bond-*",
+        "macaddress": "3C6A2C1*",
+    },
+    {
+        "domain": "bond",
+        "hostname": "bond-*",
+        "macaddress": "F44E38*",
+    },
+    {
         "domain": "broadlink",
         "registered_devices": True,
     },
@@ -499,6 +509,18 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "341513*",
     },
     {
+        "domain": "roborock",
+        "macaddress": "249E7D*",
+    },
+    {
+        "domain": "roborock",
+        "macaddress": "B04A39*",
+    },
+    {
+        "domain": "roborock",
+        "hostname": "roborock-*",
+    },
+    {
         "domain": "roomba",
         "hostname": "irobot-*",
         "macaddress": "501479*",
@@ -590,6 +612,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "sleepiq",
         "macaddress": "64DBA0*",
+    },
+    {
+        "domain": "sma",
+        "hostname": "sma*",
+        "macaddress": "0015BB*",
+    },
+    {
+        "domain": "sma",
+        "registered_devices": True,
     },
     {
         "domain": "smartthings",
