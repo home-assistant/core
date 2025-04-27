@@ -141,6 +141,5 @@ class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        await self.device.get_statistics()
         await self.device.get_coffee_and_flush_counter()
         _LOGGER.debug("Current statistics: %s", self.device.statistics.to_dict())
