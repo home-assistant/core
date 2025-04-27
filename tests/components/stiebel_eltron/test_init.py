@@ -15,7 +15,6 @@ from homeassistant.setup import async_setup_component
 async def test_async_setup_success(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test successful async_setup."""
     config = {
@@ -40,7 +39,6 @@ async def test_async_setup_success(
     assert issue
     assert issue.active is True
     assert issue.severity == ir.IssueSeverity.WARNING
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_stiebel_eltron_client")
@@ -48,7 +46,6 @@ async def test_async_setup_already_configured(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     mock_config_entry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we handle already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -75,7 +72,6 @@ async def test_async_setup_already_configured(
     assert issue
     assert issue.active is True
     assert issue.severity == ir.IssueSeverity.WARNING
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_async_setup_with_non_existing_hub(

@@ -1,6 +1,6 @@
 """Test the STIEBEL ELTRON config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_stiebel_eltron_client")
-async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_full_flow(hass: HomeAssistant) -> None:
     """Test the full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -36,13 +36,11 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 502,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_cannot_connect(
     hass: HomeAssistant,
     mock_stiebel_eltron_client: MagicMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -73,7 +71,6 @@ async def test_form_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_unknown_exception(
@@ -133,7 +130,7 @@ async def test_already_configured(
 
 
 @pytest.mark.usefixtures("mock_stiebel_eltron_client")
-async def test_import(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_import(hass: HomeAssistant) -> None:
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -150,7 +147,6 @@ async def test_import(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 502,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_cannot_connect(

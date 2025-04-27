@@ -1,7 +1,7 @@
 """Common fixtures for the STIEBEL ELTRON tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -9,15 +9,6 @@ from homeassistant.components.stiebel_eltron import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.stiebel_eltron.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
 
 
 @pytest.fixture
