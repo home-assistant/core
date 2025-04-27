@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, get_args
 import zoneinfo
 
+from hdate.translator import Language
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -25,8 +26,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    LanguageSelector,
+    LanguageSelectorConfig,
     LocationSelector,
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
 )
@@ -42,11 +44,6 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-
-LANGUAGE = [
-    SelectOptionDict(value="hebrew", label="Hebrew"),
-    SelectOptionDict(value="english", label="English"),
-]
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -72,8 +69,8 @@ async def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_DIASPORA, default=DEFAULT_DIASPORA): BooleanSelector(),
-            vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): SelectSelector(
-                SelectSelectorConfig(options=LANGUAGE)
+            vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
+                LanguageSelectorConfig(languages=list(get_args(Language)))
             ),
             vol.Optional(CONF_LOCATION, default=default_location): LocationSelector(),
             vol.Optional(CONF_ELEVATION, default=hass.config.elevation): int,
