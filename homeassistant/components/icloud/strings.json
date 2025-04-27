@@ -46,7 +46,7 @@
   "services": {
     "update": {
       "name": "Update",
-      "description": "Updates iCloud devices.",
+      "description": "Asks for a state update of all devices linked to an iCloud account.",
       "fields": {
         "account": {
           "name": "Account",
@@ -56,7 +56,7 @@
     },
     "play_sound": {
       "name": "Play sound",
-      "description": "Plays sound on an Apple device.",
+      "description": "Plays the Lost device sound on an Apple device.",
       "fields": {
         "account": {
           "name": "Account",
@@ -64,7 +64,7 @@
         },
         "device_name": {
           "name": "Device name",
-          "description": "The name of the Apple device to play a sound."
+          "description": "The name of the Apple device to play the sound."
         }
       }
     },
@@ -92,7 +92,7 @@
     },
     "lost_device": {
       "name": "Lost device",
-      "description": "Makes an Apple device in lost state.",
+      "description": "Puts an Apple device in lost state.",
       "fields": {
         "account": {
           "name": "Account",

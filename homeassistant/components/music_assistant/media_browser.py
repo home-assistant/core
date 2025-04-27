@@ -21,12 +21,16 @@ if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
 
 MEDIA_TYPE_RADIO = "radio"
+MEDIA_TYPE_PODCAST_EPISODE = "podcast_episode"
+MEDIA_TYPE_AUDIOBOOK = "audiobook"
 
 PLAYABLE_MEDIA_TYPES = [
     MediaType.PLAYLIST,
     MediaType.ALBUM,
     MediaType.ARTIST,
     MEDIA_TYPE_RADIO,
+    MediaType.PODCAST,
+    MEDIA_TYPE_AUDIOBOOK,
     MediaType.TRACK,
 ]
 
@@ -35,6 +39,8 @@ LIBRARY_ALBUMS = "albums"
 LIBRARY_TRACKS = "tracks"
 LIBRARY_PLAYLISTS = "playlists"
 LIBRARY_RADIO = "radio"
+LIBRARY_PODCASTS = "podcasts"
+LIBRARY_AUDIOBOOKS = "audiobooks"
 
 
 LIBRARY_TITLE_MAP = {
@@ -43,6 +49,8 @@ LIBRARY_TITLE_MAP = {
     LIBRARY_TRACKS: "Tracks",
     LIBRARY_PLAYLISTS: "Playlists",
     LIBRARY_RADIO: "Radio stations",
+    LIBRARY_PODCASTS: "Podcasts",
+    LIBRARY_AUDIOBOOKS: "Audiobooks",
 }
 
 LIBRARY_MEDIA_CLASS_MAP = {
@@ -51,10 +59,13 @@ LIBRARY_MEDIA_CLASS_MAP = {
     LIBRARY_TRACKS: MediaClass.TRACK,
     LIBRARY_PLAYLISTS: MediaClass.PLAYLIST,
     LIBRARY_RADIO: MediaClass.MUSIC,  # radio is not accepted by HA
+    LIBRARY_PODCASTS: MediaClass.PODCAST,
+    LIBRARY_AUDIOBOOKS: MediaClass.DIRECTORY,  # audiobook is not accepted by HA
 }
 
 MEDIA_CONTENT_TYPE_FLAC = "audio/flac"
 THUMB_SIZE = 200
+SORT_NAME_DESC = "sort_name_desc"
 
 
 def media_source_filter(item: BrowseMedia) -> bool:
@@ -89,13 +100,16 @@ async def async_browse_media(
         return await build_playlists_listing(mass)
     if media_content_id == LIBRARY_RADIO:
         return await build_radio_listing(mass)
+    if media_content_id == LIBRARY_PODCASTS:
+        return await build_podcasts_listing(mass)
+    if media_content_id == LIBRARY_AUDIOBOOKS:
+        return await build_audiobooks_listing(mass)
     if "artist" in media_content_id:
         return await build_artist_items_listing(mass, media_content_id)
     if "album" in media_content_id:
         return await build_album_items_listing(mass, media_content_id)
     if "playlist" in media_content_id:
         return await build_playlist_items_listing(mass, media_content_id)
-
     raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
 
 
@@ -148,16 +162,15 @@ async def build_playlists_listing(mass: MusicAssistantClient) -> BrowseMedia:
         can_play=False,
         can_expand=True,
         children_media_class=media_class,
-        children=sorted(
-            [
-                build_item(mass, item, can_expand=True)
-                # we only grab the first page here because the
-                # HA media browser does not support paging
-                for item in await mass.music.get_library_playlists(limit=500)
-                if item.available
-            ],
-            key=lambda x: x.title,
-        ),
+        children=[
+            build_item(mass, item, can_expand=True)
+            # we only grab the first page here because the
+            # HA media browser does not support paging
+            for item in await mass.music.get_library_playlists(
+                limit=500, order_by=SORT_NAME_DESC
+            )
+            if item.available
+        ],
     )
 
 
@@ -166,6 +179,8 @@ async def build_playlist_items_listing(
 ) -> BrowseMedia:
     """Build Playlist items browse listing."""
     playlist = await mass.music.get_item_by_uri(identifier)
+    if TYPE_CHECKING:
+        assert playlist.uri is not None
 
     return BrowseMedia(
         media_class=MediaClass.PLAYLIST,
@@ -199,16 +214,15 @@ async def build_artists_listing(mass: MusicAssistantClient) -> BrowseMedia:
         can_play=False,
         can_expand=True,
         children_media_class=media_class,
-        children=sorted(
-            [
-                build_item(mass, artist, can_expand=True)
-                # we only grab the first page here because the
-                # HA media browser does not support paging
-                for artist in await mass.music.get_library_artists(limit=500)
-                if artist.available
-            ],
-            key=lambda x: x.title,
-        ),
+        children=[
+            build_item(mass, artist, can_expand=True)
+            # we only grab the first page here because the
+            # HA media browser does not support paging
+            for artist in await mass.music.get_library_artists(
+                limit=500, order_by=SORT_NAME_DESC
+            )
+            if artist.available
+        ],
     )
 
 
@@ -218,6 +232,9 @@ async def build_artist_items_listing(
     """Build Artist items browse listing."""
     artist = await mass.music.get_item_by_uri(identifier)
     albums = await mass.music.get_artist_albums(artist.item_id, artist.provider)
+
+    if TYPE_CHECKING:
+        assert artist.uri is not None
 
     return BrowseMedia(
         media_class=MediaType.ARTIST,
@@ -247,16 +264,15 @@ async def build_albums_listing(mass: MusicAssistantClient) -> BrowseMedia:
         can_play=False,
         can_expand=True,
         children_media_class=media_class,
-        children=sorted(
-            [
-                build_item(mass, album, can_expand=True)
-                # we only grab the first page here because the
-                # HA media browser does not support paging
-                for album in await mass.music.get_library_albums(limit=500)
-                if album.available
-            ],
-            key=lambda x: x.title,
-        ),
+        children=[
+            build_item(mass, album, can_expand=True)
+            # we only grab the first page here because the
+            # HA media browser does not support paging
+            for album in await mass.music.get_library_albums(
+                limit=500, order_by=SORT_NAME_DESC
+            )
+            if album.available
+        ],
     )
 
 
@@ -266,6 +282,9 @@ async def build_album_items_listing(
     """Build Album items browse listing."""
     album = await mass.music.get_item_by_uri(identifier)
     tracks = await mass.music.get_album_tracks(album.item_id, album.provider)
+
+    if TYPE_CHECKING:
+        assert album.uri is not None
 
     return BrowseMedia(
         media_class=MediaType.ALBUM,
@@ -293,16 +312,61 @@ async def build_tracks_listing(mass: MusicAssistantClient) -> BrowseMedia:
         can_play=False,
         can_expand=True,
         children_media_class=media_class,
-        children=sorted(
-            [
-                build_item(mass, track, can_expand=False)
-                # we only grab the first page here because the
-                # HA media browser does not support paging
-                for track in await mass.music.get_library_tracks(limit=500)
-                if track.available
-            ],
-            key=lambda x: x.title,
-        ),
+        children=[
+            build_item(mass, track, can_expand=False)
+            # we only grab the first page here because the
+            # HA media browser does not support paging
+            for track in await mass.music.get_library_tracks(
+                limit=500, order_by=SORT_NAME_DESC
+            )
+            if track.available
+        ],
+    )
+
+
+async def build_podcasts_listing(mass: MusicAssistantClient) -> BrowseMedia:
+    """Build Podcasts browse listing."""
+    media_class = LIBRARY_MEDIA_CLASS_MAP[LIBRARY_PODCASTS]
+    return BrowseMedia(
+        media_class=MediaClass.DIRECTORY,
+        media_content_id=LIBRARY_PODCASTS,
+        media_content_type=MediaType.PODCAST,
+        title=LIBRARY_TITLE_MAP[LIBRARY_PODCASTS],
+        can_play=False,
+        can_expand=True,
+        children_media_class=media_class,
+        children=[
+            build_item(mass, podcast, can_expand=False)
+            # we only grab the first page here because the
+            # HA media browser does not support paging
+            for podcast in await mass.music.get_library_podcasts(
+                limit=500, order_by=SORT_NAME_DESC
+            )
+            if podcast.available
+        ],
+    )
+
+
+async def build_audiobooks_listing(mass: MusicAssistantClient) -> BrowseMedia:
+    """Build Audiobooks browse listing."""
+    media_class = LIBRARY_MEDIA_CLASS_MAP[LIBRARY_AUDIOBOOKS]
+    return BrowseMedia(
+        media_class=MediaClass.DIRECTORY,
+        media_content_id=LIBRARY_AUDIOBOOKS,
+        media_content_type=DOMAIN,
+        title=LIBRARY_TITLE_MAP[LIBRARY_AUDIOBOOKS],
+        can_play=False,
+        can_expand=True,
+        children_media_class=media_class,
+        children=[
+            build_item(mass, audiobook, can_expand=False)
+            # we only grab the first page here because the
+            # HA media browser does not support paging
+            for audiobook in await mass.music.get_library_audiobooks(
+                limit=500, order_by=SORT_NAME_DESC
+            )
+            if audiobook.available
+        ],
     )
 
 
@@ -321,7 +385,9 @@ async def build_radio_listing(mass: MusicAssistantClient) -> BrowseMedia:
             build_item(mass, track, can_expand=False, media_class=media_class)
             # we only grab the first page here because the
             # HA media browser does not support paging
-            for track in await mass.music.get_library_radios(limit=500)
+            for track in await mass.music.get_library_radios(
+                limit=500, order_by=SORT_NAME_DESC
+            )
             if track.available
         ],
     )
@@ -339,6 +405,9 @@ def build_item(
     else:
         title = item.name
     img_url = mass.get_media_item_image_url(item)
+
+    if TYPE_CHECKING:
+        assert item.uri is not None
 
     return BrowseMedia(
         media_class=media_class or item.media_type.value,

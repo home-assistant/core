@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from reolink_aio.api import Chime
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -15,6 +16,7 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     reolink_connect: MagicMock,
+    test_chime: Chime,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:

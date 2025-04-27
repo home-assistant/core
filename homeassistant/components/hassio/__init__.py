@@ -51,11 +51,9 @@ from homeassistant.helpers.hassio import (
     get_supervisor_ip as _get_supervisor_ip,
     is_hassio as _is_hassio,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service_info.hassio import (
     HassioServiceInfo as _HassioServiceInfo,
 )
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
@@ -78,6 +76,7 @@ from . import (  # noqa: F401
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # noqa: F401
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
+from .config import HassioConfig
 from .const import (
     ADDONS_COORDINATOR,
     ATTR_ADDON,
@@ -90,6 +89,8 @@ from .const import (
     ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_SLUG,
+    DATA_COMPONENT,
+    DATA_CONFIG_STORE,
     DATA_CORE_INFO,
     DATA_HOST_INFO,
     DATA_INFO,
@@ -103,7 +104,6 @@ from .const import (
 )
 from .coordinator import (
     HassioDataUpdateCoordinator,
-    get_addons_changelogs,  # noqa: F401
     get_addons_info,
     get_addons_stats,  # noqa: F401
     get_core_info,  # noqa: F401
@@ -143,8 +143,6 @@ _DEPRECATED_HassioServiceInfo = DeprecatedConstant(
     "2025.11",
 )
 
-STORAGE_KEY = DOMAIN
-STORAGE_VERSION = 1
 # If new platforms are added, be sure to import them above
 # so we do not make other components that depend on hassio
 # wait for the import of the platforms
@@ -160,7 +158,6 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
 SERVICE_ADDON_RESTART = "addon_restart"
-SERVICE_ADDON_UPDATE = "addon_update"
 SERVICE_ADDON_STDIN = "addon_stdin"
 SERVICE_HOST_SHUTDOWN = "host_shutdown"
 SERVICE_HOST_REBOOT = "host_reboot"
@@ -241,7 +238,6 @@ MAP_SERVICE_API = {
     SERVICE_ADDON_START: APIEndpointSettings("/addons/{addon}/start", SCHEMA_ADDON),
     SERVICE_ADDON_STOP: APIEndpointSettings("/addons/{addon}/stop", SCHEMA_ADDON),
     SERVICE_ADDON_RESTART: APIEndpointSettings("/addons/{addon}/restart", SCHEMA_ADDON),
-    SERVICE_ADDON_UPDATE: APIEndpointSettings("/addons/{addon}/update", SCHEMA_ADDON),
     SERVICE_ADDON_STDIN: APIEndpointSettings(
         "/addons/{addon}/stdin", SCHEMA_ADDON_STDIN
     ),
@@ -326,7 +322,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)
-    hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
+    hass.data[DATA_COMPONENT] = hassio = HassIO(hass.loop, websession, host)
     supervisor_client = get_supervisor_client(hass)
 
     try:
@@ -334,13 +330,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     except SupervisorError:
         _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
-    store = Store[dict[str, str]](hass, STORAGE_VERSION, STORAGE_KEY)
-    if (data := await store.async_load()) is None:
-        data = {}
+    # Load the store
+    config_store = HassioConfig(hass)
+    await config_store.load()
+    hass.data[DATA_CONFIG_STORE] = config_store
 
     refresh_token = None
-    if "hassio_user" in data:
-        user = await hass.auth.async_get_user(data["hassio_user"])
+    if (hassio_user := config_store.data.hassio_user) is not None:
+        user = await hass.auth.async_get_user(hassio_user)
         if user and user.refresh_tokens:
             refresh_token = list(user.refresh_tokens.values())[0]
 
@@ -357,8 +354,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
         )
         refresh_token = await hass.auth.async_create_refresh_token(user)
-        data["hassio_user"] = user.id
-        await store.async_save(data)
+        config_store.update(hassio_user=user.id)
 
     # This overrides the normal API call that would be forwarded
     development_repo = config.get(DOMAIN, {}).get(CONF_FRONTEND_REPO)
@@ -411,16 +407,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
-        if service.service == SERVICE_ADDON_UPDATE:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "update_service_deprecated",
-                breaks_in_ha_version="2025.5",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="update_service_deprecated",
-            )
         api_endpoint = MAP_SERVICE_API[service.service]
 
         data = service.data.copy()

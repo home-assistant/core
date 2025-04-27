@@ -3,7 +3,8 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
-    'configuration_url': 'http://slzb-06.local',
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://192.168.1.161',
     'connections': set({
       tuple(
         'mac',

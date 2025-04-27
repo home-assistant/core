@@ -48,7 +48,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "off": "Normal",
+              "off": "[%key:common::state::normal%]",
               "on": "Keep mode",
               "dog": "Dog mode",
               "camp": "Camp mode"
@@ -75,9 +75,9 @@
         "name": "Charging",
         "state": {
           "starting": "Starting",
-          "charging": "Charging",
-          "disconnected": "Disconnected",
-          "stopped": "Stopped",
+          "charging": "[%key:common::state::charging%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "stopped": "[%key:common::state::stopped%]",
           "complete": "Complete",
           "no_power": "No power"
         }
@@ -212,12 +212,12 @@
         "name": "State",
         "state": {
           "booting": "Booting",
-          "charging": "[%key:component::tessie::entity::sensor::charge_state_charging_state::state::charging%]",
+          "charging": "[%key:common::state::charging%]",
           "disconnected": "[%key:common::state::disconnected%]",
           "connected": "[%key:common::state::connected%]",
           "scheduled": "Scheduled",
           "negotiating": "Negotiating",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "charging_finished": "Charging finished",
           "waiting_car": "Waiting car",
           "charging_reduced": "Charging reduced"
@@ -246,81 +246,81 @@
         "name": "Seat heater left",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_right": {
         "name": "Seat heater right",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_rear_left": {
         "name": "Seat heater rear left",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_rear_center": {
         "name": "Seat heater rear center",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_rear_right": {
         "name": "Seat heater rear right",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_third_row_left": {
         "name": "Seat heater third row left",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_third_row_right": {
         "name": "Seat heater third row right",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_fan_front_left": {
         "name": "Seat cooler left",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_fan_front_right": {
         "name": "Seat cooler right",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "components_customer_preferred_export_rule": {
@@ -459,7 +459,7 @@
       }
     },
     "switch": {
-      "charge_state_charge_enable_request": {
+      "charge_state_charging_state": {
         "name": "Charge"
       },
       "climate_state_defrost_mode": {
@@ -495,7 +495,7 @@
         "name": "Speed limit"
       },
       "off_grid_vehicle_charging_reserve_percent": {
-        "name": "Off grid reserve"
+        "name": "Off-grid reserve"
       }
     },
     "update": {
@@ -506,7 +506,7 @@
   },
   "exceptions": {
     "unknown": {
-      "message": "An unknown issue occured changing {name}."
+      "message": "An unknown issue occurred changing {name}."
     },
     "not_supported": {
       "message": "{name} is not supported."

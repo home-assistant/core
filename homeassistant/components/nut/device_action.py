@@ -7,8 +7,7 @@ import voluptuous as vol
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import NutRuntimeData
@@ -52,7 +51,11 @@ async def async_call_action_from_config(
     runtime_data = _get_runtime_data_from_device_id(hass, device_id)
     if not runtime_data:
         raise InvalidDeviceAutomationConfig(
-            f"Unable to find a NUT device with id {device_id}"
+            translation_domain=DOMAIN,
+            translation_key="device_invalid",
+            translation_placeholders={
+                "device_id": device_id,
+            },
         )
     await runtime_data.data.async_run_command(command_name)
 

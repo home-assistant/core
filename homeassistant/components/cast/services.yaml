@@ -7,11 +7,11 @@ show_lovelace_view:
           integration: cast
           domain: media_player
     dashboard_path:
-      required: true
       example: lovelace-cast
       selector:
         text:
     view_path:
+      required: true
       example: downstairs
       selector:
         text:

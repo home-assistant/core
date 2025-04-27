@@ -70,7 +70,7 @@ async def test_store_telegam_history(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test storing telegram history."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     await knx.receive_write("1/3/4", True)
     await hass.services.async_call(
@@ -94,7 +94,7 @@ async def test_load_telegam_history(
 ) -> None:
     """Test telegram history restoration."""
     hass_storage["knx/telegrams_history.json"] = {"version": 1, "data": MOCK_TELEGRAMS}
-    await knx.setup_integration({})
+    await knx.setup_integration()
     loaded_telegrams = hass.data[KNX_MODULE_KEY].telegrams.recent_telegrams
     assert assert_telegram_history(loaded_telegrams)
     # TelegramDict "payload" is a tuple, this shall be restored when loading from JSON
@@ -113,7 +113,7 @@ async def test_remove_telegam_history(
         knx.mock_config_entry,
         data=knx.mock_config_entry.data | {CONF_KNX_TELEGRAM_LOG_SIZE: 0},
     )
-    await knx.setup_integration({}, add_entry_to_hass=False)
+    await knx.setup_integration(add_entry_to_hass=False)
     # Store.async_remove() is mocked by hass_storage - check that data was removed.
     assert "knx/telegrams_history.json" not in hass_storage
     assert not hass.data[KNX_MODULE_KEY].telegrams.recent_telegrams

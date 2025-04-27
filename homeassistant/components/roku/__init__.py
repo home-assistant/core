@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID
-from .coordinator import RokuDataUpdateCoordinator
+from .coordinator import RokuConfigEntry, RokuDataUpdateCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -17,22 +15,10 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 
-type RokuConfigEntry = ConfigEntry[RokuDataUpdateCoordinator]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: RokuConfigEntry) -> bool:
     """Set up Roku from a config entry."""
-    if (device_id := entry.unique_id) is None:
-        device_id = entry.entry_id
-
-    coordinator = RokuDataUpdateCoordinator(
-        hass,
-        host=entry.data[CONF_HOST],
-        device_id=device_id,
-        play_media_app_id=entry.options.get(
-            CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID
-        ),
-    )
+    coordinator = RokuDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

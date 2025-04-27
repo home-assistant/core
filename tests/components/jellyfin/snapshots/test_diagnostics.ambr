@@ -1707,6 +1707,7 @@
             }),
           ]),
           'AlbumId': 'ALBUM-UUID',
+          'AlbumPrimaryImageTag': 'ALBUM-PRIMARY-IMAGE-TAG',
           'ArtistItems': list([
             dict({
               'Id': '1d864900526d9a9513b489f1cc28f8ca',

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
-from tesla_fleet_api.const import Scope, Seat
+from tesla_fleet_api.const import AutoSeat, Scope, Seat
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -15,7 +15,8 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import TeslaFleetConfigEntry
 from .entity import TeslaFleetEnergyInfoEntity, TeslaFleetVehicleEntity
@@ -32,6 +33,8 @@ class TeslaFleetSwitchEntityDescription(SwitchEntityDescription):
     on_func: Callable
     off_func: Callable
     scopes: list[Scope]
+    value_func: Callable[[StateType], bool] = bool
+    unique_id: str | None = None
 
 
 VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSwitchEntityDescription, ...] = (
@@ -43,7 +46,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSwitchEntityDescription, ...] = (
     ),
     TeslaFleetSwitchEntityDescription(
         key="climate_state_auto_seat_climate_left",
-        on_func=lambda api: api.remote_auto_seat_climate_request(Seat.FRONT_LEFT, True),
+        on_func=lambda api: api.remote_auto_seat_climate_request(
+            AutoSeat.FRONT_LEFT, True
+        ),
         off_func=lambda api: api.remote_auto_seat_climate_request(
             Seat.FRONT_LEFT, False
         ),
@@ -52,10 +57,10 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSwitchEntityDescription, ...] = (
     TeslaFleetSwitchEntityDescription(
         key="climate_state_auto_seat_climate_right",
         on_func=lambda api: api.remote_auto_seat_climate_request(
-            Seat.FRONT_RIGHT, True
+            AutoSeat.FRONT_RIGHT, True
         ),
         off_func=lambda api: api.remote_auto_seat_climate_request(
-            Seat.FRONT_RIGHT, False
+            AutoSeat.FRONT_RIGHT, False
         ),
         scopes=[Scope.VEHICLE_CMDS],
     ),
@@ -77,20 +82,21 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSwitchEntityDescription, ...] = (
         ),
         scopes=[Scope.VEHICLE_CMDS],
     ),
-)
-
-VEHICLE_CHARGE_DESCRIPTION = TeslaFleetSwitchEntityDescription(
-    key="charge_state_user_charge_enable_request",
-    on_func=lambda api: api.charge_start(),
-    off_func=lambda api: api.charge_stop(),
-    scopes=[Scope.VEHICLE_CHARGING_CMDS, Scope.VEHICLE_CMDS],
+    TeslaFleetSwitchEntityDescription(
+        key="charge_state_charging_state",
+        unique_id="charge_state_user_charge_enable_request",
+        on_func=lambda api: api.charge_start(),
+        off_func=lambda api: api.charge_stop(),
+        value_func=lambda state: state in {"Starting", "Charging"},
+        scopes=[Scope.VEHICLE_CHARGING_CMDS, Scope.VEHICLE_CMDS],
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the TeslaFleet Switch platform from a config entry."""
 
@@ -102,12 +108,6 @@ async def async_setup_entry(
                 )
                 for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_DESCRIPTIONS
-            ),
-            (
-                TeslaFleetChargeSwitchEntity(
-                    vehicle, VEHICLE_CHARGE_DESCRIPTION, entry.runtime_data.scopes
-                )
-                for vehicle in entry.runtime_data.vehicles
             ),
             (
                 TeslaFleetChargeFromGridSwitchEntity(
@@ -144,16 +144,18 @@ class TeslaFleetVehicleSwitchEntity(TeslaFleetVehicleEntity, TeslaFleetSwitchEnt
         scopes: list[Scope],
     ) -> None:
         """Initialize the Switch."""
-        super().__init__(data, description.key)
         self.entity_description = description
         self.scoped = any(scope in scopes for scope in description.scopes)
+        super().__init__(data, description.key)
+        if description.unique_id:
+            self._attr_unique_id = f"{data.vin}-{description.unique_id}"
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         if self._value is None:
             self._attr_is_on = None
         else:
-            self._attr_is_on = bool(self._value)
+            self._attr_is_on = self.entity_description.value_func(self._value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
@@ -170,17 +172,6 @@ class TeslaFleetVehicleSwitchEntity(TeslaFleetVehicleEntity, TeslaFleetSwitchEnt
         await handle_vehicle_command(self.entity_description.off_func(self.api))
         self._attr_is_on = False
         self.async_write_ha_state()
-
-
-class TeslaFleetChargeSwitchEntity(TeslaFleetVehicleSwitchEntity):
-    """Entity class for TeslaFleet charge switch."""
-
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the entity."""
-        if self._value is None:
-            self._attr_is_on = self.get("charge_state_charge_enable_request")
-        else:
-            self._attr_is_on = self._value
 
 
 class TeslaFleetChargeFromGridSwitchEntity(

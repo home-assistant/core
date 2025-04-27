@@ -1,7 +1,8 @@
 """Tests for the habitica component."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import UUID
 
 from habiticalib import (
     BadRequestError,
@@ -14,10 +15,11 @@ from habiticalib import (
     HabiticaResponse,
     HabiticaScoreResponse,
     HabiticaSleepResponse,
+    HabiticaTagResponse,
     HabiticaTaskOrderResponse,
     HabiticaTaskResponse,
     HabiticaTasksResponse,
-    HabiticaUserAnonymizedrResponse,
+    HabiticaUserAnonymizedResponse,
     HabiticaUserResponse,
     NotAuthorizedError,
     NotFoundError,
@@ -32,11 +34,13 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
-ERROR_RESPONSE = HabiticaErrorResponse(success=False, error="error", message="message")
+ERROR_RESPONSE = HabiticaErrorResponse(success=False, error="error", message="reason")
 ERROR_NOT_AUTHORIZED = NotAuthorizedError(error=ERROR_RESPONSE, headers={})
 ERROR_NOT_FOUND = NotFoundError(error=ERROR_RESPONSE, headers={})
 ERROR_BAD_REQUEST = BadRequestError(error=ERROR_RESPONSE, headers={})
-ERROR_TOO_MANY_REQUESTS = TooManyRequestsError(error=ERROR_RESPONSE, headers={})
+ERROR_TOO_MANY_REQUESTS = TooManyRequestsError(
+    error=ERROR_RESPONSE, headers={"retry-after": 5}
+)
 
 
 @pytest.fixture(name="config_entry")
@@ -138,9 +142,18 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
             {"data": [], "success": True}
         )
         client.get_user_anonymized.return_value = (
-            HabiticaUserAnonymizedrResponse.from_json(
+            HabiticaUserAnonymizedResponse.from_json(
                 load_fixture("anonymized.json", DOMAIN)
             )
+        )
+        client.update_task.return_value = HabiticaTaskResponse.from_json(
+            load_fixture("task.json", DOMAIN)
+        )
+        client.create_tag.return_value = HabiticaTagResponse.from_json(
+            load_fixture("create_tag.json", DOMAIN)
+        )
+        client.create_task.return_value = HabiticaTaskResponse.from_json(
+            load_fixture("task.json", DOMAIN)
         )
         client.habitipy.return_value = {
             "tasks": {
@@ -164,3 +177,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.habitica.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_uuid4() -> Generator[MagicMock]:
+    """Mock uuid4."""
+    with patch(
+        "homeassistant.components.habitica.services.uuid4", autospec=True
+    ) as mock_uuid4:
+        mock_uuid4.return_value = UUID("12345678-1234-5678-1234-567812345678")
+        yield mock_uuid4

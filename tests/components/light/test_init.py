@@ -21,9 +21,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import frame
 from homeassistant.setup import async_setup_component
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from .common import MockLight
 
@@ -2846,7 +2845,6 @@ def test_report_invalid_color_modes(
     ],
     ids=["with_kelvin", "with_mired_values", "with_mired_defaults"],
 )
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 def test_missing_kelvin_property_warnings(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,

@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from asyncio import timeout
+from collections.abc import Mapping
 from http import HTTPStatus
 import json
 import logging
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
@@ -24,7 +24,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.significant_change import create_checker
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import (
@@ -260,10 +260,10 @@ async def async_enable_proactive_mode(
     def extra_significant_check(
         hass: HomeAssistant,
         old_state: str,
-        old_attrs: dict[Any, Any] | MappingProxyType[Any, Any],
+        old_attrs: Mapping[Any, Any],
         old_extra_arg: Any,
         new_state: str,
-        new_attrs: dict[str, Any] | MappingProxyType[Any, Any],
+        new_attrs: Mapping[Any, Any],
         new_extra_arg: Any,
     ) -> bool:
         """Check if the serialized data has changed."""

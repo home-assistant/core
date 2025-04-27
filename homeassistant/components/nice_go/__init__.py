@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import NiceGOUpdateCoordinator
+from .coordinator import NiceGOConfigEntry, NiceGOUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
@@ -18,13 +17,11 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
-type NiceGOConfigEntry = ConfigEntry[NiceGOUpdateCoordinator]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: NiceGOConfigEntry) -> bool:
     """Set up Nice G.O. from a config entry."""
 
-    coordinator = NiceGOUpdateCoordinator(hass)
+    coordinator = NiceGOUpdateCoordinator(hass, entry)
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.async_ha_stop)
     )

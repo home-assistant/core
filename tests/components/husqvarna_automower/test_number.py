@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aioautomower.exceptions import ApiException
+from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -40,7 +40,7 @@ async def test_number_commands(
     mocked_method = mock_automower_client.commands.set_cutting_height
     mocked_method.assert_called_once_with(TEST_MOWER_ID, 3)
 
-    mocked_method.side_effect = ApiException("Test error")
+    mocked_method.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",
@@ -68,7 +68,7 @@ async def test_number_workarea_commands(
     values[TEST_MOWER_ID].work_areas[123456].cutting_height = 75
     mock_automower_client.get_status.return_value = values
     mocked_method = AsyncMock()
-    setattr(mock_automower_client.commands, "workarea_settings", mocked_method)
+    mock_automower_client.commands.workarea_settings.return_value = mocked_method
     await hass.services.async_call(
         domain="number",
         service="set_value",
@@ -79,12 +79,12 @@ async def test_number_workarea_commands(
     freezer.tick(timedelta(seconds=EXECUTION_TIME_DELAY))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    mocked_method.assert_called_once_with(TEST_MOWER_ID, 75, 123456)
+    mocked_method.cutting_height.assert_called_once_with(cutting_height=75)
     state = hass.states.get(entity_id)
     assert state.state is not None
     assert state.state == "75"
 
-    mocked_method.side_effect = ApiException("Test error")
+    mocked_method.cutting_height.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",

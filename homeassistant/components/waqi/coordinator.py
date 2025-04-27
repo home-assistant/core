@@ -18,11 +18,14 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, client: WAQIClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, client: WAQIClient
+    ) -> None:
         """Initialize the WAQI data coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
         )

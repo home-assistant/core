@@ -1,4 +1,4 @@
-"""The tests for WebOS TV device triggers."""
+"""The tests for LG webOS TV device triggers."""
 
 import pytest
 
@@ -111,7 +111,7 @@ async def test_invalid_trigger_raises(
     await setup_webostv(hass)
 
     # Test wrong trigger platform type
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Unhandled trigger type: wrong.type"):
         await device_trigger.async_attach_trigger(
             hass, {"type": "wrong.type", "device_id": "invalid_device_id"}, None, {}
         )
@@ -140,7 +140,6 @@ async def test_invalid_entry_raises(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client,
-    caplog: pytest.LogCaptureFixture,
     domain: str,
     entry_state: ConfigEntryState,
 ) -> None:

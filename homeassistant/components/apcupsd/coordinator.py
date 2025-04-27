@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL: Final = timedelta(seconds=60)
 REQUEST_REFRESH_COOLDOWN: Final = 5
 
+type APCUPSdConfigEntry = ConfigEntry[APCUPSdCoordinator]
+
 
 class APCUPSdData(dict[str, str]):
     """Store data about an APCUPSd and provide a few helper methods for easier accesses."""
@@ -44,7 +46,10 @@ class APCUPSdData(dict[str, str]):
     @property
     def serial_no(self) -> str | None:
         """Return the unique serial number of the UPS, if available."""
-        return self.get("SERIALNO")
+        sn = self.get("SERIALNO")
+        # We had user reports that some UPS models simply return "Blank" as serial number, in
+        # which case we fall back to `None` to indicate that it is actually not available.
+        return None if sn == "Blank" else sn
 
 
 class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
@@ -54,13 +59,20 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
     updates from the server.
     """
 
-    config_entry: ConfigEntry
+    config_entry: APCUPSdConfigEntry
 
-    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: APCUPSdConfigEntry,
+        host: str,
+        port: int,
+    ) -> None:
         """Initialize the data object."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
             request_refresh_debouncer=Debouncer(
@@ -74,10 +86,15 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
         self._port = port
 
     @property
+    def unique_device_id(self) -> str:
+        """Return a unique ID of the device, which is the serial number (if available) or the config entry ID."""
+        return self.data.serial_no or self.config_entry.entry_id
+
+    @property
     def device_info(self) -> DeviceInfo:
         """Return the DeviceInfo of this APC UPS, if serial number is available."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.data.serial_no or self.config_entry.entry_id)},
+            identifiers={(DOMAIN, self.unique_device_id)},
             model=self.data.model,
             manufacturer="APC",
             name=self.data.name or "APC UPS",

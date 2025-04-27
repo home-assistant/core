@@ -12,12 +12,14 @@ if TYPE_CHECKING:
     from hass_nabucasa import Cloud
 
     from .client import CloudClient
+    from .helpers import FixedSizeQueueLogHandler
 
 DOMAIN = "cloud"
 DATA_CLOUD: HassKey[Cloud[CloudClient]] = HassKey(DOMAIN)
 DATA_PLATFORMS_SETUP: HassKey[dict[str, asyncio.Event]] = HassKey(
     "cloud_platforms_setup"
 )
+DATA_CLOUD_LOG_HANDLER: HassKey[FixedSizeQueueLogHandler] = HassKey("cloud_log_handler")
 EVENT_CLOUD_EVENT = "cloud_event"
 
 REQUEST_TIMEOUT = 10
@@ -91,3 +93,5 @@ STT_ENTITY_UNIQUE_ID = "cloud-speech-to-text"
 TTS_ENTITY_UNIQUE_ID = "cloud-text-to-speech"
 
 LOGIN_MFA_TIMEOUT = 60
+
+VOICE_STYLE_SEPERATOR = "||"

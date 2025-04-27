@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from typing import TYPE_CHECKING
 
 from pytautulli import (
     PyTautulli,
@@ -18,14 +17,14 @@ from pytautulli.exceptions import (
 )
 from pytautulli.models.host_configuration import PyTautulliHostConfiguration
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
-if TYPE_CHECKING:
-    from . import TautulliConfigEntry
+type TautulliConfigEntry = ConfigEntry[TautulliDataUpdateCoordinator]
 
 
 class TautulliDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -36,6 +35,7 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: TautulliConfigEntry,
         host_configuration: PyTautulliHostConfiguration,
         api_client: PyTautulli,
     ) -> None:
@@ -43,6 +43,7 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )

@@ -23,7 +23,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CambridgeAudioConfigEntry, media_browser
 from .const import (
@@ -65,7 +65,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CambridgeAudioConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cambridge Audio device based on a config entry."""
     client: StreamMagicClient = entry.runtime_data
@@ -142,6 +142,12 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
+        if (
+            not self.client.play_state.metadata.artist
+            and self.client.state.source == "IR"
+        ):
+            # Return channel instead of artist when playing internet radio
+            return self.client.play_state.metadata.station
         return self.client.play_state.metadata.artist
 
     @property
@@ -168,6 +174,11 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     def media_position_updated_at(self) -> datetime:
         """Last time the media position was updated."""
         return self.client.position_last_updated
+
+    @property
+    def media_channel(self) -> str | None:
+        """Channel currently playing."""
+        return self.client.play_state.metadata.station
 
     @property
     def is_volume_muted(self) -> bool | None:

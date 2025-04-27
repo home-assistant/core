@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, ValuesView
+from collections.abc import Callable, Mapping, ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
 import re
-from types import MappingProxyType
 from typing import Any, TypedDict, cast
 
 from fritzconnection import FritzConnection
@@ -16,11 +15,10 @@ from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzConnectionException,
     FritzSecurityError,
-    FritzServiceError,
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
-from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH, FritzGuestWLAN
+from fritzconnection.lib.fritzwlan import FritzGuestWLAN
 import xmltodict
 
 from homeassistant.components.device_tracker import (
@@ -29,7 +27,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -37,6 +35,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_OLD_DISCOVERY,
@@ -46,14 +45,17 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_EXCEPTIONS,
-    SERVICE_SET_GUEST_WIFI_PW,
     MeshRoles,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+FRITZ_DATA_KEY: HassKey[FritzData] = HassKey(DOMAIN)
 
-def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
+type FritzConfigEntry = ConfigEntry[AvmWrapper]
+
+
+def _is_tracked(mac: str, current_devices: ValuesView[set[str]]) -> bool:
     """Check if device is already tracked."""
     return any(mac in tracked for tracked in current_devices)
 
@@ -61,7 +63,7 @@ def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
 def device_filter_out_from_trackers(
     mac: str,
     device: FritzDevice,
-    current_devices: ValuesView,
+    current_devices: ValuesView[set[str]],
 ) -> bool:
     """Check if device should be filtered out from trackers."""
     reason: str | None = None
@@ -162,11 +164,12 @@ class UpdateCoordinatorDataType(TypedDict):
 class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """FritzBoxTools class."""
 
-    config_entry: ConfigEntry
+    config_entry: FritzConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: FritzConfigEntry,
         password: str,
         port: int,
         username: str = DEFAULT_USERNAME,
@@ -176,13 +179,14 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Initialize FritzboxTools class."""
         super().__init__(
             hass=hass,
+            config_entry=config_entry,
             logger=_LOGGER,
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=30),
         )
 
         self._devices: dict[str, FritzDevice] = {}
-        self._options: MappingProxyType[str, Any] | None = None
+        self._options: Mapping[str, Any] | None = None
         self._unique_id: str | None = None
         self.connection: FritzConnection = None
         self.fritz_guest_wifi: FritzGuestWLAN = None
@@ -191,6 +195,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.hass = hass
         self.host = host
         self.mesh_role = MeshRoles.NONE
+        self.mesh_wifi_uplink = False
         self.device_conn_type: str | None = None
         self.device_is_router: bool = False
         self.password = password
@@ -207,9 +212,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
 
-    async def async_setup(
-        self, options: MappingProxyType[str, Any] | None = None
-    ) -> None:
+    async def async_setup(self, options: Mapping[str, Any] | None = None) -> None:
         """Wrap up FritzboxTools class setup."""
         self._options = options
         await self.hass.async_add_executor_job(self.setup)
@@ -520,7 +523,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     def manage_device_info(
         self, dev_info: Device, dev_mac: str, consider_home: bool
     ) -> bool:
-        """Update device lists."""
+        """Update device lists and return if device is new."""
         _LOGGER.debug("Client dev_info: %s", dev_info)
 
         if dev_mac in self._devices:
@@ -530,6 +533,16 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         device = FritzDevice(dev_mac, dev_info.name)
         device.update(dev_info, consider_home)
         self._devices[dev_mac] = device
+
+        # manually register device entry for new connected device
+        dr.async_get(self.hass).async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            connections={(CONNECTION_NETWORK_MAC, dev_mac)},
+            default_manufacturer="AVM",
+            default_model="FRITZ!Box Tracked device",
+            default_name=device.hostname,
+            via_device=(DOMAIN, self.unique_id),
+        )
         return True
 
     async def async_send_signal_device_update(self, new_device: bool) -> None:
@@ -605,6 +618,12 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     ssid=interf.get("ssid", ""),
                     type=interf["type"],
                 )
+
+                if interf["type"].lower() == "wlan" and interf[
+                    "name"
+                ].lower().startswith("uplink"):
+                    self.mesh_wifi_uplink = True
+
                 if dr.format_mac(int_mac) == self.mac:
                     self.mesh_role = MeshRoles(node["mesh_role"])
 
@@ -692,34 +711,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=config_entry.entry_id
                 )
-
-    async def service_fritzbox(
-        self, service_call: ServiceCall, config_entry: ConfigEntry
-    ) -> None:
-        """Define FRITZ!Box services."""
-        _LOGGER.debug("FRITZ!Box service: %s", service_call.service)
-
-        if not self.connection:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="unable_to_connect"
-            )
-
-        try:
-            if service_call.service == SERVICE_SET_GUEST_WIFI_PW:
-                await self.async_trigger_set_guest_password(
-                    service_call.data.get("password"),
-                    service_call.data.get("length", DEFAULT_PASSWORD_LENGTH),
-                )
-                return
-
-        except (FritzServiceError, FritzActionError) as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="service_parameter_unknown"
-            ) from ex
-        except FritzConnectionException as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="service_not_supported"
-            ) from ex
 
 
 class AvmWrapper(FritzBoxTools):
@@ -899,9 +890,9 @@ class AvmWrapper(FritzBoxTools):
 class FritzData:
     """Storage class for platform global data."""
 
-    tracked: dict = field(default_factory=dict)
-    profile_switches: dict = field(default_factory=dict)
-    wol_buttons: dict = field(default_factory=dict)
+    tracked: dict[str, set[str]] = field(default_factory=dict)
+    profile_switches: dict[str, set[str]] = field(default_factory=dict)
+    wol_buttons: dict[str, set[str]] = field(default_factory=dict)
 
 
 class FritzDevice:

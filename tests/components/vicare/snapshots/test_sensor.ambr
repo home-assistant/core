@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_heating_entities[sensor.model0_boiler_temperature-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_boiler_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8,6 +8,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -34,7 +35,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_boiler_temperature-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_boiler_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -50,7 +51,7 @@
     'state': '63',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_burner_hours-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_burner_hours-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,6 +60,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -85,7 +87,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_burner_hours-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_burner_hours-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Burner hours',
@@ -100,7 +102,7 @@
     'state': '18726.3',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_burner_modulation-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_burner_modulation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -109,6 +111,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -135,7 +138,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_burner_modulation-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_burner_modulation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Burner modulation',
@@ -150,7 +153,7 @@
     'state': '0',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_burner_starts-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_burner_starts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,6 +162,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -185,7 +189,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_burner_starts-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_burner_starts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Burner starts',
@@ -199,7 +203,7 @@
     'state': '14315',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_month-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_gas_consumption_this_month-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -208,6 +212,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -234,7 +239,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_month-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_gas_consumption_this_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 DHW gas consumption this month',
@@ -248,7 +253,7 @@
     'state': '805',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_week-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_gas_consumption_this_week-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -257,6 +262,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -283,7 +289,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_week-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_gas_consumption_this_week-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 DHW gas consumption this week',
@@ -297,7 +303,7 @@
     'state': '84',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_year-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_gas_consumption_this_year-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -306,6 +312,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -332,7 +339,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_year-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_gas_consumption_this_year-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 DHW gas consumption this year',
@@ -346,7 +353,7 @@
     'state': '8203',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_today-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_gas_consumption_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -355,6 +362,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -381,7 +389,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_today-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_gas_consumption_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 DHW gas consumption today',
@@ -395,7 +403,7 @@
     'state': '22',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_max_temperature-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_max_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -404,6 +412,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -430,7 +439,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_max_temperature-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_max_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -446,7 +455,7 @@
     'state': '60',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_min_temperature-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_min_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -455,6 +464,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -481,7 +491,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_dhw_min_temperature-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_dhw_min_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -497,7 +507,7 @@
     'state': '10',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_electricity_consumption_this_week-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_electricity_consumption_this_week-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -506,6 +516,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -532,7 +543,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_electricity_consumption_this_week-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_electricity_consumption_this_week-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -548,7 +559,7 @@
     'state': '0.829',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_electricity_consumption_this_year-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_electricity_consumption_this_year-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -557,6 +568,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -583,7 +595,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_electricity_consumption_this_year-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_electricity_consumption_this_year-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -599,7 +611,7 @@
     'state': '207.106',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_electricity_consumption_today-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_electricity_consumption_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -608,6 +620,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -634,7 +647,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_electricity_consumption_today-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_electricity_consumption_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -650,7 +663,7 @@
     'state': '0.219',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_energy-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -659,6 +672,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -685,7 +699,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_energy-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -701,7 +715,7 @@
     'state': '7.843',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_month-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_heating_gas_consumption_this_month-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -710,6 +724,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -736,7 +751,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_month-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_heating_gas_consumption_this_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Heating gas consumption this month',
@@ -750,7 +765,7 @@
     'state': '0',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_week-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_heating_gas_consumption_this_week-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -759,6 +774,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -785,7 +801,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_week-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_heating_gas_consumption_this_week-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Heating gas consumption this week',
@@ -799,7 +815,7 @@
     'state': '0',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_year-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_heating_gas_consumption_this_year-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -808,6 +824,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -834,7 +851,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_year-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_heating_gas_consumption_this_year-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Heating gas consumption this year',
@@ -848,7 +865,7 @@
     'state': '30946',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_today-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_heating_gas_consumption_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -857,6 +874,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -883,7 +901,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_today-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_heating_gas_consumption_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Heating gas consumption today',
@@ -897,7 +915,7 @@
     'state': '0',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_outside_temperature-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -906,6 +924,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -932,7 +951,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_outside_temperature-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -948,7 +967,7 @@
     'state': '20.8',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_supply_temperature-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_supply_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -957,6 +976,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -983,7 +1003,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_supply_temperature-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_supply_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -999,7 +1019,7 @@
     'state': '63',
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_supply_temperature_2-entry]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_supply_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1008,6 +1028,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1034,7 +1055,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_heating_entities[sensor.model0_supply_temperature_2-state]
+# name: test_all_entities[type:boiler-vicare/Vitodens300W.json][sensor.model0_supply_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1050,7 +1071,1444 @@
     'state': '25.5',
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_ventilation_level-entry]
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_buffer_main_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_buffer_main_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Buffer main temperature',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'buffer_main_temperature',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-buffer main temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_buffer_main_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'model0 Buffer main temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_buffer_main_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35.3',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_compressor_hours-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_compressor_hours',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Compressor hours',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'compressor_hours',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-compressor_hours-0',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_compressor_hours-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Compressor hours',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_compressor_hours',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '71',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_compressor_phase-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_compressor_phase',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Compressor phase',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'compressor_phase',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-compressor_phase-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_compressor_phase-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Compressor phase',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_compressor_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_compressor_starts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_compressor_starts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Compressor starts',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'compressor_starts',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-compressor_starts-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_compressor_starts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Compressor starts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_compressor_starts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '121',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_electricity_consumption_last_seven_days-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_dhw_electricity_consumption_last_seven_days',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'DHW electricity consumption last seven days',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_summary_dhw_consumption_heating_lastsevendays',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-energy_summary_dhw_consumption_heating_lastsevendays',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_electricity_consumption_last_seven_days-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 DHW electricity consumption last seven days',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_dhw_electricity_consumption_last_seven_days',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28.3',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_electricity_consumption_this_month-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_dhw_electricity_consumption_this_month',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'DHW electricity consumption this month',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_dhw_summary_consumption_heating_currentmonth',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-energy_dhw_summary_consumption_heating_currentmonth',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_electricity_consumption_this_month-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 DHW electricity consumption this month',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_dhw_electricity_consumption_this_month',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.6',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_electricity_consumption_this_year-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_dhw_electricity_consumption_this_year',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'DHW electricity consumption this year',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_dhw_summary_consumption_heating_currentyear',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-energy_dhw_summary_consumption_heating_currentyear',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_electricity_consumption_this_year-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 DHW electricity consumption this year',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_dhw_electricity_consumption_this_year',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '143',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_electricity_consumption_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_dhw_electricity_consumption_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'DHW electricity consumption today',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_dhw_summary_consumption_heating_currentday',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-energy_dhw_summary_consumption_heating_currentday',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_electricity_consumption_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 DHW electricity consumption today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_dhw_electricity_consumption_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.6',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_max_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_dhw_max_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'DHW max temperature',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'hotwater_max_temperature',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-hotwater_max_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_max_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'model0 DHW max temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_dhw_max_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_min_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_dhw_min_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'DHW min temperature',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'hotwater_min_temperature',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-hotwater_min_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_min_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'model0 DHW min temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_dhw_min_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_storage_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_dhw_storage_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'DHW storage temperature',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_storage_temperature',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-dhw_storage_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_dhw_storage_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'model0 DHW storage temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_dhw_storage_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '58.8',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_electricity_consumption_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_electricity_consumption_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Electricity consumption today',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_consumption_today',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-power consumption today',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_electricity_consumption_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 Electricity consumption today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_electricity_consumption_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_electricity_consumption_last_seven_days-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_heating_electricity_consumption_last_seven_days',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Heating electricity consumption last seven days',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_summary_consumption_heating_lastsevendays',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-energy_summary_consumption_heating_lastsevendays',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_electricity_consumption_last_seven_days-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 Heating electricity consumption last seven days',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_electricity_consumption_last_seven_days',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '47.6',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_electricity_consumption_this_month-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_heating_electricity_consumption_this_month',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Heating electricity consumption this month',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_summary_consumption_heating_currentmonth',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-energy_summary_consumption_heating_currentmonth',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_electricity_consumption_this_month-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 Heating electricity consumption this month',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_electricity_consumption_this_month',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16.4',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_electricity_consumption_this_year-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_heating_electricity_consumption_this_year',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Heating electricity consumption this year',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_summary_consumption_heating_currentyear',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-energy_summary_consumption_heating_currentyear',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_electricity_consumption_this_year-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 Heating electricity consumption this year',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_electricity_consumption_this_year',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '55.2',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_electricity_consumption_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_heating_electricity_consumption_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Heating electricity consumption today',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_summary_consumption_heating_currentday',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-energy_summary_consumption_heating_currentday',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_electricity_consumption_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 Heating electricity consumption today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_electricity_consumption_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16.4',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_rod_hours-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_rod_hours',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating rod hours',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'heating_rod_hours',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-heating_rod_hours',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_rod_hours-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Heating rod hours',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_rod_hours',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_rod_starts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_heating_rod_starts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating rod starts',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'heating_rod_starts',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-heating_rod_starts',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_heating_rod_starts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Heating rod starts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_rod_starts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_outside_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_outside_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Outside temperature',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'outside_temperature',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-outside_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_outside_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'model0 Outside temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_outside_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14.3',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_primary_circuit_supply_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_primary_circuit_supply_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Primary circuit supply temperature',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'primary_circuit_supply_temperature',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-primary_circuit_supply_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_primary_circuit_supply_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'model0 Primary circuit supply temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_primary_circuit_supply_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.8',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_return_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_return_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Return temperature',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'return_temperature',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-return_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_return_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'model0 Return temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_return_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35.3',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_seasonal_performance_factor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_seasonal_performance_factor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seasonal performance factor',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'spf_total',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-spf_total',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_seasonal_performance_factor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Seasonal performance factor',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_seasonal_performance_factor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.9',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_seasonal_performance_factor_domestic_hot_water-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_seasonal_performance_factor_domestic_hot_water',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seasonal performance factor - domestic hot water',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'spf_dhw',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-spf_dhw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_seasonal_performance_factor_domestic_hot_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Seasonal performance factor - domestic hot water',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_seasonal_performance_factor_domestic_hot_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.1',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_seasonal_performance_factor_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_seasonal_performance_factor_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seasonal performance factor - heating',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'spf_heating',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-spf_heating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_seasonal_performance_factor_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Seasonal performance factor - heating',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_seasonal_performance_factor_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.2',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_secondary_circuit_supply_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_secondary_circuit_supply_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Secondary circuit supply temperature',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'secondary_circuit_supply_temperature',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-secondary_circuit_supply_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_secondary_circuit_supply_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'model0 Secondary circuit supply temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_secondary_circuit_supply_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45.1',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_supply_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_supply_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Supply pressure',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'supply_pressure',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-supply_pressure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_supply_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'model0 Supply pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_supply_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.1',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_supply_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_supply_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Supply temperature',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'supply_temperature',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-supply_temperature-1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_supply_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'model0 Supply temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_supply_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '39',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_volumetric_flow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_volumetric_flow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volumetric flow',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'volumetric_flow',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-volumetric_flow',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_volumetric_flow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Volumetric flow',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_volumetric_flow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.015',
+  })
+# ---
+# name: test_all_entities[type:ventilation-vicare/ViAir300F.json][sensor.model0_ventilation_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1065,6 +2523,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1091,7 +2550,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_ventilation_level-state]
+# name: test_all_entities[type:ventilation-vicare/ViAir300F.json][sensor.model0_ventilation_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -1112,7 +2571,7 @@
     'state': 'levelone',
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_ventilation_reason-entry]
+# name: test_all_entities[type:ventilation-vicare/ViAir300F.json][sensor.model0_ventilation_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1128,6 +2587,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1154,7 +2614,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_ventilation_reason-state]
+# name: test_all_entities[type:ventilation-vicare/ViAir300F.json][sensor.model0_ventilation_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -1176,6 +2636,58 @@
     'state': 'permanent',
   })
 # ---
+# name: test_room_sensors[sensor.model0_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway0_zigbee_d87a3bfffe5d844a-battery_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_room_sensors[sensor.model0_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'model0 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '89',
+  })
+# ---
 # name: test_room_sensors[sensor.model0_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1185,6 +2697,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1236,6 +2749,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1287,6 +2801,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1338,6 +2853,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,

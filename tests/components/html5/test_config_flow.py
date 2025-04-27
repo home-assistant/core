@@ -17,7 +17,7 @@ from homeassistant.components.html5.issues import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-import homeassistant.helpers.issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 
 MOCK_CONF = {
     ATTR_VAPID_EMAIL: "test@example.com",

@@ -328,7 +328,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
             host, port = self._async_get_host_port(host)
 
-            match_dict = {CONF_HOST: host}
+            match_dict: dict[str, Any] = {CONF_HOST: host}
             if port:
                 self.port = port
                 match_dict[CONF_PORT] = port
@@ -567,7 +567,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_reload_requires_auth_entries(self) -> None:
-        """Reload any in progress config flow that now have credentials."""
+        """Reload all config entries after auth update."""
         _config_entries = self.hass.config_entries
 
         if self.source == SOURCE_REAUTH:
@@ -579,11 +579,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             context = flow["context"]
             if context.get("source") != SOURCE_REAUTH:
                 continue
-            entry_id: str = context["entry_id"]
+            entry_id = context["entry_id"]
             if entry := _config_entries.async_get_entry(entry_id):
                 await _config_entries.async_reload(entry.entry_id)
-                if entry.state is ConfigEntryState.LOADED:
-                    _config_entries.flow.async_abort(flow["flow_id"])
 
     @callback
     def _async_create_or_update_entry_from_device(

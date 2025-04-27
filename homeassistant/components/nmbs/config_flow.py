@@ -3,11 +3,13 @@
 from typing import Any
 
 from pyrail import iRail
+from pyrail.models import StationDetails
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import Platform
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -31,17 +33,15 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self.api_client = iRail()
-        self.stations: list[dict[str, Any]] = []
+        self.stations: list[StationDetails] = []
 
-    async def _fetch_stations(self) -> list[dict[str, Any]]:
+    async def _fetch_stations(self) -> list[StationDetails]:
         """Fetch the stations."""
-        stations_response = await self.hass.async_add_executor_job(
-            self.api_client.get_stations
-        )
-        if stations_response == -1:
+        api_client = iRail(session=async_get_clientsession(self.hass))
+        stations_response = await api_client.get_stations()
+        if stations_response is None:
             raise CannotConnect("The API is currently unavailable.")
-        return stations_response["station"]
+        return stations_response.stations
 
     async def _fetch_stations_choices(self) -> list[SelectOptionDict]:
         """Fetch the stations options."""
@@ -50,7 +50,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.stations = await self._fetch_stations()
 
         return [
-            SelectOptionDict(value=station["id"], label=station["standardname"])
+            SelectOptionDict(value=station.id, label=station.standard_name)
             for station in self.stations
         ]
 
@@ -72,19 +72,20 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                 [station_from] = [
                     station
                     for station in self.stations
-                    if station["id"] == user_input[CONF_STATION_FROM]
+                    if station.id == user_input[CONF_STATION_FROM]
                 ]
                 [station_to] = [
                     station
                     for station in self.stations
-                    if station["id"] == user_input[CONF_STATION_TO]
+                    if station.id == user_input[CONF_STATION_TO]
                 ]
+                vias = "_excl_vias" if user_input.get(CONF_EXCLUDE_VIAS) else ""
                 await self.async_set_unique_id(
-                    f"{user_input[CONF_STATION_FROM]}_{user_input[CONF_STATION_TO]}"
+                    f"{user_input[CONF_STATION_FROM]}_{user_input[CONF_STATION_TO]}{vias}"
                 )
                 self._abort_if_unique_id_configured()
 
-                config_entry_name = f"Train from {station_from['standardname']} to {station_to['standardname']}"
+                config_entry_name = f"Train from {station_from.standard_name} to {station_to.standard_name}"
                 return self.async_create_entry(
                     title=config_entry_name,
                     data=user_input,
@@ -126,18 +127,18 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
         station_live = None
         for station in self.stations:
             if user_input[CONF_STATION_FROM] in (
-                station["standardname"],
-                station["name"],
+                station.standard_name,
+                station.name,
             ):
                 station_from = station
             if user_input[CONF_STATION_TO] in (
-                station["standardname"],
-                station["name"],
+                station.standard_name,
+                station.name,
             ):
                 station_to = station
             if CONF_STATION_LIVE in user_input and user_input[CONF_STATION_LIVE] in (
-                station["standardname"],
-                station["name"],
+                station.standard_name,
+                station.name,
             ):
                 station_live = station
 
@@ -147,28 +148,29 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="same_station")
 
         # config flow uses id and not the standard name
-        user_input[CONF_STATION_FROM] = station_from["id"]
-        user_input[CONF_STATION_TO] = station_to["id"]
+        user_input[CONF_STATION_FROM] = station_from.id
+        user_input[CONF_STATION_TO] = station_to.id
 
         if station_live:
-            user_input[CONF_STATION_LIVE] = station_live["id"]
+            user_input[CONF_STATION_LIVE] = station_live.id
             entity_registry = er.async_get(self.hass)
             prefix = "live"
+            vias = "_excl_vias" if user_input.get(CONF_EXCLUDE_VIAS, False) else ""
             if entity_id := entity_registry.async_get_entity_id(
                 Platform.SENSOR,
                 DOMAIN,
-                f"{prefix}_{station_live['standardname']}_{station_from['standardname']}_{station_to['standardname']}",
+                f"{prefix}_{station_live.standard_name}_{station_from.standard_name}_{station_to.standard_name}",
             ):
-                new_unique_id = f"{DOMAIN}_{prefix}_{station_live['id']}_{station_from['id']}_{station_to['id']}"
+                new_unique_id = f"{DOMAIN}_{prefix}_{station_live.id}_{station_from.id}_{station_to.id}{vias}"
                 entity_registry.async_update_entity(
                     entity_id, new_unique_id=new_unique_id
                 )
             if entity_id := entity_registry.async_get_entity_id(
                 Platform.SENSOR,
                 DOMAIN,
-                f"{prefix}_{station_live['name']}_{station_from['name']}_{station_to['name']}",
+                f"{prefix}_{station_live.name}_{station_from.name}_{station_to.name}",
             ):
-                new_unique_id = f"{DOMAIN}_{prefix}_{station_live['id']}_{station_from['id']}_{station_to['id']}"
+                new_unique_id = f"{DOMAIN}_{prefix}_{station_live.id}_{station_from.id}_{station_to.id}{vias}"
                 entity_registry.async_update_entity(
                     entity_id, new_unique_id=new_unique_id
                 )

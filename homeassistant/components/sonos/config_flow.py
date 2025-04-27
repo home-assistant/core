@@ -1,7 +1,6 @@
 """Config flow for SONOS."""
 
 from collections.abc import Awaitable
-import dataclasses
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlowResult
@@ -32,15 +31,17 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DO
         hostname = discovery_info.hostname
         if hostname is None or not hostname.lower().startswith("sonos"):
             return self.async_abort(reason="not_sonos_device")
-        await self.async_set_unique_id(self._domain, raise_on_progress=False)
-        host = discovery_info.host
-        mdns_name = discovery_info.name
-        properties = discovery_info.properties
-        boot_seqnum = properties.get("bootseq")
-        model = properties.get("model")
-        uid = hostname_to_uid(hostname)
+        if discovery_info.ip_address.version != 4:
+            return self.async_abort(reason="not_ipv4_address")
         if discovery_manager := self.hass.data.get(DATA_SONOS_DISCOVERY_MANAGER):
+            host = discovery_info.host
+            mdns_name = discovery_info.name
+            properties = discovery_info.properties
+            boot_seqnum = properties.get("bootseq")
+            model = properties.get("model")
+            uid = hostname_to_uid(hostname)
             discovery_manager.async_discovered_player(
                 "Zeroconf", properties, host, uid, boot_seqnum, model, mdns_name
             )
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+        await self.async_set_unique_id(self._domain, raise_on_progress=False)
+        return await self.async_step_discovery({})

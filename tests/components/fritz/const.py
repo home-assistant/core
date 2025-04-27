@@ -1,6 +1,5 @@
 """Common stuff for Fritz!Tools tests."""
 
-from homeassistant.components import ssdp
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.const import (
     CONF_DEVICES,
@@ -13,6 +12,7 @@ from homeassistant.const import (
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
+    SsdpServiceInfo,
 )
 
 ATTR_HOST = "host"
@@ -200,6 +200,7 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             MOCK_IPS["printer"]: {"NewDisallow": False, "NewWANAccess": "granted"}
         }
     },
+    "X_AVM-DE_UPnP1": {"GetInfo": {"NewEnable": True}},
 }
 
 MOCK_MESH_DATA = {
@@ -944,7 +945,7 @@ MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
 }
-MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
+MOCK_SSDP_DATA = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location=f"https://{MOCK_IPS['fritz.box']}:12345/test",

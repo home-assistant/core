@@ -18,7 +18,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import cover_unique_id, get_data_update_coordinator
 from .coordinator import DeviceDataUpdateCoordinator
@@ -28,7 +28,7 @@ from .entity import GoGoGate2Entity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
     data_update_coordinator = get_data_update_coordinator(hass, config_entry)

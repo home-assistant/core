@@ -109,6 +109,9 @@
       "overheated": {
         "name": "Overheated"
       },
+      "overloaded": {
+        "name": "Overloaded"
+      },
       "cloud_connection": {
         "name": "Cloud connection"
       },
@@ -138,6 +141,27 @@
       },
       "tilt_down": {
         "name": "Tilt down"
+      },
+      "pair": {
+        "name": "Pair new device"
+      },
+      "unpair": {
+        "name": "Unpair device"
+      },
+      "main_brush_reset": {
+        "name": "Reset main brush consumable"
+      },
+      "side_brush_reset": {
+        "name": "Reset side brush consumable"
+      },
+      "sensor_reset": {
+        "name": "Reset sensor consumable"
+      },
+      "filter_reset": {
+        "name": "Reset filter consumable"
+      },
+      "charging_contacts_reset": {
+        "name": "Reset charging contacts consumable"
       }
     },
     "camera": {
@@ -192,6 +216,80 @@
       },
       "alarm_source": {
         "name": "Alarm source"
+      },
+      "clean_area": {
+        "name": "Cleaning area"
+      },
+      "clean_time": {
+        "name": "Cleaning time"
+      },
+      "clean_progress": {
+        "name": "Cleaning progress"
+      },
+      "total_clean_area": {
+        "name": "Total cleaning area"
+      },
+      "total_clean_time": {
+        "name": "Total cleaning time"
+      },
+      "total_clean_count": {
+        "name": "Total cleaning count"
+      },
+      "last_clean_area": {
+        "name": "Last cleaned area"
+      },
+      "last_clean_time": {
+        "name": "Last cleaned time"
+      },
+      "last_clean_timestamp": {
+        "name": "Last clean start"
+      },
+      "main_brush_remaining": {
+        "name": "Main brush remaining"
+      },
+      "main_brush_used": {
+        "name": "Main brush used"
+      },
+      "side_brush_remaining": {
+        "name": "Side brush remaining"
+      },
+      "side_brush_used": {
+        "name": "Side brush used"
+      },
+      "filter_remaining": {
+        "name": "Filter remaining"
+      },
+      "filter_used": {
+        "name": "Filter used"
+      },
+      "sensor_remaining": {
+        "name": "Sensor remaining"
+      },
+      "sensor_used": {
+        "name": "Sensor used"
+      },
+      "charging_contacts_remaining": {
+        "name": "Charging contacts remaining"
+      },
+      "charging_contacts_used": {
+        "name": "Charging contacts used"
+      },
+      "vacuum_error": {
+        "name": "Error",
+        "state": {
+          "ok": "No error",
+          "sidebrushstuck": "Side brush stuck",
+          "mainbrushstuck": "Main brush stuck",
+          "wheelblocked": "Wheel blocked",
+          "trapped": "Unable to move",
+          "trappedcliff": "Unable to move (cliff sensor)",
+          "dustbinremoved": "Missing dust bin",
+          "unabletomove": "Unable to move",
+          "lidarblocked": "Lidar blocked",
+          "unabletofinddock": "Unable to find dock",
+          "batterylow": "Low on battery",
+          "unknowninternal": "Unknown error, report to upstream"
+        }
       }
     },
     "switch": {
@@ -227,6 +325,9 @@
       },
       "baby_cry_detection": {
         "name": "Baby cry detection"
+      },
+      "carpet_boost": {
+        "name": "Carpet boost"
       }
     },
     "number": {
@@ -242,11 +343,32 @@
       "temperature_offset": {
         "name": "Temperature offset"
       },
+      "power_protection_threshold": {
+        "name": "Power protection"
+      },
       "pan_step": {
         "name": "Pan degrees"
       },
       "tilt_step": {
         "name": "Tilt degrees"
+      },
+      "clean_count": {
+        "name": "Clean count"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "quiet": "Quiet",
+              "standard": "Standard",
+              "turbo": "Turbo",
+              "max": "Max",
+              "ultra": "Ultra"
+            }
+          }
+        }
       }
     }
   },
@@ -367,6 +489,9 @@
     },
     "unsupported_mode": {
       "message": "Tried to set unsupported mode: {mode}"
+    },
+    "invalid_alarm_duration": {
+      "message": "Invalid duration {duration} available: 1-{duration_max}s"
     }
   },
   "issues": {

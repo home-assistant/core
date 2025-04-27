@@ -36,9 +36,20 @@
         }
       }
     },
+    "select": {
+      "laundry_washer_spin_speed": {
+        "default": "mdi:reload"
+      },
+      "temperature_level": {
+        "default": "mdi:thermometer"
+      }
+    },
     "sensor": {
       "contamination_state": {
         "default": "mdi:air-filter"
+      },
+      "current_phase": {
+        "default": "mdi:state-machine"
       },
       "air_quality": {
         "default": "mdi:air-filter"
@@ -55,11 +66,38 @@
       "operational_state": {
         "default": "mdi:play-pause"
       },
+      "tank_volume": {
+        "default": "mdi:water-boiler"
+      },
+      "tank_percentage": {
+        "default": "mdi:water-boiler"
+      },
       "valve_position": {
         "default": "mdi:valve"
       },
       "battery_replacement_description": {
         "default": "mdi:battery-sync-outline"
+      },
+      "evse_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_supply_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_fault_state": {
+        "default": "mdi:ev-station"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:lock",
+        "state": {
+          "on": "mdi:lock",
+          "off": "mdi:lock-off"
+        }
+      },
+      "evse_charging_switch": {
+        "default": "mdi:ev-station"
       }
     }
   }

@@ -1,7 +1,6 @@
 {
   "domain": "frontend",
   "name": "Home Assistant Frontend",
-  "after_dependencies": ["backup"],
   "codeowners": ["@home-assistant/frontend"],
   "dependencies": [
     "api",
@@ -21,5 +20,5 @@
   "documentation": "https://www.home-assistant.io/integrations/frontend",
   "integration_type": "system",
   "quality_scale": "internal",
-  "requirements": ["home-assistant-frontend==20250109.0"]
+  "requirements": ["home-assistant-frontend==20250411.0"]
 }

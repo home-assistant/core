@@ -122,9 +122,14 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
 async def test_turn_on_without_turnon(hass: HomeAssistant, remote: Mock) -> None:
     """Test turn on."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
-    with pytest.raises(HomeAssistantError, match="does not support this service"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
     # nothing called as not supported feature
     assert remote.control.call_count == 0
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "service_unsupported"
+    assert exc_info.value.translation_placeholders == {
+        "entity": ENTITY_ID,
+    }

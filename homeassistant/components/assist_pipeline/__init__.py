@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import chat_session
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -114,24 +115,25 @@ async def async_pipeline_from_audio_stream(
 
     Raises PipelineNotFound if no pipeline is found.
     """
-    pipeline_input = PipelineInput(
-        conversation_id=conversation_id,
-        device_id=device_id,
-        stt_metadata=stt_metadata,
-        stt_stream=stt_stream,
-        wake_word_phrase=wake_word_phrase,
-        conversation_extra_system_prompt=conversation_extra_system_prompt,
-        run=PipelineRun(
-            hass,
-            context=context,
-            pipeline=async_get_pipeline(hass, pipeline_id=pipeline_id),
-            start_stage=start_stage,
-            end_stage=end_stage,
-            event_callback=event_callback,
-            tts_audio_output=tts_audio_output,
-            wake_word_settings=wake_word_settings,
-            audio_settings=audio_settings or AudioSettings(),
-        ),
-    )
-    await pipeline_input.validate()
-    await pipeline_input.execute()
+    with chat_session.async_get_chat_session(hass, conversation_id) as session:
+        pipeline_input = PipelineInput(
+            session=session,
+            device_id=device_id,
+            stt_metadata=stt_metadata,
+            stt_stream=stt_stream,
+            wake_word_phrase=wake_word_phrase,
+            conversation_extra_system_prompt=conversation_extra_system_prompt,
+            run=PipelineRun(
+                hass,
+                context=context,
+                pipeline=async_get_pipeline(hass, pipeline_id=pipeline_id),
+                start_stage=start_stage,
+                end_stage=end_stage,
+                event_callback=event_callback,
+                tts_audio_output=tts_audio_output,
+                wake_word_settings=wake_word_settings,
+                audio_settings=audio_settings or AudioSettings(),
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()

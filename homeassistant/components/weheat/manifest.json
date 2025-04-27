@@ -6,5 +6,5 @@
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/weheat",
   "iot_class": "cloud_polling",
-  "requirements": ["weheat==2025.1.14"]
+  "requirements": ["weheat==2025.3.7"]
 }

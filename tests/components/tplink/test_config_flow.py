@@ -7,7 +7,7 @@ from kasa import Module, TimeoutError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, stream
+from homeassistant.components import stream
 from homeassistant.components.tplink import (
     DOMAIN,
     AuthenticationError,
@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import _mocked_device, _patch_connect, _patch_discovery, _patch_single_discovery
 from .conftest import override_side_effect
@@ -1168,7 +1169,6 @@ async def test_manual_port_override(
         host,
         credentials=None,
         port_override=port,
-        uses_http=True,
         connection_type=CONN_PARAMS_KLAP,
     )
     mock_device = _mocked_device(
@@ -1291,7 +1291,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         )
@@ -1305,7 +1305,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress="000000000000", hostname="mock_hostname"
             ),
         )
@@ -1321,7 +1321,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.2.3.5", macaddress="000000000001", hostname="mock_hostname"
             ),
         )
@@ -1335,7 +1335,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         ),
@@ -1389,7 +1389,7 @@ async def test_discovered_by_dhcp_or_discovery(
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         ),
@@ -1490,7 +1490,6 @@ async def test_integration_discovery_with_ip_change(
     # Check that init set the new host correctly before calling connect
     assert config.host == IP_ADDRESS
     config.host = IP_ADDRESS2
-    config.uses_http = False  # Not passed in to new config class
     config.http_client = "Foo"
     mock_connect["connect"].assert_awaited_once_with(config=config)
 
@@ -1577,7 +1576,6 @@ async def test_integration_discovery_with_connection_change(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     config.host = IP_ADDRESS2
-    config.uses_http = False  # Not passed in to new config class
     config.http_client = "Foo"
     config.aes_keys = AES_KEYS
     mock_connect["connect"].assert_awaited_once_with(config=config)
@@ -1606,7 +1604,7 @@ async def test_dhcp_discovery_with_ip_change(
     discovery_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
         ),
     )
@@ -1631,7 +1629,7 @@ async def test_dhcp_discovery_discover_fail(
         discovery_result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         )
@@ -1846,7 +1844,6 @@ async def test_reauth_update_with_encryption_change(
         connection_type=Device.ConnectionParameters(
             Device.Family.SmartTapoPlug, Device.EncryptionType.Klap
         ),
-        uses_http=True,
     )
     mock_device = _mocked_device(
         alias="my_device",

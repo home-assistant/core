@@ -8,7 +8,7 @@ from enum import StrEnum
 import logging
 from typing import Any, Self, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

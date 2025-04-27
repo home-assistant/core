@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
-from .coordinator import EheimDigitalUpdateCoordinator
+from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
 
-PLATFORMS = [Platform.LIGHT]
-
-type EheimDigitalConfigEntry = ConfigEntry[EheimDigitalUpdateCoordinator]
+PLATFORMS = [Platform.CLIMATE, Platform.LIGHT, Platform.NUMBER, Platform.SENSOR]
 
 
 async def async_setup_entry(
@@ -20,7 +17,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up EHEIM Digital from a config entry."""
 
-    coordinator = EheimDigitalUpdateCoordinator(hass)
+    coordinator = EheimDigitalUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

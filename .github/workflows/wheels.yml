@@ -36,7 +36,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.3.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -91,7 +91,7 @@ jobs:
           ) > build_constraints.txt
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: env_file
           path: ./.env_file
@@ -99,14 +99,14 @@ jobs:
           overwrite: true
 
       - name: Upload build_constraints
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: build_constraints
           path: ./build_constraints.txt
           overwrite: true
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -118,7 +118,7 @@ jobs:
           python -m script.gen_requirements_all ci
 
       - name: Upload requirements_all_wheels
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: requirements_all_wheels
           path: ./requirements_all_wheels_*.txt
@@ -131,24 +131,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp312", "cp313"]
+        abi: ["cp313"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4.2.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.3.0
         with:
           name: env_file
 
       - name: Download build_constraints
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.3.0
         with:
           name: build_constraints
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.3.0
         with:
           name: requirements_diff
 
@@ -159,7 +159,7 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: home-assistant/wheels@2024.11.0
+        uses: home-assistant/wheels@2025.03.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -180,29 +180,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp312", "cp313"]
+        abi: ["cp313"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4.2.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.3.0
         with:
           name: env_file
 
       - name: Download build_constraints
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.3.0
         with:
           name: build_constraints
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.3.0
         with:
           name: requirements_diff
 
       - name: Download requirements_all_wheels
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.3.0
         with:
           name: requirements_all_wheels
 
@@ -218,16 +218,8 @@ jobs:
           sed -i "/uv/d" requirements.txt
           sed -i "/uv/d" requirements_diff.txt
 
-      - name: Split requirements all
-        run: |
-          # We split requirements all into multiple files.
-          # This is to prevent the build from running out of memory when
-          # resolving packages on 32-bits systems (like armhf, armv7).
-
-          split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 3) requirements_all_wheels_${{ matrix.arch }}.txt requirements_all.txt
-
-      - name: Build wheels (part 1)
-        uses: home-assistant/wheels@2024.11.0
+      - name: Build wheels
+        uses: home-assistant/wheels@2025.03.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -238,32 +230,4 @@ jobs:
           skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txtaa"
-
-      - name: Build wheels (part 2)
-        uses: home-assistant/wheels@2024.11.0
-        with:
-          abi: ${{ matrix.abi }}
-          tag: musllinux_1_2
-          arch: ${{ matrix.arch }}
-          wheels-key: ${{ secrets.WHEELS_KEY }}
-          env-file: true
-          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-ng-dev"
-          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
-          constraints: "homeassistant/package_constraints.txt"
-          requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txtab"
-
-      - name: Build wheels (part 3)
-        uses: home-assistant/wheels@2024.11.0
-        with:
-          abi: ${{ matrix.abi }}
-          tag: musllinux_1_2
-          arch: ${{ matrix.arch }}
-          wheels-key: ${{ secrets.WHEELS_KEY }}
-          env-file: true
-          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-ng-dev"
-          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
-          constraints: "homeassistant/package_constraints.txt"
-          requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txtac"
+          requirements: "requirements_all.txt"

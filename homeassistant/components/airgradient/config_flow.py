@@ -1,5 +1,6 @@
 """Config flow for Airgradient."""
 
+from collections.abc import Mapping
 from typing import Any
 
 from airgradient import (
@@ -11,7 +12,12 @@ from airgradient import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -95,10 +101,18 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(
                     current_measures.serial_number, raise_on_progress=False
                 )
-                self._abort_if_unique_id_configured()
+                if self.source == SOURCE_USER:
+                    self._abort_if_unique_id_configured()
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
                 await self.set_configuration_source()
-                return self.async_create_entry(
-                    title=current_measures.model,
+                if self.source == SOURCE_USER:
+                    return self.async_create_entry(
+                        title=current_measures.model,
+                        data={CONF_HOST: user_input[CONF_HOST]},
+                    )
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
                     data={CONF_HOST: user_input[CONF_HOST]},
                 )
         return self.async_show_form(
@@ -106,3 +120,9 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_user()

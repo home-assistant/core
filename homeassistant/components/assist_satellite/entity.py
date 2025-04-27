@@ -8,9 +8,9 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 import time
-from typing import Any, Final, Literal, final
+from typing import Any, Literal, final
 
-from homeassistant.components import media_source, stt, tts
+from homeassistant.components import conversation, media_source, stt, tts
 from homeassistant.components.assist_pipeline import (
     OPTION_PREFERRED,
     AudioSettings,
@@ -23,17 +23,13 @@ from homeassistant.components.assist_pipeline import (
     vad,
 )
 from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.components.tts import (
-    generate_media_source_id as tts_generate_media_source_id,
-)
 from homeassistant.core import Context, callback
-from homeassistant.helpers import entity
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import chat_session, entity
 from homeassistant.helpers.entity import EntityDescription
 
-from .const import AssistSatelliteEntityFeature
+from .const import PREANNOUNCE_URL, AssistSatelliteEntityFeature
 from .errors import AssistSatelliteError, SatelliteBusyError
-
-_CONVERSATION_TIMEOUT_SEC: Final = 5 * 60  # 5 minutes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +92,17 @@ class AssistSatelliteAnnouncement:
     media_id: str
     """Media ID to be played."""
 
+    original_media_id: str
+    """The raw media ID before processing."""
+
+    tts_token: str | None
+    """The TTS token of the media."""
+
     media_id_source: Literal["url", "media_id", "tts"]
+    """Source of the media ID."""
+
+    preannounce_media_id: str | None = None
+    """Media ID to be played before announcement."""
 
 
 class AssistSatelliteEntity(entity.Entity):
@@ -109,10 +115,10 @@ class AssistSatelliteEntity(entity.Entity):
     _attr_vad_sensitivity_entity_id: str | None = None
 
     _conversation_id: str | None = None
-    _conversation_id_time: float | None = None
 
     _run_has_tts: bool = False
     _is_announcing = False
+    _extra_system_prompt: str | None = None
     _wake_word_intercept_future: asyncio.Future[str | None] | None = None
     _attr_tts_options: dict[str, Any] | None = None
     _pipeline_task: asyncio.Task | None = None
@@ -174,6 +180,8 @@ class AssistSatelliteEntity(entity.Entity):
         self,
         message: str | None = None,
         media_id: str | None = None,
+        preannounce: bool = True,
+        preannounce_media_id: str = PREANNOUNCE_URL,
     ) -> None:
         """Play and show an announcement on the satellite.
 
@@ -183,6 +191,9 @@ class AssistSatelliteEntity(entity.Entity):
         If media_id is provided, it is played directly. It is possible
         to omit the message and the satellite will not show any text.
 
+        If preannounce is True, a sound is played before the announcement.
+        If preannounce_media_id is provided, it overrides the default sound.
+
         Calls async_announce with message and media id.
         """
         await self._cancel_running_pipeline()
@@ -190,7 +201,11 @@ class AssistSatelliteEntity(entity.Entity):
         if message is None:
             message = ""
 
-        announcement = await self._resolve_announcement_media_id(message, media_id)
+        announcement = await self._resolve_announcement_media_id(
+            message,
+            media_id,
+            preannounce_media_id=preannounce_media_id if preannounce else None,
+        )
 
         if self._is_announcing:
             raise SatelliteBusyError
@@ -212,6 +227,88 @@ class AssistSatelliteEntity(entity.Entity):
         """
         raise NotImplementedError
 
+    async def async_internal_start_conversation(
+        self,
+        start_message: str | None = None,
+        start_media_id: str | None = None,
+        extra_system_prompt: str | None = None,
+        preannounce: bool = True,
+        preannounce_media_id: str = PREANNOUNCE_URL,
+    ) -> None:
+        """Start a conversation from the satellite.
+
+        If start_media_id is not provided, message is synthesized to
+        audio with the selected pipeline.
+
+        If start_media_id is provided, it is played directly. It is possible
+        to omit the message and the satellite will not show any text.
+
+        If preannounce is True, a sound is played before the start message or media.
+        If preannounce_media_id is provided, it overrides the default sound.
+
+        Calls async_start_conversation.
+        """
+        await self._cancel_running_pipeline()
+
+        # The Home Assistant built-in agent doesn't support conversations.
+        pipeline = async_get_pipeline(self.hass, self._resolve_pipeline())
+        if pipeline.conversation_engine == conversation.HOME_ASSISTANT_AGENT:
+            raise HomeAssistantError(
+                "Built-in conversation agent does not support starting conversations"
+            )
+
+        if start_message is None:
+            start_message = ""
+
+        announcement = await self._resolve_announcement_media_id(
+            start_message,
+            start_media_id,
+            preannounce_media_id=preannounce_media_id if preannounce else None,
+        )
+
+        if self._is_announcing:
+            raise SatelliteBusyError
+
+        self._is_announcing = True
+        self._set_state(AssistSatelliteState.RESPONDING)
+
+        # Provide our start info to the LLM so it understands context of incoming message
+        if extra_system_prompt is not None:
+            self._extra_system_prompt = extra_system_prompt
+        else:
+            self._extra_system_prompt = start_message or None
+
+        with (
+            # Not passing in a conversation ID will force a new one to be created
+            chat_session.async_get_chat_session(self.hass) as session,
+            conversation.async_get_chat_log(self.hass, session) as chat_log,
+        ):
+            self._conversation_id = session.conversation_id
+
+            if start_message:
+                chat_log.async_add_assistant_content_without_tools(
+                    conversation.AssistantContent(
+                        agent_id=self.entity_id, content=start_message
+                    )
+                )
+
+        try:
+            await self.async_start_conversation(announcement)
+        except Exception:
+            # Clear prompt on error
+            self._conversation_id = None
+            self._extra_system_prompt = None
+            raise
+        finally:
+            self._is_announcing = False
+            self._set_state(AssistSatelliteState.IDLE)
+
+    async def async_start_conversation(
+        self, start_announcement: AssistSatelliteAnnouncement
+    ) -> None:
+        """Start a conversation from the satellite."""
+        raise NotImplementedError
+
     async def async_accept_pipeline_from_satellite(
         self,
         audio_stream: AsyncIterable[bytes],
@@ -221,6 +318,10 @@ class AssistSatelliteEntity(entity.Entity):
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
         await self._cancel_running_pipeline()
+
+        # Consume system prompt in first pipeline
+        extra_system_prompt = self._extra_system_prompt
+        self._extra_system_prompt = None
 
         if self._wake_word_intercept_future and start_stage in (
             PipelineStage.WAKE_WORD,
@@ -262,50 +363,52 @@ class AssistSatelliteEntity(entity.Entity):
 
         assert self._context is not None
 
-        # Reset conversation id if necessary
-        if self._conversation_id_time and (
-            (time.monotonic() - self._conversation_id_time) > _CONVERSATION_TIMEOUT_SEC
-        ):
-            self._conversation_id = None
-            self._conversation_id_time = None
-
         # Set entity state based on pipeline events
         self._run_has_tts = False
 
         assert self.platform.config_entry is not None
-        self._pipeline_task = self.platform.config_entry.async_create_background_task(
-            self.hass,
-            async_pipeline_from_audio_stream(
-                self.hass,
-                context=self._context,
-                event_callback=self._internal_on_pipeline_event,
-                stt_metadata=stt.SpeechMetadata(
-                    language="",  # set in async_pipeline_from_audio_stream
-                    format=stt.AudioFormats.WAV,
-                    codec=stt.AudioCodecs.PCM,
-                    bit_rate=stt.AudioBitRates.BITRATE_16,
-                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                    channel=stt.AudioChannels.CHANNEL_MONO,
-                ),
-                stt_stream=audio_stream,
-                pipeline_id=self._resolve_pipeline(),
-                conversation_id=self._conversation_id,
-                device_id=device_id,
-                tts_audio_output=self.tts_options,
-                wake_word_phrase=wake_word_phrase,
-                audio_settings=AudioSettings(
-                    silence_seconds=self._resolve_vad_sensitivity()
-                ),
-                start_stage=start_stage,
-                end_stage=end_stage,
-            ),
-            f"{self.entity_id}_pipeline",
-        )
 
-        try:
-            await self._pipeline_task
-        finally:
-            self._pipeline_task = None
+        with chat_session.async_get_chat_session(
+            self.hass, self._conversation_id
+        ) as session:
+            # Store the conversation ID. If it is no longer valid, get_chat_session will reset it
+            self._conversation_id = session.conversation_id
+            self._pipeline_task = (
+                self.platform.config_entry.async_create_background_task(
+                    self.hass,
+                    async_pipeline_from_audio_stream(
+                        self.hass,
+                        context=self._context,
+                        event_callback=self._internal_on_pipeline_event,
+                        stt_metadata=stt.SpeechMetadata(
+                            language="",  # set in async_pipeline_from_audio_stream
+                            format=stt.AudioFormats.WAV,
+                            codec=stt.AudioCodecs.PCM,
+                            bit_rate=stt.AudioBitRates.BITRATE_16,
+                            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                            channel=stt.AudioChannels.CHANNEL_MONO,
+                        ),
+                        stt_stream=audio_stream,
+                        pipeline_id=self._resolve_pipeline(),
+                        conversation_id=session.conversation_id,
+                        device_id=device_id,
+                        tts_audio_output=self.tts_options,
+                        wake_word_phrase=wake_word_phrase,
+                        audio_settings=AudioSettings(
+                            silence_seconds=self._resolve_vad_sensitivity()
+                        ),
+                        start_stage=start_stage,
+                        end_stage=end_stage,
+                        conversation_extra_system_prompt=extra_system_prompt,
+                    ),
+                    f"{self.entity_id}_pipeline",
+                )
+            )
+
+            try:
+                await self._pipeline_task
+            finally:
+                self._pipeline_task = None
 
     async def _cancel_running_pipeline(self) -> None:
         """Cancel the current pipeline if it's running."""
@@ -324,16 +427,14 @@ class AssistSatelliteEntity(entity.Entity):
     def _internal_on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type is PipelineEventType.WAKE_WORD_START:
-            self._set_state(AssistSatelliteState.IDLE)
+            # Only return to idle if we're not currently responding.
+            # The state will return to idle in tts_response_finished.
+            if self.state != AssistSatelliteState.RESPONDING:
+                self._set_state(AssistSatelliteState.IDLE)
         elif event.type is PipelineEventType.STT_START:
             self._set_state(AssistSatelliteState.LISTENING)
         elif event.type is PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
-        elif event.type is PipelineEventType.INTENT_END:
-            assert event.data is not None
-            # Update timeout
-            self._conversation_id_time = time.monotonic()
-            self._conversation_id = event.data["intent_output"]["conversation_id"]
         elif event.type is PipelineEventType.TTS_START:
             # Wait until tts_response_finished is called to return to waiting state
             self._run_has_tts = True
@@ -391,16 +492,26 @@ class AssistSatelliteEntity(entity.Entity):
         return vad.VadSensitivity.to_seconds(vad_sensitivity)
 
     async def _resolve_announcement_media_id(
-        self, message: str, media_id: str | None
+        self,
+        message: str,
+        media_id: str | None,
+        preannounce_media_id: str | None = None,
     ) -> AssistSatelliteAnnouncement:
         """Resolve the media ID."""
         media_id_source: Literal["url", "media_id", "tts"] | None = None
+        tts_token: str | None = None
 
-        if not media_id:
+        if media_id:
+            original_media_id = media_id
+        else:
             media_id_source = "tts"
             # Synthesize audio and get URL
             pipeline_id = self._resolve_pipeline()
             pipeline = async_get_pipeline(self.hass, pipeline_id)
+
+            engine = tts.async_resolve_engine(self.hass, pipeline.tts_engine)
+            if engine is None:
+                raise HomeAssistantError(f"TTS engine {pipeline.tts_engine} not found")
 
             tts_options: dict[str, Any] = {}
             if pipeline.tts_voice is not None:
@@ -409,10 +520,20 @@ class AssistSatelliteEntity(entity.Entity):
             if self.tts_options is not None:
                 tts_options.update(self.tts_options)
 
-            media_id = tts_generate_media_source_id(
+            stream = tts.async_create_stream(
+                self.hass,
+                engine=engine,
+                language=pipeline.tts_language,
+                options=tts_options,
+            )
+            stream.async_set_message(message)
+
+            tts_token = stream.token
+            media_id = stream.url
+            original_media_id = tts.generate_media_source_id(
                 self.hass,
                 message,
-                engine=pipeline.tts_engine,
+                engine=engine,
                 language=pipeline.tts_language,
                 options=tts_options,
             )
@@ -433,4 +554,26 @@ class AssistSatelliteEntity(entity.Entity):
         # Resolve to full URL
         media_id = async_process_play_media_url(self.hass, media_id)
 
-        return AssistSatelliteAnnouncement(message, media_id, media_id_source)
+        # Resolve preannounce media id
+        if preannounce_media_id:
+            if media_source.is_media_source_id(preannounce_media_id):
+                preannounce_media = await media_source.async_resolve_media(
+                    self.hass,
+                    preannounce_media_id,
+                    None,
+                )
+                preannounce_media_id = preannounce_media.url
+
+            # Resolve to full URL
+            preannounce_media_id = async_process_play_media_url(
+                self.hass, preannounce_media_id
+            )
+
+        return AssistSatelliteAnnouncement(
+            message=message,
+            media_id=media_id,
+            original_media_id=original_media_id,
+            tts_token=tts_token,
+            media_id_source=media_id_source,
+            preannounce_media_id=preannounce_media_id,
+        )

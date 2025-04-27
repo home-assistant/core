@@ -27,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import Router
@@ -181,7 +181,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "cell_id": HuaweiSensorEntityDescription(
                 key="cell_id",
                 translation_key="cell_id",
-                icon="mdi:transmission-tower",
+                icon="mdi:antenna",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "cqi0": HuaweiSensorEntityDescription(
@@ -230,6 +230,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "enodeb_id": HuaweiSensorEntityDescription(
                 key="enodeb_id",
                 translation_key="enodeb_id",
+                icon="mdi:antenna",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "lac": HuaweiSensorEntityDescription(
@@ -364,7 +365,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "pci": HuaweiSensorEntityDescription(
                 key="pci",
                 translation_key="pci",
-                icon="mdi:transmission-tower",
+                icon="mdi:antenna",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "plmn": HuaweiSensorEntityDescription(
@@ -542,6 +543,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
         descriptions={
             "BatteryPercent": HuaweiSensorEntityDescription(
                 key="BatteryPercent",
+                translation_key="battery",
                 device_class=SensorDeviceClass.BATTERY,
                 native_unit_of_measurement=PERCENTAGE,
                 state_class=SensorStateClass.MEASUREMENT,
@@ -754,7 +756,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.entry_id]

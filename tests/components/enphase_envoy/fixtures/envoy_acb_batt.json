@@ -235,7 +235,8 @@
         "reserved_soc": 0.0,
         "very_low_soc": 5,
         "charge_from_grid": true,
-        "date": "1714749724"
+        "date": "1714749724",
+        "opt_schedules": true
       },
       "single_rate": {
         "rate": 0.0,

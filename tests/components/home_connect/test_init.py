@@ -2,34 +2,28 @@
 
 from collections.abc import Awaitable, Callable
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
+from aiohomeconnect.const import OAUTH2_TOKEN
+from aiohomeconnect.model import HomeAppliance, SettingKey, StatusKey
+from aiohomeconnect.model.error import (
+    HomeConnectError,
+    TooManyRequestsError,
+    UnauthorizedError,
+)
+import aiohttp
 import pytest
-from requests import HTTPError
-import requests_mock
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.home_connect import (
-    SCAN_INTERVAL,
-    bsh_key_to_translation_key,
-)
-from homeassistant.components.home_connect.const import (
-    BSH_CHILD_LOCK_STATE,
-    BSH_OPERATION_STATE,
-    BSH_POWER_STATE,
-    BSH_REMOTE_START_ALLOWANCE_STATE,
-    COOKING_LIGHTING,
-    DOMAIN,
-    OAUTH2_TOKEN,
-)
+from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.home_connect.utils import bsh_key_to_translation_key
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from script.hassfest.translations import RE_TRANSLATION_KEY
 
@@ -39,115 +33,22 @@ from .conftest import (
     FAKE_ACCESS_TOKEN,
     FAKE_REFRESH_TOKEN,
     SERVER_ACCESS_TOKEN,
-    get_all_appliances,
 )
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-SERVICE_KV_CALL_PARAMS = [
-    {
-        "domain": DOMAIN,
-        "service": "set_option_active",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
-            "unit": "",
-        },
-        "blocking": True,
-    },
-    {
-        "domain": DOMAIN,
-        "service": "set_option_selected",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
-        },
-        "blocking": True,
-    },
-    {
-        "domain": DOMAIN,
-        "service": "change_setting",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
-        },
-        "blocking": True,
-    },
-]
 
-SERVICE_COMMAND_CALL_PARAMS = [
-    {
-        "domain": DOMAIN,
-        "service": "pause_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-        },
-        "blocking": True,
-    },
-    {
-        "domain": DOMAIN,
-        "service": "resume_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-        },
-        "blocking": True,
-    },
-]
-
-
-SERVICE_PROGRAM_CALL_PARAMS = [
-    {
-        "domain": DOMAIN,
-        "service": "select_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "program": "",
-            "key": "",
-            "value": "",
-        },
-        "blocking": True,
-    },
-    {
-        "domain": DOMAIN,
-        "service": "start_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "program": "",
-            "key": "",
-            "value": "",
-            "unit": "C",
-        },
-        "blocking": True,
-    },
-]
-
-SERVICE_APPLIANCE_METHOD_MAPPING = {
-    "set_option_active": "set_options_active_program",
-    "set_option_selected": "set_options_selected_program",
-    "change_setting": "set_setting",
-    "pause_program": "execute_command",
-    "resume_program": "execute_command",
-    "select_program": "select_program",
-    "start_program": "start_program",
-}
-
-
-@pytest.mark.usefixtures("bypass_throttle")
-async def test_api_setup(
+async def test_entry_setup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
-    get_appliances: MagicMock,
+    client: MagicMock,
 ) -> None:
     """Test setup and unload."""
-    get_appliances.side_effect = get_all_appliances
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup()
+    assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
@@ -156,72 +57,57 @@ async def test_api_setup(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_update_throttle(
-    appliance: Mock,
-    freezer: FrozenDateTimeFactory,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
-    setup_credentials: None,
-    get_appliances: MagicMock,
-) -> None:
-    """Test to check Throttle functionality."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
-    get_appliances_call_count = get_appliances.call_count
-
-    # First re-load after 1 minute is not blocked.
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    freezer.tick(SCAN_INTERVAL.seconds + 0.1)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    assert get_appliances.call_count == get_appliances_call_count + 1
-
-    # Second re-load is blocked by Throttle.
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    freezer.tick(SCAN_INTERVAL.seconds - 0.1)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    assert get_appliances.call_count == get_appliances_call_count + 1
-
-
-@pytest.mark.usefixtures("bypass_throttle")
 async def test_exception_handling(
-    integration_setup: Callable[[], Awaitable[bool]],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
     setup_credentials: None,
-    get_appliances: MagicMock,
-    problematic_appliance: Mock,
+    client_with_exception: MagicMock,
 ) -> None:
     """Test exception handling."""
-    get_appliances.return_value = [problematic_appliance]
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup()
+    assert await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize("token_expiration_time", [12345])
-@pytest.mark.usefixtures("bypass_throttle")
 async def test_token_refresh_success(
-    integration_setup: Callable[[], Awaitable[bool]],
+    hass: HomeAssistant,
+    platforms: list[Platform],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    requests_mock: requests_mock.Mocker,
     setup_credentials: None,
+    client: MagicMock,
 ) -> None:
     """Test where token is expired and the refresh attempt succeeds."""
 
     assert config_entry.data["token"]["access_token"] == FAKE_ACCESS_TOKEN
 
-    requests_mock.post(OAUTH2_TOKEN, json=SERVER_ACCESS_TOKEN)
-    requests_mock.get("/api/homeappliances", json={"data": {"homeappliances": []}})
-
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json=SERVER_ACCESS_TOKEN,
     )
-    assert await integration_setup()
+    appliances = client.get_home_appliances.return_value
+
+    async def mock_get_home_appliances():
+        await client._auth.async_get_access_token()
+        return appliances
+
+    client.get_home_appliances.return_value = None
+    client.get_home_appliances.side_effect = mock_get_home_appliances
+
+    def init_side_effect(auth) -> MagicMock:
+        client._auth = auth
+        return client
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    with (
+        patch("homeassistant.components.home_connect.PLATFORMS", platforms),
+        patch("homeassistant.components.home_connect.HomeConnectClient") as client_mock,
+    ):
+        client_mock.side_effect = MagicMock(side_effect=init_side_effect)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
 
     # Verify token request
@@ -240,118 +126,169 @@ async def test_token_refresh_success(
     )
 
 
-@pytest.mark.usefixtures("bypass_throttle")
-async def test_http_error(
+@pytest.mark.parametrize("token_expiration_time", [12345])
+@pytest.mark.parametrize(
+    ("aioclient_mock_args", "expected_config_entry_state"),
+    [
+        (
+            {
+                "status": 400,
+                "json": {"error": "invalid_grant"},
+            },
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            {
+                "status": 500,
+            },
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            {
+                "exc": aiohttp.ClientError,
+            },
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
+)
+async def test_token_refresh_error(
+    aioclient_mock_args: dict[str, Any],
+    expected_config_entry_state: ConfigEntryState,
+    hass: HomeAssistant,
+    platforms: list[Platform],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
+    aioclient_mock: AiohttpClientMocker,
     setup_credentials: None,
-    get_appliances: MagicMock,
+    client: MagicMock,
 ) -> None:
-    """Test HTTP errors during setup integration."""
-    get_appliances.side_effect = HTTPError(response=MagicMock())
+    """Test where token is expired and the refresh attempt fails."""
+
+    config_entry.data["token"]["access_token"] = FAKE_ACCESS_TOKEN
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        **aioclient_mock_args,
+    )
+
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
-    assert get_appliances.call_count == 1
+    with patch(
+        "homeassistant.components.home_connect.HomeConnectClient", return_value=client
+    ):
+        assert not await integration_setup(client)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == expected_config_entry_state
 
 
 @pytest.mark.parametrize(
-    "service_call",
-    SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+    ("exception", "expected_state"),
+    [
+        (HomeConnectError(), ConfigEntryState.SETUP_RETRY),
+        (UnauthorizedError("error.key"), ConfigEntryState.SETUP_ERROR),
+    ],
 )
-@pytest.mark.usefixtures("bypass_throttle")
-async def test_services(
-    service_call: list[dict[str, Any]],
+async def test_client_error(
+    exception: HomeConnectError,
+    expected_state: ConfigEntryState,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client_with_exception: MagicMock,
+) -> None:
+    """Test client errors during setup integration."""
+    client_with_exception.get_home_appliances.return_value = None
+    client_with_exception.get_home_appliances.side_effect = exception
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert not await integration_setup(client_with_exception)
+    assert config_entry.state == expected_state
+    assert client_with_exception.get_home_appliances.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "raising_exception_method",
+    [
+        "get_settings",
+        "get_status",
+        "get_all_programs",
+        "get_available_commands",
+        "get_available_program",
+    ],
+)
+async def test_client_rate_limit_error(
+    raising_exception_method: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test client errors during setup integration."""
+    retry_after = 42
+
+    original_mock = getattr(client, raising_exception_method)
+    mock = AsyncMock()
+
+    async def side_effect(*args, **kwargs):
+        if mock.call_count <= 1:
+            raise TooManyRequestsError("error.key", retry_after=retry_after)
+        return await original_mock(*args, **kwargs)
+
+    mock.side_effect = side_effect
+    setattr(client, raising_exception_method, mock)
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    with patch(
+        "homeassistant.components.home_connect.coordinator.asyncio_sleep",
+    ) as asyncio_sleep_mock:
+        assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert mock.call_count >= 2
+    asyncio_sleep_mock.assert_called_once_with(retry_after)
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_required_program_or_at_least_an_option(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
-    get_appliances: MagicMock,
-    appliance: Mock,
+    client: MagicMock,
+    appliance: HomeAppliance,
 ) -> None:
-    """Create and test services."""
-    get_appliances.return_value = [appliance]
+    "Test that the set_program_and_options does raise an exception if no program nor options are set."
+
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup()
+    assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance.haId)},
+        identifiers={(DOMAIN, appliance.ha_id)},
     )
 
-    service_name = service_call["service"]
-    service_call["service_data"]["device_id"] = device_entry.id
-    await hass.services.async_call(**service_call)
-    await hass.async_block_till_done()
-    assert (
-        getattr(appliance, SERVICE_APPLIANCE_METHOD_MAPPING[service_name]).call_count
-        == 1
-    )
+    with pytest.raises(
+        ServiceValidationError,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_program_and_options",
+            {
+                "device_id": device_entry.id,
+                "affects_to": "selected_program",
+            },
+            True,
+        )
 
 
-@pytest.mark.parametrize(
-    "service_call",
-    SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
-)
-@pytest.mark.usefixtures("bypass_throttle")
-async def test_services_exception(
-    service_call: list[dict[str, Any]],
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
-    setup_credentials: None,
-    get_appliances: MagicMock,
-    problematic_appliance: Mock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Raise a HomeAssistantError when there is an API error."""
-    get_appliances.return_value = [problematic_appliance]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, problematic_appliance.haId)},
-    )
-
-    service_call["service_data"]["device_id"] = device_entry.id
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(**service_call)
-
-
-@pytest.mark.usefixtures("bypass_throttle")
-async def test_services_appliance_not_found(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
-    setup_credentials: None,
-    get_appliances: MagicMock,
-    appliance: Mock,
-) -> None:
-    """Raise a ServiceValidationError when device id does not match."""
-    get_appliances.return_value = [appliance]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
-
-    service_call = SERVICE_KV_CALL_PARAMS[0]
-
-    service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
-
-    with pytest.raises(ServiceValidationError, match=r"Appliance.*not found"):
-        await hass.services.async_call(**service_call)
-
-
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_entity_migration(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_v1_1: MockConfigEntry,
-    appliance: Mock,
+    appliance: HomeAppliance,
     platforms: list[Platform],
 ) -> None:
     """Test entity migration."""
@@ -360,34 +297,39 @@ async def test_entity_migration(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry_v1_1.entry_id,
-        identifiers={(DOMAIN, appliance.haId)},
+        identifiers={(DOMAIN, appliance.ha_id)},
     )
 
     test_entities = [
         (
             SENSOR_DOMAIN,
             "Operation State",
-            BSH_OPERATION_STATE,
+            StatusKey.BSH_COMMON_OPERATION_STATE,
         ),
         (
             SWITCH_DOMAIN,
             "ChildLock",
-            BSH_CHILD_LOCK_STATE,
+            SettingKey.BSH_COMMON_CHILD_LOCK,
         ),
         (
             SWITCH_DOMAIN,
             "Power",
-            BSH_POWER_STATE,
+            SettingKey.BSH_COMMON_POWER_STATE,
         ),
         (
             BINARY_SENSOR_DOMAIN,
             "Remote Start",
-            BSH_REMOTE_START_ALLOWANCE_STATE,
+            StatusKey.BSH_COMMON_REMOTE_CONTROL_START_ALLOWED,
         ),
         (
             LIGHT_DOMAIN,
             "Light",
-            COOKING_LIGHTING,
+            SettingKey.COOKING_COMMON_LIGHTING,
+        ),
+        (  # An already migrated entity
+            SWITCH_DOMAIN,
+            SettingKey.REFRIGERATION_COMMON_VACATION_MODE,
+            SettingKey.REFRIGERATION_COMMON_VACATION_MODE,
         ),
     ]
 
@@ -395,7 +337,7 @@ async def test_entity_migration(
         entity_registry.async_get_or_create(
             domain,
             DOMAIN,
-            f"{appliance.haId}-{old_unique_id_suffix}",
+            f"{appliance.ha_id}-{old_unique_id_suffix}",
             device_id=device_entry.id,
             config_entry=config_entry_v1_1,
         )
@@ -406,7 +348,7 @@ async def test_entity_migration(
 
     for domain, _, expected_unique_id_suffix in test_entities:
         assert entity_registry.async_get_entity_id(
-            domain, DOMAIN, f"{appliance.haId}-{expected_unique_id_suffix}"
+            domain, DOMAIN, f"{appliance.ha_id}-{expected_unique_id_suffix}"
         )
     assert config_entry_v1_1.minor_version == 2
 

@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, UPLOAD_SCOPE
-from .types import GooglePhotosConfigEntry
+from .coordinator import GooglePhotosConfigEntry
 
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
 CONF_ALBUM = "album"
@@ -144,11 +144,9 @@ def async_register_services(hass: HomeAssistant) -> None:
         if call.return_response:
             return {
                 "media_items": [
-                    {
-                        "media_item_id": item_result.media_item.id
-                        for item_result in upload_result.new_media_item_results
-                        if item_result.media_item and item_result.media_item.id
-                    }
+                    {"media_item_id": item_result.media_item.id}
+                    for item_result in upload_result.new_media_item_results
+                    if item_result.media_item and item_result.media_item.id
                 ],
                 "album_id": album_id,
             }
