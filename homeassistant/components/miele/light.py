@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import AMBIENT_LIGHT, DOMAIN, LIGHT, LIGHT_OFF, LIGHT_ON, MieleAppliance
-from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
+from .coordinator import MieleConfigEntry
 from .entity import MieleDevice, MieleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,16 +100,6 @@ class MieleLight(MieleEntity, LightEntity):
     entity_description: MieleLightDescription
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
-
-    def __init__(
-        self,
-        coordinator: MieleDataUpdateCoordinator,
-        device_id: str,
-        description: MieleLightDescription,
-    ) -> None:
-        """Initialize the light."""
-        super().__init__(coordinator, device_id, description)
-        self.api = coordinator.api
 
     @property
     def is_on(self) -> bool:

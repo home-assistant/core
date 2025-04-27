@@ -189,7 +189,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2025.4.0
+aioautomower==2025.4.4
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -198,6 +198,7 @@ aioazuredevops==2.2.1
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
+# homeassistant.components.s3
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
@@ -744,7 +745,7 @@ energyzero==2.1.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.10.1
+env-canada==0.10.2
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1599,7 +1600,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.25.5
+pyenphase==1.26.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -2134,7 +2135,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.9
+renault-api==0.3.0
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2400,7 +2401,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.5.3
+uiprotect==7.5.5
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2435,7 +2436,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.3.1
+velbus-aio==2025.4.2
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
