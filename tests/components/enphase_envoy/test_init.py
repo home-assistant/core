@@ -530,4 +530,4 @@ async def test_coordinator_interface_information_no_device(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # verify no device found message in log
-    assert "no envoy device found in device registry" in caplog.text
+    assert "No envoy device found in device registry" in caplog.text
