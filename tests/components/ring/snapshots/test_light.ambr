@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front Light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -31,6 +32,7 @@
     'original_name': 'Light',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light',
     'unique_id': '765432',
@@ -61,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Internal Light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -88,6 +91,7 @@
     'original_name': 'Light',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light',
     'unique_id': '345678',

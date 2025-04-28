@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hob with extraction Fan',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -28,6 +29,7 @@
     'original_name': 'Fan',
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan',
     'unique_id': 'DummyAppliance_74-fan_readonly',
@@ -53,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hob with extraction Fan',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -77,6 +80,7 @@
     'original_name': 'Fan',
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan',
     'unique_id': 'DummyAppliance_74_off-fan_readonly',
@@ -102,6 +106,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hood Fan',
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -127,6 +132,7 @@
     'original_name': 'Fan',
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': 'fan',
     'unique_id': 'DummyAppliance_18-fan',

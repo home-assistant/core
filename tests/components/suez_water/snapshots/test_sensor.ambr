@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Suez mock device Water price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Water price',
     'platform': 'suez_water',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_price',
     'unique_id': 'test-counter_water_price',
@@ -54,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Suez mock device Water usage yesterday',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -77,6 +80,7 @@
     'original_name': 'Water usage yesterday',
     'platform': 'suez_water',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_usage_yesterday',
     'unique_id': 'test-counter_water_usage_yesterday',

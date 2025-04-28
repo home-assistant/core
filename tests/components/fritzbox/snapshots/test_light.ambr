@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name',
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
       'max_mireds': 370,
@@ -36,6 +37,7 @@
     'original_name': 'fake_name',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567',
@@ -86,6 +88,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name',
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
       'max_mireds': 370,
@@ -118,6 +121,7 @@
     'original_name': 'fake_name',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567',
@@ -168,6 +172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -195,6 +200,7 @@
     'original_name': 'fake_name',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567',
@@ -225,6 +231,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'fake_name',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -252,6 +259,7 @@
     'original_name': 'fake_name',
     'platform': 'fritzbox',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345 1234567',

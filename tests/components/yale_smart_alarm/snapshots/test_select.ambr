@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device1 Volume',
     'capabilities': dict({
       'options': list([
         'high',
@@ -33,6 +34,7 @@
     'original_name': 'Volume',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '1111-volume',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device2 Volume',
     'capabilities': dict({
       'options': list([
         'high',
@@ -91,6 +94,7 @@
     'original_name': 'Volume',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '2222-volume',
@@ -120,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device3 Volume',
     'capabilities': dict({
       'options': list([
         'high',
@@ -149,6 +154,7 @@
     'original_name': 'Volume',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '3333-volume',
@@ -178,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device7 Volume',
     'capabilities': dict({
       'options': list([
         'high',
@@ -207,6 +214,7 @@
     'original_name': 'Volume',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '7777-volume',
@@ -236,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device8 Volume',
     'capabilities': dict({
       'options': list([
         'high',
@@ -265,6 +274,7 @@
     'original_name': 'Volume',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '8888-volume',
@@ -294,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device9 Volume',
     'capabilities': dict({
       'options': list([
         'high',
@@ -323,6 +334,7 @@
     'original_name': 'Volume',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '9999-volume',

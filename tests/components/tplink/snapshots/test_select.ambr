@@ -41,6 +41,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Alarm sound',
     'capabilities': dict({
       'options': list([
         'Doorbell Ring 1',
@@ -86,6 +87,7 @@
     'original_name': 'Alarm sound',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_sound',
     'unique_id': '123456789ABCDEFGH_alarm_sound',
@@ -131,6 +133,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Alarm volume',
     'capabilities': dict({
       'options': list([
         'low',
@@ -160,6 +163,7 @@
     'original_name': 'Alarm volume',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_volume',
     'unique_id': '123456789ABCDEFGH_alarm_volume',
@@ -189,6 +193,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Light preset',
     'capabilities': dict({
       'options': list([
         'Off',
@@ -218,6 +223,7 @@
     'original_name': 'Light preset',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_preset',
     'unique_id': '123456789ABCDEFGH_light_preset',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Drive Drive state',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -34,6 +35,7 @@
     'original_name': 'Drive state',
     'platform': 'onedrive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state',
     'unique_id': 'mock_drive_id_drive_state',
@@ -65,6 +67,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Drive Remaining storage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -94,6 +97,7 @@
     'original_name': 'Remaining storage',
     'platform': 'onedrive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_size',
     'unique_id': 'mock_drive_id_remaining_size',
@@ -120,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Drive Total available storage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -149,6 +154,7 @@
     'original_name': 'Total available storage',
     'platform': 'onedrive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_size',
     'unique_id': 'mock_drive_id_total_size',
@@ -175,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My Drive Used storage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -204,6 +211,7 @@
     'original_name': 'Used storage',
     'platform': 'onedrive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'used_size',
     'unique_id': 'mock_drive_id_used_size',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Daily total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -32,6 +33,7 @@
     'original_name': 'Daily total',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_total',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_day_size',
@@ -59,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Free disk space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -84,6 +87,7 @@
     'original_name': 'Free disk space',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'free_disk_space',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_diskspace1',
@@ -111,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Left to download',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -136,6 +141,7 @@
     'original_name': 'Left to download',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'left',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_mbleft',
@@ -163,6 +169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Monthly total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -191,6 +198,7 @@
     'original_name': 'Monthly total',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_total',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_month_size',
@@ -218,6 +226,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Overall total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -246,6 +255,7 @@
     'original_name': 'Overall total',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'overall_total',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_total_size',
@@ -273,6 +283,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -298,6 +309,7 @@
     'original_name': 'Queue',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'queue',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_mb',
@@ -325,6 +337,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Queue count',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -353,6 +366,7 @@
     'original_name': 'Queue count',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'queue_count',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_noofslots_total',
@@ -378,6 +392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -409,6 +424,7 @@
     'original_name': 'Speed',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'speed',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_kbpersec',
@@ -436,6 +452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -459,6 +476,7 @@
     'original_name': 'Status',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_status',
@@ -483,6 +501,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Total disk space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -508,6 +527,7 @@
     'original_name': 'Total disk space',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_disk_space',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_diskspacetotal1',
@@ -535,6 +555,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabnzbd Weekly total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -563,6 +584,7 @@
     'original_name': 'Weekly total',
     'platform': 'sabnzbd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weekly_total',
     'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_week_size',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Cloud coverage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Cloud coverage',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-clouds',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -79,6 +82,7 @@
     'original_name': 'Condition',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-condition',
@@ -104,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Dew Point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -129,6 +134,7 @@
     'original_name': 'Dew Point',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-dew_point',
@@ -157,6 +163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Feels like temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -182,6 +189,7 @@
     'original_name': 'Feels like temperature',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-feels_like_temperature',
@@ -210,6 +218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -235,6 +244,7 @@
     'original_name': 'Humidity',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-humidity',
@@ -263,6 +273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Precipitation kind',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -286,6 +297,7 @@
     'original_name': 'Precipitation kind',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-precipitation_kind',
@@ -311,6 +323,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -336,6 +349,7 @@
     'original_name': 'Pressure',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-pressure',
@@ -364,6 +378,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -389,6 +404,7 @@
     'original_name': 'Rain',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-rain',
@@ -417,6 +433,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Snow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -442,6 +459,7 @@
     'original_name': 'Snow',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-snow',
@@ -470,6 +488,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -495,6 +514,7 @@
     'original_name': 'Temperature',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-temperature',
@@ -523,6 +543,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap UV Index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -548,6 +569,7 @@
     'original_name': 'UV Index',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-uv_index',
@@ -575,6 +597,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Visibility',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -600,6 +623,7 @@
     'original_name': 'Visibility',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-visibility_distance',
@@ -628,6 +652,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Weather',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -651,6 +676,7 @@
     'original_name': 'Weather',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-weather',
@@ -676,6 +702,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Weather Code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -699,6 +726,7 @@
     'original_name': 'Weather Code',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-weather_code',
@@ -724,6 +752,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Wind bearing',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -749,6 +778,7 @@
     'original_name': 'Wind bearing',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-wind_bearing',
@@ -777,6 +807,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -805,6 +836,7 @@
     'original_name': 'Wind speed',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-wind_speed',
@@ -833,6 +865,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Cloud coverage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -858,6 +891,7 @@
     'original_name': 'Cloud coverage',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-clouds',
@@ -885,6 +919,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -908,6 +943,7 @@
     'original_name': 'Condition',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-condition',
@@ -933,6 +969,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Dew Point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -958,6 +995,7 @@
     'original_name': 'Dew Point',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-dew_point',
@@ -986,6 +1024,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Feels like temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1011,6 +1050,7 @@
     'original_name': 'Feels like temperature',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-feels_like_temperature',
@@ -1039,6 +1079,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1064,6 +1105,7 @@
     'original_name': 'Humidity',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-humidity',
@@ -1092,6 +1134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Precipitation kind',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1115,6 +1158,7 @@
     'original_name': 'Precipitation kind',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-precipitation_kind',
@@ -1140,6 +1184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1165,6 +1210,7 @@
     'original_name': 'Pressure',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-pressure',
@@ -1193,6 +1239,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1218,6 +1265,7 @@
     'original_name': 'Rain',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-rain',
@@ -1246,6 +1294,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Snow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1271,6 +1320,7 @@
     'original_name': 'Snow',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-snow',
@@ -1299,6 +1349,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1324,6 +1375,7 @@
     'original_name': 'Temperature',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-temperature',
@@ -1352,6 +1404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap UV Index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1377,6 +1430,7 @@
     'original_name': 'UV Index',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-uv_index',
@@ -1404,6 +1458,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Visibility',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1429,6 +1484,7 @@
     'original_name': 'Visibility',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-visibility_distance',
@@ -1457,6 +1513,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Weather',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1480,6 +1537,7 @@
     'original_name': 'Weather',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-weather',
@@ -1505,6 +1563,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Weather Code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1528,6 +1587,7 @@
     'original_name': 'Weather Code',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-weather_code',
@@ -1553,6 +1613,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Wind bearing',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -1578,6 +1639,7 @@
     'original_name': 'Wind bearing',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-wind_bearing',
@@ -1606,6 +1668,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'openweathermap Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1634,6 +1697,7 @@
     'original_name': 'Wind speed',
     'platform': 'openweathermap',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-wind_speed',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Another Test Light',
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
       'max_mireds': 500,
@@ -35,6 +36,7 @@
     'original_name': None,
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00055511EECC-2-12',
@@ -84,6 +86,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Light Light 1',
     'capabilities': dict({
       'max_color_temp_kelvin': 500,
       'max_mireds': 6535,
@@ -116,6 +119,7 @@
     'original_name': 'Light 1',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_instance',
     'unique_id': '00055511EECC-1-1',
@@ -166,6 +170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Light Light 2',
     'capabilities': dict({
       'max_color_temp_kelvin': 4000,
       'max_mireds': 454,
@@ -198,6 +203,7 @@
     'original_name': 'Light 2',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_instance',
     'unique_id': '00055511EECC-1-5',
@@ -238,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Light Light 3',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -265,6 +272,7 @@
     'original_name': 'Light 3',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_instance',
     'unique_id': '00055511EECC-1-9',
@@ -295,6 +303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Light Light 4',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -322,6 +331,7 @@
     'original_name': 'Light 4',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_instance',
     'unique_id': '00055511EECC-1-11',

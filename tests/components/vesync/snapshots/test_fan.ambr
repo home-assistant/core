@@ -40,6 +40,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 131s',
       'capabilities': dict({
         'preset_modes': list([
           'auto',
@@ -68,6 +69,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': <FanEntityFeature: 57>,
       'translation_key': 'vesync',
       'unique_id': 'air-purifier',
@@ -140,6 +142,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 200s',
       'capabilities': dict({
         'preset_modes': list([
           'sleep',
@@ -167,6 +170,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': <FanEntityFeature: 57>,
       'translation_key': 'vesync',
       'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55',
@@ -239,6 +243,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 400s',
       'capabilities': dict({
         'preset_modes': list([
           'auto',
@@ -267,6 +272,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': <FanEntityFeature: 57>,
       'translation_key': 'vesync',
       'unique_id': '400s-purifier',
@@ -340,6 +346,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air Purifier 600s',
       'capabilities': dict({
         'preset_modes': list([
           'auto',
@@ -368,6 +375,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': <FanEntityFeature: 57>,
       'translation_key': 'vesync',
       'unique_id': '600s-purifier',
@@ -636,6 +644,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SmartTowerFan',
       'capabilities': dict({
         'preset_modes': list([
           'advancedSleep',
@@ -666,6 +675,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': <FanEntityFeature: 57>,
       'translation_key': 'vesync',
       'unique_id': 'smarttowerfan',

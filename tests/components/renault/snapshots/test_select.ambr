@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charge mode',
     'capabilities': dict({
       'options': list([
         'always',
@@ -34,6 +35,7 @@
     'original_name': 'Charge mode',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
     'unique_id': 'vf1zoe40vin_charge_mode',
@@ -64,6 +66,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charge mode',
     'capabilities': dict({
       'options': list([
         'always',
@@ -94,6 +97,7 @@
     'original_name': 'Charge mode',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
     'unique_id': 'vf1zoe40vin_charge_mode',
@@ -124,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Charge mode',
     'capabilities': dict({
       'options': list([
         'always',
@@ -154,6 +159,7 @@
     'original_name': 'Charge mode',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
     'unique_id': 'vf1capturphevvin_charge_mode',
@@ -184,6 +190,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Charge mode',
     'capabilities': dict({
       'options': list([
         'always',
@@ -214,6 +221,7 @@
     'original_name': 'Charge mode',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
     'unique_id': 'vf1twingoiiivin_charge_mode',
@@ -244,6 +252,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charge mode',
     'capabilities': dict({
       'options': list([
         'always',
@@ -274,6 +283,7 @@
     'original_name': 'Charge mode',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
     'unique_id': 'vf1zoe40vin_charge_mode',
@@ -304,6 +314,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Charge mode',
     'capabilities': dict({
       'options': list([
         'always',
@@ -334,6 +345,7 @@
     'original_name': 'Charge mode',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
     'unique_id': 'vf1zoe50vin_charge_mode',

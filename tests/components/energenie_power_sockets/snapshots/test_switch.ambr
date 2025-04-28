@@ -18,6 +18,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'MockedUSBDevice Socket 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,6 +42,7 @@
     'original_name': 'Socket 0',
     'platform': 'energenie_power_sockets',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
     'unique_id': 'DYPS:00:11:22_0',
@@ -66,6 +68,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'MockedUSBDevice Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -89,6 +92,7 @@
     'original_name': 'Socket 1',
     'platform': 'energenie_power_sockets',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
     'unique_id': 'DYPS:00:11:22_1',
@@ -114,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'MockedUSBDevice Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -137,6 +142,7 @@
     'original_name': 'Socket 2',
     'platform': 'energenie_power_sockets',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
     'unique_id': 'DYPS:00:11:22_2',
@@ -162,6 +168,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'MockedUSBDevice Socket 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -185,6 +192,7 @@
     'original_name': 'Socket 3',
     'platform': 'energenie_power_sockets',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket',
     'unique_id': 'DYPS:00:11:22_3',

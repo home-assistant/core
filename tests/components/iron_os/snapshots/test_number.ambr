@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Boost temperature',
     'capabilities': dict({
       'max': 450,
       'min': 0,
@@ -32,6 +33,7 @@
     'original_name': 'Boost temperature',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.BOOST_TEMP: 'boost_temp'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_boost_temp',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Calibration offset',
     'capabilities': dict({
       'max': 2500,
       'min': 100,
@@ -90,6 +93,7 @@
     'original_name': 'Calibration offset',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.CALIBRATION_OFFSET: 'calibration_offset'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_calibration_offset',
@@ -119,6 +123,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Display brightness',
     'capabilities': dict({
       'max': 5,
       'min': 1,
@@ -147,6 +152,7 @@
     'original_name': 'Display brightness',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.DISPLAY_BRIGHTNESS: 'display_brightness'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_display_brightness',
@@ -175,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Hall effect sensitivity',
     'capabilities': dict({
       'max': 9,
       'min': 0,
@@ -203,6 +210,7 @@
     'original_name': 'Hall effect sensitivity',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.HALL_SENSITIVITY: 'hall_sensitivity'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_hall_sensitivity',
@@ -231,6 +239,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Hall sensor sleep timeout',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -259,6 +268,7 @@
     'original_name': 'Hall sensor sleep timeout',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.HALL_EFFECT_SLEEP_TIME: 'hall_effect_sleep_time'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_hall_effect_sleep_time',
@@ -288,6 +298,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Keep-awake pulse delay',
     'capabilities': dict({
       'max': 22.5,
       'min': 2.5,
@@ -316,6 +327,7 @@
     'original_name': 'Keep-awake pulse delay',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.KEEP_AWAKE_PULSE_DELAY: 'keep_awake_pulse_delay'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_keep_awake_pulse_delay',
@@ -345,6 +357,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Keep-awake pulse duration',
     'capabilities': dict({
       'max': 2250,
       'min': 250,
@@ -373,6 +386,7 @@
     'original_name': 'Keep-awake pulse duration',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.KEEP_AWAKE_PULSE_DURATION: 'keep_awake_pulse_duration'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_keep_awake_pulse_duration',
@@ -402,6 +416,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Keep-awake pulse intensity',
     'capabilities': dict({
       'max': 9.9,
       'min': 0,
@@ -430,6 +445,7 @@
     'original_name': 'Keep-awake pulse intensity',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.KEEP_AWAKE_PULSE_POWER: 'keep_awake_pulse_power'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_keep_awake_pulse_power',
@@ -459,6 +475,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Long-press temperature step',
     'capabilities': dict({
       'max': 90,
       'min': 5,
@@ -487,6 +504,7 @@
     'original_name': 'Long-press temperature step',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.TEMP_INCREMENT_LONG: 'temp_increment_long'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_temp_increment_long',
@@ -516,6 +534,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Min. voltage per cell',
     'capabilities': dict({
       'max': 3.8,
       'min': 2.4,
@@ -544,6 +563,7 @@
     'original_name': 'Min. voltage per cell',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.MIN_VOLTAGE_PER_CELL: 'min_voltage_per_cell'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_min_voltage_per_cell',
@@ -573,6 +593,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Motion sensitivity',
     'capabilities': dict({
       'max': 9,
       'min': 0,
@@ -601,6 +622,7 @@
     'original_name': 'Motion sensitivity',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.ACCEL_SENSITIVITY: 'accel_sensitivity'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_accel_sensitivity',
@@ -629,6 +651,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Power Delivery timeout',
     'capabilities': dict({
       'max': 5.0,
       'min': 0,
@@ -657,6 +680,7 @@
     'original_name': 'Power Delivery timeout',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.PD_TIMEOUT: 'pd_timeout'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_pd_timeout',
@@ -687,6 +711,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Power limit',
     'capabilities': dict({
       'max': 120,
       'min': 0,
@@ -715,6 +740,7 @@
     'original_name': 'Power limit',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.POWER_LIMIT: 'power_limit'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_power_limit',
@@ -744,6 +770,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Quick Charge voltage',
     'capabilities': dict({
       'max': 22.0,
       'min': 9.0,
@@ -772,6 +799,7 @@
     'original_name': 'Quick Charge voltage',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.QC_MAX_VOLTAGE: 'qc_max_voltage'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_qc_max_voltage',
@@ -802,6 +830,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Setpoint temperature',
     'capabilities': dict({
       'max': 450,
       'min': 10,
@@ -830,6 +859,7 @@
     'original_name': 'Setpoint temperature',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.SETPOINT_TEMP: 'setpoint_temperature'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_setpoint_temperature',
@@ -860,6 +890,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Short-press temperature step',
     'capabilities': dict({
       'max': 50,
       'min': 1,
@@ -888,6 +919,7 @@
     'original_name': 'Short-press temperature step',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.TEMP_INCREMENT_SHORT: 'temp_increment_short'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_temp_increment_short',
@@ -917,6 +949,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Shutdown timeout',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -945,6 +978,7 @@
     'original_name': 'Shutdown timeout',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.SHUTDOWN_TIMEOUT: 'shutdown_timeout'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_shutdown_timeout',
@@ -975,6 +1009,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Sleep temperature',
     'capabilities': dict({
       'max': 450,
       'min': 10,
@@ -1003,6 +1038,7 @@
     'original_name': 'Sleep temperature',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.SLEEP_TEMP: 'sleep_temperature'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_sleep_temperature',
@@ -1033,6 +1069,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Sleep timeout',
     'capabilities': dict({
       'max': 15,
       'min': 0,
@@ -1061,6 +1098,7 @@
     'original_name': 'Sleep timeout',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.SLEEP_TIMEOUT: 'sleep_timeout'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_sleep_timeout',
@@ -1090,6 +1128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Voltage divider',
     'capabilities': dict({
       'max': 900,
       'min': 360,
@@ -1118,6 +1157,7 @@
     'original_name': 'Voltage divider',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilNumber.VOLTAGE_DIV: 'voltage_div'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_voltage_div',

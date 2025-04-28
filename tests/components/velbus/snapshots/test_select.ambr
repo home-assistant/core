@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen select',
     'capabilities': dict({
       'options': list([
         'none',
@@ -34,6 +35,7 @@
     'original_name': 'select',
     'platform': 'velbus',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'qwerty1234567-33-program_select',

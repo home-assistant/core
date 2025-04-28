@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -37,6 +38,7 @@
     'original_name': 'Bedroom',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_29',
@@ -84,6 +86,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ensuite',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -118,6 +121,7 @@
     'original_name': 'Ensuite',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_5',
@@ -167,6 +171,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Guest room',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -201,6 +206,7 @@
     'original_name': 'Guest room',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_7',
@@ -250,6 +256,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hall',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -284,6 +291,7 @@
     'original_name': 'Hall',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_2',
@@ -333,6 +341,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -367,6 +376,7 @@
     'original_name': 'Kitchen',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_3',
@@ -416,6 +426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lounge',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -449,6 +460,7 @@
     'original_name': 'Lounge',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_1',
@@ -496,6 +508,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Study',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -530,6 +543,7 @@
     'original_name': 'Study',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_30',

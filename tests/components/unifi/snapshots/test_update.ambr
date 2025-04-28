@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': None,
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
     'translation_key': None,
     'unique_id': 'device_update-00:00:00:00:01:01',
@@ -64,6 +66,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -87,6 +90,7 @@
     'original_name': None,
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
     'translation_key': None,
     'unique_id': 'device_update-00:00:00:00:01:02',
@@ -124,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -147,6 +152,7 @@
     'original_name': None,
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 4>,
     'translation_key': None,
     'unique_id': 'device_update-00:00:00:00:01:01',
@@ -184,6 +190,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -207,6 +214,7 @@
     'original_name': None,
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 4>,
     'translation_key': None,
     'unique_id': 'device_update-00:00:00:00:01:02',

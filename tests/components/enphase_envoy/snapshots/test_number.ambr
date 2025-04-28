@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Envoy 1234 Reserve battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -32,6 +33,7 @@
     'original_name': 'Reserve battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reserve_soc',
     'unique_id': '1234_reserve_soc',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Enpower 654321 Reserve battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -90,6 +93,7 @@
     'original_name': 'Reserve battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reserve_soc',
     'unique_id': '654321_reserve_soc',
@@ -120,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NC1 Fixture Cutoff battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -148,6 +153,7 @@
     'original_name': 'Cutoff battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cutoff_battery_level',
     'unique_id': '654321_relay_NC1_soc_low',
@@ -177,6 +183,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NC1 Fixture Restore battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -205,6 +212,7 @@
     'original_name': 'Restore battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restore_battery_level',
     'unique_id': '654321_relay_NC1_soc_high',
@@ -234,6 +242,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NC2 Fixture Cutoff battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -262,6 +271,7 @@
     'original_name': 'Cutoff battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cutoff_battery_level',
     'unique_id': '654321_relay_NC2_soc_low',
@@ -291,6 +301,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NC2 Fixture Restore battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -319,6 +330,7 @@
     'original_name': 'Restore battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restore_battery_level',
     'unique_id': '654321_relay_NC2_soc_high',
@@ -348,6 +360,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NC3 Fixture Cutoff battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -376,6 +389,7 @@
     'original_name': 'Cutoff battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cutoff_battery_level',
     'unique_id': '654321_relay_NC3_soc_low',
@@ -405,6 +419,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NC3 Fixture Restore battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -433,6 +448,7 @@
     'original_name': 'Restore battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restore_battery_level',
     'unique_id': '654321_relay_NC3_soc_high',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Ventilation',
     'capabilities': dict({
       'preset_modes': list([
         <VentilationMode.PERMANENT: 'permanent'>,
@@ -34,6 +35,7 @@
     'original_name': 'Ventilation',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 9>,
     'translation_key': 'ventilation',
     'unique_id': 'gateway0_deviceSerialViAir300F-ventilation',
@@ -74,6 +76,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model1 Ventilation',
     'capabilities': dict({
       'preset_modes': list([
         <VentilationMode.PERMANENT: 'permanent'>,
@@ -103,6 +106,7 @@
     'original_name': 'Ventilation',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 25>,
     'translation_key': 'ventilation',
     'unique_id': 'gateway1_deviceId1-ventilation',
@@ -142,6 +146,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model2 Ventilation',
     'capabilities': dict({
       'preset_modes': list([
         <VentilationMode.VENTILATION: 'ventilation'>,
@@ -171,6 +176,7 @@
     'original_name': 'Ventilation',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 8>,
     'translation_key': 'ventilation',
     'unique_id': 'gateway2_################-ventilation',

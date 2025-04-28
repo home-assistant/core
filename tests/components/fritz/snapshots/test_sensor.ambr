@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Connection uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Connection uptime',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'connection_uptime',
     'unique_id': '1C:ED:6F:12:34:11-connection_uptime',
@@ -52,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Download throughput',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -77,6 +80,7 @@
     'original_name': 'Download throughput',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kb_s_received',
     'unique_id': '1C:ED:6F:12:34:11-kb_s_received',
@@ -104,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title External IP',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -127,6 +132,7 @@
     'original_name': 'External IP',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'external_ip',
     'unique_id': '1C:ED:6F:12:34:11-external_ip',
@@ -151,6 +157,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title External IPv6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -174,6 +181,7 @@
     'original_name': 'External IPv6',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'external_ipv6',
     'unique_id': '1C:ED:6F:12:34:11-external_ipv6',
@@ -198,6 +206,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title GB received',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -223,6 +232,7 @@
     'original_name': 'GB received',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gb_received',
     'unique_id': '1C:ED:6F:12:34:11-gb_received',
@@ -250,6 +260,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title GB sent',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -275,6 +286,7 @@
     'original_name': 'GB sent',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gb_sent',
     'unique_id': '1C:ED:6F:12:34:11-gb_sent',
@@ -302,6 +314,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -325,6 +338,7 @@
     'original_name': 'Last restart',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_uptime',
     'unique_id': '1C:ED:6F:12:34:11-device_uptime',
@@ -350,6 +364,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Link download noise margin',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -373,6 +388,7 @@
     'original_name': 'Link download noise margin',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_noise_margin_received',
     'unique_id': '1C:ED:6F:12:34:11-link_noise_margin_received',
@@ -398,6 +414,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Link download power attenuation',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -421,6 +438,7 @@
     'original_name': 'Link download power attenuation',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_attenuation_received',
     'unique_id': '1C:ED:6F:12:34:11-link_attenuation_received',
@@ -446,6 +464,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Link download throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -469,6 +488,7 @@
     'original_name': 'Link download throughput',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_kb_s_received',
     'unique_id': '1C:ED:6F:12:34:11-link_kb_s_received',
@@ -495,6 +515,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Link upload noise margin',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -518,6 +539,7 @@
     'original_name': 'Link upload noise margin',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_noise_margin_sent',
     'unique_id': '1C:ED:6F:12:34:11-link_noise_margin_sent',
@@ -543,6 +565,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Link upload power attenuation',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -566,6 +589,7 @@
     'original_name': 'Link upload power attenuation',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_attenuation_sent',
     'unique_id': '1C:ED:6F:12:34:11-link_attenuation_sent',
@@ -591,6 +615,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Link upload throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -614,6 +639,7 @@
     'original_name': 'Link upload throughput',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_kb_s_sent',
     'unique_id': '1C:ED:6F:12:34:11-link_kb_s_sent',
@@ -640,6 +666,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Max connection download throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -663,6 +690,7 @@
     'original_name': 'Max connection download throughput',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_kb_s_received',
     'unique_id': '1C:ED:6F:12:34:11-max_kb_s_received',
@@ -689,6 +717,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Max connection upload throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -712,6 +741,7 @@
     'original_name': 'Max connection upload throughput',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_kb_s_sent',
     'unique_id': '1C:ED:6F:12:34:11-max_kb_s_sent',
@@ -738,6 +768,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Title Upload throughput',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -763,6 +794,7 @@
     'original_name': 'Upload throughput',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kb_s_sent',
     'unique_id': '1C:ED:6F:12:34:11-kb_s_sent',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW B/W pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'B/W pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bw_pages',
     'unique_id': '0123456789_bw_counter',
@@ -55,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Belt unit remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -80,6 +83,7 @@
     'original_name': 'Belt unit remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'belt_unit_remaining_life',
     'unique_id': '0123456789_belt_unit_remaining_life',
@@ -106,6 +110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Black drum page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -131,6 +136,7 @@
     'original_name': 'Black drum page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'black_drum_page_counter',
     'unique_id': '0123456789_black_drum_counter',
@@ -157,6 +163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Black drum remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -182,6 +189,7 @@
     'original_name': 'Black drum remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'black_drum_remaining_life',
     'unique_id': '0123456789_black_drum_remaining_life',
@@ -208,6 +216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Black drum remaining pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -233,6 +242,7 @@
     'original_name': 'Black drum remaining pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'black_drum_remaining_pages',
     'unique_id': '0123456789_black_drum_remaining_pages',
@@ -259,6 +269,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Black toner remaining',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -284,6 +295,7 @@
     'original_name': 'Black toner remaining',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'black_toner_remaining',
     'unique_id': '0123456789_black_toner_remaining',
@@ -310,6 +322,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Color pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -335,6 +348,7 @@
     'original_name': 'Color pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'color_pages',
     'unique_id': '0123456789_color_counter',
@@ -361,6 +375,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Cyan drum page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -386,6 +401,7 @@
     'original_name': 'Cyan drum page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cyan_drum_page_counter',
     'unique_id': '0123456789_cyan_drum_counter',
@@ -412,6 +428,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Cyan drum remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -437,6 +454,7 @@
     'original_name': 'Cyan drum remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cyan_drum_remaining_life',
     'unique_id': '0123456789_cyan_drum_remaining_life',
@@ -463,6 +481,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Cyan drum remaining pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -488,6 +507,7 @@
     'original_name': 'Cyan drum remaining pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cyan_drum_remaining_pages',
     'unique_id': '0123456789_cyan_drum_remaining_pages',
@@ -514,6 +534,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Cyan toner remaining',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -539,6 +560,7 @@
     'original_name': 'Cyan toner remaining',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cyan_toner_remaining',
     'unique_id': '0123456789_cyan_toner_remaining',
@@ -565,6 +587,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Drum page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -590,6 +613,7 @@
     'original_name': 'Drum page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drum_page_counter',
     'unique_id': '0123456789_drum_counter',
@@ -616,6 +640,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Drum remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -641,6 +666,7 @@
     'original_name': 'Drum remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drum_remaining_life',
     'unique_id': '0123456789_drum_remaining_life',
@@ -667,6 +693,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Drum remaining pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -692,6 +719,7 @@
     'original_name': 'Drum remaining pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drum_remaining_pages',
     'unique_id': '0123456789_drum_remaining_pages',
@@ -718,6 +746,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Duplex unit page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -743,6 +772,7 @@
     'original_name': 'Duplex unit page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'duplex_unit_page_counter',
     'unique_id': '0123456789_duplex_unit_pages_counter',
@@ -769,6 +799,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Fuser remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -794,6 +825,7 @@
     'original_name': 'Fuser remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fuser_remaining_life',
     'unique_id': '0123456789_fuser_remaining_life',
@@ -820,6 +852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -843,6 +876,7 @@
     'original_name': 'Last restart',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_restart',
     'unique_id': '0123456789_uptime',
@@ -868,6 +902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Magenta drum page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -893,6 +928,7 @@
     'original_name': 'Magenta drum page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'magenta_drum_page_counter',
     'unique_id': '0123456789_magenta_drum_counter',
@@ -919,6 +955,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Magenta drum remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -944,6 +981,7 @@
     'original_name': 'Magenta drum remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'magenta_drum_remaining_life',
     'unique_id': '0123456789_magenta_drum_remaining_life',
@@ -970,6 +1008,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Magenta drum remaining pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -995,6 +1034,7 @@
     'original_name': 'Magenta drum remaining pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'magenta_drum_remaining_pages',
     'unique_id': '0123456789_magenta_drum_remaining_pages',
@@ -1021,6 +1061,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Magenta toner remaining',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1046,6 +1087,7 @@
     'original_name': 'Magenta toner remaining',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'magenta_toner_remaining',
     'unique_id': '0123456789_magenta_toner_remaining',
@@ -1072,6 +1114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1097,6 +1140,7 @@
     'original_name': 'Page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'page_counter',
     'unique_id': '0123456789_page_counter',
@@ -1123,6 +1167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW PF Kit 1 remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1148,6 +1193,7 @@
     'original_name': 'PF Kit 1 remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pf_kit_1_remaining_life',
     'unique_id': '0123456789_pf_kit_1_remaining_life',
@@ -1174,6 +1220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1197,6 +1244,7 @@
     'original_name': 'Status',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': '0123456789_status',
@@ -1221,6 +1269,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Yellow drum page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1246,6 +1295,7 @@
     'original_name': 'Yellow drum page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yellow_drum_page_counter',
     'unique_id': '0123456789_yellow_drum_counter',
@@ -1272,6 +1322,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Yellow drum remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1297,6 +1348,7 @@
     'original_name': 'Yellow drum remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yellow_drum_remaining_life',
     'unique_id': '0123456789_yellow_drum_remaining_life',
@@ -1323,6 +1375,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Yellow drum remaining pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1348,6 +1401,7 @@
     'original_name': 'Yellow drum remaining pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yellow_drum_remaining_pages',
     'unique_id': '0123456789_yellow_drum_remaining_pages',
@@ -1374,6 +1428,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HL-L2340DW Yellow toner remaining',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1399,6 +1454,7 @@
     'original_name': 'Yellow toner remaining',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yellow_toner_remaining',
     'unique_id': '0123456789_yellow_toner_remaining',

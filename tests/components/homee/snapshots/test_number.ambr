@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Down-movement duration',
     'capabilities': dict({
       'max': 240,
       'min': 4,
@@ -32,6 +33,7 @@
     'original_name': 'Down-movement duration',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'down_time',
     'unique_id': '00055511EECC-1-3',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Down position',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -90,6 +93,7 @@
     'original_name': 'Down position',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'down_position',
     'unique_id': '00055511EECC-1-1',
@@ -119,6 +123,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Down slat position',
     'capabilities': dict({
       'max': 75,
       'min': -75,
@@ -147,6 +152,7 @@
     'original_name': 'Down slat position',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'down_slat_position',
     'unique_id': '00055511EECC-1-2',
@@ -176,6 +182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number End position',
     'capabilities': dict({
       'max': 130,
       'min': 0,
@@ -204,6 +211,7 @@
     'original_name': 'End position',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'endposition_configuration',
     'unique_id': '00055511EECC-1-4',
@@ -232,6 +240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Maximum slat angle',
     'capabilities': dict({
       'max': 127,
       'min': -127,
@@ -260,6 +269,7 @@
     'original_name': 'Maximum slat angle',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'slat_max_angle',
     'unique_id': '00055511EECC-1-9',
@@ -289,6 +299,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Minimum slat angle',
     'capabilities': dict({
       'max': 127,
       'min': -127,
@@ -317,6 +328,7 @@
     'original_name': 'Minimum slat angle',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'slat_min_angle',
     'unique_id': '00055511EECC-1-10',
@@ -346,6 +358,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Motion alarm delay',
     'capabilities': dict({
       'max': 15300,
       'min': 1,
@@ -374,6 +387,7 @@
     'original_name': 'Motion alarm delay',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm_cancelation_delay',
     'unique_id': '00055511EECC-1-5',
@@ -404,6 +418,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Polling interval',
     'capabilities': dict({
       'max': 45,
       'min': 5,
@@ -432,6 +447,7 @@
     'original_name': 'Polling interval',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'polling_interval',
     'unique_id': '00055511EECC-1-7',
@@ -462,6 +478,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Slat steps',
     'capabilities': dict({
       'max': 20,
       'min': 1,
@@ -490,6 +507,7 @@
     'original_name': 'Slat steps',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'slat_steps',
     'unique_id': '00055511EECC-1-11',
@@ -518,6 +536,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Slat turn duration',
     'capabilities': dict({
       'max': 24,
       'min': 0,
@@ -546,6 +565,7 @@
     'original_name': 'Slat turn duration',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'shutter_slat_time',
     'unique_id': '00055511EECC-1-8',
@@ -576,6 +596,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Temperature offset',
     'capabilities': dict({
       'max': 128,
       'min': -5,
@@ -604,6 +625,7 @@
     'original_name': 'Temperature offset',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
     'unique_id': '00055511EECC-1-12',
@@ -633,6 +655,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Threshold for wind trigger',
     'capabilities': dict({
       'max': 22.5,
       'min': 0,
@@ -661,6 +684,7 @@
     'original_name': 'Threshold for wind trigger',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_monitoring_state',
     'unique_id': '00055511EECC-1-16',
@@ -691,6 +715,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Up-movement duration',
     'capabilities': dict({
       'max': 240,
       'min': 4,
@@ -719,6 +744,7 @@
     'original_name': 'Up-movement duration',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'up_time',
     'unique_id': '00055511EECC-1-13',
@@ -749,6 +775,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Wake-up interval',
     'capabilities': dict({
       'max': 7200,
       'min': 30,
@@ -777,6 +804,7 @@
     'original_name': 'Wake-up interval',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wake_up_interval',
     'unique_id': '00055511EECC-1-14',
@@ -807,6 +835,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Number Window open sensibility',
     'capabilities': dict({
       'max': 3,
       'min': 0,
@@ -835,6 +864,7 @@
     'original_name': 'Window open sensibility',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'open_window_detection_sensibility',
     'unique_id': '00055511EECC-1-6',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter 1 Consumption year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -35,6 +36,7 @@
     'original_name': 'Consumption year',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_year',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_inverter_1_consumption_year',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter 1 Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -87,6 +90,7 @@
     'original_name': 'Power',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_power',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_inverter_1_current_power',
@@ -114,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter 2 Consumption year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -145,6 +150,7 @@
     'original_name': 'Consumption year',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_year',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_inverter_2_consumption_year',
@@ -172,6 +178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter 2 Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -197,6 +204,7 @@
     'original_name': 'Power',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_power',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_inverter_2_current_power',
@@ -224,6 +232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Alternator loss',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -249,6 +258,7 @@
     'original_name': 'Alternator loss',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alternator_loss',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_alternator_loss',
@@ -276,6 +286,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Capacity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -304,6 +315,7 @@
     'original_name': 'Capacity',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'capacity',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_capacity',
@@ -331,6 +343,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Consumption AC',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -356,6 +369,7 @@
     'original_name': 'Consumption AC',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_ac',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_consumption_ac',
@@ -383,6 +397,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Consumption day',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -414,6 +429,7 @@
     'original_name': 'Consumption day',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_day',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_consumption_day',
@@ -441,6 +457,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Consumption month',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -472,6 +489,7 @@
     'original_name': 'Consumption month',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_month',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_consumption_month',
@@ -499,6 +517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Consumption total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -530,6 +549,7 @@
     'original_name': 'Consumption total',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_total',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_consumption_total',
@@ -557,6 +577,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Consumption year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -588,6 +609,7 @@
     'original_name': 'Consumption year',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_year',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_consumption_year',
@@ -615,6 +637,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Consumption yesterday',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -644,6 +667,7 @@
     'original_name': 'Consumption yesterday',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_yesterday',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_consumption_yesterday',
@@ -670,6 +694,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Efficiency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -698,6 +723,7 @@
     'original_name': 'Efficiency',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'efficiency',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_efficiency',
@@ -725,6 +751,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Installed peak power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -750,6 +777,7 @@
     'original_name': 'Installed peak power',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_power',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_total_power',
@@ -777,6 +805,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Last update',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -800,6 +829,7 @@
     'original_name': 'Last update',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_update',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_last_updated',
@@ -825,6 +855,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Power AC',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -850,6 +881,7 @@
     'original_name': 'Power AC',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_ac',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_power_ac',
@@ -877,6 +909,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Power available',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -902,6 +935,7 @@
     'original_name': 'Power available',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_available',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_power_available',
@@ -929,6 +963,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Power DC',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -954,6 +989,7 @@
     'original_name': 'Power DC',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_dc',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_power_dc',
@@ -981,6 +1017,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Self-consumption year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1006,6 +1043,7 @@
     'original_name': 'Self-consumption year',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'self_consumption_year',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_self_consumption_year',
@@ -1033,6 +1071,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1061,6 +1100,7 @@
     'original_name': 'Usage',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'usage',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_usage',
@@ -1088,6 +1128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Voltage AC',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1113,6 +1154,7 @@
     'original_name': 'Voltage AC',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_voltage_ac',
@@ -1140,6 +1182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Voltage DC',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1165,6 +1208,7 @@
     'original_name': 'Voltage DC',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_voltage_dc',
@@ -1192,6 +1236,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Yield day',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1223,6 +1268,7 @@
     'original_name': 'Yield day',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yield_day',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_yield_day',
@@ -1250,6 +1296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Yield month',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1281,6 +1328,7 @@
     'original_name': 'Yield month',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yield_month',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_yield_month',
@@ -1308,6 +1356,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Yield total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1339,6 +1388,7 @@
     'original_name': 'Yield total',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yield_total',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_yield_total',
@@ -1366,6 +1416,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Yield year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1394,6 +1445,7 @@
     'original_name': 'Yield year',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yield_year',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_yield_year',
@@ -1421,6 +1473,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarLog Yield yesterday',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1450,6 +1503,7 @@
     'original_name': 'Yield yesterday',
     'platform': 'solarlog',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yield_yesterday',
     'unique_id': 'ce5f5431554d101905d31797e1232da8_yield_yesterday',

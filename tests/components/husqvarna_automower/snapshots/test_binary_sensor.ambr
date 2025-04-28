@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Mower 1 Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Charging',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_battery_charging',
@@ -52,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Mower 1 Leaving dock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -75,6 +78,7 @@
     'original_name': 'Leaving dock',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'leaving_dock',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_leaving_dock',
@@ -99,6 +103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Mower 2 Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -122,6 +127,7 @@
     'original_name': 'Charging',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234_battery_charging',
@@ -147,6 +153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Mower 2 Leaving dock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +177,7 @@
     'original_name': 'Leaving dock',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'leaving_dock',
     'unique_id': '1234_leaving_dock',

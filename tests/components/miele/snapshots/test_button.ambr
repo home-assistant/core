@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hood Stop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Stop',
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stop',
     'unique_id': 'DummyAppliance_18-stop',
@@ -51,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Pause',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +77,7 @@
     'original_name': 'Pause',
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause',
     'unique_id': 'Dummy_Appliance_3-pause',
@@ -98,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +126,7 @@
     'original_name': 'Start',
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start',
     'unique_id': 'Dummy_Appliance_3-start',
@@ -145,6 +151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washing machine Stop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -168,6 +175,7 @@
     'original_name': 'Stop',
     'platform': 'miele',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stop',
     'unique_id': 'Dummy_Appliance_3-stop',

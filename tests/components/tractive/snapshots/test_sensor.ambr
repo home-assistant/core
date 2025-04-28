@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Pet Activity',
     'capabilities': dict({
       'options': list([
         'good',
@@ -33,6 +34,7 @@
     'original_name': 'Activity',
     'platform': 'tractive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity',
     'unique_id': 'pet_id_123_activity_label',
@@ -63,6 +65,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Pet Activity time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -88,6 +91,7 @@
     'original_name': 'Activity time',
     'platform': 'tractive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_time',
     'unique_id': 'pet_id_123_minutes_active',
@@ -114,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Pet Calories burned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -139,6 +144,7 @@
     'original_name': 'Calories burned',
     'platform': 'tractive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'calories',
     'unique_id': 'pet_id_123_calories',
@@ -165,6 +171,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Pet Daily goal',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -188,6 +195,7 @@
     'original_name': 'Daily goal',
     'platform': 'tractive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_goal',
     'unique_id': 'pet_id_123_daily_goal',
@@ -213,6 +221,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Pet Day sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -238,6 +247,7 @@
     'original_name': 'Day sleep',
     'platform': 'tractive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'minutes_day_sleep',
     'unique_id': 'pet_id_123_minutes_day_sleep',
@@ -264,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Pet Night sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -289,6 +300,7 @@
     'original_name': 'Night sleep',
     'platform': 'tractive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'minutes_night_sleep',
     'unique_id': 'pet_id_123_minutes_night_sleep',
@@ -315,6 +327,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Pet Rest time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -340,6 +353,7 @@
     'original_name': 'Rest time',
     'platform': 'tractive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rest_time',
     'unique_id': 'pet_id_123_minutes_rest',
@@ -366,6 +380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Pet Sleep',
     'capabilities': dict({
       'options': list([
         'good',
@@ -395,6 +410,7 @@
     'original_name': 'Sleep',
     'platform': 'tractive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sleep',
     'unique_id': 'pet_id_123_sleep_label',
@@ -425,6 +441,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Pet Tracker battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -448,6 +465,7 @@
     'original_name': 'Tracker battery',
     'platform': 'tractive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tracker_battery_level',
     'unique_id': 'pet_id_123_battery_level',
@@ -474,6 +492,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Pet Tracker state',
     'capabilities': dict({
       'options': list([
         'inaccurate_position',
@@ -505,6 +524,7 @@
     'original_name': 'Tracker state',
     'platform': 'tractive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tracker_state',
     'unique_id': 'pet_id_123_tracker_state',

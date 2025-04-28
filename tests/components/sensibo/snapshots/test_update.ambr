@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Firmware',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'BBZZBBZZ-fw_ver_available',
@@ -64,6 +66,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway Firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -87,6 +90,7 @@
     'original_name': 'Firmware',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ABC999111-fw_ver_available',
@@ -124,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -147,6 +152,7 @@
     'original_name': 'Firmware',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AAZZAAZZ-fw_ver_available',

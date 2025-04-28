@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Soundbar',
     'capabilities': dict({
       'source_list': list([
         'wifi',
@@ -35,6 +36,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 23949>,
     'translation_key': None,
     'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577_main',
@@ -73,6 +75,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Galaxy Home Mini',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -97,6 +100,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 318477>,
     'translation_key': None,
     'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_main',
@@ -127,6 +131,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Elliots Rum',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -151,6 +156,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 21517>,
     'translation_key': None,
     'unique_id': 'c85fced9-c474-4a47-93c2-037cc7829536_main',
@@ -181,6 +187,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Soundbar Living',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -205,6 +212,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 21901>,
     'translation_key': None,
     'unique_id': '0d94e5db-8501-2355-eb4f-214163702cac_main',
@@ -236,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Soundbar',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -260,6 +269,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 1420>,
     'translation_key': None,
     'unique_id': 'a75cb1e1-03fd-3c77-ca9f-d4e56c4096c6_main',
@@ -286,6 +296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '[TV] Samsung 8 Series (49)',
     'capabilities': dict({
       'source_list': list([
         'digitalTv',
@@ -316,6 +327,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 23997>,
     'translation_key': None,
     'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main',

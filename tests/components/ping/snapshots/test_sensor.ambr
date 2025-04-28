@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '10.10.10.10 Round-trip time average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Round-trip time average',
     'platform': 'ping',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'round_trip_time_avg',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
@@ -55,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '10.10.10.10 Round-trip time maximum',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -80,6 +83,7 @@
     'original_name': 'Round-trip time maximum',
     'platform': 'ping',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'round_trip_time_max',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
@@ -112,6 +116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '10.10.10.10 Round-trip time minimum',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -137,6 +142,7 @@
     'original_name': 'Round-trip time minimum',
     'platform': 'ping',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'round_trip_time_min',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,

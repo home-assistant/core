@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Air outlet temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Air outlet temperature',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_outlet_temperature',
     'unique_id': '11:22:33:44:55:66-air_outlet_temperature',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Hydro temperature 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -81,6 +84,7 @@
     'original_name': 'Hydro temperature 1',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 't1_hydro',
     'unique_id': '11:22:33:44:55:66-t1_hydro',
@@ -108,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Hydro temperature 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -133,6 +138,7 @@
     'original_name': 'Hydro temperature 2',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 't2_hydro',
     'unique_id': '11:22:33:44:55:66-t2_hydro',
@@ -160,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Pellet quantity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -185,6 +192,7 @@
     'original_name': 'Pellet quantity',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pellet_quantity',
     'unique_id': '11:22:33:44:55:66-pellet_quantity',
@@ -212,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Return water temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -237,6 +246,7 @@
     'original_name': 'Return water temperature',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'return_water_temperature',
     'unique_id': '11:22:33:44:55:66-return_water_temperature',
@@ -264,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Room temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -289,6 +300,7 @@
     'original_name': 'Room temperature',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'room_temperature',
     'unique_id': '11:22:33:44:55:66-room_temperature',
@@ -316,6 +328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Status',
     'capabilities': dict({
       'options': list([
         'off',
@@ -389,6 +402,7 @@
     'original_name': 'Status',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': '11:22:33:44:55:66-status',
@@ -463,6 +477,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Tank water temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -488,6 +503,7 @@
     'original_name': 'Tank water temperature',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tank_water_temperature',
     'unique_id': '11:22:33:44:55:66-tank_water_temperature',
@@ -515,6 +531,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stove Wood combustion temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -540,6 +557,7 @@
     'original_name': 'Wood combustion temperature',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wood_combustion_temperature',
     'unique_id': '11:22:33:44:55:66-wood_combustion_temperature',

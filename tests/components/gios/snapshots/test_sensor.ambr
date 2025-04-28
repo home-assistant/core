@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Air quality index',
     'capabilities': dict({
       'options': list([
         'very_bad',
@@ -36,6 +37,7 @@
     'original_name': 'Air quality index',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'aqi',
     'unique_id': '123-aqi',
@@ -70,6 +72,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Benzene',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -98,6 +101,7 @@
     'original_name': 'Benzene',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'c6h6',
     'unique_id': '123-c6h6',
@@ -125,6 +129,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Carbon monoxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -153,6 +158,7 @@
     'original_name': 'Carbon monoxide',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co',
     'unique_id': '123-co',
@@ -180,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Nitrogen dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -208,6 +215,7 @@
     'original_name': 'Nitrogen dioxide',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-no2',
@@ -236,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Nitrogen dioxide index',
     'capabilities': dict({
       'options': list([
         'very_bad',
@@ -268,6 +277,7 @@
     'original_name': 'Nitrogen dioxide index',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'no2_index',
     'unique_id': '123-no2-index',
@@ -302,6 +312,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Ozone',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -330,6 +341,7 @@
     'original_name': 'Ozone',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-o3',
@@ -358,6 +370,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Ozone index',
     'capabilities': dict({
       'options': list([
         'very_bad',
@@ -390,6 +403,7 @@
     'original_name': 'Ozone index',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'o3_index',
     'unique_id': '123-o3-index',
@@ -424,6 +438,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -452,6 +467,7 @@
     'original_name': 'PM10',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-pm10',
@@ -480,6 +496,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home PM10 index',
     'capabilities': dict({
       'options': list([
         'very_bad',
@@ -512,6 +529,7 @@
     'original_name': 'PM10 index',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pm10_index',
     'unique_id': '123-pm10-index',
@@ -546,6 +564,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -574,6 +593,7 @@
     'original_name': 'PM2.5',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-pm25',
@@ -602,6 +622,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home PM2.5 index',
     'capabilities': dict({
       'options': list([
         'very_bad',
@@ -634,6 +655,7 @@
     'original_name': 'PM2.5 index',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pm25_index',
     'unique_id': '123-pm25-index',
@@ -668,6 +690,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Sulphur dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -696,6 +719,7 @@
     'original_name': 'Sulphur dioxide',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-so2',
@@ -724,6 +748,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home Sulphur dioxide index',
     'capabilities': dict({
       'options': list([
         'very_bad',
@@ -756,6 +781,7 @@
     'original_name': 'Sulphur dioxide index',
     'platform': 'gios',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'so2_index',
     'unique_id': '123-so2-index',

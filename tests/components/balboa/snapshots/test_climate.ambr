@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'FakeSpa',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -38,6 +39,7 @@
     'original_name': None,
     'platform': 'balboa',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'balboa',
     'unique_id': 'FakeSpa-Climate-c0ffee',

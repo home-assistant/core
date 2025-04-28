@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gummibaum',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': None,
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-plant_image',
@@ -53,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kakaobaum',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -76,6 +79,7 @@
     'original_name': None,
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-plant_image',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mealie Categories',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Categories',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'categories',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_categories',
@@ -55,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mealie Recipes',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -80,6 +83,7 @@
     'original_name': 'Recipes',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'recipes',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_recipes',
@@ -106,6 +110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mealie Tags',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -131,6 +136,7 @@
     'original_name': 'Tags',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tags',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_tags',
@@ -157,6 +163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mealie Tools',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -182,6 +189,7 @@
     'original_name': 'Tools',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tools',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_tools',
@@ -208,6 +216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mealie Users',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -233,6 +242,7 @@
     'original_name': 'Users',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'users',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_users',

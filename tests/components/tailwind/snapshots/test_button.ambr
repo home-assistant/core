@@ -18,6 +18,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tailwind iQ3 Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,6 +42,7 @@
     'original_name': 'Identify',
     'platform': 'tailwind',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '_3c_e9_e_6d_21_84_-identify',

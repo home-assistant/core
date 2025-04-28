@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tempo Disc THD EEFF Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Battery',
     'platform': 'bluemaestro',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff-battery',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tempo Disc THD EEFF Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -81,6 +84,7 @@
     'original_name': 'Dew point',
     'platform': 'bluemaestro',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dew_point',
     'unique_id': 'aa:bb:cc:dd:ee:ff-dew_point',
@@ -108,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tempo Disc THD EEFF Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -133,6 +138,7 @@
     'original_name': 'Humidity',
     'platform': 'bluemaestro',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff-humidity',
@@ -160,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tempo Disc THD EEFF Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -185,6 +192,7 @@
     'original_name': 'Signal strength',
     'platform': 'bluemaestro',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff-signal_strength',
@@ -212,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tempo Disc THD EEFF Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -237,6 +246,7 @@
     'original_name': 'Temperature',
     'platform': 'bluemaestro',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff-temperature',

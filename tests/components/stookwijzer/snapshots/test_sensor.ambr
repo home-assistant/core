@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stookwijzer Advice code',
     'capabilities': dict({
       'options': list([
         'code_yellow',
@@ -33,6 +34,7 @@
     'original_name': 'Advice code',
     'platform': 'stookwijzer',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'advice',
     'unique_id': '12345_advice',
@@ -64,6 +66,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stookwijzer Air quality index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -89,6 +92,7 @@
     'original_name': 'Air quality index',
     'platform': 'stookwijzer',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345_air_quality_index',
@@ -116,6 +120,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stookwijzer Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -147,6 +152,7 @@
     'original_name': 'Wind speed',
     'platform': 'stookwijzer',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345_windspeed',

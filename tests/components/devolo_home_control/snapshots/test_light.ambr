@@ -23,6 +23,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -50,6 +51,7 @@
     'original_name': None,
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'devolo.Dimmer:Test',
@@ -80,6 +82,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -107,6 +110,7 @@
     'original_name': None,
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'devolo.Dimmer:Test',

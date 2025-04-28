@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock classicVARIO Current speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Current speed',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_speed',
     'unique_id': '00:00:00:00:00:03_current_speed',
@@ -52,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock classicVARIO Error code',
     'capabilities': dict({
       'options': list([
         'no_error',
@@ -81,6 +84,7 @@
     'original_name': 'Error code',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_code',
     'unique_id': '00:00:00:00:00:03_error_code',
@@ -111,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock classicVARIO Remaining hours until service',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -137,6 +142,7 @@
     'original_name': 'Remaining hours until service',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'service_hours',
     'unique_id': '00:00:00:00:00:03_service_hours',

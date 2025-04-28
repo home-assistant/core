@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name AC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'AC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac',
     'unique_id': '12345678-current_ac',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name AC power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -81,6 +84,7 @@
     'original_name': 'AC power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_ac',
     'unique_id': '12345678-power_ac',
@@ -108,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name AC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -133,6 +138,7 @@
     'original_name': 'AC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac',
     'unique_id': '12345678-voltage_ac',
@@ -160,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name DC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -185,6 +192,7 @@
     'original_name': 'DC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc',
     'unique_id': '12345678-current_dc',
@@ -212,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name DC current 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -237,6 +246,7 @@
     'original_name': 'DC current 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc_2',
     'unique_id': '12345678-current_dc_2',
@@ -264,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name DC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -289,6 +300,7 @@
     'original_name': 'DC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc',
     'unique_id': '12345678-voltage_dc',
@@ -316,6 +328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name DC voltage 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -341,6 +354,7 @@
     'original_name': 'DC voltage 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc_2',
     'unique_id': '12345678-voltage_dc_2',
@@ -368,6 +382,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name Error code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -391,6 +406,7 @@
     'original_name': 'Error code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_code',
     'unique_id': '12345678-error_code',
@@ -415,6 +431,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name Error message',
     'capabilities': dict({
       'options': list([
         'no_error',
@@ -537,6 +554,7 @@
     'original_name': 'Error message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_message',
     'unique_id': '12345678-error_message',
@@ -660,6 +678,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -685,6 +704,7 @@
     'original_name': 'Frequency',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_ac',
     'unique_id': '12345678-frequency_ac',
@@ -712,6 +732,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name Inverter state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -735,6 +756,7 @@
     'original_name': 'Inverter state',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'inverter_state',
     'unique_id': '12345678-inverter_state',
@@ -759,6 +781,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name Status code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -782,6 +805,7 @@
     'original_name': 'Status code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_code',
     'unique_id': '12345678-status_code',
@@ -806,6 +830,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name Status message',
     'capabilities': dict({
       'options': list([
         'startup',
@@ -840,6 +865,7 @@
     'original_name': 'Status message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_message',
     'unique_id': '12345678-status_message',
@@ -875,6 +901,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter name Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -900,6 +927,7 @@
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': '12345678-energy_total',
@@ -927,6 +955,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -952,6 +981,7 @@
     'original_name': 'Apparent power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent',
     'unique_id': '1234567890-power_apparent',
@@ -979,6 +1009,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Apparent power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1004,6 +1035,7 @@
     'original_name': 'Apparent power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_1',
     'unique_id': '1234567890-power_apparent_phase_1',
@@ -1031,6 +1063,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Apparent power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1056,6 +1089,7 @@
     'original_name': 'Apparent power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_2',
     'unique_id': '1234567890-power_apparent_phase_2',
@@ -1083,6 +1117,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Apparent power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1108,6 +1143,7 @@
     'original_name': 'Apparent power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_3',
     'unique_id': '1234567890-power_apparent_phase_3',
@@ -1135,6 +1171,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1160,6 +1197,7 @@
     'original_name': 'Current phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_1',
     'unique_id': '1234567890-current_ac_phase_1',
@@ -1187,6 +1225,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1212,6 +1251,7 @@
     'original_name': 'Current phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_2',
     'unique_id': '1234567890-current_ac_phase_2',
@@ -1239,6 +1279,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1264,6 +1305,7 @@
     'original_name': 'Current phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_3',
     'unique_id': '1234567890-current_ac_phase_3',
@@ -1291,6 +1333,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Frequency phase average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1316,6 +1359,7 @@
     'original_name': 'Frequency phase average',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_phase_average',
     'unique_id': '1234567890-frequency_phase_average',
@@ -1343,6 +1387,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Meter location',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1366,6 +1411,7 @@
     'original_name': 'Meter location',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location',
     'unique_id': '1234567890-meter_location',
@@ -1390,6 +1436,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Meter location description',
     'capabilities': dict({
       'options': list([
         'feed_in',
@@ -1421,6 +1468,7 @@
     'original_name': 'Meter location description',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location_description',
     'unique_id': '1234567890-meter_location_description',
@@ -1453,6 +1501,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1478,6 +1527,7 @@
     'original_name': 'Power factor',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor',
     'unique_id': '1234567890-power_factor',
@@ -1504,6 +1554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Power factor phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1529,6 +1580,7 @@
     'original_name': 'Power factor phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_1',
     'unique_id': '1234567890-power_factor_phase_1',
@@ -1555,6 +1607,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Power factor phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1580,6 +1633,7 @@
     'original_name': 'Power factor phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_2',
     'unique_id': '1234567890-power_factor_phase_2',
@@ -1606,6 +1660,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Power factor phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1631,6 +1686,7 @@
     'original_name': 'Power factor phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_3',
     'unique_id': '1234567890-power_factor_phase_3',
@@ -1657,6 +1713,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1682,6 +1739,7 @@
     'original_name': 'Reactive energy consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_consumed',
     'unique_id': '1234567890-energy_reactive_ac_consumed',
@@ -1708,6 +1766,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive energy produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1733,6 +1792,7 @@
     'original_name': 'Reactive energy produced',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_produced',
     'unique_id': '1234567890-energy_reactive_ac_produced',
@@ -1759,6 +1819,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1784,6 +1845,7 @@
     'original_name': 'Reactive power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive',
     'unique_id': '1234567890-power_reactive',
@@ -1811,6 +1873,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1836,6 +1899,7 @@
     'original_name': 'Reactive power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_1',
     'unique_id': '1234567890-power_reactive_phase_1',
@@ -1863,6 +1927,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1888,6 +1953,7 @@
     'original_name': 'Reactive power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_2',
     'unique_id': '1234567890-power_reactive_phase_2',
@@ -1915,6 +1981,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1940,6 +2007,7 @@
     'original_name': 'Reactive power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_3',
     'unique_id': '1234567890-power_reactive_phase_3',
@@ -1967,6 +2035,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1992,6 +2061,7 @@
     'original_name': 'Real energy consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_consumed',
     'unique_id': '1234567890-energy_real_consumed',
@@ -2019,6 +2089,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real energy minus',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2044,6 +2115,7 @@
     'original_name': 'Real energy minus',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_ac_minus',
     'unique_id': '1234567890-energy_real_ac_minus',
@@ -2071,6 +2143,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real energy plus',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2096,6 +2169,7 @@
     'original_name': 'Real energy plus',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_ac_plus',
     'unique_id': '1234567890-energy_real_ac_plus',
@@ -2123,6 +2197,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real energy produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2148,6 +2223,7 @@
     'original_name': 'Real energy produced',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_produced',
     'unique_id': '1234567890-energy_real_produced',
@@ -2175,6 +2251,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2200,6 +2277,7 @@
     'original_name': 'Real power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real',
     'unique_id': '1234567890-power_real',
@@ -2227,6 +2305,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2252,6 +2331,7 @@
     'original_name': 'Real power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_1',
     'unique_id': '1234567890-power_real_phase_1',
@@ -2279,6 +2359,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2304,6 +2385,7 @@
     'original_name': 'Real power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_2',
     'unique_id': '1234567890-power_real_phase_2',
@@ -2331,6 +2413,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2356,6 +2439,7 @@
     'original_name': 'Real power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_3',
     'unique_id': '1234567890-power_real_phase_3',
@@ -2383,6 +2467,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2408,6 +2493,7 @@
     'original_name': 'Voltage phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_1',
     'unique_id': '1234567890-voltage_ac_phase_1',
@@ -2435,6 +2521,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 1-2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2460,6 +2547,7 @@
     'original_name': 'Voltage phase 1-2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_12',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_12',
@@ -2487,6 +2575,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2512,6 +2601,7 @@
     'original_name': 'Voltage phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_2',
     'unique_id': '1234567890-voltage_ac_phase_2',
@@ -2539,6 +2629,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 2-3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2564,6 +2655,7 @@
     'original_name': 'Voltage phase 2-3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_23',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_23',
@@ -2591,6 +2683,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2616,6 +2709,7 @@
     'original_name': 'Voltage phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_3',
     'unique_id': '1234567890-voltage_ac_phase_3',
@@ -2643,6 +2737,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 3-1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2668,6 +2763,7 @@
     'original_name': 'Voltage phase 3-1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_31',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_31',
@@ -2695,6 +2791,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Meter mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2718,6 +2815,7 @@
     'original_name': 'Meter mode',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_mode',
     'unique_id': 'solar_net_123.4567890-power_flow-meter_mode',
@@ -2742,6 +2840,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2767,6 +2866,7 @@
     'original_name': 'Power grid',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid',
@@ -2794,6 +2894,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power grid export',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2819,6 +2920,7 @@
     'original_name': 'Power grid export',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_export',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid_export',
@@ -2846,6 +2948,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power grid import',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2871,6 +2974,7 @@
     'original_name': 'Power grid import',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_import',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid_import',
@@ -2898,6 +3002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2923,6 +3028,7 @@
     'original_name': 'Power load',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load',
@@ -2950,6 +3056,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power load consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2975,6 +3082,7 @@
     'original_name': 'Power load consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_consumed',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load_consumed',
@@ -3002,6 +3110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power load generated',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3027,6 +3136,7 @@
     'original_name': 'Power load generated',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_generated',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load_generated',
@@ -3054,6 +3164,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power photovoltaics',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3079,6 +3190,7 @@
     'original_name': 'Power photovoltaics',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_photovoltaics',
     'unique_id': 'solar_net_123.4567890-power_flow-power_photovoltaics',
@@ -3106,6 +3218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Relative autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3131,6 +3244,7 @@
     'original_name': 'Relative autonomy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_autonomy',
     'unique_id': 'solar_net_123.4567890-power_flow-relative_autonomy',
@@ -3157,6 +3271,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Relative self-consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3182,6 +3297,7 @@
     'original_name': 'Relative self-consumption',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_self_consumption',
     'unique_id': 'solar_net_123.4567890-power_flow-relative_self_consumption',
@@ -3208,6 +3324,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3233,6 +3350,7 @@
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': 'solar_net_123.4567890-power_flow-energy_total',
@@ -3260,6 +3378,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'BYD Battery-Box Premium HV DC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3285,6 +3404,7 @@
     'original_name': 'DC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc',
     'unique_id': 'P030T020Z2001234567     -current_dc',
@@ -3312,6 +3432,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'BYD Battery-Box Premium HV DC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3337,6 +3458,7 @@
     'original_name': 'DC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc',
     'unique_id': 'P030T020Z2001234567     -voltage_dc',
@@ -3364,6 +3486,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'BYD Battery-Box Premium HV Designed capacity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3387,6 +3510,7 @@
     'original_name': 'Designed capacity',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'capacity_designed',
     'unique_id': 'P030T020Z2001234567     -capacity_designed',
@@ -3412,6 +3536,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'BYD Battery-Box Premium HV Maximum capacity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3435,6 +3560,7 @@
     'original_name': 'Maximum capacity',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'capacity_maximum',
     'unique_id': 'P030T020Z2001234567     -capacity_maximum',
@@ -3460,6 +3586,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'BYD Battery-Box Premium HV State of charge',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3485,6 +3612,7 @@
     'original_name': 'State of charge',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'state_of_charge',
     'unique_id': 'P030T020Z2001234567     -state_of_charge',
@@ -3512,6 +3640,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'BYD Battery-Box Premium HV Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3537,6 +3666,7 @@
     'original_name': 'Temperature',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_cell',
     'unique_id': 'P030T020Z2001234567     -temperature_cell',
@@ -3564,6 +3694,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage AC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3589,6 +3720,7 @@
     'original_name': 'AC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac',
     'unique_id': '12345678-current_ac',
@@ -3616,6 +3748,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage AC power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3641,6 +3774,7 @@
     'original_name': 'AC power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_ac',
     'unique_id': '12345678-power_ac',
@@ -3668,6 +3802,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage AC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3693,6 +3828,7 @@
     'original_name': 'AC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac',
     'unique_id': '12345678-voltage_ac',
@@ -3720,6 +3856,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage DC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3745,6 +3882,7 @@
     'original_name': 'DC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc',
     'unique_id': '12345678-current_dc',
@@ -3772,6 +3910,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage DC current 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3797,6 +3936,7 @@
     'original_name': 'DC current 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc_2',
     'unique_id': '12345678-current_dc_2',
@@ -3824,6 +3964,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage DC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3849,6 +3990,7 @@
     'original_name': 'DC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc',
     'unique_id': '12345678-voltage_dc',
@@ -3876,6 +4018,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage DC voltage 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3901,6 +4044,7 @@
     'original_name': 'DC voltage 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc_2',
     'unique_id': '12345678-voltage_dc_2',
@@ -3928,6 +4072,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage Error code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3951,6 +4096,7 @@
     'original_name': 'Error code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_code',
     'unique_id': '12345678-error_code',
@@ -3975,6 +4121,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage Error message',
     'capabilities': dict({
       'options': list([
         'no_error',
@@ -4097,6 +4244,7 @@
     'original_name': 'Error message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_message',
     'unique_id': '12345678-error_message',
@@ -4220,6 +4368,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4245,6 +4394,7 @@
     'original_name': 'Frequency',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_ac',
     'unique_id': '12345678-frequency_ac',
@@ -4272,6 +4422,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage Inverter state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4295,6 +4446,7 @@
     'original_name': 'Inverter state',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'inverter_state',
     'unique_id': '12345678-inverter_state',
@@ -4319,6 +4471,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage Status code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4342,6 +4495,7 @@
     'original_name': 'Status code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_code',
     'unique_id': '12345678-status_code',
@@ -4366,6 +4520,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage Status message',
     'capabilities': dict({
       'options': list([
         'startup',
@@ -4400,6 +4555,7 @@
     'original_name': 'Status message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_message',
     'unique_id': '12345678-status_message',
@@ -4435,6 +4591,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gen24 Storage Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4460,6 +4617,7 @@
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': '12345678-energy_total',
@@ -4487,6 +4645,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ohmpilot Energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4512,6 +4671,7 @@
     'original_name': 'Energy consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_ac_consumed',
     'unique_id': '23456789-energy_real_ac_consumed',
@@ -4539,6 +4699,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ohmpilot Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4564,6 +4725,7 @@
     'original_name': 'Power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_ac',
     'unique_id': '23456789-power_real_ac',
@@ -4591,6 +4753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ohmpilot State code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4614,6 +4777,7 @@
     'original_name': 'State code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'state_code',
     'unique_id': '23456789-state_code',
@@ -4638,6 +4802,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ohmpilot State message',
     'capabilities': dict({
       'options': list([
         'up_and_running',
@@ -4670,6 +4835,7 @@
     'original_name': 'State message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'state_message',
     'unique_id': '23456789-state_message',
@@ -4703,6 +4869,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ohmpilot Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4728,6 +4895,7 @@
     'original_name': 'Temperature',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_channel_1',
     'unique_id': '23456789-temperature_channel_1',
@@ -4755,6 +4923,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4780,6 +4949,7 @@
     'original_name': 'Apparent power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent',
     'unique_id': '1234567890-power_apparent',
@@ -4807,6 +4977,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Apparent power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4832,6 +5003,7 @@
     'original_name': 'Apparent power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_1',
     'unique_id': '1234567890-power_apparent_phase_1',
@@ -4859,6 +5031,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Apparent power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4884,6 +5057,7 @@
     'original_name': 'Apparent power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_2',
     'unique_id': '1234567890-power_apparent_phase_2',
@@ -4911,6 +5085,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Apparent power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4936,6 +5111,7 @@
     'original_name': 'Apparent power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_3',
     'unique_id': '1234567890-power_apparent_phase_3',
@@ -4963,6 +5139,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4988,6 +5165,7 @@
     'original_name': 'Current phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_1',
     'unique_id': '1234567890-current_ac_phase_1',
@@ -5015,6 +5193,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5040,6 +5219,7 @@
     'original_name': 'Current phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_2',
     'unique_id': '1234567890-current_ac_phase_2',
@@ -5067,6 +5247,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5092,6 +5273,7 @@
     'original_name': 'Current phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_3',
     'unique_id': '1234567890-current_ac_phase_3',
@@ -5119,6 +5301,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Frequency phase average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5144,6 +5327,7 @@
     'original_name': 'Frequency phase average',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_phase_average',
     'unique_id': '1234567890-frequency_phase_average',
@@ -5171,6 +5355,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Meter location',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5194,6 +5379,7 @@
     'original_name': 'Meter location',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location',
     'unique_id': '1234567890-meter_location',
@@ -5218,6 +5404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Meter location description',
     'capabilities': dict({
       'options': list([
         'feed_in',
@@ -5249,6 +5436,7 @@
     'original_name': 'Meter location description',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location_description',
     'unique_id': '1234567890-meter_location_description',
@@ -5281,6 +5469,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5306,6 +5495,7 @@
     'original_name': 'Power factor',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor',
     'unique_id': '1234567890-power_factor',
@@ -5332,6 +5522,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Power factor phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5357,6 +5548,7 @@
     'original_name': 'Power factor phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_1',
     'unique_id': '1234567890-power_factor_phase_1',
@@ -5383,6 +5575,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Power factor phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5408,6 +5601,7 @@
     'original_name': 'Power factor phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_2',
     'unique_id': '1234567890-power_factor_phase_2',
@@ -5434,6 +5628,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Power factor phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5459,6 +5654,7 @@
     'original_name': 'Power factor phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_3',
     'unique_id': '1234567890-power_factor_phase_3',
@@ -5485,6 +5681,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5510,6 +5707,7 @@
     'original_name': 'Reactive energy consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_consumed',
     'unique_id': '1234567890-energy_reactive_ac_consumed',
@@ -5536,6 +5734,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive energy produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5561,6 +5760,7 @@
     'original_name': 'Reactive energy produced',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_produced',
     'unique_id': '1234567890-energy_reactive_ac_produced',
@@ -5587,6 +5787,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5612,6 +5813,7 @@
     'original_name': 'Reactive power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive',
     'unique_id': '1234567890-power_reactive',
@@ -5639,6 +5841,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5664,6 +5867,7 @@
     'original_name': 'Reactive power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_1',
     'unique_id': '1234567890-power_reactive_phase_1',
@@ -5691,6 +5895,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5716,6 +5921,7 @@
     'original_name': 'Reactive power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_2',
     'unique_id': '1234567890-power_reactive_phase_2',
@@ -5743,6 +5949,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Reactive power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5768,6 +5975,7 @@
     'original_name': 'Reactive power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_3',
     'unique_id': '1234567890-power_reactive_phase_3',
@@ -5795,6 +6003,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5820,6 +6029,7 @@
     'original_name': 'Real energy consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_consumed',
     'unique_id': '1234567890-energy_real_consumed',
@@ -5847,6 +6057,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real energy minus',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5872,6 +6083,7 @@
     'original_name': 'Real energy minus',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_ac_minus',
     'unique_id': '1234567890-energy_real_ac_minus',
@@ -5899,6 +6111,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real energy plus',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5924,6 +6137,7 @@
     'original_name': 'Real energy plus',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_ac_plus',
     'unique_id': '1234567890-energy_real_ac_plus',
@@ -5951,6 +6165,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real energy produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5976,6 +6191,7 @@
     'original_name': 'Real energy produced',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_produced',
     'unique_id': '1234567890-energy_real_produced',
@@ -6003,6 +6219,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6028,6 +6245,7 @@
     'original_name': 'Real power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real',
     'unique_id': '1234567890-power_real',
@@ -6055,6 +6273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6080,6 +6299,7 @@
     'original_name': 'Real power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_1',
     'unique_id': '1234567890-power_real_phase_1',
@@ -6107,6 +6327,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6132,6 +6353,7 @@
     'original_name': 'Real power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_2',
     'unique_id': '1234567890-power_real_phase_2',
@@ -6159,6 +6381,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Real power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6184,6 +6407,7 @@
     'original_name': 'Real power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_3',
     'unique_id': '1234567890-power_real_phase_3',
@@ -6211,6 +6435,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6236,6 +6461,7 @@
     'original_name': 'Voltage phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_1',
     'unique_id': '1234567890-voltage_ac_phase_1',
@@ -6263,6 +6489,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 1-2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6288,6 +6515,7 @@
     'original_name': 'Voltage phase 1-2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_12',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_12',
@@ -6315,6 +6543,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6340,6 +6569,7 @@
     'original_name': 'Voltage phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_2',
     'unique_id': '1234567890-voltage_ac_phase_2',
@@ -6367,6 +6597,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 2-3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6392,6 +6623,7 @@
     'original_name': 'Voltage phase 2-3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_23',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_23',
@@ -6419,6 +6651,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6444,6 +6677,7 @@
     'original_name': 'Voltage phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_3',
     'unique_id': '1234567890-voltage_ac_phase_3',
@@ -6471,6 +6705,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Meter TS 65A-3 Voltage phase 3-1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6496,6 +6731,7 @@
     'original_name': 'Voltage phase 3-1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_31',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_31',
@@ -6523,6 +6759,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Meter mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6546,6 +6783,7 @@
     'original_name': 'Meter mode',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_mode',
     'unique_id': 'solar_net_12345678-power_flow-meter_mode',
@@ -6570,6 +6808,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6595,6 +6834,7 @@
     'original_name': 'Power battery',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_battery',
     'unique_id': 'solar_net_12345678-power_flow-power_battery',
@@ -6622,6 +6862,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power battery charge',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6647,6 +6888,7 @@
     'original_name': 'Power battery charge',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_battery_charge',
     'unique_id': 'solar_net_12345678-power_flow-power_battery_charge',
@@ -6674,6 +6916,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power battery discharge',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6699,6 +6942,7 @@
     'original_name': 'Power battery discharge',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_battery_discharge',
     'unique_id': 'solar_net_12345678-power_flow-power_battery_discharge',
@@ -6726,6 +6970,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6751,6 +6996,7 @@
     'original_name': 'Power grid',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid',
     'unique_id': 'solar_net_12345678-power_flow-power_grid',
@@ -6778,6 +7024,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power grid export',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6803,6 +7050,7 @@
     'original_name': 'Power grid export',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_export',
     'unique_id': 'solar_net_12345678-power_flow-power_grid_export',
@@ -6830,6 +7078,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power grid import',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6855,6 +7104,7 @@
     'original_name': 'Power grid import',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_import',
     'unique_id': 'solar_net_12345678-power_flow-power_grid_import',
@@ -6882,6 +7132,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6907,6 +7158,7 @@
     'original_name': 'Power load',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load',
     'unique_id': 'solar_net_12345678-power_flow-power_load',
@@ -6934,6 +7186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power load consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6959,6 +7212,7 @@
     'original_name': 'Power load consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_consumed',
     'unique_id': 'solar_net_12345678-power_flow-power_load_consumed',
@@ -6986,6 +7240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power load generated',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7011,6 +7266,7 @@
     'original_name': 'Power load generated',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_generated',
     'unique_id': 'solar_net_12345678-power_flow-power_load_generated',
@@ -7038,6 +7294,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power photovoltaics',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7063,6 +7320,7 @@
     'original_name': 'Power photovoltaics',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_photovoltaics',
     'unique_id': 'solar_net_12345678-power_flow-power_photovoltaics',
@@ -7090,6 +7348,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Relative autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7115,6 +7374,7 @@
     'original_name': 'Relative autonomy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_autonomy',
     'unique_id': 'solar_net_12345678-power_flow-relative_autonomy',
@@ -7141,6 +7401,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Relative self-consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7166,6 +7427,7 @@
     'original_name': 'Relative self-consumption',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_self_consumption',
     'unique_id': 'solar_net_12345678-power_flow-relative_self_consumption',
@@ -7192,6 +7454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7217,6 +7480,7 @@
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': 'solar_net_12345678-power_flow-energy_total',
@@ -7244,6 +7508,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 AC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7269,6 +7534,7 @@
     'original_name': 'AC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac',
     'unique_id': '234567-current_ac',
@@ -7296,6 +7562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 AC power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7321,6 +7588,7 @@
     'original_name': 'AC power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_ac',
     'unique_id': '234567-power_ac',
@@ -7348,6 +7616,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 AC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7373,6 +7642,7 @@
     'original_name': 'AC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac',
     'unique_id': '234567-voltage_ac',
@@ -7400,6 +7670,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 DC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7425,6 +7696,7 @@
     'original_name': 'DC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc',
     'unique_id': '234567-current_dc',
@@ -7452,6 +7724,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 DC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7477,6 +7750,7 @@
     'original_name': 'DC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc',
     'unique_id': '234567-voltage_dc',
@@ -7504,6 +7778,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 Energy day',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7529,6 +7804,7 @@
     'original_name': 'Energy day',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_day',
     'unique_id': '234567-energy_day',
@@ -7556,6 +7832,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 Energy year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7581,6 +7858,7 @@
     'original_name': 'Energy year',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_year',
     'unique_id': '234567-energy_year',
@@ -7608,6 +7886,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 Error code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7631,6 +7910,7 @@
     'original_name': 'Error code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_code',
     'unique_id': '234567-error_code',
@@ -7655,6 +7935,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 Error message',
     'capabilities': dict({
       'options': list([
         'no_error',
@@ -7777,6 +8058,7 @@
     'original_name': 'Error message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_message',
     'unique_id': '234567-error_message',
@@ -7900,6 +8182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7925,6 +8208,7 @@
     'original_name': 'Frequency',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_ac',
     'unique_id': '234567-frequency_ac',
@@ -7952,6 +8236,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 LED color',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7975,6 +8260,7 @@
     'original_name': 'LED color',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_color',
     'unique_id': '234567-led_color',
@@ -7999,6 +8285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 LED state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8022,6 +8309,7 @@
     'original_name': 'LED state',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_state',
     'unique_id': '234567-led_state',
@@ -8046,6 +8334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 Status code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8069,6 +8358,7 @@
     'original_name': 'Status code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_code',
     'unique_id': '234567-status_code',
@@ -8093,6 +8383,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 Status message',
     'capabilities': dict({
       'options': list([
         'startup',
@@ -8127,6 +8418,7 @@
     'original_name': 'Status message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_message',
     'unique_id': '234567-status_message',
@@ -8162,6 +8454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 3.0-1 Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8187,6 +8480,7 @@
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': '234567-energy_total',
@@ -8214,6 +8508,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 AC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8239,6 +8534,7 @@
     'original_name': 'AC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac',
     'unique_id': '123456-current_ac',
@@ -8266,6 +8562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 AC power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8291,6 +8588,7 @@
     'original_name': 'AC power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_ac',
     'unique_id': '123456-power_ac',
@@ -8318,6 +8616,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 AC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8343,6 +8642,7 @@
     'original_name': 'AC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac',
     'unique_id': '123456-voltage_ac',
@@ -8370,6 +8670,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 DC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8395,6 +8696,7 @@
     'original_name': 'DC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc',
     'unique_id': '123456-current_dc',
@@ -8422,6 +8724,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 DC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8447,6 +8750,7 @@
     'original_name': 'DC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc',
     'unique_id': '123456-voltage_dc',
@@ -8474,6 +8778,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 Energy day',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8499,6 +8804,7 @@
     'original_name': 'Energy day',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_day',
     'unique_id': '123456-energy_day',
@@ -8526,6 +8832,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 Energy year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8551,6 +8858,7 @@
     'original_name': 'Energy year',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_year',
     'unique_id': '123456-energy_year',
@@ -8578,6 +8886,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 Error code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8601,6 +8910,7 @@
     'original_name': 'Error code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_code',
     'unique_id': '123456-error_code',
@@ -8625,6 +8935,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 Error message',
     'capabilities': dict({
       'options': list([
         'no_error',
@@ -8747,6 +9058,7 @@
     'original_name': 'Error message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_message',
     'unique_id': '123456-error_message',
@@ -8870,6 +9182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8895,6 +9208,7 @@
     'original_name': 'Frequency',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_ac',
     'unique_id': '123456-frequency_ac',
@@ -8922,6 +9236,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 LED color',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8945,6 +9260,7 @@
     'original_name': 'LED color',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_color',
     'unique_id': '123456-led_color',
@@ -8969,6 +9285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 LED state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8992,6 +9309,7 @@
     'original_name': 'LED state',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_state',
     'unique_id': '123456-led_state',
@@ -9016,6 +9334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 Status code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9039,6 +9358,7 @@
     'original_name': 'Status code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_code',
     'unique_id': '123456-status_code',
@@ -9063,6 +9383,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 Status message',
     'capabilities': dict({
       'options': list([
         'startup',
@@ -9097,6 +9418,7 @@
     'original_name': 'Status message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_message',
     'unique_id': '123456-status_message',
@@ -9132,6 +9454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Primo 5.0-1 Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9157,6 +9480,7 @@
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': '123456-energy_total',
@@ -9184,6 +9508,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'S0 Meter at inverter 1 Meter location',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9207,6 +9532,7 @@
     'original_name': 'Meter location',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location',
     'unique_id': 'solar_net_123.4567890:S0 Meter at inverter 1-meter_location',
@@ -9231,6 +9557,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'S0 Meter at inverter 1 Meter location description',
     'capabilities': dict({
       'options': list([
         'feed_in',
@@ -9262,6 +9589,7 @@
     'original_name': 'Meter location description',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location_description',
     'unique_id': 'solar_net_123.4567890:S0 Meter at inverter 1-meter_location_description',
@@ -9294,6 +9622,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'S0 Meter at inverter 1 Real power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9319,6 +9648,7 @@
     'original_name': 'Real power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real',
     'unique_id': 'solar_net_123.4567890:S0 Meter at inverter 1-power_real',
@@ -9346,6 +9676,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet CO₂ factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9371,6 +9702,7 @@
     'original_name': 'CO₂ factor',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2_factor',
     'unique_id': '123.4567890-co2_factor',
@@ -9397,6 +9729,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Energy day',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9422,6 +9755,7 @@
     'original_name': 'Energy day',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_day',
     'unique_id': 'solar_net_123.4567890-power_flow-energy_day',
@@ -9449,6 +9783,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Energy year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9474,6 +9809,7 @@
     'original_name': 'Energy year',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_year',
     'unique_id': 'solar_net_123.4567890-power_flow-energy_year',
@@ -9501,6 +9837,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Grid export tariff',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9526,6 +9863,7 @@
     'original_name': 'Grid export tariff',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cash_factor',
     'unique_id': '123.4567890-cash_factor',
@@ -9552,6 +9890,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Grid import tariff',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9577,6 +9916,7 @@
     'original_name': 'Grid import tariff',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'delivery_factor',
     'unique_id': '123.4567890-delivery_factor',
@@ -9603,6 +9943,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Meter mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9626,6 +9967,7 @@
     'original_name': 'Meter mode',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_mode',
     'unique_id': 'solar_net_123.4567890-power_flow-meter_mode',
@@ -9650,6 +9992,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9675,6 +10018,7 @@
     'original_name': 'Power grid',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid',
@@ -9702,6 +10046,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power grid export',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9727,6 +10072,7 @@
     'original_name': 'Power grid export',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_export',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid_export',
@@ -9754,6 +10100,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power grid import',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9779,6 +10126,7 @@
     'original_name': 'Power grid import',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_import',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid_import',
@@ -9806,6 +10154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9831,6 +10180,7 @@
     'original_name': 'Power load',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load',
@@ -9858,6 +10208,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power load consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9883,6 +10234,7 @@
     'original_name': 'Power load consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_consumed',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load_consumed',
@@ -9910,6 +10262,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power load generated',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9935,6 +10288,7 @@
     'original_name': 'Power load generated',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_generated',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load_generated',
@@ -9962,6 +10316,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Power photovoltaics',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9987,6 +10342,7 @@
     'original_name': 'Power photovoltaics',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_photovoltaics',
     'unique_id': 'solar_net_123.4567890-power_flow-power_photovoltaics',
@@ -10014,6 +10370,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Relative autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10039,6 +10396,7 @@
     'original_name': 'Relative autonomy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_autonomy',
     'unique_id': 'solar_net_123.4567890-power_flow-relative_autonomy',
@@ -10065,6 +10423,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Relative self-consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10090,6 +10449,7 @@
     'original_name': 'Relative self-consumption',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_self_consumption',
     'unique_id': 'solar_net_123.4567890-power_flow-relative_self_consumption',
@@ -10116,6 +10476,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SolarNet Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10141,6 +10502,7 @@
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': 'solar_net_123.4567890-power_flow-energy_total',

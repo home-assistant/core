@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock classicVARIO Day speed',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -32,6 +33,7 @@
     'original_name': 'Day speed',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'day_speed',
     'unique_id': '00:00:00:00:00:03_day_speed',
@@ -61,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock classicVARIO Manual speed',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -89,6 +92,7 @@
     'original_name': 'Manual speed',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_speed',
     'unique_id': '00:00:00:00:00:03_manual_speed',
@@ -118,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock classicVARIO Night speed',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -146,6 +151,7 @@
     'original_name': 'Night speed',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'night_speed',
     'unique_id': '00:00:00:00:00:03_night_speed',
@@ -175,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Heater Night temperature offset',
     'capabilities': dict({
       'max': 5,
       'min': -5,
@@ -203,6 +210,7 @@
     'original_name': 'Night temperature offset',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'night_temperature_offset',
     'unique_id': '00:00:00:00:00:02_night_temperature_offset',
@@ -232,6 +240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Heater Temperature offset',
     'capabilities': dict({
       'max': 3,
       'min': -3,
@@ -260,6 +269,7 @@
     'original_name': 'Temperature offset',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
     'unique_id': '00:00:00:00:00:02_temperature_offset',

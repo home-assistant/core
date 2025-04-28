@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Garage 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': None,
     'platform': 'linear_garage_door',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
     'unique_id': 'test1-GDO',
@@ -53,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Garage 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -76,6 +79,7 @@
     'original_name': None,
     'platform': 'linear_garage_door',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
     'unique_id': 'test2-GDO',
@@ -102,6 +106,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Garage 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -125,6 +130,7 @@
     'original_name': None,
     'platform': 'linear_garage_door',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
     'unique_id': 'test3-GDO',
@@ -151,6 +157,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Garage 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -174,6 +181,7 @@
     'original_name': None,
     'platform': 'linear_garage_door',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
     'unique_id': 'test4-GDO',

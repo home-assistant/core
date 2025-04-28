@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Battery voltage',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_voltage',
     'unique_id': 'myemail@email.com_12345_batteryVoltageV',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Controller temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -81,6 +84,7 @@
     'original_name': 'Controller temperature',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'controller_temperature',
     'unique_id': 'myemail@email.com_12345_controllerTempF',
@@ -108,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Device IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -131,6 +136,7 @@
     'original_name': 'Device IP address',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_ip_address',
     'unique_id': 'myemail@email.com_12345_deviceIpAddress',
@@ -155,6 +161,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Engine compartment temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -180,6 +187,7 @@
     'original_name': 'Engine compartment temperature',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'engine_compartment_temperature',
     'unique_id': 'myemail@email.com_12345_engineCompartmentTempF',
@@ -207,6 +215,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Engine coolant temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -232,6 +241,7 @@
     'original_name': 'Engine coolant temperature',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'engine_coolant_temperature',
     'unique_id': 'myemail@email.com_12345_engineCoolantTempF',
@@ -259,6 +269,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Engine frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -284,6 +295,7 @@
     'original_name': 'Engine frequency',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'engine_frequency',
     'unique_id': 'myemail@email.com_12345_engineFrequencyHz',
@@ -311,6 +323,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Engine oil pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -339,6 +352,7 @@
     'original_name': 'Engine oil pressure',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'engine_oil_pressure',
     'unique_id': 'myemail@email.com_12345_engineOilPressurePsi',
@@ -366,6 +380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Engine speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -391,6 +406,7 @@
     'original_name': 'Engine speed',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'engine_speed',
     'unique_id': 'myemail@email.com_12345_engineSpeedRpm',
@@ -417,6 +433,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Engine state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -440,6 +457,7 @@
     'original_name': 'Engine state',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'engine_state',
     'unique_id': 'myemail@email.com_12345_engineState',
@@ -464,6 +482,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Generator load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -489,6 +508,7 @@
     'original_name': 'Generator load',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'generator_load',
     'unique_id': 'myemail@email.com_12345_generatorLoadW',
@@ -516,6 +536,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Generator load percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -541,6 +562,7 @@
     'original_name': 'Generator load percentage',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'generator_load_percent',
     'unique_id': 'myemail@email.com_12345_generatorLoadPercent',
@@ -567,6 +589,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Generator status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -590,6 +613,7 @@
     'original_name': 'Generator status',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'generator_status',
     'unique_id': 'myemail@email.com_12345_status',
@@ -614,6 +638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Lube oil temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -639,6 +664,7 @@
     'original_name': 'Lube oil temperature',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lube_oil_temperature',
     'unique_id': 'myemail@email.com_12345_lubeOilTempF',
@@ -666,6 +692,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Power source',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -689,6 +716,7 @@
     'original_name': 'Power source',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_source',
     'unique_id': 'myemail@email.com_12345_powerSource',
@@ -713,6 +741,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Runtime since last maintenance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -738,6 +767,7 @@
     'original_name': 'Runtime since last maintenance',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'runtime_since_last_maintenance',
     'unique_id': 'myemail@email.com_12345_runtimeSinceLastMaintenanceHours',
@@ -765,6 +795,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Server IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -788,6 +819,7 @@
     'original_name': 'Server IP address',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'server_ip_address',
     'unique_id': 'myemail@email.com_12345_serverIpAddress',
@@ -812,6 +844,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Total operation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -837,6 +870,7 @@
     'original_name': 'Total operation',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_operation',
     'unique_id': 'myemail@email.com_12345_totalOperationHours',
@@ -864,6 +898,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Total runtime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -889,6 +924,7 @@
     'original_name': 'Total runtime',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_runtime',
     'unique_id': 'myemail@email.com_12345_totalRuntimeHours',
@@ -916,6 +952,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Utility voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -941,6 +978,7 @@
     'original_name': 'Utility voltage',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'utility_voltage',
     'unique_id': 'myemail@email.com_12345_utilityVoltageV',
@@ -968,6 +1006,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator 1 Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -993,6 +1032,7 @@
     'original_name': 'Voltage',
     'platform': 'rehlko',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'generator_voltage_avg',
     'unique_id': 'myemail@email.com_12345_generatorVoltageAvgV',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmable light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -31,6 +32,7 @@
     'original_name': 'Dimmable light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 40>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:02-00',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Group',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -97,6 +100,7 @@
     'original_name': None,
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '01234E56789A-/groups/0',
@@ -153,6 +157,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RGB light',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -183,6 +188,7 @@
     'original_name': 'RGB light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00',
@@ -231,6 +237,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tunable white light',
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
       'max_mireds': 454,
@@ -262,6 +269,7 @@
     'original_name': 'Tunable white light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-00',
@@ -312,6 +320,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmable light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -339,6 +348,7 @@
     'original_name': 'Dimmable light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 40>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:02-00',
@@ -370,6 +380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Group',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -405,6 +416,7 @@
     'original_name': None,
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '01234E56789A-/groups/0',
@@ -461,6 +473,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RGB light',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -491,6 +504,7 @@
     'original_name': 'RGB light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00',
@@ -539,6 +553,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tunable white light',
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
       'max_mireds': 454,
@@ -570,6 +585,7 @@
     'original_name': 'Tunable white light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-00',
@@ -620,6 +636,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmable light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -647,6 +664,7 @@
     'original_name': 'Dimmable light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 40>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:02-00',
@@ -678,6 +696,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Group',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -713,6 +732,7 @@
     'original_name': None,
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '01234E56789A-/groups/0',
@@ -769,6 +789,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RGB light',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -799,6 +820,7 @@
     'original_name': 'RGB light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00',
@@ -847,6 +869,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tunable white light',
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
       'max_mireds': 454,
@@ -878,6 +901,7 @@
     'original_name': 'Tunable white light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-00',
@@ -928,6 +952,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hue Go',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -964,6 +989,7 @@
     'original_name': 'Hue Go',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:17:88:01:01:23:45:67-00',
@@ -1020,6 +1046,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hue Ensis',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -1056,6 +1083,7 @@
     'original_name': 'Hue Ensis',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:17:88:01:01:23:45:67-01',
@@ -1112,6 +1140,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LIDL xmas light',
     'capabilities': dict({
       'effect_list': list([
         'carnival',
@@ -1157,6 +1186,7 @@
     'original_name': 'LIDL xmas light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '58:8e:81:ff:fe:db:7b:be-01',
@@ -1220,6 +1250,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hue White Ambiance',
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 454,
@@ -1251,6 +1282,7 @@
     'original_name': 'Hue White Ambiance',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 40>,
     'translation_key': None,
     'unique_id': '00:17:88:01:01:23:45:67-02',
@@ -1301,6 +1333,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hue Filament',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -1328,6 +1361,7 @@
     'original_name': 'Hue Filament',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 40>,
     'translation_key': None,
     'unique_id': '00:17:88:01:01:23:45:67-03',
@@ -1359,6 +1393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Simple Light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -1386,6 +1421,7 @@
     'original_name': 'Simple Light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:01:23:45:67-01',
@@ -1416,6 +1452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gradient light',
     'capabilities': dict({
       'effect_list': list([
         <LightEffect.NONE: 'none'>,
@@ -1457,6 +1494,7 @@
     'original_name': 'Gradient light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:17:88:01:0b:0c:0d:0e-0f',

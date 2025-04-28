@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '28.111111111111 Temperature resolution',
     'capabilities': dict({
       'options': list([
         '9',
@@ -34,6 +35,7 @@
     'original_name': 'Temperature resolution',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tempres',
     'unique_id': '/28.111111111111/tempres',

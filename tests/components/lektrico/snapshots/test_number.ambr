@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 Dynamic limit',
     'capabilities': dict({
       'max': 32,
       'min': 0,
@@ -32,6 +33,7 @@
     'original_name': 'Dynamic limit',
     'platform': 'lektrico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dynamic_limit',
     'unique_id': '500006_dynamic_limit',
@@ -61,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '1p7k_500006 LED brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -89,6 +92,7 @@
     'original_name': 'LED brightness',
     'platform': 'lektrico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_max_brightness',
     'unique_id': '500006_led_max_brightness',

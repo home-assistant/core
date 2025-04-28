@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'FakeSpa Fault',
     'capabilities': dict({
       'event_types': list([
         'clock_failed',
@@ -48,6 +49,7 @@
     'original_name': 'Fault',
     'platform': 'balboa',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fault',
     'unique_id': 'FakeSpa-fault-c0ffee',

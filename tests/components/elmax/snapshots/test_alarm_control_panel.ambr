@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Direct Panel https://1.1.1.1:443/api/v2 AREA 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'AREA 1',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 2>,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-area-0',
@@ -55,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Direct Panel https://1.1.1.1:443/api/v2 AREA 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -78,6 +81,7 @@
     'original_name': 'AREA 2',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 2>,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-area-1',
@@ -106,6 +110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Direct Panel https://1.1.1.1:443/api/v2 AREA 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -129,6 +134,7 @@
     'original_name': 'AREA 3',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 2>,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-area-2',

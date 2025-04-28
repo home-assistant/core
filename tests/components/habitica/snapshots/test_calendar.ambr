@@ -932,6 +932,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'test-user Dailies',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -955,6 +956,7 @@
     'original_name': 'Dailies',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.DAILIES: 'dailys'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_dailys',
@@ -986,6 +988,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'test-user Daily reminders',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1009,6 +1012,7 @@
     'original_name': 'Daily reminders',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.DAILY_REMINDERS: 'daily_reminders'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_daily_reminders',
@@ -1039,6 +1043,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'test-user To-do reminders',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1062,6 +1067,7 @@
     'original_name': 'To-do reminders',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.TODO_REMINDERS: 'todo_reminders'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todo_reminders',
@@ -1092,6 +1098,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': "test-user To-Do's",
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1115,6 +1122,7 @@
     'original_name': "To-Do's",
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.TODOS: 'todos'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todos',

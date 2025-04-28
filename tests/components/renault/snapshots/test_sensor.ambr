@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,6 +30,7 @@
     'original_name': 'Battery',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe40vin_battery_level',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -81,6 +84,7 @@
     'original_name': 'Battery autonomy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
     'unique_id': 'vf1zoe40vin_battery_autonomy',
@@ -108,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -133,6 +138,7 @@
     'original_name': 'Battery available energy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
     'unique_id': 'vf1zoe40vin_battery_available_energy',
@@ -160,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -185,6 +192,7 @@
     'original_name': 'Battery temperature',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
     'unique_id': 'vf1zoe40vin_battery_temperature',
@@ -212,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -246,6 +255,7 @@
     'original_name': 'Charge state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
     'unique_id': 'vf1zoe40vin_charge_state',
@@ -281,6 +291,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -306,6 +317,7 @@
     'original_name': 'Charging power',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_power',
     'unique_id': 'vf1zoe40vin_charging_power',
@@ -333,6 +345,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -358,6 +371,7 @@
     'original_name': 'Charging remaining time',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
     'unique_id': 'vf1zoe40vin_charging_remaining_time',
@@ -385,6 +399,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -408,6 +423,7 @@
     'original_name': 'HVAC SoC threshold',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_soc_threshold',
     'unique_id': 'vf1zoe40vin_hvac_soc_threshold',
@@ -433,6 +449,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -456,6 +473,7 @@
     'original_name': 'Last battery activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
     'unique_id': 'vf1zoe40vin_battery_last_activity',
@@ -481,6 +499,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -504,6 +523,7 @@
     'original_name': 'Last HVAC activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_last_activity',
     'unique_id': 'vf1zoe40vin_hvac_last_activity',
@@ -529,6 +549,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -554,6 +575,7 @@
     'original_name': 'Mileage',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'vf1zoe40vin_mileage',
@@ -581,6 +603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -606,6 +629,7 @@
     'original_name': 'Outside temperature',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
     'unique_id': 'vf1zoe40vin_outside_temperature',
@@ -633,6 +657,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -664,6 +689,7 @@
     'original_name': 'Plug state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
     'unique_id': 'vf1zoe40vin_plug_state',
@@ -696,6 +722,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -721,6 +748,7 @@
     'original_name': 'Battery',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe40vin_battery_level',
@@ -748,6 +776,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -773,6 +802,7 @@
     'original_name': 'Battery autonomy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
     'unique_id': 'vf1zoe40vin_battery_autonomy',
@@ -800,6 +830,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -825,6 +856,7 @@
     'original_name': 'Battery available energy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
     'unique_id': 'vf1zoe40vin_battery_available_energy',
@@ -852,6 +884,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -877,6 +910,7 @@
     'original_name': 'Battery temperature',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
     'unique_id': 'vf1zoe40vin_battery_temperature',
@@ -904,6 +938,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -938,6 +973,7 @@
     'original_name': 'Charge state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
     'unique_id': 'vf1zoe40vin_charge_state',
@@ -973,6 +1009,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -998,6 +1035,7 @@
     'original_name': 'Charging power',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_power',
     'unique_id': 'vf1zoe40vin_charging_power',
@@ -1025,6 +1063,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1050,6 +1089,7 @@
     'original_name': 'Charging remaining time',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
     'unique_id': 'vf1zoe40vin_charging_remaining_time',
@@ -1077,6 +1117,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1100,6 +1141,7 @@
     'original_name': 'HVAC SoC threshold',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_soc_threshold',
     'unique_id': 'vf1zoe40vin_hvac_soc_threshold',
@@ -1125,6 +1167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1148,6 +1191,7 @@
     'original_name': 'Last battery activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
     'unique_id': 'vf1zoe40vin_battery_last_activity',
@@ -1173,6 +1217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1196,6 +1241,7 @@
     'original_name': 'Last HVAC activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_last_activity',
     'unique_id': 'vf1zoe40vin_hvac_last_activity',
@@ -1221,6 +1267,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1246,6 +1293,7 @@
     'original_name': 'Mileage',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'vf1zoe40vin_mileage',
@@ -1273,6 +1321,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1298,6 +1347,7 @@
     'original_name': 'Outside temperature',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
     'unique_id': 'vf1zoe40vin_outside_temperature',
@@ -1325,6 +1375,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -1356,6 +1407,7 @@
     'original_name': 'Plug state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
     'unique_id': 'vf1zoe40vin_plug_state',
@@ -1388,6 +1440,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR-FUEL Fuel autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1413,6 +1466,7 @@
     'original_name': 'Fuel autonomy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fuel_autonomy',
     'unique_id': 'vf1capturfuelvin_fuel_autonomy',
@@ -1440,6 +1494,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR-FUEL Fuel quantity',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1465,6 +1520,7 @@
     'original_name': 'Fuel quantity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fuel_quantity',
     'unique_id': 'vf1capturfuelvin_fuel_quantity',
@@ -1492,6 +1548,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR-FUEL Last location activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1515,6 +1572,7 @@
     'original_name': 'Last location activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'location_last_activity',
     'unique_id': 'vf1capturfuelvin_location_last_activity',
@@ -1540,6 +1598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR-FUEL Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1565,6 +1624,7 @@
     'original_name': 'Mileage',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'vf1capturfuelvin_mileage',
@@ -1592,6 +1652,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR-FUEL Remote engine start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1615,6 +1676,7 @@
     'original_name': 'Remote engine start',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'res_state',
     'unique_id': 'vf1capturfuelvin_res_state',
@@ -1639,6 +1701,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR-FUEL Remote engine start code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1662,6 +1725,7 @@
     'original_name': 'Remote engine start code',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'res_state_code',
     'unique_id': 'vf1capturfuelvin_res_state_code',
@@ -1686,6 +1750,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Admissible charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1711,6 +1776,7 @@
     'original_name': 'Admissible charging power',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'admissible_charging_power',
     'unique_id': 'vf1capturphevvin_charging_power',
@@ -1738,6 +1804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1763,6 +1830,7 @@
     'original_name': 'Battery',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1capturphevvin_battery_level',
@@ -1790,6 +1858,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1815,6 +1884,7 @@
     'original_name': 'Battery autonomy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
     'unique_id': 'vf1capturphevvin_battery_autonomy',
@@ -1842,6 +1912,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1867,6 +1938,7 @@
     'original_name': 'Battery available energy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
     'unique_id': 'vf1capturphevvin_battery_available_energy',
@@ -1894,6 +1966,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1919,6 +1992,7 @@
     'original_name': 'Battery temperature',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
     'unique_id': 'vf1capturphevvin_battery_temperature',
@@ -1946,6 +2020,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -1980,6 +2055,7 @@
     'original_name': 'Charge state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
     'unique_id': 'vf1capturphevvin_charge_state',
@@ -2015,6 +2091,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2040,6 +2117,7 @@
     'original_name': 'Charging remaining time',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
     'unique_id': 'vf1capturphevvin_charging_remaining_time',
@@ -2067,6 +2145,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Fuel autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2092,6 +2171,7 @@
     'original_name': 'Fuel autonomy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fuel_autonomy',
     'unique_id': 'vf1capturphevvin_fuel_autonomy',
@@ -2119,6 +2199,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Fuel quantity',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2144,6 +2225,7 @@
     'original_name': 'Fuel quantity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fuel_quantity',
     'unique_id': 'vf1capturphevvin_fuel_quantity',
@@ -2171,6 +2253,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2194,6 +2277,7 @@
     'original_name': 'Last battery activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
     'unique_id': 'vf1capturphevvin_battery_last_activity',
@@ -2219,6 +2303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Last location activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2242,6 +2327,7 @@
     'original_name': 'Last location activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'location_last_activity',
     'unique_id': 'vf1capturphevvin_location_last_activity',
@@ -2267,6 +2353,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2292,6 +2379,7 @@
     'original_name': 'Mileage',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'vf1capturphevvin_mileage',
@@ -2319,6 +2407,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -2350,6 +2439,7 @@
     'original_name': 'Plug state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
     'unique_id': 'vf1capturphevvin_plug_state',
@@ -2382,6 +2472,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Remote engine start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2405,6 +2496,7 @@
     'original_name': 'Remote engine start',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'res_state',
     'unique_id': 'vf1capturphevvin_res_state',
@@ -2429,6 +2521,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-CAPTUR_PHEV Remote engine start code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2452,6 +2545,7 @@
     'original_name': 'Remote engine start code',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'res_state_code',
     'unique_id': 'vf1capturphevvin_res_state_code',
@@ -2476,6 +2570,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Admissible charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2501,6 +2596,7 @@
     'original_name': 'Admissible charging power',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'admissible_charging_power',
     'unique_id': 'vf1twingoiiivin_charging_power',
@@ -2528,6 +2624,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2553,6 +2650,7 @@
     'original_name': 'Battery',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1twingoiiivin_battery_level',
@@ -2580,6 +2678,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2605,6 +2704,7 @@
     'original_name': 'Battery autonomy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
     'unique_id': 'vf1twingoiiivin_battery_autonomy',
@@ -2632,6 +2732,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2657,6 +2758,7 @@
     'original_name': 'Battery available energy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
     'unique_id': 'vf1twingoiiivin_battery_available_energy',
@@ -2684,6 +2786,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2709,6 +2812,7 @@
     'original_name': 'Battery temperature',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
     'unique_id': 'vf1twingoiiivin_battery_temperature',
@@ -2736,6 +2840,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -2770,6 +2875,7 @@
     'original_name': 'Charge state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
     'unique_id': 'vf1twingoiiivin_charge_state',
@@ -2805,6 +2911,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2830,6 +2937,7 @@
     'original_name': 'Charging remaining time',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
     'unique_id': 'vf1twingoiiivin_charging_remaining_time',
@@ -2857,6 +2965,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2880,6 +2989,7 @@
     'original_name': 'HVAC SoC threshold',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_soc_threshold',
     'unique_id': 'vf1twingoiiivin_hvac_soc_threshold',
@@ -2905,6 +3015,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2928,6 +3039,7 @@
     'original_name': 'Last battery activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
     'unique_id': 'vf1twingoiiivin_battery_last_activity',
@@ -2953,6 +3065,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2976,6 +3089,7 @@
     'original_name': 'Last HVAC activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_last_activity',
     'unique_id': 'vf1twingoiiivin_hvac_last_activity',
@@ -3001,6 +3115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Last location activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3024,6 +3139,7 @@
     'original_name': 'Last location activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'location_last_activity',
     'unique_id': 'vf1twingoiiivin_location_last_activity',
@@ -3049,6 +3165,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3074,6 +3191,7 @@
     'original_name': 'Mileage',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'vf1twingoiiivin_mileage',
@@ -3101,6 +3219,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3126,6 +3245,7 @@
     'original_name': 'Outside temperature',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
     'unique_id': 'vf1twingoiiivin_outside_temperature',
@@ -3153,6 +3273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-TWINGO-III Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -3184,6 +3305,7 @@
     'original_name': 'Plug state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
     'unique_id': 'vf1twingoiiivin_plug_state',
@@ -3216,6 +3338,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3241,6 +3364,7 @@
     'original_name': 'Battery',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe40vin_battery_level',
@@ -3268,6 +3392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3293,6 +3418,7 @@
     'original_name': 'Battery autonomy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
     'unique_id': 'vf1zoe40vin_battery_autonomy',
@@ -3320,6 +3446,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -3345,6 +3472,7 @@
     'original_name': 'Battery available energy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
     'unique_id': 'vf1zoe40vin_battery_available_energy',
@@ -3372,6 +3500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3397,6 +3526,7 @@
     'original_name': 'Battery temperature',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
     'unique_id': 'vf1zoe40vin_battery_temperature',
@@ -3424,6 +3554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -3458,6 +3589,7 @@
     'original_name': 'Charge state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
     'unique_id': 'vf1zoe40vin_charge_state',
@@ -3493,6 +3625,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3518,6 +3651,7 @@
     'original_name': 'Charging power',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_power',
     'unique_id': 'vf1zoe40vin_charging_power',
@@ -3545,6 +3679,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3570,6 +3705,7 @@
     'original_name': 'Charging remaining time',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
     'unique_id': 'vf1zoe40vin_charging_remaining_time',
@@ -3597,6 +3733,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3620,6 +3757,7 @@
     'original_name': 'HVAC SoC threshold',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_soc_threshold',
     'unique_id': 'vf1zoe40vin_hvac_soc_threshold',
@@ -3645,6 +3783,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3668,6 +3807,7 @@
     'original_name': 'Last battery activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
     'unique_id': 'vf1zoe40vin_battery_last_activity',
@@ -3693,6 +3833,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3716,6 +3857,7 @@
     'original_name': 'Last HVAC activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_last_activity',
     'unique_id': 'vf1zoe40vin_hvac_last_activity',
@@ -3741,6 +3883,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3766,6 +3909,7 @@
     'original_name': 'Mileage',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'vf1zoe40vin_mileage',
@@ -3793,6 +3937,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3818,6 +3963,7 @@
     'original_name': 'Outside temperature',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
     'unique_id': 'vf1zoe40vin_outside_temperature',
@@ -3845,6 +3991,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-40 Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -3876,6 +4023,7 @@
     'original_name': 'Plug state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
     'unique_id': 'vf1zoe40vin_plug_state',
@@ -3908,6 +4056,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Admissible charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3933,6 +4082,7 @@
     'original_name': 'Admissible charging power',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'admissible_charging_power',
     'unique_id': 'vf1zoe50vin_charging_power',
@@ -3960,6 +4110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3985,6 +4136,7 @@
     'original_name': 'Battery',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'vf1zoe50vin_battery_level',
@@ -4012,6 +4164,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4037,6 +4190,7 @@
     'original_name': 'Battery autonomy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
     'unique_id': 'vf1zoe50vin_battery_autonomy',
@@ -4064,6 +4218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4089,6 +4244,7 @@
     'original_name': 'Battery available energy',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
     'unique_id': 'vf1zoe50vin_battery_available_energy',
@@ -4116,6 +4272,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4141,6 +4298,7 @@
     'original_name': 'Battery temperature',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
     'unique_id': 'vf1zoe50vin_battery_temperature',
@@ -4168,6 +4326,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -4202,6 +4361,7 @@
     'original_name': 'Charge state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
     'unique_id': 'vf1zoe50vin_charge_state',
@@ -4237,6 +4397,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4262,6 +4423,7 @@
     'original_name': 'Charging remaining time',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
     'unique_id': 'vf1zoe50vin_charging_remaining_time',
@@ -4289,6 +4451,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4312,6 +4475,7 @@
     'original_name': 'HVAC SoC threshold',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_soc_threshold',
     'unique_id': 'vf1zoe50vin_hvac_soc_threshold',
@@ -4337,6 +4501,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4360,6 +4525,7 @@
     'original_name': 'Last battery activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
     'unique_id': 'vf1zoe50vin_battery_last_activity',
@@ -4385,6 +4551,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4408,6 +4575,7 @@
     'original_name': 'Last HVAC activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_last_activity',
     'unique_id': 'vf1zoe50vin_hvac_last_activity',
@@ -4433,6 +4601,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Last location activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4456,6 +4625,7 @@
     'original_name': 'Last location activity',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'location_last_activity',
     'unique_id': 'vf1zoe50vin_location_last_activity',
@@ -4481,6 +4651,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4506,6 +4677,7 @@
     'original_name': 'Mileage',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'vf1zoe50vin_mileage',
@@ -4533,6 +4705,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4558,6 +4731,7 @@
     'original_name': 'Outside temperature',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
     'unique_id': 'vf1zoe50vin_outside_temperature',
@@ -4585,6 +4759,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REG-ZOE-50 Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -4616,6 +4791,7 @@
     'original_name': 'Plug state',
     'platform': 'renault',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
     'unique_id': 'vf1zoe50vin_plug_state',

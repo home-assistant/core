@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bathroom light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -31,6 +32,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:01:01:01:a1-light',
@@ -61,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -88,6 +91,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:10:b9:0e-light',
@@ -117,6 +121,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Unknown 00:11:22:33:00:11:45:fe',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -144,6 +149,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:11:22:33:00:11:45:fe-light',

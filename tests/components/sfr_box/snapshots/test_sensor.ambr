@@ -40,6 +40,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box Network infrastructure',
       'capabilities': dict({
         'options': list([
           'adsl',
@@ -70,6 +71,7 @@
       'original_name': 'Network infrastructure',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'net_infra',
       'unique_id': 'e4:5d:51:00:11:22_system_net_infra',
@@ -79,6 +81,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box Voltage',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -104,6 +107,7 @@
       'original_name': 'Voltage',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': 'e4:5d:51:00:11:22_system_alimvoltage',
@@ -113,6 +117,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box Temperature',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -138,6 +143,7 @@
       'original_name': 'Temperature',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': 'e4:5d:51:00:11:22_system_temperature',
@@ -147,6 +153,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box WAN mode',
       'capabilities': dict({
         'options': list([
           'adsl_ppp',
@@ -178,6 +185,7 @@
       'original_name': 'WAN mode',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'wan_mode',
       'unique_id': 'e4:5d:51:00:11:22_wan_mode',
@@ -187,6 +195,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box DSL line mode',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -210,6 +219,7 @@
       'original_name': 'DSL line mode',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_linemode',
       'unique_id': 'e4:5d:51:00:11:22_dsl_linemode',
@@ -219,6 +229,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box DSL counter',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -242,6 +253,7 @@
       'original_name': 'DSL counter',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_counter',
       'unique_id': 'e4:5d:51:00:11:22_dsl_counter',
@@ -251,6 +263,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box DSL CRC',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -274,6 +287,7 @@
       'original_name': 'DSL CRC',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_crc',
       'unique_id': 'e4:5d:51:00:11:22_dsl_crc',
@@ -283,6 +297,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box DSL noise down',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -308,6 +323,7 @@
       'original_name': 'DSL noise down',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_noise_down',
       'unique_id': 'e4:5d:51:00:11:22_dsl_noise_down',
@@ -317,6 +333,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box DSL noise up',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -342,6 +359,7 @@
       'original_name': 'DSL noise up',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_noise_up',
       'unique_id': 'e4:5d:51:00:11:22_dsl_noise_up',
@@ -351,6 +369,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box DSL attenuation down',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -376,6 +395,7 @@
       'original_name': 'DSL attenuation down',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_attenuation_down',
       'unique_id': 'e4:5d:51:00:11:22_dsl_attenuation_down',
@@ -385,6 +405,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box DSL attenuation up',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -410,6 +431,7 @@
       'original_name': 'DSL attenuation up',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_attenuation_up',
       'unique_id': 'e4:5d:51:00:11:22_dsl_attenuation_up',
@@ -419,6 +441,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box DSL rate down',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -444,6 +467,7 @@
       'original_name': 'DSL rate down',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_rate_down',
       'unique_id': 'e4:5d:51:00:11:22_dsl_rate_down',
@@ -453,6 +477,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box DSL rate up',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -478,6 +503,7 @@
       'original_name': 'DSL rate up',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_rate_up',
       'unique_id': 'e4:5d:51:00:11:22_dsl_rate_up',
@@ -487,6 +513,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box DSL line status',
       'capabilities': dict({
         'options': list([
           'no_defect',
@@ -519,6 +546,7 @@
       'original_name': 'DSL line status',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_line_status',
       'unique_id': 'e4:5d:51:00:11:22_dsl_line_status',
@@ -528,6 +556,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'SFR Box DSL training',
       'capabilities': dict({
         'options': list([
           'idle',
@@ -564,6 +593,7 @@
       'original_name': 'DSL training',
       'platform': 'sfr_box',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_training',
       'unique_id': 'e4:5d:51:00:11:22_dsl_training',

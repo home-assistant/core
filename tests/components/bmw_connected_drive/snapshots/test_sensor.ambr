@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) AC current limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -30,6 +31,7 @@
     'original_name': 'AC current limit',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current_limit',
     'unique_id': 'WBY00000000REXI01-charging_profile.ac_current_limit',
@@ -56,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Charging end time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -79,6 +82,7 @@
     'original_name': 'Charging end time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_end_time',
     'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_end_time',
@@ -104,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Charging start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -127,6 +132,7 @@
     'original_name': 'Charging start time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_start_time',
     'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_start_time',
@@ -152,6 +158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Charging status',
     'capabilities': dict({
       'options': list([
         'default',
@@ -190,6 +197,7 @@
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_status',
     'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_status',
@@ -229,6 +237,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Charging target',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -255,6 +264,7 @@
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_target',
     'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_target',
@@ -280,6 +290,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -308,6 +319,7 @@
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'WBY00000000REXI01-mileage',
@@ -335,6 +347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Remaining battery percent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -363,6 +376,7 @@
     'original_name': 'Remaining battery percent',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_battery_percent',
     'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_battery_percent',
@@ -390,6 +404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Remaining fuel',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -418,6 +433,7 @@
     'original_name': 'Remaining fuel',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel',
     'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_fuel',
@@ -445,6 +461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Remaining fuel percent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -473,6 +490,7 @@
     'original_name': 'Remaining fuel percent',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel_percent',
     'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_fuel_percent',
@@ -499,6 +517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Remaining range electric',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -527,6 +546,7 @@
     'original_name': 'Remaining range electric',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_electric',
     'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_range_electric',
@@ -554,6 +574,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Remaining range fuel',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -582,6 +603,7 @@
     'original_name': 'Remaining range fuel',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_fuel',
     'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_range_fuel',
@@ -609,6 +631,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i3 (+ REX) Remaining range total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -637,6 +660,7 @@
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
     'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_range_total',
@@ -664,6 +688,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 AC current limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -690,6 +715,7 @@
     'original_name': 'AC current limit',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current_limit',
     'unique_id': 'WBA00000000DEMO02-charging_profile.ac_current_limit',
@@ -716,6 +742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Charging end time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -739,6 +766,7 @@
     'original_name': 'Charging end time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_end_time',
     'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_end_time',
@@ -764,6 +792,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Charging start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -787,6 +816,7 @@
     'original_name': 'Charging start time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_start_time',
     'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_start_time',
@@ -812,6 +842,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Charging status',
     'capabilities': dict({
       'options': list([
         'default',
@@ -850,6 +881,7 @@
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_status',
     'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_status',
@@ -889,6 +921,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Charging target',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -915,6 +948,7 @@
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_target',
     'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_target',
@@ -940,6 +974,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Climate status',
     'capabilities': dict({
       'options': list([
         'cooling',
@@ -971,6 +1006,7 @@
     'original_name': 'Climate status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_status',
     'unique_id': 'WBA00000000DEMO02-climate.activity',
@@ -1003,6 +1039,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Front left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1034,6 +1071,7 @@
     'original_name': 'Front left target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_left_target_pressure',
     'unique_id': 'WBA00000000DEMO02-tires.front_left.target_pressure',
@@ -1061,6 +1099,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Front left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1092,6 +1131,7 @@
     'original_name': 'Front left tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_left_current_pressure',
     'unique_id': 'WBA00000000DEMO02-tires.front_left.current_pressure',
@@ -1119,6 +1159,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Front right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1150,6 +1191,7 @@
     'original_name': 'Front right target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_right_target_pressure',
     'unique_id': 'WBA00000000DEMO02-tires.front_right.target_pressure',
@@ -1177,6 +1219,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Front right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1208,6 +1251,7 @@
     'original_name': 'Front right tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_right_current_pressure',
     'unique_id': 'WBA00000000DEMO02-tires.front_right.current_pressure',
@@ -1235,6 +1279,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1263,6 +1308,7 @@
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'WBA00000000DEMO02-mileage',
@@ -1290,6 +1336,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Rear left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1321,6 +1368,7 @@
     'original_name': 'Rear left target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_left_target_pressure',
     'unique_id': 'WBA00000000DEMO02-tires.rear_left.target_pressure',
@@ -1348,6 +1396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Rear left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1379,6 +1428,7 @@
     'original_name': 'Rear left tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_left_current_pressure',
     'unique_id': 'WBA00000000DEMO02-tires.rear_left.current_pressure',
@@ -1406,6 +1456,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Rear right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1437,6 +1488,7 @@
     'original_name': 'Rear right target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_right_target_pressure',
     'unique_id': 'WBA00000000DEMO02-tires.rear_right.target_pressure',
@@ -1464,6 +1516,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Rear right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1495,6 +1548,7 @@
     'original_name': 'Rear right tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_right_current_pressure',
     'unique_id': 'WBA00000000DEMO02-tires.rear_right.current_pressure',
@@ -1522,6 +1576,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Remaining battery percent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1550,6 +1605,7 @@
     'original_name': 'Remaining battery percent',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_battery_percent',
     'unique_id': 'WBA00000000DEMO02-fuel_and_battery.remaining_battery_percent',
@@ -1577,6 +1633,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Remaining range electric',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1605,6 +1662,7 @@
     'original_name': 'Remaining range electric',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_electric',
     'unique_id': 'WBA00000000DEMO02-fuel_and_battery.remaining_range_electric',
@@ -1632,6 +1690,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'i4 eDrive40 Remaining range total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1660,6 +1719,7 @@
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
     'unique_id': 'WBA00000000DEMO02-fuel_and_battery.remaining_range_total',
@@ -1687,6 +1747,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 AC current limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1713,6 +1774,7 @@
     'original_name': 'AC current limit',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current_limit',
     'unique_id': 'WBA00000000DEMO01-charging_profile.ac_current_limit',
@@ -1739,6 +1801,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Charging end time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1762,6 +1825,7 @@
     'original_name': 'Charging end time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_end_time',
     'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_end_time',
@@ -1787,6 +1851,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Charging start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1810,6 +1875,7 @@
     'original_name': 'Charging start time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_start_time',
     'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_start_time',
@@ -1835,6 +1901,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Charging status',
     'capabilities': dict({
       'options': list([
         'default',
@@ -1873,6 +1940,7 @@
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_status',
     'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_status',
@@ -1912,6 +1980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Charging target',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1938,6 +2007,7 @@
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_target',
     'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_target',
@@ -1963,6 +2033,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Climate status',
     'capabilities': dict({
       'options': list([
         'cooling',
@@ -1994,6 +2065,7 @@
     'original_name': 'Climate status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_status',
     'unique_id': 'WBA00000000DEMO01-climate.activity',
@@ -2026,6 +2098,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Front left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2057,6 +2130,7 @@
     'original_name': 'Front left target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_left_target_pressure',
     'unique_id': 'WBA00000000DEMO01-tires.front_left.target_pressure',
@@ -2084,6 +2158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Front left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2115,6 +2190,7 @@
     'original_name': 'Front left tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_left_current_pressure',
     'unique_id': 'WBA00000000DEMO01-tires.front_left.current_pressure',
@@ -2142,6 +2218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Front right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2173,6 +2250,7 @@
     'original_name': 'Front right target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_right_target_pressure',
     'unique_id': 'WBA00000000DEMO01-tires.front_right.target_pressure',
@@ -2200,6 +2278,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Front right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2231,6 +2310,7 @@
     'original_name': 'Front right tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_right_current_pressure',
     'unique_id': 'WBA00000000DEMO01-tires.front_right.current_pressure',
@@ -2258,6 +2338,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2286,6 +2367,7 @@
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'WBA00000000DEMO01-mileage',
@@ -2313,6 +2395,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Rear left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2344,6 +2427,7 @@
     'original_name': 'Rear left target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_left_target_pressure',
     'unique_id': 'WBA00000000DEMO01-tires.rear_left.target_pressure',
@@ -2371,6 +2455,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Rear left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2402,6 +2487,7 @@
     'original_name': 'Rear left tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_left_current_pressure',
     'unique_id': 'WBA00000000DEMO01-tires.rear_left.current_pressure',
@@ -2429,6 +2515,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Rear right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2460,6 +2547,7 @@
     'original_name': 'Rear right target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_right_target_pressure',
     'unique_id': 'WBA00000000DEMO01-tires.rear_right.target_pressure',
@@ -2487,6 +2575,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Rear right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2518,6 +2607,7 @@
     'original_name': 'Rear right tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_right_current_pressure',
     'unique_id': 'WBA00000000DEMO01-tires.rear_right.current_pressure',
@@ -2545,6 +2635,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Remaining battery percent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2573,6 +2664,7 @@
     'original_name': 'Remaining battery percent',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_battery_percent',
     'unique_id': 'WBA00000000DEMO01-fuel_and_battery.remaining_battery_percent',
@@ -2600,6 +2692,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Remaining range electric',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2628,6 +2721,7 @@
     'original_name': 'Remaining range electric',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_electric',
     'unique_id': 'WBA00000000DEMO01-fuel_and_battery.remaining_range_electric',
@@ -2655,6 +2749,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'iX xDrive50 Remaining range total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2683,6 +2778,7 @@
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
     'unique_id': 'WBA00000000DEMO01-fuel_and_battery.remaining_range_total',
@@ -2710,6 +2806,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Climate status',
     'capabilities': dict({
       'options': list([
         'cooling',
@@ -2741,6 +2838,7 @@
     'original_name': 'Climate status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_status',
     'unique_id': 'WBA00000000DEMO03-climate.activity',
@@ -2773,6 +2871,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Front left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2804,6 +2903,7 @@
     'original_name': 'Front left target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_left_target_pressure',
     'unique_id': 'WBA00000000DEMO03-tires.front_left.target_pressure',
@@ -2831,6 +2931,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Front left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2862,6 +2963,7 @@
     'original_name': 'Front left tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_left_current_pressure',
     'unique_id': 'WBA00000000DEMO03-tires.front_left.current_pressure',
@@ -2889,6 +2991,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Front right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2920,6 +3023,7 @@
     'original_name': 'Front right target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_right_target_pressure',
     'unique_id': 'WBA00000000DEMO03-tires.front_right.target_pressure',
@@ -2947,6 +3051,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Front right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2978,6 +3083,7 @@
     'original_name': 'Front right tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'front_right_current_pressure',
     'unique_id': 'WBA00000000DEMO03-tires.front_right.current_pressure',
@@ -3005,6 +3111,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3033,6 +3140,7 @@
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'WBA00000000DEMO03-mileage',
@@ -3060,6 +3168,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Rear left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3091,6 +3200,7 @@
     'original_name': 'Rear left target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_left_target_pressure',
     'unique_id': 'WBA00000000DEMO03-tires.rear_left.target_pressure',
@@ -3118,6 +3228,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Rear left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3149,6 +3260,7 @@
     'original_name': 'Rear left tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_left_current_pressure',
     'unique_id': 'WBA00000000DEMO03-tires.rear_left.current_pressure',
@@ -3176,6 +3288,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Rear right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3207,6 +3320,7 @@
     'original_name': 'Rear right target pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_right_target_pressure',
     'unique_id': 'WBA00000000DEMO03-tires.rear_right.target_pressure',
@@ -3234,6 +3348,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Rear right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3265,6 +3380,7 @@
     'original_name': 'Rear right tire pressure',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rear_right_current_pressure',
     'unique_id': 'WBA00000000DEMO03-tires.rear_right.current_pressure',
@@ -3292,6 +3408,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Remaining fuel',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3320,6 +3437,7 @@
     'original_name': 'Remaining fuel',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel',
     'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_fuel',
@@ -3347,6 +3465,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Remaining fuel percent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3375,6 +3494,7 @@
     'original_name': 'Remaining fuel percent',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel_percent',
     'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_fuel_percent',
@@ -3401,6 +3521,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Remaining range fuel',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3429,6 +3550,7 @@
     'original_name': 'Remaining range fuel',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_fuel',
     'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_range_fuel',
@@ -3456,6 +3578,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'M340i xDrive Remaining range total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3484,6 +3607,7 @@
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
     'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_range_total',

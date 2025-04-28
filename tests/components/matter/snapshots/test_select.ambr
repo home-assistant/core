@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Color Temperature Light Lighting',
     'capabilities': dict({
       'options': list([
         'Dark',
@@ -33,6 +34,7 @@
     'original_name': 'Lighting',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterModeSelect-80-3',
@@ -62,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Color Temperature Light Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -92,6 +95,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -122,6 +126,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Cooktop Temperature level',
     'capabilities': dict({
       'options': list([
         'Low',
@@ -151,6 +156,7 @@
     'original_name': 'Temperature level',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_level',
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-TemperatureControlSelectedTemperatureLevel-86-4',
@@ -180,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Dimmable Light LED Color',
     'capabilities': dict({
       'options': list([
         'Red',
@@ -219,6 +226,7 @@
     'original_name': 'LED Color',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-6-MatterModeSelect-80-3',
@@ -258,6 +266,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Dimmable Light Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -288,6 +297,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -318,6 +328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmable Plugin Unit Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -348,6 +359,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -378,6 +390,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Door Lock Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -408,6 +421,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -438,6 +452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Door Lock Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -468,6 +483,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -498,6 +514,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Energy Plug Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -528,6 +545,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -558,6 +576,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Energy Plug Patched Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -588,6 +607,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -618,6 +638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Thermo Temperature display mode',
     'capabilities': dict({
       'options': list([
         'Celsius',
@@ -646,6 +667,7 @@
     'original_name': 'Temperature display mode',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_display_mode',
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
@@ -674,6 +696,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Extended Color Light Lighting',
     'capabilities': dict({
       'options': list([
         'Dark',
@@ -703,6 +726,7 @@
     'original_name': 'Lighting',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterModeSelect-80-3',
@@ -732,6 +756,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Extended Color Light Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -762,6 +787,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -792,6 +818,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Laundrydryer Temperature level',
     'capabilities': dict({
       'options': list([
         'Low',
@@ -821,6 +848,7 @@
     'original_name': 'Temperature level',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_level',
     'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-TemperatureControlSelectedTemperatureLevel-86-4',
@@ -850,6 +878,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Mounted dimmable load control Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -880,6 +909,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -910,6 +940,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli Dimming Edge',
     'capabilities': dict({
       'options': list([
         'Leading',
@@ -938,6 +969,7 @@
     'original_name': 'Dimming Edge',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-3-MatterModeSelect-80-3',
@@ -966,6 +998,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli Dimming Speed',
     'capabilities': dict({
       'options': list([
         'Instant',
@@ -1007,6 +1040,7 @@
     'original_name': 'Dimming Speed',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-MatterModeSelect-80-3',
@@ -1048,6 +1082,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli LED Color',
     'capabilities': dict({
       'options': list([
         'Red',
@@ -1087,6 +1122,7 @@
     'original_name': 'LED Color',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-6-MatterModeSelect-80-3',
@@ -1126,6 +1162,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli Power-on behavior on startup (1)',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1156,6 +1193,7 @@
     'original_name': 'Power-on behavior on startup (1)',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -1186,6 +1224,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli Power-on behavior on startup (6)',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1216,6 +1255,7 @@
     'original_name': 'Power-on behavior on startup (6)',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-6-MatterStartUpOnOff-6-16387',
@@ -1246,6 +1286,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli Relay',
     'capabilities': dict({
       'options': list([
         'Relay Click Enable',
@@ -1274,6 +1315,7 @@
     'original_name': 'Relay',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-5-MatterModeSelect-80-3',
@@ -1302,6 +1344,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli Smart Bulb Mode',
     'capabilities': dict({
       'options': list([
         'Smart Bulb Disable',
@@ -1330,6 +1373,7 @@
     'original_name': 'Smart Bulb Mode',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-2-MatterModeSelect-80-3',
@@ -1358,6 +1402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli Switch Mode',
     'capabilities': dict({
       'options': list([
         'OnOff+Single',
@@ -1391,6 +1436,7 @@
     'original_name': 'Switch Mode',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-MatterModeSelect-80-3',
@@ -1424,6 +1470,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOffPluginUnit Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1454,6 +1501,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -1484,6 +1532,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOff Light Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1514,6 +1563,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -1544,6 +1594,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOff Light Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1574,6 +1625,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -1604,6 +1656,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Light Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1634,6 +1687,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -1664,6 +1718,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'D215S Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1694,6 +1749,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -1724,6 +1780,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Mode',
     'capabilities': dict({
       'options': list([
         'Bake',
@@ -1759,6 +1816,7 @@
     'original_name': 'Mode',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-MatterOvenMode-73-1',
@@ -1794,6 +1852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Oven Temperature level',
     'capabilities': dict({
       'options': list([
         'Low',
@@ -1823,6 +1882,7 @@
     'original_name': 'Temperature level',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_level',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-TemperatureControlSelectedTemperatureLevel-86-4',
@@ -1852,6 +1912,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'evse Energy management mode',
     'capabilities': dict({
       'options': list([
         'No energy management (forecast only)',
@@ -1883,6 +1944,7 @@
     'original_name': 'Energy management mode',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_energy_management_mode',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-MatterDeviceEnergyManagementMode-159-1',
@@ -1914,6 +1976,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'evse Mode',
     'capabilities': dict({
       'options': list([
         'Manual',
@@ -1944,6 +2007,7 @@
     'original_name': 'Mode',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-MatterEnergyEvseMode-157-1',
@@ -1974,6 +2038,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LaundryWasher Number of rinses',
     'capabilities': dict({
       'options': list([
         'off',
@@ -2002,6 +2067,7 @@
     'original_name': 'Number of rinses',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'laundry_washer_number_of_rinses',
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-MatterLaundryWasherNumberOfRinses-83-2',
@@ -2030,6 +2096,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LaundryWasher Spin speed',
     'capabilities': dict({
       'options': list([
         'Off',
@@ -2060,6 +2127,7 @@
     'original_name': 'Spin speed',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'laundry_washer_spin_speed',
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-LaundryWasherControlsSpinSpeed-83-1',
@@ -2090,6 +2158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LaundryWasher Temperature level',
     'capabilities': dict({
       'options': list([
         'Cold',
@@ -2119,6 +2188,7 @@
     'original_name': 'Temperature level',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_level',
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-TemperatureControlSelectedTemperatureLevel-86-4',
@@ -2148,6 +2218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator Mode',
     'capabilities': dict({
       'options': list([
         'Normal',
@@ -2177,6 +2248,7 @@
     'original_name': 'Mode',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-1-MatterRefrigeratorAndTemperatureControlledCabinetMode-82-1',
@@ -2206,6 +2278,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water Heater Energy management mode',
     'capabilities': dict({
       'options': list([
         'No energy management (forecast only)',
@@ -2237,6 +2310,7 @@
     'original_name': 'Energy management mode',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_energy_management_mode',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-MatterDeviceEnergyManagementMode-159-1',
@@ -2268,6 +2342,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock SwitchUnit Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -2298,6 +2373,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
@@ -2328,6 +2404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Longan link HVAC Temperature display mode',
     'capabilities': dict({
       'options': list([
         'Celsius',
@@ -2356,6 +2433,7 @@
     'original_name': 'Temperature display mode',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_display_mode',
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
@@ -2384,6 +2462,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Vacuum Clean mode',
     'capabilities': dict({
       'options': list([
         'Quick',
@@ -2415,6 +2494,7 @@
     'original_name': 'Clean mode',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'clean_mode',
     'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
@@ -2446,6 +2526,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'YNDX-00540 Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -2476,6 +2557,7 @@
     'original_name': 'Power-on behavior on startup',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',

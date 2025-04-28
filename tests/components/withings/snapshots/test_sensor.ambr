@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Body+ Battery',
     'capabilities': dict({
       'options': list([
         'low',
@@ -33,6 +34,7 @@
     'original_name': 'Battery',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': 'f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery',
@@ -63,6 +65,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Active calories burnt today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -91,6 +94,7 @@
     'original_name': 'Active calories burnt today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_active_calories_burnt_today',
     'unique_id': 'withings_12345_activity_active_calories_burnt_today',
@@ -118,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Active time today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -146,6 +151,7 @@
     'original_name': 'Active time today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_active_duration_today',
     'unique_id': 'withings_12345_activity_active_duration_today',
@@ -174,6 +180,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Average heart rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -199,6 +206,7 @@
     'original_name': 'Average heart rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'average_heart_rate',
     'unique_id': 'withings_12345_sleep_heart_rate_average_bpm',
@@ -225,6 +233,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Average respiratory rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -250,6 +259,7 @@
     'original_name': 'Average respiratory rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'average_respiratory_rate',
     'unique_id': 'withings_12345_sleep_respiratory_average_bpm',
@@ -276,6 +286,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Body temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -301,6 +312,7 @@
     'original_name': 'Body temperature',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'body_temperature',
     'unique_id': 'withings_12345_body_temperature_c',
@@ -328,6 +340,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Bone mass',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -356,6 +369,7 @@
     'original_name': 'Bone mass',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bone_mass',
     'unique_id': 'withings_12345_bone_mass_kg',
@@ -383,6 +397,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Breathing disturbances intensity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -408,6 +423,7 @@
     'original_name': 'Breathing disturbances intensity',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'breathing_disturbances_intensity',
     'unique_id': 'withings_12345_sleep_breathing_disturbances_intensity',
@@ -433,6 +449,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Calories burnt last workout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -459,6 +476,7 @@
     'original_name': 'Calories burnt last workout',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_active_calories_burnt',
     'unique_id': 'withings_12345_workout_active_calories_burnt',
@@ -484,6 +502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Deep sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -512,6 +531,7 @@
     'original_name': 'Deep sleep',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'deep_sleep',
     'unique_id': 'withings_12345_sleep_deep_duration_seconds',
@@ -539,6 +559,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Diastolic blood pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -564,6 +585,7 @@
     'original_name': 'Diastolic blood pressure',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'diastolic_blood_pressure',
     'unique_id': 'withings_12345_diastolic_blood_pressure_mmhg',
@@ -590,6 +612,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Distance travelled last workout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -616,6 +639,7 @@
     'original_name': 'Distance travelled last workout',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_distance',
     'unique_id': 'withings_12345_workout_distance',
@@ -642,6 +666,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Distance travelled today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -670,6 +695,7 @@
     'original_name': 'Distance travelled today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_distance_today',
     'unique_id': 'withings_12345_activity_distance_today',
@@ -698,6 +724,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Electrodermal activity feet',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -721,6 +748,7 @@
     'original_name': 'Electrodermal activity feet',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electrodermal_activity_feet',
     'unique_id': 'withings_12345_electrodermal_activity_feet',
@@ -746,6 +774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Electrodermal activity left foot',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -769,6 +798,7 @@
     'original_name': 'Electrodermal activity left foot',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electrodermal_activity_left_foot',
     'unique_id': 'withings_12345_electrodermal_activity_left_foot',
@@ -794,6 +824,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Electrodermal activity right foot',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -817,6 +848,7 @@
     'original_name': 'Electrodermal activity right foot',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electrodermal_activity_right_foot',
     'unique_id': 'withings_12345_electrodermal_activity_right_foot',
@@ -842,6 +874,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Elevation change last workout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -865,6 +898,7 @@
     'original_name': 'Elevation change last workout',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_elevation',
     'unique_id': 'withings_12345_workout_floors_climbed',
@@ -891,6 +925,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Elevation change today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -916,6 +951,7 @@
     'original_name': 'Elevation change today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_elevation_today',
     'unique_id': 'withings_12345_activity_floors_climbed_today',
@@ -944,6 +980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Extracellular water',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -969,6 +1006,7 @@
     'original_name': 'Extracellular water',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'extracellular_water',
     'unique_id': 'withings_12345_extracellular_water',
@@ -996,6 +1034,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat free mass',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1024,6 +1063,7 @@
     'original_name': 'Fat free mass',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass',
     'unique_id': 'withings_12345_fat_free_mass_kg',
@@ -1051,6 +1091,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat free mass in left arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1079,6 +1120,7 @@
     'original_name': 'Fat free mass in left arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass_for_segments_left_arm',
     'unique_id': 'withings_12345_fat_free_mass_for_segments_left_arm',
@@ -1106,6 +1148,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat free mass in left leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1134,6 +1177,7 @@
     'original_name': 'Fat free mass in left leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass_for_segments_left_leg',
     'unique_id': 'withings_12345_fat_free_mass_for_segments_left_leg',
@@ -1161,6 +1205,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat free mass in right arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1189,6 +1234,7 @@
     'original_name': 'Fat free mass in right arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass_for_segments_right_arm',
     'unique_id': 'withings_12345_fat_free_mass_for_segments_right_arm',
@@ -1216,6 +1262,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat free mass in right leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1244,6 +1291,7 @@
     'original_name': 'Fat free mass in right leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass_for_segments_right_leg',
     'unique_id': 'withings_12345_fat_free_mass_for_segments_right_leg',
@@ -1271,6 +1319,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat free mass in torso',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1299,6 +1348,7 @@
     'original_name': 'Fat free mass in torso',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass_for_segments_torso',
     'unique_id': 'withings_12345_fat_free_mass_for_segments_torso',
@@ -1326,6 +1376,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat mass',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1354,6 +1405,7 @@
     'original_name': 'Fat mass',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass',
     'unique_id': 'withings_12345_fat_mass_kg',
@@ -1381,6 +1433,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat mass in left arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1409,6 +1462,7 @@
     'original_name': 'Fat mass in left arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass_for_segments_left_arm',
     'unique_id': 'withings_12345_fat_mass_for_segments_left_arm',
@@ -1436,6 +1490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat mass in left leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1464,6 +1519,7 @@
     'original_name': 'Fat mass in left leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass_for_segments_left_leg',
     'unique_id': 'withings_12345_fat_mass_for_segments_left_leg',
@@ -1491,6 +1547,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat mass in right arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1519,6 +1576,7 @@
     'original_name': 'Fat mass in right arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass_for_segments_right_arm',
     'unique_id': 'withings_12345_fat_mass_for_segments_right_arm',
@@ -1546,6 +1604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat mass in right leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1574,6 +1633,7 @@
     'original_name': 'Fat mass in right leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass_for_segments_right_leg',
     'unique_id': 'withings_12345_fat_mass_for_segments_right_leg',
@@ -1601,6 +1661,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat mass in torso',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1629,6 +1690,7 @@
     'original_name': 'Fat mass in torso',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass_for_segments_torso',
     'unique_id': 'withings_12345_fat_mass_for_segments_torso',
@@ -1656,6 +1718,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Fat ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1684,6 +1747,7 @@
     'original_name': 'Fat ratio',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_ratio',
     'unique_id': 'withings_12345_fat_ratio_pct',
@@ -1710,6 +1774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Heart pulse',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1735,6 +1800,7 @@
     'original_name': 'Heart pulse',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heart_pulse',
     'unique_id': 'withings_12345_heart_pulse_bpm',
@@ -1761,6 +1827,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Height',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1789,6 +1856,7 @@
     'original_name': 'Height',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'height',
     'unique_id': 'withings_12345_height_m',
@@ -1816,6 +1884,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Hydration',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1841,6 +1910,7 @@
     'original_name': 'Hydration',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hydration',
     'unique_id': 'withings_12345_hydration',
@@ -1868,6 +1938,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Intense activity today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1896,6 +1967,7 @@
     'original_name': 'Intense activity today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_intense_duration_today',
     'unique_id': 'withings_12345_activity_intense_duration_today',
@@ -1924,6 +1996,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Intracellular water',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1949,6 +2022,7 @@
     'original_name': 'Intracellular water',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'intracellular_water',
     'unique_id': 'withings_12345_intracellular_water',
@@ -1976,6 +2050,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Last workout duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2002,6 +2077,7 @@
     'original_name': 'Last workout duration',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_duration',
     'unique_id': 'withings_12345_workout_duration',
@@ -2028,6 +2104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Last workout intensity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2051,6 +2128,7 @@
     'original_name': 'Last workout intensity',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_intensity',
     'unique_id': 'withings_12345_workout_intensity',
@@ -2075,6 +2153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Last workout type',
     'capabilities': dict({
       'options': list([
         'walk',
@@ -2150,6 +2229,7 @@
     'original_name': 'Last workout type',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_type',
     'unique_id': 'withings_12345_workout_type',
@@ -2226,6 +2306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Light sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2254,6 +2335,7 @@
     'original_name': 'Light sleep',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_sleep',
     'unique_id': 'withings_12345_sleep_light_duration_seconds',
@@ -2281,6 +2363,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Maximum heart rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2306,6 +2389,7 @@
     'original_name': 'Maximum heart rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'maximum_heart_rate',
     'unique_id': 'withings_12345_sleep_heart_rate_max_bpm',
@@ -2332,6 +2416,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Maximum respiratory rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2357,6 +2442,7 @@
     'original_name': 'Maximum respiratory rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'maximum_respiratory_rate',
     'unique_id': 'withings_12345_sleep_respiratory_max_bpm',
@@ -2383,6 +2469,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Minimum heart rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2408,6 +2495,7 @@
     'original_name': 'Minimum heart rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'minimum_heart_rate',
     'unique_id': 'withings_12345_sleep_heart_rate_min_bpm',
@@ -2434,6 +2522,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Minimum respiratory rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2459,6 +2548,7 @@
     'original_name': 'Minimum respiratory rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'minimum_respiratory_rate',
     'unique_id': 'withings_12345_sleep_respiratory_min_bpm',
@@ -2485,6 +2575,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Moderate activity today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2513,6 +2604,7 @@
     'original_name': 'Moderate activity today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_moderate_duration_today',
     'unique_id': 'withings_12345_activity_moderate_duration_today',
@@ -2541,6 +2633,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Muscle mass',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2569,6 +2662,7 @@
     'original_name': 'Muscle mass',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass',
     'unique_id': 'withings_12345_muscle_mass_kg',
@@ -2596,6 +2690,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Muscle mass in left arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2624,6 +2719,7 @@
     'original_name': 'Muscle mass in left arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass_for_segments_left_arm',
     'unique_id': 'withings_12345_muscle_mass_for_segments_left_arm',
@@ -2651,6 +2747,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Muscle mass in left leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2679,6 +2776,7 @@
     'original_name': 'Muscle mass in left leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass_for_segments_left_leg',
     'unique_id': 'withings_12345_muscle_mass_for_segments_left_leg',
@@ -2706,6 +2804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Muscle mass in right arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2734,6 +2833,7 @@
     'original_name': 'Muscle mass in right arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass_for_segments_right_arm',
     'unique_id': 'withings_12345_muscle_mass_for_segments_right_arm',
@@ -2761,6 +2861,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Muscle mass in right leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2789,6 +2890,7 @@
     'original_name': 'Muscle mass in right leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass_for_segments_right_leg',
     'unique_id': 'withings_12345_muscle_mass_for_segments_right_leg',
@@ -2816,6 +2918,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Muscle mass in torso',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2844,6 +2947,7 @@
     'original_name': 'Muscle mass in torso',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass_for_segments_torso',
     'unique_id': 'withings_12345_muscle_mass_for_segments_torso',
@@ -2871,6 +2975,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Pause during last workout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2897,6 +3002,7 @@
     'original_name': 'Pause during last workout',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_pause_duration',
     'unique_id': 'withings_12345_workout_pause_duration',
@@ -2923,6 +3029,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Pulse wave velocity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2948,6 +3055,7 @@
     'original_name': 'Pulse wave velocity',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pulse_wave_velocity',
     'unique_id': 'withings_12345_pulse_wave_velocity',
@@ -2975,6 +3083,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk REM sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3003,6 +3112,7 @@
     'original_name': 'REM sleep',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rem_sleep',
     'unique_id': 'withings_12345_sleep_rem_duration_seconds',
@@ -3030,6 +3140,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Skin temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3055,6 +3166,7 @@
     'original_name': 'Skin temperature',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'skin_temperature',
     'unique_id': 'withings_12345_skin_temperature_c',
@@ -3082,6 +3194,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Sleep goal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3110,6 +3223,7 @@
     'original_name': 'Sleep goal',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sleep_goal',
     'unique_id': 'withings_12345_sleep_goal',
@@ -3137,6 +3251,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Sleep score',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3162,6 +3277,7 @@
     'original_name': 'Sleep score',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sleep_score',
     'unique_id': 'withings_12345_sleep_score',
@@ -3188,6 +3304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Snoring',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3216,6 +3333,7 @@
     'original_name': 'Snoring',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'snoring',
     'unique_id': 'withings_12345_sleep_snoring',
@@ -3243,6 +3361,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Snoring episode count',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3268,6 +3387,7 @@
     'original_name': 'Snoring episode count',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'snoring_episode_count',
     'unique_id': 'withings_12345_sleep_snoring_eposode_count',
@@ -3293,6 +3413,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Soft activity today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -3321,6 +3442,7 @@
     'original_name': 'Soft activity today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_soft_duration_today',
     'unique_id': 'withings_12345_activity_soft_duration_today',
@@ -3349,6 +3471,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk SpO2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3374,6 +3497,7 @@
     'original_name': 'SpO2',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'spo2',
     'unique_id': 'withings_12345_spo2_pct',
@@ -3400,6 +3524,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Step goal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3425,6 +3550,7 @@
     'original_name': 'Step goal',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'step_goal',
     'unique_id': 'withings_12345_step_goal',
@@ -3451,6 +3577,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Steps today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -3476,6 +3603,7 @@
     'original_name': 'Steps today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_steps_today',
     'unique_id': 'withings_12345_activity_steps_today',
@@ -3503,6 +3631,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Systolic blood pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3528,6 +3657,7 @@
     'original_name': 'Systolic blood pressure',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'systolic_blood_pressure',
     'unique_id': 'withings_12345_systolic_blood_pressure_mmhg',
@@ -3554,6 +3684,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3579,6 +3710,7 @@
     'original_name': 'Temperature',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'withings_12345_temperature_c',
@@ -3606,6 +3738,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Time to sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3634,6 +3767,7 @@
     'original_name': 'Time to sleep',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_to_sleep',
     'unique_id': 'withings_12345_sleep_tosleep_duration_seconds',
@@ -3661,6 +3795,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Time to wakeup',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3689,6 +3824,7 @@
     'original_name': 'Time to wakeup',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_to_wakeup',
     'unique_id': 'withings_12345_sleep_towakeup_duration_seconds',
@@ -3716,6 +3852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Total calories burnt today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -3744,6 +3881,7 @@
     'original_name': 'Total calories burnt today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_total_calories_burnt_today',
     'unique_id': 'withings_12345_activity_total_calories_burnt_today',
@@ -3771,6 +3909,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Vascular age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3794,6 +3933,7 @@
     'original_name': 'Vascular age',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vascular_age',
     'unique_id': 'withings_12345_vascular_age',
@@ -3818,6 +3958,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Visceral fat index',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3841,6 +3982,7 @@
     'original_name': 'Visceral fat index',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'visceral_fat_index',
     'unique_id': 'withings_12345_visceral_fat',
@@ -3865,6 +4007,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk VO2 max',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3890,6 +4033,7 @@
     'original_name': 'VO2 max',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vo2_max',
     'unique_id': 'withings_12345_vo2_max',
@@ -3916,6 +4060,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Wakeup count',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3941,6 +4086,7 @@
     'original_name': 'Wakeup count',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wakeup_count',
     'unique_id': 'withings_12345_sleep_wakeup_count',
@@ -3967,6 +4113,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Wakeup time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3995,6 +4142,7 @@
     'original_name': 'Wakeup time',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wakeup_time',
     'unique_id': 'withings_12345_sleep_wakeup_duration_seconds',
@@ -4022,6 +4170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Weight',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4050,6 +4199,7 @@
     'original_name': 'Weight',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'withings_12345_weight_kg',
@@ -4077,6 +4227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'henk Weight goal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4102,6 +4253,7 @@
     'original_name': 'Weight goal',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weight_goal',
     'unique_id': 'withings_12345_weight_goal',

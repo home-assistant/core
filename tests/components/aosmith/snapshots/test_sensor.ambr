@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My water heater Energy usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -32,6 +33,7 @@
     'original_name': 'Energy usage',
     'platform': 'aosmith',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_usage',
     'unique_id': 'energy_usage_junctionId',
@@ -59,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My water heater Hot water availability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -82,6 +85,7 @@
     'original_name': 'Hot water availability',
     'platform': 'aosmith',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hot_water_availability',
     'unique_id': 'hot_water_availability_junctionId',

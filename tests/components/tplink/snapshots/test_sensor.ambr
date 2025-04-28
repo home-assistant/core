@@ -41,6 +41,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Alarm source',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -64,6 +65,7 @@
     'original_name': 'Alarm source',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_source',
     'unique_id': '123456789ABCDEFGH_alarm_source',
@@ -75,6 +77,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Auto-off at',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -98,6 +101,7 @@
     'original_name': 'Auto-off at',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_off_at',
     'unique_id': '123456789ABCDEFGH_auto_off_at',
@@ -123,6 +127,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -148,6 +153,7 @@
     'original_name': 'Battery',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_level',
     'unique_id': '123456789ABCDEFGH_battery_level',
@@ -175,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Charging contacts remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -201,6 +208,7 @@
     'original_name': 'Charging contacts remaining',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_contacts_remaining',
     'unique_id': '123456789ABCDEFGH_charging_contacts_remaining',
@@ -212,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Charging contacts used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -238,6 +247,7 @@
     'original_name': 'Charging contacts used',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_contacts_used',
     'unique_id': '123456789ABCDEFGH_charging_contacts_used',
@@ -249,6 +259,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Cleaning area',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -277,6 +288,7 @@
     'original_name': 'Cleaning area',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'clean_area',
     'unique_id': '123456789ABCDEFGH_clean_area',
@@ -304,6 +316,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Cleaning progress',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -329,6 +342,7 @@
     'original_name': 'Cleaning progress',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'clean_progress',
     'unique_id': '123456789ABCDEFGH_clean_progress',
@@ -340,6 +354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Cleaning time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -366,6 +381,7 @@
     'original_name': 'Cleaning time',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'clean_time',
     'unique_id': '123456789ABCDEFGH_clean_time',
@@ -392,6 +408,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -420,6 +437,7 @@
     'original_name': 'Current',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current',
     'unique_id': '123456789ABCDEFGH_current_a',
@@ -447,6 +465,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Current consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -475,6 +494,7 @@
     'original_name': 'Current consumption',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_consumption',
     'unique_id': '123456789ABCDEFGH_current_power_w',
@@ -502,6 +522,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Device time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -525,6 +546,7 @@
     'original_name': 'Device time',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_time',
     'unique_id': '123456789ABCDEFGH_device_time',
@@ -536,6 +558,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Error',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -574,6 +597,7 @@
     'original_name': 'Error',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vacuum_error',
     'unique_id': '123456789ABCDEFGH_vacuum_error',
@@ -613,6 +637,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Filter remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -639,6 +664,7 @@
     'original_name': 'Filter remaining',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_remaining',
     'unique_id': '123456789ABCDEFGH_filter_remaining',
@@ -650,6 +676,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Filter used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -676,6 +703,7 @@
     'original_name': 'Filter used',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_used',
     'unique_id': '123456789ABCDEFGH_filter_used',
@@ -687,6 +715,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -712,6 +741,7 @@
     'original_name': 'Humidity',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '123456789ABCDEFGH_humidity',
@@ -739,6 +769,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Last clean start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -762,6 +793,7 @@
     'original_name': 'Last clean start',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_clean_timestamp',
     'unique_id': '123456789ABCDEFGH_last_clean_timestamp',
@@ -773,6 +805,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Last cleaned area',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -799,6 +832,7 @@
     'original_name': 'Last cleaned area',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_clean_area',
     'unique_id': '123456789ABCDEFGH_last_clean_area',
@@ -810,6 +844,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Last cleaned time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -838,6 +873,7 @@
     'original_name': 'Last cleaned time',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_clean_time',
     'unique_id': '123456789ABCDEFGH_last_clean_time',
@@ -849,6 +885,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Last water leak alert',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -872,6 +909,7 @@
     'original_name': 'Last water leak alert',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_alert_timestamp',
     'unique_id': '123456789ABCDEFGH_water_alert_timestamp',
@@ -897,6 +935,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Main brush remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -923,6 +962,7 @@
     'original_name': 'Main brush remaining',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'main_brush_remaining',
     'unique_id': '123456789ABCDEFGH_main_brush_remaining',
@@ -934,6 +974,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Main brush used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -960,6 +1001,7 @@
     'original_name': 'Main brush used',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'main_brush_used',
     'unique_id': '123456789ABCDEFGH_main_brush_used',
@@ -971,6 +1013,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device On since',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -994,6 +1037,7 @@
     'original_name': 'On since',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_since',
     'unique_id': '123456789ABCDEFGH_on_since',
@@ -1005,6 +1049,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Report interval',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1028,6 +1073,7 @@
     'original_name': 'Report interval',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'report_interval',
     'unique_id': '123456789ABCDEFGH_report_interval',
@@ -1039,6 +1085,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Sensor remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1065,6 +1112,7 @@
     'original_name': 'Sensor remaining',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensor_remaining',
     'unique_id': '123456789ABCDEFGH_sensor_remaining',
@@ -1076,6 +1124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Sensor used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1102,6 +1151,7 @@
     'original_name': 'Sensor used',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensor_used',
     'unique_id': '123456789ABCDEFGH_sensor_used',
@@ -1113,6 +1163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Side brush remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1139,6 +1190,7 @@
     'original_name': 'Side brush remaining',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'side_brush_remaining',
     'unique_id': '123456789ABCDEFGH_side_brush_remaining',
@@ -1150,6 +1202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Side brush used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1176,6 +1229,7 @@
     'original_name': 'Side brush used',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'side_brush_used',
     'unique_id': '123456789ABCDEFGH_side_brush_used',
@@ -1187,6 +1241,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Signal level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1212,6 +1267,7 @@
     'original_name': 'Signal level',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'signal_level',
     'unique_id': '123456789ABCDEFGH_signal_level',
@@ -1237,6 +1293,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1262,6 +1319,7 @@
     'original_name': 'Signal strength',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rssi',
     'unique_id': '123456789ABCDEFGH_rssi',
@@ -1273,6 +1331,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1296,6 +1355,7 @@
     'original_name': 'SSID',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ssid',
     'unique_id': '123456789ABCDEFGH_ssid',
@@ -1307,6 +1367,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1332,6 +1393,7 @@
     'original_name': 'Temperature',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '123456789ABCDEFGH_temperature',
@@ -1343,6 +1405,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': "my_device This month's consumption",
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1371,6 +1434,7 @@
     'original_name': "This month's consumption",
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_this_month',
     'unique_id': '123456789ABCDEFGH_consumption_this_month',
@@ -1398,6 +1462,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': "my_device Today's consumption",
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1426,6 +1491,7 @@
     'original_name': "Today's consumption",
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_today',
     'unique_id': '123456789ABCDEFGH_today_energy_kwh',
@@ -1453,6 +1519,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Total cleaning area',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1481,6 +1548,7 @@
     'original_name': 'Total cleaning area',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_clean_area',
     'unique_id': '123456789ABCDEFGH_total_clean_area',
@@ -1492,6 +1560,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Total cleaning count',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1517,6 +1586,7 @@
     'original_name': 'Total cleaning count',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_clean_count',
     'unique_id': '123456789ABCDEFGH_total_clean_count',
@@ -1528,6 +1598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Total cleaning time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1556,6 +1627,7 @@
     'original_name': 'Total cleaning time',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_clean_time',
     'unique_id': '123456789ABCDEFGH_total_clean_time',
@@ -1567,6 +1639,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Total consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1595,6 +1668,7 @@
     'original_name': 'Total consumption',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_total',
     'unique_id': '123456789ABCDEFGH_total_energy_kwh',
@@ -1622,6 +1696,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'my_device Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1650,6 +1725,7 @@
     'original_name': 'Voltage',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': '123456789ABCDEFGH_voltage',

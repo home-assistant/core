@@ -21,6 +21,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'WLED RGB Light Segment 1 intensity',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -49,6 +50,7 @@
     'original_name': 'Segment 1 intensity',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'segment_intensity',
     'unique_id': 'aabbccddeeff_intensity_1',
@@ -114,6 +116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'WLED RGB Light Segment 1 speed',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -142,6 +145,7 @@
     'original_name': 'Segment 1 speed',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'segment_speed',
     'unique_id': 'aabbccddeeff_speed_1',

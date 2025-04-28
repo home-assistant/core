@@ -196,6 +196,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Dimmable Light',
       'capabilities': dict({
         'supported_color_modes': list([
           <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -223,6 +224,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': 'dimmable-bulb',
@@ -288,6 +290,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Dimmer Switch',
       'capabilities': dict({
         'supported_color_modes': list([
           <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -315,6 +318,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': 'dimmable-switch',
@@ -538,6 +542,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Temperature Light',
       'capabilities': dict({
         'max_color_temp_kelvin': 6500,
         'max_mireds': 370,
@@ -569,6 +574,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': 'tunable-bulb',

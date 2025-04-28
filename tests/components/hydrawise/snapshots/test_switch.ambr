@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone One Automatic watering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,6 +28,7 @@
     'original_name': 'Automatic watering',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_watering',
     'unique_id': '5965394_auto_watering',
@@ -53,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone One Manual watering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -76,6 +79,7 @@
     'original_name': 'Manual watering',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_watering',
     'unique_id': '5965394_manual_watering',
@@ -102,6 +106,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone Two Automatic watering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -125,6 +130,7 @@
     'original_name': 'Automatic watering',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_watering',
     'unique_id': '5965395_auto_watering',
@@ -151,6 +157,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone Two Manual watering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -174,6 +181,7 @@
     'original_name': 'Manual watering',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_watering',
     'unique_id': '5965395_manual_watering',

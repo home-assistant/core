@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tree 1 Mode',
     'capabilities': dict({
       'options': list([
         'color',
@@ -37,6 +38,7 @@
     'original_name': 'Mode',
     'platform': 'twinkly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
     'unique_id': '00:2d:13:3b:aa:bb_mode',
