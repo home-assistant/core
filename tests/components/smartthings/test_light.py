@@ -440,3 +440,14 @@ async def test_availability(
     )
 
     assert hass.states.get("light.standing_light").state == STATE_OFF
+
+
+@pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("light.standing_light").state == STATE_UNAVAILABLE

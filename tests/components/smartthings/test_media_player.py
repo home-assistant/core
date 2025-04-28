@@ -461,3 +461,14 @@ async def test_availability(
     )
 
     assert hass.states.get("media_player.soundbar").state == STATE_PLAYING
+
+
+@pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("media_player.soundbar").state == STATE_UNAVAILABLE

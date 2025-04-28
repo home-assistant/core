@@ -408,3 +408,14 @@ async def test_availability(
     )
 
     assert hass.states.get("switch.2nd_floor_hallway").state == STATE_ON
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_UNAVAILABLE

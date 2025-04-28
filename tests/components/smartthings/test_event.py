@@ -134,3 +134,17 @@ async def test_availability(
     assert (
         hass.states.get("event.livingroom_smart_switch_button1").state == STATE_UNKNOWN
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["heatit_zpushwall"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        hass.states.get("event.livingroom_smart_switch_button1").state
+        == STATE_UNAVAILABLE
+    )

@@ -13,6 +13,7 @@ from pysmartthings import (
     SceneResponse,
     Subscription,
 )
+from pysmartthings.models import HealthStatus
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -172,6 +173,13 @@ def devices(mock_smartthings: AsyncMock, device_fixture: str) -> Generator[Async
         load_fixture(f"device_status/{device_fixture}.json", DOMAIN)
     ).components
     return mock_smartthings
+
+
+@pytest.fixture
+def unavailable_device(devices: AsyncMock) -> AsyncMock:
+    """Mock an unavailable device."""
+    devices.get_device_health.return_value.state = HealthStatus.OFFLINE
+    return devices
 
 
 @pytest.fixture
