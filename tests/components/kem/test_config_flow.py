@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from aiokem import AuthenticationCredentialsError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.kem.const import DOMAIN
@@ -10,27 +11,31 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import Mock, MockConfigEntry
+from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+@pytest.fixture(name="mock_authenticate")
+async def platform_sensor_fixture():
+    """Patch KEM to only load Sensor platform."""
+    with patch("homeassistant.components.kem.data.AioKem.authenticate") as mock_auth:
+        yield mock_auth
+
+
+async def test_configure_entry(
+    hass: HomeAssistant, mock_authenticate: AsyncMock
+) -> None:
+    """Test we can configure the entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with (
-        patch("homeassistant.components.kem.data.AioKem.authenticate"),
-        patch(
-            "homeassistant.components.kem.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        mock_setup_entry.runtime_data = Mock()
-        mock_setup_entry.runtime_data.kem = AsyncMock()
-        result2 = await hass.config_entries.flow.async_configure(
+    with patch(
+        "homeassistant.components.kem.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "email": "TEST-email",
@@ -39,79 +44,76 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "test-email"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-email"
+    assert result["data"] == {
         "email": "TEST-email",
         "password": "test-password",
     }
     assert mock_setup_entry.call_count == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+async def test_form_invalid_auth(
+    hass: HomeAssistant, mock_authenticate: AsyncMock
+) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.kem.data.AioKem.authenticate",
-        side_effect=AuthenticationCredentialsError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "email": "test-email",
-                "password": "test-password",
-            },
-        )
+    mock_authenticate.side_effect = AuthenticationCredentialsError
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "email": "test-email",
+            "password": "test-password",
+        },
+    )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant, mock_authenticate: AsyncMock
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.kem.data.AioKem.authenticate",
-        side_effect=TimeoutError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "email": "test-email",
-                "password": "test-password",
-            },
-        )
+    mock_authenticate.side_effect = TimeoutError
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "email": "test-email",
+            "password": "test-password",
+        },
+    )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_exception(hass: HomeAssistant) -> None:
+async def test_form_unknown_exception(
+    hass: HomeAssistant, mock_authenticate: AsyncMock
+) -> None:
     """Test we handle unknown exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.kem.data.AioKem.authenticate",
-        side_effect=Exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "email": "test-email",
-                "password": "test-password",
-            },
-        )
+    mock_authenticate.side_effect = Exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "email": "test-email",
+            "password": "test-password",
+        },
+    )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:
