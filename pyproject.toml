@@ -27,8 +27,8 @@ dependencies = [
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
-  "aiohasupervisor==0.3.1b1",
-  "aiohttp==3.11.17",
+  "aiohasupervisor==0.3.1",
+  "aiohttp==3.11.18",
   "aiohttp_cors==0.7.0",
   "aiohttp-fast-zlib==0.2.3",
   "aiohttp-asyncmdnsresolver==0.1.1",
@@ -44,7 +44,7 @@ dependencies = [
   "certifi>=2021.5.30",
   "ciso8601==2.3.2",
   "cronsim==2.6",
-  "fnv-hash-fast==1.4.0",
+  "fnv-hash-fast==1.5.0",
   # ha-ffmpeg is indirectly imported from onboarding via the import chain
   # onboarding->cloud->assist_pipeline->tts->ffmpeg. Onboarding needs
   # to be setup in stage 0, but we don't want to also promote cloud with all its
@@ -52,7 +52,7 @@ dependencies = [
   "ha-ffmpeg==3.2.2",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==0.94.0",
+  "hass-nabucasa==0.96.0",
   # hassil is indirectly imported from onboarding via the import chain
   # onboarding->cloud->assist_pipeline->conversation->hassil. Onboarding needs
   # to be setup in stage 0, but we don't want to also promote cloud with all its
@@ -120,7 +120,7 @@ dependencies = [
   "uv==0.6.10",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.6.0",
-  "voluptuous-openapi==0.0.6",
+  "voluptuous-openapi==0.0.7",
   "yarl==1.20.0",
   "webrtc-models==0.3.0",
   "zeroconf==0.146.5",

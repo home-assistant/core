@@ -1,6 +1,24 @@
 {
   "entity": {
     "binary_sensor": {
+      "state": {
+        "state": {
+          "off": "mdi:sleep",
+          "on": "mdi:car-connected"
+        }
+      },
+      "cellular": {
+        "state": {
+          "off": "mdi:signal-cellular-outline",
+          "on": "mdi:signal-cellular-3"
+        }
+      },
+      "wifi": {
+        "state": {
+          "off": "mdi:wifi-off",
+          "on": "mdi:wifi"
+        }
+      },
       "climate_state_is_preconditioning": {
         "state": {
           "off": "mdi:hvac-off",
@@ -41,6 +59,48 @@
         "state": {
           "off": "mdi:tire",
           "on": "mdi:car-tire-alert"
+        }
+      },
+      "charge_enable_request": {
+        "state": {
+          "off": "mdi:battery-off-outline",
+          "on": "mdi:battery-charging-outline"
+        }
+      },
+      "defrost_for_preconditioning": {
+        "state": {
+          "off": "mdi:snowflake-off",
+          "on": "mdi:snowflake-melt"
+        }
+      },
+      "lights_high_beams": {
+        "state": {
+          "off": "mdi:car-light-dimmed",
+          "on": "mdi:car-light-high"
+        }
+      },
+      "seat_vent_enabled": {
+        "state": {
+          "off": "mdi:car-seat",
+          "on": "mdi:fan"
+        }
+      },
+      "speed_limit_mode": {
+        "state": {
+          "off": "mdi:speedometer",
+          "on": "mdi:car-speed-limiter"
+        }
+      },
+      "remote_start_enabled": {
+        "state": {
+          "off": "mdi:remote-off",
+          "on": "mdi:remote"
+        }
+      },
+      "hvac_auto_mode": {
+        "state": {
+          "off": "mdi:hvac-off",
+          "on": "mdi:hvac"
         }
       }
     },

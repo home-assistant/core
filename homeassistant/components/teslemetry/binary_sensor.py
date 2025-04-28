@@ -59,7 +59,20 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="state",
         polling=True,
         polling_value_fn=lambda x: x == TeslemetryState.ONLINE,
+        streaming_listener=lambda x, y: x.listen_State(y),
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="cellular",
+        streaming_listener=lambda x, y: x.listen_Cellular(y),
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="wifi",
+        streaming_listener=lambda x, y: x.listen_Wifi(y),
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TeslemetryBinarySensorEntityDescription(
         key="charge_state_battery_heater_on",
@@ -365,6 +378,51 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="located_at_favorite",
         streaming_listener=lambda x, y: x.listen_LocatedAtFavorite(y),
         streaming_firmware="2024.44.32",
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="charge_enable_request",
+        streaming_listener=lambda x, y: x.listen_ChargeEnableRequest(y),
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="defrost_for_preconditioning",
+        streaming_listener=lambda x, y: x.listen_DefrostForPreconditioning(y),
+        entity_registry_enabled_default=False,
+        streaming_firmware="2024.44.25",
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="lights_high_beams",
+        streaming_listener=lambda x, y: x.listen_LightsHighBeams(y),
+        entity_registry_enabled_default=False,
+        streaming_firmware="2025.2.6",
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="seat_vent_enabled",
+        streaming_listener=lambda x, y: x.listen_SeatVentEnabled(y),
+        entity_registry_enabled_default=False,
+        streaming_firmware="2025.2.6",
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="speed_limit_mode",
+        streaming_listener=lambda x, y: x.listen_SpeedLimitMode(y),
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="remote_start_enabled",
+        streaming_listener=lambda x, y: x.listen_RemoteStartEnabled(y),
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="hvil",
+        streaming_listener=lambda x, y: x.listen_Hvil(lambda z: y(z == "Fault")),
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="hvac_auto_mode",
+        streaming_listener=lambda x, y: x.listen_HvacAutoMode(lambda z: y(z == "On")),
         entity_registry_enabled_default=False,
     ),
 )
