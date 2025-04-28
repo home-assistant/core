@@ -5603,6 +5603,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "s3": {
+      "name": "S3",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "sabnzbd": {
       "name": "SABnzbd",
       "integration_type": "hub",

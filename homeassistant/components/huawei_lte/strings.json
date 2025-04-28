@@ -141,6 +141,9 @@
       "lte_uplink_frequency": {
         "name": "LTE uplink frequency"
       },
+      "mode": {
+        "name": "Mode"
+      },
       "nrbler": {
         "name": "5G block error rate"
       },
@@ -239,6 +242,9 @@
       },
       "current_month_upload": {
         "name": "Current month upload"
+      },
+      "battery": {
+        "name": "Battery"
       },
       "wifi_clients_connected": {
         "name": "Wi-Fi clients connected"

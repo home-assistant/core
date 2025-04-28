@@ -1590,7 +1590,7 @@
         "name": "Floor temperature"
       },
       "self_test": {
-        "name": "Self test result"
+        "name": "Self-test result"
       },
       "voc_index": {
         "name": "VOC index"
@@ -1841,7 +1841,7 @@
         "name": "Mute siren"
       },
       "self_test_switch": {
-        "name": "Self test"
+        "name": "Self-test"
       },
       "output_switch": {
         "name": "Output switch"
