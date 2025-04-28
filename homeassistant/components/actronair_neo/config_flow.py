@@ -83,10 +83,14 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauthorization request."""
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self) -> ConfigFlowResult:
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle reauthorization confirmation."""
         return await self.async_step_user()
 
-    async def async_step_reconfigure(self) -> ConfigFlowResult:
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Reconfigure the integration."""
         return await self.async_step_user()
