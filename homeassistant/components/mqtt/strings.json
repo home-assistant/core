@@ -1,7 +1,7 @@
 {
   "issues": {
     "invalid_platform_config": {
-      "title": "Invalid config found for mqtt {domain} item",
+      "title": "Invalid config found for MQTT {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
     },
     "invalid_unit_of_measurement": {
@@ -68,7 +68,7 @@
         "title": "Starting add-on"
       },
       "hassio_confirm": {
-        "title": "MQTT Broker via Home Assistant add-on",
+        "title": "MQTT broker via Home Assistant add-on",
         "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?"
       },
       "reauth_confirm": {
@@ -153,7 +153,7 @@
           },
           "sections": {
             "mqtt_settings": {
-              "name": "MQTT Settings",
+              "name": "MQTT settings",
               "data": {
                 "qos": "QoS"
               },
@@ -472,15 +472,15 @@
     },
     "platform": {
       "options": {
-        "notify": "Notify",
-        "sensor": "Sensor",
-        "switch": "Switch"
+        "notify": "[%key:component::notify::title%]",
+        "sensor": "[%key:component::sensor::title%]",
+        "switch": "[%key:component::switch::title%]"
       }
     },
     "set_ca_cert": {
       "options": {
         "off": "[%key:common::state::off%]",
-        "auto": "Auto",
+        "auto": "[%key:common::state::auto%]",
         "custom": "Custom"
       }
     },

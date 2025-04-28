@@ -6,10 +6,20 @@ from unittest.mock import AsyncMock, patch
 from pysyncthru import SyncthruState
 import pytest
 
-from homeassistant.components.syncthru import DOMAIN
+from homeassistant.components.syncthru.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_URL
 
 from tests.common import MockConfigEntry, load_json_object_fixture
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.syncthru.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture
@@ -17,7 +27,7 @@ def mock_syncthru() -> Generator[AsyncMock]:
     """Mock the SyncThru class."""
     with (
         patch(
-            "homeassistant.components.syncthru.SyncThru",
+            "homeassistant.components.syncthru.coordinator.SyncThru",
             autospec=True,
         ) as mock_syncthru,
         patch(

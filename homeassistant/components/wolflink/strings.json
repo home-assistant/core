@@ -32,7 +32,7 @@
           "deaktiviert": "[%key:common::state::disabled%]",
           "aus": "[%key:common::state::off%]",
           "standby": "[%key:common::state::standby%]",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "permanent": "Permanent",
           "initialisierung": "Initialization",
           "antilegionellenfunktion": "Anti-legionella Function",

@@ -432,7 +432,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/entur_public_transport/ @hfurubotten
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
-/homeassistant/components/ephember/ @ttroy50
+/homeassistant/components/ephember/ @ttroy50 @roberty99
 /homeassistant/components/epic_games_store/ @hacf-fr @Quentame
 /tests/components/epic_games_store/ @hacf-fr @Quentame
 /homeassistant/components/epion/ @lhgravendeel
@@ -937,6 +937,8 @@ build.json @home-assistant/supervisor
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
+/homeassistant/components/miele/ @astrandb
+/tests/components/miele/ @astrandb
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
 /homeassistant/components/mill/ @danielhiversen
@@ -1049,6 +1051,8 @@ build.json @home-assistant/supervisor
 /tests/components/nsw_fuel_station/ @nickw444
 /homeassistant/components/nsw_rural_fire_service_feed/ @exxamalte
 /tests/components/nsw_rural_fire_service_feed/ @exxamalte
+/homeassistant/components/ntfy/ @tr4nt0r
+/tests/components/ntfy/ @tr4nt0r
 /homeassistant/components/nuheat/ @tstabrawa
 /tests/components/nuheat/ @tstabrawa
 /homeassistant/components/nuki/ @pschmitt @pvizeli @pree
@@ -1314,6 +1318,8 @@ build.json @home-assistant/supervisor
 /tests/components/ruuvitag_ble/ @akx
 /homeassistant/components/rympro/ @OnFreund @elad-bar @maorcc
 /tests/components/rympro/ @OnFreund @elad-bar @maorcc
+/homeassistant/components/s3/ @tomasbedrich
+/tests/components/s3/ @tomasbedrich
 /homeassistant/components/sabnzbd/ @shaiu @jpbede
 /tests/components/sabnzbd/ @shaiu @jpbede
 /homeassistant/components/saj/ @fredericvl
@@ -1389,7 +1395,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/siren/ @home-assistant/core @raman325
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
-/homeassistant/components/sky_hub/ @rogerselwyn
 /homeassistant/components/sky_remote/ @dunnmj @saty9
 /tests/components/sky_remote/ @dunnmj @saty9
 /homeassistant/components/skybell/ @tkdrob
@@ -1436,8 +1441,8 @@ build.json @home-assistant/supervisor
 /tests/components/solarlog/ @Ernst79 @dontinelli
 /homeassistant/components/solax/ @squishykid @Darsstar
 /tests/components/solax/ @squishykid @Darsstar
-/homeassistant/components/soma/ @ratsept @sebfortier2288
-/tests/components/soma/ @ratsept @sebfortier2288
+/homeassistant/components/soma/ @ratsept
+/tests/components/soma/ @ratsept
 /homeassistant/components/sonarr/ @ctalkington
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn

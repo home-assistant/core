@@ -1375,6 +1375,7 @@ class ConfigEntriesFlowManager(
             function=self._async_fire_discovery_event,
             background=True,
         )
+        self._flow_subscriptions: list[Callable[[str, str], None]] = []
 
     async def async_wait_import_flow_initialized(self, handler: str) -> None:
         """Wait till all import flows in progress are initialized."""
@@ -1461,6 +1462,13 @@ class ConfigEntriesFlowManager(
             # Fire discovery event
             await self._discovery_event_debouncer.async_call()
 
+        if result["type"] != data_entry_flow.FlowResultType.ABORT and source in (
+            DISCOVERY_SOURCES | {SOURCE_REAUTH}
+        ):
+            # Notify listeners that a flow is created
+            for subscription in self._flow_subscriptions:
+                subscription("added", flow.flow_id)
+
         return result
 
     async def _async_init(
@@ -1513,10 +1521,9 @@ class ConfigEntriesFlowManager(
 
         # Clean up issue if this is a reauth flow
         if flow.context["source"] == SOURCE_REAUTH:
-            if (entry_id := flow.context.get("entry_id")) is not None and (
-                entry := self.config_entries.async_get_entry(entry_id)
-            ) is not None:
-                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
+            if (entry_id := flow.context.get("entry_id")) is not None:
+                # The config entry's domain is flow.handler
+                issue_id = f"config_entry_reauth_{flow.handler}_{entry_id}"
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
     async def async_finish_flow(
@@ -1738,6 +1745,29 @@ class ConfigEntriesFlowManager(
             if other_flow is not flow and flow.is_matching(other_flow):  # type: ignore[arg-type]
                 return True
         return False
+
+    @callback
+    def async_subscribe_flow(
+        self, listener: Callable[[str, str], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to non user initiated flow init or remove."""
+        self._flow_subscriptions.append(listener)
+        return lambda: self._flow_subscriptions.remove(listener)
+
+    @callback
+    def _async_remove_flow_progress(self, flow_id: str) -> None:
+        """Remove a flow from in progress."""
+        flow = self._progress.get(flow_id)
+        super()._async_remove_flow_progress(flow_id)
+        # Fire remove event for initialized non user initiated flows
+        if (
+            not flow
+            or flow.cur_step is None
+            or flow.source not in (DISCOVERY_SOURCES | {SOURCE_REAUTH})
+        ):
+            return
+        for listeners in self._flow_subscriptions:
+            listeners("removed", flow_id)
 
 
 class ConfigEntryItems(UserDict[str, ConfigEntry]):
@@ -2097,13 +2127,7 @@ class ConfigEntries:
         # If the configuration entry is removed during reauth, it should
         # abort any reauth flow that is active for the removed entry and
         # linked issues.
-        for progress_flow in self.hass.config_entries.flow.async_progress_by_handler(
-            entry.domain, match_context={"entry_id": entry_id, "source": SOURCE_REAUTH}
-        ):
-            if "flow_id" in progress_flow:
-                self.hass.config_entries.flow.async_abort(progress_flow["flow_id"])
-                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
-                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
+        _abort_reauth_flows(self.hass, entry.domain, entry_id)
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
 
@@ -2235,6 +2259,9 @@ class ConfigEntries:
         # attempts.
         entry.async_cancel_retry_setup()
 
+        # Abort any in-progress reauth flow and linked issues
+        _abort_reauth_flows(self.hass, entry.domain, entry_id)
+
         if entry.domain not in self.hass.config.components:
             # If the component is not loaded, just load it as
             # the config entry will be loaded as well. We need
@@ -2357,12 +2384,7 @@ class ConfigEntries:
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Deprecated in 2024.11, should fail in 2025.11
             if (
-                # flipr creates duplicates during migration, and asks users to
-                # remove the duplicate. We don't need warn about it here too.
-                # We should remove the special case for "flipr" in HA Core 2025.4,
-                # when the flipr migration period ends
-                entry.domain != "flipr"
-                and unique_id is not None
+                unique_id is not None
                 and self.async_entry_for_domain_unique_id(entry.domain, unique_id)
                 is not None
             ):
@@ -2729,12 +2751,6 @@ class ConfigEntries:
             issues.add(issue.issue_id)
 
         for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
-            # flipr creates duplicates during migration, and asks users to
-            # remove the duplicate. We don't need warn about it here too.
-            # We should remove the special case for "flipr" in HA Core 2025.4,
-            # when the flipr migration period ends
-            if domain == "flipr":
-                continue
             for unique_id, entries in unique_ids.items():
                 # We might mutate the list of entries, so we need a copy to not mess up
                 # the index
@@ -2897,6 +2913,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         reload_on_update: bool = True,
         *,
         error: str = "already_configured",
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Abort if the unique ID is already configured.
 
@@ -2937,7 +2954,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             return
         if should_reload:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
-        raise data_entry_flow.AbortFlow(error)
+        raise data_entry_flow.AbortFlow(error, description_placeholders)
 
     async def async_set_unique_id(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True
@@ -3766,3 +3783,13 @@ async def _async_get_flow_handler(
         return handler
 
     raise data_entry_flow.UnknownHandler
+
+
+@callback
+def _abort_reauth_flows(hass: HomeAssistant, domain: str, entry_id: str) -> None:
+    """Abort reauth flows for an entry."""
+    for progress_flow in hass.config_entries.flow.async_progress_by_handler(
+        domain, match_context={"entry_id": entry_id, "source": SOURCE_REAUTH}
+    ):
+        if "flow_id" in progress_flow:
+            hass.config_entries.flow.async_abort(progress_flow["flow_id"])

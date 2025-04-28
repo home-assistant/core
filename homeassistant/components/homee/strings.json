@@ -136,7 +136,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "manual": "Manual"
+              "manual": "[%key:common::state::manual%]"
             }
           }
         }
@@ -189,6 +189,9 @@
       },
       "wake_up_interval": {
         "name": "Wake-up interval"
+      },
+      "wind_monitoring_state": {
+        "name": "Threshold for wind trigger"
       }
     },
     "select": {
