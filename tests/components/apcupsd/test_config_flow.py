@@ -169,6 +169,14 @@ async def test_reconfigure_flow_works(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
+    # Start the reconfigure flow.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_entry.entry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
     # New configuration data with different host/port.
     new_conf_data = {CONF_HOST: "new_host", CONF_PORT: 4321}
 
@@ -182,28 +190,18 @@ async def test_reconfigure_flow_works(hass: HomeAssistant) -> None:
         patch("aioapcaccess.request_status", side_effect=mocked_request_status),
         _patch_setup() as mock_setup,
     ):
-        # Start the reconfigure flow.
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_RECONFIGURE, "entry_id": mock_entry.entry_id},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure"
-
-        # Submit the new configuration.
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=new_conf_data
         )
         await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reconfigure_successful"
-
-        # Check that the entry was updated with the new configuration
-        assert mock_entry.data[CONF_HOST] == new_conf_data[CONF_HOST]
-        assert mock_entry.data[CONF_PORT] == new_conf_data[CONF_PORT]
-
         mock_setup.assert_called_once()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Check that the entry was updated with the new configuration.
+    assert mock_entry.data[CONF_HOST] == new_conf_data[CONF_HOST]
+    assert mock_entry.data[CONF_PORT] == new_conf_data[CONF_PORT]
 
 
 async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
@@ -218,25 +216,23 @@ async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
+    # Start the reconfigure flow.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_entry.entry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
     # New configuration data with different host/port.
     new_conf_data = {CONF_HOST: "new_host", CONF_PORT: 4321}
-
     with patch("aioapcaccess.request_status", side_effect=OSError()):
-        # Start the reconfigure flow.
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_RECONFIGURE, "entry_id": mock_entry.entry_id},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure"
-
-        # Submit the new configuration.
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=new_conf_data
         )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"]["base"] == "cannot_connect"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
 
 
 @pytest.mark.parametrize(
@@ -261,28 +257,24 @@ async def test_reconfigure_flow_wrong_device(
     )
     mock_entry.add_to_hass(hass)
 
+    # Start the reconfigure flow.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_entry.entry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
     # New configuration data with different host/port.
     new_conf_data = {CONF_HOST: "new_host", CONF_PORT: 4321}
-
-    with patch("aioapcaccess.request_status") as mock_request_status:
-        mock_status = copy(MOCK_STATUS)
-        del mock_status["SERIALNO"]
-        if unique_id_after:
-            mock_status["SERIALNO"] = unique_id_after
-        mock_request_status.return_value = mock_status
-
-        # Start the reconfigure flow.
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_RECONFIGURE, "entry_id": mock_entry.entry_id},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure"
-
-        # Submit the new configuration
+    # Make a copy of the status and modify the serial number if needed.
+    mock_status = {k: v for k, v in MOCK_STATUS.items() if k != "SERIALNO"}
+    if unique_id_after:
+        mock_status["SERIALNO"] = unique_id_after
+    with patch("aioapcaccess.request_status", return_value=mock_status):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=new_conf_data
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "wrong_apcupsd_daemon"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_apcupsd_daemon"
