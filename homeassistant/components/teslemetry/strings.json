@@ -65,6 +65,12 @@
       "state": {
         "name": "Status"
       },
+      "cellular": {
+        "name": "Cellular"
+      },
+      "wifi": {
+        "name": "Wi-Fi"
+      },
       "storm_mode_active": {
         "name": "Storm watch active"
       },

@@ -1,6 +1,24 @@
 {
   "entity": {
     "binary_sensor": {
+      "state": {
+        "state": {
+          "off": "mdi:sleep",
+          "on": "mdi:car-connected"
+        }
+      },
+      "cellular": {
+        "state": {
+          "off": "mdi:signal-cellular-outline",
+          "on": "mdi:signal-cellular-3"
+        }
+      },
+      "wifi": {
+        "state": {
+          "off": "mdi:wifi-off",
+          "on": "mdi:wifi"
+        }
+      },
       "climate_state_is_preconditioning": {
         "state": {
           "off": "mdi:hvac-off",
