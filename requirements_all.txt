@@ -639,11 +639,13 @@ bluetooth-adapters==0.21.4
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.5
 
-# homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
 bluetooth-data-tools==1.28.0
+
+# homeassistant.components.bluetooth
+bluetooth-data-tools==1.28.1
 
 # homeassistant.components.bond
 bond-async==0.2.1
