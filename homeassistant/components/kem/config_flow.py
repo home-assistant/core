@@ -6,15 +6,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aiokem import AuthenticationError
+from aiokem import AioKem, AuthenticationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONNECTION_EXCEPTIONS, DOMAIN
-from .data import ConfigFlowAioKem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,19 +31,20 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if not (errors := await self._async_validate_or_error(user_input)):
-                username: str = user_input[CONF_USERNAME]
-                normalized_username = username.lower()
-                await self.async_set_unique_id(normalized_username)
+                email: str = user_input[CONF_EMAIL]
+                # Kohler does not allow the email to be changed on an account
+                # so we need to use the email as the unique ID
+                # for the config entry. The JWT sub is email
+                normalized_email = email.lower()
+                await self.async_set_unique_id(normalized_email)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=normalized_username, data=user_input
-                )
+                return self.async_create_entry(title=normalized_email, data=user_input)
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_EMAIL): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
@@ -55,12 +55,8 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the user input."""
         errors: dict[str, str] = {}
         try:
-            kem = ConfigFlowAioKem(
-                username=config[CONF_USERNAME],
-                password=config[CONF_PASSWORD],
-                session=async_get_clientsession(self.hass),
-            )
-            await kem.authenticate(config[CONF_USERNAME], config[CONF_PASSWORD])
+            kem = AioKem(session=async_get_clientsession(self.hass))
+            await kem.authenticate(config[CONF_EMAIL], config[CONF_PASSWORD])
         except CONNECTION_EXCEPTIONS:
             errors["base"] = "cannot_connect"
         except AuthenticationError:
@@ -84,7 +80,7 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         existing_data = reauth_entry.data
         description_placeholders: dict[str, str] = {
-            CONF_USERNAME: existing_data[CONF_USERNAME]
+            CONF_EMAIL: existing_data[CONF_EMAIL]
         }
         if user_input is not None:
             new_config = {**existing_data, CONF_PASSWORD: user_input[CONF_PASSWORD]}

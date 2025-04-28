@@ -48,9 +48,11 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
         super().__init__(coordinator)
         self.entity_description = description
         self._device_id = device_id
-        self._attr_unique_id = f"{device_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.entry_unique_id}_{device_id}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self._device_id))},
+            identifiers={(DOMAIN, f"{coordinator.entry_unique_id}_{device_id}")},
             name=device_data[DEVICE_DATA_DISPLAY_NAME],
             hw_version=device_data[DEVICE_DATA_PRODUCT],
             sw_version=device_data[DEVICE_DATA_FIRMWARE_VERSION],

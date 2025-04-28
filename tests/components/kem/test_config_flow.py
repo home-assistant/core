@@ -6,7 +6,7 @@ from aiokem import AuthenticationCredentialsError
 
 from homeassistant import config_entries
 from homeassistant.components.kem.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -33,16 +33,16 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "TEST-username",
+                "email": "TEST-email",
                 "password": "test-password",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "test-username"
+    assert result2["title"] == "test-email"
     assert result2["data"] == {
-        "username": "TEST-username",
+        "email": "TEST-email",
         "password": "test-password",
     }
     assert mock_setup_entry.call_count == 1
@@ -61,7 +61,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
+                "email": "test-email",
                 "password": "test-password",
             },
         )
@@ -83,7 +83,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
+                "email": "test-email",
                 "password": "test-password",
             },
         )
@@ -105,7 +105,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
+                "email": "test-email",
                 "password": "test-password",
             },
         )
@@ -119,10 +119,10 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            "username": "TEST-username",
+            "email": "TEST-email",
             "password": "test-password",
         },
-        unique_id="test-username",
+        unique_id="test-email",
     )
     entry.add_to_hass(hass)
 
@@ -134,7 +134,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
+                "email": "test-email",
                 "password": "test-password",
             },
         )
@@ -148,7 +148,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_USERNAME: "any",
+            CONF_EMAIL: "any",
             CONF_PASSWORD: "old",
         },
     )

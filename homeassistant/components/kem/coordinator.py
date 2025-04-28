@@ -56,3 +56,8 @@ class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="update_failed",
             ) from error
         return result
+
+    @property
+    def entry_unique_id(self) -> str | None:
+        """Get the unique ID for the entry."""
+        return self.config_entry.unique_id

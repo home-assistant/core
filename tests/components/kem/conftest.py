@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.kem.const import CONF_REFRESH_TOKEN, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -31,9 +31,10 @@ def kem_config_entry_fixture() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_USERNAME: "username",
+            CONF_EMAIL: "myemail@mail.com",
             CONF_PASSWORD: "password",
         },
+        unique_id="myemail@mail.com",
     )
 
 
@@ -43,10 +44,11 @@ def kem_config_entry_with_refresh_token_fixture() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_USERNAME: "username",
+            CONF_EMAIL: "myemail@mail.com",
             CONF_PASSWORD: "password",
             CONF_REFRESH_TOKEN: "refresh_token",
         },
+        unique_id="myemail@mail.com",
     )
 
 

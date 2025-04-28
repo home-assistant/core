@@ -6,12 +6,13 @@ import logging
 
 from aiokem import AuthenticationError
 
-from homeassistant.const import CONF_USERNAME, Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_REFRESH_TOKEN,
     CONNECTION_EXCEPTIONS,
     DEVICE_DATA_DEVICES,
     DEVICE_DATA_DISPLAY_NAME,
@@ -32,12 +33,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: KemConfigEntry) -> bool:
     kem = HAAioKem(session=websession, hass=hass, config_entry=entry)
     kem.set_retry_policy(retry_count=3, retry_delays=[5, 10, 20])
     try:
-        await kem.login()
+        await kem.authenticate(
+            entry.data[CONF_EMAIL],
+            entry.data[CONF_PASSWORD],
+            entry.data.get(CONF_REFRESH_TOKEN),
+        )
     except AuthenticationError as ex:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
-            translation_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+            translation_placeholders={CONF_EMAIL: entry.data[CONF_EMAIL]},
         ) from ex
     except CONNECTION_EXCEPTIONS as ex:
         raise ConfigEntryNotReady(
