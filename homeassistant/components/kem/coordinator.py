@@ -19,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching KEM data API."""
 
+    config_entry: KEMConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -35,8 +37,6 @@ class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.device_data = device_data
         self.device_id = device_id
         self.home_data = home_data
-        self.config_entry: ConfigEntry = config_entry
-        assert config_entry is not None, "ConfigEntry cannot be None"
         super().__init__(
             hass=hass,
             logger=logger,
