@@ -1550,6 +1550,7 @@ async def test_entity_info_added_to_entity_registry(
         original_icon="nice:icon",
         original_name="best name",
         options=None,
+        suggested_object_id="best name",
         supported_features=5,
         translation_key="my_translation_key",
         unit_of_measurement=PERCENTAGE,

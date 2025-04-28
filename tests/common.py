@@ -669,6 +669,7 @@ class RegistryEntryWithDefaults(er.RegistryEntry):
     original_device_class: str | None = attr.ib(default=None)
     original_icon: str | None = attr.ib(default=None)
     original_name: str | None = attr.ib(default=None)
+    suggested_object_id: str | None = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
     translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)

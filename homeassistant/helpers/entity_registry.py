@@ -79,7 +79,7 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 16
+STORAGE_VERSION_MINOR = 17
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -198,6 +198,7 @@ class RegistryEntry:
     original_device_class: str | None = attr.ib()
     original_icon: str | None = attr.ib()
     original_name: str | None = attr.ib()
+    suggested_object_id: str | None = attr.ib()
     supported_features: int = attr.ib()
     translation_key: str | None = attr.ib()
     unit_of_measurement: str | None = attr.ib()
@@ -359,6 +360,7 @@ class RegistryEntry:
                     "original_icon": self.original_icon,
                     "original_name": self.original_name,
                     "platform": self.platform,
+                    "suggested_object_id": self.suggested_object_id,
                     "supported_features": self.supported_features,
                     "translation_key": self.translation_key,
                     "unique_id": self.unique_id,
@@ -547,6 +549,11 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     entity["config_subentry_id"] = None
                 for entity in data["deleted_entities"]:
                     entity["config_subentry_id"] = None
+
+            if old_minor_version < 17:
+                # Version 1.17 adds suggested_object_id
+                for entity in data["entities"]:
+                    entity["suggested_object_id"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -942,6 +949,7 @@ class EntityRegistry(BaseRegistry):
             original_icon=none_if_undefined(original_icon),
             original_name=none_if_undefined(original_name),
             platform=platform,
+            suggested_object_id=suggested_object_id,
             supported_features=none_if_undefined(supported_features) or 0,
             translation_key=none_if_undefined(translation_key),
             unique_id=unique_id,
@@ -1378,6 +1386,7 @@ class EntityRegistry(BaseRegistry):
                     original_icon=entity["original_icon"],
                     original_name=entity["original_name"],
                     platform=entity["platform"],
+                    suggested_object_id=entity["suggested_object_id"],
                     supported_features=entity["supported_features"],
                     translation_key=entity["translation_key"],
                     unique_id=entity["unique_id"],
