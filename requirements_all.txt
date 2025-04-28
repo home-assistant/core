@@ -1318,7 +1318,7 @@ lcn-frontend==0.2.4
 ld2410-ble==0.1.1
 
 # homeassistant.components.leaone
-leaone-ble==0.1.0
+leaone-ble==0.2.0
 
 # homeassistant.components.led_ble
 led-ble==1.1.7
