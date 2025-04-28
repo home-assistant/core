@@ -2178,7 +2178,7 @@ pylutron==0.2.18
 pymailgunner==1.4
 
 # homeassistant.components.mammotion
-pymammotion==0.4.21
+pymammotion==0.4.26
 
 # homeassistant.components.firmata
 pymata-express==1.19
