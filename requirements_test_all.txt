@@ -2205,7 +2205,7 @@ sensorpro-ble==0.5.3
 sensorpush-api==2.1.2
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.7.1
+sensorpush-ble==1.8.0
 
 # homeassistant.components.sensorpush_cloud
 sensorpush-ha==1.3.2
