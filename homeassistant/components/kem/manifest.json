@@ -12,6 +12,6 @@
   "documentation": "https://www.home-assistant.io/integrations/kem",
   "iot_class": "cloud_polling",
   "loggers": ["aiokem"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["aiokem==0.5.4"]
 }

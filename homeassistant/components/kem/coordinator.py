@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching KEM data API."""
 
-    config_entry: KEMConfigEntry
+    config_entry: ConfigEntry
 
     def __init__(
         self,

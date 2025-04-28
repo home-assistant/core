@@ -28,6 +28,9 @@ from .const import DEVICE_DATA_DEVICES, DEVICE_DATA_ID
 from .entity import KemEntity
 from .types import KemConfigEntry
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class KemSensorEntityDescription(SensorEntityDescription):
