@@ -2909,7 +2909,7 @@ tessie-api==0.1.1
 thermobeacon-ble==0.9.0
 
 # homeassistant.components.thermopro
-thermopro-ble==0.11.0
+thermopro-ble==0.12.0
 
 # homeassistant.components.thingspeak
 thingspeak==1.0.0
