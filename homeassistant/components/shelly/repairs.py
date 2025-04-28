@@ -61,7 +61,7 @@ async def async_create_fix_flow(
             and (entry_id := data.get("entry_id")) is not None
             and (entry := hass.config_entries.async_get_entry(entry_id)) is not None
         ):
-            device = entry.runtime_data.rpc.device
+            device: RpcDevice = entry.runtime_data.rpc.device
             return BleScannerFirmwareUpdateFlow(device=device)
 
     return ConfirmRepairFlow()
