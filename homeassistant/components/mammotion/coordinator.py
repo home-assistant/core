@@ -45,6 +45,7 @@ from .const import (
     CONF_MAMMOTION_DATA,
     CONF_REGION_DATA,
     CONF_SESSION_DATA,
+    DEFAULT_RETRY_COUNT,
     DOMAIN,
     EXPIRED_CREDENTIAL_EXCEPTIONS,
     LOGGER,
@@ -174,7 +175,7 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         except EXPIRED_CREDENTIAL_EXCEPTIONS:
             self.update_failures += 1
             await self.async_refresh_login()
-            if self.update_failures < 5:
+            if self.update_failures < DEFAULT_RETRY_COUNT:
                 await self.async_send_command(command, **kwargs)
             return False
         except GatewayTimeoutException as ex:
@@ -182,7 +183,6 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             self.update_failures = 0
             return False
         except (DeviceOfflineException, NoConnectionException) as ex:
-            """Device is offline try bluetooth if we have it."""
             try:
                 if device.has_ble():
                     # if we don't do this it will stay connected and no longer update over wifi
@@ -227,7 +227,7 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         except EXPIRED_CREDENTIAL_EXCEPTIONS:
             self.update_failures += 1
             await self.async_refresh_login()
-            if self.update_failures < 5:
+            if self.update_failures < DEFAULT_RETRY_COUNT:
                 await self.async_sync_maps()
 
     async def async_start_stop_blades(self, start_stop: bool) -> None:
@@ -410,7 +410,6 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                     self.device_name
                 ).mower_state = mower_state
         except InvalidFieldValue:
-            """invalid"""
             self.data = MowingDevice()
             self.manager.get_device_by_name(self.device_name).mower_state = self.data
 
@@ -429,8 +428,10 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         if device.mower_state.report_data.dev.sys_status in NO_REQUEST_MODES:
             return self.data
 
-        if self.update_failures > 5 and device.preference is ConnectionPreference.WIFI:
-            """Don't hammer the mammotion/ali servers"""
+        if (
+            self.update_failures > DEFAULT_RETRY_COUNT
+            and device.preference is ConnectionPreference.WIFI
+        ):
             loop = asyncio.get_running_loop()
             loop.call_later(
                 60, lambda: asyncio.create_task(self.clear_update_failures())
@@ -504,25 +505,10 @@ class MammotionReportUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevi
             await self.async_send_command("get_report_cfg")
 
         except DeviceOfflineException as ex:
-            """Device is offline try bluetooth if we have it."""
             if ex.iot_id == self.device.iotId:
                 device = self.manager.get_device_by_name(self.device_name)
                 await self.device_offline(device)
                 return device.mower_state
-
-        LOGGER.debug("Updated Mammotion device %s", self.device_name)
-        LOGGER.debug("================= Debug Log =================")
-        if device.preference is ConnectionPreference.BLUETOOTH:
-            LOGGER.debug(
-                "Mammotion device data: %s",
-                self.manager.get_device_by_name(self.device_name).ble()._raw_data,
-            )
-        if device.preference is ConnectionPreference.WIFI:
-            LOGGER.debug(
-                "Mammotion device data: %s",
-                self.manager.get_device_by_name(self.device_name).cloud()._raw_data,
-            )
-        LOGGER.debug("==================================")
 
         self.update_failures = 0
         data = self.manager.get_device_by_name(self.device_name).mower_state
@@ -584,13 +570,12 @@ class MammotionMaintenanceUpdateCoordinator(MammotionBaseUpdateCoordinator[Maint
             await self.async_send_command("get_maintenance")
 
         except DeviceOfflineException as ex:
-            """Device is offline try bluetooth if we have it."""
             if ex.iot_id == self.device.iotId:
                 device = self.manager.get_device_by_name(self.device_name)
                 await self.device_offline(device)
                 return device.mower_state.report_data.maintenance
         except GatewayTimeoutException:
-            """Gateway is timing out again."""
+            pass
 
         return self.manager.get_device_by_name(
             self.device.deviceName
@@ -639,13 +624,12 @@ class MammotionDeviceVersionUpdateCoordinator(
                 await self.async_send_command(command)
 
             except DeviceOfflineException as ex:
-                """Device is offline bluetooth has been attempted."""
                 if ex.iot_id == self.device.iotId:
                     device = self.manager.get_device_by_name(self.device_name)
                     await self.device_offline(device)
                     return device.mower_state.mower_state
             except GatewayTimeoutException:
-                """Gateway is timing out again."""
+                pass
 
         data = self.manager.get_device_by_name(self.device_name).mower_state.mower_state
         await self.check_firmware_version()
@@ -663,7 +647,7 @@ class MammotionDeviceVersionUpdateCoordinator(
         try:
             await self.async_send_command("get_device_product_model")
         except DeviceOfflineException:
-            """Device is offline bluetooth has been attempted."""
+            return
 
 
 class MammotionMapUpdateCoordinator(MammotionBaseUpdateCoordinator[MowerInfo]):
@@ -685,10 +669,6 @@ class MammotionMapUpdateCoordinator(MammotionBaseUpdateCoordinator[MowerInfo]):
             update_interval=MAP_INTERVAL,
         )
 
-    def _map_callback(self) -> None:
-        """Trigger a resync when the bol hash changes."""
-        # TODO setup callback to get bol hash data
-
     async def _async_update_data(self):
         """Get data from the device."""
         if data := await super()._async_update_data():
@@ -699,16 +679,16 @@ class MammotionMapUpdateCoordinator(MammotionBaseUpdateCoordinator[MowerInfo]):
             if (
                 len(device.mower_state.map.hashlist) == 0
                 or len(device.mower_state.map.missing_hashlist()) > 0
+                or len(device.mower_state.map.plan) == 0
             ):
                 await self.manager.start_map_sync(self.device_name)
 
         except DeviceOfflineException as ex:
-            """Device is offline try bluetooth if we have it."""
             if ex.iot_id == self.device.iotId:
                 await self.device_offline(device)
                 return device.mower_state.mower_state
         except GatewayTimeoutException:
-            """Gateway is timing out again."""
+            pass
 
         return self.manager.get_device_by_name(self.device_name).mower_state.mower_state
 
@@ -725,8 +705,7 @@ class MammotionMapUpdateCoordinator(MammotionBaseUpdateCoordinator[MowerInfo]):
             if not DeviceType.is_luba1(self.device_name):
                 await self.async_get_area_list()
         except DeviceOfflineException as ex:
-            """Device is offline try bluetooth if we have it."""
             if ex.iot_id == self.device.iotId:
                 await self.device_offline(device)
         except GatewayTimeoutException:
-            """Gateway is timing out again."""
+            return
