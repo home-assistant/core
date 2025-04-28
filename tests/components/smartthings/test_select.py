@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pysmartthings import Attribute, Capability, Command
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -12,7 +13,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.smartthings import MAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -21,6 +22,7 @@ from . import (
     set_attribute_value,
     setup_integration,
     snapshot_smartthings_entities,
+    trigger_health_update,
     trigger_update,
 )
 
@@ -119,3 +121,27 @@ async def test_select_option_without_remote_control(
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_wd_000001"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("select.dryer").state == "stop"
+
+    await trigger_health_update(
+        hass, devices, "02f7256e-8353-5bdd-547f-bd5b1647e01b", HealthStatus.OFFLINE
+    )
+
+    assert hass.states.get("select.dryer").state == STATE_UNAVAILABLE
+
+    await trigger_health_update(
+        hass, devices, "02f7256e-8353-5bdd-547f-bd5b1647e01b", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("select.dryer").state == "stop"

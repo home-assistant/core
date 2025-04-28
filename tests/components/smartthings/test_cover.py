@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pysmartthings import Attribute, Capability, Command, Status
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -20,12 +21,18 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration, snapshot_smartthings_entities, trigger_update
+from . import (
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_health_update,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry
 
@@ -190,3 +197,27 @@ async def test_position_update(
     )
 
     assert hass.states.get("cover.curtain_1a").attributes[ATTR_CURRENT_POSITION] == 50
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("cover.curtain_1a").state == STATE_OPEN
+
+    await trigger_health_update(
+        hass, devices, "571af102-15db-4030-b76b-245a691f74a5", HealthStatus.OFFLINE
+    )
+
+    assert hass.states.get("cover.curtain_1a").state == STATE_UNAVAILABLE
+
+    await trigger_health_update(
+        hass, devices, "571af102-15db-4030-b76b-245a691f74a5", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("cover.curtain_1a").state == STATE_OPEN

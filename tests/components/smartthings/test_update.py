@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pysmartthings import Attribute, Capability, Command
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -12,11 +13,22 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration, snapshot_smartthings_entities, trigger_update
+from . import (
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_health_update,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry
 
@@ -140,3 +152,27 @@ async def test_state_update_available(
     )
 
     assert hass.states.get("update.dimmer_debian_firmware").state == STATE_ON
+
+
+@pytest.mark.parametrize("device_fixture", ["centralite"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("update.dimmer_debian_firmware").state == STATE_OFF
+
+    await trigger_health_update(
+        hass, devices, "d0268a69-abfb-4c92-a646-61cec2e510ad", HealthStatus.OFFLINE
+    )
+
+    assert hass.states.get("update.dimmer_debian_firmware").state == STATE_UNAVAILABLE
+
+    await trigger_health_update(
+        hass, devices, "d0268a69-abfb-4c92-a646-61cec2e510ad", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("update.dimmer_debian_firmware").state == STATE_OFF

@@ -24,6 +24,7 @@ from pysmartthings import (
     SmartThingsSinkError,
     Status,
 )
+from pysmartthings.models import HealthStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -79,6 +80,7 @@ class FullDevice:
 
     device: Device
     status: dict[str, ComponentStatus]
+    online: bool
 
 
 type SmartThingsConfigEntry = ConfigEntry[SmartThingsData]
@@ -192,7 +194,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         devices = await client.get_devices()
         for device in devices:
             status = process_status(await client.get_device_status(device.device_id))
-            device_status[device.device_id] = FullDevice(device=device, status=status)
+            online = await client.get_device_health(device.device_id)
+            device_status[device.device_id] = FullDevice(
+                device=device, status=status, online=online.state == HealthStatus.ONLINE
+            )
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
 

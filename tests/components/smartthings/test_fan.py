@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pysmartthings import Capability, Command
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -18,12 +19,14 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration, snapshot_smartthings_entities
+from . import setup_integration, snapshot_smartthings_entities, trigger_health_update
 
 from tests.common import MockConfigEntry
 
@@ -166,3 +169,27 @@ async def test_set_preset_mode(
         MAIN,
         argument="turbo",
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["fake_fan"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("fan.fake_fan").state == STATE_OFF
+
+    await trigger_health_update(
+        hass, devices, "f1af21a2-d5a1-437c-b10a-b34a87394b71", HealthStatus.OFFLINE
+    )
+
+    assert hass.states.get("fan.fake_fan").state == STATE_UNAVAILABLE
+
+    await trigger_health_update(
+        hass, devices, "f1af21a2-d5a1-437c-b10a-b34a87394b71", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("fan.fake_fan").state == STATE_OFF

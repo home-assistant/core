@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pysmartthings import Attribute, Capability, Command
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -12,12 +13,18 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration, snapshot_smartthings_entities, trigger_update
+from . import (
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_health_update,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry
 
@@ -85,3 +92,27 @@ async def test_state_update(
     )
 
     assert hass.states.get("valve.volvo").state == ValveState.OPEN
+
+
+@pytest.mark.parametrize("device_fixture", ["virtual_valve"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("valve.volvo").state == ValveState.CLOSED
+
+    await trigger_health_update(
+        hass, devices, "612ab3c2-3bb0-48f7-b2c0-15b169cb2fc3", HealthStatus.OFFLINE
+    )
+
+    assert hass.states.get("valve.volvo").state == STATE_UNAVAILABLE
+
+    await trigger_health_update(
+        hass, devices, "612ab3c2-3bb0-48f7-b2c0-15b169cb2fc3", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("valve.volvo").state == ValveState.CLOSED

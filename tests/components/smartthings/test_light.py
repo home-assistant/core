@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, call
 
 from pysmartthings import Attribute, Capability, Command
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -28,6 +29,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
@@ -37,6 +39,7 @@ from . import (
     set_attribute_value,
     setup_integration,
     snapshot_smartthings_entities,
+    trigger_health_update,
     trigger_update,
 )
 
@@ -413,3 +416,27 @@ async def test_color_mode_after_startup(
         hass.states.get("light.standing_light").attributes[ATTR_COLOR_MODE]
         is ColorMode.COLOR_TEMP
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("light.standing_light").state == STATE_OFF
+
+    await trigger_health_update(
+        hass, devices, "cb958955-b015-498c-9e62-fc0c51abd054", HealthStatus.OFFLINE
+    )
+
+    assert hass.states.get("light.standing_light").state == STATE_UNAVAILABLE
+
+    await trigger_health_update(
+        hass, devices, "cb958955-b015-498c-9e62-fc0c51abd054", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("light.standing_light").state == STATE_OFF

@@ -5,6 +5,7 @@ import time
 from unittest.mock import AsyncMock, patch
 
 from pysmartthings import (
+    DeviceHealth,
     DeviceResponse,
     DeviceStatus,
     LocationResponse,
@@ -85,6 +86,9 @@ def mock_smartthings() -> Generator[AsyncMock]:
         ).items
         client.create_subscription.return_value = Subscription.from_json(
             load_fixture("subscription.json", DOMAIN)
+        )
+        client.get_device_health.return_value = DeviceHealth.from_json(
+            load_fixture("device_health.json", DOMAIN)
         )
         yield client
 

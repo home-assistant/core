@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pysmartthings import Attribute, Capability
+from pysmartthings.models import HealthStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -11,12 +12,17 @@ from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.smartthings import DOMAIN, MAIN
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration, snapshot_smartthings_entities, trigger_update
+from . import (
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_health_update,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry
 
@@ -58,6 +64,33 @@ async def test_state_update(
     )
 
     assert hass.states.get("binary_sensor.refrigerator_cooler_door").state == STATE_ON
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ref_normal_000001"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.refrigerator_cooler_door").state == STATE_OFF
+
+    await trigger_health_update(
+        hass, devices, "7db87911-7dce-1cf2-7119-b953432a2f09", HealthStatus.OFFLINE
+    )
+
+    assert (
+        hass.states.get("binary_sensor.refrigerator_cooler_door").state
+        == STATE_UNAVAILABLE
+    )
+
+    await trigger_health_update(
+        hass, devices, "7db87911-7dce-1cf2-7119-b953432a2f09", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("binary_sensor.refrigerator_cooler_door").state == STATE_OFF
 
 
 @pytest.mark.parametrize(
