@@ -32,9 +32,6 @@
   },
   "entity": {
     "sensor": {
-      "firmware_version": {
-        "name": "Firmware version"
-      },
       "engine_speed": {
         "name": "Engine speed"
       },
@@ -64,9 +61,6 @@
       },
       "power_source": {
         "name": "Power source"
-      },
-      "switch_state": {
-        "name": "Switch state"
       },
       "total_operation": {
         "name": "Total operation"
