@@ -173,6 +173,93 @@
     }),
   ])
 # ---
+# name: test_device_tracker_empty[twingo_3_electric]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'renault',
+          'VF1AAAAA555777999',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Renault',
+      'model': 'Twingo iii',
+      'model_id': 'X071VE',
+      'name': 'REG-NUMBER',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_device_tracker_empty[twingo_3_electric].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'device_tracker',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'device_tracker.reg_number_location',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Location',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'location',
+      'unique_id': 'vf1aaaaa555777999_location',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_device_tracker_empty[twingo_3_electric].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'REG-NUMBER Location',
+        'source_type': <SourceType.GPS: 'gps'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'device_tracker.reg_number_location',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+  ])
+# ---
 # name: test_device_tracker_empty[zoe_40]
   list([
     DeviceRegistryEntrySnapshot({
@@ -465,6 +552,96 @@
   ])
 # ---
 # name: test_device_trackers[captur_phev].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'REG-NUMBER Location',
+        'gps_accuracy': 0,
+        'latitude': 48.1234567,
+        'longitude': 11.1234567,
+        'source_type': <SourceType.GPS: 'gps'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'device_tracker.reg_number_location',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'not_home',
+    }),
+  ])
+# ---
+# name: test_device_trackers[twingo_3_electric]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'renault',
+          'VF1AAAAA555777999',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Renault',
+      'model': 'Twingo iii',
+      'model_id': 'X071VE',
+      'name': 'REG-NUMBER',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_device_trackers[twingo_3_electric].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'device_tracker',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'device_tracker.reg_number_location',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Location',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'location',
+      'unique_id': 'vf1aaaaa555777999_location',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_device_trackers[twingo_3_electric].2
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
