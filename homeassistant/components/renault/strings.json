@@ -155,7 +155,6 @@
         "state": {
           "unplugged": "Unplugged",
           "plugged": "Plugged in",
-          "plugged_waiting_for_charge": "Plugged in, waiting for charge",
           "plug_error": "Plug error",
           "plug_unknown": "Plug unknown"
         }
