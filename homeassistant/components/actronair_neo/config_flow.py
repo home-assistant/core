@@ -1,6 +1,6 @@
 """Setup config flow for Actron Neo integration."""
 
-import logging
+from collections.abc import Mapping
 from typing import Any
 
 from actron_neo_api import ActronNeoAPI, ActronNeoAPIError, ActronNeoAuthError
@@ -10,9 +10,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import instance_id
 
-from .const import DOMAIN, ERROR_API_ERROR, ERROR_INVALID_AUTH
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, DOMAIN, ERROR_API_ERROR, ERROR_INVALID_AUTH
 
 ACTRON_AIR_SCHEMA = vol.Schema(
     {
@@ -50,17 +48,21 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
 
-            assert api is not None
-
             try:
                 instance_uuid = await instance_id.async_get(self.hass)
                 await api.request_pairing_token("HomeAssistant", instance_uuid)
                 await api.refresh_token()
             except ActronNeoAPIError:
                 errors["base"] = ERROR_API_ERROR
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=ACTRON_AIR_SCHEMA,
+                    errors=errors,
+                )
 
             user_data = await api.get_user()
             await self.async_set_unique_id(user_data["id"])
+
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=username,
@@ -74,3 +76,17 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=ACTRON_AIR_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthorization request."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self) -> ConfigFlowResult:
+        """Handle reauthorization confirmation."""
+        return await self.async_step_user()
+
+    async def async_step_reconfigure(self) -> ConfigFlowResult:
+        """Reconfigure the integration."""
+        return await self.async_step_user()
