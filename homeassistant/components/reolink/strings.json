@@ -17,8 +17,8 @@
           "port": "The HTTP(s) port to connect to the Reolink device API. For HTTP normally: '80', for HTTPS normally '443'.",
           "use_https": "Use an HTTPS (SSL) connection to the Reolink device.",
           "baichuan_port": "The 'Basic Service Port' to connect to the Reolink device over TCP. Normally '9000' unless manually changed in the Reolink desktop client.",
-          "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
-          "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
+          "username": "Username to log in to the Reolink device itself. Not the Reolink cloud account.",
+          "password": "Password to log in to the Reolink device itself. Not the Reolink cloud account."
         }
       },
       "privacy": {
@@ -33,7 +33,7 @@
       "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
       "password_incompatible": "Password contains incompatible special character or is too long, maximum 31 characters and only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "update_needed": "Failed to login because of outdated firmware, please update the firmware to version {needed_firmware} using the Reolink Download Center: {download_center_url}, currently version {current_firmware} is installed",
+      "update_needed": "Failed to log in because of outdated firmware, please update the firmware to version {needed_firmware} using the Reolink Download Center: {download_center_url}, currently version {current_firmware} is installed",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
     "abort": {
@@ -652,7 +652,7 @@
         "name": "Floodlight mode",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
+          "auto": "[%key:common::state::auto%]",
           "onatnight": "On at night",
           "schedule": "Schedule",
           "adaptive": "Adaptive",
@@ -662,7 +662,7 @@
       "day_night_mode": {
         "name": "Day night mode",
         "state": {
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "color": "Color",
           "blackwhite": "Black & white"
         }
@@ -691,7 +691,7 @@
         "name": "Doorbell LED",
         "state": {
           "stayoff": "Stay off",
-          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
+          "auto": "[%key:common::state::auto%]",
           "alwaysonatnight": "Auto & always on at night",
           "always": "Always on",
           "alwayson": "Always on"
@@ -702,7 +702,7 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
-          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
+          "auto": "[%key:common::state::auto%]"
         }
       },
       "binning_mode": {
@@ -710,7 +710,7 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
-          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
+          "auto": "[%key:common::state::auto%]"
         }
       },
       "hub_alarm_ringtone": {
@@ -845,6 +845,9 @@
           "home": "[%key:common::state::home%]",
           "away": "[%key:common::state::not_home%]"
         }
+      },
+      "packing_time": {
+        "name": "Recording packing time"
       }
     },
     "sensor": {

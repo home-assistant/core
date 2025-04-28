@@ -11,9 +11,12 @@ import aiohttp
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    config_validation as cv,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
-from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .api import AsyncConfigEntryAuth
@@ -86,8 +89,18 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: HomeConnectConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    async_delete_issue(hass, DOMAIN, "deprecated_set_program_and_option_actions")
-    async_delete_issue(hass, DOMAIN, "deprecated_command_actions")
+    issue_registry = ir.async_get(hass)
+    issues_to_delete = [
+        "deprecated_set_program_and_option_actions",
+        "deprecated_command_actions",
+    ] + [
+        issue_id
+        for (issue_domain, issue_id) in issue_registry.issues
+        if issue_domain == DOMAIN
+        and issue_id.startswith("home_connect_too_many_connected_paired_events")
+    ]
+    for issue_id in issues_to_delete:
+        issue_registry.async_delete(DOMAIN, issue_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
