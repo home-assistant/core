@@ -17,7 +17,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import CLIENT_ID, CLIENT_SECRET
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture(name="expires_at")
@@ -70,7 +70,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 @pytest.fixture(scope="package")
 def load_device_file() -> str:
     """Fixture for loading device file."""
-    return "3_devices.json"
+    return "4_devices.json"
 
 
 @pytest.fixture
@@ -91,10 +91,23 @@ def action_fixture(load_action_file: str) -> MieleAction:
     return load_json_object_fixture(load_action_file, DOMAIN)
 
 
+@pytest.fixture(scope="package")
+def load_programs_file() -> str:
+    """Fixture for loading programs file."""
+    return "programs_washing_machine.json"
+
+
+@pytest.fixture
+def programs_fixture(load_programs_file: str) -> list[dict]:
+    """Fixture for available programs."""
+    return load_fixture(load_programs_file, DOMAIN)
+
+
 @pytest.fixture
 def mock_miele_client(
     device_fixture,
     action_fixture,
+    programs_fixture,
 ) -> Generator[MagicMock]:
     """Mock a Miele client."""
 
@@ -106,6 +119,7 @@ def mock_miele_client(
 
         client.get_devices.return_value = device_fixture
         client.get_actions.return_value = action_fixture
+        client.get_programs.return_value = programs_fixture
 
         yield client
 
