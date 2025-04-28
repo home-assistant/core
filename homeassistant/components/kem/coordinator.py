@@ -58,6 +58,7 @@ class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return result
 
     @property
-    def entry_unique_id(self) -> str | None:
+    def entry_unique_id(self) -> str:
         """Get the unique ID for the entry."""
+        assert self.config_entry.unique_id
         return self.config_entry.unique_id
