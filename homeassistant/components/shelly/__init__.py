@@ -343,8 +343,8 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                     severity=ir.IssueSeverity.WARNING,
                     translation_key="ble_scanner_firmware_unsupported",
                     translation_placeholders={
-                        "device_name": runtime_data.rpc.name,
-                        "ip_address": runtime_data.rpc.device.ip_address,
+                        "device_name": device.name,
+                        "ip_address": device.ip_address,
                         "firmware": firmware,
                     },
                     data={"entry_id": entry.entry_id},
