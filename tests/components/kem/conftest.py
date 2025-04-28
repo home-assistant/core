@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.kem.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_json_value_fixture
 
@@ -71,7 +70,7 @@ async def mock_kem(
         mock_auth.return_value = None
         mock_homes.return_value = homes
         mock_generator.return_value = generator
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.config_entries.async_setup(kem_config_entry.entry_id)
         await hass.async_block_till_done()
 
         mocks = {
