@@ -100,13 +100,11 @@ SENSORS: tuple[KemSensorEntityDescription, ...] = (
     ),
     KemSensorEntityDescription(
         key="status",
-        icon="mdi:home-lightning-bolt",
         translation_key="generator_status",
         use_device_key=True,
     ),
     KemSensorEntityDescription(
         key="engineState",
-        icon="mdi:home-lightning-bolt",
         translation_key="engine_state",
     ),
     KemSensorEntityDescription(

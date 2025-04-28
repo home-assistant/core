@@ -437,7 +437,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:home-lightning-bolt',
+    'original_icon': None,
     'original_name': 'Engine state',
     'platform': 'kem',
     'previous_unique_id': None,
@@ -451,7 +451,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Generator 1 Engine state',
-      'icon': 'mdi:home-lightning-bolt',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.generator_1_engine_state',
@@ -588,7 +587,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:home-lightning-bolt',
+    'original_icon': None,
     'original_name': 'Generator status',
     'platform': 'kem',
     'previous_unique_id': None,
@@ -602,7 +601,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Generator 1 Generator status',
-      'icon': 'mdi:home-lightning-bolt',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.generator_1_generator_status',

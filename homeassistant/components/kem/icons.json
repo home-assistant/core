@@ -3,6 +3,15 @@
     "sensor": {
       "engine_speed": {
         "default": "mdi:speedometer"
+      },
+      "engine_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "generator_status": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "power_source": {
+        "default": "mdi:home-lightning-bolt"
       }
     }
   }
