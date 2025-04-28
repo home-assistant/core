@@ -330,6 +330,17 @@
       },
       "consumer_energy_imported_from_generator": {
         "default": "mdi:generator-stationary"
+      },
+      "sentry_mode": {
+        "default": "mdi:shield-car",
+        "state": {
+          "off": "mdi:shield-off-outline",
+          "idle": "mdi:shield-outline",
+          "armed": "mdi:shield-check",
+          "aware": "mdi:shield-alert",
+          "panic": "mdi:shield-alert-outline",
+          "quiet": "mdi:shield-half-full"
+        }
       }
     },
     "switch": {
