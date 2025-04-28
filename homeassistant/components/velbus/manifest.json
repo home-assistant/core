@@ -14,7 +14,7 @@
     "velbus-protocol"
   ],
   "quality_scale": "bronze",
-  "requirements": ["velbus-aio==2025.3.1"],
+  "requirements": ["velbus-aio==2025.4.2"],
   "usb": [
     {
       "vid": "10CF",
