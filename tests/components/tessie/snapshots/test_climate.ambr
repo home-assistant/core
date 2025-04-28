@@ -40,6 +40,7 @@
     'original_name': 'Climate',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': 'Test Climate',
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'primary',
     'unique_id': 'VINVINVIN-primary',

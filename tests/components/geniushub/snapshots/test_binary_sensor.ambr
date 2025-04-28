@@ -27,6 +27,7 @@
     'original_name': 'Single Channel Receiver 22',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': 'Single Channel Receiver 22',
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_device_22',

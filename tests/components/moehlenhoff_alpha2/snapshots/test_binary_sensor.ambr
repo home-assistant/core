@@ -27,6 +27,7 @@
     'original_name': 'Büro IO device 1 battery',
     'platform': 'moehlenhoff_alpha2',
     'previous_unique_id': None,
+    'suggested_object_id': 'Büro IO device 1 battery',
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Alpha2Test:1:battery',
