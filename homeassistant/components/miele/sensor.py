@@ -46,7 +46,7 @@ DISABLED_TEMPERATURE = -32768
 class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
-    value_fn: Callable[[MieleDevice], StateType | list[int]]
+    value_fn: Callable[[MieleDevice], StateType]
     zone: int | None = None
 
 
