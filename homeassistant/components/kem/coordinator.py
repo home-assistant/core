@@ -32,7 +32,7 @@ class KemRuntimeData:
 class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching KEM data API."""
 
-    config_entry: ConfigEntry
+    config_entry: KemConfigEntry
 
     def __init__(
         self,
