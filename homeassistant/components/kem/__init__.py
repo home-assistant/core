@@ -19,9 +19,8 @@ from .const import (
     DEVICE_DATA_ID,
     DOMAIN,
 )
-from .coordinator import KemUpdateCoordinator
+from .coordinator import KemConfigEntry, KemRuntimeData, KemUpdateCoordinator
 from .data import HAAioKem
-from .types import KemConfigEntry, KemRuntimeData
 
 PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -12,8 +13,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL_MINUTES
+from .data import HAAioKem
 
 _LOGGER = logging.getLogger(__name__)
+
+type KemConfigEntry = ConfigEntry[KemRuntimeData]
+
+
+@dataclass
+class KemRuntimeData:
+    """Dataclass to hold runtime data for the KEM integration."""
+
+    coordinators: dict[int, KemUpdateCoordinator]
+    kem: HAAioKem
+    homes: list[dict[str, Any]]
 
 
 class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
