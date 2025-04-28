@@ -510,8 +510,8 @@ class AbstractTemplateLight(LightEntity):
 
         return optimistic_set
 
-    def get_registered_scripts(self, **kwargs) -> tuple[str, dict]:
-        """Get registered scripts for turn_on."""
+    def get_registered_script(self, **kwargs) -> tuple[str, dict]:
+        """Get registered script for turn_on."""
         common_params = {}
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -1110,7 +1110,7 @@ class LightTemplate(TemplateEntity, AbstractTemplateLight):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         optimistic_set = self.set_optimistic_attributes(**kwargs)
-        script_id, script_params = self.get_registered_scripts(**kwargs)
+        script_id, script_params = self.get_registered_script(**kwargs)
         await self.async_run_script(
             self._action_scripts[script_id],
             run_variables=script_params,
@@ -1243,7 +1243,7 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         optimistic_set = self.set_optimistic_attributes(**kwargs)
-        script_id, script_params = self.get_registered_scripts(**kwargs)
+        script_id, script_params = self.get_registered_script(**kwargs)
         if self._template and self._state is None:
             # Ensure an optimistic state is set on the entity when turn_on
             # is called and the main state hasn't rendered.  This will only
