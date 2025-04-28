@@ -321,7 +321,6 @@ class AbstractTemplateLight(LightEntity):
             (CONF_EFFECT_ACTION, None),
             (CONF_TEMPERATURE_ACTION, ColorMode.COLOR_TEMP),
             (CONF_LEVEL_ACTION, ColorMode.BRIGHTNESS),
-            (CONF_COLOR_ACTION, ColorMode.HS),
             (CONF_HS_ACTION, ColorMode.HS),
             (CONF_RGB_ACTION, ColorMode.RGB),
             (CONF_RGBW_ACTION, ColorMode.RGBW),
@@ -405,7 +404,10 @@ class AbstractTemplateLight(LightEntity):
         return self._state
 
     def set_optimistic_attributes(self, **kwargs) -> bool:  # noqa: C901
-        """Set optimistic features."""
+        """Update attributes which should be set optimistically.
+
+        Returns True if any attribute was updated.
+        """
         optimistic_set = False
         if self._template is None:
             self._state = True
@@ -508,7 +510,7 @@ class AbstractTemplateLight(LightEntity):
 
         return optimistic_set
 
-    def get_registered_scripts(self, **kwargs) -> Generator[tuple[str, dict]]:
+    def run_registered_scripts(self, **kwargs) -> tuple[str, dict]:
         """Iterate registered turn_on scripts."""
         common_params = {}
 
@@ -526,9 +528,9 @@ class AbstractTemplateLight(LightEntity):
                 kwargs[ATTR_COLOR_TEMP_KELVIN]
             )
 
-            yield (script, common_params)
+            return (script, common_params)
 
-        elif (
+        if (
             ATTR_EFFECT in kwargs
             and (script := CONF_EFFECT_ACTION) in self._registered_scripts
         ):
@@ -545,9 +547,9 @@ class AbstractTemplateLight(LightEntity):
 
             common_params["effect"] = effect
 
-            yield (script, common_params)
+            return (script, common_params)
 
-        elif (
+        if (
             ATTR_HS_COLOR in kwargs
             and (script := CONF_HS_ACTION) in self._registered_scripts
         ):
@@ -556,9 +558,9 @@ class AbstractTemplateLight(LightEntity):
             common_params["h"] = int(hs_value[0])
             common_params["s"] = int(hs_value[1])
 
-            yield (script, common_params)
+            return (script, common_params)
 
-        elif (
+        if (
             ATTR_RGBWW_COLOR in kwargs
             and (script := CONF_RGBWW_ACTION) in self._registered_scripts
         ):
@@ -575,9 +577,9 @@ class AbstractTemplateLight(LightEntity):
             common_params["cw"] = int(rgbww_value[3])
             common_params["ww"] = int(rgbww_value[4])
 
-            yield (script, common_params)
+            return (script, common_params)
 
-        elif (
+        if (
             ATTR_RGBW_COLOR in kwargs
             and (script := CONF_RGBW_ACTION) in self._registered_scripts
         ):
@@ -593,9 +595,9 @@ class AbstractTemplateLight(LightEntity):
             common_params["b"] = int(rgbw_value[2])
             common_params["w"] = int(rgbw_value[3])
 
-            yield (script, common_params)
+            return (script, common_params)
 
-        elif (
+        if (
             ATTR_RGB_COLOR in kwargs
             and (script := CONF_RGB_ACTION) in self._registered_scripts
         ):
@@ -605,16 +607,15 @@ class AbstractTemplateLight(LightEntity):
             common_params["g"] = int(rgb_value[1])
             common_params["b"] = int(rgb_value[2])
 
-            yield (script, common_params)
+            return (script, common_params)
 
-        elif (
+        if (
             ATTR_BRIGHTNESS in kwargs
             and (script := CONF_LEVEL_ACTION) in self._registered_scripts
         ):
-            yield (script, common_params)
+            return (script, common_params)
 
-        else:
-            yield (CONF_ON_ACTION, common_params)
+        return (CONF_ON_ACTION, common_params)
 
     @callback
     def _update_brightness(self, brightness):
@@ -1109,12 +1110,12 @@ class LightTemplate(TemplateEntity, AbstractTemplateLight):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         optimistic_set = self.set_optimistic_attributes(**kwargs)
-        for script_id, script_params in self.get_registered_scripts(**kwargs):
-            await self.async_run_script(
-                self._action_scripts[script_id],
-                run_variables=script_params,
-                context=self._context,
-            )
+        script_id, script_params = self.run_registered_scripts(**kwargs)
+        await self.async_run_script(
+            self._action_scripts[script_id],
+            run_variables=script_params,
+            context=self._context,
+        )
 
         if optimistic_set:
             self.async_write_ha_state()
@@ -1242,19 +1243,19 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         optimistic_set = self.set_optimistic_attributes(**kwargs)
-        for script_id, script_params in self.get_registered_scripts(**kwargs):
-            if self._template and self._state is None:
-                # Ensure an optimistic state is set on the entity when turn_on
-                # is called and the main state hasn't rendered.  This will only
-                # occur when the state is unknown, the template hasn't triggered,
-                # and turn_on is called.
-                self._state = True
+        script_id, script_params = self.run_registered_scripts(**kwargs)
+        if self._template and self._state is None:
+            # Ensure an optimistic state is set on the entity when turn_on
+            # is called and the main state hasn't rendered.  This will only
+            # occur when the state is unknown, the template hasn't triggered,
+            # and turn_on is called.
+            self._state = True
 
-            await self.async_run_script(
-                self._action_scripts[script_id],
-                run_variables=script_params,
-                context=self._context,
-            )
+        await self.async_run_script(
+            self._action_scripts[script_id],
+            run_variables=script_params,
+            context=self._context,
+        )
 
         if optimistic_set:
             self.async_write_ha_state()
