@@ -167,7 +167,6 @@ class MieleClimate(MieleEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate entity."""
         super().__init__(coordinator, device_id, description)
-        self.api = coordinator.api
 
         t_key = self.entity_description.translation_key
 

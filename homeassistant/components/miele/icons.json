@@ -34,6 +34,12 @@
       },
       "remaining_time": {
         "default": "mdi:clock-end"
+      },
+      "core_temperature": {
+        "default": "mdi:thermometer-probe"
+      },
+      "core_target_temperature": {
+        "default": "mdi:thermometer-probe"
       }
     },
     "switch": {

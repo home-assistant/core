@@ -199,6 +199,12 @@
           "superheating": "Superheating",
           "waiting_to_start": "Waiting to start"
         }
+      },
+      "core_temperature": {
+        "name": "Core temperature"
+      },
+      "core_target_temperature": {
+        "name": "Core target temperature"
       }
     },
     "switch": {
