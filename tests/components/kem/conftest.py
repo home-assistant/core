@@ -16,13 +16,13 @@ from tests.common import MockConfigEntry, load_json_value_fixture
 @pytest.fixture(name="homes")
 def kem_homes_fixture() -> list[dict[str, Any]]:
     """Create sonos favorites fixture."""
-    return load_json_value_fixture("homes.json", "kem")
+    return load_json_value_fixture("homes.json", DOMAIN)
 
 
 @pytest.fixture(name="generator")
 def kem_generator_fixture() -> dict[str, Any]:
     """Create sonos favorites fixture."""
-    return load_json_value_fixture("generator.json", "kem")
+    return load_json_value_fixture("generator.json", DOMAIN)
 
 
 @pytest.fixture(name="kem_config_entry")
