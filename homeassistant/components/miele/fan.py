@@ -24,37 +24,36 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from .const import DOMAIN, POWER_OFF, POWER_ON, VENTILATION_STEP, MieleAppliance
-from .coordinator import MieleConfigEntry
+from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 SPEED_RANGE = (1, 4)
 
-FAN_READ_ONLY = [MieleAppliance.HOB_INDUCT_EXTR]
+# FAN_READ_ONLY = [MieleAppliance.HOB_INDUCT_EXTR]
 
 
 @dataclass(frozen=True, kw_only=True)
-class MieleFanDescription(FanEntityDescription):
-    """Class describing Miele fan entities."""
-
-
-@dataclass
 class MieleFanDefinition:
     """Class for defining fan entities."""
 
     types: tuple[MieleAppliance, ...]
-    description: MieleFanDescription
+    description: FanEntityDescription
 
 
 FAN_TYPES: Final[tuple[MieleFanDefinition, ...]] = (
     MieleFanDefinition(
-        types=(
-            MieleAppliance.HOOD,
-            MieleAppliance.HOB_INDUCT_EXTR,
-        ),
-        description=MieleFanDescription(
+        types=(MieleAppliance.HOOD,),
+        description=FanEntityDescription(
             key="fan",
+            translation_key="fan",
+        ),
+    ),
+    MieleFanDefinition(
+        types=(MieleAppliance.HOB_INDUCT_EXTR,),
+        description=FanEntityDescription(
+            key="fan_readonly",
             translation_key="fan",
         ),
     ),
@@ -80,12 +79,24 @@ async def async_setup_entry(
 class MieleFan(MieleEntity, FanEntity):
     """Representation of a Fan."""
 
-    entity_description: MieleFanDescription
-    _attr_supported_features = (
-        FanEntityFeature.SET_SPEED
-        | FanEntityFeature.TURN_ON
-        | FanEntityFeature.TURN_OFF
-    )
+    entity_description: FanEntityDescription
+
+    def __init__(
+        self,
+        coordinator: MieleDataUpdateCoordinator,
+        device_id: str,
+        description: FanEntityDescription,
+    ) -> None:
+        """Initialize the fan."""
+
+        self._attr_supported_features: FanEntityFeature = (
+            FanEntityFeature(0)
+            if description.key == "fan_readonly"
+            else FanEntityFeature.SET_SPEED
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.TURN_ON
+        )
+        super().__init__(coordinator, device_id, description)
 
     @property
     def is_on(self) -> bool:
@@ -108,8 +119,6 @@ class MieleFan(MieleEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        if self.device.device_type in FAN_READ_ONLY:
-            return
         _LOGGER.debug("Set_percentage: %s", percentage)
         ventilation_step = math.ceil(
             percentage_to_ranged_value(SPEED_RANGE, percentage)
@@ -140,8 +149,6 @@ class MieleFan(MieleEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        if self.device.device_type in FAN_READ_ONLY:
-            return
         _LOGGER.debug(
             "Turn_on -> percentage: %s, preset_mode: %s", percentage, preset_mode
         )
@@ -162,8 +169,6 @@ class MieleFan(MieleEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        if self.device.device_type in FAN_READ_ONLY:
-            return
         try:
             await self.api.send_action(self._device_id, {POWER_OFF: True})
         except ClientResponseError as ex:
