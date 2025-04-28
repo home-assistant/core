@@ -1,9 +1,9 @@
 rules:
   # Bronze
   action-setup: done
-  appropriate-polling: 
+  appropriate-polling:
     status: exempt
-    comment: Integration is local push.
+    comment: Integration is local push
   brands: done
   common-modules: done
   config-flow-test-coverage: done
