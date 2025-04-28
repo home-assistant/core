@@ -85,7 +85,10 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             new_config = {**existing_data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
             if not (errors := await self._async_validate_or_error(new_config)):
-                return self.async_update_reload_and_abort(reauth_entry, data=new_config)
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
 
         return self.async_show_form(
             description_placeholders=description_placeholders,
