@@ -85,7 +85,6 @@ DATA_OS_INFO = "hassio_os_info"
 DATA_NETWORK_INFO = "hassio_network_info"
 DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
-DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
@@ -94,7 +93,6 @@ ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"
 ATTR_VERSION_LATEST = "version_latest"
 ATTR_CPU_PERCENT = "cpu_percent"
-ATTR_CHANGELOG = "changelog"
 ATTR_LOCATION = "location"
 ATTR_MEMORY_PERCENT = "memory_percent"
 ATTR_SLUG = "slug"
@@ -124,14 +122,13 @@ CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"
 
 CONTAINER_STATS = "stats"
-CONTAINER_CHANGELOG = "changelog"
 CONTAINER_INFO = "info"
 
 # This is a mapping of which endpoint the key in the addon data
 # is obtained from so we know which endpoint to update when the
 # coordinator polls for updates.
 KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
-    ATTR_VERSION_LATEST: {CONTAINER_INFO, CONTAINER_CHANGELOG},
+    ATTR_VERSION_LATEST: {CONTAINER_INFO},
     ATTR_MEMORY_PERCENT: {CONTAINER_STATS},
     ATTR_CPU_PERCENT: {CONTAINER_STATS},
     ATTR_VERSION: {CONTAINER_INFO},

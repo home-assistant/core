@@ -1509,7 +1509,7 @@
         "name": "Software error",
         "state": {
           "nothing": "Good",
-          "something": "Error"
+          "something": "[%key:common::state::error%]"
         },
         "state_attributes": {
           "top_pcb_sensor_error": {

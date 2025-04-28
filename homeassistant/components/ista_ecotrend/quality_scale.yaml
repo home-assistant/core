@@ -5,12 +5,8 @@ rules:
     comment: The integration registers no actions.
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: Group the 3 different executor jobs as one executor job
-  config-flow-test-coverage:
-    status: todo
-    comment: test_form/docstrings outdated, test already_configuret, test abort conditions in reauth,
+  common-modules: done
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -47,7 +43,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: The integration is a web service, there are no discoverable devices.

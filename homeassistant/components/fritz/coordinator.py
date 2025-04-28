@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, ValuesView
+from collections.abc import Callable, Mapping, ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
 import re
-from types import MappingProxyType
 from typing import Any, TypedDict, cast
 
 from fritzconnection import FritzConnection
@@ -187,7 +186,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         )
 
         self._devices: dict[str, FritzDevice] = {}
-        self._options: MappingProxyType[str, Any] | None = None
+        self._options: Mapping[str, Any] | None = None
         self._unique_id: str | None = None
         self.connection: FritzConnection = None
         self.fritz_guest_wifi: FritzGuestWLAN = None
@@ -213,9 +212,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
 
-    async def async_setup(
-        self, options: MappingProxyType[str, Any] | None = None
-    ) -> None:
+    async def async_setup(self, options: Mapping[str, Any] | None = None) -> None:
         """Wrap up FritzboxTools class setup."""
         self._options = options
         await self.hass.async_add_executor_job(self.setup)

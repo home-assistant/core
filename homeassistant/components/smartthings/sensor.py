@@ -194,13 +194,7 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=PERCENTAGE,
                 deprecated=(
                     lambda status: "media_player"
-                    if all(
-                        capability in status
-                        for capability in (
-                            Capability.AUDIO_MUTE,
-                            Capability.MEDIA_PLAYBACK,
-                        )
-                    )
+                    if Capability.AUDIO_MUTE in status
                     else None
                 ),
             )

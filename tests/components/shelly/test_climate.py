@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, Mock, PropertyMock
 
 from aioshelly.const import (
     BLU_TRV_IDENTIFIER,
-    BLU_TRV_TIMEOUT,
     MODEL_BLU_GATEWAY_G3,
     MODEL_VALVE,
     MODEL_WALL_DISPLAY,
 )
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -799,15 +798,7 @@ async def test_blu_trv_climate_set_temperature(
     )
     mock_blu_trv.mock_update()
 
-    mock_blu_trv.call_rpc.assert_called_once_with(
-        "BluTRV.Call",
-        {
-            "id": 200,
-            "method": "Trv.SetTarget",
-            "params": {"id": 0, "target_C": 28.0},
-        },
-        BLU_TRV_TIMEOUT,
-    )
+    mock_blu_trv.blu_trv_set_target_temperature.assert_called_once_with(200, 28.0)
 
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_TEMPERATURE] == 28
@@ -857,3 +848,66 @@ async def test_blu_trv_climate_hvac_action(
 
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while calling action for climate.trv_name of Test name",
+        ),
+        (
+            RpcCallError(999),
+            "RPC call error occurred while calling action for climate.trv_name of Test name",
+        ),
+    ],
+)
+async def test_blu_trv_set_target_temp_exc(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """BLU TRV target temperature setting test with excepton."""
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.blu_trv_set_target_temperature.side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: "climate.trv_name", ATTR_TEMPERATURE: 28},
+            blocking=True,
+        )
+
+
+async def test_blu_trv_set_target_temp_auth_error(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+) -> None:
+    """BLU TRV target temperature setting test with authentication error."""
+    entry = await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.blu_trv_set_target_temperature.side_effect = InvalidAuthError
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.trv_name", ATTR_TEMPERATURE: 28},
+        blocking=True,
+    )
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id

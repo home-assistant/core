@@ -1527,6 +1527,217 @@ async def test_trigger_entity_available(hass: HomeAssistant) -> None:
     assert state.state == "unavailable"
 
 
+async def test_trigger_entity_available_skips_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test trigger entity availability works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Never Available",
+                            "availability": "{{ trigger and trigger.event.data.beer == 2 }}",
+                            "state": "{{ noexist - 1 }}",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    # Sensors are unknown if never triggered
+    state = hass.states.get("sensor.never_available")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.never_available")
+    assert state.state == "unavailable"
+
+    assert "'noexist' is undefined" not in caplog.text
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.never_available")
+    assert state.state == "unavailable"
+
+    assert "'noexist' is undefined" in caplog.text
+
+
+async def test_trigger_state_with_availability_syntax_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test trigger entity is available when attributes have syntax errors."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Test Sensor",
+                            "availability": "{{ what_the_heck == 2 }}",
+                            "state": "{{ trigger.event.data.beer }}",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    # Sensors are unknown if never triggered
+    state = hass.states.get("sensor.test_sensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sensor")
+    assert state.state == "2"
+
+    assert (
+        "Error rendering availability template for sensor.test_sensor: UndefinedError: 'what_the_heck' is undefined"
+        in caplog.text
+    )
+
+
+async def test_trigger_available_with_attribute_syntax_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test trigger entity is available when attributes have syntax errors."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Test Sensor",
+                            "availability": "{{ trigger and trigger.event.data.beer == 2 }}",
+                            "state": "{{ trigger.event.data.beer }}",
+                            "attributes": {
+                                "beer": "{{ trigger.event.data.beer }}",
+                                "no_beer": "{{ sad - 1 }}",
+                                "more_beer": "{{ beer + 1 }}",
+                            },
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    # Sensors are unknown if never triggered
+    state = hass.states.get("sensor.test_sensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sensor")
+    assert state.state == "2"
+
+    assert state.attributes["beer"] == 2
+    assert "no_beer" not in state.attributes
+    assert (
+        "Error rendering attributes.no_beer template for sensor.test_sensor: UndefinedError: 'sad' is undefined"
+        in caplog.text
+    )
+    assert state.attributes["more_beer"] == 3
+
+
+async def test_trigger_attribute_order(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test trigger entity attributes order."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Test Sensor",
+                            "availability": "{{ trigger and trigger.event.data.beer == 2 }}",
+                            "state": "{{ trigger.event.data.beer }}",
+                            "attributes": {
+                                "beer": "{{ trigger.event.data.beer }}",
+                                "no_beer": "{{ sad - 1 }}",
+                                "more_beer": "{{ beer + 1 }}",
+                                "all_the_beer": "{{ this.state | int + more_beer }}",
+                            },
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    # Sensors are unknown if never triggered
+    state = hass.states.get("sensor.test_sensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sensor")
+    assert state.state == "2"
+
+    assert state.attributes["beer"] == 2
+    assert "no_beer" not in state.attributes
+    assert (
+        "Error rendering attributes.no_beer template for sensor.test_sensor: UndefinedError: 'sad' is undefined"
+        in caplog.text
+    )
+    assert state.attributes["more_beer"] == 3
+    assert (
+        "Error rendering attributes.all_the_beer template for sensor.test_sensor: ValueError: Template error: int got invalid input 'unknown' when rendering template '{{ this.state | int + more_beer }}' but no default was specified"
+        in caplog.text
+    )
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sensor")
+    assert state.state == "2"
+
+    assert state.attributes["beer"] == 2
+    assert state.attributes["more_beer"] == 3
+    assert state.attributes["all_the_beer"] == 5
+
+    assert (
+        caplog.text.count(
+            "Error rendering attributes.no_beer template for sensor.test_sensor: UndefinedError: 'sad' is undefined"
+        )
+        == 2
+    )
+
+
 async def test_trigger_entity_device_class_parsing_works(hass: HomeAssistant) -> None:
     """Test trigger entity device class parsing works."""
     assert await async_setup_component(

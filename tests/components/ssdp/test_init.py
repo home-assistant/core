@@ -13,6 +13,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.components.ssdp import scanner
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -481,7 +482,7 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
 
 
 @patch(
-    "homeassistant.components.ssdp.async_build_source_set",
+    "homeassistant.components.ssdp.common.async_build_source_set",
     return_value={IPv4Address("192.168.1.1")},
 )
 async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
@@ -490,7 +491,7 @@ async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + ssdp.SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + scanner.SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert ssdp_listener.async_start.call_count == 1
     assert ssdp_listener.async_search.call_count == 4
@@ -498,7 +499,7 @@ async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + ssdp.SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + scanner.SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert ssdp_listener.async_start.call_count == 1
     assert ssdp_listener.async_search.call_count == 4
@@ -739,7 +740,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
     },
 )
 @patch(
-    "homeassistant.components.ssdp.network.async_get_adapters",
+    "homeassistant.components.ssdp.common.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_async_detect_interfaces_setting_empty_route(
@@ -764,7 +765,7 @@ async def test_async_detect_interfaces_setting_empty_route(
     },
 )
 @patch(
-    "homeassistant.components.ssdp.network.async_get_adapters",
+    "homeassistant.components.ssdp.common.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_bind_failure_skips_adapter(
@@ -813,7 +814,7 @@ async def test_bind_failure_skips_adapter(
     },
 )
 @patch(
-    "homeassistant.components.ssdp.network.async_get_adapters",
+    "homeassistant.components.ssdp.common.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_ipv4_does_additional_search_for_sonos(
@@ -824,7 +825,7 @@ async def test_ipv4_does_additional_search_for_sonos(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + ssdp.SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + scanner.SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     assert ssdp_listener.async_search.call_count == 6

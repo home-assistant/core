@@ -175,7 +175,7 @@ class TeslemetryStreamingWindowEntity(
         self.async_on_remove(
             self.stream.async_add_listener(
                 self._handle_stream_update,
-                {"vin": self.vin, "data": {self.streaming_key: None}},
+                {"vin": self.vin, "data": None},
             )
         )
         for signal in (

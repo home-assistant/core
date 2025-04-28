@@ -219,5 +219,10 @@
         "name": "Transfer to battery"
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to APC UPS Daemon."
+    }
   }
 }

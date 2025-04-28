@@ -160,7 +160,6 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'unknown',
         'empty',
         '25',
         '50',
@@ -202,7 +201,6 @@
       'device_class': 'enum',
       'friendly_name': 'Washer Detergent level',
       'options': list([
-        'unknown',
         'empty',
         '25',
         '50',

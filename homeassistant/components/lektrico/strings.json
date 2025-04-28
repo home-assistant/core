@@ -88,7 +88,7 @@
           "available": "Available",
           "charging": "[%key:common::state::charging%]",
           "connected": "[%key:common::state::connected%]",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "locked": "[%key:common::state::locked%]",
           "need_auth": "Waiting for authentication",
           "paused": "[%key:common::state::paused%]",
@@ -118,7 +118,7 @@
           "ocpp": "OCPP",
           "overtemperature": "Overtemperature",
           "switching_phases": "Switching phases",
-          "1p_charging_disabled": "1p charging disabled"
+          "1p_charging_disabled": "1P charging disabled"
         }
       },
       "breaker_current": {

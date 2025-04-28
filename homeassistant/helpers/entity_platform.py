@@ -522,8 +522,14 @@ class EntityPlatform:
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform async."""
+        entities: list[Entity] = (
+            new_entities if type(new_entities) is list else list(new_entities)
+        )
+        # handle empty list from component/platform
+        if not entities:
+            return
         task = self.hass.async_create_task_internal(
-            self.async_add_entities(new_entities, update_before_add=update_before_add),
+            self.async_add_entities(entities, update_before_add=update_before_add),
             f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
             eager_start=True,
         )
@@ -541,10 +547,16 @@ class EntityPlatform:
     ) -> None:
         """Schedule adding entities for a single platform async and track the task."""
         assert self.config_entry
+        entities: list[Entity] = (
+            new_entities if type(new_entities) is list else list(new_entities)
+        )
+        # handle empty list from component/platform
+        if not entities:
+            return
         task = self.config_entry.async_create_task(
             self.hass,
             self.async_add_entities(
-                new_entities,
+                entities,
                 update_before_add=update_before_add,
                 config_subentry_id=config_subentry_id,
             ),
@@ -686,10 +698,6 @@ class EntityPlatform:
         entities: list[Entity] = (
             new_entities if type(new_entities) is list else list(new_entities)
         )
-        # handle empty list from component/platform
-        if not entities:
-            return
-
         timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(entities), SLOW_ADD_MIN_TIMEOUT)
         if update_before_add:
             await self._async_add_and_update_entities(
@@ -875,7 +883,6 @@ class EntityPlatform:
                 get_initial_options=entity.get_initial_entity_options,
                 has_entity_name=entity.has_entity_name,
                 hidden_by=hidden_by,
-                known_object_ids=self.entities,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
                 original_name=entity_name,
@@ -919,7 +926,7 @@ class EntityPlatform:
                         f"{self.entity_namespace} {suggested_object_id}"
                     )
                 entity.entity_id = entity_registry.async_generate_entity_id(
-                    self.domain, suggested_object_id, self.entities
+                    self.domain, suggested_object_id
                 )
 
             # Make sure it is valid in case an entity set the value themselves

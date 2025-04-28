@@ -1,0 +1,377 @@
+{
+  "serialNumber": "GS012345",
+  "type": "CoffeeMachine",
+  "name": "GS012345",
+  "location": "HOME",
+  "modelCode": "GS3AV",
+  "modelName": "GS3AV",
+  "connected": true,
+  "connectionDate": 1742489087479,
+  "offlineMode": false,
+  "requireFirmwareUpdate": false,
+  "availableFirmwareUpdate": false,
+  "coffeeStation": null,
+  "imageUrl": "https://lion.lamarzocco.io/img/thing-model/detail/gs3av/gs3av-1.png",
+  "bleAuthToken": null,
+  "widgets": [
+    {
+      "code": "CMMachineStatus",
+      "index": 1,
+      "output": {
+        "status": "PoweredOn",
+        "availableModes": ["BrewingMode", "StandBy"],
+        "mode": "BrewingMode",
+        "nextStatus": {
+          "status": "StandBy",
+          "startTime": 1742857195332
+        },
+        "brewingStartTime": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMCoffeeBoiler",
+      "index": 1,
+      "output": {
+        "status": "Ready",
+        "enabled": true,
+        "enabledSupported": false,
+        "targetTemperature": 95.0,
+        "targetTemperatureMin": 80,
+        "targetTemperatureMax": 110,
+        "targetTemperatureStep": 0.1,
+        "readyStartTime": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMSteamBoilerTemperature",
+      "index": 1,
+      "output": {
+        "status": "Off",
+        "enabled": true,
+        "enabledSupported": true,
+        "targetTemperature": 123.9,
+        "targetTemperatureSupported": true,
+        "targetTemperatureMin": 95,
+        "targetTemperatureMax": 140,
+        "targetTemperatureStep": 0.1,
+        "readyStartTime": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMGroupDoses",
+      "index": 1,
+      "output": {
+        "mirrorWithGroup1Supported": false,
+        "mirrorWithGroup1": null,
+        "mirrorWithGroup1NotEffective": false,
+        "availableModes": ["PulsesType"],
+        "mode": "PulsesType",
+        "profile": null,
+        "doses": {
+          "PulsesType": [
+            {
+              "doseIndex": "DoseA",
+              "dose": 126.0,
+              "doseMin": 0,
+              "doseMax": 9999,
+              "doseStep": 1
+            },
+            {
+              "doseIndex": "DoseB",
+              "dose": 126.0,
+              "doseMin": 0,
+              "doseMax": 9999,
+              "doseStep": 1
+            },
+            {
+              "doseIndex": "DoseC",
+              "dose": 160.0,
+              "doseMin": 0,
+              "doseMax": 9999,
+              "doseStep": 1
+            },
+            {
+              "doseIndex": "DoseD",
+              "dose": 77.0,
+              "doseMin": 0,
+              "doseMax": 9999,
+              "doseStep": 1
+            }
+          ]
+        },
+        "continuousDoseSupported": false,
+        "continuousDose": null,
+        "brewingPressureSupported": false,
+        "brewingPressure": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMPreBrewing",
+      "index": 1,
+      "output": {
+        "availableModes": ["PreBrewing", "PreInfusion", "Disabled"],
+        "mode": "PreInfusion",
+        "times": {
+          "PreBrewing": [
+            {
+              "doseIndex": "DoseA",
+              "seconds": {
+                "In": 0.5,
+                "Out": 1.0
+              },
+              "secondsMin": {
+                "In": 0,
+                "Out": 0
+              },
+              "secondsMax": {
+                "In": 10,
+                "Out": 10
+              },
+              "secondsStep": {
+                "In": 0.1,
+                "Out": 0.1
+              }
+            },
+            {
+              "doseIndex": "DoseB",
+              "seconds": {
+                "In": 0.5,
+                "Out": 1.0
+              },
+              "secondsMin": {
+                "In": 0,
+                "Out": 0
+              },
+              "secondsMax": {
+                "In": 10,
+                "Out": 10
+              },
+              "secondsStep": {
+                "In": 0.1,
+                "Out": 0.1
+              }
+            },
+            {
+              "doseIndex": "DoseC",
+              "seconds": {
+                "In": 3.3,
+                "Out": 3.3
+              },
+              "secondsMin": {
+                "In": 0,
+                "Out": 0
+              },
+              "secondsMax": {
+                "In": 10,
+                "Out": 10
+              },
+              "secondsStep": {
+                "In": 0.1,
+                "Out": 0.1
+              }
+            },
+            {
+              "doseIndex": "DoseD",
+              "seconds": {
+                "In": 2.0,
+                "Out": 2.0
+              },
+              "secondsMin": {
+                "In": 0,
+                "Out": 0
+              },
+              "secondsMax": {
+                "In": 10,
+                "Out": 10
+              },
+              "secondsStep": {
+                "In": 0.1,
+                "Out": 0.1
+              }
+            }
+          ],
+          "PreInfusion": [
+            {
+              "doseIndex": "DoseA",
+              "seconds": {
+                "In": 0.0,
+                "Out": 4.0
+              },
+              "secondsMin": {
+                "In": 0,
+                "Out": 0
+              },
+              "secondsMax": {
+                "In": 25,
+                "Out": 25
+              },
+              "secondsStep": {
+                "In": 0.1,
+                "Out": 0.1
+              }
+            },
+            {
+              "doseIndex": "DoseB",
+              "seconds": {
+                "In": 0.0,
+                "Out": 4.0
+              },
+              "secondsMin": {
+                "In": 0,
+                "Out": 0
+              },
+              "secondsMax": {
+                "In": 25,
+                "Out": 25
+              },
+              "secondsStep": {
+                "In": 0.1,
+                "Out": 0.1
+              }
+            },
+            {
+              "doseIndex": "DoseC",
+              "seconds": {
+                "In": 0.0,
+                "Out": 4.0
+              },
+              "secondsMin": {
+                "In": 0,
+                "Out": 0
+              },
+              "secondsMax": {
+                "In": 25,
+                "Out": 25
+              },
+              "secondsStep": {
+                "In": 0.1,
+                "Out": 0.1
+              }
+            },
+            {
+              "doseIndex": "DoseD",
+              "seconds": {
+                "In": 0.0,
+                "Out": 4.0
+              },
+              "secondsMin": {
+                "In": 0,
+                "Out": 0
+              },
+              "secondsMax": {
+                "In": 25,
+                "Out": 25
+              },
+              "secondsStep": {
+                "In": 0.1,
+                "Out": 0.1
+              }
+            }
+          ]
+        },
+        "doseIndexSupported": true
+      },
+      "tutorialUrl": "https://www.lamarzocco.com/it/en/app/support/brewing-features/#gs3-av-linea-micra-linea-mini-home"
+    },
+    {
+      "code": "CMHotWaterDose",
+      "index": 1,
+      "output": {
+        "enabledSupported": false,
+        "enabled": true,
+        "doses": [
+          {
+            "doseIndex": "DoseA",
+            "dose": 8.0,
+            "doseMin": 0,
+            "doseMax": 90,
+            "doseStep": 1
+          }
+        ]
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMBackFlush",
+      "index": 1,
+      "output": {
+        "lastCleaningStartTime": 1743236747166,
+        "status": "Off"
+      },
+      "tutorialUrl": "http://lamarzocco.com/it/en/app/support/cleaning-and-backflush/#gs3-av"
+    }
+  ],
+  "invalidWidgets": [
+    {
+      "code": "CMMachineGroupStatus",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMSteamBoilerLevel",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMPreExtraction",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMPreInfusionEnable",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMPreInfusion",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": "http://lamarzocco.com/it/en/app/support/brewing-features/#commercial"
+    },
+    {
+      "code": "CMBrewByWeightDoses",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": "http://lamarzocco.com/it/en/app/support/brew-by-weight"
+    },
+    {
+      "code": "CMCupWarmer",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMAutoFlush",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMRinseFlush",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMSteamFlush",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMNoWater",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    }
+  ],
+  "runningCommands": []
+}

@@ -37,6 +37,7 @@ class TeslemetryVehicleData:
     api: Vehicle
     config_entry: ConfigEntry
     coordinator: TeslemetryVehicleDataCoordinator
+    poll: bool
     stream: TeslemetryStream
     stream_vehicle: TeslemetryStreamVehicle
     vin: str

@@ -127,6 +127,8 @@
       "discharging": "Discharging",
       "disconnected": "Disconnected",
       "enabled": "Enabled",
+      "error": "Error",
+      "fault": "Fault",
       "high": "High",
       "home": "Home",
       "idle": "Idle",

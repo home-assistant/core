@@ -6,5 +6,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/leaone",
   "iot_class": "local_push",
-  "requirements": ["leaone-ble==0.1.0"]
+  "requirements": ["leaone-ble==0.2.0"]
 }

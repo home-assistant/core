@@ -17,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
 from .const import (
-    APPLIANCES_WITH_PROGRAMS,
     AVAILABLE_MAPS_ENUM,
     BEAN_AMOUNT_OPTIONS,
     BEAN_CONTAINER_OPTIONS,
@@ -313,7 +312,7 @@ def _get_entities_for_appliance(
                 HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
                 for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
             ]
-            if appliance.info.type in APPLIANCES_WITH_PROGRAMS
+            if appliance.programs
             else []
         ),
         *[

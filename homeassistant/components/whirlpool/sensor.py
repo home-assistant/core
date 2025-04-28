@@ -25,7 +25,7 @@ from .entity import WhirlpoolEntity
 SCAN_INTERVAL = timedelta(minutes=5)
 
 WASHER_TANK_FILL = {
-    0: "unknown",
+    0: None,
     1: "empty",
     2: "25",
     3: "50",
@@ -120,7 +120,7 @@ WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         translation_key="whirlpool_tank",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=list(WASHER_TANK_FILL.values()),
+        options=[value for value in WASHER_TANK_FILL.values() if value],
         value_fn=lambda washer: WASHER_TANK_FILL.get(washer.get_dispense_1_level()),
     ),
 )

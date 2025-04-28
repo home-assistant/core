@@ -68,7 +68,7 @@ def mock_uuid() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_thinq_api(mock_thinq_mqtt_client: AsyncMock) -> Generator[AsyncMock]:
+def mock_config_thinq_api() -> Generator[AsyncMock]:
     """Mock a thinq api."""
     with (
         patch("homeassistant.components.lg_thinq.ThinQApi", autospec=True) as mock_api,
@@ -77,6 +77,26 @@ def mock_thinq_api(mock_thinq_mqtt_client: AsyncMock) -> Generator[AsyncMock]:
             new=mock_api,
         ),
     ):
+        thinq_api = mock_api.return_value
+        thinq_api.async_get_device_list.return_value = ["air_conditioner"]
+        yield thinq_api
+
+
+@pytest.fixture
+def mock_invalid_thinq_api(mock_config_thinq_api: AsyncMock) -> AsyncMock:
+    """Mock an invalid thinq api."""
+    mock_config_thinq_api.async_get_device_list = AsyncMock(
+        side_effect=ThinQAPIException(
+            code="1309", message="Not allowed api call", headers=None
+        )
+    )
+    return mock_config_thinq_api
+
+
+@pytest.fixture
+def mock_thinq_api(mock_thinq_mqtt_client: None) -> Generator[AsyncMock]:
+    """Mock a thinq api."""
+    with patch("homeassistant.components.lg_thinq.ThinQApi", autospec=True) as mock_api:
         thinq_api = mock_api.return_value
         thinq_api.async_get_device_list.return_value = [
             load_json_object_fixture("air_conditioner/device.json", DOMAIN)
@@ -91,20 +111,11 @@ def mock_thinq_api(mock_thinq_mqtt_client: AsyncMock) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_thinq_mqtt_client() -> Generator[AsyncMock]:
-    """Mock a thinq api."""
+def mock_thinq_mqtt_client() -> Generator[None]:
+    """Mock a thinq mqtt client."""
     with patch(
-        "homeassistant.components.lg_thinq.mqtt.ThinQMQTTClient", autospec=True
-    ) as mock_api:
-        yield mock_api
-
-
-@pytest.fixture
-def mock_invalid_thinq_api(mock_thinq_api: AsyncMock) -> AsyncMock:
-    """Mock an invalid thinq api."""
-    mock_thinq_api.async_get_device_list = AsyncMock(
-        side_effect=ThinQAPIException(
-            code="1309", message="Not allowed api call", headers=None
-        )
-    )
-    return mock_thinq_api
+        "homeassistant.components.lg_thinq.mqtt.ThinQMQTTClient",
+        autospec=True,
+        return_value=True,
+    ):
+        yield

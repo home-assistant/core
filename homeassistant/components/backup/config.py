@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass, field, replace
 import datetime as dt
 from datetime import datetime, timedelta
@@ -87,12 +88,26 @@ class BackupConfigData:
         else:
             time = None
         days = [Day(day) for day in data["schedule"]["days"]]
+        agents = {}
+        for agent_id, agent_data in data["agents"].items():
+            protected = agent_data["protected"]
+            stored_retention = agent_data["retention"]
+            agent_retention: AgentRetentionConfig | None
+            if stored_retention:
+                agent_retention = AgentRetentionConfig(
+                    copies=stored_retention["copies"],
+                    days=stored_retention["days"],
+                )
+            else:
+                agent_retention = None
+            agent_config = AgentConfig(
+                protected=protected,
+                retention=agent_retention,
+            )
+            agents[agent_id] = agent_config
 
         return cls(
-            agents={
-                agent_id: AgentConfig(protected=agent_data["protected"])
-                for agent_id, agent_data in data["agents"].items()
-            },
+            agents=agents,
             automatic_backups_configured=data["automatic_backups_configured"],
             create_backup=CreateBackupConfig(
                 agent_ids=data["create_backup"]["agent_ids"],
@@ -176,12 +191,36 @@ class BackupConfig:
         """Update config."""
         if agents is not UNDEFINED:
             for agent_id, agent_config in agents.items():
-                if agent_id not in self.data.agents:
-                    self.data.agents[agent_id] = AgentConfig(**agent_config)
+                agent_retention = agent_config.get("retention")
+                if agent_retention is None:
+                    new_agent_retention = None
                 else:
-                    self.data.agents[agent_id] = replace(
-                        self.data.agents[agent_id], **agent_config
+                    new_agent_retention = AgentRetentionConfig(
+                        copies=agent_retention.get("copies"),
+                        days=agent_retention.get("days"),
                     )
+                if agent_id not in self.data.agents:
+                    old_agent_retention = None
+                    self.data.agents[agent_id] = AgentConfig(
+                        protected=agent_config.get("protected", False),
+                        retention=new_agent_retention,
+                    )
+                else:
+                    new_agent_config = self.data.agents[agent_id]
+                    old_agent_retention = new_agent_config.retention
+                    if "protected" in agent_config:
+                        new_agent_config = replace(
+                            new_agent_config, protected=agent_config["protected"]
+                        )
+                    if "retention" in agent_config:
+                        new_agent_config = replace(
+                            new_agent_config, retention=new_agent_retention
+                        )
+                    self.data.agents[agent_id] = new_agent_config
+                if new_agent_retention != old_agent_retention:
+                    # There's a single retention application method
+                    # for both global and agent retention settings.
+                    self.data.retention.apply(self._manager)
         if automatic_backups_configured is not UNDEFINED:
             self.data.automatic_backups_configured = automatic_backups_configured
         if create_backup is not UNDEFINED:
@@ -207,11 +246,24 @@ class AgentConfig:
     """Represent the config for an agent."""
 
     protected: bool
+    """Agent protected configuration.
+
+    If True, the agent backups are password protected.
+    """
+    retention: AgentRetentionConfig | None = None
+    """Agent retention configuration.
+
+    If None, the global retention configuration is used.
+    If not None, the global retention configuration is ignored for this agent.
+    If an agent retention configuration is set and both copies and days are None,
+    backups will be kept forever for that agent.
+    """
 
     def to_dict(self) -> StoredAgentConfig:
         """Convert agent config to a dict."""
         return {
             "protected": self.protected,
+            "retention": self.retention.to_dict() if self.retention else None,
         }
 
 
@@ -219,24 +271,46 @@ class StoredAgentConfig(TypedDict):
     """Represent the stored config for an agent."""
 
     protected: bool
+    retention: StoredRetentionConfig | None
 
 
 class AgentParametersDict(TypedDict, total=False):
     """Represent the parameters for an agent."""
 
     protected: bool
+    retention: RetentionParametersDict | None
 
 
 @dataclass(kw_only=True)
-class RetentionConfig:
-    """Represent the backup retention configuration."""
+class BaseRetentionConfig:
+    """Represent the base backup retention configuration."""
 
     copies: int | None = None
     days: int | None = None
 
+    def to_dict(self) -> StoredRetentionConfig:
+        """Convert backup retention configuration to a dict."""
+        return StoredRetentionConfig(
+            copies=self.copies,
+            days=self.days,
+        )
+
+
+@dataclass(kw_only=True)
+class RetentionConfig(BaseRetentionConfig):
+    """Represent the backup retention configuration."""
+
     def apply(self, manager: BackupManager) -> None:
         """Apply backup retention configuration."""
-        if self.days is not None:
+        agents_retention = {
+            agent_id: agent_config.retention
+            for agent_id, agent_config in manager.config.data.agents.items()
+        }
+
+        if self.days is not None or any(
+            agent_retention and agent_retention.days is not None
+            for agent_retention in agents_retention.values()
+        ):
             LOGGER.debug(
                 "Scheduling next automatic delete of backups older than %s in 1 day",
                 self.days,
@@ -245,13 +319,6 @@ class RetentionConfig:
         else:
             LOGGER.debug("Unscheduling next automatic delete")
             self._unschedule_next(manager)
-
-    def to_dict(self) -> StoredRetentionConfig:
-        """Convert backup retention configuration to a dict."""
-        return StoredRetentionConfig(
-            copies=self.copies,
-            days=self.days,
-        )
 
     @callback
     def _schedule_next(
@@ -271,16 +338,81 @@ class RetentionConfig:
                 """Return backups older than days to delete."""
                 # we need to check here since we await before
                 # this filter is applied
-                if self.days is None:
-                    return {}
-                now = dt_util.utcnow()
-                return {
-                    backup_id: backup
-                    for backup_id, backup in backups.items()
-                    if dt_util.parse_datetime(backup.date, raise_on_error=True)
-                    + timedelta(days=self.days)
-                    < now
+                agents_retention = {
+                    agent_id: agent_config.retention
+                    for agent_id, agent_config in manager.config.data.agents.items()
                 }
+                has_agents_retention = any(
+                    agent_retention for agent_retention in agents_retention.values()
+                )
+                has_agents_retention_days = any(
+                    agent_retention and agent_retention.days is not None
+                    for agent_retention in agents_retention.values()
+                )
+                if (global_days := self.days) is None and not has_agents_retention_days:
+                    # No global retention days and no agent retention days
+                    return {}
+
+                now = dt_util.utcnow()
+                if global_days is not None and not has_agents_retention:
+                    # Return early to avoid the longer filtering below.
+                    return {
+                        backup_id: backup
+                        for backup_id, backup in backups.items()
+                        if dt_util.parse_datetime(backup.date, raise_on_error=True)
+                        + timedelta(days=global_days)
+                        < now
+                    }
+
+                # If there are any agent retention settings, we need to check
+                # the retention settings, for every backup and agent combination.
+
+                backups_to_delete = {}
+
+                for backup_id, backup in backups.items():
+                    backup_date = dt_util.parse_datetime(
+                        backup.date, raise_on_error=True
+                    )
+                    delete_from_agents = set(backup.agents)
+                    for agent_id in backup.agents:
+                        agent_retention = agents_retention.get(agent_id)
+                        if agent_retention is None:
+                            # This agent does not have a retention setting,
+                            # so the global retention setting should be used.
+                            if global_days is None:
+                                # This agent does not have a retention setting
+                                # and the global retention days setting is None,
+                                # so this backup should not be deleted.
+                                delete_from_agents.discard(agent_id)
+                                continue
+                            days = global_days
+                        elif (agent_days := agent_retention.days) is None:
+                            # This agent has a retention setting
+                            # where days is set to None,
+                            # so the backup should not be deleted.
+                            delete_from_agents.discard(agent_id)
+                            continue
+                        else:
+                            # This agent has a retention setting
+                            # where days is set to a number,
+                            # so that setting should be used.
+                            days = agent_days
+                        if backup_date + timedelta(days=days) >= now:
+                            # This backup is not older than the retention days,
+                            # so this agent should not be deleted.
+                            delete_from_agents.discard(agent_id)
+
+                    filtered_backup = replace(
+                        backup,
+                        agents={
+                            agent_id: agent_backup_status
+                            for agent_id, agent_backup_status in backup.agents.items()
+                            if agent_id in delete_from_agents
+                        },
+                    )
+                    backups_to_delete[backup_id] = filtered_backup
+
+                return backups_to_delete
 
             await manager.async_delete_filtered_backups(
                 include_filter=_automatic_backups_filter, delete_filter=_delete_filter
@@ -310,6 +442,10 @@ class RetentionParametersDict(TypedDict, total=False):
 
     copies: int | None
     days: int | None
+
+
+class AgentRetentionConfig(BaseRetentionConfig):
+    """Represent an agent retention configuration."""
 
 
 class StoredBackupSchedule(TypedDict):
@@ -554,16 +690,87 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
         backups: dict[str, ManagerBackup],
     ) -> dict[str, ManagerBackup]:
         """Return oldest backups more numerous than copies to delete."""
+        agents_retention = {
+            agent_id: agent_config.retention
+            for agent_id, agent_config in manager.config.data.agents.items()
+        }
+        has_agents_retention = any(
+            agent_retention for agent_retention in agents_retention.values()
+        )
+        has_agents_retention_copies = any(
+            agent_retention and agent_retention.copies is not None
+            for agent_retention in agents_retention.values()
+        )
         # we need to check here since we await before
         # this filter is applied
-        if manager.config.data.retention.copies is None:
+        if (
+            global_copies := manager.config.data.retention.copies
+        ) is None and not has_agents_retention_copies:
+            # No global retention copies and no agent retention copies
             return {}
-        return dict(
-            sorted(
-                backups.items(),
-                key=lambda backup_item: backup_item[1].date,
-            )[: max(len(backups) - manager.config.data.retention.copies, 0)]
+        if global_copies is not None and not has_agents_retention:
+            # Return early to avoid the longer filtering below.
+            return dict(
+                sorted(
+                    backups.items(),
+                    key=lambda backup_item: backup_item[1].date,
+                )[: max(len(backups) - global_copies, 0)]
+            )
+
+        backups_by_agent: dict[str, dict[str, ManagerBackup]] = defaultdict(dict)
+        for backup_id, backup in backups.items():
+            for agent_id in backup.agents:
+                backups_by_agent[agent_id][backup_id] = backup
+
+        backups_to_delete_by_agent: dict[str, dict[str, ManagerBackup]] = defaultdict(
+            dict
         )
+        for agent_id, agent_backups in backups_by_agent.items():
+            agent_retention = agents_retention.get(agent_id)
+            if agent_retention is None:
+                # This agent does not have a retention setting,
+                # so the global retention setting should be used.
+                if global_copies is None:
+                    # This agent does not have a retention setting
+                    # and the global retention copies setting is None,
+                    # so backups should not be deleted.
+                    continue
+                # The global retention setting will be used.
+                copies = global_copies
+            elif (agent_copies := agent_retention.copies) is None:
+                # This agent has a retention setting
+                # where copies is set to None,
+                # so backups should not be deleted.
+                continue
+            else:
+                # This agent retention setting will be used.
+                copies = agent_copies
+
+            backups_to_delete_by_agent[agent_id] = dict(
+                sorted(
+                    agent_backups.items(),
+                    key=lambda backup_item: backup_item[1].date,
+                )[: max(len(agent_backups) - copies, 0)]
+            )
+
+        backup_ids_to_delete: dict[str, set[str]] = defaultdict(set)
+        for agent_id, to_delete in backups_to_delete_by_agent.items():
+            for backup_id in to_delete:
+                backup_ids_to_delete[backup_id].add(agent_id)
+        backups_to_delete: dict[str, ManagerBackup] = {}
+        for backup_id, agent_ids in backup_ids_to_delete.items():
+            backup = backups[backup_id]
+            # filter the backup to only include the agents that should be deleted
+            filtered_backup = replace(
+                backup,
+                agents={
+                    agent_id: agent_backup_status
+                    for agent_id, agent_backup_status in backup.agents.items()
+                    if agent_id in agent_ids
+                },
+            )
+            backups_to_delete[backup_id] = filtered_backup
+        return backups_to_delete
 
     await manager.async_delete_filtered_backups(
         include_filter=_automatic_backups_filter, delete_filter=_delete_filter

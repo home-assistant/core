@@ -12,5 +12,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pyatmo"],
-  "requirements": ["pyatmo==8.1.0"]
+  "requirements": ["pyatmo==9.0.0"]
 }

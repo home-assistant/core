@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from aioshelly.const import RPC_GENERATIONS
 
@@ -20,6 +20,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
@@ -75,15 +76,15 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
     """Represent a RPC text entity."""
 
     entity_description: RpcTextDescription
+    attribute_value: str | None
+    _id: int
 
     @property
     def native_value(self) -> str | None:
         """Return value of sensor."""
-        if TYPE_CHECKING:
-            assert isinstance(self.attribute_value, str | None)
-
         return self.attribute_value
 
+    @rpc_call
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
-        await self.call_rpc("Text.Set", {"id": self._id, "value": value})
+        await self.coordinator.device.text_set(self._id, value)

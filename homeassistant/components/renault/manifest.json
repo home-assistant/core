@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["renault_api"],
   "quality_scale": "silver",
-  "requirements": ["renault-api==0.2.9"]
+  "requirements": ["renault-api==0.3.0"]
 }

@@ -1536,7 +1536,7 @@
           "pause": "[%key:common::state::paused%]",
           "actionrequired": "Action required",
           "finished": "Finished",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "aborting": "Aborting"
         }
       },
@@ -1587,7 +1587,7 @@
           "streaminglocal": "Streaming local",
           "streamingcloud": "Streaming cloud",
           "streaminglocal_and_cloud": "Streaming local and cloud",
-          "error": "Error"
+          "error": "[%key:common::state::error%]"
         }
       },
       "last_selected_map": {

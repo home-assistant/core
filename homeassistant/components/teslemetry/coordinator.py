@@ -58,8 +58,11 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             LOGGER,
             config_entry=config_entry,
             name="Teslemetry Vehicle",
-            update_interval=VEHICLE_INTERVAL,
         )
+        if product["command_signing"] == "off":
+            # Only allow automatic polling if its included
+            self.update_interval = VEHICLE_INTERVAL
+
         self.api = api
         self.data = flatten(product)
         self.last_active = datetime.now()

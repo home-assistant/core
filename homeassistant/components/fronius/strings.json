@@ -184,7 +184,7 @@
           "running": "Running",
           "standby": "[%key:common::state::standby%]",
           "bootloading": "Bootloading",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "idle": "[%key:common::state::idle%]",
           "ready": "Ready",
           "sleeping": "Sleeping"

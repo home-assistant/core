@@ -380,7 +380,7 @@ def assert_location_longitude(hass: HomeAssistant, longitude: float) -> None:
     assert state.attributes.get("longitude") == longitude
 
 
-def assert_location_accuracy(hass: HomeAssistant, accuracy: int) -> None:
+def assert_location_accuracy(hass: HomeAssistant, accuracy: float) -> None:
     """Test the assertion of a location accuracy."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.attributes.get("gps_accuracy") == accuracy

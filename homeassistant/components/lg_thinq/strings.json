@@ -1034,5 +1034,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "failed_to_connect_mqtt": {
+      "message": "Failed to connect MQTT: {error}"
+    }
   }
 }

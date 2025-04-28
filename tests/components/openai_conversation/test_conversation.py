@@ -586,6 +586,11 @@ async def test_function_call(
         agent_id="conversation.openai",
     )
 
+    assert mock_create_stream.call_args.kwargs["input"][2] == {
+        "id": "rs_A",
+        "summary": [],
+        "type": "reasoning",
+    }
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot

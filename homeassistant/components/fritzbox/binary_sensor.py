@@ -22,18 +22,13 @@ from .entity import FritzBoxDeviceEntity
 from .model import FritzEntityDescriptionMixinBase
 
 
-@dataclass(frozen=True)
-class FritzEntityDescriptionMixinBinarySensor(FritzEntityDescriptionMixinBase):
-    """BinarySensor description mixin for Fritz!Smarthome entities."""
-
-    is_on: Callable[[FritzhomeDevice], bool | None]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class FritzBinarySensorEntityDescription(
-    BinarySensorEntityDescription, FritzEntityDescriptionMixinBinarySensor
+    BinarySensorEntityDescription, FritzEntityDescriptionMixinBase
 ):
     """Description for Fritz!Smarthome binary sensor entities."""
+
+    is_on: Callable[[FritzhomeDevice], bool | None]
 
 
 BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
