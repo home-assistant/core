@@ -428,7 +428,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
                 1: "ConfigType",
             },
-            return_type=["DeviceScanner", None],
+            return_type=["DeviceScanner", "ScannerEntity", None],
             has_async_counterpart=True,
         ),
     ],
