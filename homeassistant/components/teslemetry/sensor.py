@@ -361,7 +361,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="sentry_mode",
-        streaming_listener=lambda x, y: x.listen_SentryMode(y),
+        streaming_listener=lambda x, y: x.listen_SentryMode(
+            lambda z: None if z is None else y(SENTRY_MODE_STATES.get(z))
+        ),
         options=list(SENTRY_MODE_STATES.values()),
         device_class=SensorDeviceClass.ENUM,
     ),
