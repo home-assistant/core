@@ -37,7 +37,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage: todo
 
   # Gold
   devices: done
@@ -57,9 +57,9 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations: done
-  exception-translations: done
-  icon-translations: done
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
   reconfiguration-flow: done
   repair-issues: done
   stale-devices: done
