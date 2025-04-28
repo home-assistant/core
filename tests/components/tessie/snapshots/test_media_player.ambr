@@ -28,6 +28,7 @@
     'original_name': 'Media player',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': 'Test Media player',
     'supported_features': 0,
     'translation_key': 'media',
     'unique_id': 'VINVINVIN-media',

@@ -27,6 +27,7 @@
     'original_name': None,
     'platform': 'comelit',
     'previous_unique_id': None,
+    'suggested_object_id': 'Switch0',
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'serial_bridge_config_entry_id-other-0',

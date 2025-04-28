@@ -34,6 +34,7 @@
     'original_name': None,
     'platform': 'folder_watcher',
     'previous_unique_id': None,
+    'suggested_object_id': 'Folder Watcher /tmp/pytest-of-erik/pytest-63/popen-gw3/test_event_entity0',
     'supported_features': 0,
     'translation_key': 'folder_watcher',
     'unique_id': '1',

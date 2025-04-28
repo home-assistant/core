@@ -34,6 +34,7 @@
     'original_name': 'Temperature resolution',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': '28.111111111111 Temperature resolution',
     'supported_features': 0,
     'translation_key': 'tempres',
     'unique_id': '/28.111111111111/tempres',

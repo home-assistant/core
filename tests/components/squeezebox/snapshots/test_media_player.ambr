@@ -65,6 +65,7 @@
     'original_name': None,
     'platform': 'squeezebox',
     'previous_unique_id': None,
+    'suggested_object_id': 'Test Player',
     'supported_features': <MediaPlayerEntityFeature: 4126655>,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff',

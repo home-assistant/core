@@ -40,6 +40,7 @@
     'original_name': 'Temperature',
     'platform': 'velbus',
     'previous_unique_id': None,
+    'suggested_object_id': 'Living room Temperature',
     'supported_features': <ClimateEntityFeature: 17>,
     'translation_key': None,
     'unique_id': 'asdfghjk-3',
