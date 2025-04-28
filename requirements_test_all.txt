@@ -2344,7 +2344,7 @@ teslemetry-stream==0.7.5
 tessie-api==0.1.1
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.8.1
+thermobeacon-ble==0.9.0
 
 # homeassistant.components.thermopro
 thermopro-ble==0.11.0
