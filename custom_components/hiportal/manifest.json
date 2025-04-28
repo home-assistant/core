@@ -1,0 +1,11 @@
+{
+  "domain": "hiportal",
+  "name": "Hiportal",
+  "version": "1.0",
+  "documentation": "https://github.com/ThomasWerland/hiportal",
+  "dependencies": [],
+  "codeowners": ["@TurboNerd"],
+  "requirements": ["aiohttp==3.11.16"],
+  "config_flow": true,
+  "iot_class": "cloud_polling"
+}
