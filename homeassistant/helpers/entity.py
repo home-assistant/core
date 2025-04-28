@@ -31,7 +31,6 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
-    MAX_LENGTH_STATE_STATE,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -1124,9 +1123,6 @@ class Entity(
             # Polling returned after the entity has already been removed
             return
 
-        hass = self.hass
-        entity_id = self.entity_id
-
         if (entry := self.registry_entry) and entry.disabled_by:
             if not self._disabled_reported:
                 self._disabled_reported = True
@@ -1135,7 +1131,7 @@ class Entity(
                         "Entity %s is incorrectly being triggered for updates while it"
                         " is disabled. This is a bug in the %s integration"
                     ),
-                    entity_id,
+                    self.entity_id,
                     self.platform.platform_name,
                 )
             return
@@ -1177,7 +1173,7 @@ class Entity(
                                 "Entity %s (%s) is updating its capabilities too often,"
                                 " please %s"
                             ),
-                            entity_id,
+                            self.entity_id,
                             type(self),
                             report_issue,
                         )
@@ -1194,7 +1190,7 @@ class Entity(
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
                 "Updating state for %s (%s) took %.3f seconds. Please %s",
-                entity_id,
+                self.entity_id,
                 type(self),
                 time_now - state_calculate_start,
                 report_issue,
@@ -1205,12 +1201,12 @@ class Entity(
             # set and since try is near zero cost
             # on py3.11+ its faster to assume it is
             # set and catch the exception if it is not.
-            customize = hass.data[DATA_CUSTOMIZE]
+            custom = self.hass.data[DATA_CUSTOMIZE].get(self.entity_id)
         except KeyError:
             pass
         else:
             # Overwrite properties that have been set in the config file.
-            if custom := customize.get(entity_id):
+            if custom:
                 attr |= custom
 
         if (
@@ -1220,19 +1216,9 @@ class Entity(
             self._context = None
             self._context_set = None
 
-        if len(state) > MAX_LENGTH_STATE_STATE:
-            _LOGGER.error(
-                "State %s for %s is longer than %s, falling back to %s",
-                state,
-                entity_id,
-                MAX_LENGTH_STATE_STATE,
-                STATE_UNKNOWN,
-            )
-            state = STATE_UNKNOWN
-
         # Intentionally called with positional args for performance reasons
-        hass.states.async_set_internal(
-            entity_id,
+        self.hass.states.async_set_internal(
+            self.entity_id,
             state,
             attr,
             self.force_update,
