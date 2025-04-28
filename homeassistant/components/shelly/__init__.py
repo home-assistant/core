@@ -40,6 +40,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
+    BLE_SCANNER_MIN_FIRMWARE,
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
@@ -330,7 +331,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             and entry.options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE
         ):
             firmware = AwesomeVersion(device.shelly["ver"])
-            if firmware < "1.5.0":
+            if firmware < BLE_SCANNER_MIN_FIRMWARE:
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
