@@ -227,7 +227,7 @@ class BLEScannerMode(StrEnum):
     PASSIVE = "passive"
 
 
-BLE_SCANNER_MIN_FIRMWARE = "1.5.0"
+BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
 
 MAX_PUSH_UPDATE_FAILURES = 5
 PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
