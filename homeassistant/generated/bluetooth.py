@@ -29,6 +29,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "PROCHBT001",
     },
     {
+        "domain": "aeroflex",
+        "service_uuid": "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
+    },
+    {
         "domain": "airthings_ble",
         "manufacturer_id": 820,
         "service_uuid": "b42e1f6e-ade7-11e4-89d3-123b93f75cba",
