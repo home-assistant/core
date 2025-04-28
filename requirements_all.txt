@@ -3174,7 +3174,7 @@ ziggo-mediabox-xl==1.1.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.62.0
+zwave-js-server-python==0.63.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
