@@ -32,10 +32,9 @@ class HAAioKem(AioKem):
     async def on_refresh_token_update(self, refresh_token: str):
         """Handle refresh token update."""
         _LOGGER.debug("Saving refresh token")
-        if self.config_entry:
-            # Update the config entry with the new refresh token`
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
-            )
+        # Update the config entry with the new refresh token`
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
+        )
         return await super().on_refresh_token_update(refresh_token)
