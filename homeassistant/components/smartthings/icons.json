@@ -24,6 +24,9 @@
       "reset_water_filter": {
         "default": "mdi:reload"
       },
+      "toggle_tv_ambient_mode": {
+        "default": "mdi:television-shimmer"
+      },
       "stop": {
         "default": "mdi:stop"
       }

@@ -34,6 +34,11 @@ CAPABILITIES_TO_BUTTONS: dict[Capability | str, SmartThingsButtonDescription] = 
         translation_key="reset_water_filter",
         command=Command.RESET_WATER_FILTER,
     ),
+    Capability.SAMSUNG_VD_AMBIENT: SmartThingsButtonDescription(
+        key=Capability.SAMSUNG_VD_AMBIENT,
+        translation_key="toggle_tv_ambient_mode",
+        command=Command.SET_AMBIENT_ON,
+    ),
 }
 
 

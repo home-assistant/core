@@ -54,3 +54,28 @@ async def test_press(
         Command.STOP,
         MAIN,
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_frame_2024"])
+async def test_tv_ambient_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+    freezer.move_to("2023-10-21")
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.tv_samsung_the_frame_55_toggle_tv_ambient_mode"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "d8af1824-16ae-40f4-9a0b-ed5dfbaccda1",
+        Capability.SAMSUNG_VD_AMBIENT,
+        Command.SET_AMBIENT_ON,
+        MAIN,
+    )
