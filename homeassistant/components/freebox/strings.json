@@ -29,5 +29,14 @@
       "name": "Reboot",
       "description": "Reboots the Freebox."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
+    }
   }
 }

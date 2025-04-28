@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.freebox import SCAN_INTERVAL
+from homeassistant.components.freebox import DEFAULT_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
@@ -24,7 +24,7 @@ async def test_router_mode(
     assert router().lan.get_hosts_list.call_count == 2
 
     # Simulate an update
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -42,7 +42,7 @@ async def test_bridge_mode(
     assert router_bridge_mode().lan.get_interfaces.call_count == 1
 
     # Simulate an update
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

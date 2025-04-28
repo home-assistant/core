@@ -6,20 +6,58 @@ from typing import Any
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.core import callback
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .router import get_api, get_hosts_list_if_supported
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class FreeboxOptionsFlowHandler(OptionsFlow):
+    """Handle a option flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_SCAN_INTERVAL,
+                    default=self.config_entry.options.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    ),
+                ): int,
+            }
+        )
+
+        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> FreeboxOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return FreeboxOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize config flow."""

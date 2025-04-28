@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.freebox import SCAN_INTERVAL
+from homeassistant.components.freebox import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -34,7 +34,7 @@ async def test_network_speed(
     data_connection_get_status_changed["rate_up"] = 432100
     router().connection.get_status.return_value = data_connection_get_status_changed
     # Simulate an update
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
@@ -54,7 +54,7 @@ async def test_call(
     data_call_get_calls_marked_as_read = []
     router().call.get_calls_log.return_value = data_call_get_calls_marked_as_read
     # Simulate an update
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
@@ -85,7 +85,7 @@ async def test_disk(
     data_storage_get_disks_changed[2]["partitions"][0]["free_bytes"] = 880000000000
     router().storage.get_disks.return_value = data_storage_get_disks_changed
     # Simulate an update
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
@@ -109,7 +109,7 @@ async def test_battery(
     data_home_get_nodes_changed[4]["show_endpoints"][5]["value"] = 75
     router().home.get_home_nodes.return_value = data_home_get_nodes_changed
     # Simulate an update
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()

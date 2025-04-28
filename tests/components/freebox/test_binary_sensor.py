@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.freebox import SCAN_INTERVAL
+from homeassistant.components.freebox import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 
@@ -36,7 +36,7 @@ async def test_raid_array_degraded(
     data_storage_get_raids_degraded[0]["degraded"] = True
     router().storage.get_raids.return_value = data_storage_get_raids_degraded
     # Simulate an update
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
@@ -81,7 +81,7 @@ async def test_home(
     router().home.get_home_endpoint_value.return_value = data_home_get_values_changed
 
     # Simulate an update
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

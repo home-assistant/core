@@ -10,7 +10,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.components.freebox import SCAN_INTERVAL
+from homeassistant.components.freebox import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
@@ -63,7 +63,7 @@ async def test_alarm_changed_from_external(
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
 
     # Simulate an update
-    freezer.tick(SCAN_INTERVAL)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
