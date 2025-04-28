@@ -1,8 +1,11 @@
 """Tests for the Whirlpool Sixth Sense integration."""
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.whirlpool.const import CONF_BRAND, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from tests.common import MockConfigEntry
 
@@ -32,3 +35,17 @@ async def init_integration_with_entry(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return entry
+
+
+def snapshot_whirlpool_entities(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    platform: Platform,
+) -> None:
+    """Snapshot Whirlpool entities."""
+    entities = hass.states.async_all(platform)
+    for entity_state in entities:
+        entity_entry = entity_registry.async_get(entity_state.entity_id)
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")

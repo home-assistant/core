@@ -610,6 +610,12 @@
       },
       "flow_switch": {
         "name": "Flow switch"
+      },
+      "water_leak": {
+        "name": "Water leak"
+      },
+      "water_supply": {
+        "name": "Water supply"
       }
     },
     "button": {
@@ -1101,6 +1107,27 @@
       },
       "shutdown_timer": {
         "name": "Shutdown timer"
+      },
+      "calibration_vertical_run_time_up": {
+        "name": "Calibration vertical run time up"
+      },
+      "calibration_vertical_run_time_down": {
+        "name": "Calibration vertical run time down"
+      },
+      "calibration_rotation_run_time_up": {
+        "name": "Calibration rotation run time up"
+      },
+      "calibration_rotation_run_time_down": {
+        "name": "Calibration rotation run time down"
+      },
+      "impulse_mode_duration": {
+        "name": "Impulse mode duration"
+      },
+      "water_duration": {
+        "name": "Water duration"
+      },
+      "water_interval": {
+        "name": "Water interval"
       }
     },
     "select": {
@@ -1319,6 +1346,9 @@
       },
       "hysteresis_mode": {
         "name": "Hysteresis mode"
+      },
+      "speed": {
+        "name": "Speed"
       }
     },
     "sensor": {
@@ -1457,7 +1487,7 @@
       "adaptation_run_status": {
         "name": "Adaptation run status",
         "state": {
-          "nothing": "Idle",
+          "nothing": "[%key:common::state::idle%]",
           "something": "State"
         },
         "state_attributes": {
@@ -1479,7 +1509,7 @@
         "name": "Software error",
         "state": {
           "nothing": "Good",
-          "something": "Error"
+          "something": "[%key:common::state::error%]"
         },
         "state_attributes": {
           "top_pcb_sensor_error": {
@@ -1666,6 +1696,9 @@
       },
       "last_watering_duration": {
         "name": "Last watering duration"
+      },
+      "device_status": {
+        "name": "Device status"
       }
     },
     "switch": {

@@ -182,10 +182,10 @@
         "state": {
           "startup": "Startup",
           "running": "Running",
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "bootloading": "Bootloading",
-          "error": "Error",
-          "idle": "Idle",
+          "error": "[%key:common::state::error%]",
+          "idle": "[%key:common::state::idle%]",
           "ready": "Ready",
           "sleeping": "Sleeping"
         }
@@ -317,11 +317,11 @@
       "state_message": {
         "name": "State message",
         "state": {
+          "fault": "[%key:common::state::fault%]",
+          "critical_fault": "Critical fault",
           "up_and_running": "Up and running",
           "keep_minimum_temperature": "Keep minimum temperature",
           "legionella_protection": "Legionella protection",
-          "critical_fault": "Critical fault",
-          "fault": "Fault",
           "boost_mode": "Boost mode"
         }
       },
@@ -362,7 +362,7 @@
         "name": "Relative autonomy"
       },
       "relative_self_consumption": {
-        "name": "Relative self consumption"
+        "name": "Relative self-consumption"
       },
       "capacity_maximum": {
         "name": "Maximum capacity"

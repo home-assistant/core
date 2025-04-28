@@ -3,19 +3,25 @@
     "flow_title": "{host}",
     "step": {
       "reauth_confirm": {
-        "description": "Please enter the correct PIN for {host}",
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "data_description": {
+          "pin": "The PIN of your Comelit device."
         }
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "pin": "[%key:common::config_flow::data::pin%]"
+          "pin": "[%key:common::config_flow::data::pin%]",
+          "type": "Device type"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Comelit device."
+          "host": "The hostname or IP address of your Comelit device.",
+          "port": "The port of your Comelit device.",
+          "pin": "[%key:component::comelit::config::step::reauth_confirm::data_description::pin%]",
+          "type": "The type of your Comelit device."
         }
       }
     },
@@ -36,9 +42,9 @@
     "sensor": {
       "zone_status": {
         "state": {
+          "open": "[%key:common::state::open%]",
           "alarm": "Alarm",
           "armed": "Armed",
-          "open": "Open",
           "excluded": "Excluded",
           "faulty": "Faulty",
           "inhibited": "Inhibited",
@@ -46,7 +52,9 @@
           "rest": "Rest",
           "sabotated": "Sabotated"
         }
-      },
+      }
+    },
+    "humidifier": {
       "humidifier": {
         "name": "Humidifier"
       },
@@ -61,6 +69,15 @@
     },
     "invalid_clima_data": {
       "message": "Invalid 'clima' data"
+    },
+    "cannot_connect": {
+      "message": "Error connecting: {error}"
+    },
+    "cannot_authenticate": {
+      "message": "Error authenticating"
+    },
+    "updated_failed": {
+      "message": "Failed to update data: {error}"
     }
   }
 }

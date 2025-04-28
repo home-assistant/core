@@ -1,0 +1,145 @@
+# serializer version: 1
+# name: test_setup[binary_sensor.fake_name_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.fake_name_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Alarm',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm',
+    'unique_id': '12345 1234567_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'fake_name Alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.fake_name_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_button_lock_on_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.fake_name_button_lock_on_device',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Button lock on device',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock',
+    'unique_id': '12345 1234567_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_button_lock_on_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'friendly_name': 'fake_name Button lock on device',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.fake_name_button_lock_on_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_button_lock_via_ui-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.fake_name_button_lock_via_ui',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Button lock via UI',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_lock',
+    'unique_id': '12345 1234567_device_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_button_lock_via_ui-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'friendly_name': 'fake_name Button lock via UI',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.fake_name_button_lock_via_ui',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

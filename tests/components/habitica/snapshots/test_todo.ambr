@@ -50,6 +50,13 @@
           'uid': '6e53f1f5-a315-4edd-984d-8d762e4a08ef',
         }),
         dict({
+          'description': 'Setze dich einmal im Monat hin, um deine Einnahmen und Ausgaben zu überprüfen und dein Budget zu planen.',
+          'due': '2024-12-14',
+          'status': 'needs_action',
+          'summary': 'Monatliche Finanzübersicht erstellen',
+          'uid': '369afeed-61e3-4bf7-9747-66e05807134c',
+        }),
+        dict({
           'description': 'Wähle eine Programmiersprache aus, die du noch nicht kennst, und lerne die Grundlagen.',
           'status': 'needs_action',
           'summary': 'Lerne eine neue Programmiersprache',
@@ -151,7 +158,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': '5',
   })
 # ---
 # name: test_todos[todo.test_user_to_do_s-entry]

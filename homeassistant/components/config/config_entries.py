@@ -58,7 +58,8 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, config_entry_get_single)
     websocket_api.async_register_command(hass, config_entry_update)
     websocket_api.async_register_command(hass, config_entries_subscribe)
-    websocket_api.async_register_command(hass, config_entries_progress)
+    websocket_api.async_register_command(hass, config_entries_flow_progress)
+    websocket_api.async_register_command(hass, config_entries_flow_subscribe)
     websocket_api.async_register_command(hass, ignore_config_flow)
 
     websocket_api.async_register_command(hass, config_subentry_delete)
@@ -357,7 +358,7 @@ class SubentryManagerFlowResourceView(
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({"type": "config_entries/flow/progress"})
-def config_entries_progress(
+def config_entries_flow_progress(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -376,6 +377,66 @@ def config_entries_progress(
             not in (config_entries.SOURCE_RECONFIGURE, config_entries.SOURCE_USER)
         ],
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({"type": "config_entries/flow/subscribe"})
+def config_entries_flow_subscribe(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Subscribe to non user created flows being initiated or removed.
+
+    When initiating the subscription, the current flows are sent to the client.
+
+    Example of a non-user initiated flow is a discovered Hue hub that
+    requires user interaction to finish setup.
+    """
+
+    @callback
+    def async_on_flow_init_remove(change_type: str, flow_id: str) -> None:
+        """Forward config entry state events to websocket."""
+        if change_type == "removed":
+            connection.send_message(
+                websocket_api.event_message(
+                    msg["id"],
+                    [{"type": change_type, "flow_id": flow_id}],
+                )
+            )
+            return
+        # change_type == "added"
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                [
+                    {
+                        "type": change_type,
+                        "flow_id": flow_id,
+                        "flow": hass.config_entries.flow.async_get(flow_id),
+                    }
+                ],
+            )
+        )
+
+    connection.subscriptions[msg["id"]] = hass.config_entries.flow.async_subscribe_flow(
+        async_on_flow_init_remove
+    )
+    connection.send_message(
+        websocket_api.event_message(
+            msg["id"],
+            [
+                {"type": None, "flow_id": flw["flow_id"], "flow": flw}
+                for flw in hass.config_entries.flow.async_progress()
+                if flw["context"]["source"]
+                not in (
+                    config_entries.SOURCE_RECONFIGURE,
+                    config_entries.SOURCE_USER,
+                )
+            ],
+        )
+    )
+    connection.send_result(msg["id"])
 
 
 def send_entry_not_found(

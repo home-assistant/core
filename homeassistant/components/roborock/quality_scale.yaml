@@ -21,7 +21,7 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -29,14 +29,12 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
   # Gold
   devices: done
   diagnostics: done
-  discovery:
-    status: todo
-    comment: Determine if these devices can support discovery
+  discovery: done
   discovery-update-info:
     status: exempt
     comment: Devices do not support discovery.
@@ -73,7 +71,5 @@ rules:
   stale-devices: done
   # Platinum
   async-dependency: todo
-  inject-websession:
-    status: todo
-    comment: Web API uses aiohttp but does not yet inject web session.
-  strict-typing: todo
+  inject-websession: done
+  strict-typing: done

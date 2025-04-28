@@ -12,9 +12,6 @@
     'entry': dict({
       'data': dict({
         'api_key': '**REDACTED**',
-        'fuel_types': list([
-          'e5',
-        ]),
         'location': dict({
           'latitude': '**REDACTED**',
           'longitude': '**REDACTED**',

@@ -54,5 +54,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "connection_closed": {
+      "message": "Connection to the Android TV device is closed"
+    }
   }
 }

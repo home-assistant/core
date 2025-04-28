@@ -6,10 +6,11 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.iometer.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import setup_integration
+from . import setup_platform
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -22,7 +23,8 @@ async def test_new_firmware_version(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test device registry integration."""
-    await setup_integration(hass, mock_config_entry)
+    # await setup_integration(hass, mock_config_entry)
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry.unique_id)}
     )

@@ -26,12 +26,10 @@ def reset_log_level() -> Generator[None]:
 
 
 @pytest.fixture
-def provider(hass: HomeAssistant) -> hass_auth.HassAuthProvider:
+async def provider(hass: HomeAssistant) -> hass_auth.HassAuthProvider:
     """Home Assistant auth provider."""
-    provider = hass.loop.run_until_complete(
-        register_auth_provider(hass, {"type": "homeassistant"})
-    )
-    hass.loop.run_until_complete(provider.async_initialize())
+    provider = await register_auth_provider(hass, {"type": "homeassistant"})
+    await provider.async_initialize()
     return provider
 
 
