@@ -1,5 +1,7 @@
 """Test APCUPSd config flow setup process."""
 
+from __future__ import annotations
+
 from copy import copy
 from unittest.mock import patch
 
@@ -237,14 +239,24 @@ async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
         assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_reconfigure_flow_wrong_device(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("unique_id_before", "unique_id_after"),
+    [
+        (None, MOCK_STATUS["SERIALNO"]),
+        (MOCK_STATUS["SERIALNO"], None),
+        (MOCK_STATUS["SERIALNO"], MOCK_STATUS["SERIALNO"] + "ZZZ"),
+    ],
+)
+async def test_reconfigure_flow_wrong_device(
+    hass: HomeAssistant, unique_id_before: str | None, unique_id_after: str | None
+) -> None:
     """Test reconfiguration with a different device (wrong serial number)."""
     mock_entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
         title="APCUPSd",
         data=CONF_DATA,
-        unique_id=MOCK_STATUS["SERIALNO"],
+        unique_id=unique_id_before,
         source=SOURCE_USER,
     )
     mock_entry.add_to_hass(hass)
@@ -253,10 +265,11 @@ async def test_reconfigure_flow_wrong_device(hass: HomeAssistant) -> None:
     new_conf_data = {CONF_HOST: "new_host", CONF_PORT: 4321}
 
     with patch("aioapcaccess.request_status") as mock_request_status:
-        # Create a status with a different serial number.
-        different_device_status = copy(MOCK_STATUS)
-        different_device_status["SERIALNO"] = MOCK_STATUS["SERIALNO"] + "ZZZ"
-        mock_request_status.return_value = different_device_status
+        mock_status = copy(MOCK_STATUS)
+        del mock_status["SERIALNO"]
+        if unique_id_after:
+            mock_status["SERIALNO"] = unique_id_after
+        mock_request_status.return_value = mock_status
 
         # Start the reconfigure flow.
         result = await hass.config_entries.flow.async_init(
