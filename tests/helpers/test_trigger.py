@@ -15,20 +15,12 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
     """Test bad trigger platform."""
     with pytest.raises(vol.Invalid) as ex:
         await async_validate_trigger_config(hass, [{"platform": "not_a_platform"}])
-    assert "Invalid platform 'not_a_platform' specified" in str(ex)
+    assert "Invalid trigger 'not_a_platform' specified" in str(ex)
 
 
 async def test_trigger_subtype(hass: HomeAssistant) -> None:
@@ -45,7 +37,9 @@ async def test_trigger_variables(hass: HomeAssistant) -> None:
     """Test trigger variables."""
 
 
-async def test_if_fires_on_event(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_event(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
     """Test the firing of events."""
     assert await async_setup_component(
         hass,
@@ -70,12 +64,12 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls) -> None:
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["hello"] == "Paulus + test_event"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["hello"] == "Paulus + test_event"
 
 
 async def test_if_disabled_trigger_not_firing(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test disabled triggers don't fire."""
     assert await async_setup_component(
@@ -103,15 +97,167 @@ async def test_if_disabled_trigger_not_firing(
 
     hass.bus.async_fire("disabled_trigger_event")
     await hass.async_block_till_done()
-    assert not calls
+    assert not service_calls
 
     hass.bus.async_fire("enabled_trigger_event")
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
+
+
+async def test_trigger_enabled_templates(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test triggers enabled by template."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": [
+                    {
+                        "enabled": "{{ 'some text' }}",
+                        "platform": "event",
+                        "event_type": "truthy_template_trigger_event",
+                    },
+                    {
+                        "enabled": "{{ 3 == 4 }}",
+                        "platform": "event",
+                        "event_type": "falsy_template_trigger_event",
+                    },
+                    {
+                        "enabled": False,  # eg. from a blueprints input defaulting to `false`
+                        "platform": "event",
+                        "event_type": "falsy_trigger_event",
+                    },
+                    {
+                        "enabled": "some text",  # eg. from a blueprints input value
+                        "platform": "event",
+                        "event_type": "truthy_trigger_event",
+                    },
+                ],
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("falsy_template_trigger_event")
+    await hass.async_block_till_done()
+    assert not service_calls
+
+    hass.bus.async_fire("falsy_trigger_event")
+    await hass.async_block_till_done()
+    assert not service_calls
+
+    hass.bus.async_fire("truthy_template_trigger_event")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    hass.bus.async_fire("truthy_trigger_event")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 2
+
+
+async def test_nested_trigger_list(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test triggers within nested list."""
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": [
+                    {
+                        "triggers": {
+                            "platform": "event",
+                            "event_type": "trigger_1",
+                        },
+                    },
+                    {
+                        "platform": "event",
+                        "event_type": "trigger_2",
+                    },
+                    {"triggers": []},
+                    {"triggers": None},
+                    {
+                        "triggers": [
+                            {
+                                "platform": "event",
+                                "event_type": "trigger_3",
+                            },
+                            {
+                                "platform": "event",
+                                "event_type": "trigger_4",
+                            },
+                        ],
+                    },
+                ],
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("trigger_1")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    hass.bus.async_fire("trigger_2")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 2
+
+    hass.bus.async_fire("trigger_none")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 2
+
+    hass.bus.async_fire("trigger_3")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 3
+
+    hass.bus.async_fire("trigger_4")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 4
+
+
+async def test_trigger_enabled_template_limited(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test triggers enabled invalid template."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": [
+                    {
+                        "enabled": "{{ states('sensor.limited') }}",  # only limited template supported
+                        "platform": "event",
+                        "event_type": "test_event",
+                    },
+                ],
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert not service_calls
+    assert "Error rendering enabled template" in caplog.text
 
 
 async def test_trigger_alias(
-    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test triggers support aliases."""
     assert await async_setup_component(
@@ -136,8 +282,8 @@ async def test_trigger_alias(
 
     hass.bus.async_fire("trigger_event")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["alias"] == "My event"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["alias"] == "My event"
     assert (
         "Automation trigger 'My event' triggered by event 'trigger_event'"
         in caplog.text
@@ -145,7 +291,9 @@ async def test_trigger_alias(
 
 
 async def test_async_initialize_triggers(
-    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_initialize_triggers with different action types."""
 
@@ -203,7 +351,9 @@ async def test_async_initialize_triggers(
         unsub()
 
 
-async def test_pluggable_action(hass: HomeAssistant, calls: list[ServiceCall]):
+async def test_pluggable_action(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
     """Test normal behavior of pluggable actions."""
     update_1 = MagicMock()
     update_2 = MagicMock()

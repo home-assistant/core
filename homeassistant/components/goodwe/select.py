@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 
@@ -40,7 +40,7 @@ OPERATION_MODE = SelectEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the inverter select entities from a config entry."""
     inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
@@ -88,6 +88,11 @@ class InverterOperationModeEntity(SelectEntity):
         self._attr_options = supported_options
         self._attr_current_option = current_mode
         self._inverter: Inverter = inverter
+
+    async def async_update(self) -> None:
+        """Get the current value from inverter."""
+        value = await self._inverter.get_operation_mode()
+        self._attr_current_option = _MODE_TO_OPTION[value]
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

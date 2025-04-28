@@ -1,5 +1,6 @@
 """Tests for the Apple WeatherKit integration."""
 
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from apple_weatherkit import DataSetType
@@ -26,20 +27,13 @@ EXAMPLE_CONFIG_DATA = {
 }
 
 
-async def init_integration(
-    hass: HomeAssistant,
+@contextmanager
+def mock_weather_response(
     is_night_time: bool = False,
     has_hourly_forecast: bool = True,
     has_daily_forecast: bool = True,
-) -> MockConfigEntry:
-    """Set up the WeatherKit integration in Home Assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Home",
-        unique_id="0123456",
-        data=EXAMPLE_CONFIG_DATA,
-    )
-
+):
+    """Mock a successful WeatherKit API response."""
     weather_response = load_json_object_fixture("weatherkit/weather_response.json")
 
     available_data_sets = [DataSetType.CURRENT_WEATHER]
@@ -58,15 +52,32 @@ async def init_integration(
     else:
         available_data_sets.append(DataSetType.HOURLY_FORECAST)
 
-    with patch(
-        "homeassistant.components.weatherkit.WeatherKitApiClient.get_weather_data",
-        return_value=weather_response,
-    ), patch(
-        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
-        return_value=available_data_sets,
+    with (
+        patch(
+            "homeassistant.components.weatherkit.WeatherKitApiClient.get_weather_data",
+            return_value=weather_response,
+        ),
+        patch(
+            "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+            return_value=available_data_sets,
+        ),
     ):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        yield
+
+
+async def init_integration(
+    hass: HomeAssistant,
+) -> MockConfigEntry:
+    """Set up the WeatherKit integration in Home Assistant."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        unique_id="0123456",
+        data=EXAMPLE_CONFIG_DATA,
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     return entry

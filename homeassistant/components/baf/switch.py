@@ -8,15 +8,13 @@ from typing import Any, cast
 
 from aiobafi6 import Device
 
-from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .entity import BAFEntity
-from .models import BAFData
+from . import BAFConfigEntry
+from .entity import BAFDescriptionEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -104,12 +102,11 @@ LIGHT_SWITCHES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: BAFConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BAF fan switches."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    device = data.device
+    device = entry.runtime_data
     descriptions: list[BAFSwitchDescription] = []
     descriptions.extend(BASE_SWITCHES)
     if device.has_fan:
@@ -121,16 +118,10 @@ async def async_setup_entry(
     async_add_entities(BAFSwitch(device, description) for description in descriptions)
 
 
-class BAFSwitch(BAFEntity, SwitchEntity):
+class BAFSwitch(BAFDescriptionEntity, SwitchEntity):
     """BAF switch component."""
 
     entity_description: BAFSwitchDescription
-
-    def __init__(self, device: Device, description: BAFSwitchDescription) -> None:
-        """Initialize the entity."""
-        self.entity_description = description
-        super().__init__(device)
-        self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
 
     @callback
     def _async_update_attrs(self) -> None:

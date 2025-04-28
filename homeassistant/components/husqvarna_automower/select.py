@@ -1,23 +1,22 @@
 """Creates a select entity for the headlight of the mower."""
 
 import logging
+from typing import cast
 
-from aioautomower.exceptions import ApiException
 from aioautomower.model import HeadlightModes
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerControlEntity
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
 HEADLIGHT_MODES: list = [
     HeadlightModes.ALWAYS_OFF.lower(),
@@ -28,15 +27,23 @@ HEADLIGHT_MODES: list = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        AutomowerSelectEntity(mower_id, coordinator)
-        for mower_id in coordinator.data
-        if coordinator.data[mower_id].capabilities.headlights
-    )
+    coordinator = entry.runtime_data
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerSelectEntity(mower_id, coordinator)
+            for mower_id in mower_ids
+            if coordinator.data[mower_id].capabilities.headlights
+        )
+
+    _async_add_new_devices(set(coordinator.data))
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
 
 
 class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
@@ -58,13 +65,13 @@ class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
     @property
     def current_option(self) -> str:
         """Return the current option for the entity."""
-        return self.mower_attributes.headlight.mode.lower()
+        return cast(
+            HeadlightModes, self.mower_attributes.settings.headlight.mode
+        ).lower()
 
+    @handle_sending_exception()
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.coordinator.api.set_headlight_mode(self.mower_id, option.upper())
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.set_headlight_mode(
+            self.mower_id, cast(HeadlightModes, option.upper())
+        )

@@ -1,5 +1,7 @@
 {
   "services": {
-    "send_magic_packet": "mdi:cube-send"
+    "send_magic_packet": {
+      "service": "mdi:cube-send"
+    }
   }
 }

@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aiohttp import ClientError
 import pytest
-from tibber import FatalHttpException, InvalidLogin, RetryableHttpException
+from tibber import (
+    FatalHttpExceptionError,
+    InvalidLoginError,
+    RetryableHttpExceptionError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
@@ -33,7 +37,7 @@ async def test_show_config_form(recorder_mock: Recorder, hass: HomeAssistant) ->
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -56,7 +60,7 @@ async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == title
     assert result["data"] == test_data
 
@@ -66,9 +70,9 @@ async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
     [
         (TimeoutError, ERR_TIMEOUT),
         (ClientError, ERR_CLIENT),
-        (InvalidLogin(401), ERR_TOKEN),
-        (RetryableHttpException(503), ERR_CLIENT),
-        (FatalHttpException(404), ERR_CLIENT),
+        (InvalidLoginError(401), ERR_TOKEN),
+        (RetryableHttpExceptionError(503), ERR_CLIENT),
+        (FatalHttpExceptionError(404), ERR_CLIENT),
     ],
 )
 async def test_create_entry_exceptions(
@@ -92,7 +96,7 @@ async def test_create_entry_exceptions(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"][CONF_ACCESS_TOKEN] == expected_error
 
 
@@ -109,5 +113,5 @@ async def test_flow_entry_already_exists(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

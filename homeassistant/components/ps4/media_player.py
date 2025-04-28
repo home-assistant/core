@@ -27,7 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import JsonObjectType
 
 from . import format_unique_id, load_games, save_games
@@ -48,7 +48,7 @@ DEFAULT_RETRIES = 2
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PS4 from a config entry."""
     config = config_entry
@@ -96,11 +96,10 @@ class PS4Device(MediaPlayerEntity):
         self._retry = 0
         self._disconnected = False
 
-    @callback
     def status_callback(self) -> None:
         """Handle status callback. Parse status."""
         self._parse_status()
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     @callback
     def subscribe_to_protocol(self) -> None:
@@ -118,7 +117,7 @@ class PS4Device(MediaPlayerEntity):
         """Display logger msg if region is deprecated."""
         # Non-Breaking although data returned may be inaccurate.
         if self._region in deprecated_regions:
-            _LOGGER.info(
+            _LOGGER.warning(
                 """Region: %s has been deprecated.
                             Please remove PS4 integration
                             and Re-configure again to utilize
@@ -157,7 +156,7 @@ class PS4Device(MediaPlayerEntity):
             self._ps4.ddp_protocol = self.hass.data[PS4_DATA].protocol
             self.subscribe_to_protocol()
 
-        self._parse_status()
+        await self.hass.async_add_executor_job(self._parse_status)
 
     def _parse_status(self) -> None:
         """Parse status."""
@@ -340,7 +339,7 @@ class PS4Device(MediaPlayerEntity):
         """Set device info for registry."""
         # If cannot get status on startup, assume info from registry.
         if status is None:
-            _LOGGER.info("Assuming status from registry")
+            _LOGGER.debug("Assuming status from registry")
             e_registry = er.async_get(self.hass)
             d_registry = dr.async_get(self.hass)
 
@@ -350,16 +349,17 @@ class PS4Device(MediaPlayerEntity):
                 self._attr_unique_id = entry.unique_id
                 self.entity_id = entry.entity_id
                 break
-            for device in d_registry.devices.values():
-                if self._entry_id in device.config_entries:
-                    self._attr_device_info = DeviceInfo(
-                        identifiers=device.identifiers,
-                        manufacturer=device.manufacturer,
-                        model=device.model,
-                        name=device.name,
-                        sw_version=device.sw_version,
-                    )
-                    break
+            for device in d_registry.devices.get_devices_for_config_entry_id(
+                self._entry_id
+            ):
+                self._attr_device_info = DeviceInfo(
+                    identifiers=device.identifiers,
+                    manufacturer=device.manufacturer,
+                    model=device.model,
+                    name=device.name,
+                    sw_version=device.sw_version,
+                )
+                break
 
         else:
             _sw_version = status["system-version"]

@@ -1,10 +1,10 @@
 {
   "domain": "zha",
   "name": "Zigbee Home Automation",
-  "after_dependencies": ["onboarding", "usb"],
+  "after_dependencies": ["hassio", "onboarding", "usb"],
   "codeowners": ["@dmulcahey", "@adminiuga", "@puddly", "@TheJulianJES"],
   "config_flow": true,
-  "dependencies": ["file_upload"],
+  "dependencies": ["file_upload", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "iot_class": "local_polling",
   "loggers": [
@@ -18,21 +18,10 @@
     "zigpy_xbee",
     "zigpy_zigate",
     "zigpy_znp",
+    "zha",
     "universal_silabs_flasher"
   ],
-  "requirements": [
-    "bellows==0.38.1",
-    "pyserial==3.5",
-    "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.112",
-    "zigpy-deconz==0.23.1",
-    "zigpy==0.63.4",
-    "zigpy-xbee==0.20.1",
-    "zigpy-zigate==0.12.0",
-    "zigpy-znp==0.12.1",
-    "universal-silabs-flasher==0.0.18",
-    "pyserial-asyncio-fast==0.11"
-  ],
+  "requirements": ["zha==0.0.56"],
   "usb": [
     {
       "vid": "10C4",
@@ -133,6 +122,18 @@
     {
       "type": "_slzb-06._tcp.local.",
       "name": "slzb-06*"
+    },
+    {
+      "type": "_xzg._tcp.local.",
+      "name": "xzg*"
+    },
+    {
+      "type": "_czc._tcp.local.",
+      "name": "czc*"
+    },
+    {
+      "type": "_zigbee-coordinator._tcp.local.",
+      "name": "*"
     }
   ]
 }

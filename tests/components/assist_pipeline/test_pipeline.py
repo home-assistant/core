@@ -4,8 +4,10 @@ from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import ANY, patch
 
+from hassil.recognize import Intent, IntentData, RecognizeResult
 import pytest
 
+from homeassistant.components import conversation
 from homeassistant.components.assist_pipeline.const import DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
@@ -15,34 +17,38 @@ from homeassistant.components.assist_pipeline.pipeline import (
     PipelineData,
     PipelineStorageCollection,
     PipelineStore,
+    _async_local_fallback_intent_filter,
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
+    async_migrate_engine,
     async_update_pipeline,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
 from . import MANY_LANGUAGES
-from .conftest import MockSttProvider, MockTTSProvider
+from .conftest import MockSTTProviderEntity, MockTTSProvider
 
 from tests.common import flush_store
 
 
 @pytest.fixture(autouse=True)
-async def delay_save_fixture() -> AsyncGenerator[None, None]:
+async def delay_save_fixture() -> AsyncGenerator[None]:
     """Load the homeassistant integration."""
     with patch("homeassistant.helpers.collection.SAVE_DELAY", new=0):
         yield
 
 
 @pytest.fixture(autouse=True)
-async def load_homeassistant(hass) -> None:
+async def load_homeassistant(hass: HomeAssistant) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
 
 
-async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
+@pytest.mark.usefixtures("init_components")
+async def test_load_pipelines(hass: HomeAssistant) -> None:
     """Make sure that we can load/save data correctly."""
 
     pipelines = [
@@ -117,6 +123,13 @@ async def test_loading_pipelines_from_storage(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored pipelines on start."""
+    async_migrate_engine(
+        hass,
+        "conversation",
+        conversation.OLD_HOME_ASSISTANT_AGENT,
+        conversation.HOME_ASSISTANT_AGENT,
+    )
+    id_1 = "01GX8ZWBAQYWNB1XV3EXEZ75DY"
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
         "minor_version": STORAGE_VERSION_MINOR,
@@ -124,9 +137,9 @@ async def test_loading_pipelines_from_storage(
         "data": {
             "items": [
                 {
-                    "conversation_engine": "conversation_engine_1",
+                    "conversation_engine": conversation.OLD_HOME_ASSISTANT_AGENT,
                     "conversation_language": "language_1",
-                    "id": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+                    "id": id_1,
                     "language": "language_1",
                     "name": "name_1",
                     "stt_engine": "stt_engine_1",
@@ -166,7 +179,7 @@ async def test_loading_pipelines_from_storage(
                     "wake_word_id": "wakeword_id_3",
                 },
             ],
-            "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+            "preferred_item": id_1,
         },
     }
 
@@ -175,7 +188,8 @@ async def test_loading_pipelines_from_storage(
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
     assert len(store.data) == 3
-    assert store.async_get_preferred_item() == "01GX8ZWBAQYWNB1XV3EXEZ75DY"
+    assert store.async_get_preferred_item() == id_1
+    assert store.data[id_1].conversation_engine == conversation.HOME_ASSISTANT_AGENT
 
 
 async def test_migrate_pipeline_store(
@@ -237,9 +251,8 @@ async def test_migrate_pipeline_store(
     assert store.async_get_preferred_item() == "01GX8ZWBAQYWNB1XV3EXEZ75DY"
 
 
-async def test_create_default_pipeline(
-    hass: HomeAssistant, init_supporting_components
-) -> None:
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_create_default_pipeline(hass: HomeAssistant) -> None:
     """Test async_create_default_pipeline."""
     assert await async_setup_component(hass, "assist_pipeline", {})
 
@@ -262,7 +275,7 @@ async def test_create_default_pipeline(
         tts_engine_id="test",
         pipeline_name="Test pipeline",
     ) == Pipeline(
-        conversation_engine="homeassistant",
+        conversation_engine="conversation.home_assistant",
         conversation_language="en",
         id=ANY,
         language="en",
@@ -304,7 +317,7 @@ async def test_get_pipelines(hass: HomeAssistant) -> None:
     pipelines = async_get_pipelines(hass)
     assert list(pipelines) == [
         Pipeline(
-            conversation_engine="homeassistant",
+            conversation_engine="conversation.home_assistant",
             conversation_language="en",
             id=ANY,
             language="en",
@@ -351,7 +364,7 @@ async def test_default_pipeline_no_stt_tts(
     # Check the default pipeline
     pipeline = async_get_pipeline(hass, None)
     assert pipeline == Pipeline(
-        conversation_engine="homeassistant",
+        conversation_engine="conversation.home_assistant",
         conversation_language=conv_language,
         id=pipeline.id,
         language=pipeline_language,
@@ -385,10 +398,10 @@ async def test_default_pipeline_no_stt_tts(
         ("pt", "br", "pt-br", "pt", "pt-br", "pt-br"),
     ],
 )
+@pytest.mark.usefixtures("init_supporting_components")
 async def test_default_pipeline(
     hass: HomeAssistant,
-    init_supporting_components,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider_entity: MockSTTProviderEntity,
     mock_tts_provider: MockTTSProvider,
     ha_language: str,
     ha_country: str | None,
@@ -401,9 +414,10 @@ async def test_default_pipeline(
     hass.config.country = ha_country
     hass.config.language = ha_language
 
-    with patch.object(
-        mock_stt_provider, "_supported_languages", MANY_LANGUAGES
-    ), patch.object(mock_tts_provider, "_supported_languages", MANY_LANGUAGES):
+    with (
+        patch.object(mock_stt_provider_entity, "_supported_languages", MANY_LANGUAGES),
+        patch.object(mock_tts_provider, "_supported_languages", MANY_LANGUAGES),
+    ):
         assert await async_setup_component(hass, "assist_pipeline", {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -413,12 +427,12 @@ async def test_default_pipeline(
     # Check the default pipeline
     pipeline = async_get_pipeline(hass, None)
     assert pipeline == Pipeline(
-        conversation_engine="homeassistant",
+        conversation_engine="conversation.home_assistant",
         conversation_language=conv_language,
         id=pipeline.id,
         language=pipeline_language,
         name="Home Assistant",
-        stt_engine="test",
+        stt_engine="stt.mock_stt",
         stt_language=stt_language,
         tts_engine="test",
         tts_language=tts_language,
@@ -428,13 +442,12 @@ async def test_default_pipeline(
     )
 
 
+@pytest.mark.usefixtures("init_supporting_components")
 async def test_default_pipeline_unsupported_stt_language(
-    hass: HomeAssistant,
-    init_supporting_components,
-    mock_stt_provider: MockSttProvider,
+    hass: HomeAssistant, mock_stt_provider_entity: MockSTTProviderEntity
 ) -> None:
     """Test async_get_pipeline."""
-    with patch.object(mock_stt_provider, "_supported_languages", ["smurfish"]):
+    with patch.object(mock_stt_provider_entity, "_supported_languages", ["smurfish"]):
         assert await async_setup_component(hass, "assist_pipeline", {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -444,7 +457,7 @@ async def test_default_pipeline_unsupported_stt_language(
     # Check the default pipeline
     pipeline = async_get_pipeline(hass, None)
     assert pipeline == Pipeline(
-        conversation_engine="homeassistant",
+        conversation_engine="conversation.home_assistant",
         conversation_language="en",
         id=pipeline.id,
         language="en",
@@ -459,10 +472,9 @@ async def test_default_pipeline_unsupported_stt_language(
     )
 
 
+@pytest.mark.usefixtures("init_supporting_components")
 async def test_default_pipeline_unsupported_tts_language(
-    hass: HomeAssistant,
-    init_supporting_components,
-    mock_tts_provider: MockTTSProvider,
+    hass: HomeAssistant, mock_tts_provider: MockTTSProvider
 ) -> None:
     """Test async_get_pipeline."""
     with patch.object(mock_tts_provider, "_supported_languages", ["smurfish"]):
@@ -475,12 +487,12 @@ async def test_default_pipeline_unsupported_tts_language(
     # Check the default pipeline
     pipeline = async_get_pipeline(hass, None)
     assert pipeline == Pipeline(
-        conversation_engine="homeassistant",
+        conversation_engine="conversation.home_assistant",
         conversation_language="en",
         id=pipeline.id,
         language="en",
         name="Home Assistant",
-        stt_engine="test",
+        stt_engine="stt.mock_stt",
         stt_language="en-US",
         tts_engine=None,
         tts_language=None,
@@ -491,8 +503,7 @@ async def test_default_pipeline_unsupported_tts_language(
 
 
 async def test_update_pipeline(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test async_update_pipeline."""
     assert await async_setup_component(hass, "assist_pipeline", {})
@@ -501,7 +512,7 @@ async def test_update_pipeline(
     pipelines = list(pipelines)
     assert pipelines == [
         Pipeline(
-            conversation_engine="homeassistant",
+            conversation_engine="conversation.home_assistant",
             conversation_language="en",
             id=ANY,
             language="en",
@@ -566,6 +577,7 @@ async def test_update_pipeline(
         "tts_voice": "test_voice",
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
+        "prefer_local_intents": False,
     }
 
     await async_update_pipeline(
@@ -609,4 +621,79 @@ async def test_update_pipeline(
         "tts_voice": "test_voice",
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
+        "prefer_local_intents": False,
     }
+
+
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_migrate_after_load(hass: HomeAssistant) -> None:
+    """Test migrating an engine after done loading."""
+    assert await async_setup_component(hass, "assist_pipeline", {})
+
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store = pipeline_data.pipeline_store
+    assert len(store.data) == 1
+
+    assert (
+        await async_create_default_pipeline(
+            hass,
+            stt_engine_id="bla",
+            tts_engine_id="bla",
+            pipeline_name="Bla pipeline",
+        )
+        is None
+    )
+    pipeline = await async_create_default_pipeline(
+        hass,
+        stt_engine_id="test",
+        tts_engine_id="test",
+        pipeline_name="Test pipeline",
+    )
+    assert pipeline is not None
+
+    async_migrate_engine(hass, "stt", "test", "stt.test")
+    async_migrate_engine(hass, "tts", "test", "tts.test")
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    pipeline_updated = async_get_pipeline(hass, pipeline.id)
+
+    assert pipeline_updated.stt_engine == "stt.test"
+    assert pipeline_updated.tts_engine == "tts.test"
+
+
+def test_fallback_intent_filter() -> None:
+    """Test that we filter the right things."""
+    assert (
+        _async_local_fallback_intent_filter(
+            RecognizeResult(
+                intent=Intent(intent.INTENT_GET_STATE),
+                intent_data=IntentData([]),
+                entities={},
+                entities_list=[],
+            )
+        )
+        is True
+    )
+    assert (
+        _async_local_fallback_intent_filter(
+            RecognizeResult(
+                intent=Intent(intent.INTENT_NEVERMIND),
+                intent_data=IntentData([]),
+                entities={},
+                entities_list=[],
+            )
+        )
+        is False
+    )
+    assert (
+        _async_local_fallback_intent_filter(
+            RecognizeResult(
+                intent=Intent(intent.INTENT_TURN_ON),
+                intent_data=IntentData([]),
+                entities={},
+                entities_list=[],
+            )
+        )
+        is False
+    )

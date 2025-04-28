@@ -15,14 +15,14 @@ from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, valid_entity_id
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import websocket_api
 from .const import DOMAIN
-from .helpers import entities_may_have_state_changes_after, has_recorder_run_after
+from .helpers import entities_may_have_state_changes_after, has_states_before
 
 CONF_ORDER = "use_include_order"
 
@@ -107,11 +107,16 @@ class HistoryPeriodView(HomeAssistantView):
         no_attributes = "no_attributes" in request.query
 
         if (
-            (end_time and not has_recorder_run_after(hass, end_time))
-            or not include_start_time_state
-            and entity_ids
-            and not entities_may_have_state_changes_after(
-                hass, entity_ids, start_time, no_attributes
+            # has_states_before will return True if there are states older than
+            # end_time. If it's false, we know there are no states in the
+            # database up until end_time.
+            (end_time and not has_states_before(hass, end_time))
+            or (
+                not include_start_time_state
+                and entity_ids
+                and not entities_may_have_state_changes_after(
+                    hass, entity_ids, start_time, no_attributes
+                )
             )
         ):
             return self.json([])

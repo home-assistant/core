@@ -1,5 +1,44 @@
 # serializer version: 1
-# name: test_state[sensor.my_water_heater_energy_usage]
+# name: test_state[sensor.my_water_heater_energy_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_water_heater_energy_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy usage',
+    'platform': 'aosmith',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_usage',
+    'unique_id': 'energy_usage_junctionId',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_state[sensor.my_water_heater_energy_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -15,22 +54,51 @@
     'state': '132.825',
   })
 # ---
-# name: test_state[sensor.my_water_heater_hot_water_availability]
+# name: test_state[sensor.my_water_heater_hot_water_availability-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_water_heater_hot_water_availability',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hot water availability',
+    'platform': 'aosmith',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'hot_water_availability',
+    'unique_id': 'hot_water_availability_junctionId',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_state[sensor.my_water_heater_hot_water_availability-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
       'friendly_name': 'My water heater Hot water availability',
-      'options': list([
-        'low',
-        'medium',
-        'high',
-      ]),
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_water_heater_hot_water_availability',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'low',
+    'state': '90',
   })
 # ---

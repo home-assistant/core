@@ -13,7 +13,7 @@ from homeassistant.components import remote
 from homeassistant.components.remote import (
     ATTR_NUM_REPEATS,
     DEFAULT_NUM_REPEATS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as REMOTE_PLATFORM_SCHEMA,
 )
 from homeassistant.const import (
     CONF_DEVICES,
@@ -24,7 +24,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -42,7 +42,7 @@ CONF_COMMANDS = "commands"
 CONF_DATA = "data"
 CONF_IR_COUNT = "ir_count"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MAC): cv.string,
         vol.Required(CONF_HOST): cv.string,

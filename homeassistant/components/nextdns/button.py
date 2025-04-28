@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+from aiohttp import ClientError
+from aiohttp.client_exceptions import ClientConnectorError
+from nextdns import AnalyticsStatus, ApiError, InvalidApiKeyError
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NextDnsStatusUpdateCoordinator
-from .const import ATTR_STATUS, DOMAIN
+from . import NextDnsConfigEntry
+from .const import DOMAIN
+from .coordinator import NextDnsUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -22,27 +27,26 @@ CLEAR_LOGS_BUTTON = ButtonEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NextDnsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add aNextDNS entities from a config_entry."""
-    coordinator: NextDnsStatusUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        ATTR_STATUS
-    ]
+    coordinator = entry.runtime_data.status
 
-    buttons: list[NextDnsButton] = []
-    buttons.append(NextDnsButton(coordinator, CLEAR_LOGS_BUTTON))
-
-    async_add_entities(buttons)
+    async_add_entities([NextDnsButton(coordinator, CLEAR_LOGS_BUTTON)])
 
 
-class NextDnsButton(CoordinatorEntity[NextDnsStatusUpdateCoordinator], ButtonEntity):
+class NextDnsButton(
+    CoordinatorEntity[NextDnsUpdateCoordinator[AnalyticsStatus]], ButtonEntity
+):
     """Define an NextDNS button."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: NextDnsStatusUpdateCoordinator,
+        coordinator: NextDnsUpdateCoordinator[AnalyticsStatus],
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize."""
@@ -53,4 +57,21 @@ class NextDnsButton(CoordinatorEntity[NextDnsStatusUpdateCoordinator], ButtonEnt
 
     async def async_press(self) -> None:
         """Trigger cleaning logs."""
-        await self.coordinator.nextdns.clear_logs(self.coordinator.profile_id)
+        try:
+            await self.coordinator.nextdns.clear_logs(self.coordinator.profile_id)
+        except (
+            ApiError,
+            ClientConnectorError,
+            TimeoutError,
+            ClientError,
+        ) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="method_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "error": repr(err),
+                },
+            ) from err
+        except InvalidApiKeyError:
+            self.coordinator.config_entry.async_start_reauth(self.hass)

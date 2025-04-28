@@ -11,7 +11,6 @@ from hko import HKO, HKOError
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_FOG,
-    ATTR_CONDITION_HAIL,
     ATTR_CONDITION_LIGHTNING_RAINY,
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_POURING,
@@ -26,6 +25,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -69,8 +69,15 @@ _LOGGER = logging.getLogger(__name__)
 class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """HKO Update Coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, session: ClientSession, district: str, location: str
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        session: ClientSession,
+        district: str,
+        location: str,
     ) -> None:
         """Update data via library."""
         self.location = location
@@ -80,6 +87,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=15),
         )
@@ -101,7 +109,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _convert_current(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return temperature and humidity in the appropriate format."""
-        current = {
+        return {
             API_HUMIDITY: data[API_HUMIDITY][API_DATA][0][API_VALUE],
             API_TEMPERATURE: next(
                 (
@@ -112,12 +120,11 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 0,
             ),
         }
-        return current
 
     def _convert_forecast(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return daily forecast in the appropriate format."""
         date = data[API_FORECAST_DATE]
-        forecast = {
+        return {
             ATTR_FORECAST_CONDITION: self._convert_icon_condition(
                 data[API_FORECAST_ICON], data[API_FORECAST_WEATHER]
             ),
@@ -125,7 +132,6 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ATTR_FORECAST_TEMP_LOW: data[API_FORECAST_MIN_TEMP][API_VALUE],
             ATTR_FORECAST_TIME: f"{date[0:4]}-{date[4:6]}-{date[6:8]}T00:00:00+08:00",
         }
-        return forecast
 
     def _convert_icon_condition(self, icon_code: int, info: str) -> str:
         """Return the condition corresponding to an icon code."""
@@ -138,7 +144,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return the condition corresponding to the weather info."""
         info = info.lower()
         if WEATHER_INFO_RAIN in info:
-            return ATTR_CONDITION_HAIL
+            return ATTR_CONDITION_RAINY
         if WEATHER_INFO_SNOW in info and WEATHER_INFO_RAIN in info:
             return ATTR_CONDITION_SNOWY_RAINY
         if WEATHER_INFO_SNOW in info:

@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -39,10 +39,10 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"octoprint-{config_entry.entry_id}",
             update_interval=timedelta(seconds=interval),
         )
-        self.config_entry = config_entry
         self._octoprint = octoprint
         self._printer_offline = False
         self.data = {"printer": None, "job": None, "last_read_time": None}
@@ -80,7 +80,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         """Device info."""
         unique_id = cast(str, self.config_entry.unique_id)
         configuration_url = URL.build(
-            scheme=self.config_entry.data[CONF_SSL] and "https" or "http",
+            scheme=(self.config_entry.data[CONF_SSL] and "https") or "http",
             host=self.config_entry.data[CONF_HOST],
             port=self.config_entry.data[CONF_PORT],
             path=self.config_entry.data[CONF_PATH],

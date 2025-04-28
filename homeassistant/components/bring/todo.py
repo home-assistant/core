@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+from itertools import chain
 from typing import TYPE_CHECKING
 import uuid
 
-from bring_api.exceptions import BringRequestException
-from bring_api.types import BringItem, BringItemOperation
+from bring_api import (
+    BringItem,
+    BringItemOperation,
+    BringList,
+    BringNotificationType,
+    BringRequestException,
+)
+import voluptuous as vol
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -14,46 +21,67 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import BringData, BringDataUpdateCoordinator
+from .const import (
+    ATTR_ITEM_NAME,
+    ATTR_NOTIFICATION_TYPE,
+    DOMAIN,
+    SERVICE_PUSH_NOTIFICATION,
+)
+from .coordinator import BringConfigEntry, BringData, BringDataUpdateCoordinator
+from .entity import BringBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BringConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
+    lists_added: set[str] = set()
 
-    unique_id = config_entry.unique_id
+    @callback
+    def add_entities() -> None:
+        """Add or remove todo list entities."""
+        nonlocal lists_added
 
-    if TYPE_CHECKING:
-        assert unique_id
+        if new_lists := {lst.listUuid for lst in coordinator.lists} - lists_added:
+            async_add_entities(
+                BringTodoListEntity(coordinator, bring_list)
+                for bring_list in coordinator.lists
+                if bring_list.listUuid in new_lists
+            )
+            lists_added |= new_lists
 
-    async_add_entities(
-        BringTodoListEntity(
-            coordinator,
-            bring_list=bring_list,
-            unique_id=unique_id,
-        )
-        for bring_list in coordinator.data.values()
+    coordinator.async_add_listener(add_entities)
+    add_entities()
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_PUSH_NOTIFICATION,
+        {
+            vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
+                vol.Upper, vol.Coerce(BringNotificationType)
+            ),
+            vol.Optional(ATTR_ITEM_NAME): cv.string,
+        },
+        "async_send_message",
     )
 
 
-class BringTodoListEntity(
-    CoordinatorEntity[BringDataUpdateCoordinator], TodoListEntity
-):
+class BringTodoListEntity(BringBaseEntity, TodoListEntity):
     """A To-do List representation of the Bring! Shopping List."""
 
     _attr_translation_key = "shopping_list"
-    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
@@ -62,16 +90,11 @@ class BringTodoListEntity(
     )
 
     def __init__(
-        self,
-        coordinator: BringDataUpdateCoordinator,
-        bring_list: BringData,
-        unique_id: str,
+        self, coordinator: BringDataUpdateCoordinator, bring_list: BringList
     ) -> None:
-        """Initialize BringTodoListEntity."""
-        super().__init__(coordinator)
-        self._list_uuid = bring_list["listUuid"]
-        self._attr_name = bring_list["name"]
-        self._attr_unique_id = f"{unique_id}_{self._list_uuid}"
+        """Initialize the entity."""
+        super().__init__(coordinator, bring_list)
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{self._list_uuid}"
 
     @property
     def todo_items(self) -> list[TodoItem]:
@@ -79,21 +102,21 @@ class BringTodoListEntity(
         return [
             *(
                 TodoItem(
-                    uid=item["uuid"],
-                    summary=item["itemId"],
-                    description=item["specification"] or "",
+                    uid=item.uuid,
+                    summary=item.itemId,
+                    description=item.specification,
                     status=TodoItemStatus.NEEDS_ACTION,
                 )
-                for item in self.bring_list["purchase_items"]
+                for item in self.bring_list.content.items.purchase
             ),
             *(
                 TodoItem(
-                    uid=item["uuid"],
-                    summary=item["itemId"],
-                    description=item["specification"] or "",
+                    uid=item.uuid,
+                    summary=item.itemId,
+                    description=item.specification,
                     status=TodoItemStatus.COMPLETED,
                 )
-                for item in self.bring_list["recently_items"]
+                for item in self.bring_list.content.items.recently
             ),
         ]
 
@@ -106,13 +129,17 @@ class BringTodoListEntity(
         """Add an item to the To-do list."""
         try:
             await self.coordinator.bring.save_item(
-                self.bring_list["listUuid"],
-                item.summary,
+                self._list_uuid,
+                item.summary or "",
                 item.description or "",
                 str(uuid.uuid4()),
             )
         except BringRequestException as e:
-            raise HomeAssistantError("Unable to save todo item for bring") from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="todo_save_item_failed",
+                translation_placeholders={"name": item.summary or ""},
+            ) from e
 
         await self.coordinator.async_refresh()
 
@@ -137,29 +164,28 @@ class BringTodoListEntity(
 
         bring_list = self.bring_list
 
-        bring_purchase_item = next(
-            (i for i in bring_list["purchase_items"] if i["uuid"] == item.uid),
+        current_item = next(
+            (
+                i
+                for i in chain(
+                    bring_list.content.items.purchase, bring_list.content.items.recently
+                )
+                if i.uuid == item.uid
+            ),
             None,
         )
-
-        bring_recently_item = next(
-            (i for i in bring_list["recently_items"] if i["uuid"] == item.uid),
-            None,
-        )
-
-        current_item = bring_purchase_item or bring_recently_item
 
         if TYPE_CHECKING:
             assert item.uid
             assert current_item
 
-        if item.summary == current_item["itemId"]:
+        if item.summary == current_item.itemId:
             try:
                 await self.coordinator.bring.batch_update_list(
-                    bring_list["listUuid"],
+                    self._list_uuid,
                     BringItem(
-                        itemId=item.summary,
-                        spec=item.description,
+                        itemId=item.summary or "",
+                        spec=item.description or "",
                         uuid=item.uid,
                     ),
                     BringItemOperation.ADD
@@ -167,21 +193,25 @@ class BringTodoListEntity(
                     else BringItemOperation.COMPLETE,
                 )
             except BringRequestException as e:
-                raise HomeAssistantError("Unable to update todo item for bring") from e
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="todo_update_item_failed",
+                    translation_placeholders={"name": item.summary or ""},
+                ) from e
         else:
             try:
                 await self.coordinator.bring.batch_update_list(
-                    bring_list["listUuid"],
+                    self._list_uuid,
                     [
                         BringItem(
-                            itemId=current_item["itemId"],
-                            spec=item.description,
+                            itemId=current_item.itemId,
+                            spec=item.description or "",
                             uuid=item.uid,
                             operation=BringItemOperation.REMOVE,
                         ),
                         BringItem(
-                            itemId=item.summary,
-                            spec=item.description,
+                            itemId=item.summary or "",
+                            spec=item.description or "",
                             uuid=str(uuid.uuid4()),
                             operation=BringItemOperation.ADD
                             if item.status == TodoItemStatus.NEEDS_ACTION
@@ -191,7 +221,11 @@ class BringTodoListEntity(
                 )
 
             except BringRequestException as e:
-                raise HomeAssistantError("Unable to replace todo item for bring") from e
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="todo_rename_item_failed",
+                    translation_placeholders={"name": item.summary or ""},
+                ) from e
 
         await self.coordinator.async_refresh()
 
@@ -200,7 +234,7 @@ class BringTodoListEntity(
 
         try:
             await self.coordinator.bring.batch_update_list(
-                self.bring_list["listUuid"],
+                self._list_uuid,
                 [
                     BringItem(
                         itemId=uid,
@@ -212,6 +246,31 @@ class BringTodoListEntity(
                 BringItemOperation.REMOVE,
             )
         except BringRequestException as e:
-            raise HomeAssistantError("Unable to delete todo item for bring") from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="todo_delete_item_failed",
+                translation_placeholders={"count": str(len(uids))},
+            ) from e
 
         await self.coordinator.async_refresh()
+
+    async def async_send_message(
+        self,
+        message: BringNotificationType,
+        item: str | None = None,
+    ) -> None:
+        """Send a push notification to members of a shared bring list."""
+
+        try:
+            await self.coordinator.bring.notify(self._list_uuid, message, item or None)
+        except BringRequestException as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="notify_request_failed",
+            ) from e
+        except ValueError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="notify_missing_argument",
+                translation_placeholders={"field": "item"},
+            ) from e

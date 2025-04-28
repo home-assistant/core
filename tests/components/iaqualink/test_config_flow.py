@@ -7,8 +7,10 @@ from iaqualink.exception import (
     AqualinkServiceUnauthorizedException,
 )
 
-from homeassistant.components.iaqualink import config_flow
+from homeassistant.components.iaqualink import DOMAIN, config_flow
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_already_configured(
@@ -17,13 +19,12 @@ async def test_already_configured(
     """Test config flow when iaqualink component is already setup."""
     config_entry.add_to_hass(hass)
 
-    flow = config_flow.AqualinkFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    result = await flow.async_step_user(config_data)
-
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_without_config(hass: HomeAssistant) -> None:
@@ -34,7 +35,7 @@ async def test_without_config(hass: HomeAssistant) -> None:
 
     result = await flow.async_step_user()
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -50,7 +51,7 @@ async def test_with_invalid_credentials(hass: HomeAssistant, config_data) -> Non
     ):
         result = await flow.async_step_user(config_data)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -66,7 +67,7 @@ async def test_service_exception(hass: HomeAssistant, config_data) -> None:
     ):
         result = await flow.async_step_user(config_data)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -83,6 +84,6 @@ async def test_with_existing_config(hass: HomeAssistant, config_data) -> None:
     ):
         result = await flow.async_step_user(config_data)
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == config_data["username"]
     assert result["data"] == config_data

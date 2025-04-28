@@ -28,9 +28,8 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 
 from .api import ApiAuthImpl, get_feature_access
@@ -175,7 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
-    if not async_entry_has_scopes(hass, entry):
+    if not async_entry_has_scopes(entry):
         raise ConfigEntryAuthFailed(
             "Required scopes are not available, reauth required"
         )
@@ -198,7 +197,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
 
     # Only expose the add event service if we have the correct permissions
-    if get_feature_access(hass, entry) is FeatureAccess.read_write:
+    if get_feature_access(entry) is FeatureAccess.read_write:
         await async_setup_add_event_service(hass, calendar_service)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -208,9 +207,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def async_entry_has_scopes(entry: ConfigEntry) -> bool:
     """Verify that the config entry desired scope is present in the oauth token."""
-    access = get_feature_access(hass, entry)
+    access = get_feature_access(entry)
     token_scopes = entry.data.get("token", {}).get("scope", [])
     return access.scope in token_scopes
 
@@ -224,7 +223,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry if the access options change."""
-    if not async_entry_has_scopes(hass, entry):
+    if not async_entry_has_scopes(entry):
         await hass.config_entries.async_reload(entry.entry_id)
 
 

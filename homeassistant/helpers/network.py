@@ -6,14 +6,17 @@ from collections.abc import Callable
 from contextlib import suppress
 from ipaddress import ip_address
 
+from aiohttp import hdrs
 from hass_nabucasa import remote
 import yarl
 
-from homeassistant.components import http
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util.network import is_ip_address, is_loopback, normalize_url
+
+from . import http
+from .hassio import is_hassio
 
 TYPE_URL_INTERNAL = "internal_url"
 TYPE_URL_EXTERNAL = "external_url"
@@ -31,9 +34,9 @@ def is_internal_request(hass: HomeAssistant) -> bool:
         get_url(
             hass, allow_external=False, allow_cloud=False, require_current_request=True
         )
-        return True
     except NoURLAvailableError:
         return False
+    return True
 
 
 @bind_hass
@@ -41,10 +44,6 @@ def get_supervisor_network_url(
     hass: HomeAssistant, *, allow_ssl: bool = False
 ) -> str | None:
     """Get URL for home assistant within supervisor network."""
-    # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.hassio import is_hassio
-
     if hass.config.api is None or not is_hassio(hass):
         return None
 
@@ -122,6 +121,7 @@ def get_url(
     require_current_request: bool = False,
     require_ssl: bool = False,
     require_standard_port: bool = False,
+    require_cloud: bool = False,
     allow_internal: bool = True,
     allow_external: bool = True,
     allow_cloud: bool = True,
@@ -145,7 +145,7 @@ def get_url(
 
     # Try finding an URL in the order specified
     for url_type in order:
-        if allow_internal and url_type == TYPE_URL_INTERNAL:
+        if allow_internal and url_type == TYPE_URL_INTERNAL and not require_cloud:
             with suppress(NoURLAvailableError):
                 return _get_internal_url(
                     hass,
@@ -155,7 +155,7 @@ def get_url(
                     require_standard_port=require_standard_port,
                 )
 
-        if allow_external and url_type == TYPE_URL_EXTERNAL:
+        if require_cloud or (allow_external and url_type == TYPE_URL_EXTERNAL):
             with suppress(NoURLAvailableError):
                 return _get_external_url(
                     hass,
@@ -165,7 +165,10 @@ def get_url(
                     require_current_request=require_current_request,
                     require_ssl=require_ssl,
                     require_standard_port=require_standard_port,
+                    require_cloud=require_cloud,
                 )
+            if require_cloud:
+                raise NoURLAvailableError
 
     # For current request, we accept loopback interfaces (e.g., 127.0.0.1),
     # the Supervisor hostname and localhost transparently
@@ -175,20 +178,21 @@ def get_url(
         and request_host is not None
         and hass.config.api is not None
     ):
-        # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.hassio import get_host_info, is_hassio
-
         scheme = "https" if hass.config.api.use_ssl else "http"
         current_url = yarl.URL.build(
             scheme=scheme, host=request_host, port=hass.config.api.port
         )
 
         known_hostnames = ["localhost"]
-        if is_hassio(hass) and (host_info := get_host_info(hass)):
-            known_hostnames.extend(
-                [host_info["hostname"], f"{host_info['hostname']}.local"]
-            )
+        if is_hassio(hass):
+            # Local import to avoid circular dependencies
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.components.hassio import get_host_info
+
+            if host_info := get_host_info(hass):
+                known_hostnames.extend(
+                    [host_info["hostname"], f"{host_info['hostname']}.local"]
+                )
 
         if (
             (
@@ -212,7 +216,18 @@ def _get_request_host() -> str | None:
     """Get the host address of the current request."""
     if (request := http.current_request.get()) is None:
         raise NoURLAvailableError
-    return yarl.URL(request.url).host
+    # partition the host to remove the port
+    # because the raw host header can contain the port
+    host = request.headers.get(hdrs.HOST)
+    if host is None:
+        return None
+    # IPv6 addresses are enclosed in brackets
+    # use same logic as yarl and urllib to extract the host
+    if "[" in host:
+        return (host.partition("[")[2]).partition("]")[0]
+    if ":" in host:
+        host = host.partition(":")[0]
+    return host
 
 
 @bind_hass
@@ -263,8 +278,12 @@ def _get_external_url(
     require_current_request: bool = False,
     require_ssl: bool = False,
     require_standard_port: bool = False,
+    require_cloud: bool = False,
 ) -> str:
     """Get external URL of this instance."""
+    if require_cloud:
+        return _get_cloud_url(hass, require_current_request=require_current_request)
+
     if prefer_cloud and allow_cloud:
         with suppress(NoURLAvailableError):
             return _get_cloud_url(hass)

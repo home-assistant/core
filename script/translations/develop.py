@@ -4,12 +4,11 @@ import argparse
 import json
 from pathlib import Path
 import re
-from shutil import rmtree
 import sys
 
 from . import download, upload
 from .const import INTEGRATIONS_DIR
-from .util import get_base_arg_parser
+from .util import flatten_translations, get_base_arg_parser
 
 
 def valid_integration(integration):
@@ -30,29 +29,6 @@ def get_arguments() -> argparse.Namespace:
     )
     parser.add_argument("--all", action="store_true", help="Process all integrations.")
     return parser.parse_args()
-
-
-def flatten_translations(translations):
-    """Flatten all translations."""
-    stack = [iter(translations.items())]
-    key_stack = []
-    flattened_translations = {}
-    while stack:
-        for k, v in stack[-1]:
-            key_stack.append(k)
-            if isinstance(v, dict):
-                stack.append(iter(v.items()))
-                break
-            elif isinstance(v, str):
-                common_key = "::".join(key_stack)
-                flattened_translations[common_key] = v
-                key_stack.pop()
-        else:
-            stack.pop()
-            if key_stack:
-                key_stack.pop()
-
-    return flattened_translations
 
 
 def substitute_translation_references(integration_strings, flattened_translations):
@@ -106,9 +82,10 @@ def run_single(translations, flattened_translations, integration):
     )
 
     if download.DOWNLOAD_DIR.is_dir():
-        rmtree(str(download.DOWNLOAD_DIR))
-
-    download.DOWNLOAD_DIR.mkdir(parents=True)
+        for lang_file in download.DOWNLOAD_DIR.glob("*.json"):
+            lang_file.unlink()
+    else:
+        download.DOWNLOAD_DIR.mkdir(parents=True)
 
     (download.DOWNLOAD_DIR / "en.json").write_text(
         json.dumps({"component": {integration: translations["component"][integration]}})

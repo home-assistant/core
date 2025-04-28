@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
-from aiolivisi import errors as livisi_errors
+from livisi import errors as livisi_errors
 import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components.livisi.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     VALID_CONFIG,
@@ -30,7 +30,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
             VALID_CONFIG,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "SHC Classic"
         assert result["data"]["host"] == "1.1.1.1"
         assert result["data"]["password"] == "test"
@@ -59,11 +59,11 @@ async def test_create_entity_after_login_error(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], VALID_CONFIG
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"]["base"] == expected_reason
     with mocked_livisi_login(), mocked_livisi_controller(), mocked_livisi_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=VALID_CONFIG,
         )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY

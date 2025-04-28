@@ -12,7 +12,7 @@ from homeassistant.components.google_mail.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import SENSOR, TOKEN, ComponentSetup
 
@@ -46,7 +46,7 @@ async def test_sensors(
     ):
         next_update = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(SENSOR)
     assert state.state == result
@@ -61,7 +61,7 @@ async def test_sensor_reauth_trigger(
     with patch(TOKEN, side_effect=RefreshError):
         next_update = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     flows = hass.config_entries.flow.async_progress()
 

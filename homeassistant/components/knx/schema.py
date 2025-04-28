@@ -7,14 +7,15 @@ from collections import OrderedDict
 from typing import ClassVar, Final
 
 import voluptuous as vol
-from xknx.devices.climate import SetpointShiftMode
+from xknx.devices.climate import FanSpeedMode, SetpointShiftMode
 from xknx.dpt import DPTBase, DPTNumeric
+from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
-from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate import FAN_OFF, HVACMode
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
@@ -37,12 +38,15 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD,
     CONF_TYPE,
+    CONF_VALUE_TEMPLATE,
     Platform,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 
 from .const import (
+    CONF_CONTEXT_TIMEOUT,
+    CONF_IGNORE_INTERNAL_STATE,
     CONF_INVERT,
     CONF_KNX_EXPOSE,
     CONF_PAYLOAD_LENGTH,
@@ -50,12 +54,13 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    CONTROLLER_MODES,
     KNX_ADDRESS,
-    PRESET_MODES,
     ColorTempModes,
+    FanZeroMode,
 )
 from .validation import (
+    backwards_compatible_xknx_climate_enum_member,
+    dpt_base_type_validator,
     ga_list_validator,
     ga_validator,
     numeric_type_validator,
@@ -172,7 +177,7 @@ class EventSchema:
     KNX_EVENT_FILTER_SCHEMA = vol.Schema(
         {
             vol.Required(KNX_ADDRESS): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_TYPE): sensor_type_validator,
+            vol.Optional(CONF_TYPE): dpt_base_type_validator,
         }
     )
 
@@ -208,20 +213,9 @@ class BinarySensorSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX binary sensors."""
 
     PLATFORM = Platform.BINARY_SENSOR
-
-    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
-    CONF_SYNC_STATE = CONF_SYNC_STATE
-    CONF_INVERT = CONF_INVERT
-    CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
-    CONF_CONTEXT_TIMEOUT = "context_timeout"
-    CONF_RESET_AFTER = CONF_RESET_AFTER
-
     DEFAULT_NAME = "KNX Binary Sensor"
 
     ENTITY_SCHEMA = vol.All(
-        # deprecated since September 2020
-        cv.deprecated("significant_bit"),
-        cv.deprecated("automation"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -339,6 +333,16 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_ON_OFF_INVERT = "on_off_invert"
     CONF_MIN_TEMP = "min_temp"
     CONF_MAX_TEMP = "max_temp"
+    CONF_FAN_SPEED_ADDRESS = "fan_speed_address"
+    CONF_FAN_SPEED_STATE_ADDRESS = "fan_speed_state_address"
+    CONF_FAN_MAX_STEP = "fan_max_step"
+    CONF_FAN_SPEED_MODE = "fan_speed_mode"
+    CONF_FAN_ZERO_MODE = "fan_zero_mode"
+    CONF_HUMIDITY_STATE_ADDRESS = "humidity_state_address"
+    CONF_SWING_ADDRESS = "swing_address"
+    CONF_SWING_STATE_ADDRESS = "swing_state_address"
+    CONF_SWING_HORIZONTAL_ADDRESS = "swing_horizontal_address"
+    CONF_SWING_HORIZONTAL_STATE_ADDRESS = "swing_horizontal_state_address"
 
     DEFAULT_NAME = "KNX Climate"
     DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
@@ -346,12 +350,9 @@ class ClimateSchema(KNXPlatformSchema):
     DEFAULT_SETPOINT_SHIFT_MIN = -6
     DEFAULT_TEMPERATURE_STEP = 0.1
     DEFAULT_ON_OFF_INVERT = False
+    DEFAULT_FAN_SPEED_MODE = "percent"
 
     ENTITY_SCHEMA = vol.All(
-        # deprecated since September 2020
-        cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
-        # deprecated since 2021.6
-        cv.deprecated("create_temperature_sensors"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -408,10 +409,12 @@ class ClimateSchema(KNXPlatformSchema):
                     CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
                 ): cv.boolean,
                 vol.Optional(CONF_OPERATION_MODES): vol.All(
-                    cv.ensure_list, [vol.In(PRESET_MODES)]
+                    cv.ensure_list,
+                    [backwards_compatible_xknx_climate_enum_member(HVACOperationMode)],
                 ),
                 vol.Optional(CONF_CONTROLLER_MODES): vol.All(
-                    cv.ensure_list, [vol.In(CONTROLLER_MODES)]
+                    cv.ensure_list,
+                    [backwards_compatible_xknx_climate_enum_member(HVACControllerMode)],
                 ),
                 vol.Optional(
                     CONF_DEFAULT_CONTROLLER_MODE, default=HVACMode.HEAT
@@ -419,6 +422,20 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+                vol.Optional(CONF_FAN_SPEED_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_FAN_SPEED_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_FAN_MAX_STEP, default=3): cv.byte,
+                vol.Optional(
+                    CONF_FAN_SPEED_MODE, default=DEFAULT_FAN_SPEED_MODE
+                ): vol.All(vol.Upper, cv.enum(FanSpeedMode)),
+                vol.Optional(CONF_FAN_ZERO_MODE, default=FAN_OFF): vol.Coerce(
+                    FanZeroMode
+                ),
+                vol.Optional(CONF_SWING_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SWING_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SWING_HORIZONTAL_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SWING_HORIZONTAL_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_HUMIDITY_STATE_ADDRESS): ga_list_validator,
             }
         ),
     )
@@ -534,11 +551,10 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_BINARY = "binary"
     CONF_KNX_EXPOSE_COOLDOWN = "cooldown"
     CONF_KNX_EXPOSE_DEFAULT = "default"
-    EXPOSE_TIME_TYPES: Final = [
-        "time",
-        "date",
-        "datetime",
-    ]
+    CONF_TIME = "time"
+    CONF_DATE = "date"
+    CONF_DATETIME = "datetime"
+    EXPOSE_TIME_TYPES: Final = [CONF_TIME, CONF_DATE, CONF_DATETIME]
 
     EXPOSE_TIME_SCHEMA = vol.Schema(
         {
@@ -559,6 +575,7 @@ class ExposeSchema(KNXPlatformSchema):
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         }
     )
     ENTITY_SCHEMA = vol.Any(EXPOSE_SENSOR_SCHEMA, EXPOSE_TIME_SCHEMA)
@@ -750,6 +767,7 @@ class NotifySchema(KNXPlatformSchema):
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_TYPE, default="latin_1"): string_type_validator,
             vol.Required(KNX_ADDRESS): ga_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
     )
 
@@ -946,8 +964,6 @@ class WeatherSchema(KNXPlatformSchema):
     DEFAULT_NAME = "KNX Weather Station"
 
     ENTITY_SCHEMA = vol.All(
-        # deprecated since 2021.6
-        cv.deprecated("create_sensors"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

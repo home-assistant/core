@@ -1,4 +1,11 @@
 {
+  "common": {
+    "data_description_host": "The hostname or IP address of your FRITZ!Box router.",
+    "data_description_port": "Leave empty to use the default port.",
+    "data_description_username": "Username for the FRITZ!Box.",
+    "data_description_password": "Password for the FRITZ!Box.",
+    "data_description_ssl": "Use SSL to connect to the FRITZ!Box."
+  },
   "config": {
     "flow_title": "{name}",
     "step": {
@@ -7,7 +14,13 @@
         "description": "Discovered FRITZ!Box: {name}\n\nSet up FRITZ!Box Tools to control your {name}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]"
+        },
+        "data_description": {
+          "username": "[%key:component::fritz::common::data_description_username%]",
+          "password": "[%key:component::fritz::common::data_description_password%]",
+          "ssl": "[%key:component::fritz::common::data_description_ssl%]"
         }
       },
       "reauth_confirm": {
@@ -16,6 +29,24 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::fritz::common::data_description_username%]",
+          "password": "[%key:component::fritz::common::data_description_password%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Updating FRITZ!Box Tools - configuration",
+        "description": "Update FRITZ!Box Tools configuration for: {host}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::fritz::common::data_description_host%]",
+          "port": "[%key:component::fritz::common::data_description_port%]",
+          "ssl": "[%key:component::fritz::common::data_description_ssl%]"
         }
       },
       "user": {
@@ -25,10 +56,15 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box router."
+          "host": "[%key:component::fritz::common::data_description_host%]",
+          "port": "[%key:component::fritz::common::data_description_port%]",
+          "username": "[%key:component::fritz::common::data_description_username%]",
+          "password": "[%key:component::fritz::common::data_description_password%]",
+          "ssl": "[%key:component::fritz::common::data_description_ssl%]"
         }
       }
     },
@@ -36,9 +72,11 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "ignore_ip6_link_local": "IPv6 link local address is not supported.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
+      "unknown_error": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "upnp_not_configured": "Missing UPnP settings on device.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
@@ -52,6 +90,10 @@
         "data": {
           "consider_home": "Seconds to consider a device at 'home'",
           "old_discovery": "Enable old discovery method"
+        },
+        "data_description": {
+          "consider_home": "Time in seconds to consider a device at home. Default is 180 seconds.",
+          "old_discovery": "Enable old discovery method. This is needed for some scenarios."
         }
       }
     }
@@ -128,42 +170,12 @@
     }
   },
   "services": {
-    "reconnect": {
-      "name": "[%key:component::fritz::entity::button::reconnect::name%]",
-      "description": "Reconnects your FRITZ!Box internet connection.",
-      "fields": {
-        "device_id": {
-          "name": "Fritz!Box Device",
-          "description": "Select the Fritz!Box to reconnect."
-        }
-      }
-    },
-    "reboot": {
-      "name": "Reboot",
-      "description": "Reboots your FRITZ!Box.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::fritz::services::reconnect::fields::device_id::name%]",
-          "description": "Select the Fritz!Box to reboot."
-        }
-      }
-    },
-    "cleanup": {
-      "name": "Remove stale device tracker entities",
-      "description": "Remove FRITZ!Box stale device_tracker entities.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::fritz::services::reconnect::fields::device_id::name%]",
-          "description": "Select the Fritz!Box to check."
-        }
-      }
-    },
     "set_guest_wifi_password": {
       "name": "Set guest Wi-Fi password",
       "description": "Sets a new password for the guest Wi-Fi. The password must be between 8 and 63 characters long. If no additional parameter is set, the password will be auto-generated with a length of 12 characters.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::fritz::services::reconnect::fields::device_id::name%]",
+          "name": "Fritz!Box Device",
           "description": "Select the Fritz!Box to configure."
         },
         "password": {
@@ -175,6 +187,26 @@
           "description": "Length of the new password. The password will be auto-generated, if no password is set."
         }
       }
+    }
+  },
+  "exceptions": {
+    "config_entry_not_found": {
+      "message": "Failed to perform action \"{service}\". Config entry for target not found"
+    },
+    "service_parameter_unknown": {
+      "message": "Action or parameter unknown"
+    },
+    "service_not_supported": {
+      "message": "Action not supported"
+    },
+    "error_refresh_hosts_info": {
+      "message": "Error refreshing hosts info"
+    },
+    "unable_to_connect": {
+      "message": "Unable to establish a connection"
+    },
+    "update_failed": {
+      "message": "Error while uptaing the data: {error}"
     }
   }
 }

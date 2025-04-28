@@ -5,9 +5,10 @@ from __future__ import annotations
 import enum
 import logging
 
-from universal_silabs_flasher.const import ApplicationType
-from universal_silabs_flasher.flasher import Flasher
-
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    probe_silabs_firmware_type,
+)
 from homeassistant.components.homeassistant_sky_connect import (
     hardware as skyconnect_hardware,
 )
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
-from ..core.const import DOMAIN
+from ..const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,18 +73,6 @@ def _detect_radio_hardware(hass: HomeAssistant, device: str) -> HardwareType:
                     return HardwareType.SKYCONNECT
 
     return HardwareType.OTHER
-
-
-async def probe_silabs_firmware_type(device: str) -> ApplicationType | None:
-    """Probe the running firmware on a Silabs device."""
-    flasher = Flasher(device=device)
-
-    try:
-        await flasher.probe_app_type()
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.debug("Failed to probe application type", exc_info=True)
-
-    return flasher.app_type
 
 
 async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> bool:

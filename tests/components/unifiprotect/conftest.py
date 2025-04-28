@@ -13,8 +13,8 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     NVR,
     Bootstrap,
     Camera,
@@ -29,10 +29,11 @@ from pyunifiprotect.data import (
     Viewer,
     WSSubscriptionMessage,
 )
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import _patch_discovery
 from .utils import MockUFPFixture
@@ -50,11 +51,11 @@ def mock_nvr():
     nvr = NVR.from_unifi_dict(**data)
 
     # disable pydantic validation so mocking can happen
-    NVR.__config__.validate_assignment = False
+    NVR.model_config["validate_assignment"] = False
 
     yield nvr
 
-    NVR.__config__.validate_assignment = True
+    NVR.model_config["validate_assignment"] = True
 
 
 @pytest.fixture(name="ufp_config_entry")
@@ -97,6 +98,7 @@ def bootstrap_fixture(nvr: NVR):
     data["events"] = []
     data["doorlocks"] = []
     data["chimes"] = []
+    data["aiports"] = []
 
     return Bootstrap.from_unifi_dict(**data)
 
@@ -119,7 +121,11 @@ def mock_ufp_client(bootstrap: Bootstrap):
 
     client.base_url = "https://127.0.0.1"
     client.connection_host = IPv4Address("127.0.0.1")
-    client.get_nvr = AsyncMock(return_value=nvr)
+
+    async def get_nvr(*args: Any, **kwargs: Any) -> NVR:
+        return client.bootstrap.nvr
+
+    client.get_nvr = get_nvr
     client.get_bootstrap = AsyncMock(return_value=bootstrap)
     client.update = AsyncMock(return_value=bootstrap)
     client.async_disconnect_ws = AsyncMock()
@@ -132,9 +138,12 @@ def mock_entry(
 ):
     """Mock ProtectApiClient for testing."""
 
-    with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
-    ) as mock_api:
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+        ) as mock_api,
+    ):
         ufp_config_entry.add_to_hass(hass)
 
         mock_api.return_value = ufp_client
@@ -145,7 +154,14 @@ def mock_entry(
             ufp.ws_subscription = ws_callback
             return Mock()
 
+        def subscribe_websocket_state(
+            ws_state_subscription: Callable[[WebsocketState], None],
+        ) -> Any:
+            ufp.ws_state_subscription = ws_state_subscription
+            return Mock()
+
         ufp_client.subscribe_websocket = subscribe
+        ufp_client.subscribe_websocket_state = subscribe_websocket_state
         yield ufp
 
 
@@ -162,7 +178,7 @@ def camera_fixture(fixed_now: datetime):
     """Mock UniFi Protect Camera device."""
 
     # disable pydantic validation so mocking can happen
-    Camera.__config__.validate_assignment = False
+    Camera.model_config["validate_assignment"] = False
 
     data = json.loads(load_fixture("sample_camera.json", integration=DOMAIN))
     camera = Camera.from_unifi_dict(**data)
@@ -170,23 +186,23 @@ def camera_fixture(fixed_now: datetime):
 
     yield camera
 
-    Camera.__config__.validate_assignment = True
+    Camera.model_config["validate_assignment"] = True
 
 
 @pytest.fixture(name="camera_all")
 def camera_all_fixture(camera: Camera):
     """Mock UniFi Protect Camera device."""
 
-    all_camera = camera.copy()
-    all_camera.channels = [all_camera.channels[0].copy()]
+    all_camera = camera.model_copy()
+    all_camera.channels = [all_camera.channels[0].model_copy()]
 
-    medium_channel = all_camera.channels[0].copy()
+    medium_channel = all_camera.channels[0].model_copy()
     medium_channel.name = "Medium"
     medium_channel.id = 1
     medium_channel.rtsp_alias = "test_medium_alias"
     all_camera.channels.append(medium_channel)
 
-    low_channel = all_camera.channels[0].copy()
+    low_channel = all_camera.channels[0].model_copy()
     low_channel.name = "Low"
     low_channel.id = 2
     low_channel.rtsp_alias = "test_medium_alias"
@@ -199,10 +215,10 @@ def camera_all_fixture(camera: Camera):
 def doorbell_fixture(camera: Camera, fixed_now: datetime):
     """Mock UniFi Protect Camera device (with chime)."""
 
-    doorbell = camera.copy()
-    doorbell.channels = [c.copy() for c in doorbell.channels]
+    doorbell = camera.model_copy()
+    doorbell.channels = [c.model_copy() for c in doorbell.channels]
 
-    package_channel = doorbell.channels[0].copy()
+    package_channel = doorbell.channels[0].model_copy()
     package_channel.name = "Package Camera"
     package_channel.id = 3
     package_channel.fps = 2
@@ -213,6 +229,8 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     doorbell.feature_flags.smart_detect_types = [
         SmartDetectObjectType.PERSON,
         SmartDetectObjectType.VEHICLE,
+        SmartDetectObjectType.ANIMAL,
+        SmartDetectObjectType.PACKAGE,
     ]
     doorbell.has_speaker = True
     doorbell.feature_flags.has_hdr = True
@@ -220,6 +238,8 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     doorbell.feature_flags.has_speaker = True
     doorbell.feature_flags.has_privacy_mask = True
     doorbell.feature_flags.is_doorbell = True
+    doorbell.feature_flags.has_fingerprint_sensor = True
+    doorbell.feature_flags.support_nfc = True
     doorbell.feature_flags.has_chime = True
     doorbell.feature_flags.has_smart_detect = True
     doorbell.feature_flags.has_package_camera = True
@@ -232,8 +252,8 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
 def unadopted_camera(camera: Camera):
     """Mock UniFi Protect Camera device (unadopted)."""
 
-    no_camera = camera.copy()
-    no_camera.channels = [c.copy() for c in no_camera.channels]
+    no_camera = camera.model_copy()
+    no_camera.channels = [c.model_copy() for c in no_camera.channels]
     no_camera.name = "Unadopted Camera"
     no_camera.is_adopted = False
     return no_camera
@@ -244,19 +264,19 @@ def light_fixture():
     """Mock UniFi Protect Light device."""
 
     # disable pydantic validation so mocking can happen
-    Light.__config__.validate_assignment = False
+    Light.model_config["validate_assignment"] = False
 
     data = json.loads(load_fixture("sample_light.json", integration=DOMAIN))
     yield Light.from_unifi_dict(**data)
 
-    Light.__config__.validate_assignment = True
+    Light.model_config["validate_assignment"] = True
 
 
 @pytest.fixture
 def unadopted_light(light: Light):
     """Mock UniFi Protect Light device (unadopted)."""
 
-    no_light = light.copy()
+    no_light = light.model_copy()
     no_light.name = "Unadopted Light"
     no_light.is_adopted = False
     return no_light
@@ -267,12 +287,12 @@ def viewer():
     """Mock UniFi Protect Viewport device."""
 
     # disable pydantic validation so mocking can happen
-    Viewer.__config__.validate_assignment = False
+    Viewer.model_config["validate_assignment"] = False
 
     data = json.loads(load_fixture("sample_viewport.json", integration=DOMAIN))
     yield Viewer.from_unifi_dict(**data)
 
-    Viewer.__config__.validate_assignment = True
+    Viewer.model_config["validate_assignment"] = True
 
 
 @pytest.fixture(name="sensor")
@@ -280,7 +300,7 @@ def sensor_fixture(fixed_now: datetime):
     """Mock UniFi Protect Sensor device."""
 
     # disable pydantic validation so mocking can happen
-    Sensor.__config__.validate_assignment = False
+    Sensor.model_config["validate_assignment"] = False
 
     data = json.loads(load_fixture("sample_sensor.json", integration=DOMAIN))
     sensor: Sensor = Sensor.from_unifi_dict(**data)
@@ -289,14 +309,14 @@ def sensor_fixture(fixed_now: datetime):
     sensor.alarm_triggered_at = fixed_now - timedelta(hours=1)
     yield sensor
 
-    Sensor.__config__.validate_assignment = True
+    Sensor.model_config["validate_assignment"] = True
 
 
 @pytest.fixture(name="sensor_all")
 def csensor_all_fixture(sensor: Sensor):
     """Mock UniFi Protect Sensor device."""
 
-    all_sensor = sensor.copy()
+    all_sensor = sensor.model_copy()
     all_sensor.light_settings.is_enabled = True
     all_sensor.humidity_settings.is_enabled = True
     all_sensor.temperature_settings.is_enabled = True
@@ -312,19 +332,19 @@ def doorlock_fixture():
     """Mock UniFi Protect Doorlock device."""
 
     # disable pydantic validation so mocking can happen
-    Doorlock.__config__.validate_assignment = False
+    Doorlock.model_config["validate_assignment"] = False
 
     data = json.loads(load_fixture("sample_doorlock.json", integration=DOMAIN))
     yield Doorlock.from_unifi_dict(**data)
 
-    Doorlock.__config__.validate_assignment = True
+    Doorlock.model_config["validate_assignment"] = True
 
 
 @pytest.fixture
 def unadopted_doorlock(doorlock: Doorlock):
     """Mock UniFi Protect Light device (unadopted)."""
 
-    no_doorlock = doorlock.copy()
+    no_doorlock = doorlock.model_copy()
     no_doorlock.name = "Unadopted Lock"
     no_doorlock.is_adopted = False
     return no_doorlock
@@ -335,12 +355,12 @@ def chime():
     """Mock UniFi Protect Chime device."""
 
     # disable pydantic validation so mocking can happen
-    Chime.__config__.validate_assignment = False
+    Chime.model_config["validate_assignment"] = False
 
     data = json.loads(load_fixture("sample_chime.json", integration=DOMAIN))
     yield Chime.from_unifi_dict(**data)
 
-    Chime.__config__.validate_assignment = True
+    Chime.model_config["validate_assignment"] = True
 
 
 @pytest.fixture(name="fixed_now")

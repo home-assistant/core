@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as STE_DOMAIN
+from . import DOMAIN as STE_DOMAIN, StiebelEltronData
 
 DEPENDENCIES = ["stiebel_eltron"]
 
@@ -80,17 +80,16 @@ class StiebelEltron(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, name, ste_data):
+    def __init__(self, name: str, ste_data: StiebelEltronData) -> None:
         """Initialize the unit."""
         self._name = name
-        self._target_temperature = None
-        self._current_temperature = None
-        self._current_humidity = None
-        self._operation = None
-        self._filter_alarm = None
-        self._force_update = False
+        self._target_temperature: float | int | None = None
+        self._current_temperature: float | int | None = None
+        self._current_humidity: float | int | None = None
+        self._operation: str | None = None
+        self._filter_alarm: bool | None = None
+        self._force_update: bool = False
         self._ste_data = ste_data
 
     def update(self) -> None:
@@ -109,59 +108,59 @@ class StiebelEltron(ClimateEntity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, bool | None]:
         """Return device specific state attributes."""
         return {"filter_alarm": self._filter_alarm}
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the climate device."""
         return self._name
 
     # Handle ClimateEntityFeature.TARGET_TEMPERATURE
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._current_temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._target_temperature
 
     @property
-    def target_temperature_step(self):
+    def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         return 0.1
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return 10.0
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return 30.0
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return float(f"{self._current_humidity:.1f}")
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        return STE_TO_HA_HVAC.get(self._operation)
+        return STE_TO_HA_HVAC.get(self._operation) if self._operation else None
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        return STE_TO_HA_PRESET.get(self._operation)
+        return STE_TO_HA_PRESET.get(self._operation) if self._operation else None
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 

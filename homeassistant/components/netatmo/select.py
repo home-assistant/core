@@ -4,19 +4,19 @@ from __future__ import annotations
 
 import logging
 
-from pyatmo import DeviceType
-
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_URL_ENERGY,
     DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_SCHEDULE,
+    MANUFACTURER,
     NETATMO_CREATE_SELECT,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoHome
@@ -26,7 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo energy platform schedule selector."""
 
@@ -43,39 +45,36 @@ async def async_setup_entry(
 class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
     """Representation a Netatmo thermostat schedule selector."""
 
-    def __init__(
-        self,
-        netatmo_home: NetatmoHome,
-    ) -> None:
+    _attr_name = None
+
+    def __init__(self, netatmo_home: NetatmoHome) -> None:
         """Initialize the select entity."""
-        SelectEntity.__init__(self)
         super().__init__(netatmo_home.data_handler)
 
-        self._home = netatmo_home.home
-        self._home_id = self._home.entity_id
+        self.home = netatmo_home.home
 
-        self._signal_name = netatmo_home.signal_name
         self._publishers.extend(
             [
                 {
                     "name": HOME,
-                    "home_id": self._home.entity_id,
-                    SIGNAL_NAME: self._signal_name,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: netatmo_home.signal_name,
                 },
             ]
         )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.home.entity_id)},
+            name=self.home.name,
+            manufacturer=MANUFACTURER,
+            model="Climate",
+            configuration_url=CONF_URL_ENERGY,
+        )
 
-        self._device_name = self._home.name
-        self._attr_name = f"{self._device_name}"
+        self._attr_unique_id = f"{self.home.entity_id}-schedule-select"
 
-        self._model = DeviceType.NATherm1
-        self._config_url = CONF_URL_ENERGY
-
-        self._attr_unique_id = f"{self._home_id}-schedule-select"
-
-        self._attr_current_option = getattr(self._home.get_selected_schedule(), "name")
+        self._attr_current_option = getattr(self.home.get_selected_schedule(), "name")
         self._attr_options = [
-            schedule.name for schedule in self._home.schedules.values()
+            schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]
 
     async def async_added_to_hass(self) -> None:
@@ -95,12 +94,12 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         """Handle webhook events."""
         data = event["data"]
 
-        if self._home_id != data["home_id"]:
+        if self.home.entity_id != data["home_id"]:
             return
 
         if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
             self._attr_current_option = getattr(
-                self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].get(
+                self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id].get(
                     data["schedule_id"]
                 ),
                 "name",
@@ -110,24 +109,26 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         for sid, schedule in self.hass.data[DOMAIN][DATA_SCHEDULES][
-            self._home_id
+            self.home.entity_id
         ].items():
             if schedule.name != option:
                 continue
             _LOGGER.debug(
                 "Setting %s schedule to %s (%s)",
-                self._home_id,
+                self.home.entity_id,
                 option,
                 sid,
             )
-            await self._home.async_switch_schedule(schedule_id=sid)
+            await self.home.async_switch_schedule(schedule_id=sid)
             break
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_current_option = getattr(self._home.get_selected_schedule(), "name")
-        self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id] = self._home.schedules
+        self._attr_current_option = getattr(self.home.get_selected_schedule(), "name")
+        self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id] = (
+            self.home.schedules
+        )
         self._attr_options = [
-            schedule.name for schedule in self._home.schedules.values()
+            schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]

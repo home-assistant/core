@@ -1,0 +1,309 @@
+# serializer version: 1
+# name: test_sensors[sensor.aquacell_name_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aquacell_name_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'aquacell',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'DSN-battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'AquaCell name Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aquacell_name_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_salt_left_side_percentage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aquacell_name_salt_left_side_percentage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Salt left side percentage',
+    'platform': 'aquacell',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_left_side_percentage',
+    'unique_id': 'DSN-salt_left_side_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_salt_left_side_percentage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AquaCell name Salt left side percentage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aquacell_name_salt_left_side_percentage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_salt_left_side_time_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aquacell_name_salt_left_side_time_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Salt left side time remaining',
+    'platform': 'aquacell',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_left_side_time_remaining',
+    'unique_id': 'DSN-salt_left_side_time_remaining',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_salt_left_side_time_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'AquaCell name Salt left side time remaining',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aquacell_name_salt_left_side_time_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_salt_right_side_percentage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aquacell_name_salt_right_side_percentage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Salt right side percentage',
+    'platform': 'aquacell',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_right_side_percentage',
+    'unique_id': 'DSN-salt_right_side_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_salt_right_side_percentage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AquaCell name Salt right side percentage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aquacell_name_salt_right_side_percentage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_salt_right_side_time_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aquacell_name_salt_right_side_time_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Salt right side time remaining',
+    'platform': 'aquacell',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_right_side_time_remaining',
+    'unique_id': 'DSN-salt_right_side_time_remaining',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_salt_right_side_time_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'AquaCell name Salt right side time remaining',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aquacell_name_salt_right_side_time_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_wi_fi_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'high',
+        'medium',
+        'low',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aquacell_name_wi_fi_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi strength',
+    'platform': 'aquacell',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wi_fi_strength',
+    'unique_id': 'DSN-wi_fi_strength',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_wi_fi_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'AquaCell name Wi-Fi strength',
+      'options': list([
+        'high',
+        'medium',
+        'low',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aquacell_name_wi_fi_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---

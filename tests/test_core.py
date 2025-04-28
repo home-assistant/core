@@ -9,21 +9,20 @@ import functools
 import gc
 import logging
 import os
-import sys
-from tempfile import TemporaryDirectory
+import re
 import threading
 import time
 from typing import Any
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
 import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
-    CONF_UNIT_SYSTEM,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -36,13 +35,13 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     MATCH_ALL,
-    __version__,
+    STATE_UNKNOWN,
 )
-import homeassistant.core as ha
 from homeassistant.core import (
     CoreState,
     HassJob,
     HomeAssistant,
+    ReleaseChannel,
     ServiceCall,
     ServiceResponse,
     State,
@@ -50,25 +49,26 @@ from homeassistant.core import (
     callback,
     get_release_channel,
 )
+from homeassistant.core_config import Config
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
     MaxLengthExceeded,
     ServiceNotFound,
+    ServiceValidationError,
 )
 from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
-import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .common import (
     async_capture_events,
     async_mock_service,
     help_test_all,
-    import_and_test_deprecated_constant_enum,
+    import_and_test_deprecated_alias,
 )
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
@@ -94,7 +94,7 @@ async def test_async_add_hass_job_schedule_callback() -> None:
     hass = MagicMock()
     job = MagicMock()
 
-    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(ha.callback(job)))
+    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(ha.callback(job)))
     assert len(hass.loop.call_soon.mock_calls) == 1
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
@@ -108,9 +108,7 @@ async def test_async_add_hass_job_eager_start_coro_suspends(
     async def job_that_suspends():
         await asyncio.sleep(0)
 
-    task = hass.async_add_hass_job(
-        ha.HassJob(ha.callback(job_that_suspends)), eager_start=True
-    )
+    task = hass._async_add_hass_job(ha.HassJob(ha.callback(job_that_suspends)))
     assert not task.done()
     assert task in hass._tasks
     await task
@@ -138,7 +136,7 @@ async def test_async_add_hass_job_background(hass: HomeAssistant) -> None:
     async def job_that_suspends():
         await asyncio.sleep(0)
 
-    task = hass.async_add_hass_job(
+    task = hass._async_add_hass_job(
         ha.HassJob(ha.callback(job_that_suspends)), background=True
     )
     assert not task.done()
@@ -168,7 +166,7 @@ async def test_async_add_hass_job_eager_background(hass: HomeAssistant) -> None:
     async def job_that_suspends():
         await asyncio.sleep(0)
 
-    task = hass.async_add_hass_job(
+    task = hass._async_add_hass_job(
         ha.HassJob(ha.callback(job_that_suspends)), background=True
     )
     assert not task.done()
@@ -233,7 +231,7 @@ async def test_async_add_hass_job_coro_named(hass: HomeAssistant) -> None:
     job = ha.HassJob(mycoro, "named coro")
     assert "named coro" in str(job)
     assert job.name == "named coro"
-    task = ha.HomeAssistant.async_add_hass_job(hass, job)
+    task = ha.HomeAssistant._async_add_hass_job(hass, job)
     assert "named coro" in str(task)
 
 
@@ -246,7 +244,7 @@ async def test_async_add_hass_job_eager_start(hass: HomeAssistant) -> None:
     job = ha.HassJob(mycoro, "named coro")
     assert "named coro" in str(job)
     assert job.name == "named coro"
-    task = ha.HomeAssistant.async_add_hass_job(hass, job, eager_start=True)
+    task = ha.HomeAssistant._async_add_hass_job(hass, job)
     assert "named coro" in str(task)
 
 
@@ -256,22 +254,9 @@ async def test_async_add_hass_job_schedule_partial_callback() -> None:
     job = MagicMock()
     partial = functools.partial(ha.callback(job))
 
-    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(partial))
+    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(partial))
     assert len(hass.loop.call_soon.mock_calls) == 1
     assert len(hass.loop.create_task.mock_calls) == 0
-    assert len(hass.add_job.mock_calls) == 0
-
-
-async def test_async_add_hass_job_schedule_coroutinefunction() -> None:
-    """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
-
-    async def job():
-        pass
-
-    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(job))
-    assert len(hass.loop.call_soon.mock_calls) == 0
-    assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
 
 
@@ -286,15 +271,15 @@ async def test_async_add_hass_job_schedule_corofunction_eager_start() -> None:
         "homeassistant.core.create_eager_task", wraps=create_eager_task
     ) as mock_create_eager_task:
         hass_job = ha.HassJob(job)
-        task = ha.HomeAssistant.async_add_hass_job(hass, hass_job, eager_start=True)
+        task = ha.HomeAssistant._async_add_hass_job(hass, hass_job)
         assert len(hass.loop.call_soon.mock_calls) == 0
         assert len(hass.add_job.mock_calls) == 0
         assert mock_create_eager_task.mock_calls
         await task
 
 
-async def test_async_add_hass_job_schedule_partial_coroutinefunction() -> None:
-    """Test that we schedule partial coros and add jobs to the job pool."""
+async def test_async_add_hass_job_schedule_partial_corofunction_eager_start() -> None:
+    """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
 
     async def job():
@@ -302,10 +287,15 @@ async def test_async_add_hass_job_schedule_partial_coroutinefunction() -> None:
 
     partial = functools.partial(job)
 
-    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(partial))
-    assert len(hass.loop.call_soon.mock_calls) == 0
-    assert len(hass.loop.create_task.mock_calls) == 1
-    assert len(hass.add_job.mock_calls) == 0
+    with patch(
+        "homeassistant.core.create_eager_task", wraps=create_eager_task
+    ) as mock_create_eager_task:
+        hass_job = ha.HassJob(partial)
+        task = ha.HomeAssistant._async_add_hass_job(hass, hass_job)
+        assert len(hass.loop.call_soon.mock_calls) == 0
+        assert len(hass.add_job.mock_calls) == 0
+        assert mock_create_eager_task.mock_calls
+        await task
 
 
 async def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
@@ -315,7 +305,7 @@ async def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
     def job():
         pass
 
-    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(job))
+    ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(job))
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.loop.run_in_executor.mock_calls) == 2
@@ -328,15 +318,12 @@ async def test_async_create_task_schedule_coroutine() -> None:
     async def job():
         pass
 
-    ha.HomeAssistant.async_create_task(hass, job())
+    ha.HomeAssistant.async_create_task_internal(hass, job(), eager_start=False)
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 12), reason="eager_start is only supported for Python 3.12"
-)
 async def test_async_create_task_eager_start_schedule_coroutine() -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
@@ -344,26 +331,8 @@ async def test_async_create_task_eager_start_schedule_coroutine() -> None:
     async def job():
         pass
 
-    ha.HomeAssistant.async_create_task(hass, job(), eager_start=True)
+    ha.HomeAssistant.async_create_task_internal(hass, job(), eager_start=True)
     # Should create the task directly since 3.12 supports eager_start
-    assert len(hass.loop.create_task.mock_calls) == 0
-    assert len(hass.add_job.mock_calls) == 0
-
-
-@pytest.mark.skipif(
-    sys.version_info >= (3, 12), reason="eager_start is not supported on < 3.12"
-)
-async def test_async_create_task_eager_start_fallback_schedule_coroutine() -> None:
-    """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
-
-    async def job():
-        pass
-
-    ha.HomeAssistant.async_create_task(hass, job(), eager_start=True)
-    assert len(hass.loop.call_soon.mock_calls) == 1
-    # Should fallback to loop.create_task since 3.11 does
-    # not support eager_start
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
 
@@ -375,7 +344,9 @@ async def test_async_create_task_schedule_coroutine_with_name() -> None:
     async def job():
         pass
 
-    task = ha.HomeAssistant.async_create_task(hass, job(), "named task")
+    task = ha.HomeAssistant.async_create_task_internal(
+        hass, job(), "named task", eager_start=False
+    )
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
@@ -403,7 +374,7 @@ async def test_async_run_eager_hass_job_calls_coro_function() -> None:
         pass
 
     ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job))
-    assert len(hass.async_add_hass_job.mock_calls) == 1
+    assert len(hass._async_add_hass_job.mock_calls) == 1
 
 
 async def test_async_run_hass_job_calls_callback() -> None:
@@ -429,7 +400,7 @@ async def test_async_run_hass_job_delegates_non_async() -> None:
 
     ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job))
     assert len(calls) == 0
-    assert len(hass.async_add_hass_job.mock_calls) == 1
+    assert len(hass._async_add_hass_job.mock_calls) == 1
 
 
 async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
@@ -450,11 +421,11 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
         try:
             if ha.async_get_hass() is hass:
                 return True
-            raise Exception
+            raise Exception  # noqa: TRY002
         except HomeAssistantError:
             return False
 
-        raise Exception
+        raise Exception  # noqa: TRY002
 
     # Test scheduling a coroutine which calls async_get_hass via hass.async_create_task
     async def _async_create_task() -> None:
@@ -610,6 +581,46 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
     my_job_create_task.join()
 
 
+async def test_async_add_executor_job_background(hass: HomeAssistant) -> None:
+    """Test running an executor job in the background."""
+    calls = []
+
+    def job():
+        time.sleep(0.01)
+        calls.append(1)
+
+    async def _async_add_executor_job():
+        await hass.async_add_executor_job(job)
+
+    task = hass.async_create_background_task(
+        _async_add_executor_job(), "background", eager_start=True
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(calls) == 1
+    await task
+
+
+async def test_async_add_executor_job(hass: HomeAssistant) -> None:
+    """Test running an executor job."""
+    calls = []
+
+    def job():
+        time.sleep(0.01)
+        calls.append(1)
+
+    async def _async_add_executor_job():
+        await hass.async_add_executor_job(job)
+
+    task = hass.async_create_task(
+        _async_add_executor_job(), "background", eager_start=True
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    await task
+
+
 async def test_stage_shutdown(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test calling stuff."""
     test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
@@ -634,7 +645,9 @@ async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     assert hass.state is CoreState.stopped
 
 
-async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
+async def test_stage_shutdown_generic_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Simulate a shutdown, test that a generic error at the final stage doesn't prevent it."""
 
     task = asyncio.Future()
@@ -705,9 +718,12 @@ async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_thread
         nonlocal stop_calls
         stop_calls.append(("shutdown_run_callback_threadsafe", loop))
 
-    with patch.object(hass, "async_block_till_done", _record_block_till_done), patch(
-        "homeassistant.core.shutdown_run_callback_threadsafe",
-        _record_shutdown_run_callback_threadsafe,
+    with (
+        patch.object(hass, "async_block_till_done", _record_block_till_done),
+        patch(
+            "homeassistant.core.shutdown_run_callback_threadsafe",
+            _record_shutdown_run_callback_threadsafe,
+        ),
     ):
         await hass.async_stop()
 
@@ -771,7 +787,7 @@ async def test_async_create_task_pending_tasks_coro(hass: HomeAssistant) -> None
         call_count.append("call")
 
     for _ in range(2):
-        hass.async_create_task(test_coro())
+        hass.async_create_task(test_coro(), eager_start=False)
 
     assert len(hass._tasks) == 2
     await hass.async_block_till_done()
@@ -900,6 +916,14 @@ def test_event_repr() -> None:
         str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
         == "<Event TestEvent[R]: beer=nice>"
     )
+
+
+def test_event_origin_idx() -> None:
+    """Test the EventOrigin idx."""
+    assert ha.EventOrigin.remote is ha.EventOrigin.remote
+    assert ha.EventOrigin.local is ha.EventOrigin.local
+    assert ha.EventOrigin.local.idx == 0
+    assert ha.EventOrigin.remote.idx == 1
 
 
 def test_event_as_dict() -> None:
@@ -1123,11 +1147,11 @@ async def test_eventbus_filtered_listener(hass: HomeAssistant) -> None:
         calls.append(event)
 
     @ha.callback
-    def filter(event_data):
+    def mock_filter(event_data):
         """Mock filter."""
         return not event_data["filtered"]
 
-    unsub = hass.bus.async_listen("test", listener, event_filter=filter)
+    unsub = hass.bus.async_listen("test", listener, event_filter=mock_filter)
 
     hass.bus.async_fire("test", {"filtered": True})
     await hass.async_block_till_done()
@@ -1151,7 +1175,7 @@ async def test_eventbus_run_immediately_callback(hass: HomeAssistant) -> None:
         """Mock listener."""
         calls.append(event)
 
-    unsub = hass.bus.async_listen("test", listener, run_immediately=True)
+    unsub = hass.bus.async_listen("test", listener)
 
     hass.bus.async_fire("test", {"event": True})
     # No async_block_till_done here
@@ -1168,7 +1192,7 @@ async def test_eventbus_run_immediately_coro(hass: HomeAssistant) -> None:
         """Mock listener."""
         calls.append(event)
 
-    unsub = hass.bus.async_listen("test", listener, run_immediately=True)
+    unsub = hass.bus.async_listen("test", listener)
 
     hass.bus.async_fire("test", {"event": True})
     # No async_block_till_done here
@@ -1185,7 +1209,7 @@ async def test_eventbus_listen_once_run_immediately_coro(hass: HomeAssistant) ->
         """Mock listener."""
         calls.append(event)
 
-    hass.bus.async_listen_once("test", listener, run_immediately=True)
+    hass.bus.async_listen_once("test", listener)
 
     hass.bus.async_fire("test", {"event": True})
     # No async_block_till_done here
@@ -1345,9 +1369,6 @@ def test_state_init() -> None:
     with pytest.raises(InvalidEntityFormatError):
         ha.State("invalid_entity_format", "test_state")
 
-    with pytest.raises(InvalidStateError):
-        ha.State("domain.long_state", "t" * 256)
-
 
 def test_state_domain() -> None:
     """Test domain."""
@@ -1415,6 +1436,38 @@ def test_state_repr() -> None:
         )
         == "<state happy.happy=on; brightness=144 @ 1984-12-08T12:00:00+00:00>"
     )
+
+
+async def test_statemachine_async_set_invalid_state(hass: HomeAssistant) -> None:
+    """Test setting an invalid state with the async_set method."""
+    with pytest.raises(
+        InvalidStateError,
+        match="Invalid state with length 256. State max length is 255 characters.",
+    ):
+        hass.states.async_set("light.bowl", "o" * 256, {})
+
+
+async def test_statemachine_async_set_internal_invalid_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setting an invalid state with the async_set_internal method."""
+    long_state = "o" * 256
+    hass.states.async_set_internal(
+        "light.bowl",
+        long_state,
+        {},
+        force_update=False,
+        context=None,
+        state_info=None,
+        timestamp=time.time(),
+    )
+    assert hass.states.get("light.bowl").state == STATE_UNKNOWN
+    assert (
+        "homeassistant.core",
+        logging.ERROR,
+        f"State {long_state} for light.bowl is longer than 255, "
+        f"falling back to {STATE_UNKNOWN}",
+    ) in caplog.record_tuples
 
 
 async def test_statemachine_is_state(hass: HomeAssistant) -> None:
@@ -1539,10 +1592,10 @@ async def test_statemachine_avoids_updating_attributes(hass: HomeAssistant) -> N
 
 def test_service_call_repr() -> None:
     """Test ServiceCall repr."""
-    call = ha.ServiceCall("homeassistant", "start")
+    call = ha.ServiceCall(None, "homeassistant", "start")
     assert str(call) == f"<ServiceCall homeassistant.start (c:{call.context.id})>"
 
-    call2 = ha.ServiceCall("homeassistant", "start", {"fast": "yes"})
+    call2 = ha.ServiceCall(None, "homeassistant", "start", {"fast": "yes"})
     assert (
         str(call2)
         == f"<ServiceCall homeassistant.start (c:{call2.context.id}): fast=yes>"
@@ -1602,7 +1655,7 @@ async def test_serviceregistry_call_non_existing_with_blocking(
     hass: HomeAssistant,
 ) -> None:
     """Test non-existing with blocking."""
-    with pytest.raises(ha.ServiceNotFound):
+    with pytest.raises(ServiceNotFound):
         await hass.services.async_call("test_domain", "i_do_not_exist", blocking=True)
 
 
@@ -1688,7 +1741,7 @@ async def test_serviceregistry_service_that_not_exists(hass: HomeAssistant) -> N
     assert exc.value.domain == "test_do_not"
     assert exc.value.service == "exist"
 
-    assert str(exc.value) == "Service test_do_not.exist not found"
+    assert str(exc.value) == "Action test_do_not.exist not found"
 
 
 async def test_serviceregistry_async_service_raise_exception(
@@ -1768,8 +1821,9 @@ async def test_services_call_return_response_requires_blocking(
     hass: HomeAssistant,
 ) -> None:
     """Test that non-blocking service calls cannot ask for response data."""
+    await async_setup_component(hass, "homeassistant", {})
     async_mock_service(hass, "test_domain", "test_service")
-    with pytest.raises(ValueError, match="when blocking=False"):
+    with pytest.raises(ServiceValidationError, match="blocking=False") as exc:
         await hass.services.async_call(
             "test_domain",
             "test_service",
@@ -1777,6 +1831,10 @@ async def test_services_call_return_response_requires_blocking(
             blocking=False,
             return_response=True,
         )
+    assert str(exc.value) == (
+        "A non blocking action call with argument blocking=False "
+        "can't be used together with argument return_response=True"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1793,6 +1851,7 @@ async def test_serviceregistry_return_response_invalid(
     hass: HomeAssistant, response_data: Any, expected_error: str
 ) -> None:
     """Test service call response data must be json serializable objects."""
+    await async_setup_component(hass, "homeassistant", {})
 
     def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
@@ -1813,14 +1872,13 @@ async def test_serviceregistry_return_response_invalid(
             blocking=True,
             return_response=True,
         )
-        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
     ("supports_response", "return_response", "expected_error"),
     [
-        (SupportsResponse.NONE, True, "not support responses"),
-        (SupportsResponse.ONLY, False, "caller did not ask for responses"),
+        (SupportsResponse.NONE, True, "does not return responses"),
+        (SupportsResponse.ONLY, False, "action requires responses"),
     ],
 )
 async def test_serviceregistry_return_response_arguments(
@@ -1830,6 +1888,7 @@ async def test_serviceregistry_return_response_arguments(
     expected_error: str,
 ) -> None:
     """Test service call response data invalid arguments."""
+    await async_setup_component(hass, "homeassistant", {})
 
     hass.services.async_register(
         "test_domain",
@@ -1838,7 +1897,7 @@ async def test_serviceregistry_return_response_arguments(
         supports_response=supports_response,
     )
 
-    with pytest.raises(ValueError, match=expected_error):
+    with pytest.raises(ServiceValidationError, match=expected_error):
         await hass.services.async_call(
             "test_domain",
             "test_service",
@@ -1883,159 +1942,6 @@ async def test_serviceregistry_return_response_optional(
     )
     await hass.async_block_till_done()
     assert response_data == expected_response_data
-
-
-async def test_config_defaults() -> None:
-    """Test config defaults."""
-    hass = Mock()
-    config = ha.Config(hass, "/test/ha-config")
-    assert config.hass is hass
-    assert config.latitude == 0
-    assert config.longitude == 0
-    assert config.elevation == 0
-    assert config.location_name == "Home"
-    assert config.time_zone == "UTC"
-    assert config.internal_url is None
-    assert config.external_url is None
-    assert config.config_source is ha.ConfigSource.DEFAULT
-    assert config.skip_pip is False
-    assert config.skip_pip_packages == []
-    assert config.components == set()
-    assert config.api is None
-    assert config.config_dir == "/test/ha-config"
-    assert config.allowlist_external_dirs == set()
-    assert config.allowlist_external_urls == set()
-    assert config.media_dirs == {}
-    assert config.recovery_mode is False
-    assert config.legacy_templates is False
-    assert config.currency == "EUR"
-    assert config.country is None
-    assert config.language == "en"
-
-
-async def test_config_path_with_file() -> None:
-    """Test get_config_path method."""
-    config = ha.Config(None, "/test/ha-config")
-    assert config.path("test.conf") == "/test/ha-config/test.conf"
-
-
-async def test_config_path_with_dir_and_file() -> None:
-    """Test get_config_path method."""
-    config = ha.Config(None, "/test/ha-config")
-    assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
-
-
-async def test_config_as_dict() -> None:
-    """Test as dict."""
-    config = ha.Config(None, "/test/ha-config")
-    config.hass = MagicMock()
-    type(config.hass.state).value = PropertyMock(return_value="RUNNING")
-    expected = {
-        "latitude": 0,
-        "longitude": 0,
-        "elevation": 0,
-        CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
-        "location_name": "Home",
-        "time_zone": "UTC",
-        "components": [],
-        "config_dir": "/test/ha-config",
-        "whitelist_external_dirs": [],
-        "allowlist_external_dirs": [],
-        "allowlist_external_urls": [],
-        "version": __version__,
-        "config_source": ha.ConfigSource.DEFAULT,
-        "recovery_mode": False,
-        "state": "RUNNING",
-        "external_url": None,
-        "internal_url": None,
-        "currency": "EUR",
-        "country": None,
-        "language": "en",
-        "safe_mode": False,
-    }
-
-    assert expected == config.as_dict()
-
-
-async def test_config_is_allowed_path() -> None:
-    """Test is_allowed_path method."""
-    config = ha.Config(None, "/test/ha-config")
-    with TemporaryDirectory() as tmp_dir:
-        # The created dir is in /tmp. This is a symlink on OS X
-        # causing this test to fail unless we resolve path first.
-        config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
-
-        test_file = os.path.join(tmp_dir, "test.jpg")
-        with open(test_file, "w") as tmp_file:
-            tmp_file.write("test")
-
-        valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
-        for path in valid:
-            assert config.is_allowed_path(path)
-
-        config.allowlist_external_dirs = {"/home", "/var"}
-
-        invalid = [
-            "/hass/config/secure",
-            "/etc/passwd",
-            "/root/secure_file",
-            "/var/../etc/passwd",
-            test_file,
-        ]
-        for path in invalid:
-            assert not config.is_allowed_path(path)
-
-        with pytest.raises(AssertionError):
-            config.is_allowed_path(None)
-
-
-async def test_config_is_allowed_external_url() -> None:
-    """Test is_allowed_external_url method."""
-    config = ha.Config(None, "/test/ha-config")
-    config.allowlist_external_urls = [
-        "http://x.com/",
-        "https://y.com/bla/",
-        "https://z.com/images/1.jpg/",
-    ]
-
-    valid = [
-        "http://x.com/1.jpg",
-        "http://x.com",
-        "https://y.com/bla/",
-        "https://y.com/bla/2.png",
-        "https://z.com/images/1.jpg",
-    ]
-    for url in valid:
-        assert config.is_allowed_external_url(url)
-
-    invalid = [
-        "https://a.co",
-        "https://y.com/bla_wrong",
-        "https://y.com/bla/../image.jpg",
-        "https://z.com/images",
-    ]
-    for url in invalid:
-        assert not config.is_allowed_external_url(url)
-
-
-async def test_event_on_update(hass: HomeAssistant) -> None:
-    """Test that event is fired on update."""
-    events = async_capture_events(hass, EVENT_CORE_CONFIG_UPDATE)
-
-    assert hass.config.latitude != 12
-
-    await hass.config.async_update(latitude=12)
-    await hass.async_block_till_done()
-
-    assert hass.config.latitude == 12
-    assert len(events) == 1
-    assert events[0].data == {"latitude": 12}
-
-
-async def test_bad_timezone_raises_value_error(hass: HomeAssistant) -> None:
-    """Test bad timezone raises ValueError."""
-    with pytest.raises(ValueError):
-        await hass.config.async_update(time_zone="not_a_timezone")
 
 
 async def test_start_taking_too_long(caplog: pytest.LogCaptureFixture) -> None:
@@ -2147,7 +2053,7 @@ async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
     runs = []
 
     @ha.callback
-    async def test():
+    async def test():  # pylint: disable=hass-async-callback-decorator
         runs.append(True)
 
     await hass.async_add_job(test)
@@ -2158,7 +2064,7 @@ async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
     assert len(runs) == 2
 
     @ha.callback
-    async def service_handler(call):
+    async def service_handler(call):  # pylint: disable=hass-async-callback-decorator
         runs.append(True)
 
     hass.services.async_register("test_domain", "test_service", service_handler)
@@ -2197,7 +2103,7 @@ async def test_async_run_job_starts_coro_eagerly(hass: HomeAssistant) -> None:
 
 def test_valid_entity_id() -> None:
     """Test valid entity ID."""
-    for invalid in [
+    for invalid in (
         "_light.kitchen",
         ".kitchen",
         ".light.kitchen",
@@ -2210,10 +2116,10 @@ def test_valid_entity_id() -> None:
         "Light.kitchen",
         "light.Kitchen",
         "lightkitchen",
-    ]:
+    ):
         assert not ha.valid_entity_id(invalid), invalid
 
-    for valid in [
+    for valid in (
         "1.a",
         "1light.kitchen",
         "a.1",
@@ -2222,13 +2128,13 @@ def test_valid_entity_id() -> None:
         "light.1kitchen",
         "light.kitchen",
         "light.something_yoo",
-    ]:
+    ):
         assert ha.valid_entity_id(valid), valid
 
 
 def test_valid_domain() -> None:
     """Test valid domain."""
-    for invalid in [
+    for invalid in (
         "_light",
         ".kitchen",
         ".light.kitchen",
@@ -2239,61 +2145,17 @@ def test_valid_domain() -> None:
         "light.kitchen_yo_",
         "light.kitchen.",
         "Light",
-    ]:
+    ):
         assert not ha.valid_domain(invalid), invalid
 
-    for valid in [
+    for valid in (
         "1",
         "1light",
         "a",
         "input_boolean",
         "light",
-    ]:
+    ):
         assert ha.valid_domain(valid), valid
-
-
-async def test_additional_data_in_core_config(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Test that we can handle additional data in core configuration."""
-    config = ha.Config(hass, "/test/ha-config")
-    hass_storage[ha.CORE_STORAGE_KEY] = {
-        "version": 1,
-        "data": {"location_name": "Test Name", "additional_valid_key": "value"},
-    }
-    await config.async_load()
-    assert config.location_name == "Test Name"
-
-
-async def test_incorrect_internal_external_url(
-    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that we warn when detecting invalid internal/external url."""
-    config = ha.Config(hass, "/test/ha-config")
-
-    hass_storage[ha.CORE_STORAGE_KEY] = {
-        "version": 1,
-        "data": {
-            "internal_url": None,
-            "external_url": None,
-        },
-    }
-    await config.async_load()
-    assert "Invalid external_url set" not in caplog.text
-    assert "Invalid internal_url set" not in caplog.text
-
-    config = ha.Config(hass, "/test/ha-config")
-
-    hass_storage[ha.CORE_STORAGE_KEY] = {
-        "version": 1,
-        "data": {
-            "internal_url": "https://community.home-assistant.io/profile",
-            "external_url": "https://www.home-assistant.io/blue",
-        },
-    }
-    await config.async_load()
-    assert "Invalid external_url set" in caplog.text
-    assert "Invalid internal_url set" in caplog.text
 
 
 async def test_start_events(hass: HomeAssistant) -> None:
@@ -2340,11 +2202,11 @@ async def test_log_blocking_events(
     async def _wait_a_bit_2():
         await asyncio.sleep(0.1)
 
-    hass.async_create_task(_wait_a_bit_1())
+    hass.async_create_task(_wait_a_bit_1(), eager_start=False)
     await hass.async_block_till_done()
 
     with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0001):
-        hass.async_create_task(_wait_a_bit_2())
+        hass.async_create_task(_wait_a_bit_2(), eager_start=False)
         await hass.async_block_till_done()
 
     assert "_wait_a_bit_2" in caplog.text
@@ -2364,14 +2226,14 @@ async def test_chained_logging_hits_log_timeout(
         created += 1
         if created > 1000:
             return
-        hass.async_create_task(_task_chain_2())
+        hass.async_create_task(_task_chain_2(), eager_start=False)
 
     async def _task_chain_2():
         nonlocal created
         created += 1
         if created > 1000:
             return
-        hass.async_create_task(_task_chain_1())
+        hass.async_create_task(_task_chain_1(), eager_start=False)
 
     with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0):
         hass.async_create_task(_task_chain_1())
@@ -2393,16 +2255,16 @@ async def test_chained_logging_misses_log_timeout(
         created += 1
         if created > 10:
             return
-        hass.async_create_task(_task_chain_2())
+        hass.async_create_task(_task_chain_2(), eager_start=False)
 
     async def _task_chain_2():
         nonlocal created
         created += 1
         if created > 10:
             return
-        hass.async_create_task(_task_chain_1())
+        hass.async_create_task(_task_chain_1(), eager_start=False)
 
-    hass.async_create_task(_task_chain_1())
+    hass.async_create_task(_task_chain_1(), eager_start=False)
     await hass.async_block_till_done()
 
     assert "_task_chain_" not in caplog.text
@@ -2479,14 +2341,14 @@ async def test_reserving_states(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bedroom", "on")
     assert hass.states.async_available("light.bedroom") is False
 
-    with pytest.raises(ha.HomeAssistantError):
+    with pytest.raises(HomeAssistantError):
         hass.states.async_reserve("light.bedroom")
 
     hass.states.async_remove("light.bedroom")
     assert hass.states.async_available("light.bedroom") is True
     hass.states.async_set("light.bedroom", "on")
 
-    with pytest.raises(ha.HomeAssistantError):
+    with pytest.raises(HomeAssistantError):
         hass.states.async_reserve("light.bedroom")
 
     assert hass.states.async_available("light.bedroom") is False
@@ -2790,15 +2652,39 @@ async def test_state_change_events_context_id_match_state_time(
     hass: HomeAssistant,
 ) -> None:
     """Test last_updated, timed_fired, and the ulid all have the same time."""
-    events = async_capture_events(hass, ha.EVENT_STATE_CHANGED)
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
     hass.states.async_set("light.bedroom", "on")
     await hass.async_block_till_done()
     state: State = hass.states.get("light.bedroom")
     assert state.last_updated == events[0].time_fired
     assert len(state.context.id) == 26
     # ULIDs store time to 3 decimal places compared to python timestamps
-    assert _ulid_timestamp(state.context.id) == int(
-        state.last_updated.timestamp() * 1000
+    assert _ulid_timestamp(state.context.id) == int(state.last_updated_timestamp * 1000)
+
+
+async def test_state_change_events_match_time_with_limits_of_precision(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure last_updated matches last_updated_timestamp within limits of precision.
+
+    The last_updated_timestamp uses the same precision as time.time() which is
+    a bit better than the precision of datetime.now() which is used for last_updated
+    on some platforms.
+    """
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    hass.states.async_set("light.bedroom", "on")
+    await hass.async_block_till_done()
+    state: State = hass.states.get("light.bedroom")
+    assert state.last_updated == events[0].time_fired
+    assert state.last_updated_timestamp == pytest.approx(
+        events[0].time_fired.timestamp()
+    )
+    assert state.last_updated_timestamp == pytest.approx(state.last_updated.timestamp())
+    assert state.last_updated_timestamp == state.last_changed_timestamp
+    assert state.last_updated_timestamp == pytest.approx(state.last_changed.timestamp())
+    assert state.last_updated_timestamp == state.last_reported_timestamp
+    assert state.last_updated_timestamp == pytest.approx(
+        state.last_reported.timestamp()
     )
 
 
@@ -3016,26 +2902,28 @@ async def test_validate_state(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("version", "release_channel"),
     [
-        ("0.115.0.dev20200815", "nightly"),
-        ("0.115.0", "stable"),
-        ("0.115.0b4", "beta"),
-        ("0.115.0dev0", "dev"),
+        ("0.115.0.dev20200815", ReleaseChannel.NIGHTLY),
+        ("0.115.0", ReleaseChannel.STABLE),
+        ("0.115.0b4", ReleaseChannel.BETA),
+        ("0.115.0dev0", ReleaseChannel.DEV),
     ],
 )
-async def test_get_release_channel(version: str, release_channel: str) -> None:
+async def test_get_release_channel(
+    version: str, release_channel: ReleaseChannel
+) -> None:
     """Test if release channel detection works from Home Assistant version number."""
     with patch("homeassistant.core.__version__", f"{version}"):
         assert get_release_channel() == release_channel
 
 
-def test_is_callback_check_partial():
+def test_is_callback_check_partial() -> None:
     """Test is_callback_check_partial matches HassJob."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert ha.is_callback(callback_func)
@@ -3064,14 +2952,14 @@ def test_is_callback_check_partial():
     )
 
 
-def test_hassjob_passing_job_type():
+def test_hassjob_passing_job_type() -> None:
     """Test passing the job type to HassJob when we already know it."""
 
     @ha.callback
-    def callback_func():
+    def callback_func() -> None:
         pass
 
-    def not_callback_func():
+    def not_callback_func() -> None:
         pass
 
     assert (
@@ -3121,20 +3009,9 @@ def test_all() -> None:
     help_test_all(ha)
 
 
-@pytest.mark.parametrize(
-    ("enum"),
-    [
-        ha.ConfigSource.DISCOVERED,
-        ha.ConfigSource.YAML,
-        ha.ConfigSource.STORAGE,
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: ha.ConfigSource,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")
+def test_deprecated_config(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated Config class."""
+    import_and_test_deprecated_alias(caplog, ha, "Config", Config, "2025.11")
 
 
 def test_one_time_listener_repr(hass: HomeAssistant) -> None:
@@ -3155,7 +3032,7 @@ async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
     evt = threading.Event()
     loop = asyncio.get_running_loop()
 
-    def executor_func() -> None:
+    def executor_func() -> threading.Event:
         evt.set()
         return evt
 
@@ -3171,15 +3048,14 @@ async def test_async_run_job_deprecated(
 ) -> None:
     """Test async_run_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_run_job(_test)
     assert (
-        "Detected code that calls `async_run_job`, which is deprecated "
-        "and will be removed in Home Assistant 2025.4; Please review "
+        "Detected code that calls `async_run_job`, which should be reviewed against "
         "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
-        " for replacement options"
+        " for replacement options. This will stop working in Home Assistant 2025.4"
     ) in caplog.text
 
 
@@ -3188,15 +3064,30 @@ async def test_async_add_job_deprecated(
 ) -> None:
     """Test async_add_job warns about its deprecation."""
 
-    async def _test():
+    async def _test() -> None:
         pass
 
     hass.async_add_job(_test)
     assert (
-        "Detected code that calls `async_add_job`, which is deprecated "
-        "and will be removed in Home Assistant 2025.4; Please review "
+        "Detected code that calls `async_add_job`, which should be reviewed against "
         "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
-        " for replacement options"
+        " for replacement options. This will stop working in Home Assistant 2025.4"
+    ) in caplog.text
+
+
+async def test_async_add_hass_job_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_add_hass_job warns about its deprecation."""
+
+    async def _test() -> None:
+        pass
+
+    hass.async_add_hass_job(HassJob(_test))
+    assert (
+        "Detected code that calls `async_add_hass_job`, which should be reviewed against "
+        "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
+        " for replacement options. This will stop working in Home Assistant 2025.5"
     ) in caplog.text
 
 
@@ -3210,11 +3101,11 @@ async def test_eventbus_lazy_object_creation(hass: HomeAssistant) -> None:
         calls.append(event)
 
     @ha.callback
-    def filter(event_data):
+    def mock_filter(event_data):
         """Mock filter."""
         return not event_data["filtered"]
 
-    unsub = hass.bus.async_listen("test_1", listener, event_filter=filter)
+    unsub = hass.bus.async_listen("test_1", listener, event_filter=mock_filter)
 
     # Test lazy creation of Event objects
     with patch("homeassistant.core.Event") as mock_event:
@@ -3260,11 +3151,39 @@ async def test_eventbus_lazy_object_creation(hass: HomeAssistant) -> None:
     unsub()
 
 
+async def test_event_filter_sanity_checks(hass: HomeAssistant) -> None:
+    """Test raising on bad event filters."""
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+
+    def bad_filter(event_data):
+        """Mock filter."""
+        return False
+
+    with pytest.raises(HomeAssistantError):
+        hass.bus.async_listen("test", listener, event_filter=bad_filter)
+
+
 async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     """Test report state event."""
+
+    @ha.callback
+    def mock_filter(event_data):
+        """Mock filter."""
+        return True
+
+    @callback
+    def listener(event: ha.Event) -> None:
+        state_reported_events.append(event)
+
     hass.states.async_set("light.bowl", "on", {})
     state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
-    state_reported_events = async_capture_events(hass, EVENT_STATE_REPORTED)
+    state_reported_events = []
+    unsub = hass.bus.async_listen(
+        EVENT_STATE_REPORTED, listener, event_filter=mock_filter
+    )
 
     hass.states.async_set("light.bowl", "on")
     await hass.async_block_till_done()
@@ -3274,14 +3193,149 @@ async def test_statemachine_report_state(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", None, True)
     await hass.async_block_till_done()
     assert len(state_changed_events) == 1
-    assert len(state_reported_events) == 2
+    assert len(state_reported_events) == 1
 
     hass.states.async_set("light.bowl", "off")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 2
-    assert len(state_reported_events) == 3
+    assert len(state_reported_events) == 1
 
     hass.states.async_remove("light.bowl")
     await hass.async_block_till_done()
     assert len(state_changed_events) == 3
-    assert len(state_reported_events) == 4
+    assert len(state_reported_events) == 1
+
+    unsub()
+
+    hass.states.async_set("light.bowl", "on")
+    await hass.async_block_till_done()
+    assert len(state_changed_events) == 4
+    assert len(state_reported_events) == 1
+
+
+async def test_report_state_listener_restrictions(hass: HomeAssistant) -> None:
+    """Test we enforce requirements for EVENT_STATE_REPORTED listeners."""
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+
+    @ha.callback
+    def mock_filter(event_data):
+        """Mock filter."""
+        return False
+
+    # no filter
+    with pytest.raises(HomeAssistantError):
+        hass.bus.async_listen(EVENT_STATE_REPORTED, listener)
+
+    # Both filter and run_immediately
+    hass.bus.async_listen(EVENT_STATE_REPORTED, listener, event_filter=mock_filter)
+
+
+@pytest.mark.parametrize(
+    "run_immediately",
+    [True, False],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["async_listen", "async_listen_once"],
+)
+async def test_async_listen_with_run_immediately_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    run_immediately: bool,
+    method: str,
+) -> None:
+    """Test async_add_job warns about its deprecation."""
+
+    async def _test(event: ha.Event):
+        pass
+
+    func = getattr(hass.bus, method)
+    func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
+    assert (
+        f"Detected code that calls `{method}` with run_immediately. "
+        "This will stop working in Home Assistant 2025.5"
+    ) in caplog.text
+
+
+async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:
+    """Test async_fire thread safety."""
+    events = async_capture_events(hass, "test_event")
+    hass.bus.async_fire("test_event")
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls hass.bus.async_fire from a thread.",
+    ):
+        await hass.async_add_executor_job(hass.bus.async_fire, "test_event")
+
+    assert len(events) == 1
+
+
+async def test_async_register_thread_safety(hass: HomeAssistant) -> None:
+    """Test async_register thread safety."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls hass.services.async_register from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            hass.services.async_register,
+            "test_domain",
+            "test_service",
+            lambda call: None,
+        )
+
+
+async def test_async_remove_thread_safety(hass: HomeAssistant) -> None:
+    """Test async_remove thread safety."""
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls hass.services.async_remove from a thread.",
+    ):
+        await hass.async_add_executor_job(
+            hass.services.async_remove, "test_domain", "test_service"
+        )
+
+
+async def test_async_create_task_thread_safety(hass: HomeAssistant) -> None:
+    """Test async_create_task thread safety."""
+
+    async def _any_coro():
+        pass
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls hass.async_create_task from a thread.",
+    ):
+        await hass.async_add_executor_job(hass.async_create_task, _any_coro)
+
+
+async def test_thread_safety_message(hass: HomeAssistant) -> None:
+    """Test the thread safety message."""
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "Detected code that calls test from a thread other than the event loop, "
+            "which may cause Home Assistant to crash or data to corrupt. For more "
+            "information, see "
+            "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
+            ". Please report this issue",
+        ),
+    ):
+        await hass.async_add_executor_job(hass.verify_event_loop_thread, "test")
+
+
+async def test_async_set_updates_last_reported(hass: HomeAssistant) -> None:
+    """Test async_set method updates last_reported AND last_reported_timestamp."""
+    hass.states.async_set("light.bowl", "on", {})
+    state = hass.states.get("light.bowl")
+    last_reported = state.last_reported
+    last_reported_timestamp = state.last_reported_timestamp
+
+    for _ in range(2):
+        hass.states.async_set("light.bowl", "on", {})
+        assert state.last_reported != last_reported
+        assert state.last_reported_timestamp != last_reported_timestamp
+        last_reported = state.last_reported
+        last_reported_timestamp = state.last_reported_timestamp

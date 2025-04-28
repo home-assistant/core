@@ -1,55 +1,93 @@
 """Tests for Comelit SimpleHome config flow."""
 
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 from aiocomelit import CannotAuthenticate, CannotConnect
+from aiocomelit.const import BRIDGE, VEDO
 import pytest
 
 from homeassistant.components.comelit.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import FAKE_PIN, MOCK_USER_BRIDGE_DATA, MOCK_USER_VEDO_DATA
+from .const import (
+    BRIDGE_HOST,
+    BRIDGE_PIN,
+    BRIDGE_PORT,
+    FAKE_PIN,
+    VEDO_HOST,
+    VEDO_PIN,
+    VEDO_PORT,
+)
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize(
-    ("class_api", "user_input"),
-    [
-        ("ComeliteSerialBridgeApi", MOCK_USER_BRIDGE_DATA),
-        ("ComelitVedoApi", MOCK_USER_VEDO_DATA),
-    ],
-)
-async def test_full_flow(
-    hass: HomeAssistant, class_api: str, user_input: dict[str, Any]
+async def test_flow_serial_bridge(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
 ) -> None:
     """Test starting a flow by user."""
-    with patch(
-        f"aiocomelit.api.{class_api}.login",
-    ), patch(
-        f"aiocomelit.api.{class_api}.logout",
-    ), patch("homeassistant.components.comelit.async_setup_entry") as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "user"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=user_input
-        )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_HOST] == user_input[CONF_HOST]
-        assert result["data"][CONF_PORT] == user_input[CONF_PORT]
-        assert result["data"][CONF_PIN] == user_input[CONF_PIN]
-        assert not result["result"].unique_id
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    assert mock_setup_entry.called
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: BRIDGE_HOST,
+        CONF_PORT: BRIDGE_PORT,
+        CONF_PIN: BRIDGE_PIN,
+        CONF_TYPE: BRIDGE,
+    }
+    assert not result["result"].unique_id
+    await hass.async_block_till_done()
+
+
+async def test_flow_vedo(
+    hass: HomeAssistant,
+    mock_vedo: AsyncMock,
+    mock_vedo_config_entry: MockConfigEntry,
+) -> None:
+    """Test starting a flow by user."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: VEDO_HOST,
+            CONF_PORT: VEDO_PORT,
+            CONF_PIN: VEDO_PIN,
+            CONF_TYPE: VEDO,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: VEDO_HOST,
+        CONF_PORT: VEDO_PORT,
+        CONF_PIN: VEDO_PIN,
+        CONF_TYPE: VEDO,
+    }
+    assert not result["result"].unique_id
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -60,67 +98,80 @@ async def test_full_flow(
         (ConnectionResetError, "unknown"),
     ],
 )
-async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> None:
+async def test_exception_connection(
+    hass: HomeAssistant,
+    mock_vedo: AsyncMock,
+    mock_vedo_config_entry: MockConfigEntry,
+    side_effect,
+    error,
+) -> None:
     """Test starting a flow by user with a connection error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    with patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.login",
-        side_effect=side_effect,
-    ), patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
-    ), patch(
-        "homeassistant.components.comelit.async_setup_entry",
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_USER_BRIDGE_DATA
-        )
+    mock_vedo.login.side_effect = side_effect
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] is not None
-        assert result["errors"]["base"] == error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: VEDO_HOST,
+            CONF_PORT: VEDO_PORT,
+            CONF_PIN: VEDO_PIN,
+            CONF_TYPE: VEDO,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error}
+
+    mock_vedo.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: VEDO_HOST,
+            CONF_PORT: VEDO_PORT,
+            CONF_PIN: VEDO_PIN,
+            CONF_TYPE: VEDO,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == VEDO_HOST
+    assert result["data"] == {
+        CONF_HOST: VEDO_HOST,
+        CONF_PORT: VEDO_PORT,
+        CONF_PIN: VEDO_PIN,
+        CONF_TYPE: VEDO,
+    }
 
 
-async def test_reauth_successful(hass: HomeAssistant) -> None:
+async def test_reauth_successful(
+    hass: HomeAssistant,
+    mock_vedo: AsyncMock,
+    mock_vedo_config_entry: MockConfigEntry,
+) -> None:
     """Test starting a reauthentication flow."""
 
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_BRIDGE_DATA)
-    mock_config.add_to_hass(hass)
+    mock_vedo_config_entry.add_to_hass(hass)
+    result = await mock_vedo_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
-    with patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.login",
-    ), patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
-    ), patch("homeassistant.components.comelit.async_setup_entry"), patch(
-        "requests.get"
-    ) as mock_request_get:
-        mock_request_get.return_value.status_code = 200
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PIN: FAKE_PIN,
+        },
+    )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
-            data=mock_config.data,
-        )
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_PIN: FAKE_PIN,
-            },
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(
@@ -131,34 +182,40 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
         (ConnectionResetError, "unknown"),
     ],
 )
-async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) -> None:
+async def test_reauth_not_successful(
+    hass: HomeAssistant,
+    mock_vedo: AsyncMock,
+    mock_vedo_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
     """Test starting a reauthentication flow but no connection found."""
+    mock_vedo_config_entry.add_to_hass(hass)
+    result = await mock_vedo_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_BRIDGE_DATA)
-    mock_config.add_to_hass(hass)
+    mock_vedo.login.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PIN: FAKE_PIN,
+        },
+    )
 
-    with patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.login", side_effect=side_effect
-    ), patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
-    ), patch("homeassistant.components.comelit.async_setup_entry"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
-            data=mock_config.data,
-        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
+    mock_vedo.login.side_effect = None
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_PIN: FAKE_PIN,
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PIN: VEDO_PIN,
+        },
+    )
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-        assert result["errors"] is not None
-        assert result["errors"]["base"] == error
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_vedo_config_entry.data[CONF_PIN] == VEDO_PIN

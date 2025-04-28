@@ -5,11 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 from unittest.mock import Mock
 
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     Bootstrap,
     Camera,
     Event,
@@ -18,15 +17,15 @@ from pyunifiprotect.data import (
     ProtectAdoptableDeviceModel,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.data.bootstrap import ProtectDeviceRef
-from pyunifiprotect.test_util.anonymize import random_hex
+from uiprotect.data.bootstrap import ProtectDeviceRef
+from uiprotect.test_util.anonymize import random_hex
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -38,12 +37,13 @@ class MockUFPFixture:
     entry: MockConfigEntry
     api: ProtectApiClient
     ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
+    ws_state_subscription: Callable[[WebsocketState], None] | None = None
 
-    def ws_msg(self, msg: WSSubscriptionMessage) -> Any:
+    def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
 
         if self.ws_subscription is not None:
-            return self.ws_subscription(msg)
+            self.ws_subscription(msg)
 
 
 def reset_objects(bootstrap: Bootstrap):
@@ -108,7 +108,11 @@ def ids_from_device_description(
     """Return expected unique_id and entity_id for a give platform/device/description combination."""
 
     entity_name = normalize_name(device.display_name)
-    description_entity_name = normalize_name(str(description.name))
+
+    if description.name and isinstance(description.name, str):
+        description_entity_name = normalize_name(description.name)
+    else:
+        description_entity_name = normalize_name(description.key)
 
     unique_id = f"{device.mac}_{description.key}"
     entity_id = f"{platform.value}.{entity_name}_{description_entity_name}"
@@ -162,7 +166,6 @@ async def init_entry(
     ufp: MockUFPFixture,
     devices: Sequence[ProtectAdoptableDeviceModel],
     regenerate_ids: bool = True,
-    debug: bool = False,
 ) -> None:
     """Initialize Protect entry with given devices."""
 
@@ -170,14 +173,6 @@ async def init_entry(
     for device in devices:
         add_device(ufp.api.bootstrap, device, regenerate_ids)
 
-    if debug:
-        assert await async_setup_component(hass, "logger", {"logger": {}})
-        await hass.services.async_call(
-            "logger",
-            "set_level",
-            {"homeassistant.components.unifiprotect": "DEBUG"},
-            blocking=True,
-        )
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 

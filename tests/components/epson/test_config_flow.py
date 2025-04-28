@@ -5,9 +5,10 @@ from unittest.mock import patch
 from epson_projector.const import PWR_OFF_STATE
 
 from homeassistant import config_entries
-from homeassistant.components.epson.const import DOMAIN
+from homeassistant.components.epson.const import CONF_CONNECTION_TYPE, DOMAIN, HTTP
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -17,28 +18,36 @@ async def test_form(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == config_entries.SOURCE_USER
-    with patch(
-        "homeassistant.components.epson.Projector.get_power",
-        return_value="01",
-    ), patch(
-        "homeassistant.components.epson.Projector.get_serial_number",
-        return_value="12345",
-    ), patch(
-        "homeassistant.components.epson.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.epson.Projector.get_power",
+            return_value="01",
+        ),
+        patch(
+            "homeassistant.components.epson.Projector.get_serial_number",
+            return_value="12345",
+        ),
+        patch(
+            "homeassistant.components.epson.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.epson.Projector.close",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-epson"
-    assert result2["data"] == {CONF_HOST: "1.1.1.1"}
+    assert result2["data"] == {CONF_CONNECTION_TYPE: HTTP, CONF_HOST: "1.1.1.1"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -57,7 +66,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             {CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -76,5 +85,5 @@ async def test_form_powered_off(hass: HomeAssistant) -> None:
             {CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "powered_off"}

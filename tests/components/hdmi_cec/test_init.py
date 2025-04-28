@@ -1,7 +1,9 @@
 """Tests for the HDMI-CEC component."""
 
+from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import ANY, PropertyMock, call, patch
+from typing import Any
+from unittest.mock import ANY, MagicMock, PropertyMock, call, patch
 
 import pytest
 import voluptuous as vol
@@ -28,6 +30,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import assert_key_press_release
+from .conftest import HDMINetworkCreator
 
 from tests.common import (
     MockEntity,
@@ -38,7 +41,7 @@ from tests.common import (
 
 
 @pytest.fixture(name="mock_tcp_adapter")
-def mock_tcp_adapter_fixture():
+def mock_tcp_adapter_fixture() -> Generator[MagicMock]:
     """Mock TcpAdapter."""
     with patch(
         "homeassistant.components.hdmi_cec.TcpAdapter", autospec=True
@@ -88,7 +91,9 @@ def mock_tcp_adapter_fixture():
         ),
     ],
 )
-def test_parse_mapping_physical_address(mapping, expected) -> None:
+def test_parse_mapping_physical_address(
+    mapping: dict[str, Any], expected: list[tuple[str, list[int]]]
+) -> None:
     """Test the device config mapping function."""
     result = parse_mapping(mapping)
     result = [
@@ -101,7 +106,7 @@ def test_parse_mapping_physical_address(mapping, expected) -> None:
 
 
 async def test_setup_cec_adapter(
-    hass: HomeAssistant, mock_cec_adapter, mock_hdmi_network
+    hass: HomeAssistant, mock_cec_adapter: MagicMock, mock_hdmi_network: MagicMock
 ) -> None:
     """Test the general setup of this component."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -125,7 +130,7 @@ async def test_setup_cec_adapter(
 
 @pytest.mark.parametrize("osd_name", ["test", "test_a_long_name"])
 async def test_setup_set_osd_name(
-    hass: HomeAssistant, osd_name, mock_cec_adapter
+    hass: HomeAssistant, osd_name: str, mock_cec_adapter: MagicMock
 ) -> None:
     """Test the setup of this component with the `osd_name` config setting."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"osd_name": osd_name}})
@@ -134,7 +139,7 @@ async def test_setup_set_osd_name(
 
 
 async def test_setup_tcp_adapter(
-    hass: HomeAssistant, mock_tcp_adapter, mock_hdmi_network
+    hass: HomeAssistant, mock_tcp_adapter: MagicMock, mock_hdmi_network: MagicMock
 ) -> None:
     """Test the setup of this component with the TcpAdapter (`host` config setting)."""
     host = "0.0.0.0"
@@ -161,7 +166,9 @@ async def test_setup_tcp_adapter(
 # Test services
 
 
-async def test_service_power_on(hass: HomeAssistant, create_hdmi_network) -> None:
+async def test_service_power_on(
+    hass: HomeAssistant, create_hdmi_network: HDMINetworkCreator
+) -> None:
     """Test the power on service call."""
     mock_hdmi_network_instance = await create_hdmi_network()
 
@@ -175,7 +182,9 @@ async def test_service_power_on(hass: HomeAssistant, create_hdmi_network) -> Non
     mock_hdmi_network_instance.power_on.assert_called_once_with()
 
 
-async def test_service_standby(hass: HomeAssistant, create_hdmi_network) -> None:
+async def test_service_standby(
+    hass: HomeAssistant, create_hdmi_network: HDMINetworkCreator
+) -> None:
     """Test the standby service call."""
     mock_hdmi_network_instance = await create_hdmi_network()
 
@@ -190,7 +199,7 @@ async def test_service_standby(hass: HomeAssistant, create_hdmi_network) -> None
 
 
 async def test_service_select_device_alias(
-    hass: HomeAssistant, create_hdmi_network
+    hass: HomeAssistant, create_hdmi_network: HDMINetworkCreator
 ) -> None:
     """Test the select device service call with a known alias."""
     mock_hdmi_network_instance = await create_hdmi_network(
@@ -220,7 +229,7 @@ class MockCecEntity(MockEntity):
 
 
 async def test_service_select_device_entity(
-    hass: HomeAssistant, create_hdmi_network
+    hass: HomeAssistant, create_hdmi_network: HDMINetworkCreator
 ) -> None:
     """Test the select device service call with an existing entity."""
     platform = MockEntityPlatform(hass)
@@ -244,7 +253,7 @@ async def test_service_select_device_entity(
 
 
 async def test_service_select_device_physical_address(
-    hass: HomeAssistant, create_hdmi_network
+    hass: HomeAssistant, create_hdmi_network: HDMINetworkCreator
 ) -> None:
     """Test the select device service call with a raw physical address."""
     mock_hdmi_network_instance = await create_hdmi_network()
@@ -262,7 +271,9 @@ async def test_service_select_device_physical_address(
     assert str(physical_address) == "1.1.0.0"
 
 
-async def test_service_update_devices(hass: HomeAssistant, create_hdmi_network) -> None:
+async def test_service_update_devices(
+    hass: HomeAssistant, create_hdmi_network: HDMINetworkCreator
+) -> None:
     """Test the update devices service call."""
     mock_hdmi_network_instance = await create_hdmi_network()
 
@@ -277,7 +288,7 @@ async def test_service_update_devices(hass: HomeAssistant, create_hdmi_network) 
 
 
 @pytest.mark.parametrize(
-    ("count", "calls"),
+    ("count", "call_count"),
     [
         (3, 3),
         (1, 1),
@@ -294,7 +305,12 @@ async def test_service_update_devices(hass: HomeAssistant, create_hdmi_network) 
 )
 @pytest.mark.parametrize(("direction", "key"), [("up", 65), ("down", 66)])
 async def test_service_volume_x_times(
-    hass: HomeAssistant, create_hdmi_network, count, calls, direction, key
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    count: int,
+    call_count: int,
+    direction: str,
+    key: int,
 ) -> None:
     """Test the volume service call with steps."""
     mock_hdmi_network_instance = await create_hdmi_network()
@@ -306,8 +322,8 @@ async def test_service_volume_x_times(
         blocking=True,
     )
 
-    assert mock_hdmi_network_instance.send_command.call_count == calls * 2
-    for i in range(calls):
+    assert mock_hdmi_network_instance.send_command.call_count == call_count * 2
+    for i in range(call_count):
         assert_key_press_release(
             mock_hdmi_network_instance.send_command, i, dst=5, key=key
         )
@@ -315,7 +331,10 @@ async def test_service_volume_x_times(
 
 @pytest.mark.parametrize(("direction", "key"), [("up", 65), ("down", 66)])
 async def test_service_volume_press(
-    hass: HomeAssistant, create_hdmi_network, direction, key
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    direction: str,
+    key: int,
 ) -> None:
     """Test the volume service call with press attribute."""
     mock_hdmi_network_instance = await create_hdmi_network()
@@ -336,7 +355,10 @@ async def test_service_volume_press(
 
 @pytest.mark.parametrize(("direction", "key"), [("up", 65), ("down", 66)])
 async def test_service_volume_release(
-    hass: HomeAssistant, create_hdmi_network, direction, key
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    direction: str,
+    key: int,
 ) -> None:
     """Test the volume service call with release attribute."""
     mock_hdmi_network_instance = await create_hdmi_network()
@@ -371,7 +393,7 @@ async def test_service_volume_release(
     ],
 )
 async def test_service_volume_mute(
-    hass: HomeAssistant, create_hdmi_network, attr, key
+    hass: HomeAssistant, create_hdmi_network: HDMINetworkCreator, attr: str, key: int
 ) -> None:
     """Test the volume service call with mute."""
     mock_hdmi_network_instance = await create_hdmi_network()
@@ -442,7 +464,10 @@ async def test_service_volume_mute(
     ],
 )
 async def test_service_send_command(
-    hass: HomeAssistant, create_hdmi_network, data, expected
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    data: dict[str, Any],
+    expected: str,
 ) -> None:
     """Test the send command service call."""
     mock_hdmi_network_instance = await create_hdmi_network()
@@ -465,10 +490,10 @@ async def test_service_send_command(
 )
 async def test_watchdog(
     hass: HomeAssistant,
-    create_hdmi_network,
-    mock_cec_adapter,
-    adapter_initialized_value,
-    watchdog_actions,
+    create_hdmi_network: HDMINetworkCreator,
+    mock_cec_adapter: MagicMock,
+    adapter_initialized_value: bool,
+    watchdog_actions: int,
 ) -> None:
     """Test the watchdog when adapter is down/up."""
     adapter_initialized = PropertyMock(return_value=adapter_initialized_value)

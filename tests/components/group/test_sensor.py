@@ -32,10 +32,10 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -48,6 +48,7 @@ MAX_VALUE = max(VALUES)
 MEAN = statistics.mean(VALUES)
 MEDIAN = statistics.median(VALUES)
 RANGE = max(VALUES) - min(VALUES)
+STDEV = statistics.stdev(VALUES)
 SUM_VALUE = sum(VALUES)
 PRODUCT_VALUE = prod(VALUES)
 
@@ -61,6 +62,7 @@ PRODUCT_VALUE = prod(VALUES)
         ("median", MEDIAN, {}),
         ("last", VALUES[2], {ATTR_LAST_ENTITY_ID: "sensor.test_3"}),
         ("range", RANGE, {}),
+        ("stdev", STDEV, {}),
         ("sum", SUM_VALUE, {}),
         ("product", PRODUCT_VALUE, {}),
     ],
@@ -85,7 +87,7 @@ async def test_sensors2(
 
     entity_ids = config["sensor"]["entities"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(
             entity_id,
             value,
@@ -135,7 +137,7 @@ async def test_sensors_attributes_defined(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entities"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(
             entity_id,
             value,
@@ -269,7 +271,7 @@ async def test_sensor_incorrect_state_with_ignore_non_numeric(
     entity_ids = config["sensor"]["entities"]
 
     # Check that the final sensor value ignores the non numeric input
-    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -280,7 +282,7 @@ async def test_sensor_incorrect_state_with_ignore_non_numeric(
     )
 
     # Check that the final sensor value with all numeric inputs
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -310,7 +312,7 @@ async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
     entity_ids = config["sensor"]["entities"]
 
     # Check that the final sensor value is unavailable if a non numeric input exists
-    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -319,7 +321,7 @@ async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
     assert "Unable to use state. Only numerical states are supported" in caplog.text
 
     # Check that the final sensor value is correct with all numeric inputs
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -346,7 +348,7 @@ async def test_sensor_require_all_states(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entities"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES_ERROR, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
 
@@ -494,7 +496,7 @@ async def test_sensor_with_uoms_but_no_device_class(
     state = hass.states.get("sensor.test_sum")
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("state_class") is None
-    assert state.attributes.get("unit_of_measurement") == "W"
+    assert state.attributes.get("unit_of_measurement") is None
     assert state.state == STATE_UNKNOWN
 
     assert (
@@ -648,10 +650,10 @@ async def test_sensor_calculated_result_fails_on_uom(hass: HomeAssistant) -> Non
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
     assert state.attributes.get("device_class") == "energy"
     assert state.attributes.get("state_class") == "total"
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") is None
 
 
 async def test_sensor_calculated_properties_not_convertible_device_class(
@@ -728,7 +730,7 @@ async def test_sensor_calculated_properties_not_convertible_device_class(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("device_class") == "humidity"
     assert state.attributes.get("state_class") == "measurement"
-    assert state.attributes.get("unit_of_measurement") == "%"
+    assert state.attributes.get("unit_of_measurement") is None
 
     assert (
         "Unable to use state. Only entities with correct unit of measurement is"
@@ -755,9 +757,252 @@ async def test_last_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entities"]
 
-    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, value)
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test_last")
         assert str(float(value)) == state.state
         assert entity_id == state.attributes.get("last_entity_id")
+
+
+async def test_sensors_attributes_added_when_entity_info_available(
+    hass: HomeAssistant,
+) -> None:
+    """Test the sensor calculate attributes once all entities attributes are available."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": DEFAULT_NAME,
+            "type": "sum",
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id",
+        }
+    }
+
+    entity_ids = config["sensor"]["entities"]
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.sensor_group_sum")
+
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes.get(ATTR_ENTITY_ID) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
+        hass.states.async_set(
+            entity_id,
+            value,
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLUME,
+                ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+                ATTR_UNIT_OF_MEASUREMENT: "L",
+            },
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.sensor_group_sum")
+
+    assert float(state.state) == pytest.approx(float(SUM_VALUE))
+    assert state.attributes.get(ATTR_ENTITY_ID) == entity_ids
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLUME
+    assert state.attributes.get(ATTR_ICON) is None
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "L"
+
+
+async def test_sensor_state_class_no_uom_not_available(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when input sensors drops unit of measurement."""
+
+    # If we have a valid unit of measurement from all input sensors
+    # the group sensor will go unknown in the case any input sensor
+    # drops the unit of measurement and log a warning.
+
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_sum",
+            "type": "sum",
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_sum_sensor",
+        }
+    }
+
+    entity_ids = config["sensor"]["entities"]
+
+    input_attributes = {
+        "state_class": SensorStateClass.MEASUREMENT,
+        "unit_of_measurement": PERCENTAGE,
+    }
+
+    hass.states.async_set(entity_ids[0], VALUES[0], input_attributes)
+    hass.states.async_set(entity_ids[1], VALUES[1], input_attributes)
+    hass.states.async_set(entity_ids[2], VALUES[2], input_attributes)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == str(sum(VALUES))
+    assert state.attributes.get("state_class") == "measurement"
+    assert state.attributes.get("unit_of_measurement") == "%"
+
+    assert (
+        "Unable to use state. Only entities with correct unit of measurement is"
+        " supported"
+    ) not in caplog.text
+
+    # sensor.test_3 drops the unit of measurement
+    hass.states.async_set(
+        entity_ids[2],
+        VALUES[2],
+        {
+            "state_class": SensorStateClass.MEASUREMENT,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("state_class") == "measurement"
+    assert state.attributes.get("unit_of_measurement") is None
+
+    assert (
+        "Unable to use state. Only entities with correct unit of measurement is"
+        " supported, entity sensor.test_3, value 15.3 with"
+        " device class None and unit of measurement None excluded from calculation"
+        " in sensor.test_sum"
+    ) in caplog.text
+
+
+async def test_sensor_different_attributes_ignore_non_numeric(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the sensor handles calculating attributes when using ignore_non_numeric."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_sum",
+            "type": "sum",
+            "ignore_non_numeric": True,
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_sum_sensor",
+        }
+    }
+
+    entity_ids = config["sensor"]["entities"]
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes.get("state_class") is None
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("unit_of_measurement") is None
+
+    test_cases = [
+        {
+            "entity": entity_ids[0],
+            "value": VALUES[0],
+            "attributes": {
+                "state_class": SensorStateClass.MEASUREMENT,
+                "unit_of_measurement": PERCENTAGE,
+            },
+            "expected_state": str(float(VALUES[0])),
+            "expected_state_class": SensorStateClass.MEASUREMENT,
+            "expected_device_class": None,
+            "expected_unit_of_measurement": PERCENTAGE,
+        },
+        {
+            "entity": entity_ids[1],
+            "value": VALUES[1],
+            "attributes": {
+                "state_class": SensorStateClass.MEASUREMENT,
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit_of_measurement": PERCENTAGE,
+            },
+            "expected_state": str(float(sum([VALUES[0], VALUES[1]]))),
+            "expected_state_class": SensorStateClass.MEASUREMENT,
+            "expected_device_class": None,
+            "expected_unit_of_measurement": PERCENTAGE,
+        },
+        {
+            "entity": entity_ids[2],
+            "value": VALUES[2],
+            "attributes": {
+                "state_class": SensorStateClass.MEASUREMENT,
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+            },
+            "expected_state": str(float(sum(VALUES))),
+            "expected_state_class": SensorStateClass.MEASUREMENT,
+            "expected_device_class": None,
+            "expected_unit_of_measurement": None,
+        },
+        {
+            "entity": entity_ids[2],
+            "value": VALUES[2],
+            "attributes": {
+                "state_class": SensorStateClass.MEASUREMENT,
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit_of_measurement": PERCENTAGE,
+            },
+            "expected_state": str(float(sum(VALUES))),
+            "expected_state_class": SensorStateClass.MEASUREMENT,
+            # One sensor does not have a device class
+            "expected_device_class": None,
+            "expected_unit_of_measurement": PERCENTAGE,
+        },
+        {
+            "entity": entity_ids[0],
+            "value": VALUES[0],
+            "attributes": {
+                "state_class": SensorStateClass.MEASUREMENT,
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit_of_measurement": PERCENTAGE,
+            },
+            "expected_state": str(float(sum(VALUES))),
+            "expected_state_class": SensorStateClass.MEASUREMENT,
+            # First sensor now has a device class
+            "expected_device_class": SensorDeviceClass.HUMIDITY,
+            "expected_unit_of_measurement": PERCENTAGE,
+        },
+        {
+            "entity": entity_ids[0],
+            "value": VALUES[0],
+            "attributes": {
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "expected_state": str(float(sum(VALUES))),
+            "expected_state_class": SensorStateClass.MEASUREMENT,
+            "expected_device_class": None,
+            "expected_unit_of_measurement": None,
+        },
+    ]
+
+    for test_case in test_cases:
+        hass.states.async_set(
+            test_case["entity"],
+            test_case["value"],
+            test_case["attributes"],
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_sum")
+        assert state.state == test_case["expected_state"]
+        assert state.attributes.get("state_class") == test_case["expected_state_class"]
+        assert (
+            state.attributes.get("device_class") == test_case["expected_device_class"]
+        )
+        assert (
+            state.attributes.get("unit_of_measurement")
+            == test_case["expected_unit_of_measurement"]
+        )

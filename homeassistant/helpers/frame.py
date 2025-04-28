@@ -4,30 +4,46 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from contextlib import suppress
 from dataclasses import dataclass
+import enum
 import functools
 import linecache
 import logging
 import sys
+import threading
 from types import FrameType
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import Any, cast
 
-from homeassistant.core import HomeAssistant, async_get_hass
+from propcache.api import cached_property
+
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import async_suggest_report_issue
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+from homeassistant.loader import (
+    Integration,
+    async_get_issue_integration,
+    async_suggest_report_issue,
+)
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
 # Keep track of integrations already reported to prevent flooding
 _REPORTED_INTEGRATIONS: set[str] = set()
 
-_CallableT = TypeVar("_CallableT", bound=Callable)
+
+class _Hass:
+    """Container which makes a HomeAssistant instance available to frame helper."""
+
+    hass: HomeAssistant | None = None
+
+
+_hass = _Hass()
+
+
+@callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the frame helper."""
+    _hass.hass = hass
 
 
 @dataclass(kw_only=True)
@@ -38,17 +54,17 @@ class IntegrationFrame:
     integration: str
     module: str | None
     relative_filename: str
-    _frame: FrameType
+    frame: FrameType
 
     @cached_property
     def line_number(self) -> int:
         """Return the line number of the frame."""
-        return self._frame.f_lineno
+        return self.frame.f_lineno
 
     @cached_property
     def filename(self) -> str:
         """Return the filename of the frame."""
-        return self._frame.f_code.co_filename
+        return self.frame.f_code.co_filename
 
     @cached_property
     def line(self) -> str:
@@ -79,7 +95,7 @@ def get_integration_logger(fallback_name: str) -> logging.Logger:
 def get_current_frame(depth: int = 0) -> FrameType:
     """Return the current frame."""
     # Add one to depth since get_current_frame is included
-    return sys._getframe(depth + 1)  # pylint: disable=protected-access
+    return sys._getframe(depth + 1)  # noqa: SLF001
 
 
 def get_integration_frame(exclude_integrations: set | None = None) -> IntegrationFrame:
@@ -126,7 +142,7 @@ def get_integration_frame(exclude_integrations: set | None = None) -> Integratio
         integration=integration,
         module=found_module,
         relative_filename=found_frame.f_code.co_filename[index:],
-        _frame=found_frame,
+        frame=found_frame,
     )
 
 
@@ -134,82 +150,262 @@ class MissingIntegrationFrame(HomeAssistantError):
     """Raised when no integration is found in the frame."""
 
 
-def report(
-    what: str,
-    exclude_integrations: set | None = None,
-    error_if_core: bool = True,
-    level: int = logging.WARNING,
-    log_custom_component_only: bool = False,
-) -> None:
-    """Report incorrect usage.
+class ReportBehavior(enum.Enum):
+    """Enum for behavior on code usage."""
 
-    Async friendly.
+    IGNORE = enum.auto()
+    """Ignore the code usage."""
+    LOG = enum.auto()
+    """Log the code usage."""
+    ERROR = enum.auto()
+    """Raise an error on code usage."""
+
+
+def report_usage(
+    what: str,
+    *,
+    breaks_in_ha_version: str | None = None,
+    core_behavior: ReportBehavior = ReportBehavior.ERROR,
+    core_integration_behavior: ReportBehavior = ReportBehavior.LOG,
+    custom_integration_behavior: ReportBehavior = ReportBehavior.LOG,
+    exclude_integrations: set[str] | None = None,
+    integration_domain: str | None = None,
+    level: int = logging.WARNING,
+) -> None:
+    """Report incorrect code usage.
+
+    :param what: will be wrapped with "Detected that integration 'integration' {what}.
+    Please create a bug report at https://..."
+    :param breaks_in_ha_version: if set, the report will be adjusted to specify the
+    breaking version
+    :param exclude_integrations: skip specified integration when reviewing the stack.
+    If no integration is found, the core behavior will be applied
+    :param integration_domain: domain of the integration causing the issue. If None, the
+    stack frame will be searched to identify the integration causing the issue.
     """
+    if (hass := _hass.hass) is None:
+        raise RuntimeError("Frame helper not set up")
+    _report_usage_partial = functools.partial(
+        _report_usage,
+        hass,
+        what,
+        breaks_in_ha_version=breaks_in_ha_version,
+        core_behavior=core_behavior,
+        core_integration_behavior=core_integration_behavior,
+        custom_integration_behavior=custom_integration_behavior,
+        exclude_integrations=exclude_integrations,
+        integration_domain=integration_domain,
+        level=level,
+    )
+    if hass.loop_thread_id != threading.get_ident():
+        future = run_callback_threadsafe(hass.loop, _report_usage_partial)
+        future.result()
+        return
+    _report_usage_partial()
+
+
+def _report_usage(
+    hass: HomeAssistant,
+    what: str,
+    *,
+    breaks_in_ha_version: str | None,
+    core_behavior: ReportBehavior,
+    core_integration_behavior: ReportBehavior,
+    custom_integration_behavior: ReportBehavior,
+    exclude_integrations: set[str] | None,
+    integration_domain: str | None,
+    level: int,
+) -> None:
+    """Report incorrect code usage.
+
+    Must be called from the event loop.
+    """
+    if integration_domain:
+        if integration := async_get_issue_integration(hass, integration_domain):
+            _report_usage_integration_domain(
+                hass,
+                what,
+                breaks_in_ha_version,
+                integration,
+                core_integration_behavior,
+                custom_integration_behavior,
+                level,
+            )
+            return
+        _report_usage_no_integration(what, core_behavior, breaks_in_ha_version, None)
+        return
+
     try:
         integration_frame = get_integration_frame(
             exclude_integrations=exclude_integrations
         )
     except MissingIntegrationFrame as err:
-        msg = f"Detected code that {what}. Please report this issue."
-        if error_if_core:
-            raise RuntimeError(msg) from err
-        if not log_custom_component_only:
-            _LOGGER.warning(msg, stack_info=True)
+        _report_usage_no_integration(what, core_behavior, breaks_in_ha_version, err)
         return
 
-    if not log_custom_component_only or integration_frame.custom_integration:
-        _report_integration(what, integration_frame, level)
+    integration_behavior = core_integration_behavior
+    if integration_frame.custom_integration:
+        integration_behavior = custom_integration_behavior
+
+    if integration_behavior is not ReportBehavior.IGNORE:
+        _report_usage_integration_frame(
+            hass,
+            what,
+            breaks_in_ha_version,
+            integration_frame,
+            level,
+            integration_behavior is ReportBehavior.ERROR,
+        )
 
 
-def _report_integration(
+def _report_usage_integration_domain(
+    hass: HomeAssistant | None,
     what: str,
+    breaks_in_ha_version: str | None,
+    integration: Integration,
+    core_integration_behavior: ReportBehavior,
+    custom_integration_behavior: ReportBehavior,
+    level: int,
+) -> None:
+    """Report incorrect usage in an integration (identified via domain).
+
+    Async friendly.
+    """
+    integration_behavior = core_integration_behavior
+    if not integration.is_built_in:
+        integration_behavior = custom_integration_behavior
+
+    if integration_behavior is ReportBehavior.IGNORE:
+        return
+
+    # Keep track of integrations already reported to prevent flooding
+    key = f"{integration.domain}:{what}"
+    if (
+        integration_behavior is not ReportBehavior.ERROR
+        and key in _REPORTED_INTEGRATIONS
+    ):
+        return
+    _REPORTED_INTEGRATIONS.add(key)
+
+    report_issue = async_suggest_report_issue(hass, integration=integration)
+    integration_type = "" if integration.is_built_in else "custom "
+    _LOGGER.log(
+        level,
+        "Detected that %sintegration '%s' %s. %s %s",
+        integration_type,
+        integration.domain,
+        what,
+        f"This will stop working in Home Assistant {breaks_in_ha_version}, please"
+        if breaks_in_ha_version
+        else "Please",
+        report_issue,
+    )
+
+    if integration_behavior is ReportBehavior.ERROR:
+        raise RuntimeError(
+            f"Detected that {integration_type}integration "
+            f"'{integration.domain}' {what}. Please {report_issue}"
+        )
+
+
+def _report_usage_integration_frame(
+    hass: HomeAssistant,
+    what: str,
+    breaks_in_ha_version: str | None,
     integration_frame: IntegrationFrame,
     level: int = logging.WARNING,
+    error: bool = False,
 ) -> None:
-    """Report incorrect usage in an integration.
+    """Report incorrect usage in an integration (identified via frame).
 
     Async friendly.
     """
     # Keep track of integrations already reported to prevent flooding
     key = f"{integration_frame.filename}:{integration_frame.line_number}"
-    if key in _REPORTED_INTEGRATIONS:
+    if not error and key in _REPORTED_INTEGRATIONS:
         return
     _REPORTED_INTEGRATIONS.add(key)
 
-    hass: HomeAssistant | None = None
-    with suppress(HomeAssistantError):
-        hass = async_get_hass()
     report_issue = async_suggest_report_issue(
         hass,
         integration_domain=integration_frame.integration,
         module=integration_frame.module,
     )
-
+    integration_type = "custom " if integration_frame.custom_integration else ""
     _LOGGER.log(
         level,
-        "Detected that %sintegration '%s' %s at %s, line %s: %s, please %s",
-        "custom " if integration_frame.custom_integration else "",
+        "Detected that %sintegration '%s' %s at %s, line %s: %s. %s %s",
+        integration_type,
         integration_frame.integration,
         what,
         integration_frame.relative_filename,
         integration_frame.line_number,
         integration_frame.line,
+        f"This will stop working in Home Assistant {breaks_in_ha_version}, please"
+        if breaks_in_ha_version
+        else "Please",
         report_issue,
+    )
+    if not error:
+        return
+    raise RuntimeError(
+        f"Detected that {integration_type}integration "
+        f"'{integration_frame.integration}' {what} at "
+        f"{integration_frame.relative_filename}, line "
+        f"{integration_frame.line_number}: {integration_frame.line}. "
+        f"Please {report_issue}"
     )
 
 
-def warn_use(func: _CallableT, what: str) -> _CallableT:
+def _report_usage_no_integration(
+    what: str,
+    core_behavior: ReportBehavior,
+    breaks_in_ha_version: str | None,
+    err: MissingIntegrationFrame | None,
+) -> None:
+    """Report incorrect usage without an integration.
+
+    This could happen because the offending call happened outside of an integration,
+    or because the integration could not be identified.
+    """
+    msg = f"Detected code that {what}. Please report this issue"
+    if core_behavior is ReportBehavior.ERROR:
+        raise RuntimeError(msg) from err
+    if core_behavior is ReportBehavior.LOG:
+        if breaks_in_ha_version:
+            msg = (
+                f"Detected code that {what}. This will stop working in Home "
+                f"Assistant {breaks_in_ha_version}, please report this issue"
+            )
+        _LOGGER.warning(msg, stack_info=True)
+
+
+def warn_use[_CallableT: Callable](func: _CallableT, what: str) -> _CallableT:
     """Mock a function to warn when it was about to be used."""
     if asyncio.iscoroutinefunction(func):
 
         @functools.wraps(func)
         async def report_use(*args: Any, **kwargs: Any) -> None:
-            report(what)
+            report_usage(what)
 
     else:
 
         @functools.wraps(func)
         def report_use(*args: Any, **kwargs: Any) -> None:
-            report(what)
+            report_usage(what)
 
     return cast(_CallableT, report_use)
+
+
+def report_non_thread_safe_operation(what: str) -> None:
+    """Report a non-thread safe operation."""
+    report_usage(
+        f"calls {what} from a thread other than the event loop, "
+        "which may cause Home Assistant to crash or data to corrupt. "
+        "For more information, see "
+        "https://developers.home-assistant.io/docs/asyncio_thread_safety/"
+        f"#{what.replace('.', '')}",
+        core_behavior=ReportBehavior.ERROR,
+        core_integration_behavior=ReportBehavior.ERROR,
+        custom_integration_behavior=ReportBehavior.ERROR,
+    )

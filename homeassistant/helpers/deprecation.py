@@ -4,18 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
-from enum import Enum
+from enum import EnumType, IntEnum, IntFlag, StrEnum, _EnumDict
 import functools
 import inspect
 import logging
-from typing import Any, NamedTuple, ParamSpec, TypeVar
-
-_ObjectT = TypeVar("_ObjectT", bound=object)
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
+from typing import Any, NamedTuple
 
 
-def deprecated_substitute(
+def deprecated_substitute[_ObjectT: object](
     substitute_name: str,
 ) -> Callable[[Callable[[_ObjectT], Any]], Callable[[_ObjectT], Any]]:
     """Help migrate properties to new names.
@@ -92,7 +88,7 @@ def get_deprecated(
     return config.get(new_name, default)
 
 
-def deprecated_class(
+def deprecated_class[**_P, _R](
     replacement: str, *, breaks_in_ha_version: str | None = None
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """Mark class as deprecated and provide a replacement class to be used instead.
@@ -117,7 +113,7 @@ def deprecated_class(
     return deprecated_decorator
 
 
-def deprecated_function(
+def deprecated_function[**_P, _R](
     replacement: str, *, breaks_in_ha_version: str | None = None
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """Mark function as deprecated and provide a replacement to be used instead.
@@ -170,9 +166,32 @@ def _print_deprecation_warning_internal(
     *,
     log_when_no_integration_is_found: bool,
 ) -> None:
+    # Suppress ImportError due to use of deprecated enum in core.py
+    # Can be removed in HA Core 2025.1
+    with suppress(ImportError):
+        _print_deprecation_warning_internal_impl(
+            obj_name,
+            module_name,
+            replacement,
+            description,
+            verb,
+            breaks_in_ha_version,
+            log_when_no_integration_is_found=log_when_no_integration_is_found,
+        )
+
+
+def _print_deprecation_warning_internal_impl(
+    obj_name: str,
+    module_name: str,
+    replacement: str,
+    description: str,
+    verb: str,
+    breaks_in_ha_version: str | None,
+    *,
+    log_when_no_integration_is_found: bool,
+) -> None:
     # pylint: disable=import-outside-toplevel
-    from homeassistant.core import HomeAssistant, async_get_hass
-    from homeassistant.exceptions import HomeAssistantError
+    from homeassistant.core import async_get_hass_or_none
     from homeassistant.loader import async_suggest_report_issue
 
     from .frame import MissingIntegrationFrame, get_integration_frame
@@ -195,11 +214,8 @@ def _print_deprecation_warning_internal(
             )
     else:
         if integration_frame.custom_integration:
-            hass: HomeAssistant | None = None
-            with suppress(HomeAssistantError):
-                hass = async_get_hass()
             report_issue = async_suggest_report_issue(
-                hass,
+                async_get_hass_or_none(),
                 integration_domain=integration_frame.integration,
                 module=integration_frame.module,
             )
@@ -228,19 +244,47 @@ def _print_deprecation_warning_internal(
             )
 
 
-class DeprecatedConstant(NamedTuple):
+class DeprecatedConstant[T](NamedTuple):
     """Deprecated constant."""
 
-    value: Any
+    value: T
     replacement: str
     breaks_in_ha_version: str | None
 
 
-class DeprecatedConstantEnum(NamedTuple):
+class DeprecatedConstantEnum[T: (StrEnum | IntEnum | IntFlag)](NamedTuple):
     """Deprecated constant."""
 
-    enum: Enum
+    enum: T
     breaks_in_ha_version: str | None
+
+
+class DeprecatedAlias[T](NamedTuple):
+    """Deprecated alias."""
+
+    value: T
+    replacement: str
+    breaks_in_ha_version: str | None
+
+
+class DeferredDeprecatedAlias[T]:
+    """Deprecated alias with deferred evaluation of the value."""
+
+    def __init__(
+        self,
+        value_fn: Callable[[], T],
+        replacement: str,
+        breaks_in_ha_version: str | None,
+    ) -> None:
+        """Initialize."""
+        self.breaks_in_ha_version = breaks_in_ha_version
+        self.replacement = replacement
+        self._value_fn = value_fn
+
+    @functools.cached_property
+    def value(self) -> T:
+        """Return the value."""
+        return self._value_fn()
 
 
 _PREFIX_DEPRECATED = "_DEPRECATED_"
@@ -254,6 +298,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
     """
     module_name = module_globals.get("__name__")
     value = replacement = None
+    description = "constant"
     if (deprecated_const := module_globals.get(_PREFIX_DEPRECATED + name)) is None:
         raise AttributeError(f"Module {module_name!r} has no attribute {name!r}")
     if isinstance(deprecated_const, DeprecatedConstant):
@@ -261,16 +306,23 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         replacement = deprecated_const.replacement
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
     elif isinstance(deprecated_const, DeprecatedConstantEnum):
-        value = deprecated_const.enum.value
+        value = deprecated_const.enum
         replacement = (
             f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
         )
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
+    elif isinstance(deprecated_const, (DeprecatedAlias, DeferredDeprecatedAlias)):
+        description = "alias"
+        value = deprecated_const.value
+        replacement = deprecated_const.replacement
+        breaks_in_ha_version = deprecated_const.breaks_in_ha_version
 
     if value is None or replacement is None:
         msg = (
-            f"Value of {_PREFIX_DEPRECATED}{name} is an instance of {type(deprecated_const)} "
-            "but an instance of DeprecatedConstant or DeprecatedConstantEnum is required"
+            f"Value of {_PREFIX_DEPRECATED}{name} is an instance of "
+            f"{type(deprecated_const)} but an instance of DeprecatedAlias, "
+            "DeferredDeprecatedAlias, DeprecatedConstant or DeprecatedConstantEnum "
+            "is required"
         )
 
         logging.getLogger(module_name).debug(msg)
@@ -284,7 +336,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         name,
         module_name or __name__,
         replacement,
-        "constant",
+        description,
         "used",
         breaks_in_ha_version,
         log_when_no_integration_is_found=False,
@@ -311,3 +363,35 @@ def all_with_deprecated_constants(module_globals: dict[str, Any]) -> list[str]:
         for name in module_globals_keys
         if name.startswith(_PREFIX_DEPRECATED)
     ]
+
+
+class EnumWithDeprecatedMembers(EnumType):
+    """Enum with deprecated members."""
+
+    def __new__(
+        mcs,
+        cls: str,
+        bases: tuple[type, ...],
+        classdict: _EnumDict,
+        *,
+        deprecated: dict[str, tuple[str, str]],
+        **kwds: Any,
+    ) -> Any:
+        """Create a new class."""
+        classdict["__deprecated__"] = deprecated
+        return super().__new__(mcs, cls, bases, classdict, **kwds)
+
+    def __getattribute__(cls, name: str) -> Any:
+        """Warn if accessing a deprecated member."""
+        deprecated = super().__getattribute__("__deprecated__")
+        if name in deprecated:
+            _print_deprecation_warning_internal(
+                f"{cls.__name__}.{name}",
+                cls.__module__,
+                f"{deprecated[name][0]}",
+                "enum member",
+                "used",
+                deprecated[name][1],
+                log_when_no_integration_is_found=False,
+            )
+        return super().__getattribute__(name)

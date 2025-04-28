@@ -26,6 +26,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::huawei_lte::config::step::user::data_description::password%]",
+          "username": "[%key:component::huawei_lte::config::step::user::data_description::username%]"
         }
       },
       "user": {
@@ -34,6 +38,12 @@
           "url": "[%key:common::config_flow::data::url%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "password": "Password for accessing the router's API. Typically, the same as the one used for the router's web interface.",
+          "url": "Base URL to the API of the router. Typically, something like `http://192.168.X.1`. This is the beginning of the location shown in a browser when accessing the router's web interface.",
+          "username": "Username for accessing the router's API. Typically, the same as the one used for the router's web interface. Usually, either `admin`, or left empty (recommended if that works).",
+          "verify_ssl": "Whether to verify the SSL certificate of the router when accessing it. Applicable only if the router is accessed via HTTPS."
         },
         "description": "Enter device access details.",
         "title": "Configure Huawei LTE"
@@ -48,6 +58,12 @@
           "recipient": "SMS notification recipients",
           "track_wired_clients": "Track wired network clients",
           "unauthenticated_mode": "Unauthenticated mode (change requires reload)"
+        },
+        "data_description": {
+          "name": "Used to distinguish between notification services in case there are multiple Huawei LTE devices configured. Changes to this option value take effect after Home Assistant restart.",
+          "recipient": "Comma separated list of default recipient SMS phone numbers for the notification service, used in case the notification sender does not specify any.",
+          "track_wired_clients": "Whether the device tracker entities track also clients attached to the router's wired Ethernet network, in addition to wireless clients.",
+          "unauthenticated_mode": "Whether to run in unauthenticated mode. Unauthenticated mode provides a limited set of features, but may help in case there are problems accessing the router's web interface from a browser while the integration is active. Changes to this option value take effect after integration reload."
         }
       }
     }
@@ -125,6 +141,48 @@
       "lte_uplink_frequency": {
         "name": "LTE uplink frequency"
       },
+      "mode": {
+        "name": "Mode"
+      },
+      "nrbler": {
+        "name": "5G block error rate"
+      },
+      "nrcqi0": {
+        "name": "5G CQI 0"
+      },
+      "nrcqi1": {
+        "name": "5G CQI 1"
+      },
+      "nrdlbandwidth": {
+        "name": "5G downlink bandwidth"
+      },
+      "nrdlmcs": {
+        "name": "5G downlink MCS"
+      },
+      "nrearfcn": {
+        "name": "5G EARFCN"
+      },
+      "nrrank": {
+        "name": "5G rank"
+      },
+      "nrrsrp": {
+        "name": "5G RSRP"
+      },
+      "nrrsrq": {
+        "name": "5G RSRQ"
+      },
+      "nrsinr": {
+        "name": "5G SINR"
+      },
+      "nrtxpower": {
+        "name": "5G transmit power"
+      },
+      "nrulbandwidth": {
+        "name": "5G uplink bandwidth"
+      },
+      "nrulmcs": {
+        "name": "5G uplink MCS"
+      },
       "pci": {
         "name": "PCI"
       },
@@ -185,6 +243,9 @@
       "current_month_upload": {
         "name": "Current month upload"
       },
+      "battery": {
+        "name": "Battery"
+      },
       "wifi_clients_connected": {
         "name": "Wi-Fi clients connected"
       },
@@ -233,8 +294,8 @@
       "operator_search_mode": {
         "name": "Operator search mode",
         "state": {
-          "0": "Auto",
-          "1": "Manual"
+          "0": "[%key:common::state::auto%]",
+          "1": "[%key:common::state::manual%]"
         }
       },
       "preferred_network_mode": {
@@ -322,7 +383,7 @@
     },
     "suspend_integration": {
       "name": "Suspend integration",
-      "description": "Suspends integration. Suspending logs the integration out from the router, and stops accessing it. Useful e.g. if accessing the router web interface from another source such as a web browser is temporarily required. Invoke the resume_integration service to resume.\n.",
+      "description": "Suspends integration. Suspending logs the integration out from the router, and stops accessing it. Useful e.g. if accessing the router web interface from another source such as a web browser is temporarily required. Invoke the 'Resume integration' action to resume.",
       "fields": {
         "url": {
           "name": "[%key:common::config_flow::data::url%]",

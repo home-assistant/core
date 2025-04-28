@@ -12,7 +12,7 @@ from homeassistant.components.light import (
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
@@ -123,14 +123,17 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
             json={},
         )
 
-    with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
-    ) as mock_auth, patch(
-        "homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]
-    ), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url",
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook_generate_url",
+        ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = (
             fake_post_request_no_data

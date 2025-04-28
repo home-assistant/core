@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyfronius import FroniusError
 
 from homeassistant.components.fronius.const import DOMAIN, SOLAR_NET_RESCAN_TIMER
@@ -10,9 +11,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
-from . import mock_responses, remove_device, setup_fronius_integration
+from . import mock_responses, setup_fronius_integration
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -66,6 +66,7 @@ async def test_inverter_night_rescan(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test dynamic adding of an inverter discovered automatically after a Home Assistant reboot during the night."""
     mock_responses(aioclient_mock, fixture_set="igplus_v2", night=True)
@@ -78,9 +79,8 @@ async def test_inverter_night_rescan(
 
     # Switch to daytime
     mock_responses(aioclient_mock, fixture_set="igplus_v2", night=False)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(minutes=SOLAR_NET_RESCAN_TIMER)
-    )
+    freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # We expect our inverter to be present now
@@ -88,9 +88,8 @@ async def test_inverter_night_rescan(
     assert inverter_1.manufacturer == "Fronius"
 
     # After another re-scan we still only expect this inverter
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(minutes=SOLAR_NET_RESCAN_TIMER * 2)
-    )
+    freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "203200")})
     assert inverter_1.manufacturer == "Fronius"
@@ -100,6 +99,7 @@ async def test_inverter_rescan_interruption(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test interruption of re-scan during runtime to process further."""
     mock_responses(aioclient_mock, fixture_set="igplus_v2", night=True)
@@ -115,9 +115,8 @@ async def test_inverter_rescan_interruption(
         "pyfronius.Fronius.inverter_info",
         side_effect=FroniusError,
     ):
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(minutes=SOLAR_NET_RESCAN_TIMER)
-        )
+        freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         # No increase of devices expected because of a FroniusError
@@ -132,9 +131,8 @@ async def test_inverter_rescan_interruption(
 
     # Next re-scan will pick up the new inverter. Expect 2 devices now.
     mock_responses(aioclient_mock, fixture_set="igplus_v2", night=False)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(minutes=SOLAR_NET_RESCAN_TIMER * 2)
-    )
+    freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (
@@ -159,11 +157,8 @@ async def test_device_remove_devices(
     )
 
     inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "12345678")})
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), inverter_1.id, config_entry.entry_id
-        )
-        is True
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(inverter_1.id, config_entry.entry_id)
+    assert response["success"]
 
     assert not device_registry.async_get_device(identifiers={(DOMAIN, "12345678")})

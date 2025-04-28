@@ -1,26 +1,20 @@
 """Tests for select platform."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from aioautomower.exceptions import ApiException
-from aioautomower.model import HeadlightModes
-from aioautomower.utils import mower_list_to_dictionary_dataclass
+from aioautomower.exceptions import ApiError
+from aioautomower.model import HeadlightModes, MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_select_states(
@@ -28,27 +22,25 @@ async def test_select_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test states of headlight mode select."""
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("select.test_mower_1_headlight_mode")
     assert state is not None
     assert state.state == "evening_only"
 
-    for state, expected_state in [
+    for state, expected_state in (
         (
             HeadlightModes.ALWAYS_OFF,
             "always_off",
         ),
         (HeadlightModes.ALWAYS_ON, "always_on"),
         (HeadlightModes.EVENING_AND_NIGHT, "evening_and_night"),
-    ]:
-        values[TEST_MOWER_ID].headlight.mode = state
+    ):
+        values[TEST_MOWER_ID].settings.headlight.mode = state
         mock_automower_client.get_status.return_value = values
-        freezer.tick(timedelta(minutes=5))
+        freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         state = hass.states.get("select.test_mower_1_headlight_mode")
@@ -81,11 +73,15 @@ async def test_select_commands(
         },
         blocking=True,
     )
-    mocked_method = mock_automower_client.set_headlight_mode
+    mocked_method = mock_automower_client.commands.set_headlight_mode
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, service.upper())
     assert len(mocked_method.mock_calls) == 1
 
-    mocked_method.side_effect = ApiException("Test error")
-    with pytest.raises(HomeAssistantError) as exc_info:
+    mocked_method.side_effect = ApiError("Test error")
+    with pytest.raises(
+        HomeAssistantError,
+        match="Failed to send command: Test error",
+    ):
         await hass.services.async_call(
             domain="select",
             service="select_option",
@@ -95,8 +91,4 @@ async def test_select_commands(
             },
             blocking=True,
         )
-    assert (
-        str(exc_info.value)
-        == "Command couldn't be sent to the command queue: Test error"
-    )
     assert len(mocked_method.mock_calls) == 2

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from homeassistant.components.litterrobot.sensor import icon_for_gauge_level
 from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN, SensorDeviceClass
 from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, UnitOfMass
 from homeassistant.core import HomeAssistant
@@ -47,7 +48,6 @@ async def test_sleep_time_sensor_with_sleep_disabled(
 
 async def test_gauge_icon() -> None:
     """Test icon generator for gauge sensor."""
-    from homeassistant.components.litterrobot.sensor import icon_for_gauge_level
 
     GAUGE_EMPTY = "mdi:gauge-empty"
     GAUGE_LOW = "mdi:gauge-low"
@@ -86,7 +86,7 @@ async def test_litter_robot_sensor(
     assert sensor.state == "2022-09-17T12:06:37+00:00"
     assert sensor.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
     sensor = hass.states.get("sensor.test_status_code")
-    assert sensor.state == "dfs"
+    assert sensor.state == "rdy"
     assert sensor.attributes["device_class"] == SensorDeviceClass.ENUM
     sensor = hass.states.get("sensor.test_litter_level")
     assert sensor.state == "70.0"
@@ -104,3 +104,13 @@ async def test_feeder_robot_sensor(
     sensor = hass.states.get("sensor.test_food_level")
     assert sensor.state == "10"
     assert sensor.attributes["unit_of_measurement"] == PERCENTAGE
+
+
+async def test_pet_weight_sensor(
+    hass: HomeAssistant, mock_account_with_pet: MagicMock
+) -> None:
+    """Tests pet weight sensors."""
+    await setup_integration(hass, mock_account_with_pet, PLATFORM_DOMAIN)
+    sensor = hass.states.get("sensor.kitty_weight")
+    assert sensor.state == "9.1"
+    assert sensor.attributes["unit_of_measurement"] == UnitOfMass.POUNDS

@@ -1,387 +1,342 @@
 """Test the Whirlpool Sensor domain."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 from whirlpool.washerdryer import MachineState
 
 from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
-from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import as_timestamp, utc_from_timestamp, utcnow
 
-from . import init_integration
+from . import init_integration, snapshot_whirlpool_entities
 
 from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
 
+WASHER_ENTITY_ID_BASE = "sensor.washer"
+DRYER_ENTITY_ID_BASE = "sensor.dryer"
 
-async def update_sensor_state(
-    hass: HomeAssistant,
-    entity_id: str,
-    mock_sensor_api_instance: MagicMock,
-) -> State:
+
+async def trigger_attr_callback(
+    hass: HomeAssistant, mock_api_instance: MagicMock
+) -> None:
     """Simulate an update trigger from the API."""
 
-    for call in mock_sensor_api_instance.register_attr_callback.call_args_list:
+    for call in mock_api_instance.register_attr_callback.call_args_list:
         update_ha_state_cb = call[0][0]
         update_ha_state_cb()
-        await hass.async_block_till_done()
-
-    return hass.states.get(entity_id)
-
-
-def side_effect_function_open_door(*args, **kwargs):
-    """Return correct value for attribute."""
-    if args[0] == "Cavity_TimeStatusEstTimeRemaining":
-        return 3540
-
-    if args[0] == "Cavity_OpStatusDoorOpen":
-        return "1"
-
-    if args[0] == "WashCavity_OpStatusBulkDispense1Level":
-        return "3"
-
-
-async def test_dryer_sensor_values(
-    hass: HomeAssistant,
-    mock_sensor_api_instances: MagicMock,
-    mock_sensor2_api: MagicMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the sensor value callbacks."""
-    hass.set_state(CoreState.not_running)
-    thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, UTC)
-    mock_restore_cache_with_extra_data(
-        hass,
-        (
-            (
-                State(
-                    "sensor.washer_end_time",
-                    "1",
-                ),
-                {"native_value": thetimestamp, "native_unit_of_measurement": None},
-            ),
-            (
-                State("sensor.dryer_end_time", "1"),
-                {"native_value": thetimestamp, "native_unit_of_measurement": None},
-            ),
-        ),
-    )
-
-    await init_integration(hass)
-
-    entity_id = "sensor.dryer_state"
-    mock_instance = mock_sensor2_api
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "standby"
-
-    state = await update_sensor_state(hass, entity_id, mock_instance)
-    assert state is not None
-    state_id = f"{entity_id.split('_')[0]}_end_time"
-    state = hass.states.get(state_id)
-    assert state.state == thetimestamp.isoformat()
-
-    mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
-    mock_instance.get_cycle_status_filling.return_value = False
-    mock_instance.attr_value_to_bool.side_effect = [
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-    ]
-
-    state = await update_sensor_state(hass, entity_id, mock_instance)
-    assert state is not None
-    assert state.state == "running_maincycle"
-
-    mock_instance.get_machine_state.return_value = MachineState.Complete
-
-    state = await update_sensor_state(hass, entity_id, mock_instance)
-    assert state is not None
-    assert state.state == "complete"
-
-
-async def test_washer_sensor_values(
-    hass: HomeAssistant,
-    mock_sensor_api_instances: MagicMock,
-    mock_sensor1_api: MagicMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the sensor value callbacks."""
-    hass.set_state(CoreState.not_running)
-    thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, UTC)
-    mock_restore_cache_with_extra_data(
-        hass,
-        (
-            (
-                State(
-                    "sensor.washer_end_time",
-                    "1",
-                ),
-                {"native_value": thetimestamp, "native_unit_of_measurement": None},
-            ),
-            (
-                State("sensor.dryer_end_time", "1"),
-                {"native_value": thetimestamp, "native_unit_of_measurement": None},
-            ),
-        ),
-    )
-
-    await init_integration(hass)
-
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
     await hass.async_block_till_done()
 
-    entity_id = "sensor.washer_state"
-    mock_instance = mock_sensor1_api
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "standby"
 
-    state = await update_sensor_state(hass, entity_id, mock_instance)
-    assert state is not None
-    state_id = f"{entity_id.split('_')[0]}_end_time"
-    state = hass.states.get(state_id)
-    assert state.state == thetimestamp.isoformat()
-
-    state_id = f"{entity_id.split('_')[0]}_detergent_level"
-    entry = entity_registry.async_get(state_id)
-    assert entry
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-    update_entry = entity_registry.async_update_entity(
-        entry.entity_id, disabled_by=None
-    )
-    await hass.async_block_till_done()
-
-    assert update_entry != entry
-    assert update_entry.disabled is False
-    state = hass.states.get(state_id)
-    assert state is None
-
-    await hass.config_entries.async_reload(entry.config_entry_id)
-    state = hass.states.get(state_id)
-    assert state is not None
-    assert state.state == "50"
-
-    # Test the washer cycle states
-    mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
-    mock_instance.get_cycle_status_filling.return_value = True
-    mock_instance.attr_value_to_bool.side_effect = [
-        True,
-        False,
-        False,
-        False,
-        False,
-        False,
-    ]
-
-    state = await update_sensor_state(hass, entity_id, mock_instance)
-    assert state is not None
-    assert state.state == "cycle_filling"
-
-    mock_instance.get_cycle_status_filling.return_value = False
-    mock_instance.get_cycle_status_rinsing.return_value = True
-    mock_instance.attr_value_to_bool.side_effect = [
-        False,
-        True,
-        False,
-        False,
-        False,
-        False,
-    ]
-
-    state = await update_sensor_state(hass, entity_id, mock_instance)
-    assert state is not None
-    assert state.state == "cycle_rinsing"
-
-    mock_instance.get_cycle_status_rinsing.return_value = False
-    mock_instance.get_cycle_status_sensing.return_value = True
-    mock_instance.attr_value_to_bool.side_effect = [
-        False,
-        False,
-        True,
-        False,
-        False,
-        False,
-    ]
-
-    state = await update_sensor_state(hass, entity_id, mock_instance)
-    assert state is not None
-    assert state.state == "cycle_sensing"
-
-    mock_instance.get_cycle_status_sensing.return_value = False
-    mock_instance.get_cycle_status_soaking.return_value = True
-    mock_instance.attr_value_to_bool.side_effect = [
-        False,
-        False,
-        False,
-        True,
-        False,
-        False,
-    ]
-
-    state = await update_sensor_state(hass, entity_id, mock_instance)
-    assert state is not None
-    assert state.state == "cycle_soaking"
-
-    mock_instance.get_cycle_status_soaking.return_value = False
-    mock_instance.get_cycle_status_spinning.return_value = True
-    mock_instance.attr_value_to_bool.side_effect = [
-        False,
-        False,
-        False,
-        False,
-        True,
-        False,
-    ]
-
-    state = await update_sensor_state(hass, entity_id, mock_instance)
-    assert state is not None
-    assert state.state == "cycle_spinning"
-
-    mock_instance.get_cycle_status_spinning.return_value = False
-    mock_instance.get_cycle_status_washing.return_value = True
-    mock_instance.attr_value_to_bool.side_effect = [
-        False,
-        False,
-        False,
-        False,
-        False,
-        True,
-    ]
-
-    state = await update_sensor_state(hass, entity_id, mock_instance)
-    assert state is not None
-    assert state.state == "cycle_washing"
-
-    mock_instance.get_machine_state.return_value = MachineState.Complete
-    mock_instance.attr_value_to_bool.side_effect = None
-    mock_instance.get_attribute.side_effect = side_effect_function_open_door
-    state = await update_sensor_state(hass, entity_id, mock_instance)
-    assert state is not None
-    assert state.state == "door_open"
-
-
-async def test_restore_state(
+# Freeze time for WasherDryerTimeSensor
+@pytest.mark.freeze_time("2025-05-04 12:00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
     hass: HomeAssistant,
-    mock_sensor_api_instances: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test sensor restore state."""
-    # Home assistant is not running yet
-    hass.set_state(CoreState.not_running)
-    thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, UTC)
-    mock_restore_cache_with_extra_data(
-        hass,
-        (
-            (
-                State(
-                    "sensor.washer_end_time",
-                    "1",
-                ),
-                {"native_value": thetimestamp, "native_unit_of_measurement": None},
-            ),
-            (
-                State("sensor.dryer_end_time", "1"),
-                {"native_value": thetimestamp, "native_unit_of_measurement": None},
-            ),
-        ),
-    )
-
-    # create and add entry
+    """Test all entities."""
     await init_integration(hass)
-    # restore from cache
-    state = hass.states.get("sensor.washer_end_time")
-    assert state.state == thetimestamp.isoformat()
-    state = hass.states.get("sensor.dryer_end_time")
-    assert state.state == thetimestamp.isoformat()
+    snapshot_whirlpool_entities(hass, entity_registry, snapshot, Platform.SENSOR)
 
 
-async def test_no_restore_state(
-    hass: HomeAssistant,
-    mock_sensor_api_instances: MagicMock,
-    mock_sensor1_api: MagicMock,
-) -> None:
-    """Test sensor restore state with no restore."""
-    # create and add entry
-    entity_id = "sensor.washer_end_time"
-    await init_integration(hass)
-    # restore from cache
-    state = hass.states.get(entity_id)
-    assert state.state == "unknown"
-
-    mock_sensor1_api.get_machine_state.return_value = MachineState.RunningMainCycle
-    state = await update_sensor_state(hass, entity_id, mock_sensor1_api)
-    assert state.state != "unknown"
-
-
+@pytest.mark.parametrize(
+    ("entity_id", "mock_fixture"),
+    [
+        ("sensor.washer_end_time", "mock_washer_api"),
+        ("sensor.dryer_end_time", "mock_dryer_api"),
+    ],
+)
 @pytest.mark.freeze_time("2022-11-30 00:00:00")
-async def test_callback(
+async def test_washer_dryer_time_sensor(
     hass: HomeAssistant,
-    mock_sensor_api_instances: MagicMock,
-    mock_sensor1_api: MagicMock,
+    entity_id: str,
+    mock_fixture: str,
+    request: pytest.FixtureRequest,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test callback timestamp callback function."""
-    hass.set_state(CoreState.not_running)
-    thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, UTC)
+    """Test Washer/Dryer end time sensors."""
+    now = utcnow()
+    restored_datetime: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, UTC)
     mock_restore_cache_with_extra_data(
         hass,
-        (
+        [
             (
-                State(
-                    "sensor.washer_end_time",
-                    "1",
-                ),
-                {"native_value": thetimestamp, "native_unit_of_measurement": None},
-            ),
-            (
-                State("sensor.dryer_end_time", "1"),
-                {"native_value": thetimestamp, "native_unit_of_measurement": None},
-            ),
-        ),
+                State(entity_id, "1"),
+                {"native_value": restored_datetime, "native_unit_of_measurement": None},
+            )
+        ],
     )
 
-    # create and add entry
+    mock_instance = request.getfixturevalue(mock_fixture)
+    mock_instance.get_machine_state.return_value = MachineState.Pause
     await init_integration(hass)
-    # restore from cache
-    state = hass.states.get("sensor.washer_end_time")
-    assert state.state == thetimestamp.isoformat()
-    callback = mock_sensor1_api.register_attr_callback.call_args_list[1][0][0]
-    callback()
 
-    state = hass.states.get("sensor.washer_end_time")
-    assert state.state == thetimestamp.isoformat()
-    mock_sensor1_api.get_machine_state.return_value = MachineState.RunningMainCycle
-    mock_sensor1_api.get_attribute.side_effect = None
-    mock_sensor1_api.get_attribute.return_value = "60"
-    callback()
+    # Test restored state.
+    state = hass.states.get(entity_id)
+    assert state.state == restored_datetime.isoformat()
 
-    # Test new timestamp when machine starts a cycle.
-    state = hass.states.get("sensor.washer_end_time")
-    time = state.state
-    assert state.state != thetimestamp.isoformat()
+    # Test no time change because the machine is not running.
+    await trigger_attr_callback(hass, mock_instance)
 
-    # Test no timestamp change for < 60 seconds time change.
-    mock_sensor1_api.get_attribute.return_value = "65"
-    callback()
-    state = hass.states.get("sensor.washer_end_time")
-    assert state.state == time
+    state = hass.states.get(entity_id)
+    assert state.state == restored_datetime.isoformat()
+
+    # Test new time when machine starts a cycle.
+    mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
+    mock_instance.get_time_remaining.return_value = 60
+    await trigger_attr_callback(hass, mock_instance)
+
+    state = hass.states.get(entity_id)
+    expected_time = (now + timedelta(seconds=60)).isoformat()
+    assert state.state == expected_time
+
+    # Test no state change for < 60 seconds elapsed time.
+    mock_instance.get_time_remaining.return_value = 65
+    await trigger_attr_callback(hass, mock_instance)
+
+    state = hass.states.get(entity_id)
+    assert state.state == expected_time
 
     # Test timestamp change for > 60 seconds.
-    mock_sensor1_api.get_attribute.return_value = "125"
-    callback()
-    state = hass.states.get("sensor.washer_end_time")
-    newtime = utc_from_timestamp(as_timestamp(time) + 65)
-    assert state.state == newtime.isoformat()
+    mock_instance.get_time_remaining.return_value = 125
+    await trigger_attr_callback(hass, mock_instance)
+
+    state = hass.states.get(entity_id)
+    assert (
+        state.state == utc_from_timestamp(as_timestamp(expected_time) + 65).isoformat()
+    )
+
+    # Test that periodic updates call the API to fetch data
+    mock_instance.fetch_data.reset_mock()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_instance.fetch_data.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "mock_fixture"),
+    [
+        ("sensor.washer_end_time", "mock_washer_api"),
+        ("sensor.dryer_end_time", "mock_dryer_api"),
+    ],
+)
+@pytest.mark.freeze_time("2022-11-30 00:00:00")
+async def test_washer_dryer_time_sensor_no_restore(
+    hass: HomeAssistant,
+    entity_id: str,
+    mock_fixture: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test Washer/Dryer end time sensors without state restore."""
+    now = utcnow()
+
+    mock_instance = request.getfixturevalue(mock_fixture)
+    mock_instance.get_machine_state.return_value = MachineState.Pause
+    await init_integration(hass)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+
+    # Test no change because the machine is paused.
+    await trigger_attr_callback(hass, mock_instance)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+
+    # Test new time when machine starts a cycle.
+    mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
+    mock_instance.get_time_remaining.return_value = 60
+    await trigger_attr_callback(hass, mock_instance)
+
+    state = hass.states.get(entity_id)
+    expected_time = (now + timedelta(seconds=60)).isoformat()
+    assert state.state == expected_time
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "mock_fixture"),
+    [
+        ("sensor.washer_state", "mock_washer_api"),
+        ("sensor.dryer_state", "mock_dryer_api"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("machine_state", "expected_state"),
+    [
+        (MachineState.Standby, "standby"),
+        (MachineState.Setting, "setting"),
+        (MachineState.DelayCountdownMode, "delay_countdown"),
+        (MachineState.DelayPause, "delay_paused"),
+        (MachineState.SmartDelay, "smart_delay"),
+        (MachineState.SmartGridPause, "smart_grid_pause"),
+        (MachineState.Pause, "pause"),
+        (MachineState.RunningMainCycle, "running_maincycle"),
+        (MachineState.RunningPostCycle, "running_postcycle"),
+        (MachineState.Exceptions, "exception"),
+        (MachineState.Complete, "complete"),
+        (MachineState.PowerFailure, "power_failure"),
+        (MachineState.ServiceDiagnostic, "service_diagnostic_mode"),
+        (MachineState.FactoryDiagnostic, "factory_diagnostic_mode"),
+        (MachineState.LifeTest, "life_test"),
+        (MachineState.CustomerFocusMode, "customer_focus_mode"),
+        (MachineState.DemoMode, "demo_mode"),
+        (MachineState.HardStopOrError, "hard_stop_or_error"),
+        (MachineState.SystemInit, "system_initialize"),
+    ],
+)
+async def test_washer_dryer_machine_states(
+    hass: HomeAssistant,
+    entity_id: str,
+    mock_fixture: str,
+    machine_state: MachineState,
+    expected_state: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test Washer/Dryer machine states."""
+    mock_instance = request.getfixturevalue(mock_fixture)
+    await init_integration(hass)
+
+    mock_instance.get_machine_state.return_value = machine_state
+    await trigger_attr_callback(hass, mock_instance)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "mock_fixture"),
+    [
+        ("sensor.washer_state", "mock_washer_api"),
+        ("sensor.dryer_state", "mock_dryer_api"),
+    ],
+)
+@pytest.mark.parametrize(
+    (
+        "filling",
+        "rinsing",
+        "sensing",
+        "soaking",
+        "spinning",
+        "washing",
+        "expected_state",
+    ),
+    [
+        (True, False, False, False, False, False, "cycle_filling"),
+        (False, True, False, False, False, False, "cycle_rinsing"),
+        (False, False, True, False, False, False, "cycle_sensing"),
+        (False, False, False, True, False, False, "cycle_soaking"),
+        (False, False, False, False, True, False, "cycle_spinning"),
+        (False, False, False, False, False, True, "cycle_washing"),
+    ],
+)
+async def test_washer_dryer_running_states(
+    hass: HomeAssistant,
+    entity_id: str,
+    mock_fixture: str,
+    filling: bool,
+    rinsing: bool,
+    sensing: bool,
+    soaking: bool,
+    spinning: bool,
+    washing: bool,
+    expected_state: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test Washer/Dryer machine states for RunningMainCycle."""
+    mock_instance = request.getfixturevalue(mock_fixture)
+    await init_integration(hass)
+
+    mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
+    mock_instance.get_cycle_status_filling.return_value = filling
+    mock_instance.get_cycle_status_rinsing.return_value = rinsing
+    mock_instance.get_cycle_status_sensing.return_value = sensing
+    mock_instance.get_cycle_status_soaking.return_value = soaking
+    mock_instance.get_cycle_status_spinning.return_value = spinning
+    mock_instance.get_cycle_status_washing.return_value = washing
+
+    await trigger_attr_callback(hass, mock_instance)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "mock_fixture"),
+    [
+        ("sensor.washer_state", "mock_washer_api"),
+        ("sensor.dryer_state", "mock_dryer_api"),
+    ],
+)
+async def test_washer_dryer_door_open_state(
+    hass: HomeAssistant,
+    entity_id: str,
+    mock_fixture: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test Washer/Dryer machine state when door is open."""
+    mock_instance = request.getfixturevalue(mock_fixture)
+    await init_integration(hass)
+
+    state = hass.states.get(entity_id)
+    assert state.state == "running_maincycle"
+
+    mock_instance.get_door_open.return_value = True
+
+    await trigger_attr_callback(hass, mock_instance)
+    state = hass.states.get(entity_id)
+    assert state.state == "door_open"
+
+    mock_instance.get_door_open.return_value = False
+
+    await trigger_attr_callback(hass, mock_instance)
+    state = hass.states.get(entity_id)
+    assert state.state == "running_maincycle"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "mock_fixture", "mock_method_name", "values"),
+    [
+        (
+            "sensor.washer_detergent_level",
+            "mock_washer_api",
+            "get_dispense_1_level",
+            [
+                (0, STATE_UNKNOWN),
+                (1, "empty"),
+                (2, "25"),
+                (3, "50"),
+                (4, "100"),
+                (5, "active"),
+            ],
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_simple_enum_sensors(
+    hass: HomeAssistant,
+    entity_id: str,
+    mock_fixture: str,
+    mock_method_name: str,
+    values: list[tuple[int, str]],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test simple enum sensors where state maps directly from a single API value."""
+    await init_integration(hass)
+
+    mock_instance = request.getfixturevalue(mock_fixture)
+    mock_method = getattr(mock_instance, mock_method_name)
+    for raw_value, expected_state in values:
+        mock_method.return_value = raw_value
+
+        await trigger_attr_callback(hass, mock_instance)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected_state

@@ -3,9 +3,10 @@
 from http import HTTPStatus
 import json
 
+from aiohttp.test_utils import TestClient
 import pytest
 
-import homeassistant.components.device_tracker as device_tracker
+from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import legacy
 from homeassistant.components.meraki.device_tracker import (
     CONF_SECRET,
@@ -16,29 +17,29 @@ from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.typing import ClientSessionGenerator
+
 
 @pytest.fixture
-def meraki_client(event_loop, hass, hass_client):
+async def meraki_client(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> TestClient:
     """Meraki mock client."""
-    loop = event_loop
+    assert await async_setup_component(
+        hass,
+        device_tracker.DOMAIN,
+        {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: "meraki",
+                CONF_VALIDATOR: "validator",
+                CONF_SECRET: "secret",
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
-    async def setup_and_wait():
-        result = await async_setup_component(
-            hass,
-            device_tracker.DOMAIN,
-            {
-                device_tracker.DOMAIN: {
-                    CONF_PLATFORM: "meraki",
-                    CONF_VALIDATOR: "validator",
-                    CONF_SECRET: "secret",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        return result
-
-    assert loop.run_until_complete(setup_and_wait())
-    return loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
 async def test_invalid_or_missing_data(
@@ -134,12 +135,8 @@ async def test_data_will_be_saved(
     req = await meraki_client.post(URL, data=json.dumps(data))
     assert req.status == HTTPStatus.OK
     await hass.async_block_till_done()
-    state_name = hass.states.get(
-        "{}.{}".format("device_tracker", "00_26_ab_b8_a9_a4")
-    ).state
+    state_name = hass.states.get("device_tracker.00_26_ab_b8_a9_a4").state
     assert state_name == "home"
 
-    state_name = hass.states.get(
-        "{}.{}".format("device_tracker", "00_26_ab_b8_a9_a5")
-    ).state
+    state_name = hass.states.get("device_tracker.00_26_ab_b8_a9_a5").state
     assert state_name == "home"

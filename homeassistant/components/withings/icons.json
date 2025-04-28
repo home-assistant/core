@@ -16,8 +16,29 @@
       "heart_pulse": {
         "default": "mdi:heart-pulse"
       },
+      "height": {
+        "default": "mdi:human-male-height-variant"
+      },
       "hydration": {
         "default": "mdi:water"
+      },
+      "muscle_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "muscle_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_free_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_free_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
       },
       "deep_sleep": {
         "default": "mdi:sleep"
@@ -118,6 +139,14 @@
       },
       "workout_duration": {
         "default": "mdi:timer"
+      },
+      "battery": {
+        "default": "mdi:battery-off",
+        "state": {
+          "low": "mdi:battery-20",
+          "medium": "mdi:battery-50",
+          "high": "mdi:battery"
+        }
       }
     }
   }

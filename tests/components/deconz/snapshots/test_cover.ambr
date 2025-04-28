@@ -1,0 +1,153 @@
+# serializer version: 1
+# name: test_cover[light_payload0][cover.window_covering_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.window_covering_device',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
+    'original_icon': None,
+    'original_name': 'Window covering device',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:00:00:01-00',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover[light_payload0][cover.window_covering_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shade',
+      'friendly_name': 'Window covering device',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.window_covering_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_level_controllable_output_cover[light_payload0][cover.vent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.vent',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
+    'original_icon': None,
+    'original_name': 'Vent',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': '00:22:a3:00:00:00:00:00-01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_level_controllable_output_cover[light_payload0][cover.vent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 5,
+      'current_tilt_position': 97,
+      'device_class': 'damper',
+      'friendly_name': 'Vent',
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.vent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_tilt_cover[light_payload0][cover.covering_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.covering_device',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
+    'original_icon': None,
+    'original_name': 'Covering device',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': '00:24:46:00:00:12:34:56-01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_tilt_cover[light_payload0][cover.covering_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'current_tilt_position': 100,
+      'device_class': 'shade',
+      'friendly_name': 'Covering device',
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.covering_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---

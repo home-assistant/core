@@ -396,8 +396,7 @@ async def async_get_users(hass: HomeAssistant) -> list[str]:
 
     This is called by the cloud integration to import from the previously shared store.
     """
-    # pylint: disable-next=protected-access
-    path = hass.config.path(STORAGE_DIR, GoogleConfigStore._STORAGE_KEY)
+    path = hass.config.path(STORAGE_DIR, GoogleConfigStore._STORAGE_KEY)  # noqa: SLF001
     try:
         store_data = await hass.async_add_executor_job(json_util.load_json, path)
     except HomeAssistantError:

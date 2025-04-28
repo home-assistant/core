@@ -14,7 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DATA_KEYS, LOGGER
+from .const import LOGGER, DelugeGetSessionStatusKeys
+
+type DelugeConfigEntry = ConfigEntry[DelugeDataUpdateCoordinator]
 
 
 class DelugeDataUpdateCoordinator(
@@ -22,20 +24,20 @@ class DelugeDataUpdateCoordinator(
 ):
     """Data update coordinator for the Deluge integration."""
 
-    config_entry: ConfigEntry
+    config_entry: DelugeConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, api: DelugeRPCClient, entry: ConfigEntry
+        self, hass: HomeAssistant, api: DelugeRPCClient, entry: DelugeConfigEntry
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=entry,
             name=entry.title,
             update_interval=timedelta(seconds=30),
         )
         self.api = api
-        self.config_entry = entry
 
     async def _async_update_data(self) -> dict[Platform, dict[str, Any]]:
         """Get the latest data from Deluge and updates the state."""
@@ -44,7 +46,7 @@ class DelugeDataUpdateCoordinator(
             _data = await self.hass.async_add_executor_job(
                 self.api.call,
                 "core.get_session_status",
-                DATA_KEYS,
+                [iter_member.value for iter_member in list(DelugeGetSessionStatusKeys)],
             )
             data[Platform.SENSOR] = {k.decode(): v for k, v in _data.items()}
             data[Platform.SWITCH] = await self.hass.async_add_executor_job(
@@ -63,5 +65,5 @@ class DelugeDataUpdateCoordinator(
                     "Credentials for Deluge client are not valid"
                 ) from ex
             LOGGER.error("Unknown error connecting to Deluge: %s", ex)
-            raise ex
+            raise
         return data

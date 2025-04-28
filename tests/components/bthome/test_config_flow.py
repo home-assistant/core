@@ -27,13 +27,13 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=TEMP_HUMI_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     with patch("homeassistant.components.bthome.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ATC 18B2"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "A4:C1:38:8D:18:B2"
@@ -41,19 +41,22 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
 
 async def test_async_step_bluetooth_during_onboarding(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth during onboarding."""
-    with patch(
-        "homeassistant.components.bthome.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.onboarding.async_is_onboarded",
-        return_value=False,
-    ) as mock_onboarding:
+    with (
+        patch(
+            "homeassistant.components.bthome.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=False,
+        ) as mock_onboarding,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=TEMP_HUMI_SERVICE_INFO,
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ATC 18B2"
     assert result["data"] == {}
     assert result["result"].unique_id == "A4:C1:38:8D:18:B2"
@@ -70,7 +73,7 @@ async def test_async_step_bluetooth_valid_device_with_encryption(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=TEMP_HUMI_ENCRYPTED_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "get_encryption_key"
 
     with patch("homeassistant.components.bthome.async_setup_entry", return_value=True):
@@ -78,7 +81,7 @@ async def test_async_step_bluetooth_valid_device_with_encryption(
             result["flow_id"],
             user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
@@ -93,14 +96,14 @@ async def test_async_step_bluetooth_valid_device_encryption_wrong_key(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=TEMP_HUMI_ENCRYPTED_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "get_encryption_key"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"bindkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "get_encryption_key"
     assert result2["errors"]["bindkey"] == "decryption_failed"
 
@@ -110,7 +113,7 @@ async def test_async_step_bluetooth_valid_device_encryption_wrong_key(
             result["flow_id"],
             user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
@@ -125,7 +128,7 @@ async def test_async_step_bluetooth_valid_device_encryption_wrong_key_length(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=TEMP_HUMI_ENCRYPTED_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "get_encryption_key"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -133,7 +136,7 @@ async def test_async_step_bluetooth_valid_device_encryption_wrong_key_length(
         user_input={"bindkey": "aa"},
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "get_encryption_key"
     assert result2["errors"]["bindkey"] == "expected_32_characters"
 
@@ -143,7 +146,7 @@ async def test_async_step_bluetooth_valid_device_encryption_wrong_key_length(
             result["flow_id"],
             user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
@@ -156,7 +159,7 @@ async def test_async_step_bluetooth_not_supported(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=NOT_BTHOME_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
 
 
@@ -166,7 +169,7 @@ async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -183,7 +186,7 @@ async def test_async_step_user_no_devices_found_2(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_devices_found"
 
 
@@ -197,14 +200,44 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     with patch("homeassistant.components.bthome.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "54:48:E6:8F:80:A5"},
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "b-parasite 80A5"
+    assert result2["data"] == {}
+    assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
+
+
+async def test_async_step_user_replaces_ignored(hass: HomeAssistant) -> None:
+    """Test setup from service info cache replaces an ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="54:48:E6:8F:80:A5",
+        data={},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.bthome.config_flow.async_discovered_service_info",
+        return_value=[PRST_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    with patch("homeassistant.components.bthome.async_setup_entry", return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "54:48:E6:8F:80:A5"},
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "b-parasite 80A5"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
@@ -222,14 +255,14 @@ async def test_async_step_user_with_found_devices_encryption(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result1 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"address": "54:48:E6:8F:80:A5"},
     )
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "get_encryption_key"
 
     with patch("homeassistant.components.bthome.async_setup_entry", return_value=True):
@@ -238,7 +271,7 @@ async def test_async_step_user_with_found_devices_encryption(
             user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
         )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
@@ -257,7 +290,7 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Pick a device
@@ -265,7 +298,7 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key(
         result["flow_id"],
         user_input={"address": "54:48:E6:8F:80:A5"},
     )
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "get_encryption_key"
 
     # Try an incorrect key
@@ -273,7 +306,7 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key(
         result["flow_id"],
         user_input={"bindkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "get_encryption_key"
     assert result2["errors"]["bindkey"] == "decryption_failed"
 
@@ -284,7 +317,7 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key(
             user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
         )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
@@ -303,7 +336,7 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key_length(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Select a single device
@@ -311,7 +344,7 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key_length(
         result["flow_id"],
         user_input={"address": "54:48:E6:8F:80:A5"},
     )
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "get_encryption_key"
 
     # Try an incorrect key
@@ -320,7 +353,7 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key_length(
         user_input={"bindkey": "aa"},
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "get_encryption_key"
     assert result2["errors"]["bindkey"] == "expected_32_characters"
 
@@ -331,7 +364,7 @@ async def test_async_step_user_with_found_devices_encryption_wrong_key_length(
             user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
         )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "TEST DEVICE 80A5"
     assert result2["data"] == {"bindkey": "231d39c1d7cc1ab1aee224cd096db932"}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
@@ -347,7 +380,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     entry = MockConfigEntry(
@@ -361,7 +394,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
             result["flow_id"],
             user_input={"address": "A4:C1:38:8D:18:B2"},
         )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -383,7 +416,7 @@ async def test_async_step_user_with_found_devices_already_setup(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -400,7 +433,7 @@ async def test_async_step_bluetooth_devices_already_setup(hass: HomeAssistant) -
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=PRST_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -411,7 +444,7 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=PRST_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     result = await hass.config_entries.flow.async_init(
@@ -419,7 +452,7 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=PRST_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -432,7 +465,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=PRST_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     with patch(
@@ -443,14 +476,14 @@ async def test_async_step_user_takes_precedence_over_discovery(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
     with patch("homeassistant.components.bthome.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"address": "54:48:E6:8F:80:A5"},
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "b-parasite 80A5"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
@@ -495,7 +528,7 @@ async def test_async_step_reauth(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
 
@@ -535,7 +568,7 @@ async def test_async_step_reauth_wrong_key(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={"bindkey": "5b51a7c91cde6707c9ef18dada143a58"},
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "get_encryption_key"
     assert result2["errors"]["bindkey"] == "decryption_failed"
 
@@ -543,7 +576,7 @@ async def test_async_step_reauth_wrong_key(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={"bindkey": "231d39c1d7cc1ab1aee224cd096db932"},
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
 
@@ -560,16 +593,7 @@ async def test_async_step_reauth_abort_early(hass: HomeAssistant) -> None:
 
     device = DeviceData()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "title_placeholders": {"name": entry.title},
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data | {"device": device},
-    )
+    result = await entry.start_reauth_flow(hass, data={"device": device})
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

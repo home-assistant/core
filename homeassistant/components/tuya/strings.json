@@ -14,7 +14,7 @@
         }
       },
       "scan": {
-        "description": "Use Smart Life app or Tuya Smart app to scan the following QR-code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
+        "description": "Use the Smart Life app or Tuya Smart app to scan the following QR code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
       }
     },
     "error": {
@@ -119,6 +119,9 @@
       }
     },
     "number": {
+      "alarm_duration": {
+        "name": "Alarm duration"
+      },
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
@@ -145,6 +148,9 @@
       },
       "far_detection": {
         "name": "Far detection"
+      },
+      "target_dis_closest": {
+        "name": "Clostest target distance"
       },
       "water_level": {
         "name": "Water level"
@@ -275,16 +281,16 @@
         "name": "Indicator light mode",
         "state": {
           "none": "[%key:common::state::off%]",
-          "pos": "Indicate switch location",
+          "pos": "Indicate inverted switch state",
           "relay": "Indicate switch on/off state"
         }
       },
       "motion_sensitivity": {
         "name": "Motion detection sensitivity",
         "state": {
-          "0": "Low sensitivity",
-          "1": "Medium sensitivity",
-          "2": "High sensitivity"
+          "0": "[%key:common::state::low%]",
+          "1": "[%key:common::state::medium%]",
+          "2": "[%key:common::state::high%]"
         }
       },
       "record_mode": {
@@ -315,9 +321,9 @@
       "vacuum_cistern": {
         "name": "Water tank adjustment",
         "state": {
-          "low": "Low",
+          "low": "[%key:common::state::low%]",
           "middle": "Middle",
-          "high": "High",
+          "high": "[%key:common::state::high%]",
           "closed": "[%key:common::state::closed%]"
         }
       },
@@ -398,7 +404,7 @@
       "humidifier_spray_mode": {
         "name": "Spray mode",
         "state": {
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "health": "Health",
           "sleep": "Sleep",
           "humidity": "Humidity",
@@ -463,6 +469,9 @@
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
+      "temperature_external": {
+        "name": "Probe temperature"
+      },
       "humidity": {
         "name": "[%key:component::sensor::entity_component::humidity::name%]"
       },
@@ -516,6 +525,9 @@
       },
       "total_energy": {
         "name": "Total energy"
+      },
+      "total_production": {
+        "name": "Total production"
       },
       "phase_a_current": {
         "name": "Phase A current"
@@ -617,6 +629,17 @@
           "good": "Good",
           "severe": "Severe"
         }
+      },
+      "air_quality_index": {
+        "name": "Air quality index",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6"
+        }
       }
     },
     "switch": {
@@ -637,6 +660,9 @@
       },
       "filter_reset": {
         "name": "Filter reset"
+      },
+      "pump": {
+        "name": "Pump"
       },
       "water_pump_reset": {
         "name": "Water pump reset"

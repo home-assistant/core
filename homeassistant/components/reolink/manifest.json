@@ -1,9 +1,9 @@
 {
   "domain": "reolink",
-  "name": "Reolink IP NVR/camera",
+  "name": "Reolink",
   "codeowners": ["@starkillerOG"],
   "config_flow": true,
-  "dependencies": ["webhook"],
+  "dependencies": ["http", "webhook"],
   "dhcp": [
     {
       "hostname": "reolink*"
@@ -18,5 +18,6 @@
   "documentation": "https://www.home-assistant.io/integrations/reolink",
   "iot_class": "local_push",
   "loggers": ["reolink_aio"],
-  "requirements": ["reolink-aio==0.8.9"]
+  "quality_scale": "platinum",
+  "requirements": ["reolink-aio==0.13.2"]
 }

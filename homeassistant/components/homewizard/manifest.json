@@ -3,10 +3,15 @@
   "name": "HomeWizard Energy",
   "codeowners": ["@DCSBL"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "registered_devices": true
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/homewizard",
   "iot_class": "local_polling",
   "loggers": ["homewizard_energy"],
   "quality_scale": "platinum",
-  "requirements": ["python-homewizard-energy==4.3.1"],
-  "zeroconf": ["_hwenergy._tcp.local."]
+  "requirements": ["python-homewizard-energy==v8.3.2"],
+  "zeroconf": ["_hwenergy._tcp.local.", "_homewizard._tcp.local."]
 }

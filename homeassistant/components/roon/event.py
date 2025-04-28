@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roon Event from Config Entry."""
     roon_server = hass.data[DOMAIN][config_entry.entry_id]
@@ -47,7 +47,7 @@ class RoonEventEntity(EventEntity):
     """Representation of a Roon Event entity."""
 
     _attr_device_class = EventDeviceClass.BUTTON
-    _attr_event_types = ["volume_up", "volume_down"]
+    _attr_event_types = ["volume_up", "volume_down", "mute_toggle"]
     _attr_translation_key = "volume"
 
     def __init__(self, server, player_data):
@@ -72,23 +72,24 @@ class RoonEventEntity(EventEntity):
             via_device=(DOMAIN, self._server.roon_id),
         )
 
-    @callback
     def _roonapi_volume_callback(
         self, control_key: str, event: str, value: int
     ) -> None:
         """Callbacks from the roon api with volume request."""
 
-        if event != "set_volume":
+        if event == "set_mute":
+            event = "mute_toggle"
+        elif event == "set_volume":
+            if value > 0:
+                event = "volume_up"
+            else:
+                event = "volume_down"
+        else:
             _LOGGER.debug("Received unsupported roon volume event %s", event)
             return
 
-        if value > 0:
-            event = "volume_up"
-        else:
-            event = "volume_down"
-
         self._trigger_event(event)
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register volume hooks with the roon api."""

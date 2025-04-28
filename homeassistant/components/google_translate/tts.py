@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.tts import (
     CONF_LANG,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
     TextToSpeechEntity,
     TtsAudioType,
@@ -19,7 +19,7 @@ from homeassistant.components.tts import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_OPTIONS = ["tld"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
         vol.Optional(CONF_TLD, default=DEFAULT_TLD): vol.In(SUPPORT_TLD),
@@ -55,7 +55,7 @@ async def async_get_engine(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Google Translate speech platform via config entry."""
     default_language = config_entry.data[CONF_LANG]
@@ -74,7 +74,7 @@ class GoogleTTSEntity(TextToSpeechEntity):
         else:
             self._lang = lang
             self._tld = tld
-        self._attr_name = f"Google {self._lang} {self._tld}"
+        self._attr_name = f"Google Translate {self._lang} {self._tld}"
         self._attr_unique_id = config_entry.entry_id
 
     @property
@@ -130,7 +130,7 @@ class GoogleProvider(Provider):
         else:
             self._lang = lang
             self._tld = tld
-        self.name = "Google"
+        self.name = "Google Translate"
 
     @property
     def default_language(self) -> str:
@@ -162,8 +162,8 @@ class GoogleProvider(Provider):
 
         try:
             tts.write_to_fp(mp3_data)
-        except gTTSError as exc:
-            _LOGGER.exception("Error during processing of TTS request %s", exc)
+        except gTTSError:
+            _LOGGER.exception("Error during processing of TTS request")
             return None, None
 
         return "mp3", mp3_data.getvalue()

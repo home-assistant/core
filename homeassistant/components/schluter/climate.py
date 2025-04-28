@@ -9,7 +9,7 @@ from requests import RequestException
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     ClimateEntity,
     ClimateEntityFeature,
@@ -29,7 +29,7 @@ from homeassistant.helpers.update_coordinator import (
 from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=1))}
 )
 
@@ -82,7 +82,6 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, serial_number, api, session_id):
         """Initialize the thermostat."""

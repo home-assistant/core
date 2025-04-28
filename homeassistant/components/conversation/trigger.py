@@ -4,25 +4,35 @@ from __future__ import annotations
 
 from typing import Any
 
-from hassil.recognize import PUNCTUATION, RecognizeResult
+from hassil.recognize import RecognizeResult
+from hassil.util import (
+    PUNCTUATION_END,
+    PUNCTUATION_END_WORD,
+    PUNCTUATION_START,
+    PUNCTUATION_START_WORD,
+)
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.script import ScriptRunResult
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
-from . import HOME_ASSISTANT_AGENT, _get_agent_manager
-from .const import DOMAIN
-from .default_agent import DefaultAgent
+from .const import DATA_DEFAULT_ENTITY, DOMAIN
+from .models import ConversationInput
 
 
 def has_no_punctuation(value: list[str]) -> list[str]:
     """Validate result does not contain punctuation."""
     for sentence in value:
-        if PUNCTUATION.search(sentence):
+        if (
+            PUNCTUATION_START.search(sentence)
+            or PUNCTUATION_END.search(sentence)
+            or PUNCTUATION_START_WORD.search(sentence)
+            or PUNCTUATION_END_WORD.search(sentence)
+        ):
             raise vol.Invalid("sentence should not contain punctuation")
 
     return value
@@ -63,7 +73,7 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     async def call_action(
-        sentence: str, result: RecognizeResult, device_id: str | None
+        user_input: ConversationInput, result: RecognizeResult
     ) -> str | None:
         """Call action with right context."""
 
@@ -84,12 +94,13 @@ async def async_attach_trigger(
         trigger_input: dict[str, Any] = {  # Satisfy type checker
             **trigger_data,
             "platform": DOMAIN,
-            "sentence": sentence,
+            "sentence": user_input.text,
             "details": details,
             "slots": {  # direct access to values
                 entity_name: entity["value"] for entity_name, entity in details.items()
             },
-            "device_id": device_id,
+            "device_id": user_input.device_id,
+            "user_input": user_input.as_dict(),
         }
 
         # Wait for the automation to complete
@@ -111,7 +122,4 @@ async def async_attach_trigger(
         # two trigger copies for who will provide a response.
         return None
 
-    default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
-    assert isinstance(default_agent, DefaultAgent)
-
-    return default_agent.register_trigger(sentences, call_action)
+    return hass.data[DATA_DEFAULT_ENTITY].register_trigger(sentences, call_action)

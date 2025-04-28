@@ -50,13 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         departure=departure,
     )
 
-    cls: type[HERETransitDataUpdateCoordinator] | type[HERERoutingDataUpdateCoordinator]
+    cls: type[HERETransitDataUpdateCoordinator | HERERoutingDataUpdateCoordinator]
     if config_entry.data[CONF_MODE] in {TRAVEL_MODE_PUBLIC, "publicTransportTimeTable"}:
         cls = HERETransitDataUpdateCoordinator
     else:
         cls = HERERoutingDataUpdateCoordinator
 
-    data_coordinator = cls(hass, api_key, here_travel_time_config)
+    data_coordinator = cls(hass, config_entry, api_key, here_travel_time_config)
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = data_coordinator
 
     async def _async_update_at_start(_: HomeAssistant) -> None:

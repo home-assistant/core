@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import time
+from datetime import time, timedelta
 
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     mock_config_entry,
@@ -24,7 +24,11 @@ async def test_schedule_start_time(hass: HomeAssistant) -> None:
 
     entry = mock_config_entry(hass)
 
-    with patch_async_ble_device_from_address(), patch_melnor_device() as device_patch, patch_async_register_callback():
+    with (
+        patch_async_ble_device_from_address(),
+        patch_melnor_device() as device_patch,
+        patch_async_register_callback(),
+    ):
         device = device_patch.return_value
 
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -42,7 +46,7 @@ async def test_schedule_start_time(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-        async_fire_time_changed(hass, now + dt_util.dt.timedelta(seconds=10))
+        async_fire_time_changed(hass, now + timedelta(seconds=10))
         await hass.async_block_till_done()
 
         time_entity = hass.states.get("time.zone_1_schedule_start_time")

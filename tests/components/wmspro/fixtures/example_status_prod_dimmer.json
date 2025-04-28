@@ -1,0 +1,28 @@
+{
+  "command": "getStatus",
+  "protocolVersion": "1.0.0",
+  "details": [
+    {
+      "destinationId": 97358,
+      "data": {
+        "drivingCause": 0,
+        "heartbeatError": false,
+        "blocking": false,
+        "productData": [
+          {
+            "actionId": 0,
+            "value": {
+              "percentage": 0
+            }
+          },
+          {
+            "actionId": 20,
+            "value": {
+              "onOffState": false
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

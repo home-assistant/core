@@ -38,7 +38,7 @@ from .const import (
     SERVICE_STOP_WATERING,
     WEBHOOK_CONST_ID,
 )
-from .coordinator import RachioUpdateCoordinator
+from .coordinator import RachioScheduleUpdateCoordinator, RachioUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -164,7 +164,7 @@ class RachioPerson:
             # rachio hands us back a dict
             if isinstance(webhooks, dict):
                 if webhooks.get("code") == PERMISSION_ERROR:
-                    _LOGGER.info(
+                    _LOGGER.warning(
                         (
                             "Not adding controller '%s', only controllers owned by '%s'"
                             " may be added"
@@ -187,12 +187,17 @@ class RachioPerson:
         base_count = len(base_stations)
         self._base_stations.extend(
             RachioBaseStation(
-                rachio, base, RachioUpdateCoordinator(hass, rachio, base, base_count)
+                rachio,
+                base,
+                RachioUpdateCoordinator(
+                    hass, rachio, self.config_entry, base, base_count
+                ),
+                RachioScheduleUpdateCoordinator(hass, rachio, self.config_entry, base),
             )
             for base in base_stations
         )
 
-        _LOGGER.info('Using Rachio API as user "%s"', self.username)
+        _LOGGER.debug('Using Rachio API as user "%s"', self.username)
 
     @property
     def user_id(self) -> str | None:
@@ -331,7 +336,7 @@ class RachioIro:
     def stop_watering(self) -> None:
         """Stop watering all zones connected to this controller."""
         self.rachio.device.stop_water(self.controller_id)
-        _LOGGER.info("Stopped watering of all zones on %s", self)
+        _LOGGER.debug("Stopped watering of all zones on %s", self)
 
     def pause_watering(self, duration) -> None:
         """Pause watering on this controller."""
@@ -348,14 +353,17 @@ class RachioBaseStation:
     """Represent a smart hose timer base station."""
 
     def __init__(
-        self, rachio: Rachio, data: dict[str, Any], coordinator: RachioUpdateCoordinator
+        self,
+        rachio: Rachio,
+        data: dict[str, Any],
+        status_coordinator: RachioUpdateCoordinator,
+        schedule_coordinator: RachioScheduleUpdateCoordinator,
     ) -> None:
-        """Initialize a hose time base station."""
+        """Initialize a smart hose timer base station."""
         self.rachio = rachio
         self._id = data[KEY_ID]
-        self.serial_number = data[KEY_SERIAL_NUMBER]
-        self.mac_address = data[KEY_MAC_ADDRESS]
-        self.coordinator = coordinator
+        self.status_coordinator = status_coordinator
+        self.schedule_coordinator = schedule_coordinator
 
     def start_watering(self, valve_id: str, duration: int) -> None:
         """Start watering on this valve."""
@@ -364,6 +372,10 @@ class RachioBaseStation:
     def stop_watering(self, valve_id: str) -> None:
         """Stop watering on this valve."""
         self.rachio.valve.stop_watering(valve_id)
+
+    def create_skip(self, program_id: str, timestamp: str) -> None:
+        """Create a skip for a scheduled event."""
+        self.rachio.program.create_skip_overrides(program_id, timestamp)
 
 
 def is_invalid_auth_code(http_status_code: int) -> bool:

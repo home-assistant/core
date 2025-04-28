@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, Mapping
+from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -20,7 +20,7 @@ from didl_lite import didl_lite
 import pytest
 
 from homeassistant import const as ha_const
-from homeassistant.components import ssdp
+from homeassistant.components import media_player as mp, ssdp
 from homeassistant.components.dlna_dmr.const import (
     CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
@@ -31,13 +31,10 @@ from homeassistant.components.dlna_dmr.const import (
 from homeassistant.components.dlna_dmr.data import EventListenAddr
 from homeassistant.components.dlna_dmr.media_player import DlnaDmrEntity
 from homeassistant.components.media_player import (
-    ATTR_TO_PROPERTY,
-    DOMAIN as MP_DOMAIN,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
     RepeatMode,
-    const as mp_const,
 )
 from homeassistant.components.media_source import DOMAIN as MS_DOMAIN, PlayMedia
 from homeassistant.const import (
@@ -48,16 +45,9 @@ from homeassistant.const import (
     CONF_URL,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    CONNECTION_UPNP,
-    async_get as async_get_dr,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_get as async_get_er,
-)
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -83,11 +73,10 @@ async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry)
     assert await hass.config_entries.async_setup(mock_entry.entry_id) is True
     await hass.async_block_till_done()
 
-    entries = async_entries_for_config_entry(async_get_er(hass), mock_entry.entry_id)
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, mock_entry.entry_id)
     assert len(entries) == 1
-    entity_id = entries[0].entity_id
-
-    return entity_id
+    return entries[0].entity_id
 
 
 async def get_attrs(hass: HomeAssistant, entity_id: str) -> Mapping[str, Any]:
@@ -107,7 +96,7 @@ async def mock_entity_id(
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dmr_device_mock: Mock,
-) -> AsyncIterable[str]:
+) -> AsyncGenerator[str]:
     """Fixture to set up a mock DlnaDmrEntity in a connected state.
 
     Yields the entity ID. Cleans up the entity after the test is complete.
@@ -157,7 +146,7 @@ async def mock_disconnected_entity_id(
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dmr_device_mock: Mock,
-) -> AsyncIterable[str]:
+) -> AsyncGenerator[str]:
     """Fixture to set up a mock DlnaDmrEntity in a disconnected state.
 
     Yields the entity ID. Cleans up the entity after the test is complete.
@@ -350,6 +339,7 @@ async def test_setup_entry_with_options(
 
 async def test_setup_entry_mac_address(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     domain_data_mock: Mock,
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
@@ -361,17 +351,17 @@ async def test_setup_entry_mac_address(
     await async_update_entity(hass, mock_entity_id)
     await hass.async_block_till_done()
     # Check the device registry connections for MAC address
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
     assert device is not None
-    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections
+    assert (dr.CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections
 
 
 async def test_setup_entry_no_mac_address(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     domain_data_mock: Mock,
     config_entry_mock_no_mac: MockConfigEntry,
     ssdp_scanner_mock: Mock,
@@ -383,13 +373,12 @@ async def test_setup_entry_no_mac_address(
     await async_update_entity(hass, mock_entity_id)
     await hass.async_block_till_done()
     # Check the device registry connections does not include the MAC address
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
     assert device is not None
-    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
+    assert (dr.CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
 
 
 async def test_event_subscribe_failure(
@@ -450,15 +439,17 @@ async def test_event_subscribe_rejected(
 
 
 async def test_available_device(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
 ) -> None:
     """Test a DlnaDmrEntity with a connected DmrDevice."""
     # Check hass device information is filled in
     await async_update_entity(hass, mock_entity_id)
     await hass.async_block_till_done()
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
     assert device is not None
@@ -468,7 +459,7 @@ async def test_available_device(
     assert device.name == "device_name"
 
     # Check entity state gets updated when device changes state
-    for dev_state, ent_state in [
+    for dev_state, ent_state in (
         (None, MediaPlayerState.ON),
         (TransportState.STOPPED, MediaPlayerState.IDLE),
         (TransportState.PLAYING, MediaPlayerState.PLAYING),
@@ -478,7 +469,7 @@ async def test_available_device(
         (TransportState.RECORDING, MediaPlayerState.IDLE),
         (TransportState.NO_MEDIA_PRESENT, MediaPlayerState.IDLE),
         (TransportState.VENDOR_DEFINED, ha_const.STATE_UNKNOWN),
-    ]:
+    ):
         dmr_device_mock.profile_device.available = True
         dmr_device_mock.transport_state = dev_state
         await async_update_entity(hass, mock_entity_id)
@@ -553,59 +544,59 @@ async def test_attributes(
     """Test attributes of a connected DlnaDmrEntity."""
     # Check attributes come directly from the device
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_VOLUME_LEVEL] is dmr_device_mock.volume_level
-    assert attrs[mp_const.ATTR_MEDIA_VOLUME_MUTED] is dmr_device_mock.is_volume_muted
-    assert attrs[mp_const.ATTR_MEDIA_DURATION] is dmr_device_mock.media_duration
-    assert attrs[mp_const.ATTR_MEDIA_POSITION] is dmr_device_mock.media_position
+    assert attrs[mp.ATTR_MEDIA_VOLUME_LEVEL] is dmr_device_mock.volume_level
+    assert attrs[mp.ATTR_MEDIA_VOLUME_MUTED] is dmr_device_mock.is_volume_muted
+    assert attrs[mp.ATTR_MEDIA_DURATION] is dmr_device_mock.media_duration
+    assert attrs[mp.ATTR_MEDIA_POSITION] is dmr_device_mock.media_position
     assert (
-        attrs[mp_const.ATTR_MEDIA_POSITION_UPDATED_AT]
+        attrs[mp.ATTR_MEDIA_POSITION_UPDATED_AT]
         is dmr_device_mock.media_position_updated_at
     )
-    assert attrs[mp_const.ATTR_MEDIA_CONTENT_ID] is dmr_device_mock.current_track_uri
-    assert attrs[mp_const.ATTR_MEDIA_ARTIST] is dmr_device_mock.media_artist
-    assert attrs[mp_const.ATTR_MEDIA_ALBUM_NAME] is dmr_device_mock.media_album_name
-    assert attrs[mp_const.ATTR_MEDIA_ALBUM_ARTIST] is dmr_device_mock.media_album_artist
-    assert attrs[mp_const.ATTR_MEDIA_TRACK] is dmr_device_mock.media_track_number
-    assert attrs[mp_const.ATTR_MEDIA_SERIES_TITLE] is dmr_device_mock.media_series_title
-    assert attrs[mp_const.ATTR_MEDIA_SEASON] is dmr_device_mock.media_season_number
-    assert attrs[mp_const.ATTR_MEDIA_EPISODE] is dmr_device_mock.media_episode_number
-    assert attrs[mp_const.ATTR_MEDIA_CHANNEL] is dmr_device_mock.media_channel_name
-    assert attrs[mp_const.ATTR_SOUND_MODE_LIST] is dmr_device_mock.preset_names
+    assert attrs[mp.ATTR_MEDIA_CONTENT_ID] is dmr_device_mock.current_track_uri
+    assert attrs[mp.ATTR_MEDIA_ARTIST] is dmr_device_mock.media_artist
+    assert attrs[mp.ATTR_MEDIA_ALBUM_NAME] is dmr_device_mock.media_album_name
+    assert attrs[mp.ATTR_MEDIA_ALBUM_ARTIST] is dmr_device_mock.media_album_artist
+    assert attrs[mp.ATTR_MEDIA_TRACK] is dmr_device_mock.media_track_number
+    assert attrs[mp.ATTR_MEDIA_SERIES_TITLE] is dmr_device_mock.media_series_title
+    assert attrs[mp.ATTR_MEDIA_SEASON] is dmr_device_mock.media_season_number
+    assert attrs[mp.ATTR_MEDIA_EPISODE] is dmr_device_mock.media_episode_number
+    assert attrs[mp.ATTR_MEDIA_CHANNEL] is dmr_device_mock.media_channel_name
+    assert attrs[mp.ATTR_SOUND_MODE_LIST] is dmr_device_mock.preset_names
 
     # Entity picture is cached, won't correspond to remote image
     assert isinstance(attrs[ha_const.ATTR_ENTITY_PICTURE], str)
 
     # media_title depends on what is available
-    assert attrs[mp_const.ATTR_MEDIA_TITLE] is dmr_device_mock.media_program_title
+    assert attrs[mp.ATTR_MEDIA_TITLE] is dmr_device_mock.media_program_title
     dmr_device_mock.media_program_title = None
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_TITLE] is dmr_device_mock.media_title
+    assert attrs[mp.ATTR_MEDIA_TITLE] is dmr_device_mock.media_title
 
     # media_content_type is mapped from UPnP class to MediaPlayer type
     dmr_device_mock.media_class = "object.item.audioItem.musicTrack"
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
+    assert attrs[mp.ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     dmr_device_mock.media_class = "object.item.videoItem.movie"
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == MediaType.MOVIE
+    assert attrs[mp.ATTR_MEDIA_CONTENT_TYPE] == MediaType.MOVIE
     dmr_device_mock.media_class = "object.item.videoItem.videoBroadcast"
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == MediaType.TVSHOW
+    assert attrs[mp.ATTR_MEDIA_CONTENT_TYPE] == MediaType.TVSHOW
 
     # media_season & media_episode have a special case
     dmr_device_mock.media_season_number = "0"
     dmr_device_mock.media_episode_number = "123"
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_SEASON] == "1"
-    assert attrs[mp_const.ATTR_MEDIA_EPISODE] == "23"
+    assert attrs[mp.ATTR_MEDIA_SEASON] == "1"
+    assert attrs[mp.ATTR_MEDIA_EPISODE] == "23"
     dmr_device_mock.media_season_number = "0"
     dmr_device_mock.media_episode_number = "S1E23"  # Unexpected and not parsed
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_SEASON] == "0"
-    assert attrs[mp_const.ATTR_MEDIA_EPISODE] == "S1E23"
+    assert attrs[mp.ATTR_MEDIA_SEASON] == "0"
+    assert attrs[mp.ATTR_MEDIA_EPISODE] == "S1E23"
 
     # shuffle and repeat is based on device's play mode
-    for play_mode, shuffle, repeat in [
+    for play_mode, shuffle, repeat in (
         (PlayMode.NORMAL, False, RepeatMode.OFF),
         (PlayMode.SHUFFLE, True, RepeatMode.OFF),
         (PlayMode.REPEAT_ONE, False, RepeatMode.ONE),
@@ -613,16 +604,16 @@ async def test_attributes(
         (PlayMode.RANDOM, True, RepeatMode.ALL),
         (PlayMode.DIRECT_1, False, RepeatMode.OFF),
         (PlayMode.INTRO, False, RepeatMode.OFF),
-    ]:
+    ):
         dmr_device_mock.play_mode = play_mode
         attrs = await get_attrs(hass, mock_entity_id)
-        assert attrs[mp_const.ATTR_MEDIA_SHUFFLE] is shuffle
-        assert attrs[mp_const.ATTR_MEDIA_REPEAT] == repeat
-    for bad_play_mode in [None, PlayMode.VENDOR_DEFINED]:
+        assert attrs[mp.ATTR_MEDIA_SHUFFLE] is shuffle
+        assert attrs[mp.ATTR_MEDIA_REPEAT] == repeat
+    for bad_play_mode in (None, PlayMode.VENDOR_DEFINED):
         dmr_device_mock.play_mode = bad_play_mode
         attrs = await get_attrs(hass, mock_entity_id)
-        assert mp_const.ATTR_MEDIA_SHUFFLE not in attrs
-        assert mp_const.ATTR_MEDIA_REPEAT not in attrs
+        assert mp.ATTR_MEDIA_SHUFFLE not in attrs
+        assert mp.ATTR_MEDIA_REPEAT not in attrs
 
 
 async def test_services(
@@ -631,65 +622,65 @@ async def test_services(
     """Test service calls of a connected DlnaDmrEntity."""
     # Check interface methods interact directly with the device
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
+        {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
         blocking=True,
     )
     dmr_device_mock.async_set_volume_level.assert_awaited_once_with(0.80)
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_VOLUME_MUTED: True},
+        {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_MUTED: True},
         blocking=True,
     )
     dmr_device_mock.async_mute_volume.assert_awaited_once_with(True)
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_MEDIA_PAUSE,
         {ATTR_ENTITY_ID: mock_entity_id},
         blocking=True,
     )
     dmr_device_mock.async_pause.assert_awaited_once_with()
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_MEDIA_PLAY,
         {ATTR_ENTITY_ID: mock_entity_id},
         blocking=True,
     )
     dmr_device_mock.async_pause.assert_awaited_once_with()
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_MEDIA_STOP,
         {ATTR_ENTITY_ID: mock_entity_id},
         blocking=True,
     )
     dmr_device_mock.async_stop.assert_awaited_once_with()
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_MEDIA_NEXT_TRACK,
         {ATTR_ENTITY_ID: mock_entity_id},
         blocking=True,
     )
     dmr_device_mock.async_next.assert_awaited_once_with()
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_MEDIA_PREVIOUS_TRACK,
         {ATTR_ENTITY_ID: mock_entity_id},
         blocking=True,
     )
     dmr_device_mock.async_previous.assert_awaited_once_with()
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_MEDIA_SEEK,
-        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_SEEK_POSITION: 33},
+        {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_SEEK_POSITION: 33},
         blocking=True,
     )
     dmr_device_mock.async_seek_rel_time.assert_awaited_once_with(timedelta(seconds=33))
     await hass.services.async_call(
-        MP_DOMAIN,
-        mp_const.SERVICE_SELECT_SOUND_MODE,
-        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_SOUND_MODE: "Default"},
+        mp.DOMAIN,
+        mp.SERVICE_SELECT_SOUND_MODE,
+        {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_SOUND_MODE: "Default"},
         blocking=True,
     )
     dmr_device_mock.async_select_preset.assert_awaited_once_with("Default")
@@ -703,15 +694,15 @@ async def test_play_media_stopped(
     dmr_device_mock.can_stop = True
     dmr_device_mock.transport_state = TransportState.STOPPED
     await hass.services.async_call(
-        MP_DOMAIN,
-        mp_const.SERVICE_PLAY_MEDIA,
+        mp.DOMAIN,
+        mp.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: (
+            mp.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            mp.ATTR_MEDIA_CONTENT_ID: (
                 "http://198.51.100.20:8200/MediaItems/17621.mp3"
             ),
-            mp_const.ATTR_MEDIA_ENQUEUE: False,
+            mp.ATTR_MEDIA_ENQUEUE: False,
         },
         blocking=True,
     )
@@ -737,15 +728,15 @@ async def test_play_media_playing(
     dmr_device_mock.can_stop = False
     dmr_device_mock.transport_state = TransportState.PLAYING
     await hass.services.async_call(
-        MP_DOMAIN,
-        mp_const.SERVICE_PLAY_MEDIA,
+        mp.DOMAIN,
+        mp.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: (
+            mp.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            mp.ATTR_MEDIA_CONTENT_ID: (
                 "http://198.51.100.20:8200/MediaItems/17621.mp3"
             ),
-            mp_const.ATTR_MEDIA_ENQUEUE: False,
+            mp.ATTR_MEDIA_ENQUEUE: False,
         },
         blocking=True,
     )
@@ -772,16 +763,16 @@ async def test_play_media_no_autoplay(
     dmr_device_mock.can_stop = True
     dmr_device_mock.transport_state = TransportState.STOPPED
     await hass.services.async_call(
-        MP_DOMAIN,
-        mp_const.SERVICE_PLAY_MEDIA,
+        mp.DOMAIN,
+        mp.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: (
+            mp.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            mp.ATTR_MEDIA_CONTENT_ID: (
                 "http://198.51.100.20:8200/MediaItems/17621.mp3"
             ),
-            mp_const.ATTR_MEDIA_ENQUEUE: False,
-            mp_const.ATTR_MEDIA_EXTRA: {"autoplay": False},
+            mp.ATTR_MEDIA_ENQUEUE: False,
+            mp.ATTR_MEDIA_EXTRA: {"autoplay": False},
         },
         blocking=True,
     )
@@ -805,16 +796,16 @@ async def test_play_media_metadata(
 ) -> None:
     """Test play_media constructs useful metadata from user params."""
     await hass.services.async_call(
-        MP_DOMAIN,
-        mp_const.SERVICE_PLAY_MEDIA,
+        mp.DOMAIN,
+        mp.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: (
+            mp.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            mp.ATTR_MEDIA_CONTENT_ID: (
                 "http://198.51.100.20:8200/MediaItems/17621.mp3"
             ),
-            mp_const.ATTR_MEDIA_ENQUEUE: False,
-            mp_const.ATTR_MEDIA_EXTRA: {
+            mp.ATTR_MEDIA_ENQUEUE: False,
+            mp.ATTR_MEDIA_EXTRA: {
                 "title": "Mock song",
                 "thumb": "http://198.51.100.20:8200/MediaItems/17621.jpg",
                 "metadata": {"artist": "Mock artist", "album": "Mock album"},
@@ -837,16 +828,14 @@ async def test_play_media_metadata(
     # Check again for a different media type
     dmr_device_mock.construct_play_media_metadata.reset_mock()
     await hass.services.async_call(
-        MP_DOMAIN,
-        mp_const.SERVICE_PLAY_MEDIA,
+        mp.DOMAIN,
+        mp.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.TVSHOW,
-            mp_const.ATTR_MEDIA_CONTENT_ID: (
-                "http://198.51.100.20:8200/MediaItems/123.mkv"
-            ),
-            mp_const.ATTR_MEDIA_ENQUEUE: False,
-            mp_const.ATTR_MEDIA_EXTRA: {
+            mp.ATTR_MEDIA_CONTENT_TYPE: MediaType.TVSHOW,
+            mp.ATTR_MEDIA_CONTENT_ID: ("http://198.51.100.20:8200/MediaItems/123.mkv"),
+            mp.ATTR_MEDIA_ENQUEUE: False,
+            mp.ATTR_MEDIA_EXTRA: {
                 "title": "Mock show",
                 "metadata": {"season": 1, "episode": 12},
             },
@@ -872,12 +861,12 @@ async def test_play_media_local_source(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        MP_DOMAIN,
-        mp_const.SERVICE_PLAY_MEDIA,
+        mp.DOMAIN,
+        mp.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
-            mp_const.ATTR_MEDIA_CONTENT_ID: (
+            mp.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
+            mp.ATTR_MEDIA_CONTENT_ID: (
                 "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
             ),
         },
@@ -929,12 +918,12 @@ async def test_play_media_didl_metadata(
         return_value=play_media,
     ):
         await hass.services.async_call(
-            MP_DOMAIN,
-            mp_const.SERVICE_PLAY_MEDIA,
+            mp.DOMAIN,
+            mp.SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: mock_entity_id,
-                mp_const.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
-                mp_const.ATTR_MEDIA_CONTENT_ID: (
+                mp.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
+                mp.ATTR_MEDIA_CONTENT_ID: (
                     "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
                 ),
             },
@@ -956,7 +945,7 @@ async def test_shuffle_repeat_modes(
     """Test setting repeat and shuffle modes."""
     # Test shuffle with all variations of existing play mode
     dmr_device_mock.valid_play_modes = {mode.value for mode in PlayMode}
-    for init_mode, shuffle_set, expect_mode in [
+    for init_mode, shuffle_set, expect_mode in (
         (PlayMode.NORMAL, False, PlayMode.NORMAL),
         (PlayMode.SHUFFLE, False, PlayMode.NORMAL),
         (PlayMode.REPEAT_ONE, False, PlayMode.REPEAT_ONE),
@@ -967,18 +956,18 @@ async def test_shuffle_repeat_modes(
         (PlayMode.REPEAT_ONE, True, PlayMode.RANDOM),
         (PlayMode.REPEAT_ALL, True, PlayMode.RANDOM),
         (PlayMode.RANDOM, True, PlayMode.RANDOM),
-    ]:
+    ):
         dmr_device_mock.play_mode = init_mode
         await hass.services.async_call(
-            MP_DOMAIN,
+            mp.DOMAIN,
             ha_const.SERVICE_SHUFFLE_SET,
-            {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_SHUFFLE: shuffle_set},
+            {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_SHUFFLE: shuffle_set},
             blocking=True,
         )
         dmr_device_mock.async_set_play_mode.assert_awaited_with(expect_mode)
 
     # Test repeat with all variations of existing play mode
-    for init_mode, repeat_set, expect_mode in [
+    for init_mode, repeat_set, expect_mode in (
         (PlayMode.NORMAL, RepeatMode.OFF, PlayMode.NORMAL),
         (PlayMode.SHUFFLE, RepeatMode.OFF, PlayMode.SHUFFLE),
         (PlayMode.REPEAT_ONE, RepeatMode.OFF, PlayMode.NORMAL),
@@ -994,12 +983,12 @@ async def test_shuffle_repeat_modes(
         (PlayMode.REPEAT_ONE, RepeatMode.ALL, PlayMode.REPEAT_ALL),
         (PlayMode.REPEAT_ALL, RepeatMode.ALL, PlayMode.REPEAT_ALL),
         (PlayMode.RANDOM, RepeatMode.ALL, PlayMode.RANDOM),
-    ]:
+    ):
         dmr_device_mock.play_mode = init_mode
         await hass.services.async_call(
-            MP_DOMAIN,
+            mp.DOMAIN,
             ha_const.SERVICE_REPEAT_SET,
-            {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_REPEAT: repeat_set},
+            {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_REPEAT: repeat_set},
             blocking=True,
         )
         dmr_device_mock.async_set_play_mode.assert_awaited_with(expect_mode)
@@ -1011,9 +1000,9 @@ async def test_shuffle_repeat_modes(
     dmr_device_mock.valid_play_modes = {PlayMode.SHUFFLE, PlayMode.RANDOM}
     await get_attrs(hass, mock_entity_id)
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_SHUFFLE: False},
+        {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_SHUFFLE: False},
         blocking=True,
     )
     dmr_device_mock.async_set_play_mode.assert_not_awaited()
@@ -1025,11 +1014,11 @@ async def test_shuffle_repeat_modes(
     dmr_device_mock.valid_play_modes = {PlayMode.REPEAT_ONE, PlayMode.REPEAT_ALL}
     await get_attrs(hass, mock_entity_id)
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_REPEAT_SET,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_REPEAT: RepeatMode.OFF,
+            mp.ATTR_MEDIA_REPEAT: RepeatMode.OFF,
         },
         blocking=True,
     )
@@ -1069,6 +1058,7 @@ async def test_browse_media(
         ),
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1081,6 +1071,7 @@ async def test_browse_media(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1107,7 +1098,7 @@ async def test_browse_media(
     assert expected_child_audio in response["result"]["children"]
 
     # Device specifies extra parameters in MIME type, uses non-standard "x-"
-    # prefix, and capitilizes things, all of which should be ignored
+    # prefix, and capitalizes things, all of which should be ignored
     dmr_device_mock.sink_protocol_info = [
         "http-get:*:audio/X-MPEG;codecs=mp3:*",
     ]
@@ -1164,6 +1155,7 @@ async def test_browse_media_unfiltered(
         ),
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1174,6 +1166,7 @@ async def test_browse_media_unfiltered(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1267,6 +1260,7 @@ async def test_playback_update_state(
 )
 async def test_unavailable_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
@@ -1324,49 +1318,48 @@ async def test_unavailable_device(
 
     # Check attributes are unavailable
     attrs = mock_state.attributes
-    for attr in ATTR_TO_PROPERTY:
+    for attr in mp.ATTR_TO_PROPERTY:
         assert attr not in attrs
 
     assert attrs[ha_const.ATTR_FRIENDLY_NAME] == MOCK_DEVICE_NAME
     assert attrs[ha_const.ATTR_SUPPORTED_FEATURES] == 0
-    assert mp_const.ATTR_SOUND_MODE_LIST not in attrs
+    assert mp.ATTR_SOUND_MODE_LIST not in attrs
 
     # Check service calls do nothing
     SERVICES: list[tuple[str, dict]] = [
-        (ha_const.SERVICE_VOLUME_SET, {mp_const.ATTR_MEDIA_VOLUME_LEVEL: 0.80}),
-        (ha_const.SERVICE_VOLUME_MUTE, {mp_const.ATTR_MEDIA_VOLUME_MUTED: True}),
+        (ha_const.SERVICE_VOLUME_SET, {mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80}),
+        (ha_const.SERVICE_VOLUME_MUTE, {mp.ATTR_MEDIA_VOLUME_MUTED: True}),
         (ha_const.SERVICE_MEDIA_PAUSE, {}),
         (ha_const.SERVICE_MEDIA_PLAY, {}),
         (ha_const.SERVICE_MEDIA_STOP, {}),
         (ha_const.SERVICE_MEDIA_NEXT_TRACK, {}),
         (ha_const.SERVICE_MEDIA_PREVIOUS_TRACK, {}),
-        (ha_const.SERVICE_MEDIA_SEEK, {mp_const.ATTR_MEDIA_SEEK_POSITION: 33}),
+        (ha_const.SERVICE_MEDIA_SEEK, {mp.ATTR_MEDIA_SEEK_POSITION: 33}),
         (
-            mp_const.SERVICE_PLAY_MEDIA,
+            mp.SERVICE_PLAY_MEDIA,
             {
-                mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                mp_const.ATTR_MEDIA_CONTENT_ID: (
+                mp.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                mp.ATTR_MEDIA_CONTENT_ID: (
                     "http://198.51.100.20:8200/MediaItems/17621.mp3"
                 ),
-                mp_const.ATTR_MEDIA_ENQUEUE: False,
+                mp.ATTR_MEDIA_ENQUEUE: False,
             },
         ),
-        (mp_const.SERVICE_SELECT_SOUND_MODE, {mp_const.ATTR_SOUND_MODE: "Default"}),
-        (ha_const.SERVICE_SHUFFLE_SET, {mp_const.ATTR_MEDIA_SHUFFLE: True}),
-        (ha_const.SERVICE_REPEAT_SET, {mp_const.ATTR_MEDIA_REPEAT: "all"}),
+        (mp.SERVICE_SELECT_SOUND_MODE, {mp.ATTR_SOUND_MODE: "Default"}),
+        (ha_const.SERVICE_SHUFFLE_SET, {mp.ATTR_MEDIA_SHUFFLE: True}),
+        (ha_const.SERVICE_REPEAT_SET, {mp.ATTR_MEDIA_REPEAT: "all"}),
     ]
     for service, data in SERVICES:
         await hass.services.async_call(
-            MP_DOMAIN,
+            mp.DOMAIN,
             service,
             {ATTR_ENTITY_ID: mock_entity_id, **data},
             blocking=True,
         )
 
     # Check hass device information has not been filled in yet
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
     assert device is not None
@@ -1394,6 +1387,7 @@ async def test_unavailable_device(
 )
 async def test_become_available(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
@@ -1411,9 +1405,8 @@ async def test_become_available(
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
     # Check hass device information has not been filled in yet
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
     assert device is not None
@@ -1425,7 +1418,7 @@ async def test_become_available(
     # Send an SSDP notification from the now alive device
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1453,9 +1446,8 @@ async def test_become_available(
     assert mock_state is not None
     assert mock_state.state == MediaPlayerState.IDLE
     # Check hass device information is now filled in
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
     assert device is not None
@@ -1497,7 +1489,7 @@ async def test_alive_but_gone(
     # Send an SSDP notification from the still missing device
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1519,7 +1511,7 @@ async def test_alive_but_gone(
     # Send the same SSDP notification, expecting no extra connection attempts
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1538,7 +1530,7 @@ async def test_alive_but_gone(
     # Send an SSDP notification with a new BOOTID, indicating the device has rebooted
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1559,7 +1551,7 @@ async def test_alive_but_gone(
     # should result in a reconnect attempt even with same BOOTID.
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
@@ -1567,7 +1559,7 @@ async def test_alive_but_gone(
         ssdp.SsdpChange.BYEBYE,
     )
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1610,7 +1602,7 @@ async def test_multiple_ssdp_alive(
     # Send two SSDP notifications with the new device URL
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1619,7 +1611,7 @@ async def test_multiple_ssdp_alive(
         ssdp.SsdpChange.ALIVE,
     )
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1650,7 +1642,7 @@ async def test_ssdp_byebye(
     # First byebye will cause a disconnect
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={"NTS": "ssdp:byebye"},
@@ -1669,7 +1661,7 @@ async def test_ssdp_byebye(
 
     # Second byebye will do nothing
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={"NTS": "ssdp:byebye"},
@@ -1702,7 +1694,7 @@ async def test_ssdp_update_seen_bootid(
     # Send SSDP alive with boot ID
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -1715,7 +1707,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send SSDP update with next boot ID
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -1740,7 +1732,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send SSDP update with same next boot ID, again
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -1765,7 +1757,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send SSDP update with bad next boot ID
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -1790,7 +1782,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send a new SSDP alive with the new boot ID, device should not reconnect
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},
@@ -1829,7 +1821,7 @@ async def test_ssdp_update_missed_bootid(
     # Send SSDP alive with boot ID
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -1842,7 +1834,7 @@ async def test_ssdp_update_missed_bootid(
 
     # Send SSDP update with skipped boot ID (not previously seen)
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -1867,7 +1859,7 @@ async def test_ssdp_update_missed_bootid(
 
     # Send a new SSDP alive with the new boot ID, device should reconnect
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "3"},
@@ -1906,7 +1898,7 @@ async def test_ssdp_bootid(
     # Send SSDP alive with boot ID
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -1926,7 +1918,7 @@ async def test_ssdp_bootid(
 
     # Send SSDP alive with same boot ID, nothing should happen
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -1946,7 +1938,7 @@ async def test_ssdp_bootid(
 
     # Send a new SSDP alive with an incremented boot ID, device should be dis/reconnected
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},
@@ -1982,9 +1974,9 @@ async def test_become_unavailable(
     # Interface service calls should flag that the device is unavailable, but
     # not disconnect it immediately
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
+        {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
         blocking=True,
     )
 
@@ -2005,9 +1997,9 @@ async def test_become_unavailable(
     dmr_device_mock.async_update.side_effect = UpnpConnectionError
 
     await hass.services.async_call(
-        MP_DOMAIN,
+        mp.DOMAIN,
         ha_const.SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
+        {ATTR_ENTITY_ID: mock_entity_id, mp.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
         blocking=True,
     )
     await async_update_entity(hass, mock_entity_id)
@@ -2085,10 +2077,10 @@ async def test_disappearing_device(
     directly to skip the availability check.
     """
     # Retrieve entity directly.
-    entity: DlnaDmrEntity = hass.data[MP_DOMAIN].get_entity(mock_disconnected_entity_id)
+    entity: DlnaDmrEntity = hass.data[mp.DOMAIN].get_entity(mock_disconnected_entity_id)
 
     # Test attribute access
-    for attr in ATTR_TO_PROPERTY:
+    for attr in mp.ATTR_TO_PROPERTY:
         value = getattr(entity, attr)
         assert value is None
 
@@ -2288,6 +2280,7 @@ async def test_config_update_poll_availability(
 
 async def test_config_update_mac_address(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     domain_data_mock: Mock,
     config_entry_mock_no_mac: MockConfigEntry,
     ssdp_scanner_mock: Mock,
@@ -2300,13 +2293,12 @@ async def test_config_update_mac_address(
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
 
     # Check the device registry connections does not include the MAC address
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
     assert device is not None
-    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
+    assert (dr.CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
 
     # MAC address discovered and set by config flow
     hass.config_entries.async_update_entry(
@@ -2321,12 +2313,12 @@ async def test_config_update_mac_address(
     await hass.async_block_till_done()
 
     # Device registry connections should now include the MAC address
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
     assert device is not None
-    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections
+    assert (dr.CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections
 
 
 @pytest.mark.parametrize(
@@ -2335,6 +2327,8 @@ async def test_config_update_mac_address(
 )
 async def test_connections_restored(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
@@ -2352,9 +2346,8 @@ async def test_connections_restored(
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
     # Check hass device information has not been filled in yet
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
     assert device is not None
@@ -2366,7 +2359,7 @@ async def test_connections_restored(
     # Send an SSDP notification from the now alive device
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -2394,9 +2387,8 @@ async def test_connections_restored(
     assert mock_state is not None
     assert mock_state.state == MediaPlayerState.IDLE
     # Check hass device information is now filled in
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
     assert device is not None
@@ -2417,17 +2409,15 @@ async def test_connections_restored(
     dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
 
     # Check hass device information has not been filled in yet
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
     assert device is not None
     assert device.connections == previous_connections
 
     # Verify the entity remains linked to the device
-    ent_reg = async_get_er(hass)
-    entry = ent_reg.async_get(mock_entity_id)
+    entry = entity_registry.async_get(mock_entity_id)
     assert entry is not None
     assert entry.device_id == device.id
 
@@ -2442,6 +2432,8 @@ async def test_connections_restored(
 
 async def test_udn_upnp_connection_added_if_missing(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
@@ -2456,23 +2448,21 @@ async def test_udn_upnp_connection_added_if_missing(
     config_entry_mock.add_to_hass(hass)
 
     # Cause connection attempts to fail before adding entity
-    ent_reg = async_get_er(hass)
-    entry = ent_reg.async_get_or_create(
-        MP_DOMAIN,
+    entry = entity_registry.async_get_or_create(
+        mp.DOMAIN,
         DOMAIN,
         MOCK_DEVICE_UDN,
         config_entry=config_entry_mock,
     )
     mock_entity_id = entry.entity_id
 
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=config_entry_mock.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS)},
+        connections={(dr.CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS)},
         identifiers=set(),
     )
 
-    ent_reg.async_update_entity(mock_entity_id, device_id=device.id)
+    entity_registry.async_update_entity(mock_entity_id, device_id=device.id)
 
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
     assert await hass.config_entries.async_setup(config_entry_mock.entry_id) is True
@@ -2483,7 +2473,6 @@ async def test_udn_upnp_connection_added_if_missing(
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
     # Check hass device information has not been filled in yet
-    dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get(device.id)
+    device = device_registry.async_get(device.id)
     assert device is not None
-    assert (CONNECTION_UPNP, MOCK_DEVICE_UDN) in device.connections
+    assert (dr.CONNECTION_UPNP, MOCK_DEVICE_UDN) in device.connections

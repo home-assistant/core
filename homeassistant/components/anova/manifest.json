@@ -4,7 +4,7 @@
   "codeowners": ["@Lash-L"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/anova",
-  "iot_class": "cloud_polling",
+  "iot_class": "cloud_push",
   "loggers": ["anova_wifi"],
-  "requirements": ["anova-wifi==0.10.0"]
+  "requirements": ["anova-wifi==0.17.0"]
 }

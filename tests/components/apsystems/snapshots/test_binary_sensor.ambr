@@ -1,0 +1,193 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor.mock_title_dc_1_short_circuit_error_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_title_dc_1_short_circuit_error_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'DC 1 short circuit error status',
+    'platform': 'apsystems',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dc_1_short_circuit_error_status',
+    'unique_id': 'MY_SERIAL_NUMBER_dc_1_short_circuit_error_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.mock_title_dc_1_short_circuit_error_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Mock Title DC 1 short circuit error status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_title_dc_1_short_circuit_error_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.mock_title_dc_2_short_circuit_error_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_title_dc_2_short_circuit_error_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'DC 2 short circuit error status',
+    'platform': 'apsystems',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dc_2_short_circuit_error_status',
+    'unique_id': 'MY_SERIAL_NUMBER_dc_2_short_circuit_error_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.mock_title_dc_2_short_circuit_error_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Mock Title DC 2 short circuit error status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_title_dc_2_short_circuit_error_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.mock_title_off_grid_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_title_off_grid_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Off-grid status',
+    'platform': 'apsystems',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'off_grid_status',
+    'unique_id': 'MY_SERIAL_NUMBER_off_grid_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.mock_title_off_grid_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Mock Title Off-grid status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_title_off_grid_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.mock_title_output_fault_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_title_output_fault_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Output fault status',
+    'platform': 'apsystems',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'output_fault_status',
+    'unique_id': 'MY_SERIAL_NUMBER_output_fault_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.mock_title_output_fault_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Mock Title Output fault status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_title_output_fault_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://192.168.5.1',
     'connections': set({
     }),
@@ -21,8 +22,10 @@
     }),
     'manufacturer': 'Netgear',
     'model': 'LM1200',
+    'model_id': None,
     'name': 'Netgear LM1200',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'FFFFFFFFFFFFF',
     'suggested_area': None,
     'sw_version': 'EC25AFFDR07A09M4G',

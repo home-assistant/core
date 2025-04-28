@@ -8,10 +8,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.lock import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
+    DOMAIN as LOCK_DOMAIN,
+    PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     LockEntity,
     LockEntityFeature,
+    LockState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -22,16 +23,15 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
@@ -41,9 +41,9 @@ DEFAULT_NAME = "Lock Group"
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(LOCK_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -73,7 +73,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Lock Group config entry."""
     registry = er.async_get(hass)
@@ -129,7 +129,7 @@ class LockGroup(GroupEntity, LockEntity):
         _LOGGER.debug("Forwarded lock command: %s", data)
 
         await self.hass.services.async_call(
-            DOMAIN,
+            LOCK_DOMAIN,
             SERVICE_LOCK,
             data,
             blocking=True,
@@ -140,7 +140,7 @@ class LockGroup(GroupEntity, LockEntity):
         """Forward the unlock command to all locks in the group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
         await self.hass.services.async_call(
-            DOMAIN,
+            LOCK_DOMAIN,
             SERVICE_UNLOCK,
             data,
             blocking=True,
@@ -151,7 +151,7 @@ class LockGroup(GroupEntity, LockEntity):
         """Forward the open command to all locks in the group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
         await self.hass.services.async_call(
-            DOMAIN,
+            LOCK_DOMAIN,
             SERVICE_OPEN,
             data,
             blocking=True,
@@ -175,13 +175,17 @@ class LockGroup(GroupEntity, LockEntity):
             # Set as unknown if any member is unknown or unavailable
             self._attr_is_jammed = None
             self._attr_is_locking = None
+            self._attr_is_opening = None
+            self._attr_is_open = None
             self._attr_is_unlocking = None
             self._attr_is_locked = None
         else:
             # Set attributes based on member states and let the lock entity sort out the correct state
-            self._attr_is_jammed = STATE_JAMMED in states
-            self._attr_is_locking = STATE_LOCKING in states
-            self._attr_is_unlocking = STATE_UNLOCKING in states
-            self._attr_is_locked = all(state == STATE_LOCKED for state in states)
+            self._attr_is_jammed = LockState.JAMMED in states
+            self._attr_is_locking = LockState.LOCKING in states
+            self._attr_is_opening = LockState.OPENING in states
+            self._attr_is_open = LockState.OPEN in states
+            self._attr_is_unlocking = LockState.UNLOCKING in states
+            self._attr_is_locked = all(state == LockState.LOCKED for state in states)
 
         self._attr_available = any(state != STATE_UNAVAILABLE for state in states)

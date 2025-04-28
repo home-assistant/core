@@ -96,7 +96,8 @@
       "name": "Schakel",
       "switches": {
         "relay": true
-      }
+      },
+      "vendor": "Plugwise"
     },
     "d950b314e9d8499f968e6db8d82ef78c": {
       "dev_class": "report",
@@ -111,7 +112,8 @@
       "name": "Stroomvreters",
       "switches": {
         "relay": true
-      }
+      },
+      "vendor": "Plugwise"
     },
     "e1c884e7dede431dadee09506ec4f859": {
       "dev_class": "refrigerator",
@@ -136,7 +138,6 @@
   "gateway": {
     "gateway_id": "0000aaaa0000aaaa0000aaaa0000aa00",
     "item_count": 83,
-    "notifications": {},
     "smile_name": "Stretch"
   }
 }

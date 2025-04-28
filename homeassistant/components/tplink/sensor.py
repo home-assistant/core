@@ -1,178 +1,329 @@
-"""Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
+"""Support for TPLink sensor entities."""
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from operator import methodcaller
+from typing import TYPE_CHECKING, Any, cast
 
-from kasa import SmartDevice
+from kasa import Feature
+from kasa.smart.modules.clean import ErrorCode as VacuumError
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_VOLTAGE,
-    UnitOfElectricCurrent,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfPower,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.const import UnitOfTime
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import legacy_device_id
-from .const import (
-    ATTR_CURRENT_A,
-    ATTR_CURRENT_POWER_W,
-    ATTR_TODAY_ENERGY_KWH,
-    ATTR_TOTAL_ENERGY_KWH,
-    DOMAIN,
-)
-from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity
-from .models import TPLinkData
+from . import TPLinkConfigEntry
+from .const import UNIT_MAPPING
+from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
-@dataclass(frozen=True)
-class TPLinkSensorEntityDescription(SensorEntityDescription):
-    """Describes TPLink sensor entity."""
+@dataclass(frozen=True, kw_only=True)
+class TPLinkSensorEntityDescription(
+    SensorEntityDescription, TPLinkFeatureEntityDescription
+):
+    """Base class for a TPLink feature based sensor entity description."""
 
-    emeter_attr: str | None = None
-    precision: int | None = None
+    #: Optional callable to convert the value
+    convert_fn: Callable[[Any], Any] | None = None
 
 
-ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
+_TOTAL_SECONDS_METHOD_CALLER = methodcaller("total_seconds")
+
+SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
-        key=ATTR_CURRENT_POWER_W,
-        translation_key="current_consumption",
-        native_unit_of_measurement=UnitOfPower.WATT,
+        key="current_consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        emeter_attr="power",
-        precision=1,
     ),
     TPLinkSensorEntityDescription(
-        key=ATTR_TOTAL_ENERGY_KWH,
-        translation_key="total_consumption",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        key="consumption_total",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        emeter_attr="total",
-        precision=3,
     ),
     TPLinkSensorEntityDescription(
-        key=ATTR_TODAY_ENERGY_KWH,
-        translation_key="today_consumption",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        key="consumption_today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        precision=3,
     ),
     TPLinkSensorEntityDescription(
-        key=ATTR_VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        key="consumption_this_month",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    TPLinkSensorEntityDescription(
+        key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        emeter_attr="voltage",
-        precision=1,
     ),
     TPLinkSensorEntityDescription(
-        key=ATTR_CURRENT_A,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        key="current",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        emeter_attr="current",
-        precision=2,
+    ),
+    TPLinkSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        # Disable as the value reported by the device changes seconds frequently
+        entity_registry_enabled_default=False,
+        key="on_since",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TPLinkSensorEntityDescription(
+        key="rssi",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="signal_level",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="ssid",
+    ),
+    TPLinkSensorEntityDescription(
+        key="battery_level",
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="auto_off_at",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TPLinkSensorEntityDescription(
+        key="device_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TPLinkSensorEntityDescription(
+        key="water_alert_timestamp",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TPLinkSensorEntityDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="report_interval",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    TPLinkSensorEntityDescription(
+        key="alarm_source",
+    ),
+    # Vacuum cleaning records
+    TPLinkSensorEntityDescription(
+        key="clean_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="clean_area",
+        device_class=SensorDeviceClass.AREA,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="clean_progress",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TPLinkSensorEntityDescription(
+        key="last_clean_time",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="last_clean_area",
+        device_class=SensorDeviceClass.AREA,
+    ),
+    TPLinkSensorEntityDescription(
+        key="last_clean_timestamp",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="total_clean_time",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="total_clean_area",
+        device_class=SensorDeviceClass.AREA,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    TPLinkSensorEntityDescription(
+        key="total_clean_count",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="main_brush_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="main_brush_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="side_brush_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="side_brush_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="filter_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="filter_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="sensor_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="sensor_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="charging_contacts_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="charging_contacts_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="vacuum_error",
+        device_class=SensorDeviceClass.ENUM,
+        options=[name.lower() for name in VacuumError._member_names_],
+        convert_fn=lambda x: x.name.lower(),
     ),
 )
 
-
-def async_emeter_from_device(
-    device: SmartDevice, description: TPLinkSensorEntityDescription
-) -> float | None:
-    """Map a sensor key to the device attribute."""
-    if attr := description.emeter_attr:
-        if (val := getattr(device.emeter_realtime, attr)) is None:
-            return None
-        return round(cast(float, val), description.precision)
-
-    # ATTR_TODAY_ENERGY_KWH
-    if (emeter_today := device.emeter_today) is not None:
-        return round(cast(float, emeter_today), description.precision)
-    # today's consumption not available, when device was off all the day
-    # bulb's do not report this information, so filter it out
-    return None if device.is_bulb else 0.0
-
-
-def _async_sensors_for_device(
-    device: SmartDevice,
-    coordinator: TPLinkDataUpdateCoordinator,
-    has_parent: bool = False,
-) -> list[SmartPlugSensor]:
-    """Generate the sensors for the device."""
-    return [
-        SmartPlugSensor(device, coordinator, description, has_parent)
-        for description in ENERGY_SENSORS
-        if async_emeter_from_device(device, description) is not None
-    ]
+SENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in SENSOR_DESCRIPTIONS}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: TPLinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
-    children_coordinators = data.children_coordinators
-    entities: list[SmartPlugSensor] = []
-    parent = parent_coordinator.device
-    if not parent.has_emeter:
-        return
+    device = parent_coordinator.device
+    known_child_device_ids: set[str] = set()
+    first_check = True
 
-    if parent.is_strip:
-        # Historically we only add the children if the device is a strip
-        for idx, child in enumerate(parent.children):
-            entities.extend(
-                _async_sensors_for_device(child, children_coordinators[idx], True)
-            )
-    else:
-        entities.extend(_async_sensors_for_device(parent, parent_coordinator))
+    def _check_device() -> None:
+        entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+            hass=hass,
+            device=device,
+            coordinator=parent_coordinator,
+            feature_type=Feature.Type.Sensor,
+            entity_class=TPLinkSensorEntity,
+            descriptions=SENSOR_DESCRIPTIONS_MAP,
+            platform_domain=SENSOR_DOMAIN,
+            known_child_device_ids=known_child_device_ids,
+            first_check=first_check,
+        )
+        async_add_entities(entities)
 
-    async_add_entities(entities)
+    _check_device()
+    first_check = False
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
-class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
-    """Representation of a TPLink Smart Plug energy sensor."""
+class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
+    """Representation of a feature-based TPLink sensor."""
 
     entity_description: TPLinkSensorEntityDescription
 
-    def __init__(
-        self,
-        device: SmartDevice,
-        coordinator: TPLinkDataUpdateCoordinator,
-        description: TPLinkSensorEntityDescription,
-        has_parent: bool = False,
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(device, coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{legacy_device_id(device)}_{description.key}"
-        if has_parent:
-            assert device.alias
-            self._attr_translation_placeholders = {"device_name": device.alias}
-            if description.translation_key:
-                self._attr_translation_key = f"{description.translation_key}_child"
-            else:
-                assert description.device_class
-                self._attr_translation_key = f"{description.device_class.value}_child"
+    @callback
+    def _async_update_attrs(self) -> bool:
+        """Update the entity's attributes."""
+        value = self._feature.value
+        if value is not None and self._feature.precision_hint is not None:
+            value = round(cast(float, value), self._feature.precision_hint)
+            # We probably do not need this, when we are rounding already?
+            self._attr_suggested_display_precision = self._feature.precision_hint
 
-    @property
-    def native_value(self) -> float | None:
-        """Return the sensors state."""
-        return async_emeter_from_device(self.device, self.entity_description)
+        if self.entity_description.convert_fn:
+            value = self.entity_description.convert_fn(value)
+
+        if TYPE_CHECKING:
+            # pylint: disable-next=import-outside-toplevel
+            from datetime import date, datetime
+
+            assert isinstance(value, str | int | float | date | datetime | None)
+
+        self._attr_native_value = value
+        # Map to homeassistant units and fallback to upstream one if none found
+        if (unit := self._feature.unit) is not None:
+            self._attr_native_unit_of_measurement = UNIT_MAPPING.get(unit, unit)
+        return True

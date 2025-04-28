@@ -7,11 +7,11 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-from homeassistant import config as hass_config
+from homeassistant import config as hass_config, core as ha
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
-    DOMAIN,
+    DOMAIN as CLIMATE_DOMAIN,
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_COMFORT,
@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     PRESET_SLEEP,
     HVACMode,
 )
-from homeassistant.components.generic_thermostat import (
+from homeassistant.components.generic_thermostat.const import (
     DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
 )
 from homeassistant.const import (
@@ -35,28 +35,32 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-import homeassistant.core as ha
 from homeassistant.core import (
-    DOMAIN as HASS_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     HomeAssistant,
+    ServiceCall,
     State,
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.typing import StateType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import (
+    MockConfigEntry,
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
     get_fixture_path,
     mock_restore_cache,
+    setup_test_component_platform,
 )
 from tests.components.climate import common
+from tests.components.switch.common import MockSwitch
 
 ENTITY = "climate.test"
 ENT_SENSOR = "sensor.test"
@@ -100,14 +104,15 @@ async def test_valid_conf(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-async def setup_comp_1(hass):
+async def setup_comp_1(hass: HomeAssistant) -> None:
     """Initialize components."""
     hass.config.units = METRIC_SYSTEM
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
 
-async def test_heater_input_boolean(hass: HomeAssistant, setup_comp_1) -> None:
+@pytest.mark.usefixtures("setup_comp_1")
+async def test_heater_input_boolean(hass: HomeAssistant) -> None:
     """Test heater switching input_boolean."""
     heater_switch = "input_boolean.test"
     assert await async_setup_component(
@@ -116,7 +121,7 @@ async def test_heater_input_boolean(hass: HomeAssistant, setup_comp_1) -> None:
 
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -139,13 +144,13 @@ async def test_heater_input_boolean(hass: HomeAssistant, setup_comp_1) -> None:
     assert hass.states.get(heater_switch).state == STATE_ON
 
 
+@pytest.mark.usefixtures("setup_comp_1")
 async def test_heater_switch(
-    hass: HomeAssistant, setup_comp_1, enable_custom_integrations: None
+    hass: HomeAssistant, mock_switch_entities: list[MockSwitch]
 ) -> None:
     """Test heater switching test switch."""
-    platform = getattr(hass.components, "test.switch")
-    platform.init()
-    switch_1 = platform.ENTITIES[1]
+    setup_test_component_platform(hass, switch.DOMAIN, mock_switch_entities)
+    switch_1 = mock_switch_entities[1]
     assert await async_setup_component(
         hass, switch.DOMAIN, {"switch": {"platform": "test"}}
     )
@@ -154,7 +159,7 @@ async def test_heater_switch(
 
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -176,8 +181,9 @@ async def test_heater_switch(
     assert hass.states.get(heater_switch).state == STATE_ON
 
 
+@pytest.mark.usefixtures("setup_comp_1")
 async def test_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp_1
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test setting a unique ID."""
     unique_id = "some_unique_id"
@@ -185,7 +191,7 @@ async def test_unique_id(
     _setup_switch(hass, True)
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -203,18 +209,18 @@ async def test_unique_id(
     assert entry.unique_id == unique_id
 
 
-def _setup_sensor(hass, temp):
+def _setup_sensor(hass: HomeAssistant, temp: StateType) -> None:
     """Set up the test sensor."""
     hass.states.async_set(ENT_SENSOR, temp)
 
 
 @pytest.fixture
-async def setup_comp_2(hass):
+async def setup_comp_2(hass: HomeAssistant) -> None:
     """Initialize components."""
     hass.config.units = METRIC_SYSTEM
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -241,7 +247,7 @@ async def test_setup_defaults_to_unknown(hass: HomeAssistant) -> None:
     hass.config.units = METRIC_SYSTEM
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -265,7 +271,7 @@ async def test_setup_gets_current_temp_from_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -282,7 +288,8 @@ async def test_setup_gets_current_temp_from_sensor(hass: HomeAssistant) -> None:
     assert hass.states.get(ENTITY).attributes["current_temperature"] == 18
 
 
-async def test_default_setup_params(hass: HomeAssistant, setup_comp_2) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_default_setup_params(hass: HomeAssistant) -> None:
     """Test the setup with default parameters."""
     state = hass.states.get(ENTITY)
     assert state.attributes.get("min_temp") == 7
@@ -291,14 +298,16 @@ async def test_default_setup_params(hass: HomeAssistant, setup_comp_2) -> None:
     assert state.attributes.get("target_temp_step") == 0.1
 
 
-async def test_get_hvac_modes(hass: HomeAssistant, setup_comp_2) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_get_hvac_modes(hass: HomeAssistant) -> None:
     """Test that the operation list returns the correct modes."""
     state = hass.states.get(ENTITY)
     modes = state.attributes.get("hvac_modes")
     assert modes == [HVACMode.HEAT, HVACMode.OFF]
 
 
-async def test_set_target_temp(hass: HomeAssistant, setup_comp_2) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_set_target_temp(hass: HomeAssistant) -> None:
     """Test the setting of the target temperature."""
     await common.async_set_temperature(hass, 30)
     state = hass.states.get(ENTITY)
@@ -307,6 +316,20 @@ async def test_set_target_temp(hass: HomeAssistant, setup_comp_2) -> None:
         await common.async_set_temperature(hass, None)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 30.0
+
+
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_set_target_temp_change_preset(hass: HomeAssistant) -> None:
+    """Test the setting of the target temperature.
+
+    Verify that preset is changed.
+    """
+    await common.async_set_temperature(hass, 30)
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == PRESET_NONE
+    await common.async_set_temperature(hass, 20)
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == PRESET_COMFORT
 
 
 @pytest.mark.parametrize(
@@ -321,7 +344,8 @@ async def test_set_target_temp(hass: HomeAssistant, setup_comp_2) -> None:
         (PRESET_ACTIVITY, 21),
     ],
 )
-async def test_set_away_mode(hass: HomeAssistant, setup_comp_2, preset, temp) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_set_away_mode(hass: HomeAssistant, preset, temp) -> None:
     """Test the setting away mode."""
     await common.async_set_temperature(hass, 23)
     await common.async_set_preset_mode(hass, preset)
@@ -341,8 +365,9 @@ async def test_set_away_mode(hass: HomeAssistant, setup_comp_2, preset, temp) ->
         (PRESET_ACTIVITY, 21),
     ],
 )
+@pytest.mark.usefixtures("setup_comp_2")
 async def test_set_away_mode_and_restore_prev_temp(
-    hass: HomeAssistant, setup_comp_2, preset, temp
+    hass: HomeAssistant, preset, temp
 ) -> None:
     """Test the setting and removing away mode.
 
@@ -369,8 +394,9 @@ async def test_set_away_mode_and_restore_prev_temp(
         (PRESET_ACTIVITY, 21),
     ],
 )
+@pytest.mark.usefixtures("setup_comp_2")
 async def test_set_away_mode_twice_and_restore_prev_temp(
-    hass: HomeAssistant, setup_comp_2, preset, temp
+    hass: HomeAssistant, preset, temp
 ) -> None:
     """Test the setting away mode twice in a row.
 
@@ -386,7 +412,8 @@ async def test_set_away_mode_twice_and_restore_prev_temp(
     assert state.attributes.get("temperature") == 23
 
 
-async def test_set_preset_mode_invalid(hass: HomeAssistant, setup_comp_2) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_set_preset_mode_invalid(hass: HomeAssistant) -> None:
     """Test an invalid mode raises an error and ignore case when checking modes."""
     await common.async_set_temperature(hass, 23)
     await common.async_set_preset_mode(hass, "away")
@@ -401,7 +428,8 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, setup_comp_2) -> Non
     assert state.attributes.get("preset_mode") == "none"
 
 
-async def test_sensor_bad_value(hass: HomeAssistant, setup_comp_2) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_sensor_bad_value(hass: HomeAssistant) -> None:
     """Test sensor that have None as state."""
     state = hass.states.get(ENTITY)
     temp = state.attributes.get("current_temperature")
@@ -462,7 +490,8 @@ async def test_sensor_unavailable(hass: HomeAssistant) -> None:
     assert state.attributes.get("current_temperature") is None
 
 
-async def test_set_target_temp_heater_on(hass: HomeAssistant, setup_comp_2) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_set_target_temp_heater_on(hass: HomeAssistant) -> None:
     """Test if target temperature turn heater on."""
     calls = _setup_switch(hass, False)
     _setup_sensor(hass, 25)
@@ -470,12 +499,13 @@ async def test_set_target_temp_heater_on(hass: HomeAssistant, setup_comp_2) -> N
     await common.async_set_temperature(hass, 30)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_set_target_temp_heater_off(hass: HomeAssistant, setup_comp_2) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_set_target_temp_heater_off(hass: HomeAssistant) -> None:
     """Test if target temperature turn heater off."""
     calls = _setup_switch(hass, True)
     _setup_sensor(hass, 30)
@@ -483,14 +513,13 @@ async def test_set_target_temp_heater_off(hass: HomeAssistant, setup_comp_2) -> 
     await common.async_set_temperature(hass, 25)
     assert len(calls) == 2
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_temp_change_heater_on_within_tolerance(
-    hass: HomeAssistant, setup_comp_2
-) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_temp_change_heater_on_within_tolerance(hass: HomeAssistant) -> None:
     """Test if temperature change doesn't turn on within tolerance."""
     calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 30)
@@ -499,9 +528,8 @@ async def test_temp_change_heater_on_within_tolerance(
     assert len(calls) == 0
 
 
-async def test_temp_change_heater_on_outside_tolerance(
-    hass: HomeAssistant, setup_comp_2
-) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_temp_change_heater_on_outside_tolerance(hass: HomeAssistant) -> None:
     """Test if temperature change turn heater on outside cold tolerance."""
     calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 30)
@@ -509,14 +537,13 @@ async def test_temp_change_heater_on_outside_tolerance(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_temp_change_heater_off_within_tolerance(
-    hass: HomeAssistant, setup_comp_2
-) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_temp_change_heater_off_within_tolerance(hass: HomeAssistant) -> None:
     """Test if temperature change doesn't turn off within tolerance."""
     calls = _setup_switch(hass, True)
     await common.async_set_temperature(hass, 30)
@@ -525,9 +552,8 @@ async def test_temp_change_heater_off_within_tolerance(
     assert len(calls) == 0
 
 
-async def test_temp_change_heater_off_outside_tolerance(
-    hass: HomeAssistant, setup_comp_2
-) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_temp_change_heater_off_outside_tolerance(hass: HomeAssistant) -> None:
     """Test if temperature change turn heater off outside hot tolerance."""
     calls = _setup_switch(hass, True)
     await common.async_set_temperature(hass, 30)
@@ -535,26 +561,26 @@ async def test_temp_change_heater_off_outside_tolerance(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_running_when_hvac_mode_is_off(hass: HomeAssistant, setup_comp_2) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_running_when_hvac_mode_is_off(hass: HomeAssistant) -> None:
     """Test that the switch turns off when enabled is set False."""
     calls = _setup_switch(hass, True)
     await common.async_set_temperature(hass, 30)
     await common.async_set_hvac_mode(hass, HVACMode.OFF)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_no_state_change_when_hvac_mode_off(
-    hass: HomeAssistant, setup_comp_2
-) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_no_state_change_when_hvac_mode_off(hass: HomeAssistant) -> None:
     """Test that the switch doesn't turn on when enabled is False."""
     calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 30)
@@ -564,7 +590,8 @@ async def test_no_state_change_when_hvac_mode_off(
     assert len(calls) == 0
 
 
-async def test_hvac_mode_heat(hass: HomeAssistant, setup_comp_2) -> None:
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_hvac_mode_heat(hass: HomeAssistant) -> None:
     """Test change mode from OFF to HEAT.
 
     Switch turns on when temp below setpoint and mode changes.
@@ -577,18 +604,18 @@ async def test_hvac_mode_heat(hass: HomeAssistant, setup_comp_2) -> None:
     await common.async_set_hvac_mode(hass, HVACMode.HEAT)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-def _setup_switch(hass, is_on):
+def _setup_switch(hass: HomeAssistant, is_on: bool) -> list[ServiceCall]:
     """Set up the test switch."""
     hass.states.async_set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
     calls = []
 
     @callback
-    def log_call(call):
+    def log_call(call: ServiceCall) -> None:
         """Log service calls."""
         calls.append(call)
 
@@ -599,12 +626,12 @@ def _setup_switch(hass, is_on):
 
 
 @pytest.fixture
-async def setup_comp_3(hass):
+async def setup_comp_3(hass: HomeAssistant) -> None:
     """Initialize components."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -622,7 +649,8 @@ async def setup_comp_3(hass):
     await hass.async_block_till_done()
 
 
-async def test_set_target_temp_ac_off(hass: HomeAssistant, setup_comp_3) -> None:
+@pytest.mark.usefixtures("setup_comp_3")
+async def test_set_target_temp_ac_off(hass: HomeAssistant) -> None:
     """Test if target temperature turn ac off."""
     calls = _setup_switch(hass, True)
     _setup_sensor(hass, 25)
@@ -630,12 +658,13 @@ async def test_set_target_temp_ac_off(hass: HomeAssistant, setup_comp_3) -> None
     await common.async_set_temperature(hass, 30)
     assert len(calls) == 2
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_turn_away_mode_on_cooling(hass: HomeAssistant, setup_comp_3) -> None:
+@pytest.mark.usefixtures("setup_comp_3")
+async def test_turn_away_mode_on_cooling(hass: HomeAssistant) -> None:
     """Test the setting away mode when cooling."""
     _setup_switch(hass, True)
     _setup_sensor(hass, 25)
@@ -646,7 +675,8 @@ async def test_turn_away_mode_on_cooling(hass: HomeAssistant, setup_comp_3) -> N
     assert state.attributes.get("temperature") == 30
 
 
-async def test_hvac_mode_cool(hass: HomeAssistant, setup_comp_3) -> None:
+@pytest.mark.usefixtures("setup_comp_3")
+async def test_hvac_mode_cool(hass: HomeAssistant) -> None:
     """Test change mode from OFF to COOL.
 
     Switch turns on when temp below setpoint and mode changes.
@@ -659,12 +689,13 @@ async def test_hvac_mode_cool(hass: HomeAssistant, setup_comp_3) -> None:
     await common.async_set_hvac_mode(hass, HVACMode.COOL)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_set_target_temp_ac_on(hass: HomeAssistant, setup_comp_3) -> None:
+@pytest.mark.usefixtures("setup_comp_3")
+async def test_set_target_temp_ac_on(hass: HomeAssistant) -> None:
     """Test if target temperature turn ac on."""
     calls = _setup_switch(hass, False)
     _setup_sensor(hass, 30)
@@ -672,14 +703,13 @@ async def test_set_target_temp_ac_on(hass: HomeAssistant, setup_comp_3) -> None:
     await common.async_set_temperature(hass, 25)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_temp_change_ac_off_within_tolerance(
-    hass: HomeAssistant, setup_comp_3
-) -> None:
+@pytest.mark.usefixtures("setup_comp_3")
+async def test_temp_change_ac_off_within_tolerance(hass: HomeAssistant) -> None:
     """Test if temperature change doesn't turn ac off within tolerance."""
     calls = _setup_switch(hass, True)
     await common.async_set_temperature(hass, 30)
@@ -688,9 +718,8 @@ async def test_temp_change_ac_off_within_tolerance(
     assert len(calls) == 0
 
 
-async def test_set_temp_change_ac_off_outside_tolerance(
-    hass: HomeAssistant, setup_comp_3
-) -> None:
+@pytest.mark.usefixtures("setup_comp_3")
+async def test_set_temp_change_ac_off_outside_tolerance(hass: HomeAssistant) -> None:
     """Test if temperature change turn ac off."""
     calls = _setup_switch(hass, True)
     await common.async_set_temperature(hass, 30)
@@ -698,14 +727,13 @@ async def test_set_temp_change_ac_off_outside_tolerance(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_temp_change_ac_on_within_tolerance(
-    hass: HomeAssistant, setup_comp_3
-) -> None:
+@pytest.mark.usefixtures("setup_comp_3")
+async def test_temp_change_ac_on_within_tolerance(hass: HomeAssistant) -> None:
     """Test if temperature change doesn't turn ac on within tolerance."""
     calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 25)
@@ -714,9 +742,8 @@ async def test_temp_change_ac_on_within_tolerance(
     assert len(calls) == 0
 
 
-async def test_temp_change_ac_on_outside_tolerance(
-    hass: HomeAssistant, setup_comp_3
-) -> None:
+@pytest.mark.usefixtures("setup_comp_3")
+async def test_temp_change_ac_on_outside_tolerance(hass: HomeAssistant) -> None:
     """Test if temperature change turn ac on."""
     calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 25)
@@ -724,28 +751,26 @@ async def test_temp_change_ac_on_outside_tolerance(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_running_when_operating_mode_is_off_2(
-    hass: HomeAssistant, setup_comp_3
-) -> None:
+@pytest.mark.usefixtures("setup_comp_3")
+async def test_running_when_operating_mode_is_off_2(hass: HomeAssistant) -> None:
     """Test that the switch turns off when enabled is set False."""
     calls = _setup_switch(hass, True)
     await common.async_set_temperature(hass, 30)
     await common.async_set_hvac_mode(hass, HVACMode.OFF)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_no_state_change_when_operation_mode_off_2(
-    hass: HomeAssistant, setup_comp_3
-) -> None:
+@pytest.mark.usefixtures("setup_comp_3")
+async def test_no_state_change_when_operation_mode_off_2(hass: HomeAssistant) -> None:
     """Test that the switch doesn't turn on when enabled is False."""
     calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 30)
@@ -762,7 +787,7 @@ async def _setup_thermostat_with_min_cycle_duration(
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -807,10 +832,10 @@ async def test_heating_cooling_switch_does_not_toggle_when_within_min_cycle_dura
     # Given
     await _setup_thermostat_with_min_cycle_duration(hass, ac_mode, initial_hvac_mode)
     calls = _setup_switch(hass, initial_switch_state)
-    _setup_sensor(hass, sensor_temperature)
 
     # When
     await common.async_set_temperature(hass, target_temperature)
+    _setup_sensor(hass, sensor_temperature)
     await hass.async_block_till_done()
 
     # Then
@@ -848,16 +873,16 @@ async def test_heating_cooling_switch_toggles_when_outside_min_cycle_duration(
     fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with freeze_time(fake_changed):
         calls = _setup_switch(hass, initial_switch_state)
-    _setup_sensor(hass, sensor_temperature)
 
     # When
     await common.async_set_temperature(hass, target_temperature)
+    _setup_sensor(hass, sensor_temperature)
     await hass.async_block_till_done()
 
     # Then
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == expected_triggered_service_call
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -893,10 +918,10 @@ async def test_hvac_mode_change_toggles_heating_cooling_switch_even_when_within_
     # Given
     await _setup_thermostat_with_min_cycle_duration(hass, ac_mode, initial_hvac_mode)
     calls = _setup_switch(hass, initial_switch_state)
-    _setup_sensor(hass, sensor_temperature)
 
     # When
     await common.async_set_temperature(hass, target_temperature)
+    _setup_sensor(hass, sensor_temperature)
     await hass.async_block_till_done()
 
     # Then
@@ -910,126 +935,12 @@ async def test_hvac_mode_change_toggles_heating_cooling_switch_even_when_within_
 
 
 @pytest.fixture
-async def setup_comp_5(hass):
+async def setup_comp_7(hass: HomeAssistant) -> None:
     """Initialize components."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
-        DOMAIN,
-        {
-            "climate": {
-                "platform": "generic_thermostat",
-                "name": "test",
-                "cold_tolerance": 0.3,
-                "hot_tolerance": 0.3,
-                "heater": ENT_SWITCH,
-                "target_sensor": ENT_SENSOR,
-                "ac_mode": True,
-                "min_cycle_duration": datetime.timedelta(minutes=10),
-                "initial_hvac_mode": HVACMode.COOL,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-
-async def test_temp_change_ac_trigger_on_not_long_enough_2(
-    hass: HomeAssistant, setup_comp_5
-) -> None:
-    """Test if temperature change turn ac on."""
-    calls = _setup_switch(hass, False)
-    await common.async_set_temperature(hass, 25)
-    _setup_sensor(hass, 30)
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-
-
-async def test_temp_change_ac_trigger_on_long_enough_2(
-    hass: HomeAssistant, setup_comp_5
-) -> None:
-    """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
-    with freeze_time(fake_changed):
-        calls = _setup_switch(hass, False)
-    await common.async_set_temperature(hass, 25)
-    _setup_sensor(hass, 30)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == HASS_DOMAIN
-    assert call.service == SERVICE_TURN_ON
-    assert call.data["entity_id"] == ENT_SWITCH
-
-
-async def test_temp_change_ac_trigger_off_not_long_enough_2(
-    hass: HomeAssistant, setup_comp_5
-) -> None:
-    """Test if temperature change turn ac on."""
-    calls = _setup_switch(hass, True)
-    await common.async_set_temperature(hass, 30)
-    _setup_sensor(hass, 25)
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-
-
-async def test_temp_change_ac_trigger_off_long_enough_2(
-    hass: HomeAssistant, setup_comp_5
-) -> None:
-    """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
-    with freeze_time(fake_changed):
-        calls = _setup_switch(hass, True)
-    await common.async_set_temperature(hass, 30)
-    _setup_sensor(hass, 25)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == HASS_DOMAIN
-    assert call.service == SERVICE_TURN_OFF
-    assert call.data["entity_id"] == ENT_SWITCH
-
-
-async def test_mode_change_ac_trigger_off_not_long_enough_2(
-    hass: HomeAssistant, setup_comp_5
-) -> None:
-    """Test if mode change turns ac off despite minimum cycle."""
-    calls = _setup_switch(hass, True)
-    await common.async_set_temperature(hass, 30)
-    _setup_sensor(hass, 25)
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-    await common.async_set_hvac_mode(hass, HVACMode.OFF)
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "homeassistant"
-    assert call.service == SERVICE_TURN_OFF
-    assert call.data["entity_id"] == ENT_SWITCH
-
-
-async def test_mode_change_ac_trigger_on_not_long_enough_2(
-    hass: HomeAssistant, setup_comp_5
-) -> None:
-    """Test if mode change turns ac on despite minimum cycle."""
-    calls = _setup_switch(hass, False)
-    await common.async_set_temperature(hass, 25)
-    _setup_sensor(hass, 30)
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-    await common.async_set_hvac_mode(hass, HVACMode.HEAT)
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "homeassistant"
-    assert call.service == SERVICE_TURN_ON
-    assert call.data["entity_id"] == ENT_SWITCH
-
-
-@pytest.fixture
-async def setup_comp_7(hass):
-    """Initialize components."""
-    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1050,9 +961,8 @@ async def setup_comp_7(hass):
     await hass.async_block_till_done()
 
 
-async def test_temp_change_ac_trigger_on_long_enough_3(
-    hass: HomeAssistant, setup_comp_7
-) -> None:
+@pytest.mark.usefixtures("setup_comp_7")
+async def test_temp_change_ac_trigger_on_long_enough_3(hass: HomeAssistant) -> None:
     """Test if turn on signal is sent at keep-alive intervals."""
     calls = _setup_switch(hass, True)
     await hass.async_block_till_done()
@@ -1070,14 +980,13 @@ async def test_temp_change_ac_trigger_on_long_enough_3(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_temp_change_ac_trigger_off_long_enough_3(
-    hass: HomeAssistant, setup_comp_7
-) -> None:
+@pytest.mark.usefixtures("setup_comp_7")
+async def test_temp_change_ac_trigger_off_long_enough_3(hass: HomeAssistant) -> None:
     """Test if turn on signal is sent at keep-alive intervals."""
     calls = _setup_switch(hass, False)
     await hass.async_block_till_done()
@@ -1095,18 +1004,18 @@ async def test_temp_change_ac_trigger_off_long_enough_3(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
 
 @pytest.fixture
-async def setup_comp_8(hass):
+async def setup_comp_8(hass: HomeAssistant) -> None:
     """Initialize components."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1125,9 +1034,8 @@ async def setup_comp_8(hass):
     await hass.async_block_till_done()
 
 
-async def test_temp_change_heater_trigger_on_long_enough_2(
-    hass: HomeAssistant, setup_comp_8
-) -> None:
+@pytest.mark.usefixtures("setup_comp_8")
+async def test_temp_change_heater_trigger_on_long_enough_2(hass: HomeAssistant) -> None:
     """Test if turn on signal is sent at keep-alive intervals."""
     calls = _setup_switch(hass, True)
     await hass.async_block_till_done()
@@ -1145,13 +1053,14 @@ async def test_temp_change_heater_trigger_on_long_enough_2(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
 
+@pytest.mark.usefixtures("setup_comp_8")
 async def test_temp_change_heater_trigger_off_long_enough_2(
-    hass: HomeAssistant, setup_comp_8
+    hass: HomeAssistant,
 ) -> None:
     """Test if turn on signal is sent at keep-alive intervals."""
     calls = _setup_switch(hass, False)
@@ -1170,17 +1079,17 @@ async def test_temp_change_heater_trigger_off_long_enough_2(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
 
 @pytest.fixture
-async def setup_comp_9(hass):
+async def setup_comp_9(hass: HomeAssistant) -> None:
     """Initialize components."""
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1199,21 +1108,68 @@ async def setup_comp_9(hass):
     await hass.async_block_till_done()
 
 
-async def test_precision(hass: HomeAssistant, setup_comp_9) -> None:
+@pytest.mark.usefixtures("setup_comp_9")
+async def test_precision(hass: HomeAssistant) -> None:
     """Test that setting precision to tenths works as intended."""
     hass.config.units = US_CUSTOMARY_SYSTEM
-    await common.async_set_temperature(hass, 23.27)
+    await common.async_set_temperature(hass, 55.27)
     state = hass.states.get(ENTITY)
-    assert state.attributes.get("temperature") == 23.3
+    assert state.attributes.get("temperature") == 55.3
     # check that target_temp_step defaults to precision
     assert state.attributes.get("target_temp_step") == 0.1
+
+
+@pytest.fixture(
+    params=[
+        HVACMode.HEAT,
+        HVACMode.COOL,
+    ]
+)
+async def setup_comp_10(hass: HomeAssistant, request: pytest.FixtureRequest) -> None:
+    """Initialize components."""
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0,
+                "hot_tolerance": 0,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "initial_hvac_mode": request.param,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("setup_comp_10")
+async def test_zero_tolerances(hass: HomeAssistant) -> None:
+    """Test that having a zero tolerance doesn't cause the switch to flip-flop."""
+
+    # if the switch is off, it should remain off
+    calls = _setup_switch(hass, False)
+    _setup_sensor(hass, 25)
+    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
+    assert len(calls) == 0
+
+    # if the switch is on, it should turn off
+    calls = _setup_switch(hass, True)
+    _setup_sensor(hass, 25)
+    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
+    assert len(calls) == 1
 
 
 async def test_custom_setup_params(hass: HomeAssistant) -> None:
     """Test the setup with custom parameters."""
     result = await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1254,7 +1210,7 @@ async def test_restore_state(hass: HomeAssistant, hvac_mode) -> None:
 
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1292,7 +1248,7 @@ async def test_no_restore_state(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1323,7 +1279,7 @@ async def test_initial_hvac_off_force_heater_off(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1342,7 +1298,7 @@ async def test_initial_hvac_off_force_heater_off(hass: HomeAssistant) -> None:
     # heater must be switched off
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1377,7 +1333,7 @@ async def test_restore_will_turn_off_(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1422,7 +1378,7 @@ async def test_restore_will_turn_off_when_loaded_second(hass: HomeAssistant) -> 
 
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1450,7 +1406,7 @@ async def test_restore_will_turn_off_when_loaded_second(hass: HomeAssistant) -> 
     assert len(calls_on) == 0
     assert len(calls_off) == 1
     call = calls_off[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == "input_boolean.test"
 
@@ -1479,10 +1435,10 @@ async def test_restore_state_uncoherence_case(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.OFF
 
 
-async def _setup_climate(hass):
+async def _setup_climate(hass: HomeAssistant) -> None:
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1498,7 +1454,9 @@ async def _setup_climate(hass):
     )
 
 
-def _mock_restore_cache(hass, temperature=20, hvac_mode=HVACMode.OFF):
+def _mock_restore_cache(
+    hass: HomeAssistant, temperature: int = 20, hvac_mode: HVACMode = HVACMode.OFF
+) -> None:
     mock_restore_cache(
         hass,
         (
@@ -1516,7 +1474,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1544,3 +1502,50 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("climate.test") is None
     assert hass.states.get("climate.reload")
+
+
+async def test_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test for source entity device."""
+
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("switch", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    source_entity = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("switch.test_source") is not None
+
+    helper_config_entry = MockConfigEntry(
+        data={},
+        domain=GENERIC_THERMOSTAT_DOMAIN,
+        options={
+            "name": "Test",
+            "heater": "switch.test_source",
+            "target_sensor": ENT_SENSOR,
+            "ac_mode": False,
+            "cold_tolerance": 0.3,
+            "hot_tolerance": 0.3,
+        },
+        title="Test",
+    )
+    helper_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    helper_entity = entity_registry.async_get("climate.test")
+    assert helper_entity is not None
+    assert helper_entity.device_id == source_entity.device_id

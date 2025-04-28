@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from deebot_client.capabilities import MowerCapabilities
+from deebot_client.capabilities import Capabilities, DeviceType
 from deebot_client.device import Device
 from deebot_client.events import StateEvent
 from deebot_client.models import CleanAction, State
@@ -15,12 +15,10 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityEntityDescription,
     LawnMowerEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .controller import EcovacsController
+from . import EcovacsConfigEntry
 from .entity import EcovacsEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 _STATE_TO_MOWER_STATE = {
     State.IDLE: LawnMowerActivity.PAUSED,
     State.CLEANING: LawnMowerActivity.MOWING,
-    State.RETURNING: LawnMowerActivity.MOWING,
+    State.RETURNING: LawnMowerActivity.RETURNING,
     State.DOCKED: LawnMowerActivity.DOCKED,
     State.ERROR: LawnMowerActivity.ERROR,
     State.PAUSED: LawnMowerActivity.PAUSED,
@@ -38,20 +36,22 @@ _STATE_TO_MOWER_STATE = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcovacsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ecovacs mowers."""
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
     mowers: list[EcovacsMower] = [
-        EcovacsMower(device) for device in controller.devices(MowerCapabilities)
+        EcovacsMower(device)
+        for device in controller.devices
+        if device.capabilities.device_type is DeviceType.MOWER
     ]
     _LOGGER.debug("Adding Ecovacs Mowers to Home Assistant: %s", mowers)
     async_add_entities(mowers)
 
 
 class EcovacsMower(
-    EcovacsEntity[MowerCapabilities, MowerCapabilities],
+    EcovacsEntity[Capabilities],
     LawnMowerEntity,
 ):
     """Ecovacs Mower."""
@@ -64,10 +64,9 @@ class EcovacsMower(
 
     entity_description = LawnMowerEntityEntityDescription(key="mower", name=None)
 
-    def __init__(self, device: Device[MowerCapabilities]) -> None:
+    def __init__(self, device: Device) -> None:
         """Initialize the mower."""
-        capabilities = device.capabilities
-        super().__init__(device, capabilities)
+        super().__init__(device, device.capabilities)
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""

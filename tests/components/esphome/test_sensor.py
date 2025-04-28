@@ -1,21 +1,17 @@
 """Test ESPHome sensors."""
 
-from collections.abc import Awaitable, Callable
 import logging
 import math
 
 from aioesphomeapi import (
     APIClient,
     EntityCategory as ESPHomeEntityCategory,
-    EntityInfo,
-    EntityState,
     LastResetType,
     SensorInfo,
     SensorState,
     SensorStateClass as ESPHomeSensorStateClass,
     TextSensorInfo,
     TextSensorState,
-    UserService,
 )
 
 from homeassistant.components.sensor import (
@@ -28,21 +24,18 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 
 async def test_generic_numeric_sensor(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a generic sensor entity."""
     logging.getLogger("homeassistant.components.esphome").setLevel(logging.DEBUG)
@@ -97,8 +90,9 @@ async def test_generic_numeric_sensor(
 
 async def test_generic_numeric_sensor_with_entity_category_and_icon(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic sensor entity."""
     entity_info = [
@@ -123,8 +117,7 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_ICON] == "mdi:leaf"
-    entity_reg = er.async_get(hass)
-    entry = entity_reg.async_get("sensor.test_mysensor")
+    entry = entity_registry.async_get("sensor.test_mysensor")
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
@@ -134,8 +127,9 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
 
 async def test_generic_numeric_sensor_state_class_measurement(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic sensor entity."""
     entity_info = [
@@ -161,8 +155,7 @@ async def test_generic_numeric_sensor_state_class_measurement(
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-    entity_reg = er.async_get(hass)
-    entry = entity_reg.async_get("sensor.test_mysensor")
+    entry = entity_registry.async_get("sensor.test_mysensor")
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
@@ -173,7 +166,7 @@ async def test_generic_numeric_sensor_state_class_measurement(
 async def test_generic_numeric_sensor_device_class_timestamp(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a sensor entity that uses timestamp (epoch)."""
     entity_info = [
@@ -201,7 +194,7 @@ async def test_generic_numeric_sensor_device_class_timestamp(
 async def test_generic_numeric_sensor_legacy_last_reset_convert(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a state class of measurement with last reset type of auto is converted to total increasing."""
     entity_info = [
@@ -229,7 +222,9 @@ async def test_generic_numeric_sensor_legacy_last_reset_convert(
 
 
 async def test_generic_numeric_sensor_no_state(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic numeric sensor that has no state."""
     entity_info = [
@@ -254,7 +249,9 @@ async def test_generic_numeric_sensor_no_state(
 
 
 async def test_generic_numeric_sensor_nan_state(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic numeric sensor that has nan state."""
     entity_info = [
@@ -279,7 +276,9 @@ async def test_generic_numeric_sensor_nan_state(
 
 
 async def test_generic_numeric_sensor_missing_state(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic numeric sensor that is missing state."""
     entity_info = [
@@ -306,7 +305,7 @@ async def test_generic_numeric_sensor_missing_state(
 async def test_generic_text_sensor(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic text sensor entity."""
     entity_info = [
@@ -331,7 +330,9 @@ async def test_generic_text_sensor(
 
 
 async def test_generic_text_sensor_missing_state(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic text sensor that is missing state."""
     entity_info = [
@@ -358,7 +359,7 @@ async def test_generic_text_sensor_missing_state(
 async def test_generic_text_sensor_device_class_timestamp(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a sensor entity that uses timestamp (datetime)."""
     entity_info = [
@@ -387,7 +388,7 @@ async def test_generic_text_sensor_device_class_timestamp(
 async def test_generic_text_sensor_device_class_date(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a sensor entity that uses date (datetime)."""
     entity_info = [
@@ -414,7 +415,9 @@ async def test_generic_text_sensor_device_class_date(
 
 
 async def test_generic_numeric_sensor_empty_string_uom(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic numeric sensor that has an empty string as the uom."""
     entity_info = [

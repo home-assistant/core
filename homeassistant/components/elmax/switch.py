@@ -8,24 +8,22 @@ from elmax_api.model.command import SwitchCommand
 from elmax_api.model.panel import PanelStatus
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElmaxCoordinator
-from .common import ElmaxEntity
-from .const import DOMAIN
+from .coordinator import ElmaxConfigEntry
+from .entity import ElmaxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ElmaxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Elmax switch platform."""
-    coordinator: ElmaxCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     known_devices = set()
 
     def _discover_new_devices():

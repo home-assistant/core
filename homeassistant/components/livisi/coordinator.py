@@ -6,8 +6,9 @@ from datetime import timedelta
 from typing import Any
 
 from aiohttp import ClientConnectorError
-from aiolivisi import AioLivisi, LivisiEvent, Websocket
-from aiolivisi.errors import TokenExpiredException
+from livisi import LivisiEvent, Websocket
+from livisi.aiolivisi import AioLivisi
+from livisi.errors import TokenExpiredException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -38,10 +39,10 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="Livisi devices",
             update_interval=timedelta(seconds=DEVICE_POLLING_DELAY),
         )
-        self.config_entry = config_entry
         self.hass = hass
         self.aiolivisi = aiolivisi
         self.websocket = Websocket(aiolivisi)

@@ -27,6 +27,15 @@
       },
       "confirm_discovery": {
         "description": "Do you want to set up Nettigo Air Monitor at {host}?"
+      },
+      "reconfigure": {
+        "description": "Update configuration for {device_name}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::nam::config::step::user::data_description::host%]"
+        }
       }
     },
     "error": {
@@ -38,11 +47,16 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "device_unsupported": "The device is unsupported.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "another_device": "The IP address/hostname of another Nettigo Air Monitor was used."
     }
   },
   "entity": {
     "sensor": {
+      "bh1750_illuminance": {
+        "name": "BH1750 illuminance"
+      },
       "bme280_humidity": {
         "name": "BME280 humidity"
       },
@@ -64,6 +78,9 @@
       "bmp280_temperature": {
         "name": "BMP280 temperature"
       },
+      "ds18b20_temperature": {
+        "name": "DS18B20 temperature"
+      },
       "heca_humidity": {
         "name": "HECA humidity"
       },
@@ -79,11 +96,22 @@
       "pmsx003_caqi_level": {
         "name": "PMSx003 common air quality index level",
         "state": {
-          "very_low": "Very low",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High",
-          "very_high": "Very high"
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "very_low": "[%key:common::state::very_low%]",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]",
+              "high": "[%key:common::state::high%]",
+              "very_high": "[%key:common::state::very_high%]"
+            }
+          }
         }
       },
       "pmsx003_pm1": {
@@ -101,11 +129,22 @@
       "sds011_caqi_level": {
         "name": "SDS011 common air quality index level",
         "state": {
-          "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
-          "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
-          "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
-          "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
-          "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "very_low": "[%key:common::state::very_low%]",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]",
+              "high": "[%key:common::state::high%]",
+              "very_high": "[%key:common::state::very_high%]"
+            }
+          }
         }
       },
       "sds011_pm10": {
@@ -126,11 +165,22 @@
       "sps30_caqi_level": {
         "name": "SPS30 common air quality index level",
         "state": {
-          "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
-          "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
-          "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
-          "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
-          "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "very_low": "[%key:common::state::very_low%]",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]",
+              "high": "[%key:common::state::high%]",
+              "very_high": "[%key:common::state::very_high%]"
+            }
+          }
         }
       },
       "sps30_pm1": {
@@ -154,6 +204,20 @@
       "last_restart": {
         "name": "Last restart"
       }
+    }
+  },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed for {device}, please update your credentials"
+    },
+    "device_communication_error": {
+      "message": "An error occurred while communicating with {device}"
+    },
+    "device_communication_action_error": {
+      "message": "An error occurred while calling action for {entity} for {device}"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from {device}"
     }
   }
 }

@@ -21,7 +21,7 @@ query_icon_matching = [
 
 
 @pytest.fixture(name="tvliftbox")
-def tv_lift_box_fixture(caplog):
+def tv_lift_box_fixture(caplog: pytest.LogCaptureFixture):
     """Return simple button entity mock."""
     caplog.set_level(logging.ERROR)
 

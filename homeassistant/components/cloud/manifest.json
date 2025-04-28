@@ -1,12 +1,18 @@
 {
   "domain": "cloud",
   "name": "Home Assistant Cloud",
-  "after_dependencies": ["assist_pipeline", "google_assistant", "alexa"],
+  "after_dependencies": [
+    "alexa",
+    "assist_pipeline",
+    "backup",
+    "google_assistant"
+  ],
   "codeowners": ["@home-assistant/cloud"],
-  "dependencies": ["http", "repairs", "webhook"],
+  "dependencies": ["auth", "http", "repairs", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/cloud",
   "integration_type": "system",
   "iot_class": "cloud_push",
-  "loggers": ["hass_nabucasa"],
-  "requirements": ["hass-nabucasa==0.79.0"]
+  "loggers": ["acme", "hass_nabucasa", "snitun"],
+  "requirements": ["hass-nabucasa==0.96.0"],
+  "single_config_entry": true
 }

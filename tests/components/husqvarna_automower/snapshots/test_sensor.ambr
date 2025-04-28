@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[sensor.test_mower_1_battery-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8,6 +8,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -34,7 +35,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_battery-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -50,7 +51,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_cutting_blade_usage_time-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_cutting_blade_usage_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,11 +60,12 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.test_mower_1_cutting_blade_usage_time',
     'has_entity_name': True,
     'hidden_by': None,
@@ -88,7 +90,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_cutting_blade_usage_time-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_cutting_blade_usage_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -104,21 +106,492 @@
     'state': '0.034',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_mode-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_downtime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_mower_1_downtime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Downtime',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'downtime',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_downtime',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_downtime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Test Mower 1 Downtime',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_downtime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'main_area',
-        'demo',
-        'secondary_area',
-        'home',
-        'unknown',
+        'alarm_mower_in_motion',
+        'alarm_mower_lifted',
+        'alarm_mower_stopped',
+        'alarm_mower_switched_off',
+        'alarm_mower_tilted',
+        'alarm_outside_geofence',
+        'angular_sensor_problem',
+        'battery_problem',
+        'battery_restriction_due_to_ambient_temperature',
+        'can_error',
+        'charging_current_too_high',
+        'charging_station_blocked',
+        'charging_system_problem',
+        'collision_sensor_defect',
+        'collision_sensor_error',
+        'collision_sensor_problem_front',
+        'collision_sensor_problem_rear',
+        'com_board_not_available',
+        'communication_circuit_board_sw_must_be_updated',
+        'complex_working_area',
+        'connection_changed',
+        'connection_not_changed',
+        'connectivity_problem',
+        'connectivity_settings_restored',
+        'cutting_drive_motor_1_defect',
+        'cutting_drive_motor_2_defect',
+        'cutting_drive_motor_3_defect',
+        'cutting_height_blocked',
+        'cutting_height_problem_curr',
+        'cutting_height_problem_dir',
+        'cutting_height_problem_drive',
+        'cutting_height_problem',
+        'cutting_motor_problem',
+        'cutting_stopped_slope_too_steep',
+        'cutting_system_blocked',
+        'cutting_system_imbalance_warning',
+        'cutting_system_major_imbalance',
+        'destination_not_reachable',
+        'difficult_finding_home',
+        'docking_sensor_defect',
+        'electronic_problem',
+        'empty_battery',
+        'folding_cutting_deck_sensor_defect',
+        'folding_sensor_activated',
+        'geofence_problem',
+        'gps_navigation_problem',
+        'guide_1_not_found',
+        'guide_2_not_found',
+        'guide_3_not_found',
+        'guide_calibration_accomplished',
+        'guide_calibration_failed',
+        'high_charging_power_loss',
+        'high_internal_power_loss',
+        'high_internal_temperature',
+        'internal_voltage_error',
+        'invalid_battery_combination_invalid_combination_of_different_battery_types',
+        'invalid_sub_device_combination',
+        'invalid_system_configuration',
+        'left_brush_motor_overloaded',
+        'lift_sensor_defect',
+        'lifted',
+        'limited_cutting_height_range',
+        'loop_sensor_defect',
+        'loop_sensor_problem_front',
+        'loop_sensor_problem_left',
+        'loop_sensor_problem_rear',
+        'loop_sensor_problem_right',
+        'low_battery',
+        'memory_circuit_problem',
+        'mower_lifted',
+        'mower_tilted',
+        'no_accurate_position_from_satellites',
+        'no_confirmed_position',
+        'no_drive',
+        'no_error',
+        'no_loop_signal',
+        'no_power_in_charging_station',
+        'no_response_from_charger',
+        'outside_working_area',
+        'poor_signal_quality',
+        'reference_station_communication_problem',
+        'right_brush_motor_overloaded',
+        'safety_function_faulty',
+        'settings_restored',
+        'sim_card_locked',
+        'sim_card_not_found',
+        'sim_card_requires_pin',
+        'slipped_mower_has_slipped_situation_not_solved_with_moving_pattern',
+        'slope_too_steep',
+        'sms_could_not_be_sent',
+        'stop_button_problem',
+        'stuck_in_charging_station',
+        'switch_cord_problem',
+        'temporary_battery_problem',
+        'tilt_sensor_problem',
+        'too_high_discharge_current',
+        'too_high_internal_current',
+        'trapped',
+        'ultrasonic_problem',
+        'ultrasonic_sensor_1_defect',
+        'ultrasonic_sensor_2_defect',
+        'ultrasonic_sensor_3_defect',
+        'ultrasonic_sensor_4_defect',
+        'unexpected_cutting_height_adj',
+        'unexpected_error',
+        'upside_down',
+        'weak_gps_signal',
+        'wheel_drive_problem_left',
+        'wheel_drive_problem_rear_left',
+        'wheel_drive_problem_rear_right',
+        'wheel_drive_problem_right',
+        'wheel_motor_blocked_left',
+        'wheel_motor_blocked_rear_left',
+        'wheel_motor_blocked_rear_right',
+        'wheel_motor_blocked_right',
+        'wheel_motor_overloaded_left',
+        'wheel_motor_overloaded_rear_left',
+        'wheel_motor_overloaded_rear_right',
+        'wheel_motor_overloaded_right',
+        'work_area_not_valid',
+        'wrong_loop_signal',
+        'wrong_pin_code',
+        'zone_generator_problem',
+        'error_at_power_up',
+        'error',
+        'fatal_error',
+        'off',
+        'stopped',
+        'wait_power_up',
+        'wait_updating',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Error',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'error',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_error',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Mower 1 Error',
+      'options': list([
+        'alarm_mower_in_motion',
+        'alarm_mower_lifted',
+        'alarm_mower_stopped',
+        'alarm_mower_switched_off',
+        'alarm_mower_tilted',
+        'alarm_outside_geofence',
+        'angular_sensor_problem',
+        'battery_problem',
+        'battery_restriction_due_to_ambient_temperature',
+        'can_error',
+        'charging_current_too_high',
+        'charging_station_blocked',
+        'charging_system_problem',
+        'collision_sensor_defect',
+        'collision_sensor_error',
+        'collision_sensor_problem_front',
+        'collision_sensor_problem_rear',
+        'com_board_not_available',
+        'communication_circuit_board_sw_must_be_updated',
+        'complex_working_area',
+        'connection_changed',
+        'connection_not_changed',
+        'connectivity_problem',
+        'connectivity_settings_restored',
+        'cutting_drive_motor_1_defect',
+        'cutting_drive_motor_2_defect',
+        'cutting_drive_motor_3_defect',
+        'cutting_height_blocked',
+        'cutting_height_problem_curr',
+        'cutting_height_problem_dir',
+        'cutting_height_problem_drive',
+        'cutting_height_problem',
+        'cutting_motor_problem',
+        'cutting_stopped_slope_too_steep',
+        'cutting_system_blocked',
+        'cutting_system_imbalance_warning',
+        'cutting_system_major_imbalance',
+        'destination_not_reachable',
+        'difficult_finding_home',
+        'docking_sensor_defect',
+        'electronic_problem',
+        'empty_battery',
+        'folding_cutting_deck_sensor_defect',
+        'folding_sensor_activated',
+        'geofence_problem',
+        'gps_navigation_problem',
+        'guide_1_not_found',
+        'guide_2_not_found',
+        'guide_3_not_found',
+        'guide_calibration_accomplished',
+        'guide_calibration_failed',
+        'high_charging_power_loss',
+        'high_internal_power_loss',
+        'high_internal_temperature',
+        'internal_voltage_error',
+        'invalid_battery_combination_invalid_combination_of_different_battery_types',
+        'invalid_sub_device_combination',
+        'invalid_system_configuration',
+        'left_brush_motor_overloaded',
+        'lift_sensor_defect',
+        'lifted',
+        'limited_cutting_height_range',
+        'loop_sensor_defect',
+        'loop_sensor_problem_front',
+        'loop_sensor_problem_left',
+        'loop_sensor_problem_rear',
+        'loop_sensor_problem_right',
+        'low_battery',
+        'memory_circuit_problem',
+        'mower_lifted',
+        'mower_tilted',
+        'no_accurate_position_from_satellites',
+        'no_confirmed_position',
+        'no_drive',
+        'no_error',
+        'no_loop_signal',
+        'no_power_in_charging_station',
+        'no_response_from_charger',
+        'outside_working_area',
+        'poor_signal_quality',
+        'reference_station_communication_problem',
+        'right_brush_motor_overloaded',
+        'safety_function_faulty',
+        'settings_restored',
+        'sim_card_locked',
+        'sim_card_not_found',
+        'sim_card_requires_pin',
+        'slipped_mower_has_slipped_situation_not_solved_with_moving_pattern',
+        'slope_too_steep',
+        'sms_could_not_be_sent',
+        'stop_button_problem',
+        'stuck_in_charging_station',
+        'switch_cord_problem',
+        'temporary_battery_problem',
+        'tilt_sensor_problem',
+        'too_high_discharge_current',
+        'too_high_internal_current',
+        'trapped',
+        'ultrasonic_problem',
+        'ultrasonic_sensor_1_defect',
+        'ultrasonic_sensor_2_defect',
+        'ultrasonic_sensor_3_defect',
+        'ultrasonic_sensor_4_defect',
+        'unexpected_cutting_height_adj',
+        'unexpected_error',
+        'upside_down',
+        'weak_gps_signal',
+        'wheel_drive_problem_left',
+        'wheel_drive_problem_rear_left',
+        'wheel_drive_problem_rear_right',
+        'wheel_drive_problem_right',
+        'wheel_motor_blocked_left',
+        'wheel_motor_blocked_rear_left',
+        'wheel_motor_blocked_rear_right',
+        'wheel_motor_blocked_right',
+        'wheel_motor_overloaded_left',
+        'wheel_motor_overloaded_rear_left',
+        'wheel_motor_overloaded_rear_right',
+        'wheel_motor_overloaded_right',
+        'work_area_not_valid',
+        'wrong_loop_signal',
+        'wrong_pin_code',
+        'zone_generator_problem',
+        'error_at_power_up',
+        'error',
+        'fatal_error',
+        'off',
+        'stopped',
+        'wait_power_up',
+        'wait_updating',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_error',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_last_time_completed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_front_lawn_last_time_completed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Front lawn last time completed',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_area_last_time_completed',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_last_time_completed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_last_time_completed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test Mower 1 Front lawn last time completed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_front_lawn_last_time_completed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-08-12T05:54:29+00:00',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_front_lawn_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Front lawn progress',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_area_progress',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_progress',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 1 Front lawn progress',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_front_lawn_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <MowerModes.MAIN_AREA: 'main_area'>,
+        <MowerModes.DEMO: 'demo'>,
+        <MowerModes.SECONDARY_AREA: 'secondary_area'>,
+        <MowerModes.HOME: 'home'>,
+        <MowerModes.UNKNOWN: 'unknown'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -145,17 +618,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_mode-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test Mower 1 Mode',
       'options': list([
-        'main_area',
-        'demo',
-        'secondary_area',
-        'home',
-        'unknown',
+        <MowerModes.MAIN_AREA: 'main_area'>,
+        <MowerModes.DEMO: 'demo'>,
+        <MowerModes.SECONDARY_AREA: 'secondary_area'>,
+        <MowerModes.HOME: 'home'>,
+        <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
     'context': <ANY>,
@@ -166,13 +639,113 @@
     'state': 'main_area',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_next_start-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_last_time_completed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_my_lawn_last_time_completed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'My lawn last time completed',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'my_lawn_last_time_completed',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_last_time_completed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_last_time_completed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test Mower 1 My lawn last time completed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_my_lawn_last_time_completed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-08-12T03:07:49+00:00',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_my_lawn_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'My lawn progress',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'my_lawn_progress',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_progress',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 1 My lawn progress',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_my_lawn_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_next_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -199,7 +772,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_next_start-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_next_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -210,10 +783,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-06-05T19:00:00+00:00',
+    'state': '2023-06-05T17:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_number_of_charging_cycles-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_number_of_charging_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -222,6 +795,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -248,7 +822,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_number_of_charging_cycles-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_number_of_charging_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Number of charging cycles',
@@ -262,7 +836,7 @@
     'state': '1380',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_number_of_collisions-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_number_of_collisions-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -271,6 +845,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -297,7 +872,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_number_of_collisions-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_number_of_collisions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Number of collisions',
@@ -311,7 +886,80 @@
     'state': '11396',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_charging_time-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_restricted_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
+        <RestrictedReasons.DAILY_LIMIT: 'daily_limit'>,
+        <RestrictedReasons.EXTERNAL: 'external'>,
+        <RestrictedReasons.FOTA: 'fota'>,
+        <RestrictedReasons.FROST: 'frost'>,
+        <RestrictedReasons.NONE: 'none'>,
+        <RestrictedReasons.NOT_APPLICABLE: 'not_applicable'>,
+        <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
+        <RestrictedReasons.SENSOR: 'sensor'>,
+        <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_restricted_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Restricted reason',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'restricted_reason',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_restricted_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_restricted_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Mower 1 Restricted reason',
+      'options': list([
+        <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
+        <RestrictedReasons.DAILY_LIMIT: 'daily_limit'>,
+        <RestrictedReasons.EXTERNAL: 'external'>,
+        <RestrictedReasons.FOTA: 'fota'>,
+        <RestrictedReasons.FROST: 'frost'>,
+        <RestrictedReasons.NONE: 'none'>,
+        <RestrictedReasons.NOT_APPLICABLE: 'not_applicable'>,
+        <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
+        <RestrictedReasons.SENSOR: 'sensor'>,
+        <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_restricted_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'week_schedule',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_total_charging_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -320,6 +968,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -349,7 +998,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_charging_time-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_charging_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -365,7 +1014,7 @@
     'state': '1204.000',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_cutting_time-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_cutting_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -374,6 +1023,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -403,7 +1053,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_cutting_time-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_cutting_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -419,7 +1069,7 @@
     'state': '1165.000',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_drive_distance-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_drive_distance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -428,6 +1078,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -457,7 +1108,7 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_drive_distance-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_drive_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
@@ -473,7 +1124,7 @@
     'state': '1780.272',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_running_time-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_running_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -482,6 +1133,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -511,7 +1163,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_running_time-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_running_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -527,7 +1179,7 @@
     'state': '1268.000',
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_searching_time-entry]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_searching_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -536,6 +1188,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -565,7 +1218,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor[sensor.test_mower_1_total_searching_time-state]
+# name: test_sensor_snapshot[sensor.test_mower_1_total_searching_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -579,5 +1232,678 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '103.000',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_mower_1_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'uptime',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_uptime',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Test Mower 1 Uptime',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_work_area-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Front lawn',
+        'Back lawn',
+        'my_lawn',
+        'no_work_area_active',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_work_area',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Work area',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_area',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_work_area',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_work_area-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Mower 1 Work area',
+      'options': list([
+        'Front lawn',
+        'Back lawn',
+        'my_lawn',
+        'no_work_area_active',
+      ]),
+      'work_area_id_assignment': dict({
+        0: 'my_lawn',
+        123456: 'Front lawn',
+        654321: 'Back lawn',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_work_area',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Front lawn',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_2_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1234_battery_percent',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Test Mower 2 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_2_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'alarm_mower_in_motion',
+        'alarm_mower_lifted',
+        'alarm_mower_stopped',
+        'alarm_mower_switched_off',
+        'alarm_mower_tilted',
+        'alarm_outside_geofence',
+        'angular_sensor_problem',
+        'battery_problem',
+        'battery_restriction_due_to_ambient_temperature',
+        'can_error',
+        'charging_current_too_high',
+        'charging_station_blocked',
+        'charging_system_problem',
+        'collision_sensor_defect',
+        'collision_sensor_error',
+        'collision_sensor_problem_front',
+        'collision_sensor_problem_rear',
+        'com_board_not_available',
+        'communication_circuit_board_sw_must_be_updated',
+        'complex_working_area',
+        'connection_changed',
+        'connection_not_changed',
+        'connectivity_problem',
+        'connectivity_settings_restored',
+        'cutting_drive_motor_1_defect',
+        'cutting_drive_motor_2_defect',
+        'cutting_drive_motor_3_defect',
+        'cutting_height_blocked',
+        'cutting_height_problem_curr',
+        'cutting_height_problem_dir',
+        'cutting_height_problem_drive',
+        'cutting_height_problem',
+        'cutting_motor_problem',
+        'cutting_stopped_slope_too_steep',
+        'cutting_system_blocked',
+        'cutting_system_imbalance_warning',
+        'cutting_system_major_imbalance',
+        'destination_not_reachable',
+        'difficult_finding_home',
+        'docking_sensor_defect',
+        'electronic_problem',
+        'empty_battery',
+        'folding_cutting_deck_sensor_defect',
+        'folding_sensor_activated',
+        'geofence_problem',
+        'gps_navigation_problem',
+        'guide_1_not_found',
+        'guide_2_not_found',
+        'guide_3_not_found',
+        'guide_calibration_accomplished',
+        'guide_calibration_failed',
+        'high_charging_power_loss',
+        'high_internal_power_loss',
+        'high_internal_temperature',
+        'internal_voltage_error',
+        'invalid_battery_combination_invalid_combination_of_different_battery_types',
+        'invalid_sub_device_combination',
+        'invalid_system_configuration',
+        'left_brush_motor_overloaded',
+        'lift_sensor_defect',
+        'lifted',
+        'limited_cutting_height_range',
+        'loop_sensor_defect',
+        'loop_sensor_problem_front',
+        'loop_sensor_problem_left',
+        'loop_sensor_problem_rear',
+        'loop_sensor_problem_right',
+        'low_battery',
+        'memory_circuit_problem',
+        'mower_lifted',
+        'mower_tilted',
+        'no_accurate_position_from_satellites',
+        'no_confirmed_position',
+        'no_drive',
+        'no_error',
+        'no_loop_signal',
+        'no_power_in_charging_station',
+        'no_response_from_charger',
+        'outside_working_area',
+        'poor_signal_quality',
+        'reference_station_communication_problem',
+        'right_brush_motor_overloaded',
+        'safety_function_faulty',
+        'settings_restored',
+        'sim_card_locked',
+        'sim_card_not_found',
+        'sim_card_requires_pin',
+        'slipped_mower_has_slipped_situation_not_solved_with_moving_pattern',
+        'slope_too_steep',
+        'sms_could_not_be_sent',
+        'stop_button_problem',
+        'stuck_in_charging_station',
+        'switch_cord_problem',
+        'temporary_battery_problem',
+        'tilt_sensor_problem',
+        'too_high_discharge_current',
+        'too_high_internal_current',
+        'trapped',
+        'ultrasonic_problem',
+        'ultrasonic_sensor_1_defect',
+        'ultrasonic_sensor_2_defect',
+        'ultrasonic_sensor_3_defect',
+        'ultrasonic_sensor_4_defect',
+        'unexpected_cutting_height_adj',
+        'unexpected_error',
+        'upside_down',
+        'weak_gps_signal',
+        'wheel_drive_problem_left',
+        'wheel_drive_problem_rear_left',
+        'wheel_drive_problem_rear_right',
+        'wheel_drive_problem_right',
+        'wheel_motor_blocked_left',
+        'wheel_motor_blocked_rear_left',
+        'wheel_motor_blocked_rear_right',
+        'wheel_motor_blocked_right',
+        'wheel_motor_overloaded_left',
+        'wheel_motor_overloaded_rear_left',
+        'wheel_motor_overloaded_rear_right',
+        'wheel_motor_overloaded_right',
+        'work_area_not_valid',
+        'wrong_loop_signal',
+        'wrong_pin_code',
+        'zone_generator_problem',
+        'error_at_power_up',
+        'error',
+        'fatal_error',
+        'off',
+        'stopped',
+        'wait_power_up',
+        'wait_updating',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_2_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Error',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'error',
+    'unique_id': '1234_error',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Mower 2 Error',
+      'options': list([
+        'alarm_mower_in_motion',
+        'alarm_mower_lifted',
+        'alarm_mower_stopped',
+        'alarm_mower_switched_off',
+        'alarm_mower_tilted',
+        'alarm_outside_geofence',
+        'angular_sensor_problem',
+        'battery_problem',
+        'battery_restriction_due_to_ambient_temperature',
+        'can_error',
+        'charging_current_too_high',
+        'charging_station_blocked',
+        'charging_system_problem',
+        'collision_sensor_defect',
+        'collision_sensor_error',
+        'collision_sensor_problem_front',
+        'collision_sensor_problem_rear',
+        'com_board_not_available',
+        'communication_circuit_board_sw_must_be_updated',
+        'complex_working_area',
+        'connection_changed',
+        'connection_not_changed',
+        'connectivity_problem',
+        'connectivity_settings_restored',
+        'cutting_drive_motor_1_defect',
+        'cutting_drive_motor_2_defect',
+        'cutting_drive_motor_3_defect',
+        'cutting_height_blocked',
+        'cutting_height_problem_curr',
+        'cutting_height_problem_dir',
+        'cutting_height_problem_drive',
+        'cutting_height_problem',
+        'cutting_motor_problem',
+        'cutting_stopped_slope_too_steep',
+        'cutting_system_blocked',
+        'cutting_system_imbalance_warning',
+        'cutting_system_major_imbalance',
+        'destination_not_reachable',
+        'difficult_finding_home',
+        'docking_sensor_defect',
+        'electronic_problem',
+        'empty_battery',
+        'folding_cutting_deck_sensor_defect',
+        'folding_sensor_activated',
+        'geofence_problem',
+        'gps_navigation_problem',
+        'guide_1_not_found',
+        'guide_2_not_found',
+        'guide_3_not_found',
+        'guide_calibration_accomplished',
+        'guide_calibration_failed',
+        'high_charging_power_loss',
+        'high_internal_power_loss',
+        'high_internal_temperature',
+        'internal_voltage_error',
+        'invalid_battery_combination_invalid_combination_of_different_battery_types',
+        'invalid_sub_device_combination',
+        'invalid_system_configuration',
+        'left_brush_motor_overloaded',
+        'lift_sensor_defect',
+        'lifted',
+        'limited_cutting_height_range',
+        'loop_sensor_defect',
+        'loop_sensor_problem_front',
+        'loop_sensor_problem_left',
+        'loop_sensor_problem_rear',
+        'loop_sensor_problem_right',
+        'low_battery',
+        'memory_circuit_problem',
+        'mower_lifted',
+        'mower_tilted',
+        'no_accurate_position_from_satellites',
+        'no_confirmed_position',
+        'no_drive',
+        'no_error',
+        'no_loop_signal',
+        'no_power_in_charging_station',
+        'no_response_from_charger',
+        'outside_working_area',
+        'poor_signal_quality',
+        'reference_station_communication_problem',
+        'right_brush_motor_overloaded',
+        'safety_function_faulty',
+        'settings_restored',
+        'sim_card_locked',
+        'sim_card_not_found',
+        'sim_card_requires_pin',
+        'slipped_mower_has_slipped_situation_not_solved_with_moving_pattern',
+        'slope_too_steep',
+        'sms_could_not_be_sent',
+        'stop_button_problem',
+        'stuck_in_charging_station',
+        'switch_cord_problem',
+        'temporary_battery_problem',
+        'tilt_sensor_problem',
+        'too_high_discharge_current',
+        'too_high_internal_current',
+        'trapped',
+        'ultrasonic_problem',
+        'ultrasonic_sensor_1_defect',
+        'ultrasonic_sensor_2_defect',
+        'ultrasonic_sensor_3_defect',
+        'ultrasonic_sensor_4_defect',
+        'unexpected_cutting_height_adj',
+        'unexpected_error',
+        'upside_down',
+        'weak_gps_signal',
+        'wheel_drive_problem_left',
+        'wheel_drive_problem_rear_left',
+        'wheel_drive_problem_rear_right',
+        'wheel_drive_problem_right',
+        'wheel_motor_blocked_left',
+        'wheel_motor_blocked_rear_left',
+        'wheel_motor_blocked_rear_right',
+        'wheel_motor_blocked_right',
+        'wheel_motor_overloaded_left',
+        'wheel_motor_overloaded_rear_left',
+        'wheel_motor_overloaded_rear_right',
+        'wheel_motor_overloaded_right',
+        'work_area_not_valid',
+        'wrong_loop_signal',
+        'wrong_pin_code',
+        'zone_generator_problem',
+        'error_at_power_up',
+        'error',
+        'fatal_error',
+        'off',
+        'stopped',
+        'wait_power_up',
+        'wait_updating',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_2_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_error',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <MowerModes.MAIN_AREA: 'main_area'>,
+        <MowerModes.DEMO: 'demo'>,
+        <MowerModes.SECONDARY_AREA: 'secondary_area'>,
+        <MowerModes.HOME: 'home'>,
+        <MowerModes.UNKNOWN: 'unknown'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_2_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '1234_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Mower 2 Mode',
+      'options': list([
+        <MowerModes.MAIN_AREA: 'main_area'>,
+        <MowerModes.DEMO: 'demo'>,
+        <MowerModes.SECONDARY_AREA: 'secondary_area'>,
+        <MowerModes.HOME: 'home'>,
+        <MowerModes.UNKNOWN: 'unknown'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_2_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'main_area',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_next_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_2_next_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next start',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_start_timestamp',
+    'unique_id': '1234_next_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_next_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test Mower 2 Next start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_2_next_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-06-05T17:00:00+00:00',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_restricted_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
+        <RestrictedReasons.DAILY_LIMIT: 'daily_limit'>,
+        <RestrictedReasons.EXTERNAL: 'external'>,
+        <RestrictedReasons.FOTA: 'fota'>,
+        <RestrictedReasons.FROST: 'frost'>,
+        <RestrictedReasons.NONE: 'none'>,
+        <RestrictedReasons.NOT_APPLICABLE: 'not_applicable'>,
+        <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
+        <RestrictedReasons.SENSOR: 'sensor'>,
+        <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_2_restricted_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Restricted reason',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'restricted_reason',
+    'unique_id': '1234_restricted_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_restricted_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Mower 2 Restricted reason',
+      'options': list([
+        <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
+        <RestrictedReasons.DAILY_LIMIT: 'daily_limit'>,
+        <RestrictedReasons.EXTERNAL: 'external'>,
+        <RestrictedReasons.FOTA: 'fota'>,
+        <RestrictedReasons.FROST: 'frost'>,
+        <RestrictedReasons.NONE: 'none'>,
+        <RestrictedReasons.NOT_APPLICABLE: 'not_applicable'>,
+        <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
+        <RestrictedReasons.SENSOR: 'sensor'>,
+        <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_2_restricted_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'week_schedule',
   })
 # ---

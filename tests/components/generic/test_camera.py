@@ -25,8 +25,8 @@ from homeassistant.components.generic.const import (
     CONF_STREAM_SOURCE,
     DOMAIN,
 )
-from homeassistant.components.stream.const import CONF_RTSP_TRANSPORT
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.stream import CONF_RTSP_TRANSPORT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -73,8 +73,8 @@ async def help_setup_mock_config_entry(
 async def test_fetching_url(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    fakeimgbytes_png,
-    caplog: pytest.CaptureFixture,
+    fakeimgbytes_png: bytes,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that it fetches the given url."""
     hass.states.async_set("sensor.temp", "http://example.com/0a")
@@ -132,7 +132,7 @@ async def test_image_caching(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
-    fakeimgbytes_png,
+    fakeimgbytes_png: bytes,
 ) -> None:
     """Test that the image is cached and not fetched more often than the framerate indicates."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
@@ -197,7 +197,7 @@ async def test_image_caching(
 
 @respx.mock
 async def test_fetching_without_verify_ssl(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, fakeimgbytes_png
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, fakeimgbytes_png: bytes
 ) -> None:
     """Test that it fetches the given url when ssl verify is off."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
@@ -221,7 +221,7 @@ async def test_fetching_without_verify_ssl(
 
 @respx.mock
 async def test_fetching_url_with_verify_ssl(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, fakeimgbytes_png
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, fakeimgbytes_png: bytes
 ) -> None:
     """Test that it fetches the given url when ssl verify is explicitly on."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
@@ -247,8 +247,8 @@ async def test_fetching_url_with_verify_ssl(
 async def test_limit_refetch(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    fakeimgbytes_png,
-    fakeimgbytes_jpg,
+    fakeimgbytes_png: bytes,
+    fakeimgbytes_jpg: bytes,
 ) -> None:
     """Test that it fetches the given url."""
     respx.get("http://example.com/0a").respond(stream=fakeimgbytes_png)
@@ -273,8 +273,11 @@ async def test_limit_refetch(
 
     hass.states.async_set("sensor.temp", "5")
 
-    with pytest.raises(aiohttp.ServerTimeoutError), patch(
-        "asyncio.timeout", side_effect=TimeoutError()
+    with (
+        pytest.raises(aiohttp.ServerTimeoutError),
+        patch.object(
+            client.session._connector, "connect", side_effect=asyncio.TimeoutError
+        ),
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
 
@@ -318,7 +321,7 @@ async def test_stream_source(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    fakeimgbytes_png,
+    fakeimgbytes_png: bytes,
 ) -> None:
     """Test that the stream source is rendered."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
@@ -375,7 +378,7 @@ async def test_stream_source_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    fakeimgbytes_png,
+    fakeimgbytes_png: bytes,
 ) -> None:
     """Test that the stream source has an error."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
@@ -417,7 +420,7 @@ async def test_stream_source_error(
 
 @respx.mock
 async def test_setup_alternative_options(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, fakeimgbytes_png
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, fakeimgbytes_png: bytes
 ) -> None:
     """Test that the stream source is setup with different config options."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
@@ -441,7 +444,7 @@ async def test_no_stream_source(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    fakeimgbytes_png,
+    fakeimgbytes_png: bytes,
 ) -> None:
     """Test a stream request without stream source option set."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
@@ -481,8 +484,8 @@ async def test_no_stream_source(
 async def test_camera_content_type(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    fakeimgbytes_svg,
-    fakeimgbytes_jpg,
+    fakeimgbytes_svg: bytes,
+    fakeimgbytes_jpg: bytes,
 ) -> None:
     """Test generic camera with custom content_type."""
     urlsvg = "https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg"
@@ -531,8 +534,8 @@ async def test_camera_content_type(
 async def test_timeout_cancelled(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    fakeimgbytes_png,
-    fakeimgbytes_jpg,
+    fakeimgbytes_png: bytes,
+    fakeimgbytes_jpg: bytes,
 ) -> None:
     """Test that timeouts and cancellations return last image."""
 

@@ -1,5 +1,7 @@
 """The tests for the Light component."""
 
+from types import ModuleType
+from typing import Literal
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
@@ -20,10 +22,19 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
-from tests.common import MockEntityPlatform, MockUser, async_mock_service
-from tests.components.light.common import MockLight, SetupLightPlatformCallable
+from .common import MockLight
+
+from tests.common import (
+    MockEntityPlatform,
+    MockUser,
+    async_mock_service,
+    help_test_all,
+    import_and_test_deprecated_constant,
+    import_and_test_deprecated_constant_enum,
+    setup_test_component_platform,
+)
 
 orig_Profiles = light.Profiles
 
@@ -111,11 +122,10 @@ async def test_methods(hass: HomeAssistant) -> None:
 async def test_services(
     hass: HomeAssistant,
     mock_light_profiles,
-    setup_light_platform: SetupLightPlatformCallable,
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the provided services."""
-    setup_light_platform(hass, mock_light_entities)
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -512,11 +522,10 @@ async def test_light_profiles(
     profile_name,
     expected_data,
     last_call,
-    setup_light_platform: SetupLightPlatformCallable,
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test light profiles."""
-    setup_light_platform(hass, mock_light_entities)
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
     profile_mock_data = {
         "test": (0.4, 0.6, 100, 0),
@@ -561,11 +570,10 @@ async def test_light_profiles(
 async def test_default_profiles_group(
     hass: HomeAssistant,
     mock_light_profiles,
-    setup_light_platform: SetupLightPlatformCallable,
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test default turn-on light profile for all lights."""
-    setup_light_platform(hass, mock_light_entities)
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -787,11 +795,10 @@ async def test_default_profiles_light(
     extra_call_params,
     expected_params_state_was_off,
     expected_params_state_was_on,
-    setup_light_platform: SetupLightPlatformCallable,
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test default turn-on light profile for a specific light."""
-    setup_light_platform(hass, mock_light_entities)
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -857,11 +864,10 @@ async def test_default_profiles_light(
 async def test_light_context(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
-    setup_light_platform: SetupLightPlatformCallable,
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test that light context works."""
-    setup_light_platform(hass, mock_light_entities)
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -886,11 +892,10 @@ async def test_light_context(
 async def test_light_turn_on_auth(
     hass: HomeAssistant,
     hass_read_only_user: MockUser,
-    setup_light_platform: SetupLightPlatformCallable,
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test that light context works."""
-    setup_light_platform(hass, mock_light_entities)
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -910,16 +915,14 @@ async def test_light_turn_on_auth(
         )
 
 
-async def test_light_brightness_step(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_brightness_step(hass: HomeAssistant) -> None:
     """Test that light context works."""
     entities = [
         MockLight("Test_0", STATE_ON),
         MockLight("Test_1", STATE_ON),
     ]
 
-    setup_light_platform(hass, entities)
+    setup_test_component_platform(hass, light.DOMAIN, entities)
 
     entity0 = entities[0]
     entity0.supported_features = light.SUPPORT_BRIGHTNESS
@@ -983,14 +986,13 @@ async def test_light_brightness_step(
     assert entity0.state == "off"  # 126 - 126; brightness is 0, light should turn off
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_light_brightness_pct_conversion(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
-    setup_light_platform: SetupLightPlatformCallable,
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test that light brightness percent conversion."""
-    setup_light_platform(hass, mock_light_entities)
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
     entity = mock_light_entities[0]
     entity.supported_features = light.SUPPORT_BRIGHTNESS
@@ -1147,7 +1149,7 @@ invalid_no_brightness_no_color_no_transition,,,
 
 @pytest.mark.parametrize("light_state", [STATE_ON, STATE_OFF])
 async def test_light_backwards_compatibility_supported_color_modes(
-    hass: HomeAssistant, light_state, setup_light_platform: SetupLightPlatformCallable
+    hass: HomeAssistant, light_state: Literal["on", "off"]
 ) -> None:
     """Test supported_color_modes if not implemented by the entity."""
     entities = [
@@ -1186,7 +1188,7 @@ async def test_light_backwards_compatibility_supported_color_modes(
     entity4.supported_color_modes = None
     entity4.color_mode = None
 
-    setup_light_platform(hass, entities)
+    setup_test_component_platform(hass, light.DOMAIN, entities)
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1230,9 +1232,7 @@ async def test_light_backwards_compatibility_supported_color_modes(
         assert state.attributes["color_mode"] == light.ColorMode.UNKNOWN
 
 
-async def test_light_backwards_compatibility_color_mode(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_backwards_compatibility_color_mode(hass: HomeAssistant) -> None:
     """Test color_mode if not implemented by the entity."""
     entities = [
         MockLight("Test_0", STATE_ON),
@@ -1275,7 +1275,7 @@ async def test_light_backwards_compatibility_color_mode(
     entity4.hs_color = (240, 100)
     entity4.color_temp_kelvin = 10000
 
-    setup_light_platform(hass, entities)
+    setup_test_component_platform(hass, light.DOMAIN, entities)
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1291,9 +1291,9 @@ async def test_light_backwards_compatibility_color_mode(
     state = hass.states.get(entity2.entity_id)
     assert state.attributes["supported_color_modes"] == [light.ColorMode.COLOR_TEMP]
     assert state.attributes["color_mode"] == light.ColorMode.COLOR_TEMP
-    assert state.attributes["rgb_color"] == (201, 218, 255)
+    assert state.attributes["rgb_color"] == (202, 218, 255)
     assert state.attributes["hs_color"] == (221.575, 20.9)
-    assert state.attributes["xy_color"] == (0.277, 0.287)
+    assert state.attributes["xy_color"] == (0.278, 0.287)
 
     state = hass.states.get(entity3.entity_id)
     assert state.attributes["supported_color_modes"] == [light.ColorMode.HS]
@@ -1308,14 +1308,12 @@ async def test_light_backwards_compatibility_color_mode(
     assert state.attributes["color_mode"] == light.ColorMode.HS
 
 
-async def test_light_service_call_rgbw(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_service_call_rgbw(hass: HomeAssistant) -> None:
     """Test rgbw functionality in service calls."""
     entity0 = MockLight("Test_rgbw", STATE_ON)
     entity0.supported_color_modes = {light.ColorMode.RGBW}
 
-    setup_light_platform(hass, [entity0])
+    setup_test_component_platform(hass, light.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1338,9 +1336,7 @@ async def test_light_service_call_rgbw(
     assert data == {"brightness": 255, "rgbw_color": (10, 20, 30, 40)}
 
 
-async def test_light_state_off(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_state_off(hass: HomeAssistant) -> None:
     """Test rgbw color conversion in state updates."""
     entities = [
         MockLight("Test_onoff", STATE_OFF),
@@ -1348,7 +1344,7 @@ async def test_light_state_off(
         MockLight("Test_ct", STATE_OFF),
         MockLight("Test_rgbw", STATE_OFF),
     ]
-    setup_light_platform(hass, entities)
+    setup_test_component_platform(hass, light.DOMAIN, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.ONOFF}
@@ -1391,7 +1387,7 @@ async def test_light_state_off(
         "hs_color": None,
         "rgb_color": None,
         "xy_color": None,
-        "max_color_temp_kelvin": 6500,
+        "max_color_temp_kelvin": 6535,
         "max_mireds": 500,
         "min_color_temp_kelvin": 2000,
         "min_mireds": 153,
@@ -1411,12 +1407,10 @@ async def test_light_state_off(
     }
 
 
-async def test_light_state_rgbw(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_state_rgbw(hass: HomeAssistant) -> None:
     """Test rgbw color conversion in state updates."""
     entity0 = MockLight("Test_rgbw", STATE_ON)
-    setup_light_platform(hass, [entity0])
+    setup_test_component_platform(hass, light.DOMAIN, [entity0])
 
     entity0.brightness = 255
     entity0.supported_color_modes = {light.ColorMode.RGBW}
@@ -1444,12 +1438,10 @@ async def test_light_state_rgbw(
     }
 
 
-async def test_light_state_rgbww(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_state_rgbww(hass: HomeAssistant) -> None:
     """Test rgbww color conversion in state updates."""
     entity0 = MockLight("Test_rgbww", STATE_ON)
-    setup_light_platform(hass, [entity0])
+    setup_test_component_platform(hass, light.DOMAIN, [entity0])
 
     entity0.supported_color_modes = {light.ColorMode.RGBWW}
     entity0.color_mode = light.ColorMode.RGBWW
@@ -1477,9 +1469,7 @@ async def test_light_state_rgbww(
     }
 
 
-async def test_light_service_call_color_conversion(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_service_call_color_conversion(hass: HomeAssistant) -> None:
     """Test color conversion in service calls."""
     entities = [
         MockLight("Test_hs", STATE_ON),
@@ -1491,7 +1481,7 @@ async def test_light_service_call_color_conversion(
         MockLight("Test_rgbww", STATE_ON),
         MockLight("Test_temperature", STATE_ON),
     ]
-    setup_light_platform(hass, entities)
+    setup_test_component_platform(hass, light.DOMAIN, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.HS}
@@ -1923,7 +1913,7 @@ async def test_light_service_call_color_conversion(
 
 
 async def test_light_service_call_color_conversion_named_tuple(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
+    hass: HomeAssistant,
 ) -> None:
     """Test a named tuple (RGBColor) is handled correctly."""
     entities = [
@@ -1935,7 +1925,7 @@ async def test_light_service_call_color_conversion_named_tuple(
         MockLight("Test_rgbw", STATE_ON),
         MockLight("Test_rgbww", STATE_ON),
     ]
-    setup_light_platform(hass, entities)
+    setup_test_component_platform(hass, light.DOMAIN, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.HS}
@@ -2002,16 +1992,14 @@ async def test_light_service_call_color_conversion_named_tuple(
     assert data == {"brightness": 64, "rgbww_color": (128, 0, 0, 0, 0)}
 
 
-async def test_light_service_call_color_temp_emulation(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_service_call_color_temp_emulation(hass: HomeAssistant) -> None:
     """Test color conversion in service calls."""
     entities = [
         MockLight("Test_hs_ct", STATE_ON),
         MockLight("Test_hs", STATE_ON),
         MockLight("Test_hs_white", STATE_ON),
     ]
-    setup_light_platform(hass, entities)
+    setup_test_component_platform(hass, light.DOMAIN, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.COLOR_TEMP, light.ColorMode.HS}
@@ -2062,15 +2050,13 @@ async def test_light_service_call_color_temp_emulation(
     assert data == {"brightness": 255, "hs_color": (27.001, 19.243)}
 
 
-async def test_light_service_call_color_temp_conversion(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_service_call_color_temp_conversion(hass: HomeAssistant) -> None:
     """Test color temp conversion in service calls."""
     entities = [
         MockLight("Test_rgbww_ct", STATE_ON),
         MockLight("Test_rgbww", STATE_ON),
     ]
-    setup_light_platform(hass, entities)
+    setup_test_component_platform(hass, light.DOMAIN, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {
@@ -2083,7 +2069,7 @@ async def test_light_service_call_color_temp_conversion(
     assert entity1.min_mireds == 153
     assert entity1.max_mireds == 500
     assert entity1.min_color_temp_kelvin == 2000
-    assert entity1.max_color_temp_kelvin == 6500
+    assert entity1.max_color_temp_kelvin == 6535
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -2096,7 +2082,7 @@ async def test_light_service_call_color_temp_conversion(
     assert state.attributes["min_mireds"] == 153
     assert state.attributes["max_mireds"] == 500
     assert state.attributes["min_color_temp_kelvin"] == 2000
-    assert state.attributes["max_color_temp_kelvin"] == 6500
+    assert state.attributes["max_color_temp_kelvin"] == 6535
 
     state = hass.states.get(entity1.entity_id)
     assert state.attributes["supported_color_modes"] == [light.ColorMode.RGBWW]
@@ -2195,15 +2181,13 @@ async def test_light_service_call_color_temp_conversion(
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 66, 189)}
 
 
-async def test_light_mired_color_temp_conversion(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_mired_color_temp_conversion(hass: HomeAssistant) -> None:
     """Test color temp conversion from K to legacy mired."""
     entities = [
         MockLight("Test_rgbww_ct", STATE_ON),
         MockLight("Test_rgbww", STATE_ON),
     ]
-    setup_light_platform(hass, entities)
+    setup_test_component_platform(hass, light.DOMAIN, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {
@@ -2243,13 +2227,11 @@ async def test_light_mired_color_temp_conversion(
     assert state.attributes["color_temp_kelvin"] == 3500
 
 
-async def test_light_service_call_white_mode(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_service_call_white_mode(hass: HomeAssistant) -> None:
     """Test color_mode white in service calls."""
     entity0 = MockLight("Test_white", STATE_ON)
     entity0.supported_color_modes = {light.ColorMode.HS, light.ColorMode.WHITE}
-    setup_light_platform(hass, [entity0])
+    setup_test_component_platform(hass, light.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -2344,9 +2326,7 @@ async def test_light_service_call_white_mode(
     assert data == {"white": 128}
 
 
-async def test_light_state_color_conversion(
-    hass: HomeAssistant, setup_light_platform: SetupLightPlatformCallable
-) -> None:
+async def test_light_state_color_conversion(hass: HomeAssistant) -> None:
     """Test color conversion in state updates."""
     entities = [
         MockLight("Test_hs", STATE_ON),
@@ -2354,7 +2334,7 @@ async def test_light_state_color_conversion(
         MockLight("Test_xy", STATE_ON),
         MockLight("Test_legacy", STATE_ON),
     ]
-    setup_light_platform(hass, entities)
+    setup_test_component_platform(hass, light.DOMAIN, entities)
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.HS}
@@ -2415,11 +2395,10 @@ async def test_light_state_color_conversion(
 async def test_services_filter_parameters(
     hass: HomeAssistant,
     mock_light_profiles,
-    setup_light_platform: SetupLightPlatformCallable,
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test turn_on and turn_off filters unsupported parameters."""
-    setup_light_platform(hass, mock_light_entities)
+    setup_test_component_platform(hass, light.DOMAIN, mock_light_entities)
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -2646,7 +2625,9 @@ def test_filter_supported_color_modes() -> None:
     assert light.filter_supported_color_modes(supported) == {light.ColorMode.BRIGHTNESS}
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockLightEntityEntity(light.LightEntity):
@@ -2656,6 +2637,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockLightEntityEntity()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass, domain="test", platform_name="test")
     assert entity.supported_features_compat is light.LightEntityFeature(1)
     assert "MockLightEntityEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text
@@ -2674,7 +2657,7 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
         (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
     ],
 )
-def test_report_no_color_mode(
+async def test_report_no_color_mode(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     color_mode: str,
@@ -2690,6 +2673,8 @@ def test_report_no_color_mode(
         _attr_supported_color_modes = supported_color_modes
 
     entity = MockLightEntityEntity()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     entity._async_calculate_state()
     expected_warning = "does not report a color mode"
     assert (expected_warning in caplog.text) is warning_expected
@@ -2702,7 +2687,7 @@ def test_report_no_color_mode(
         (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
     ],
 )
-def test_report_no_color_modes(
+async def test_report_no_color_modes(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     color_mode: str,
@@ -2718,6 +2703,8 @@ def test_report_no_color_modes(
         _attr_supported_color_modes = supported_color_modes
 
     entity = MockLightEntityEntity()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     entity._async_calculate_state()
     expected_warning = "does not set supported color modes"
     assert (expected_warning in caplog.text) is warning_expected
@@ -2748,7 +2735,7 @@ def test_report_no_color_modes(
         (light.ColorMode.HS, {light.ColorMode.BRIGHTNESS}, "effect", True),
     ],
 )
-def test_report_invalid_color_mode(
+async def test_report_invalid_color_mode(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     color_mode: str,
@@ -2766,6 +2753,8 @@ def test_report_invalid_color_mode(
         _attr_supported_color_modes = supported_color_modes
 
     entity = MockLightEntityEntity()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     entity._async_calculate_state()
     expected_warning = f"set to unsupported color mode {color_mode}"
     assert (expected_warning in caplog.text) is warning_expected
@@ -2827,3 +2816,194 @@ def test_report_invalid_color_modes(
     entity._async_calculate_state()
     expected_warning = "sets invalid supported color modes"
     assert (expected_warning in caplog.text) is warning_expected
+
+
+@pytest.mark.parametrize(
+    ("attributes", "expected_warnings", "expected_values"),
+    [
+        (
+            {
+                "_attr_color_temp_kelvin": 4000,
+                "_attr_min_color_temp_kelvin": 3000,
+                "_attr_max_color_temp_kelvin": 5000,
+            },
+            {"current": False, "warmest": False, "coldest": False},
+            # Just highlighting that the attributes match the
+            # converted kelvin values, not the mired properties
+            (3000, 4000, 5000, 200, 250, 333, 153, None, 500),
+        ),
+        (
+            {"_attr_color_temp": 350, "_attr_min_mireds": 300, "_attr_max_mireds": 400},
+            {"current": True, "warmest": True, "coldest": True},
+            (2500, 2857, 3333, 300, 350, 400, 300, 350, 400),
+        ),
+        (
+            {},
+            {"current": False, "warmest": True, "coldest": True},
+            (2000, None, 6535, 153, None, 500, 153, None, 500),
+        ),
+    ],
+    ids=["with_kelvin", "with_mired_values", "with_mired_defaults"],
+)
+def test_missing_kelvin_property_warnings(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    attributes: dict[str, int | None],
+    expected_warnings: dict[str, bool],
+    expected_values: tuple[int, int | None, int],
+) -> None:
+    """Test missing kelvin properties."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        _attr_color_mode = light.ColorMode.COLOR_TEMP
+        _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
+        _attr_supported_color_modes = {light.ColorMode.COLOR_TEMP}
+        platform = MockEntityPlatform(hass, platform_name="test")
+
+    entity = MockLightEntityEntity()
+    for k, v in attributes.items():
+        setattr(entity, k, v)
+
+    state = entity._async_calculate_state()
+    for warning, expected in expected_warnings.items():
+        assert (
+            f"is using mireds for {warning} light color temperature" in caplog.text
+        ) is expected, f"Expected {expected} for '{warning}'"
+
+    assert state.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN] == expected_values[0]
+    assert state.attributes[light.ATTR_COLOR_TEMP_KELVIN] == expected_values[1]
+    assert state.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN] == expected_values[2]
+    assert state.attributes[light.ATTR_MIN_MIREDS] == expected_values[3]
+    assert state.attributes[light.ATTR_COLOR_TEMP] == expected_values[4]
+    assert state.attributes[light.ATTR_MAX_MIREDS] == expected_values[5]
+    assert entity.min_mireds == expected_values[6]
+    assert entity.color_temp == expected_values[7]
+    assert entity.max_mireds == expected_values[8]
+
+
+@pytest.mark.parametrize(
+    "module",
+    [light],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "constant_value", "constant_replacement"),
+    [
+        ("SUPPORT_BRIGHTNESS", 1, "supported_color_modes"),
+        ("SUPPORT_COLOR_TEMP", 2, "supported_color_modes"),
+        ("SUPPORT_COLOR", 16, "supported_color_modes"),
+        ("ATTR_COLOR_TEMP", "color_temp", "kelvin equivalent (ATTR_COLOR_TEMP_KELVIN)"),
+        ("ATTR_KELVIN", "kelvin", "ATTR_COLOR_TEMP_KELVIN"),
+        (
+            "ATTR_MIN_MIREDS",
+            "min_mireds",
+            "kelvin equivalent (ATTR_MAX_COLOR_TEMP_KELVIN)",
+        ),
+        (
+            "ATTR_MAX_MIREDS",
+            "max_mireds",
+            "kelvin equivalent (ATTR_MIN_COLOR_TEMP_KELVIN)",
+        ),
+    ],
+)
+def test_deprecated_light_constants(
+    caplog: pytest.LogCaptureFixture,
+    constant_name: str,
+    constant_value: int | str,
+    constant_replacement: str,
+) -> None:
+    """Test deprecated light constants."""
+    import_and_test_deprecated_constant(
+        caplog, light, constant_name, constant_replacement, constant_value, "2026.1"
+    )
+
+
+@pytest.mark.parametrize(
+    "entity_feature",
+    list(light.LightEntityFeature),
+)
+def test_deprecated_support_light_constants_enums(
+    caplog: pytest.LogCaptureFixture,
+    entity_feature: light.LightEntityFeature,
+) -> None:
+    """Test deprecated support light constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, light, entity_feature, "SUPPORT_", "2026.1"
+    )
+
+
+@pytest.mark.parametrize(
+    "entity_feature",
+    list(light.ColorMode),
+)
+def test_deprecated_color_mode_constants_enums(
+    caplog: pytest.LogCaptureFixture,
+    entity_feature: light.LightEntityFeature,
+) -> None:
+    """Test deprecated support light constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, light, entity_feature, "COLOR_MODE_", "2026.1"
+    )
+
+
+async def test_deprecated_turn_on_arguments(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test color temp conversion in service calls."""
+    entity = MockLight("Test_ct", STATE_ON, {light.ColorMode.COLOR_TEMP})
+    setup_test_component_platform(hass, light.DOMAIN, [entity])
+
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.ColorMode.COLOR_TEMP]
+
+    caplog.clear()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [entity.entity_id],
+            "color_temp": 200,
+        },
+        blocking=True,
+    )
+    assert "Got `color_temp` argument in `turn_on` service" in caplog.text
+    _, data = entity.last_call("turn_on")
+    assert data == {"color_temp": 200, "color_temp_kelvin": 5000}
+
+    caplog.clear()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [entity.entity_id],
+            "kelvin": 5000,
+        },
+        blocking=True,
+    )
+    assert "Got `kelvin` argument in `turn_on` service" in caplog.text
+    _, data = entity.last_call("turn_on")
+    assert data == {"color_temp": 200, "color_temp_kelvin": 5000}
+
+    caplog.clear()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [entity.entity_id],
+            "color_temp_kelvin": 5000,
+        },
+        blocking=True,
+    )
+    _, data = entity.last_call("turn_on")
+    assert data == {"color_temp": 200, "color_temp_kelvin": 5000}
+    assert "argument in `turn_on` service" not in caplog.text

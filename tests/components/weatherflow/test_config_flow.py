@@ -30,7 +30,7 @@ async def test_single_instance(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -48,7 +48,7 @@ async def test_devices_with_mocks(
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
 
 
@@ -80,12 +80,12 @@ async def test_devices_with_various_mocks_errors(
         )
 
         await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"]["base"] == error_msg
         assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}

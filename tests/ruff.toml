@@ -2,25 +2,17 @@
 extend = "../pyproject.toml"
 
 [lint]
-extend-select = [
-    "PT001", # Use @pytest.fixture without parentheses
-    "PT002", # Configuration for fixture specified via positional args, use kwargs
-    "PT003", # The scope='function' is implied in @pytest.fixture()
-    "PT006", # Single parameter in parameterize is a string, multiple a tuple
-    "PT013", # Found incorrect pytest import, use simple import pytest instead
-    "PT015", # Assertion always fails, replace with pytest.fail()
-    "PT021", # use yield instead of request.addfinalizer
-    "PT022", # No teardown in fixture, replace useless yield with return
-]
 
 extend-ignore = [
-    "PLC", # pylint
-    "PLE", # pylint
-    "PLR", # pylint
-    "PLW", # pylint
     "B904", # Use raise from to specify exception cause
     "N815", # Variable {name} in class scope should not be mixedCase
+    "RUF018", # Avoid assignment expressions in assert statements
+    "SLF001", # Private member accessed: Tests do often test internals a lot
 ]
+
+[lint.flake8-tidy-imports.banned-api]
+"async_timeout".msg = "use asyncio.timeout instead"
+"pytz".msg = "use zoneinfo instead"
 
 [lint.isort]
 known-first-party = [

@@ -6,11 +6,12 @@ from collections.abc import Mapping
 from typing import Any
 
 import aiohttp
-from ovoenergy.ovoenergy import OVOEnergy
+from ovoenergy import OVOEnergy
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ACCOUNT, DOMAIN
 
@@ -41,13 +42,19 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
-            client = OVOEnergy()
+            client = OVOEnergy(
+                client_session=async_get_clientsession(self.hass),
+            )
+
+            if (custom_account := user_input.get(CONF_ACCOUNT)) is not None:
+                client.custom_account_id = custom_account
+
             try:
                 authenticated = await client.authenticate(
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
-                    user_input.get(CONF_ACCOUNT, None),
                 )
+                await client.bootstrap_accounts()
             except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             else:
@@ -72,42 +79,49 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(
         self,
-        user_input: Mapping[str, Any],
+        entry_data: Mapping[str, Any],
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        self.username = entry_data.get(CONF_USERNAME)
+        self.account = entry_data.get(CONF_ACCOUNT)
+
+        if self.username:
+            # If we have a username, use it as flow title
+            self.context["title_placeholders"] = {CONF_USERNAME: self.username}
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self,
+        user_input: Mapping[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         errors = {}
 
-        if user_input and user_input.get(CONF_USERNAME):
-            self.username = user_input[CONF_USERNAME]
+        if user_input is not None:
+            client = OVOEnergy(
+                client_session=async_get_clientsession(self.hass),
+            )
 
-        if user_input and user_input.get(CONF_ACCOUNT):
-            self.account = user_input[CONF_ACCOUNT]
+            if self.account is not None:
+                client.custom_account_id = self.account
 
-        self.context["title_placeholders"] = {CONF_USERNAME: self.username}
-
-        if user_input is not None and user_input.get(CONF_PASSWORD) is not None:
-            client = OVOEnergy()
             try:
                 authenticated = await client.authenticate(
-                    self.username, user_input[CONF_PASSWORD], self.account
+                    self.username,
+                    user_input[CONF_PASSWORD],
                 )
             except aiohttp.ClientError:
                 errors["base"] = "connection_error"
             else:
                 if authenticated:
-                    entry = await self.async_set_unique_id(self.username)
-                    if entry:
-                        self.hass.config_entries.async_update_entry(
-                            entry,
-                            data={
-                                CONF_USERNAME: self.username,
-                                CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            },
-                        )
-                        return self.async_abort(reason="reauth_successful")
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                    )
 
                 errors["base"] = "authorization_error"
 
         return self.async_show_form(
-            step_id="reauth", data_schema=REAUTH_SCHEMA, errors=errors
+            step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
         )

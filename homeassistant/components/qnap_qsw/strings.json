@@ -52,6 +52,9 @@
       },
       "uptime": {
         "name": "Uptime"
+      },
+      "uptime_timestamp": {
+        "name": "Uptime timestamp"
       }
     }
   }

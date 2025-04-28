@@ -9,13 +9,13 @@ from oru import Meter, MeterError
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -25,7 +25,9 @@ CONF_METER_NUMBER = "meter_number"
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_METER_NUMBER): cv.string})
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_METER_NUMBER): cv.string}
+)
 
 
 def setup_platform(

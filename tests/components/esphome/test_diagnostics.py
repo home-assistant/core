@@ -1,8 +1,11 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
 
+from typing import Any
 from unittest.mock import ANY
 
+import pytest
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
@@ -14,18 +17,18 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-    enable_bluetooth: None,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for config entry."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
-    assert result == snapshot
+    assert result == snapshot(exclude=props("created_at", "modified_at"))
 
 
 async def test_diagnostics_with_bluetooth(
@@ -34,7 +37,7 @@ async def test_diagnostics_with_bluetooth(
     mock_bluetooth_entry_with_raw_adv: MockESPHomeDevice,
 ) -> None:
     """Test diagnostics for config entry with Bluetooth."""
-    scanner = bluetooth.async_scanner_by_source(hass, "11:22:33:44:55:AA")
+    scanner = bluetooth.async_scanner_by_source(hass, "AA:BB:CC:DD:EE:FC")
     assert scanner is not None
     assert scanner.connectable is True
     entry = mock_bluetooth_entry_with_raw_adv.entry
@@ -46,33 +49,40 @@ async def test_diagnostics_with_bluetooth(
             "connections_limit": 0,
             "scanner": {
                 "connectable": True,
+                "current_mode": None,
+                "requested_mode": None,
                 "discovered_device_timestamps": {},
                 "discovered_devices_and_advertisement_data": [],
                 "last_detection": ANY,
                 "monotonic_time": ANY,
-                "name": "test (11:22:33:44:55:AA)",
+                "name": "test (AA:BB:CC:DD:EE:FC)",
                 "scanning": True,
-                "source": "11:22:33:44:55:AA",
+                "source": "AA:BB:CC:DD:EE:FC",
                 "start_time": ANY,
                 "time_since_last_device_detection": {},
                 "type": "ESPHomeScanner",
             },
         },
         "config": {
+            "created_at": ANY,
             "data": {
+                "bluetooth_mac_address": "**REDACTED**",
                 "device_name": "test",
                 "host": "test.local",
                 "password": "",
                 "port": 6053,
             },
             "disabled_by": None,
+            "discovery_keys": {},
             "domain": "esphome",
             "entry_id": ANY,
             "minor_version": 1,
+            "modified_at": ANY,
             "options": {"allow_service_calls": False},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
+            "subentries": [],
             "title": "Mock Title",
             "unique_id": "11:22:33:44:55:aa",
             "version": 1,
@@ -80,6 +90,7 @@ async def test_diagnostics_with_bluetooth(
         "storage_data": {
             "api_version": {"major": 99, "minor": 99},
             "device_info": {
+                "bluetooth_mac_address": "**REDACTED**",
                 "bluetooth_proxy_feature_flags": 63,
                 "compilation_time": "",
                 "esphome_version": "1.0.0",
@@ -94,7 +105,8 @@ async def test_diagnostics_with_bluetooth(
                 "project_version": "",
                 "suggested_area": "",
                 "uses_password": False,
-                "voice_assistant_version": 0,
+                "legacy_voice_assistant_version": 0,
+                "voice_assistant_feature_flags": 0,
                 "webserver_port": 0,
             },
             "services": [],

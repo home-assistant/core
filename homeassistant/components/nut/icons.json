@@ -1,59 +1,17 @@
 {
   "entity": {
     "sensor": {
-      "ups_status_display": {
+      "ambient_humidity_status": {
         "default": "mdi:information-outline"
       },
-      "ups_status": {
+      "ambient_temperature_status": {
         "default": "mdi:information-outline"
       },
-      "ups_alarm": {
-        "default": "mdi:alarm"
-      },
-      "ups_load": {
-        "default": "mdi:gauge"
-      },
-      "ups_load_high": {
-        "default": "mdi:gauge"
-      },
-      "ups_id": {
+      "battery_alarm_threshold": {
         "default": "mdi:information-outline"
       },
-      "ups_test_result": {
-        "default": "mdi:information-outline"
-      },
-      "ups_test_date": {
-        "default": "mdi:calendar"
-      },
-      "ups_display_language": {
-        "default": "mdi:information-outline"
-      },
-      "ups_contacts": {
-        "default": "mdi:information-outline"
-      },
-      "ups_efficiency": {
-        "default": "mdi:gauge"
-      },
-      "ups_beeper_status": {
-        "default": "mdi:information-outline"
-      },
-      "ups_type": {
-        "default": "mdi:information-outline"
-      },
-      "ups_watchdog_status": {
-        "default": "mdi:information-outline"
-      },
-      "ups_start_auto": {
-        "default": "mdi:information-outline"
-      },
-      "ups_start_battery": {
-        "default": "mdi:information-outline"
-      },
-      "ups_start_reboot": {
-        "default": "mdi:information-outline"
-      },
-      "ups_shutdown": {
-        "default": "mdi:information-outline"
+      "battery_capacity": {
+        "default": "mdi:flash"
       },
       "battery_charge_low": {
         "default": "mdi:gauge"
@@ -65,12 +23,6 @@
         "default": "mdi:gauge"
       },
       "battery_charger_status": {
-        "default": "mdi:information-outline"
-      },
-      "battery_capacity": {
-        "default": "mdi:flash"
-      },
-      "battery_alarm_threshold": {
         "default": "mdi:information-outline"
       },
       "battery_date": {
@@ -85,8 +37,38 @@
       "battery_packs_bad": {
         "default": "mdi:information-outline"
       },
+      "battery_runtime": {
+        "default": "mdi:clock-outline"
+      },
+      "battery_runtime_low": {
+        "default": "mdi:clock-alert-outline"
+      },
+      "battery_runtime_restart": {
+        "default": "mdi:clock-start"
+      },
       "battery_type": {
         "default": "mdi:information-outline"
+      },
+      "battery_voltage_high": {
+        "default": "mdi:battery-high"
+      },
+      "battery_voltage_low": {
+        "default": "mdi:battery-low"
+      },
+      "input_bypass_phases": {
+        "default": "mdi:sine-wave"
+      },
+      "input_current_status": {
+        "default": "mdi:information-outline"
+      },
+      "input_frequency_status": {
+        "default": "mdi:information-outline"
+      },
+      "input_load": {
+        "default": "mdi:percent-box-outline"
+      },
+      "input_phases": {
+        "default": "mdi:sine-wave"
       },
       "input_sensitivity": {
         "default": "mdi:information-outline"
@@ -94,26 +76,106 @@
       "input_transfer_reason": {
         "default": "mdi:information-outline"
       },
-      "input_frequency_status": {
+      "input_voltage_status": {
         "default": "mdi:information-outline"
       },
-      "input_bypass_phases": {
+      "outlet_number_current_status": {
         "default": "mdi:information-outline"
       },
-      "input_phases": {
+      "outlet_number_desc": {
         "default": "mdi:information-outline"
       },
       "output_l1_power_percent": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-circle-outline"
       },
       "output_l2_power_percent": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-circle-outline"
       },
       "output_l3_power_percent": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-circle-outline"
       },
       "output_phases": {
+        "default": "mdi:sine-wave"
+      },
+      "ups_alarm": {
+        "default": "mdi:alarm"
+      },
+      "ups_beeper_status": {
         "default": "mdi:information-outline"
+      },
+      "ups_contacts": {
+        "default": "mdi:information-outline"
+      },
+      "ups_delay_reboot": {
+        "default": "mdi:timelapse"
+      },
+      "ups_delay_shutdown": {
+        "default": "mdi:timelapse"
+      },
+      "ups_delay_start": {
+        "default": "mdi:timelapse"
+      },
+      "ups_display_language": {
+        "default": "mdi:information-outline"
+      },
+      "ups_efficiency": {
+        "default": "mdi:percent-outline"
+      },
+      "ups_id": {
+        "default": "mdi:information-outline"
+      },
+      "ups_load": {
+        "default": "mdi:percent-box-outline"
+      },
+      "ups_load_high": {
+        "default": "mdi:percent-box-outline"
+      },
+      "ups_shutdown": {
+        "default": "mdi:information-outline"
+      },
+      "ups_start_auto": {
+        "default": "mdi:information-outline"
+      },
+      "ups_start_battery": {
+        "default": "mdi:information-outline"
+      },
+      "ups_start_reboot": {
+        "default": "mdi:information-outline"
+      },
+      "ups_status": {
+        "default": "mdi:information-outline"
+      },
+      "ups_status_display": {
+        "default": "mdi:information-outline"
+      },
+      "ups_test_date": {
+        "default": "mdi:calendar"
+      },
+      "ups_test_interval": {
+        "default": "mdi:timelapse"
+      },
+      "ups_test_result": {
+        "default": "mdi:information-outline"
+      },
+      "ups_timer_reboot": {
+        "default": "mdi:timer-refresh-outline"
+      },
+      "ups_timer_shutdown": {
+        "default": "mdi:timer-stop-outline"
+      },
+      "ups_timer_start": {
+        "default": "mdi:timer-play-outline"
+      },
+      "ups_type": {
+        "default": "mdi:information-outline"
+      },
+      "ups_watchdog_status": {
+        "default": "mdi:information-outline"
+      }
+    },
+    "switch": {
+      "outlet_number_load_poweronoff": {
+        "default": "mdi:power"
       }
     }
   }

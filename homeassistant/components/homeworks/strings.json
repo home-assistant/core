@@ -1,14 +1,20 @@
 {
   "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
     "error": {
       "connection_error": "Could not connect to the controller.",
+      "credentials_needed": "The controller needs credentials.",
       "duplicated_controller_id": "The controller name is already in use.",
       "duplicated_host_port": "The specified host and port is already configured.",
+      "invalid_credentials": "The provided credentials are not valid.",
+      "need_username_with_password": "Credentials must be either a username and a password or only a username.",
       "unknown_error": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "import_finish": {
-        "description": "The existing YAML configuration has succesfully been imported.\n\nYou can now remove the `homeworks` configuration from your configuration.yaml file."
+        "description": "The existing YAML configuration has successfully been imported.\n\nYou can now remove the `homeworks` configuration from your configuration.yaml file."
       },
       "import_controller_name": {
         "description": "Lutron Homeworks is no longer configured through configuration.yaml.\n\nPlease fill in the form to import the existing configuration to the UI.",
@@ -22,7 +28,13 @@
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Optional password, leave blank if your system does not need credentials or only needs a single credential",
+          "username": "Optional username, leave blank if your system does not need login credentials"
         },
         "description": "Modify a Lutron Homeworks controller connection settings"
       },
@@ -30,13 +42,22 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "Controller name",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "name": "A unique name identifying the Lutron Homeworks controller"
+          "name": "A unique name identifying the Lutron Homeworks controller",
+          "password": "[%key:component::homeworks::config::step::reconfigure::data_description::password%]",
+          "username": "[%key:component::homeworks::config::step::reconfigure::data_description::username%]"
         },
         "description": "Add a Lutron Homeworks controller"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_controller_id": {
+      "message": "Invalid controller ID \"{controller_id}\", expected one of \"{controller_ids}\""
     }
   },
   "options": {
@@ -140,6 +161,22 @@
       },
       "select_edit_light": {
         "title": "[%key:component::homeworks::options::step::init::menu_options::select_edit_light%]"
+      }
+    }
+  },
+  "services": {
+    "send_command": {
+      "name": "Send command",
+      "description": "Sends a custom command to a controller",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "The command to send to the controller. This can either be a single command or a list of commands."
+        },
+        "controller_id": {
+          "name": "Controller ID",
+          "description": "The controller to which to send the command."
+        }
       }
     }
   }

@@ -14,7 +14,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_LIGHTS,
@@ -28,7 +28,9 @@ from .helpers import get_spa_name
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for any lights in the tub."""
 
@@ -96,13 +98,11 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        effects = [
+        return [
             effect
             for effect in map(self._light_mode_to_effect, SpaLight.LightMode)
             if effect is not None
         ]
-
-        return effects
 
     @staticmethod
     def _light_mode_to_effect(light_mode: SpaLight.LightMode):

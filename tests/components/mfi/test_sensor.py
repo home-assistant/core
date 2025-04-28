@@ -1,14 +1,14 @@
 """The tests for the mFi sensor platform."""
 
 from copy import deepcopy
-import unittest.mock as mock
+from unittest import mock
 
 from mficlient.client import FailedToLogin
 import pytest
 import requests
 
-import homeassistant.components.mfi.sensor as mfi
-import homeassistant.components.sensor as sensor_component
+from homeassistant.components import sensor as sensor_component
+from homeassistant.components.mfi import sensor as mfi
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -93,11 +93,12 @@ async def test_setup_with_tls_disabled(hass: HomeAssistant) -> None:
 
 async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
     """Test if setup adds devices."""
-    with mock.patch(
-        "homeassistant.components.mfi.sensor.MFiClient"
-    ) as mock_client, mock.patch(
-        "homeassistant.components.mfi.sensor.MfiSensor", side_effect=mfi.MfiSensor
-    ) as mock_sensor:
+    with (
+        mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client,
+        mock.patch(
+            "homeassistant.components.mfi.sensor.MfiSensor", side_effect=mfi.MfiSensor
+        ) as mock_sensor,
+    ):
         ports = {
             i: mock.MagicMock(model=model, label=f"Port {i}", value=0)
             for i, model in enumerate(mfi.SENSOR_MODELS)
@@ -115,13 +116,13 @@ async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(name="port")
-def port_fixture():
+def port_fixture() -> mock.MagicMock:
     """Port fixture."""
     return mock.MagicMock()
 
 
 @pytest.fixture(name="sensor")
-def sensor_fixture(hass, port):
+def sensor_fixture(hass: HomeAssistant, port: mock.MagicMock) -> mfi.MfiSensor:
     """Sensor fixture."""
     sensor = mfi.MfiSensor(port, hass)
     sensor.hass = hass

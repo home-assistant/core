@@ -1,11 +1,9 @@
 """Tests for voice command segmenter."""
 
 import itertools as it
-from unittest.mock import patch
 
 from homeassistant.components.assist_pipeline.vad import (
     AudioBuffer,
-    VoiceActivityDetector,
     VoiceCommandSegmenter,
     chunk_samples,
 )
@@ -18,85 +16,66 @@ def test_silence() -> None:
     segmenter = VoiceCommandSegmenter()
 
     # True return value indicates voice command has not finished
-    assert segmenter.process(_ONE_SECOND * 3, False)
+    assert segmenter.process(_ONE_SECOND * 3, 0.0)
+    assert not segmenter.in_command
 
 
 def test_speech() -> None:
     """Test that silence + speech + silence triggers a voice command."""
 
-    def is_speech(chunk):
-        """Anything non-zero is speech."""
-        return sum(chunk) > 0
-
     segmenter = VoiceCommandSegmenter()
 
     # silence
-    assert segmenter.process(_ONE_SECOND, False)
+    assert segmenter.process(_ONE_SECOND, 0.0)
 
     # "speech"
-    assert segmenter.process(_ONE_SECOND, True)
+    assert segmenter.process(_ONE_SECOND, 1.0)
+    assert segmenter.in_command
 
     # silence
     # False return value indicates voice command is finished
-    assert not segmenter.process(_ONE_SECOND, False)
+    assert not segmenter.process(_ONE_SECOND, 0.0)
+    assert not segmenter.in_command
 
 
 def test_audio_buffer() -> None:
     """Test audio buffer wrapping."""
 
-    class DisabledVad(VoiceActivityDetector):
-        def is_speech(self, chunk):
-            return False
+    samples_per_chunk = 160  # 10 ms
+    bytes_per_chunk = samples_per_chunk * 2
+    leftover_buffer = AudioBuffer(bytes_per_chunk)
 
-        @property
-        def samples_per_chunk(self):
-            return 160  # 10 ms
+    # Partially fill audio buffer
+    half_chunk = bytes(it.islice(it.cycle(range(256)), bytes_per_chunk // 2))
+    chunks = list(chunk_samples(half_chunk, bytes_per_chunk, leftover_buffer))
 
-    vad = DisabledVad()
-    bytes_per_chunk = vad.samples_per_chunk * 2
-    vad_buffer = AudioBuffer(bytes_per_chunk)
-    segmenter = VoiceCommandSegmenter()
+    assert not chunks
+    assert leftover_buffer.bytes() == half_chunk
 
-    with patch.object(vad, "is_speech", return_value=False) as mock_process:
-        # Partially fill audio buffer
-        half_chunk = bytes(it.islice(it.cycle(range(256)), bytes_per_chunk // 2))
-        segmenter.process_with_vad(half_chunk, vad, vad_buffer)
+    # Fill and wrap with 1/4 chunk left over
+    three_quarters_chunk = bytes(
+        it.islice(it.cycle(range(256)), int(0.75 * bytes_per_chunk))
+    )
+    chunks = list(chunk_samples(three_quarters_chunk, bytes_per_chunk, leftover_buffer))
 
-        assert not mock_process.called
-        assert vad_buffer is not None
-        assert vad_buffer.bytes() == half_chunk
+    assert len(chunks) == 1
+    assert (
+        leftover_buffer.bytes()
+        == three_quarters_chunk[len(three_quarters_chunk) - (bytes_per_chunk // 4) :]
+    )
+    assert chunks[0] == half_chunk + three_quarters_chunk[: bytes_per_chunk // 2]
 
-        # Fill and wrap with 1/4 chunk left over
-        three_quarters_chunk = bytes(
-            it.islice(it.cycle(range(256)), int(0.75 * bytes_per_chunk))
-        )
-        segmenter.process_with_vad(three_quarters_chunk, vad, vad_buffer)
+    # Run 2 chunks through
+    leftover_buffer.clear()
+    assert len(leftover_buffer) == 0
 
-        assert mock_process.call_count == 1
-        assert (
-            vad_buffer.bytes()
-            == three_quarters_chunk[
-                len(three_quarters_chunk) - (bytes_per_chunk // 4) :
-            ]
-        )
-        assert (
-            mock_process.call_args[0][0]
-            == half_chunk + three_quarters_chunk[: bytes_per_chunk // 2]
-        )
+    two_chunks = bytes(it.islice(it.cycle(range(256)), bytes_per_chunk * 2))
+    chunks = list(chunk_samples(two_chunks, bytes_per_chunk, leftover_buffer))
 
-        # Run 2 chunks through
-        segmenter.reset()
-        vad_buffer.clear()
-        assert len(vad_buffer) == 0
-
-        mock_process.reset_mock()
-        two_chunks = bytes(it.islice(it.cycle(range(256)), bytes_per_chunk * 2))
-        segmenter.process_with_vad(two_chunks, vad, vad_buffer)
-
-        assert mock_process.call_count == 2
-        assert len(vad_buffer) == 0
-        assert mock_process.call_args_list[0][0][0] == two_chunks[:bytes_per_chunk]
-        assert mock_process.call_args_list[1][0][0] == two_chunks[bytes_per_chunk:]
+    assert len(chunks) == 2
+    assert len(leftover_buffer) == 0
+    assert chunks[0] == two_chunks[:bytes_per_chunk]
+    assert chunks[1] == two_chunks[bytes_per_chunk:]
 
 
 def test_partial_chunk() -> None:
@@ -127,41 +106,147 @@ def test_chunk_samples_leftover() -> None:
     assert leftover_chunk_buffer.bytes() == bytes([5, 6])
 
 
-def test_vad_no_chunking() -> None:
-    """Test VAD that doesn't require chunking."""
+def test_silence_seconds() -> None:
+    """Test end of voice command silence seconds."""
 
-    class VadNoChunk(VoiceActivityDetector):
-        def is_speech(self, chunk: bytes) -> bool:
-            return sum(chunk) > 0
+    segmenter = VoiceCommandSegmenter(silence_seconds=1.0)
 
-        @property
-        def samples_per_chunk(self) -> int | None:
-            return None
+    # silence
+    assert segmenter.process(_ONE_SECOND, 0.0)
+    assert not segmenter.in_command
 
-    vad = VadNoChunk()
+    # "speech"
+    assert segmenter.process(_ONE_SECOND, 1.0)
+    assert segmenter.in_command
+
+    # not enough silence to end
+    assert segmenter.process(_ONE_SECOND * 0.5, 0.0)
+    assert segmenter.in_command
+
+    # exactly enough silence now
+    assert not segmenter.process(_ONE_SECOND * 0.5, 0.0)
+    assert not segmenter.in_command
+
+
+def test_silence_reset() -> None:
+    """Test that speech resets end of voice command detection."""
+
+    segmenter = VoiceCommandSegmenter(silence_seconds=1.0, reset_seconds=0.5)
+
+    # silence
+    assert segmenter.process(_ONE_SECOND, 0.0)
+    assert not segmenter.in_command
+
+    # "speech"
+    assert segmenter.process(_ONE_SECOND, 1.0)
+    assert segmenter.in_command
+
+    # not enough silence to end
+    assert segmenter.process(_ONE_SECOND * 0.5, 0.0)
+    assert segmenter.in_command
+
+    # speech should reset silence detection
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert segmenter.in_command
+
+    # not enough silence to end
+    assert segmenter.process(_ONE_SECOND * 0.5, 0.0)
+    assert segmenter.in_command
+
+    # exactly enough silence now
+    assert not segmenter.process(_ONE_SECOND * 0.5, 0.0)
+    assert not segmenter.in_command
+
+
+def test_speech_reset() -> None:
+    """Test that silence resets start of voice command detection."""
+
     segmenter = VoiceCommandSegmenter(
-        speech_seconds=1.0, silence_seconds=1.0, reset_seconds=0.5
+        silence_seconds=1.0, reset_seconds=0.5, speech_seconds=1.0
     )
-    silence = bytes([0] * 16000)
-    speech = bytes([255] * (16000 // 2))
 
-    # Test with differently-sized chunks
-    assert vad.is_speech(speech)
-    assert not vad.is_speech(silence)
+    # silence
+    assert segmenter.process(_ONE_SECOND, 0.0)
+    assert not segmenter.in_command
 
-    # Simulate voice command
-    assert segmenter.process_with_vad(silence, vad, None)
-    # begin
-    assert segmenter.process_with_vad(speech, vad, None)
-    assert segmenter.process_with_vad(speech, vad, None)
-    assert segmenter.process_with_vad(speech, vad, None)
-    # reset with silence
-    assert segmenter.process_with_vad(silence, vad, None)
-    # resume
-    assert segmenter.process_with_vad(speech, vad, None)
-    assert segmenter.process_with_vad(speech, vad, None)
-    assert segmenter.process_with_vad(speech, vad, None)
-    assert segmenter.process_with_vad(speech, vad, None)
-    # end
-    assert segmenter.process_with_vad(silence, vad, None)
-    assert not segmenter.process_with_vad(silence, vad, None)
+    # not enough speech to start voice command
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert not segmenter.in_command
+
+    # silence should reset speech detection
+    assert segmenter.process(_ONE_SECOND, 0.0)
+    assert not segmenter.in_command
+
+    # not enough speech to start voice command
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert not segmenter.in_command
+
+    # exactly enough speech now
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert segmenter.in_command
+
+
+def test_timeout() -> None:
+    """Test that voice command detection times out."""
+
+    segmenter = VoiceCommandSegmenter(timeout_seconds=1.0)
+
+    # not enough to time out
+    assert not segmenter.timed_out
+    assert segmenter.process(_ONE_SECOND * 0.5, 0.0)
+    assert not segmenter.timed_out
+
+    # enough to time out
+    assert not segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert segmenter.timed_out
+
+    # flag resets with more audio
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert not segmenter.timed_out
+
+    assert not segmenter.process(_ONE_SECOND * 0.5, 0.0)
+    assert segmenter.timed_out
+
+
+def test_command_seconds() -> None:
+    """Test minimum number of seconds for voice command."""
+
+    segmenter = VoiceCommandSegmenter(
+        command_seconds=3, speech_seconds=1, silence_seconds=1, reset_seconds=1
+    )
+
+    assert segmenter.process(_ONE_SECOND, 1.0)
+
+    # Silence counts towards total command length
+    assert segmenter.process(_ONE_SECOND * 0.5, 0.0)
+
+    # Enough to finish command now
+    assert segmenter.process(_ONE_SECOND, 1.0)
+    assert segmenter.process(_ONE_SECOND * 0.5, 0.0)
+
+    # Silence to finish
+    assert not segmenter.process(_ONE_SECOND * 0.5, 0.0)
+
+
+def test_speech_thresholds() -> None:
+    """Test before/in command speech thresholds."""
+
+    segmenter = VoiceCommandSegmenter(
+        before_command_speech_threshold=0.2,
+        in_command_speech_threshold=0.5,
+        command_seconds=2,
+        speech_seconds=1,
+        silence_seconds=1,
+    )
+
+    # Not high enough probability to trigger command
+    assert segmenter.process(_ONE_SECOND, 0.1)
+    assert not segmenter.in_command
+
+    # Triggers command
+    assert segmenter.process(_ONE_SECOND, 0.3)
+    assert segmenter.in_command
+
+    # Now that same probability is considered silence.
+    # Finishes command.
+    assert not segmenter.process(_ONE_SECOND, 0.3)

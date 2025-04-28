@@ -74,7 +74,7 @@ async def test_config_entry_authentication_failed(
     assert len(flows) == 1
 
     flow = flows[0]
-    assert flow.get("step_id") == "choice_enter_manual_or_fetch_cloud"
+    assert flow["step_id"] == "choice_enter_manual_or_fetch_cloud"
     assert flow.get("handler") == DOMAIN
 
     assert "context" in flow

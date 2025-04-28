@@ -6,40 +6,49 @@ import asyncio
 from collections.abc import Iterable
 from functools import lru_cache
 import logging
-from typing import Any
+import pathlib
+from typing import Any, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import Integration, async_get_integrations
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import load_json_object
 
 from .translation import build_resources
 
-ICON_CACHE = "icon_cache"
+ICON_CACHE: HassKey[_IconsCache] = HassKey("icon_cache")
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@callback
-def _component_icons_path(component: str, integration: Integration) -> str | None:
-    """Return the icons json file location for a component.
-
-    Ex: components/hue/icons.json
-    If component is just a single file, will return None.
-    """
-    domain = component.rpartition(".")[-1]
-
-    # If it's a component that is just one file, we don't support icons
-    # Example custom_components/my_component.py
-    if integration.file_path.name != domain:
-        return None
-
-    return str(integration.file_path / "icons.json")
+def convert_shorthand_service_icon(
+    value: str | dict[str, str | dict[str, str]],
+) -> dict[str, str | dict[str, str]]:
+    """Convert shorthand service icon to dict."""
+    if isinstance(value, str):
+        return {"service": value}
+    return value
 
 
-def _load_icons_files(icons_files: dict[str, str]) -> dict[str, dict[str, Any]]:
+def _load_icons_file(
+    icons_file: pathlib.Path,
+) -> dict[str, Any]:
+    """Load and parse an icons.json file."""
+    icons = load_json_object(icons_file)
+    if "services" not in icons:
+        return icons
+    services = cast(dict[str, str | dict[str, str | dict[str, str]]], icons["services"])
+    for service, service_icons in services.items():
+        services[service] = convert_shorthand_service_icon(service_icons)
+    return icons
+
+
+def _load_icons_files(
+    icons_files: dict[str, pathlib.Path],
+) -> dict[str, dict[str, Any]]:
     """Load and parse icons.json files."""
     return {
-        component: load_json_object(icons_file)
+        component: _load_icons_file(icons_file)
         for component, icons_file in icons_files.items()
     }
 
@@ -53,19 +62,15 @@ async def _async_get_component_icons(
     icons: dict[str, Any] = {}
 
     # Determine files to load
-    files_to_load = {}
-    for loaded in components:
-        domain = loaded.rpartition(".")[-1]
-        if (path := _component_icons_path(loaded, integrations[domain])) is None:
-            icons[loaded] = {}
-        else:
-            files_to_load[loaded] = path
+    files_to_load = {
+        comp: integrations[comp].file_path / "icons.json" for comp in components
+    }
 
     # Load files
-    if files_to_load and (
-        load_icons_job := hass.async_add_executor_job(_load_icons_files, files_to_load)
-    ):
-        icons |= await load_icons_job
+    if files_to_load:
+        icons.update(
+            await hass.async_add_executor_job(_load_icons_files, files_to_load)
+        )
 
     return icons
 
@@ -73,7 +78,7 @@ async def _async_get_component_icons(
 class _IconsCache:
     """Cache for icons."""
 
-    __slots__ = ("_hass", "_loaded", "_cache", "_lock")
+    __slots__ = ("_cache", "_hass", "_loaded", "_lock")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
@@ -108,8 +113,7 @@ class _IconsCache:
         _LOGGER.debug("Cache miss for: %s", components)
 
         integrations: dict[str, Integration] = {}
-        domains = {loaded.rpartition(".")[-1] for loaded in components}
-        ints_or_excs = await async_get_integrations(self._hass, domains)
+        ints_or_excs = await async_get_integrations(self._hass, components)
         for domain, int_or_exc in ints_or_excs.items():
             if isinstance(int_or_exc, Exception):
                 raise int_or_exc
@@ -127,11 +131,9 @@ class _IconsCache:
         icons: dict[str, dict[str, Any]],
     ) -> None:
         """Extract resources into the cache."""
-        categories: set[str] = set()
-
-        for resource in icons.values():
-            categories.update(resource)
-
+        categories = {
+            category for component in icons.values() for category in component
+        }
         for category in categories:
             self._cache.setdefault(category, {}).update(
                 build_resources(icons, components, category)
@@ -151,12 +153,10 @@ async def async_get_icons(
     if integrations:
         components = set(integrations)
     else:
-        components = {
-            component for component in hass.config.components if "." not in component
-        }
+        components = hass.config.top_level_components
 
     if ICON_CACHE in hass.data:
-        cache: _IconsCache = hass.data[ICON_CACHE]
+        cache = hass.data[ICON_CACHE]
     else:
         cache = hass.data[ICON_CACHE] = _IconsCache(hass)
 

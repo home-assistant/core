@@ -1,0 +1,42 @@
+{
+  "config": {
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "from": "Start station",
+          "to": "End station"
+        },
+        "description": "Provide start and end station for your connection from the provided list",
+        "title": "Israel Rail"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "departure0": {
+        "name": "Departure"
+      },
+      "departure1": {
+        "name": "Departure +1"
+      },
+      "departure2": {
+        "name": "Departure +2"
+      },
+      "trains": {
+        "name": "Trains"
+      },
+      "platform": {
+        "name": "Platform"
+      },
+      "train_number": {
+        "name": "Train number"
+      }
+    }
+  }
+}

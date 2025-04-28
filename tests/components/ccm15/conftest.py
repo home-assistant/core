@@ -8,7 +8,7 @@ import pytest
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.ccm15.async_setup_entry", return_value=True
@@ -17,7 +17,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def ccm15_device() -> Generator[AsyncMock, None, None]:
+def ccm15_device() -> Generator[None]:
     """Mock ccm15 device."""
     ccm15_devices = {
         0: CCM15SlaveDevice(bytes.fromhex("000000b0b8001b")),
@@ -32,7 +32,7 @@ def ccm15_device() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def network_failure_ccm15_device() -> Generator[AsyncMock, None, None]:
+def network_failure_ccm15_device() -> Generator[None]:
     """Mock empty set of ccm15 device."""
     device_state = CCM15DeviceState(devices={})
     with patch(

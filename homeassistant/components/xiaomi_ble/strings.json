@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
@@ -25,18 +25,35 @@
         "data": {
           "bindkey": "Bindkey"
         }
+      },
+      "cloud_auth": {
+        "description": "Please provide your Mi app username and password. This data won't be saved and only used to retrieve the device encryption key. Usernames and passwords are case sensitive.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "get_encryption_key_4_5_choose_method": {
+        "description": "A Mi device can be set up in Home Assistant in two different ways.\n\nYou can enter the bindkey yourself, or Home Assistant can import them from your Mi account.",
+        "menu_options": {
+          "cloud_auth": "Mi account (recommended)",
+          "get_encryption_key_4_5": "Enter encryption key manually"
+        }
       }
     },
     "error": {
       "decryption_failed": "The provided bindkey did not work, sensor data could not be decrypted. Please check it and try again.",
       "expected_24_characters": "Expected a 24 character hexadecimal bindkey.",
-      "expected_32_characters": "Expected a 32 character hexadecimal bindkey."
+      "expected_32_characters": "Expected a 32 character hexadecimal bindkey.",
+      "auth_failed": "Authentication failed: {error_detail}",
+      "api_device_not_found": "The device was not found in your Mi account."
     },
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "api_error": "Error while communicating with Mi API: {error_detail}"
     }
   },
   "device_automation": {
@@ -69,6 +86,8 @@
     "trigger_type": {
       "button": "Button \"{subtype}\"",
       "button_left": "Button Left \"{subtype}\"",
+      "button_mid_left": "Button Mid Left \"{subtype}\"",
+      "button_mid_right": "Button Mid Right \"{subtype}\"",
       "button_middle": "Button Middle \"{subtype}\"",
       "button_right": "Button Right \"{subtype}\"",
       "button_on": "Button On \"{subtype}\"",
@@ -83,7 +102,7 @@
       "button_fan": "Button Fan \"{subtype}\"",
       "button_swing": "Button Swing \"{subtype}\"",
       "button_decrease_speed": "Button Decrease Speed \"{subtype}\"",
-      "button_increase_speed": "Button Inrease Speed \"{subtype}\"",
+      "button_increase_speed": "Button Increase Speed \"{subtype}\"",
       "button_stop": "Button Stop \"{subtype}\"",
       "button_light": "Button Light \"{subtype}\"",
       "button_wind_speed": "Button Wind Speed \"{subtype}\"",
@@ -209,6 +228,14 @@
             }
           }
         }
+      }
+    },
+    "sensor": {
+      "impedance": {
+        "name": "Impedance"
+      },
+      "weight_non_stabilized": {
+        "name": "Weight non stabilized"
       }
     }
   }

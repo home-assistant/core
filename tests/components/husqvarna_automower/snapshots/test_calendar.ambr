@@ -1,0 +1,88 @@
+# serializer version: 1
+# name: test_calendar_snapshot[start_date0-end_date0]
+  dict({
+    'calendar.test_mower_1': dict({
+      'events': list([
+        dict({
+          'end': '2023-06-05T09:00:00+02:00',
+          'start': '2023-06-05T01:00:00+02:00',
+          'summary': 'Back lawn schedule 2',
+        }),
+        dict({
+          'end': '2023-06-06T00:00:00+02:00',
+          'start': '2023-06-05T19:00:00+02:00',
+          'summary': 'Front lawn schedule 1',
+        }),
+        dict({
+          'end': '2023-06-06T08:00:00+02:00',
+          'start': '2023-06-06T00:00:00+02:00',
+          'summary': 'Back lawn schedule 1',
+        }),
+        dict({
+          'end': '2023-06-06T08:00:00+02:00',
+          'start': '2023-06-06T00:00:00+02:00',
+          'summary': 'Front lawn schedule 2',
+        }),
+        dict({
+          'end': '2023-06-06T09:00:00+02:00',
+          'start': '2023-06-06T01:00:00+02:00',
+          'summary': 'Back lawn schedule 2',
+        }),
+        dict({
+          'end': '2023-06-08T00:00:00+02:00',
+          'start': '2023-06-07T19:00:00+02:00',
+          'summary': 'Front lawn schedule 1',
+        }),
+        dict({
+          'end': '2023-06-08T08:00:00+02:00',
+          'start': '2023-06-08T00:00:00+02:00',
+          'summary': 'Back lawn schedule 1',
+        }),
+        dict({
+          'end': '2023-06-08T08:00:00+02:00',
+          'start': '2023-06-08T00:00:00+02:00',
+          'summary': 'Front lawn schedule 2',
+        }),
+        dict({
+          'end': '2023-06-08T09:00:00+02:00',
+          'start': '2023-06-08T01:00:00+02:00',
+          'summary': 'Back lawn schedule 2',
+        }),
+        dict({
+          'end': '2023-06-10T00:00:00+02:00',
+          'start': '2023-06-09T19:00:00+02:00',
+          'summary': 'Front lawn schedule 1',
+        }),
+        dict({
+          'end': '2023-06-10T08:00:00+02:00',
+          'start': '2023-06-10T00:00:00+02:00',
+          'summary': 'Back lawn schedule 1',
+        }),
+        dict({
+          'end': '2023-06-10T08:00:00+02:00',
+          'start': '2023-06-10T00:00:00+02:00',
+          'summary': 'Front lawn schedule 2',
+        }),
+        dict({
+          'end': '2023-06-10T09:00:00+02:00',
+          'start': '2023-06-10T01:00:00+02:00',
+          'summary': 'Back lawn schedule 2',
+        }),
+        dict({
+          'end': '2023-06-12T09:00:00+02:00',
+          'start': '2023-06-12T01:00:00+02:00',
+          'summary': 'Back lawn schedule 2',
+        }),
+      ]),
+    }),
+    'calendar.test_mower_2': dict({
+      'events': list([
+        dict({
+          'end': '2023-06-05T02:49:00+02:00',
+          'start': '2023-06-05T02:00:00+02:00',
+          'summary': 'Schedule 1',
+        }),
+      ]),
+    }),
+  })
+# ---

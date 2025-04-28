@@ -1,8 +1,8 @@
 {
   "services": {
     "clear": {
-      "name": "Clear all",
-      "description": "Clears all log entries."
+      "name": "Clear",
+      "description": "Deletes all log entries."
     },
     "write": {
       "name": "Write",

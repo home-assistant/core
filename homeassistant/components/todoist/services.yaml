@@ -5,9 +5,16 @@ new_task:
       example: Pick up the mail.
       selector:
         text:
+    description:
+      selector:
+        text:
     project:
       example: Errands
       default: Inbox
+      selector:
+        text:
+    section:
+      example: Deliveries
       selector:
         text:
     labels:

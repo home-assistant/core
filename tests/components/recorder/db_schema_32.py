@@ -33,6 +33,7 @@ from sqlalchemy import (
     type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
+from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
@@ -50,7 +51,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSON_DUMP, json_bytes
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
@@ -109,7 +110,7 @@ STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
 
-    def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
+    def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """Offload the datetime parsing to ciso8601."""
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
@@ -223,7 +224,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
     data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
     context_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
-    )  # *** Not originally in v3v320, only added for recorder to startup ok
+    )  # *** Not originally in v32, only added for recorder to startup ok
     context_user_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v32, only added for recorder to startup ok
@@ -253,7 +254,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=None,
-            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
+            time_fired_ts=event.time_fired.timestamp(),
             context_id=event.context.id,
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
@@ -372,6 +373,9 @@ class States(Base):  # type: ignore[misc,valid-type]
     )
     last_changed = Column(DATETIME_TYPE)
     last_changed_ts = Column(TIMESTAMP_TYPE)
+    last_reported_ts = Column(
+        TIMESTAMP_TYPE
+    )  # *** Not originally in v32, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
     last_updated_ts = Column(TIMESTAMP_TYPE, default=time.time, index=True)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
@@ -425,16 +429,16 @@ class States(Base):  # type: ignore[misc,valid-type]
         # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""
-            dbstate.last_updated_ts = dt_util.utc_to_timestamp(event.time_fired)
+            dbstate.last_updated_ts = event.time_fired.timestamp()
             dbstate.last_changed_ts = None
             return dbstate
 
         dbstate.state = state.state
-        dbstate.last_updated_ts = dt_util.utc_to_timestamp(state.last_updated)
+        dbstate.last_updated_ts = state.last_updated.timestamp()
         if state.last_updated == state.last_changed:
             dbstate.last_changed_ts = None
         else:
-            dbstate.last_changed_ts = dt_util.utc_to_timestamp(state.last_changed)
+            dbstate.last_changed_ts = state.last_changed.timestamp()
 
         return dbstate
 
@@ -561,6 +565,7 @@ class StatisticsBase:
 
     id = Column(Integer, Identity(), primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    # *** Not originally in v32, only added for recorder to startup ok
     created_ts = Column(TIMESTAMP_TYPE, default=time.time)
     metadata_id = Column(
         Integer,
@@ -568,14 +573,18 @@ class StatisticsBase:
         index=True,
     )
     start = Column(DATETIME_TYPE, index=True)
+    # *** Not originally in v32, only added for recorder to startup ok
     start_ts = Column(TIMESTAMP_TYPE, index=True)
     mean = Column(DOUBLE_TYPE)
     min = Column(DOUBLE_TYPE)
     max = Column(DOUBLE_TYPE)
     last_reset = Column(DATETIME_TYPE)
+    # *** Not originally in v32, only added for recorder to startup ok
     last_reset_ts = Column(TIMESTAMP_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
+    # *** Not originally in v32, only added for tests. Added in v49
+    mean_weight = Column(DOUBLE_TYPE)
 
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
@@ -739,13 +748,11 @@ OLD_STATE = aliased(States, name="old_state")
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:

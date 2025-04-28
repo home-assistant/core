@@ -11,7 +11,7 @@ from homeassistant.components import camera, mqtt
 from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
 from homeassistant.core import HomeAssistant
 
-from .test_common import (
+from .common import (
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -222,11 +222,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        camera.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, camera.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -237,26 +233,16 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        camera.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, camera.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        camera.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, camera.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -289,35 +275,28 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_camera(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered camera."""
     data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][camera.DOMAIN])
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry, caplog, camera.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, camera.DOMAIN, data)
 
 
 async def test_discovery_update_camera(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered camera."""
     config1 = {"name": "Beer", "topic": "test_topic"}
     config2 = {"name": "Milk", "topic": "test_topic"}
 
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, camera.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, camera.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_camera(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered camera."""
     data1 = '{ "name": "Beer", "topic": "test_topic"}'
@@ -325,28 +304,19 @@ async def test_discovery_update_unchanged_camera(
         "homeassistant.components.mqtt.camera.MqttCamera.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            camera.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, camera.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk", "topic": "test_topic"}'
 
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, camera.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, camera.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(
@@ -390,11 +360,7 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass,
-        mqtt_mock_entry,
-        camera.DOMAIN,
-        DEFAULT_CONFIG,
-        ["test_topic"],
+        hass, mqtt_mock_entry, camera.DOMAIN, DEFAULT_CONFIG, ["test_topic"]
     )
 
 
@@ -423,8 +389,7 @@ async def test_entity_debug_info_message(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = camera.DOMAIN
@@ -447,8 +412,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = camera.DOMAIN

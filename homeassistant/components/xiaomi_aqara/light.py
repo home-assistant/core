@@ -13,11 +13,11 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
-from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
+from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []

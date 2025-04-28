@@ -15,10 +15,11 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.myuplink.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import json_loads
 
-from .const import CLIENT_ID, CLIENT_SECRET
+from .const import CLIENT_ID, CLIENT_SECRET, UNIQUE_ID
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -33,7 +34,7 @@ def mock_expires_at() -> float:
 def mock_config_entry(hass: HomeAssistant, expires_at: float) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
-        version=1,
+        minor_version=2,
         domain=DOMAIN,
         title="myUplink test",
         data={
@@ -48,6 +49,7 @@ def mock_config_entry(hass: HomeAssistant, expires_at: float) -> MockConfigEntry
             },
         },
         entry_id="myuplink_test",
+        unique_id=UNIQUE_ID,
     )
     config_entry.add_to_hass(hass)
     return config_entry
@@ -71,7 +73,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 # Fixture group for device API endpoint.
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def load_device_file() -> str:
     """Fixture for loading device file."""
     return load_fixture("device.json", DOMAIN)
@@ -92,7 +94,7 @@ def load_systems_jv_file(load_systems_file: str) -> dict[str, Any]:
     return json_loads(load_systems_file)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def load_systems_file() -> str:
     """Load fixture file for systems."""
     return load_fixture("systems-2dev.json", DOMAIN)
@@ -135,7 +137,7 @@ def mock_myuplink_client(
     device_points_fixture,
     system_fixture,
     load_systems_jv_file,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock a myuplink client."""
 
     with patch(
@@ -182,10 +184,28 @@ async def setup_platform(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     platforms,
-) -> AsyncGenerator[None, None]:
+) -> AsyncGenerator[None]:
     """Set up one or all platforms."""
 
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         yield
+
+
+@pytest.fixture
+async def access_token(hass: HomeAssistant) -> str:
+    """Return a valid access token."""
+    return config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "sub": UNIQUE_ID,
+            "aud": [],
+            "scp": [
+                "WRITESYSTEM",
+                "READSYSTEM",
+                "offline_access",
+            ],
+            "ou_code": "NA",
+        },
+    )

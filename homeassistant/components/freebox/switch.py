@@ -11,7 +11,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .router import FreeboxRouter
@@ -29,7 +29,9 @@ SWITCH_DESCRIPTIONS = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
@@ -72,5 +74,5 @@ class FreeboxSwitch(SwitchEntity):
 
     async def async_update(self) -> None:
         """Get the state and update it."""
-        datas = await self._router.wifi.get_global_config()
-        self._attr_is_on = bool(datas["enabled"])
+        data = await self._router.wifi.get_global_config()
+        self._attr_is_on = bool(data["enabled"])

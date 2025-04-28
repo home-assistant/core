@@ -48,8 +48,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -89,7 +88,7 @@ from .utils import get_device_macs, non_verifying_requests_session
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 NOTIFY_SCHEMA = vol.Any(
     None,
@@ -209,7 +208,7 @@ class Router:
                 else:
                     _LOGGER.debug("failed")
                 return
-            _LOGGER.info(
+            _LOGGER.warning(
                 "%s requires authorization, excluding from future updates", key
             )
             self.subscriptions.pop(key)
@@ -221,7 +220,7 @@ class Router:
                 exc, (ResponseErrorNotSupportedException, ExpatError)
             ) and exc.code not in (-1, 100006):
                 raise
-            _LOGGER.info(
+            _LOGGER.warning(
                 "%s apparently not supported by device, excluding from future updates",
                 key,
             )
@@ -308,7 +307,7 @@ class Router:
             ResponseErrorNotSupportedException,
         ):
             pass  # Ok, normal, nothing to do
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.warning("Logout error", exc_info=True)
 
     def cleanup(self, *_: Any) -> None:
@@ -406,7 +405,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         wlan_settings = await hass.async_add_executor_job(
             router.client.wlan.multi_basic_settings
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         # Assume not supported, or authentication required but in unauthenticated mode
         wlan_settings = {}
     macs = get_device_macs(router_info or {}, wlan_settings)
@@ -559,74 +558,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if isinstance(recipient, str):
             options[CONF_RECIPIENT] = [x.strip() for x in recipient.split(",")]
         hass.config_entries.async_update_entry(config_entry, options=options, version=2)
-        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+        _LOGGER.debug("Migrated config entry to version %d", config_entry.version)
     if config_entry.version == 2:
         data = dict(config_entry.data)
         data[CONF_MAC] = []
         hass.config_entries.async_update_entry(config_entry, data=data, version=3)
-        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+        _LOGGER.debug("Migrated config entry to version %d", config_entry.version)
     # There can be no longer needed *_from_yaml data and options things left behind
     # from pre-2022.4ish; they can be removed while at it when/if we eventually bump and
     # migrate to version > 3 for some other reason.
     return True
-
-
-class HuaweiLteBaseEntity(Entity):
-    """Huawei LTE entity base class."""
-
-    _available = True
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-
-    def __init__(self, router: Router) -> None:
-        """Initialize."""
-        self.router = router
-        self._unsub_handlers: list[Callable] = []
-
-    @property
-    def _device_unique_id(self) -> str:
-        """Return unique ID for entity within a router."""
-        raise NotImplementedError
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID for entity."""
-        return f"{self.router.config_entry.unique_id}-{self._device_unique_id}"
-
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-        return self._available
-
-    async def async_update(self) -> None:
-        """Update state."""
-        raise NotImplementedError
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to update signals."""
-        self._unsub_handlers.append(
-            async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self._async_maybe_update)
-        )
-
-    async def _async_maybe_update(self, config_entry_unique_id: str) -> None:
-        """Update state if the update signal comes from our router."""
-        if config_entry_unique_id == self.router.config_entry.unique_id:
-            self.async_schedule_update_ha_state(True)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Invoke unsubscription handlers."""
-        for unsub in self._unsub_handlers:
-            unsub()
-        self._unsub_handlers.clear()
-
-
-class HuaweiLteBaseEntityWithDevice(HuaweiLteBaseEntity):
-    """Base entity with device info."""
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Get info for matching with parent router."""
-        return DeviceInfo(
-            connections=self.router.device_connections,
-            identifiers=self.router.device_identifiers,
-        )

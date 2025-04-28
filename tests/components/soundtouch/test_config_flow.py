@@ -8,11 +8,11 @@ import requests_mock
 from requests_mock import ANY, Mocker
 
 from homeassistant.components.soundtouch.const import DOMAIN
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import DEVICE_1_ID, DEVICE_1_IP, DEVICE_1_NAME
 
@@ -26,7 +26,7 @@ async def test_user_flow_create_entry(
         context={CONF_SOURCE: SOURCE_USER},
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     with patch(
@@ -41,7 +41,7 @@ async def test_user_flow_create_entry(
 
     assert len(mock_setup_entry.mock_calls) == 1
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == DEVICE_1_NAME
     assert result.get("data") == {
         CONF_HOST: DEVICE_1_IP,
@@ -65,7 +65,7 @@ async def test_user_flow_cannot_connect(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -92,7 +92,7 @@ async def test_zeroconf_flow_create_entry(
         ),
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "zeroconf_confirm"
     assert result.get("description_placeholders") == {"name": DEVICE_1_NAME}
 
@@ -105,7 +105,7 @@ async def test_zeroconf_flow_create_entry(
 
     assert len(mock_setup_entry.mock_calls) == 1
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == DEVICE_1_NAME
     assert result.get("data") == {
         CONF_HOST: DEVICE_1_IP,

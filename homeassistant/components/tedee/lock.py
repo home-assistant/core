@@ -2,44 +2,40 @@
 
 from typing import Any
 
-from pytedee_async import TedeeClientException, TedeeLock, TedeeLockState
+from aiotedee import TedeeClientException, TedeeLock, TedeeLockState
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import TedeeApiCoordinator
+from .coordinator import TedeeApiCoordinator, TedeeConfigEntry
 from .entity import TedeeEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: TedeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tedee lock entity."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
-    entities: list[TedeeLockEntity] = []
-    for lock in coordinator.data.values():
-        if lock.is_enabled_pullspring:
-            entities.append(TedeeLockWithLatchEntity(lock, coordinator))
-        else:
-            entities.append(TedeeLockEntity(lock, coordinator))
-
-    def _async_add_new_lock(lock_id: int) -> None:
-        lock = coordinator.data[lock_id]
-        if lock.is_enabled_pullspring:
-            async_add_entities([TedeeLockWithLatchEntity(lock, coordinator)])
-        else:
-            async_add_entities([TedeeLockEntity(lock, coordinator)])
+    def _async_add_new_lock(locks: list[TedeeLock]) -> None:
+        entities: list[TedeeLockEntity] = []
+        for lock in locks:
+            if lock.is_enabled_pullspring:
+                entities.append(TedeeLockWithLatchEntity(lock, coordinator))
+            else:
+                entities.append(TedeeLockEntity(lock, coordinator))
+        async_add_entities(entities)
 
     coordinator.new_lock_callbacks.append(_async_add_new_lock)
 
-    async_add_entities(entities)
+    _async_add_new_lock(list(coordinator.data.values()))
 
 
 class TedeeLockEntity(TedeeEntity, LockEntity):
@@ -56,14 +52,29 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
         super().__init__(lock, coordinator, "lock")
 
     @property
-    def is_locked(self) -> bool:
+    def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
+        if self._lock.state in (
+            TedeeLockState.HALF_OPEN,
+            TedeeLockState.UNKNOWN,
+        ):
+            return None
         return self._lock.state == TedeeLockState.LOCKED
 
     @property
     def is_unlocking(self) -> bool:
         """Return true if lock is unlocking."""
         return self._lock.state == TedeeLockState.UNLOCKING
+
+    @property
+    def is_open(self) -> bool:
+        """Return true if lock is open."""
+        return self._lock.state == TedeeLockState.PULLED
+
+    @property
+    def is_opening(self) -> bool:
+        """Return true if lock is opening."""
+        return self._lock.state == TedeeLockState.PULLING
 
     @property
     def is_locking(self) -> bool:
@@ -78,7 +89,11 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._lock.is_connected
+        return (
+            super().available
+            and self._lock.is_connected
+            and self._lock.state != TedeeLockState.UNCALIBRATED
+        )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door."""
@@ -90,7 +105,9 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             raise HomeAssistantError(
-                "Failed to unlock the door. Lock %s" % self._lock.lock_id
+                translation_domain=DOMAIN,
+                translation_key="unlock_failed",
+                translation_placeholders={"lock_id": str(self._lock.lock_id)},
             ) from ex
 
     async def async_lock(self, **kwargs: Any) -> None:
@@ -103,7 +120,9 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             raise HomeAssistantError(
-                "Failed to lock the door. Lock %s" % self._lock.lock_id
+                translation_domain=DOMAIN,
+                translation_key="lock_failed",
+                translation_placeholders={"lock_id": str(self._lock.lock_id)},
             ) from ex
 
 
@@ -125,5 +144,7 @@ class TedeeLockWithLatchEntity(TedeeLockEntity):
             await self.coordinator.async_request_refresh()
         except (TedeeClientException, Exception) as ex:
             raise HomeAssistantError(
-                "Failed to unlatch the door. Lock %s" % self._lock.lock_id
+                translation_domain=DOMAIN,
+                translation_key="open_failed",
+                translation_placeholders={"lock_id": str(self._lock.lock_id)},
             ) from ex

@@ -2,196 +2,222 @@
 
 from __future__ import annotations
 
-from russound_rio import Russound
-import voluptuous as vol
+import datetime as dt
+import logging
+from typing import TYPE_CHECKING
+
+from aiorussound import Controller
+from aiorussound.const import FeatureFlag
+from aiorussound.models import PlayStatus, Source
+from aiorussound.rio import ZoneControlSurface
+from aiorussound.util import is_feature_supported
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=9621): cv.port,
-    }
-)
+from . import RussoundConfigEntry
+from .entity import RussoundBaseEntity, command
+
+_LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: RussoundConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Russound RIO platform."""
+    client = entry.runtime_data
+    sources = client.sources
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-
-    russ = Russound(hass.loop, host, port)
-
-    await russ.connect()
-
-    # Discover sources and zones
-    sources = await russ.enumerate_sources()
-    valid_zones = await russ.enumerate_zones()
-
-    devices = []
-    for zone_id, name in valid_zones:
-        await russ.watch_zone(zone_id)
-        dev = RussoundZoneDevice(russ, zone_id, name, sources)
-        devices.append(dev)
-
-    @callback
-    def on_stop(event):
-        """Shutdown cleanly when hass stops."""
-        hass.loop.create_task(russ.close())
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
-
-    async_add_entities(devices)
+    async_add_entities(
+        RussoundZoneDevice(controller, zone_id, sources)
+        for controller in client.controllers.values()
+        for zone_id in controller.zones
+    )
 
 
-class RussoundZoneDevice(MediaPlayerEntity):
+class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     """Representation of a Russound Zone."""
 
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_media_content_type = MediaType.MUSIC
-    _attr_should_poll = False
     _attr_supported_features = (
-        MediaPlayerEntityFeature.VOLUME_MUTE
-        | MediaPlayerEntityFeature.VOLUME_SET
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.SEEK
     )
 
-    def __init__(self, russ, zone_id, name, sources):
+    def __init__(
+        self, controller: Controller, zone_id: int, sources: dict[int, Source]
+    ) -> None:
         """Initialize the zone device."""
-        super().__init__()
-        self._name = name
-        self._russ = russ
+        super().__init__(controller)
         self._zone_id = zone_id
+        _zone = self._zone
         self._sources = sources
-
-    def _zone_var(self, name, default=None):
-        return self._russ.get_cached_zone_variable(self._zone_id, name, default)
-
-    def _source_var(self, name, default=None):
-        current = int(self._zone_var("currentsource", 0))
-        if current:
-            return self._russ.get_cached_source_variable(current, name, default)
-        return default
-
-    def _source_na_var(self, name):
-        """Will replace invalid values with None."""
-        current = int(self._zone_var("currentsource", 0))
-        if current:
-            value = self._russ.get_cached_source_variable(current, name, None)
-            if value in (None, "", "------"):
-                return None
-            return value
-        return None
-
-    def _zone_callback_handler(self, zone_id, *args):
-        if zone_id == self._zone_id:
-            self.schedule_update_ha_state()
-
-    def _source_callback_handler(self, source_id, *args):
-        current = int(self._zone_var("currentsource", 0))
-        if source_id == current:
-            self.schedule_update_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register callback handlers."""
-        self._russ.add_zone_callback(self._zone_callback_handler)
-        self._russ.add_source_callback(self._source_callback_handler)
+        self._attr_name = _zone.name
+        self._attr_unique_id = f"{self._primary_mac_address}-{_zone.device_str}"
 
     @property
-    def name(self):
-        """Return the name of the zone."""
-        return self._zone_var("name", self._name)
+    def _zone(self) -> ZoneControlSurface:
+        return self._controller.zones[self._zone_id]
+
+    @property
+    def _source(self) -> Source:
+        return self._zone.fetch_current_source()
 
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        status = self._zone_var("status", "OFF")
-        if status == "ON":
-            return MediaPlayerState.ON
-        if status == "OFF":
+        status = self._zone.status
+        play_status = self._source.play_status
+        if not status:
             return MediaPlayerState.OFF
-        return None
+        if play_status == PlayStatus.PLAYING:
+            return MediaPlayerState.PLAYING
+        if play_status == PlayStatus.PAUSED:
+            return MediaPlayerState.PAUSED
+        if play_status == PlayStatus.TRANSITIONING:
+            return MediaPlayerState.BUFFERING
+        if play_status == PlayStatus.STOPPED:
+            return MediaPlayerState.IDLE
+        return MediaPlayerState.ON
 
     @property
-    def source(self):
+    def source(self) -> str:
         """Get the currently selected source."""
-        return self._source_na_var("name")
+        return self._source.name
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """Return a list of available input sources."""
-        return [x[1] for x in self._sources]
+        if TYPE_CHECKING:
+            assert self._client.rio_version
+        available_sources = (
+            [
+                source
+                for source_id, source in self._sources.items()
+                if source_id in self._zone.enabled_sources
+            ]
+            if is_feature_supported(
+                self._client.rio_version, FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION
+            )
+            else self._sources.values()
+        )
+        return [x.name for x in available_sources]
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
-        return self._source_na_var("songname")
+        return self._source.song_name
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        return self._source_na_var("artistname")
+        return self._source.artist_name
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
-        return self._source_na_var("albumname")
+        return self._source.album_name
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        return self._source_na_var("coverarturl")
+        return self._source.cover_art_url
 
     @property
-    def volume_level(self):
+    def media_duration(self) -> int | None:
+        """Duration of the current media."""
+        return self._source.track_time
+
+    @property
+    def media_position(self) -> int | None:
+        """Position of the current media."""
+        return self._source.play_time
+
+    @property
+    def media_position_updated_at(self) -> dt.datetime:
+        """Last time the media position was updated."""
+        return self._source.position_last_updated
+
+    @property
+    def volume_level(self) -> float:
         """Volume level of the media player (0..1).
 
         Value is returned based on a range (0..50).
         Therefore float divide by 50 to get to the required range.
         """
-        return float(self._zone_var("volume", 0)) / 50.0
+        return self._zone.volume / 50.0
 
+    @property
+    def is_volume_muted(self) -> bool:
+        """Return whether zone is muted."""
+        return self._zone.is_mute
+
+    @command
     async def async_turn_off(self) -> None:
         """Turn off the zone."""
-        await self._russ.send_zone_event(self._zone_id, "ZoneOff")
+        await self._zone.zone_off()
 
+    @command
     async def async_turn_on(self) -> None:
         """Turn on the zone."""
-        await self._russ.send_zone_event(self._zone_id, "ZoneOn")
+        await self._zone.zone_on()
 
+    @command
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         rvol = int(volume * 50.0)
-        await self._russ.send_zone_event(self._zone_id, "KeyPress", "Volume", rvol)
+        await self._zone.set_volume(str(rvol))
 
+    @command
     async def async_select_source(self, source: str) -> None:
         """Select the source input for this zone."""
-        for source_id, name in self._sources:
-            if name.lower() != source.lower():
+        for source_id, src in self._sources.items():
+            if src.name.lower() != source.lower():
                 continue
-            await self._russ.send_zone_event(self._zone_id, "SelectSource", source_id)
+            await self._zone.select_source(source_id)
             break
+
+    @command
+    async def async_volume_up(self) -> None:
+        """Step the volume up."""
+        await self._zone.volume_up()
+
+    @command
+    async def async_volume_down(self) -> None:
+        """Step the volume down."""
+        await self._zone.volume_down()
+
+    @command
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Mute the media player."""
+        if FeatureFlag.COMMANDS_ZONE_MUTE_OFF_ON in self._client.supported_features:
+            if mute:
+                await self._zone.mute()
+            else:
+                await self._zone.unmute()
+            return
+
+        if mute != self.is_volume_muted:
+            await self._zone.toggle_mute()
+
+    @command
+    async def async_media_seek(self, position: float) -> None:
+        """Seek to a position in the current media."""
+        await self._zone.set_seek_time(int(position))

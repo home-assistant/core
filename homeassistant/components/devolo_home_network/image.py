@@ -5,21 +5,22 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
 
-from devolo_plc_api import Device, wifi_qr_code
+from devolo_plc_api import wifi_qr_code
 from devolo_plc_api.device_api import WifiGuestAccessGet
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, IMAGE_GUEST_WIFI, SWITCH_GUEST_WIFI
+from . import DevoloHomeNetworkConfigEntry
+from .const import IMAGE_GUEST_WIFI, SWITCH_GUEST_WIFI
+from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -39,13 +40,12 @@ IMAGE_TYPES: dict[str, DevoloImageEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeNetworkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[str, DataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]["coordinators"]
+    coordinators = entry.runtime_data.coordinators
 
     entities: list[ImageEntity] = []
     entities.append(
@@ -53,7 +53,6 @@ async def async_setup_entry(
             entry,
             coordinators[SWITCH_GUEST_WIFI],
             IMAGE_TYPES[IMAGE_GUEST_WIFI],
-            device,
         )
     )
     async_add_entities(entities)
@@ -66,14 +65,13 @@ class DevoloImageEntity(DevoloCoordinatorEntity[WifiGuestAccessGet], ImageEntity
 
     def __init__(
         self,
-        entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator[WifiGuestAccessGet],
+        entry: DevoloHomeNetworkConfigEntry,
+        coordinator: DevoloDataUpdateCoordinator[WifiGuestAccessGet],
         description: DevoloImageEntityDescription,
-        device: Device,
     ) -> None:
         """Initialize entity."""
         self.entity_description: DevoloImageEntityDescription = description
-        super().__init__(entry, coordinator, device)
+        super().__init__(entry, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self._attr_image_last_updated = dt_util.utcnow()
         self._data = self.coordinator.data

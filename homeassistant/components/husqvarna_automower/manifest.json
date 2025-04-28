@@ -7,5 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/husqvarna_automower",
   "iot_class": "cloud_push",
   "loggers": ["aioautomower"],
-  "requirements": ["aioautomower==2024.3.3"]
+  "quality_scale": "silver",
+  "requirements": ["aioautomower==2025.4.4"]
 }

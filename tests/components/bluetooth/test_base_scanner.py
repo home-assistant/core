@@ -7,14 +7,12 @@ import time
 from typing import Any
 from unittest.mock import patch
 
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
+# pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
-    MONOTONIC_TIME,
     BaseHaRemoteScanner,
     HaBluetoothConnector,
     storage,
@@ -26,12 +24,16 @@ from homeassistant.components.bluetooth.const import (
     SCANNER_WATCHDOG_TIMEOUT,
     UNAVAILABLE_TRACK_SECONDS,
 )
+from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
 
 from . import (
+    FakeRemoteScanner as FakeScanner,
     MockBleakClient,
     _get_manager,
     generate_advertisement_data,
@@ -39,36 +41,12 @@ from . import (
     patch_bluetooth_time,
 )
 
-from tests.common import async_fire_time_changed, load_fixture
-
-
-class FakeScanner(BaseHaRemoteScanner):
-    """Fake scanner."""
-
-    def inject_advertisement(
-        self,
-        device: BLEDevice,
-        advertisement_data: AdvertisementData,
-        now: float | None = None,
-    ) -> None:
-        """Inject an advertisement."""
-        self._async_on_advertisement(
-            device.address,
-            advertisement_data.rssi,
-            device.name,
-            advertisement_data.service_uuids,
-            advertisement_data.service_data,
-            advertisement_data.manufacturer_data,
-            advertisement_data.tx_power,
-            {"scanner_specific_data": "test"},
-            now or MONOTONIC_TIME(),
-        )
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
 @pytest.mark.parametrize("name_2", [None, "w"])
-async def test_remote_scanner(
-    hass: HomeAssistant, enable_bluetooth: None, name_2: str | None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_remote_scanner(hass: HomeAssistant, name_2: str | None) -> None:
     """Test the remote scanner base class merges advertisement_data."""
     manager = _get_manager()
 
@@ -159,9 +137,8 @@ async def test_remote_scanner(
     unsetup()
 
 
-async def test_remote_scanner_expires_connectable(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_remote_scanner_expires_connectable(hass: HomeAssistant) -> None:
     """Test the remote scanner expires stale connectable data."""
     manager = _get_manager()
 
@@ -213,9 +190,8 @@ async def test_remote_scanner_expires_connectable(
     unsetup()
 
 
-async def test_remote_scanner_expires_non_connectable(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_remote_scanner_expires_non_connectable(hass: HomeAssistant) -> None:
     """Test the remote scanner expires stale non connectable data."""
     manager = _get_manager()
 
@@ -287,9 +263,8 @@ async def test_remote_scanner_expires_non_connectable(
     unsetup()
 
 
-async def test_base_scanner_connecting_behavior(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_base_scanner_connecting_behavior(hass: HomeAssistant) -> None:
     """Test that the default behavior is to mark the scanner as not scanning when connecting."""
     manager = _get_manager()
 
@@ -348,11 +323,14 @@ async def test_restore_history_remote_adapter(
         if address != "E3:A5:63:3E:5E:23":
             timestamps[address] = now
 
-    with patch(
-        "bluetooth_adapters.systems.linux.LinuxAdapters.history",
-        {},
-    ), patch(
-        "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
+    with (
+        patch(
+            "bluetooth_adapters.systems.linux.LinuxAdapters.history",
+            {},
+        ),
+        patch(
+            "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
+        ),
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -389,9 +367,8 @@ async def test_restore_history_remote_adapter(
     unsetup()
 
 
-async def test_device_with_ten_minute_advertising_interval(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_device_with_ten_minute_advertising_interval(hass: HomeAssistant) -> None:
     """Test a device with a 10 minute advertising interval."""
     manager = _get_manager()
 
@@ -493,9 +470,8 @@ async def test_device_with_ten_minute_advertising_interval(
     unsetup()
 
 
-async def test_scanner_stops_responding(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_scanner_stops_responding(hass: HomeAssistant) -> None:
     """Test we mark a scanner are not scanning when it stops responding."""
     manager = _get_manager()
 
@@ -546,3 +522,75 @@ async def test_scanner_stops_responding(
 
     cancel()
     unsetup()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+@pytest.mark.parametrize(
+    ("manufacturer", "source"),
+    [
+        ("test", "test"),
+        ("Raspberry Pi Trading Ltd (test)", "28:CD:C1:11:23:45"),
+    ],
+)
+async def test_remote_scanner_bluetooth_config_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    manufacturer: str,
+    source: str,
+) -> None:
+    """Test the remote scanner gets a bluetooth config entry."""
+    manager: HomeAssistantBluetoothManager = _get_manager()
+
+    switchbot_device = generate_ble_device(
+        "44:44:33:11:23:45",
+        "wohand",
+        {},
+        rssi=-100,
+    )
+    switchbot_device_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-100,
+    )
+
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeScanner(source, source, connector, True)
+    unsetup = scanner.async_setup()
+    assert scanner.source == source
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    cancel = manager.async_register_hass_scanner(
+        scanner,
+        source_domain="test",
+        source_model="test",
+        source_config_entry_id=entry.entry_id,
+    )
+    await hass.async_block_till_done()
+
+    scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
+    assert len(scanner.discovered_devices) == 1
+
+    cancel()
+    unsetup()
+
+    adapter_entry = hass.config_entries.async_entry_for_domain_unique_id(
+        "bluetooth", scanner.source
+    )
+    assert adapter_entry is not None
+    assert adapter_entry.state is ConfigEntryState.LOADED
+
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_BLUETOOTH, scanner.source)}
+    )
+    assert dev is not None
+    assert dev.config_entries == {adapter_entry.entry_id}
+    assert dev.manufacturer == manufacturer
+
+    manager.async_remove_scanner(scanner.source)
+    await hass.async_block_till_done()
+    assert not hass.config_entries.async_entry_for_domain_unique_id(
+        "bluetooth", scanner.source
+    )

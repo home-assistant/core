@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -45,7 +46,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State
+from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import StoredState, async_get
@@ -59,7 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def storage_setup(hass: HomeAssistant, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -156,11 +157,12 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATUS_IDLE
 
-    results = []
+    results: list[tuple[Event, str]] = []
 
-    def fake_event_listener(event):
+    @callback
+    def fake_event_listener(event: Event):
         """Fake event listener for trigger."""
-        results.append(event)
+        results.append((event, hass.states.get("timer.test1").state))
 
     hass.bus.async_listen(EVENT_TIMER_STARTED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_RESTARTED, fake_event_listener)
@@ -195,6 +197,12 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "data": {},
         },
         {
+            "call": SERVICE_CANCEL,
+            "state": STATUS_IDLE,
+            "event": None,
+            "data": {},
+        },
+        {
             "call": SERVICE_START,
             "state": STATUS_ACTIVE,
             "event": EVENT_TIMER_STARTED,
@@ -204,6 +212,12 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "call": SERVICE_FINISH,
             "state": STATUS_IDLE,
             "event": EVENT_TIMER_FINISHED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_FINISH,
+            "state": STATUS_IDLE,
+            "event": None,
             "data": {},
         },
         {
@@ -242,6 +256,18 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "event": EVENT_TIMER_RESTARTED,
             "data": {},
         },
+        {
+            "call": SERVICE_PAUSE,
+            "state": STATUS_PAUSED,
+            "event": EVENT_TIMER_PAUSED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_FINISH,
+            "state": STATUS_IDLE,
+            "event": EVENT_TIMER_FINISHED,
+            "data": {},
+        },
     ]
 
     expected_events = 0
@@ -262,7 +288,10 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
 
         if step["event"] is not None:
             expected_events += 1
-            assert results[-1].event_type == step["event"]
+            last_result = results[-1]
+            event, state = last_result
+            assert event.event_type == step["event"]
+            assert state == step["state"]
             assert len(results) == expected_events
 
 
@@ -303,7 +332,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
             {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 10},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     await hass.services.async_call(
         DOMAIN,
@@ -404,6 +432,7 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
 
     results = []
 
+    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)
@@ -471,11 +500,13 @@ async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> Non
 
 
 async def test_config_reload(
-    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
 ) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = er.async_get(hass)
 
     _LOGGER.debug("ENTITIES @ start: %s", hass.states.async_entity_ids())
 
@@ -503,9 +534,9 @@ async def test_config_reload(
     assert state_1 is not None
     assert state_2 is not None
     assert state_3 is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
 
     assert state_1.state == STATUS_IDLE
     assert ATTR_ICON not in state_1.attributes
@@ -554,9 +585,9 @@ async def test_config_reload(
     assert state_1 is None
     assert state_2 is not None
     assert state_3 is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
 
     assert state_2.state == STATUS_IDLE
     assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World reloaded"
@@ -580,6 +611,7 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
 
     results = []
 
+    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)
@@ -647,6 +679,7 @@ async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
 
     results = []
 
+    @callback
     def fake_event_listener(event):
         """Fake event listener for trigger."""
         results.append(event)
@@ -722,18 +755,20 @@ async def test_ws_list(
 
 
 async def test_ws_delete(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
     timer_id = "from_storage"
     timer_entity_id = f"{DOMAIN}.{DOMAIN}_{timer_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(timer_entity_id)
     assert state is not None
-    from_reg = ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id)
+    from_reg = entity_registry.async_get_entity_id(DOMAIN, DOMAIN, timer_id)
     assert from_reg == timer_entity_id
 
     client = await hass_ws_client(hass)
@@ -746,11 +781,14 @@ async def test_ws_delete(
 
     state = hass.states.get(timer_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, timer_id) is None
 
 
 async def test_update(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test updating timer entity."""
 
@@ -758,11 +796,12 @@ async def test_update(
 
     timer_id = "from_storage"
     timer_entity_id = f"{DOMAIN}.{DOMAIN}_{timer_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(timer_entity_id)
     assert state.attributes[ATTR_FRIENDLY_NAME] == "timer from storage"
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id) == timer_entity_id
+    assert (
+        entity_registry.async_get_entity_id(DOMAIN, DOMAIN, timer_id) == timer_entity_id
+    )
 
     client = await hass_ws_client(hass)
 
@@ -794,18 +833,20 @@ async def test_update(
 
 
 async def test_ws_create(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
     timer_id = "new_timer"
     timer_entity_id = f"{DOMAIN}.{timer_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(timer_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, timer_id) is None
 
     client = await hass_ws_client(hass)
 
@@ -823,7 +864,9 @@ async def test_ws_create(
     state = hass.states.get(timer_entity_id)
     assert state.state == STATUS_IDLE
     assert state.attributes[ATTR_DURATION] == _format_timedelta(cv.time_period(42))
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id) == timer_entity_id
+    assert (
+        entity_registry.async_get_entity_id(DOMAIN, DOMAIN, timer_id) == timer_entity_id
+    )
 
 
 async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:

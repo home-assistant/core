@@ -12,7 +12,7 @@ import pytest
 from homeassistant.components.srp_energy.const import DOMAIN, PHOENIX_TIME_ZONE
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import MOCK_USAGE, TEST_CONFIG_HOME
 
@@ -20,11 +20,11 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="setup_hass_config", autouse=True)
-def fixture_setup_hass_config(hass: HomeAssistant) -> None:
+async def fixture_setup_hass_config(hass: HomeAssistant) -> None:
     """Set up things to be run when tests are started."""
     hass.config.latitude = 33.27
     hass.config.longitude = 112
-    hass.config.set_time_zone(PHOENIX_TIME_ZONE)
+    await hass.config.async_set_time_zone(PHOENIX_TIME_ZONE)
 
 
 @pytest.fixture(name="hass_tz_info")
@@ -36,8 +36,7 @@ def fixture_hass_tz_info(hass: HomeAssistant, setup_hass_config) -> dt.tzinfo | 
 @pytest.fixture(name="test_date")
 def fixture_test_date(hass: HomeAssistant, hass_tz_info) -> dt.datetime | None:
     """Return test datetime for the hass timezone."""
-    test_date = dt.datetime(2022, 8, 2, 0, 0, 0, 0, tzinfo=hass_tz_info)
-    return test_date
+    return dt.datetime(2022, 8, 2, 0, 0, 0, 0, tzinfo=hass_tz_info)
 
 
 @pytest.fixture(name="mock_config_entry")
@@ -49,7 +48,7 @@ def fixture_mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(name="mock_srp_energy")
-def fixture_mock_srp_energy() -> Generator[None, MagicMock, None]:
+def fixture_mock_srp_energy() -> Generator[MagicMock]:
     """Return a mocked SrpEnergyClient client."""
     with patch(
         "homeassistant.components.srp_energy.SrpEnergyClient", autospec=True
@@ -61,7 +60,7 @@ def fixture_mock_srp_energy() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture(name="mock_srp_energy_config_flow")
-def fixture_mock_srp_energy_config_flow() -> Generator[None, MagicMock, None]:
+def fixture_mock_srp_energy_config_flow() -> Generator[MagicMock]:
     """Return a mocked config_flow SrpEnergyClient client."""
     with patch(
         "homeassistant.components.srp_energy.config_flow.SrpEnergyClient", autospec=True

@@ -32,25 +32,36 @@ HEADER: Final = """
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
-    "plugins": ", ".join(["pydantic.mypy"]),
+    "platform": "linux",
+    "plugins": ", ".join(  # noqa: FLY002
+        [
+            "pydantic.mypy",
+            "pydantic.v1.mypy",
+        ]
+    ),
     "show_error_codes": "true",
-    "follow_imports": "silent",
+    "follow_imports": "normal",
+    # "enable_incomplete_feature": ", ".join(
+    #     []
+    # ),
     # Enable some checks globally.
     "local_partial_types": "true",
     "strict_equality": "true",
+    "strict_bytes": "true",
     "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
-    "enable_error_code": ", ".join(
+    "enable_error_code": ", ".join(  # noqa: FLY002
         [
+            "deprecated",
             "ignore-without-code",
             "redundant-self",
             "truthy-iterable",
         ]
     ),
-    "disable_error_code": ", ".join(
+    "disable_error_code": ", ".join(  # noqa: FLY002
         [
             "annotation-unchecked",
             "import-not-found",

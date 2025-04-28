@@ -6,7 +6,7 @@ from p1monitor import P1MonitorError
 
 from homeassistant.components.p1_monitor.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -17,22 +17,26 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    with patch(
-        "homeassistant.components.p1_monitor.config_flow.P1Monitor.smartmeter"
-    ) as mock_p1monitor, patch(
-        "homeassistant.components.p1_monitor.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.p1_monitor.config_flow.P1Monitor.smartmeter"
+        ) as mock_p1monitor,
+        patch(
+            "homeassistant.components.p1_monitor.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: "example.com"},
+            user_input={CONF_HOST: "example.com", CONF_PORT: 80},
         )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "P1 Monitor"
-    assert result2.get("data") == {CONF_HOST: "example.com"}
+    assert result2.get("data") == {CONF_HOST: "example.com", CONF_PORT: 80}
+    assert isinstance(result2["data"][CONF_PORT], int)
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_p1monitor.mock_calls) == 1
@@ -41,14 +45,14 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 async def test_api_error(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     with patch(
-        "homeassistant.components.p1_monitor.P1Monitor.smartmeter",
+        "homeassistant.components.p1_monitor.coordinator.P1Monitor.smartmeter",
         side_effect=P1MonitorError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data={CONF_HOST: "example.com"},
+            data={CONF_HOST: "example.com", CONF_PORT: 80},
         )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}

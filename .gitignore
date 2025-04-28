@@ -34,6 +34,7 @@ Icon
 
 # GITHUB Proposed Python stuff:
 *.py[cod]
+__pycache__
 
 # C extensions
 *.so
@@ -68,6 +69,7 @@ test-reports/
 test-results.xml
 test-output.xml
 pytest-*.txt
+junit.xml
 
 # Translations
 *.mo
@@ -78,6 +80,7 @@ pytest-*.txt
 .pydevproject
 
 .python-version
+.tool-versions
 
 # emacs auto backups
 *~
@@ -132,3 +135,6 @@ tmp_cache
 
 # python-language-server / Rope
 .ropeproject
+
+# Will be created from script/split_tests.py
+pytest_buckets.txt

@@ -1,18 +1,13 @@
 """Test the Anova sensors."""
 
-from datetime import timedelta
 import logging
-from unittest.mock import patch
 
-from anova_wifi import AnovaApi, AnovaOffline
+from anova_wifi import AnovaApi
+import pytest
 
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from . import async_init_integration
-
-from tests.common import async_fire_time_changed
 
 LOGGER = logging.getLogger(__name__)
 
@@ -28,34 +23,26 @@ async def test_sensors(hass: HomeAssistant, anova_api: AnovaApi) -> None:
     assert hass.states.get("sensor.anova_precision_cooker_cook_time").state == "0"
     assert (
         hass.states.get("sensor.anova_precision_cooker_heater_temperature").state
-        == "20.87"
+        == "22.37"
     )
-    assert hass.states.get("sensor.anova_precision_cooker_mode").state == "Low water"
-    assert hass.states.get("sensor.anova_precision_cooker_state").state == "No state"
+    assert hass.states.get("sensor.anova_precision_cooker_mode").state == "idle"
+    assert hass.states.get("sensor.anova_precision_cooker_state").state == "no_state"
     assert (
         hass.states.get("sensor.anova_precision_cooker_target_temperature").state
-        == "23.33"
+        == "54.72"
     )
     assert (
         hass.states.get("sensor.anova_precision_cooker_water_temperature").state
-        == "21.33"
+        == "18.33"
     )
     assert (
         hass.states.get("sensor.anova_precision_cooker_triac_temperature").state
-        == "21.79"
+        == "36.04"
     )
 
 
-async def test_update_failed(hass: HomeAssistant, anova_api: AnovaApi) -> None:
-    """Test updating data after the coordinator has been set up, but anova is offline."""
+@pytest.mark.usefixtures("anova_api_no_data")
+async def test_no_data_sensors(hass: HomeAssistant) -> None:
+    """Test that if we have no data for the device, and we have not set it up previously, It is not immediately set up."""
     await async_init_integration(hass)
-    await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.anova.AnovaPrecisionCooker.update",
-        side_effect=AnovaOffline(),
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
-        await hass.async_block_till_done()
-
-        state = hass.states.get("sensor.anova_precision_cooker_water_temperature")
-        assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.anova_precision_cooker_triac_temperature") is None

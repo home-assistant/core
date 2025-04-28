@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_ASUSWRT, DOMAIN
+from . import AsusWrtConfigEntry
 from .router import AsusWrtDevInfo, AsusWrtRouter
 
 ATTR_LAST_TIME_REACHABLE = "last_time_reachable"
@@ -17,10 +16,12 @@ DEFAULT_DEVICE_NAME = "Unknown device"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AsusWrtConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for AsusWrt component."""
-    router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
+    router = entry.runtime_data
     tracked: set = set()
 
     @callback
@@ -37,7 +38,9 @@ async def async_setup_entry(
 
 @callback
 def add_entities(
-    router: AsusWrtRouter, async_add_entities: AddEntitiesCallback, tracked: set[str]
+    router: AsusWrtRouter,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    tracked: set[str],
 ) -> None:
     """Add new tracker entities from the router."""
     new_tracked = []
@@ -71,11 +74,6 @@ class AsusWrtDevice(ScannerEntity):
         return self._device.is_connected
 
     @property
-    def source_type(self) -> SourceType:
-        """Return the source type."""
-        return SourceType.ROUTER
-
-    @property
     def hostname(self) -> str | None:
         """Return the hostname of device."""
         return self._device.name
@@ -101,9 +99,9 @@ class AsusWrtDevice(ScannerEntity):
         self._device = self._router.devices[self._device.mac]
         self._attr_extra_state_attributes = {}
         if self._device.last_activity:
-            self._attr_extra_state_attributes[
-                ATTR_LAST_TIME_REACHABLE
-            ] = self._device.last_activity.isoformat(timespec="seconds")
+            self._attr_extra_state_attributes[ATTR_LAST_TIME_REACHABLE] = (
+                self._device.last_activity.isoformat(timespec="seconds")
+            )
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:

@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN, MANUFACTURER_URL
@@ -20,7 +20,9 @@ from .coordinator import ZamgDataUpdateCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ZAMG weather platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -66,9 +68,9 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
                 value := self.coordinator.data[self.station_id]["TL"]["data"]
             ) is not None:
                 return float(value)
-            return None
         except (KeyError, ValueError, TypeError):
             return None
+        return None
 
     @property
     def native_pressure(self) -> float | None:
@@ -98,9 +100,9 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
                 value := self.coordinator.data[self.station_id]["FFX"]["data"]
             ) is not None:
                 return float(value)
-            return None
         except (KeyError, ValueError, TypeError):
             return None
+        return None
 
     @property
     def wind_bearing(self) -> float | None:
@@ -114,6 +116,6 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
                 value := self.coordinator.data[self.station_id]["DDX"]["data"]
             ) is not None:
                 return float(value)
-            return None
         except (KeyError, ValueError, TypeError):
             return None
+        return None

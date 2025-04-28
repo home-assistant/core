@@ -1,8 +1,8 @@
 """The met_eireann component."""
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from types import MappingProxyType
 from typing import Any, Self
 
 import meteireann
@@ -12,7 +12,7 @@ from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, P
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -46,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name=DOMAIN,
         update_method=_async_update_data,
         update_interval=UPDATE_INTERVAL,
@@ -73,7 +74,7 @@ class MetEireannWeatherData:
     """Keep data for Met Éireann weather entities."""
 
     def __init__(
-        self, config: MappingProxyType[str, Any], weather_data: meteireann.WeatherData
+        self, config: Mapping[str, Any], weather_data: meteireann.WeatherData
     ) -> None:
         """Initialise the weather entity data."""
         self._config = config
@@ -86,7 +87,7 @@ class MetEireannWeatherData:
         """Fetch data from API - (current weather and forecast)."""
         await self._weather_data.fetching_data()
         self.current_weather_data = self._weather_data.get_current_weather()
-        time_zone = dt_util.DEFAULT_TIME_ZONE
+        time_zone = dt_util.get_default_time_zone()
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False)
         self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
         return self

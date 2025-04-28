@@ -1,17 +1,17 @@
 """Test MatrixBot's ability to parse and respond to commands in matrix rooms."""
 
+from dataclasses import dataclass
 from functools import partial
 from itertools import chain
 from typing import Any
 
 from nio import MatrixRoom, RoomMessageText
-from pydantic.dataclasses import dataclass
 import pytest
 
 from homeassistant.components.matrix import MatrixBot, RoomID
 from homeassistant.core import Event, HomeAssistant
 
-from tests.components.matrix.conftest import (
+from .conftest import (
     MOCK_EXPRESSION_COMMANDS,
     MOCK_WORD_COMMANDS,
     TEST_MXID,
@@ -42,9 +42,8 @@ class CommandTestParameters:
         Commands that are named with 'Subset' are expected not to be read from Room A.
         """
 
-        if (
-            self.expected_event_data_extra is None
-            or "Subset" in self.expected_event_data_extra["command"]
+        if self.expected_event_data_extra is None or (
+            "Subset" in self.expected_event_data_extra["command"]
             and self.room_id not in SUBSET_ROOMS
         ):
             return None
@@ -131,7 +130,7 @@ async def test_commands(
     matrix_bot: MatrixBot,
     command_events: list[Event],
     command_params: CommandTestParameters,
-):
+) -> None:
     """Test that the configured commands are used correctly."""
     room = MatrixRoom(room_id=command_params.room_id, own_user_id=matrix_bot._mx_id)
 
@@ -160,7 +159,7 @@ async def test_non_commands(
     matrix_bot: MatrixBot,
     command_events: list[Event],
     command_params: CommandTestParameters,
-):
+) -> None:
     """Test that normal/non-qualifying messages don't wrongly trigger commands."""
     room = MatrixRoom(room_id=command_params.room_id, own_user_id=matrix_bot._mx_id)
 
@@ -173,7 +172,7 @@ async def test_non_commands(
     assert len(command_events) == 0
 
 
-async def test_commands_parsing(hass: HomeAssistant, matrix_bot: MatrixBot):
+async def test_commands_parsing(hass: HomeAssistant, matrix_bot: MatrixBot) -> None:
     """Test that the configured commands were parsed correctly."""
 
     await hass.async_start()

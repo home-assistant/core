@@ -1,10 +1,12 @@
 {
   "domain": "matter",
-  "name": "Matter (BETA)",
+  "name": "Matter",
+  "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/matter"],
   "config_flow": true,
   "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/matter",
   "iot_class": "local_push",
-  "requirements": ["python-matter-server==5.7.0"]
+  "requirements": ["python-matter-server==7.0.0"],
+  "zeroconf": ["_matter._tcp.local.", "_matterc._udp.local."]
 }

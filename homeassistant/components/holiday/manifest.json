@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/holiday",
   "iot_class": "local_polling",
-  "requirements": ["holidays==0.45", "babel==2.13.1"]
+  "requirements": ["holidays==0.70", "babel==2.15.0"]
 }

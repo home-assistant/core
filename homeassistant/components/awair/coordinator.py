@@ -26,6 +26,8 @@ from .const import (
     UPDATE_INTERVAL_LOCAL,
 )
 
+type AwairConfigEntry = ConfigEntry[AwairDataUpdateCoordinator]
+
 
 @dataclass
 class AwairResult:
@@ -38,17 +40,24 @@ class AwairResult:
 class AwairDataUpdateCoordinator(DataUpdateCoordinator[dict[str, AwairResult]]):
     """Define a wrapper class to update Awair data."""
 
+    config_entry: AwairConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: AwairConfigEntry,
         update_interval: timedelta | None,
     ) -> None:
         """Set up the AwairDataUpdateCoordinator class."""
-        self._config_entry = config_entry
         self.title = config_entry.title
 
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=update_interval,
+        )
 
     async def _fetch_air_data(self, device: AwairBaseDevice) -> AwairResult:
         """Fetch latest air quality data."""
@@ -62,7 +71,10 @@ class AwairCloudDataUpdateCoordinator(AwairDataUpdateCoordinator):
     """Define a wrapper class to update Awair data from Cloud API."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, session: ClientSession
+        self,
+        hass: HomeAssistant,
+        config_entry: AwairConfigEntry,
+        session: ClientSession,
     ) -> None:
         """Set up the AwairCloudDataUpdateCoordinator class."""
         access_token = config_entry.data[CONF_ACCESS_TOKEN]
@@ -93,7 +105,10 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
     _device: AwairLocalDevice | None = None
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, session: ClientSession
+        self,
+        hass: HomeAssistant,
+        config_entry: AwairConfigEntry,
+        session: ClientSession,
     ) -> None:
         """Set up the AwairLocalDataUpdateCoordinator class."""
         self._awair = AwairLocal(
@@ -111,7 +126,7 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
                     devices = await self._awair.devices()
                     self._device = devices[0]
                 result = await self._fetch_air_data(self._device)
-                return {result.device.uuid: result}
             except AwairError as err:
                 LOGGER.error("Unexpected API error: %s", err)
                 raise UpdateFailed(err) from err
+            return {result.device.uuid: result}

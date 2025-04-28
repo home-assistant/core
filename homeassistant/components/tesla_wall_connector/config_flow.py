@@ -9,11 +9,11 @@ from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import WallConnectorError
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN, WALLCONNECTOR_DEVICE_NAME, WALLCONNECTOR_SERIAL_NUMBER
 
@@ -46,10 +46,9 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         super().__init__()
         self.ip_address: str | None = None
-        self.serial_number = None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info.ip
@@ -70,23 +69,21 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="cannot_connect")
 
-        self.serial_number = version.serial_number
+        serial_number: str = version.serial_number
 
-        await self.async_set_unique_id(self.serial_number)
+        await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
 
         _LOGGER.debug(
             "No entry found for wall connector with IP %s. Serial nr: %s",
             self.ip_address,
-            self.serial_number,
+            serial_number,
         )
 
-        placeholders = {
+        self.context["title_placeholders"] = {
             CONF_HOST: self.ip_address,
-            WALLCONNECTOR_SERIAL_NUMBER: self.serial_number,
+            WALLCONNECTOR_SERIAL_NUMBER: serial_number,
         }
-
-        self.context["title_placeholders"] = placeholders
         return await self.async_step_user()
 
     async def async_step_user(
@@ -104,8 +101,8 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except WallConnectorError:
             errors["base"] = "cannot_connect"
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception: %s", ex)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
         if not errors:

@@ -9,11 +9,15 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.hue import config_flow, const
 from homeassistant.components.hue.errors import CannotConnect
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, ClientError
@@ -35,7 +39,10 @@ def create_mock_api_discovery(aioclient_mock, bridges):
     """Patch aiohttp responses with fake data for bridge discovery."""
     aioclient_mock.get(
         URL_NUPNP,
-        json=[{"internalipaddress": host, "id": id} for (host, id) in bridges],
+        json=[
+            {"internalipaddress": host, "id": bridge_id}
+            for (host, bridge_id) in bridges
+        ],
     )
     for host, bridge_id in bridges:
         aioclient_mock.get(
@@ -61,14 +68,14 @@ async def test_flow_works(hass: HomeAssistant) -> None:
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"id": disc_bridge.id}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
     flow = next(
@@ -83,7 +90,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={}
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Hue Bridge aabbccddeeff"
     assert result["data"] == {
         "host": "1.2.3.4",
@@ -108,14 +115,14 @@ async def test_manual_flow_works(hass: HomeAssistant) -> None:
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"id": "manual"}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
     with patch.object(config_flow, "discover_bridge", return_value=disc_bridge):
@@ -123,15 +130,16 @@ async def test_manual_flow_works(hass: HomeAssistant) -> None:
             result["flow_id"], {"host": "2.2.2.2"}
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
-    with patch.object(config_flow, "create_app_key", return_value="123456789"), patch(
-        "homeassistant.components.hue.async_unload_entry", return_value=True
+    with (
+        patch.object(config_flow, "create_app_key", return_value="123456789"),
+        patch("homeassistant.components.hue.async_unload_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Hue Bridge {disc_bridge.id}"
     assert result["data"] == {
         "host": "2.2.2.2",
@@ -158,14 +166,14 @@ async def test_manual_flow_bridge_exist(hass: HomeAssistant) -> None:
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"host": "2.2.2.2"}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -178,7 +186,7 @@ async def test_manual_flow_no_discovered_bridges(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
 
@@ -198,7 +206,7 @@ async def test_flow_all_discovered_bridges_exist(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
 
@@ -218,7 +226,7 @@ async def test_flow_bridges_discovered(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with pytest.raises(vol.Invalid):
@@ -242,7 +250,7 @@ async def test_flow_two_bridges_discovered_one_new(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["data_schema"]({"id": "beer"})
     assert result["data_schema"]({"id": "manual"})
@@ -260,7 +268,7 @@ async def test_flow_timeout_discovery(hass: HomeAssistant) -> None:
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
 
@@ -284,7 +292,7 @@ async def test_flow_link_unknown_error(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={}
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
     assert result["errors"] == {"base": "linking"}
 
@@ -309,7 +317,7 @@ async def test_flow_link_button_not_pressed(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={}
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
     assert result["errors"] == {"base": "register_failed"}
 
@@ -334,7 +342,7 @@ async def test_flow_link_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={}
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -349,7 +357,7 @@ async def test_import_with_no_config(
         data={"host": "0.0.0.0"},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
 
@@ -384,16 +392,19 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(
         context={"source": config_entries.SOURCE_IMPORT},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
-    with patch(
-        "homeassistant.components.hue.config_flow.create_app_key",
-        return_value="123456789",
-    ), patch("homeassistant.components.hue.async_unload_entry", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.hue.config_flow.create_app_key",
+            return_value="123456789",
+        ),
+        patch("homeassistant.components.hue.async_unload_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Hue Bridge id-1234"
     assert result["data"] == {
         "host": "2.2.2.2",
@@ -416,18 +427,18 @@ async def test_bridge_homekit(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("0.0.0.0"),
             ip_addresses=[ip_address("0.0.0.0")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+            properties={ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
             type="mock_type",
         ),
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
     flow = next(
@@ -450,7 +461,7 @@ async def test_bridge_import_already_configured(hass: HomeAssistant) -> None:
         data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -466,18 +477,18 @@ async def test_bridge_homekit_already_configured(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("0.0.0.0"),
             ip_addresses=[ip_address("0.0.0.0")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+            properties={ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
             type="mock_type",
         ),
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -492,7 +503,7 @@ async def test_options_flow_v1(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert (
@@ -512,7 +523,7 @@ async def test_options_flow_v1(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         const.CONF_ALLOW_HUE_GROUPS: True,
         const.CONF_ALLOW_UNREACHABLE: True,
@@ -546,7 +557,7 @@ async def test_options_flow_v2(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert _get_schema_default(schema, const.CONF_IGNORE_AVAILABILITY) == []
@@ -556,7 +567,7 @@ async def test_options_flow_v2(
         user_input={const.CONF_IGNORE_AVAILABILITY: [mock_dev_id]},
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         const.CONF_IGNORE_AVAILABILITY: [mock_dev_id],
     }
@@ -570,7 +581,7 @@ async def test_bridge_zeroconf(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.217"),
             ip_addresses=[ip_address("192.168.1.217")],
             port=443,
@@ -585,7 +596,7 @@ async def test_bridge_zeroconf(
         ),
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
 
@@ -606,7 +617,7 @@ async def test_bridge_zeroconf_already_exists(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.217"),
             ip_addresses=[ip_address("192.168.1.217")],
             port=443,
@@ -621,7 +632,7 @@ async def test_bridge_zeroconf_already_exists(
         ),
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "192.168.1.217"
 
@@ -631,7 +642,7 @@ async def test_bridge_zeroconf_ipv6(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("fd00::eeb5:faff:fe84:b17d"),
             ip_addresses=[ip_address("fd00::eeb5:faff:fe84:b17d")],
             port=443,
@@ -646,7 +657,7 @@ async def test_bridge_zeroconf_ipv6(hass: HomeAssistant) -> None:
         ),
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_host"
 
 
@@ -672,14 +683,14 @@ async def test_bridge_connection_failed(
         # a warning message should have been logged that the bridge could not be reached
         assert "Error while attempting to retrieve discovery information" in caplog.text
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
         # test again with zeroconf discovered wrong bridge IP
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=443,
@@ -693,24 +704,24 @@ async def test_bridge_connection_failed(
                 },
             ),
         )
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
         # test again with homekit discovered wrong bridge IP
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("0.0.0.0"),
                 ip_addresses=[ip_address("0.0.0.0")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
-                properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                properties={ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
                 type="mock_type",
             ),
         )
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
         # repeat test with import flow
@@ -719,5 +730,5 @@ async def test_bridge_connection_failed(
             context={"source": config_entries.SOURCE_IMPORT},
             data={"host": "blah"},
         )
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"

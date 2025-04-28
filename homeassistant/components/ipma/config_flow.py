@@ -10,8 +10,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
@@ -40,8 +40,8 @@ class IpmaFlowHandler(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_LATITUDE],
                     user_input[CONF_LONGITUDE],
                 )
-            except IPMAException as err:
-                _LOGGER.exception(err)
+            except IPMAException:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=location.name, data=user_input)

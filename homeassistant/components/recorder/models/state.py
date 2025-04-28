@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
 
+from propcache.api import cached_property
 from sqlalchemy.engine.row import Row
 
 from homeassistant.const import (
@@ -15,14 +16,9 @@ from homeassistant.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .state_attributes import decode_attributes_from_source
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,8 +58,8 @@ class LazyState(State):
         self.attr_cache = attr_cache
         self.context = EMPTY_CONTEXT
 
-    @cached_property  # type: ignore[override]
-    def attributes(self) -> dict[str, Any]:
+    @cached_property
+    def attributes(self) -> dict[str, Any]:  # type: ignore[override]
         """State attributes."""
         return decode_attributes_from_source(
             getattr(self._row, "attributes", None), self.attr_cache
@@ -78,7 +74,19 @@ class LazyState(State):
     def last_changed(self) -> datetime:  # type: ignore[override]
         """Last changed datetime."""
         return dt_util.utc_from_timestamp(
-            self._last_changed_ts or self._last_updated_ts
+            self._last_changed_ts or self._last_updated_ts  # type: ignore[arg-type]
+        )
+
+    @cached_property
+    def _last_reported_ts(self) -> float | None:
+        """Last reported timestamp."""
+        return getattr(self._row, "last_reported_ts", None)
+
+    @cached_property
+    def last_reported(self) -> datetime:  # type: ignore[override]
+        """Last reported datetime."""
+        return dt_util.utc_from_timestamp(
+            self._last_reported_ts or self._last_updated_ts  # type: ignore[arg-type]
         )
 
     @cached_property
@@ -87,6 +95,29 @@ class LazyState(State):
         if TYPE_CHECKING:
             assert self._last_updated_ts is not None
         return dt_util.utc_from_timestamp(self._last_updated_ts)
+
+    @cached_property
+    def last_updated_timestamp(self) -> float:  # type: ignore[override]
+        """Last updated timestamp."""
+        if TYPE_CHECKING:
+            assert self._last_updated_ts is not None
+        return self._last_updated_ts
+
+    @cached_property
+    def last_changed_timestamp(self) -> float:
+        """Last changed timestamp."""
+        ts = self._last_changed_ts or self._last_updated_ts
+        if TYPE_CHECKING:
+            assert ts is not None
+        return ts
+
+    @cached_property
+    def last_reported_timestamp(self) -> float:
+        """Last reported timestamp."""
+        ts = self._last_reported_ts or self._last_updated_ts
+        if TYPE_CHECKING:
+            assert ts is not None
+        return ts
 
     def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
         """Return a dict representation of the LazyState.

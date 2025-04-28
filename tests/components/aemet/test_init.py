@@ -9,6 +9,7 @@ from homeassistant.components.aemet.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .util import mock_api_call
 
@@ -24,11 +25,12 @@ CONFIG = {
 
 async def test_unload_entry(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test (un)loading the AEMET integration."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     with patch(
         "homeassistant.components.aemet.AEMET.api_call",
@@ -47,6 +49,12 @@ async def test_unload_entry(
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.NOT_LOADED
 
+        assert await hass.config_entries.async_remove(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert hass.states.get("weather.aemet") is None
+        assert entity_registry.async_get("weather.aemet") is None
+
 
 async def test_init_town_not_found(
     hass: HomeAssistant,
@@ -54,7 +62,7 @@ async def test_init_town_not_found(
 ) -> None:
     """Test TownNotFound when loading the AEMET integration."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     with patch(
         "homeassistant.components.aemet.AEMET.api_call",
@@ -80,7 +88,7 @@ async def test_init_api_timeout(
 ) -> None:
     """Test API timeouts when loading the AEMET integration."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     with patch(
         "homeassistant.components.aemet.AEMET.api_call",

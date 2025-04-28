@@ -7,7 +7,7 @@ from elgato import BatteryInfo, ElgatoNoBatteryError, Info, Settings, State
 import pytest
 
 from homeassistant.components.elgato.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, get_fixture_path, load_fixture
@@ -35,14 +35,13 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: "127.0.0.1",
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
-            CONF_PORT: 9123,
         },
         unique_id="CN11A1A00001",
     )
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.elgato.async_setup_entry", return_value=True
@@ -51,7 +50,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_onboarding() -> Generator[None, MagicMock, None]:
+def mock_onboarding() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -61,14 +60,13 @@ def mock_onboarding() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_elgato(
-    device_fixtures: str, state_variant: str
-) -> Generator[None, MagicMock, None]:
+def mock_elgato(device_fixtures: str, state_variant: str) -> Generator[MagicMock]:
     """Return a mocked Elgato client."""
-    with patch(
-        "homeassistant.components.elgato.coordinator.Elgato", autospec=True
-    ) as elgato_mock, patch(
-        "homeassistant.components.elgato.config_flow.Elgato", new=elgato_mock
+    with (
+        patch(
+            "homeassistant.components.elgato.coordinator.Elgato", autospec=True
+        ) as elgato_mock,
+        patch("homeassistant.components.elgato.config_flow.Elgato", new=elgato_mock),
     ):
         elgato = elgato_mock.return_value
         elgato.info.return_value = Info.from_json(

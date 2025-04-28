@@ -6,28 +6,47 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from hass_nabucasa.voice import TTS_VOICES, VoiceError, VoiceTokenError
+from hass_nabucasa.voice import VoiceError, VoiceTokenError
+from hass_nabucasa.voice_data import TTS_VOICES
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
-from homeassistant.components.cloud import DOMAIN, const, tts
-from homeassistant.components.tts import DOMAIN as TTS_DOMAIN
-from homeassistant.components.tts.helper import get_engine_instance
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
+from homeassistant.components.cloud.tts import (
+    DEFAULT_VOICES,
+    PLATFORM_SCHEMA,
+    SUPPORT_LANGUAGES,
+    Voice,
+)
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID,
+    DOMAIN as DOMAIN_MP,
+    SERVICE_PLAY_MEDIA,
+)
+from homeassistant.components.tts import (
+    ATTR_LANGUAGE,
+    ATTR_MEDIA_PLAYER_ENTITY_ID,
+    ATTR_MESSAGE,
+    DOMAIN as TTS_DOMAIN,
+    get_engine_instance,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_registry import EntityRegistry
-from homeassistant.helpers.issue_registry import IssueRegistry, IssueSeverity
 from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
 
+from tests.common import async_mock_service
+from tests.components.tts.common import get_media_source_url
 from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-async def delay_save_fixture() -> AsyncGenerator[None, None]:
+async def delay_save_fixture() -> AsyncGenerator[None]:
     """Load the homeassistant integration."""
     with patch("homeassistant.helpers.collection.SAVE_DELAY", new=0):
         yield
@@ -44,33 +63,43 @@ async def internal_url_mock(hass: HomeAssistant) -> None:
 
 def test_default_exists() -> None:
     """Test our default language exists."""
-    assert const.DEFAULT_TTS_DEFAULT_VOICE[0] in TTS_VOICES
-    assert (
-        const.DEFAULT_TTS_DEFAULT_VOICE[1]
-        in TTS_VOICES[const.DEFAULT_TTS_DEFAULT_VOICE[0]]
-    )
+    assert DEFAULT_TTS_DEFAULT_VOICE[0] in TTS_VOICES
+    assert DEFAULT_TTS_DEFAULT_VOICE[1] in TTS_VOICES[DEFAULT_TTS_DEFAULT_VOICE[0]]
+
+
+def test_all_languages_have_default() -> None:
+    """Test all languages have a default voice."""
+    assert set(SUPPORT_LANGUAGES).difference(DEFAULT_VOICES) == set()
+    assert set(DEFAULT_VOICES).difference(SUPPORT_LANGUAGES) == set()
+
+
+@pytest.mark.parametrize(("language", "voice"), DEFAULT_VOICES.items())
+def test_default_voice_is_valid(language: str, voice: str) -> None:
+    """Test that the default voice is valid."""
+    assert language in TTS_VOICES
+    assert voice in TTS_VOICES[language]
 
 
 def test_schema() -> None:
     """Test schema."""
-    assert "nl-NL" in tts.SUPPORT_LANGUAGES
+    assert "nl-NL" in SUPPORT_LANGUAGES
 
-    processed = tts.PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL"})
+    processed = PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL"})
     assert processed["gender"] == "female"
 
     with pytest.raises(vol.Invalid):
-        tts.PLATFORM_SCHEMA(
+        PLATFORM_SCHEMA(
             {"platform": "cloud", "language": "non-existing", "gender": "female"}
         )
 
     with pytest.raises(vol.Invalid):
-        tts.PLATFORM_SCHEMA(
+        PLATFORM_SCHEMA(
             {"platform": "cloud", "language": "nl-NL", "gender": "not-supported"}
         )
 
     # Should not raise
-    tts.PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL", "gender": "female"})
-    tts.PLATFORM_SCHEMA({"platform": "cloud"})
+    PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL", "gender": "female"})
+    PLATFORM_SCHEMA({"platform": "cloud"})
 
 
 @pytest.mark.parametrize(
@@ -120,18 +149,18 @@ async def test_prefs_default_voice(
     assert engine is not None
     # The platform config provider will be overridden by the discovery info provider.
     assert engine.default_language == "en-US"
-    assert engine.default_options == {"audio_output": "mp3", "voice": "JennyNeural"}
+    assert engine.default_options == {"audio_output": "mp3"}
 
     await set_cloud_prefs({"tts_default_voice": ("nl-NL", "MaartenNeural")})
     await hass.async_block_till_done()
 
     assert engine.default_language == "nl-NL"
-    assert engine.default_options == {"audio_output": "mp3", "voice": "MaartenNeural"}
+    assert engine.default_options == {"audio_output": "mp3"}
 
 
 async def test_deprecated_platform_config(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     cloud: MagicMock,
 ) -> None:
     """Test cloud provider uses the preferences."""
@@ -145,7 +174,7 @@ async def test_deprecated_platform_config(
     assert issue.breaks_in_ha_version == "2024.9.0"
     assert issue.is_fixable is False
     assert issue.is_persistent is False
-    assert issue.severity == IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_tts_platform_config"
 
 
@@ -175,7 +204,7 @@ async def test_provider_properties(
     assert "nl-NL" in engine.supported_languages
     supported_voices = engine.async_get_supported_voices("nl-NL")
     assert supported_voices is not None
-    assert tts.Voice("ColetteNeural", "ColetteNeural") in supported_voices
+    assert Voice("ColetteNeural", "Colette") in supported_voices
     supported_voices = engine.async_get_supported_voices("missing_language")
     assert supported_voices is None
 
@@ -217,31 +246,28 @@ async def test_get_tts_audio(
     await on_start_callback()
     client = await hass_client()
 
-    url = "/api/tts_get_url"
-    data |= {"message": "There is someone at the door."}
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data |= {"message": "There is someone at the door."}
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == "en-US"
     assert mock_process_tts.call_args.kwargs["gender"] is None
+    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
 
 
@@ -269,31 +295,28 @@ async def test_get_tts_audio_logged_out(
     await hass.async_block_till_done()
     client = await hass_client()
 
-    url = "/api/tts_get_url"
-    data |= {"message": "There is someone at the door."}
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data |= {"message": "There is someone at the door."}
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == "en-US"
     assert mock_process_tts.call_args.kwargs["gender"] is None
+    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
 
 
@@ -330,34 +353,31 @@ async def test_tts_entity(
     assert state
     assert state.state == STATE_UNKNOWN
 
-    url = "/api/tts_get_url"
-    data = {
-        "engine_id": entity_id,
-        "message": "There is someone at the door.",
-    }
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data = {
+            "engine_id": entity_id,
+            "message": "There is someone at the door.",
+        }
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{entity_id}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_5c97d21c48_{entity_id}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == "en-US"
     assert mock_process_tts.call_args.kwargs["gender"] is None
+    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
 
     state = hass.states.get(entity_id)
@@ -448,7 +468,7 @@ async def test_migrating_pipelines(
 )
 async def test_deprecated_voice(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     cloud: MagicMock,
     hass_client: ClientSessionGenerator,
     data: dict[str, Any],
@@ -469,29 +489,25 @@ async def test_deprecated_voice(
     client = await hass_client()
 
     # Test with non deprecated voice.
-    url = "/api/tts_get_url"
-    data |= {
-        "message": "There is someone at the door.",
-        "language": language,
-        "options": {"voice": replacement_voice},
-    }
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data |= {
+            "message": "There is someone at the door.",
+            "language": language,
+            "options": {"voice": replacement_voice},
+        }
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_87567e3e29_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_87567e3e29_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
@@ -509,22 +525,18 @@ async def test_deprecated_voice(
     # Test with deprecated voice.
     data["options"] = {"voice": deprecated_voice}
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_13646b7d32_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_13646b7d32_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     issue_id = f"deprecated_voice_{deprecated_voice}"
 
@@ -540,7 +552,7 @@ async def test_deprecated_voice(
     assert issue.breaks_in_ha_version == "2024.8.0"
     assert issue.is_fixable is True
     assert issue.is_persistent is True
-    assert issue.severity == IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_voice"
     assert issue.translation_placeholders == {
         "deprecated_voice": deprecated_voice,
@@ -598,7 +610,7 @@ async def test_deprecated_voice(
 )
 async def test_deprecated_gender(
     hass: HomeAssistant,
-    issue_registry: IssueRegistry,
+    issue_registry: ir.IssueRegistry,
     cloud: MagicMock,
     hass_client: ClientSessionGenerator,
     data: dict[str, Any],
@@ -618,34 +630,30 @@ async def test_deprecated_gender(
     client = await hass_client()
 
     # Test without deprecated gender option.
-    url = "/api/tts_get_url"
-    data |= {
-        "message": "There is someone at the door.",
-        "language": language,
-    }
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data |= {
+            "message": "There is someone at the door.",
+            "language": language,
+        }
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_5c97d21c48_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_5c97d21c48_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == language
-    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
+    assert mock_process_tts.call_args.kwargs["voice"] == "XiaoxiaoNeural"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
     issue = issue_registry.async_get_issue("cloud", "deprecated_gender")
     assert issue is None
@@ -654,22 +662,18 @@ async def test_deprecated_gender(
     # Test with deprecated gender option.
     data["options"] = {"gender": gender_option}
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_5dded72256_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_5dded72256_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     issue_id = "deprecated_gender"
 
@@ -678,14 +682,14 @@ async def test_deprecated_gender(
     assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
     assert mock_process_tts.call_args.kwargs["language"] == language
     assert mock_process_tts.call_args.kwargs["gender"] == gender_option
-    assert mock_process_tts.call_args.kwargs["voice"] == "JennyNeural"
+    assert mock_process_tts.call_args.kwargs["voice"] == "XiaoxiaoNeural"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
     issue = issue_registry.async_get_issue("cloud", issue_id)
     assert issue is not None
     assert issue.breaks_in_ha_version == "2024.10.0"
     assert issue.is_fixable is True
     assert issue.is_persistent is True
-    assert issue.severity == IssueSeverity.WARNING
+    assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_gender"
     assert issue.translation_placeholders == {
         "integration_name": "Home Assistant Cloud",
@@ -733,3 +737,65 @@ async def test_deprecated_gender(
     }
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.home_assistant_cloud",
+                ATTR_LANGUAGE: "id-ID",
+                ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                ATTR_MESSAGE: "There is someone at the door.",
+            },
+        ),
+        (
+            "cloud_say",
+            {
+                ATTR_ENTITY_ID: "media_player.something",
+                ATTR_LANGUAGE: "id-ID",
+                ATTR_MESSAGE: "There is someone at the door.",
+            },
+        ),
+    ],
+)
+async def test_tts_services(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test tts services."""
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    mock_process_tts = AsyncMock(return_value=b"")
+    cloud.voice.process_tts = mock_process_tts
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+    client = await hass_client()
+
+    await hass.services.async_call(
+        domain=TTS_DOMAIN,
+        service=service,
+        service_data=service_data,
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+
+    url = await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    await hass.async_block_till_done()
+    response = await client.get(url)
+    assert response.status == HTTPStatus.OK
+    await hass.async_block_till_done()
+
+    assert mock_process_tts.call_count == 1
+    assert mock_process_tts.call_args is not None
+    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+    assert mock_process_tts.call_args.kwargs["language"] == service_data[ATTR_LANGUAGE]
+    assert mock_process_tts.call_args.kwargs["voice"] == "GadisNeural"
+    assert mock_process_tts.call_args.kwargs["output"] == "mp3"

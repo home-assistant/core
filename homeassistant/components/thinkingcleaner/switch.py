@@ -11,13 +11,13 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.switch import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
     SwitchEntityDescription,
 )
 from homeassistant.const import CONF_HOST, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -42,7 +42,7 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
 
 
 def setup_platform(

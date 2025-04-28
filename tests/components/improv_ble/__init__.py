@@ -21,6 +21,26 @@ IMPROV_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     ),
     time=0,
     connectable=True,
+    tx_power=-127,
+)
+
+
+BAD_IMPROV_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
+    name="00123456",
+    address="AA:BB:CC:DD:EE:F0",
+    rssi=-60,
+    manufacturer_data={},
+    service_uuids=[SERVICE_UUID],
+    service_data={SERVICE_DATA_UUID: b"\x00\x00\x00\x00\x00\x00"},
+    source="local",
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:F0", name="00123456"),
+    advertisement=generate_advertisement_data(
+        service_uuids=[SERVICE_UUID],
+        service_data={SERVICE_DATA_UUID: b"\x00\x00\x00\x00\x00\x00"},
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
 )
 
 
@@ -39,6 +59,7 @@ PROVISIONED_IMPROV_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     ),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 
@@ -57,4 +78,5 @@ NOT_IMPROV_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
+    tx_power=-127,
 )

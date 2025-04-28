@@ -1,25 +1,34 @@
 """Test the Z-Wave JS init module."""
 
 import asyncio
+from collections.abc import Generator
 from copy import deepcopy
 import logging
-from unittest.mock import AsyncMock, call, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonsOptions
 import pytest
 from zwave_js_server.client import Client
+from zwave_js_server.const import SecurityClass
 from zwave_js_server.event import Event
-from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
-from zwave_js_server.model.node import Node
+from zwave_js_server.exceptions import (
+    BaseZwaveJSServerError,
+    InvalidServerVersion,
+    NotConnected,
+)
+from zwave_js_server.model.controller import ProvisioningEntry
+from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.version import VersionInfo
 
-from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
+from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -30,18 +39,29 @@ from homeassistant.setup import async_setup_component
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
-from tests.common import MockConfigEntry, async_get_persistent_notifications
+from tests.common import (
+    MockConfigEntry,
+    async_call_logger_set_level,
+    async_fire_time_changed,
+    async_get_persistent_notifications,
+)
 from tests.typing import WebSocketGenerator
+
+CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
 
 @pytest.fixture(name="connect_timeout")
-def connect_timeout_fixture():
+def connect_timeout_fixture() -> Generator[int]:
     """Mock the connect timeout."""
     with patch("homeassistant.components.zwave_js.CONNECT_TIMEOUT", new=0) as timeout:
         yield timeout
 
 
-async def test_entry_setup_unload(hass: HomeAssistant, client, integration) -> None:
+async def test_entry_setup_unload(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
     """Test the integration set up and unload."""
     entry = integration
 
@@ -54,16 +74,19 @@ async def test_entry_setup_unload(hass: HomeAssistant, client, integration) -> N
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_home_assistant_stop(hass: HomeAssistant, client, integration) -> None:
+@pytest.mark.usefixtures("integration")
+async def test_home_assistant_stop(
+    hass: HomeAssistant,
+    client: MagicMock,
+) -> None:
     """Test we clean up on home assistant stop."""
     await hass.async_stop()
 
     assert client.disconnect.call_count == 1
 
 
-async def test_initialized_timeout(
-    hass: HomeAssistant, client, connect_timeout
-) -> None:
+@pytest.mark.usefixtures("client", "connect_timeout")
+async def test_initialized_timeout(hass: HomeAssistant) -> None:
     """Test we handle a timeout during client initialization."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
@@ -74,7 +97,8 @@ async def test_initialized_timeout(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_enabled_statistics(hass: HomeAssistant, client) -> None:
+@pytest.mark.usefixtures("client")
+async def test_enabled_statistics(hass: HomeAssistant) -> None:
     """Test that we enabled statistics if the entry is opted in."""
     entry = MockConfigEntry(
         domain="zwave_js",
@@ -90,8 +114,9 @@ async def test_enabled_statistics(hass: HomeAssistant, client) -> None:
         assert mock_cmd.called
 
 
-async def test_disabled_statistics(hass: HomeAssistant, client) -> None:
-    """Test that we diisabled statistics if the entry is opted out."""
+@pytest.mark.usefixtures("client")
+async def test_disabled_statistics(hass: HomeAssistant) -> None:
+    """Test that we disabled statistics if the entry is opted out."""
     entry = MockConfigEntry(
         domain="zwave_js",
         data={"url": "ws://test.org", "data_collection_opted_in": False},
@@ -106,44 +131,245 @@ async def test_disabled_statistics(hass: HomeAssistant, client) -> None:
         assert mock_cmd.called
 
 
-async def test_noop_statistics(hass: HomeAssistant, client) -> None:
+@pytest.mark.usefixtures("client")
+async def test_noop_statistics(hass: HomeAssistant) -> None:
     """Test that we don't make statistics calls if user hasn't set preference."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
-    with patch(
-        "zwave_js_server.model.driver.Driver.async_enable_statistics"
-    ) as mock_cmd1, patch(
-        "zwave_js_server.model.driver.Driver.async_disable_statistics"
-    ) as mock_cmd2:
+    with (
+        patch(
+            "zwave_js_server.model.driver.Driver.async_enable_statistics"
+        ) as mock_cmd1,
+        patch(
+            "zwave_js_server.model.driver.Driver.async_disable_statistics"
+        ) as mock_cmd2,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert not mock_cmd1.called
         assert not mock_cmd2.called
 
 
-@pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
-async def test_listen_failure(hass: HomeAssistant, client, error) -> None:
-    """Test we handle errors during client listen."""
+async def test_driver_ready_timeout_during_setup(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+) -> None:
+    """Test we handle driver ready timeout during setup."""
 
-    async def listen(driver_ready):
-        """Mock the client listen method."""
-        # Set the connect side effect to stop an endless loop on reload.
-        client.connect.side_effect = BaseZwaveJSServerError("Boom")
-        raise error
+    async def listen(driver_ready: asyncio.Event) -> None:
+        """Mock listen."""
+        await listen_block.wait()
 
     client.listen.side_effect = listen
+
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
+
+    with patch("homeassistant.components.zwave_js.DRIVER_READY_TIMEOUT", new=0):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize("core_state", [CoreState.running, CoreState.stopping])
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_during_setup_before_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+    core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
+) -> None:
+    """Test listen task finishing during setup before forward entry."""
+    assert hass.state is CoreState.running
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        await listen_block.wait()
+        await listen_result
+        async_fire_time_changed(hass, fire_all=True)
+
+    client.listen.side_effect = listen
+    hass.set_state(core_state)
+    listen_block.set()
+    getattr(listen_result, listen_future_result_method)(listen_future_result)
+
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
 
 
+async def test_not_connected_during_setup_after_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+) -> None:
+    """Test we handle not connected client during setup after forward entry."""
+
+    async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
+        """Mock send command."""
+        listen_block.set()
+        listen_result.set_result(None)
+        # Yield to allow the listen task to run
+        await asyncio.sleep(0)
+        raise NotConnected("Boom")
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        """Mock listen."""
+        driver_ready.set()
+        client.async_send_command.side_effect = send_command_side_effect
+        await listen_block.wait()
+        await listen_result
+
+    client.listen.side_effect = listen
+
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize("core_state", [CoreState.running, CoreState.stopping])
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_during_setup_after_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+    core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
+) -> None:
+    """Test listen task finishing during setup after forward entry."""
+    assert hass.state is CoreState.running
+
+    original_send_command_side_effect = client.async_send_command.side_effect
+
+    async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
+        """Mock send command."""
+        listen_block.set()
+        getattr(listen_result, listen_future_result_method)(listen_future_result)
+        client.async_send_command.side_effect = original_send_command_side_effect
+        # Yield to allow the listen task to run
+        await asyncio.sleep(0)
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        """Mock listen."""
+        driver_ready.set()
+        client.async_send_command.side_effect = send_command_side_effect
+        await listen_block.wait()
+        await listen_result
+
+    client.listen.side_effect = listen
+    hass.set_state(core_state)
+
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("core_state", "final_config_entry_state", "disconnect_call_count"),
+    [
+        (
+            CoreState.running,
+            ConfigEntryState.SETUP_RETRY,
+            2,
+        ),  # the reload will cause a disconnect call too
+        (
+            CoreState.stopping,
+            ConfigEntryState.LOADED,
+            0,
+        ),  # the home assistant stop event will handle the disconnect
+    ],
+)
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_after_setup(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+    core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
+    final_config_entry_state: ConfigEntryState,
+    disconnect_call_count: int,
+) -> None:
+    """Test listen task finishing after setup."""
+    config_entry = integration
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.state is CoreState.running
+    assert client.disconnect.call_count == 0
+
+    hass.set_state(core_state)
+    listen_block.set()
+    getattr(listen_result, listen_future_result_method)(listen_future_result)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is final_config_entry_state
+    assert client.disconnect.call_count == disconnect_call_count
+
+
+@pytest.mark.usefixtures("client")
 async def test_new_entity_on_value_added(
-    hass: HomeAssistant, multisensor_6, client, integration
+    hass: HomeAssistant,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test we create a new entity if a value is added after the fact."""
     node: Node = multisensor_6
@@ -177,11 +403,14 @@ async def test_new_entity_on_value_added(
     assert hass.states.get("sensor.multisensor_6_ultraviolet_10") is not None
 
 
+@pytest.mark.usefixtures("integration")
 async def test_on_node_added_ready(
-    hass: HomeAssistant, multisensor_6_state, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6_state: NodeDataType,
+    client: MagicMock,
 ) -> None:
     """Test we handle a node added event with a ready node."""
-    dev_reg = dr.async_get(hass)
     node = Node(client, deepcopy(multisensor_6_state))
     event = {"node": node}
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
@@ -189,7 +418,7 @@ async def test_on_node_added_ready(
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert not state  # entity and device not yet added
-    assert not dev_reg.async_get_device(
+    assert not device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
 
@@ -200,18 +429,64 @@ async def test_on_node_added_ready(
 
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
-    assert dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
 
 
+async def test_on_node_added_preprovisioned(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6_state,
+    client,
+    integration,
+) -> None:
+    """Test node added event with a preprovisioned device."""
+    dsk = "test"
+    node = Node(client, deepcopy(multisensor_6_state))
+    device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"provision_{dsk}")},
+    )
+    provisioning_entry = ProvisioningEntry.from_dict(
+        {
+            "dsk": dsk,
+            "securityClasses": [SecurityClass.S2_UNAUTHENTICATED],
+            "device_id": device.id,
+        }
+    )
+    with patch(
+        f"{CONTROLLER_PATCH_PREFIX}.async_get_provisioning_entry",
+        side_effect=lambda id: provisioning_entry if id == node.node_id else None,
+    ):
+        event = {"node": node}
+        client.driver.controller.emit("node added", event)
+        await hass.async_block_till_done()
+
+        device = device_registry.async_get(device.id)
+        assert device
+        assert device.identifiers == {
+            get_device_id(client.driver, node),
+            get_device_id_ext(client.driver, node),
+        }
+        assert device.sw_version == node.firmware_version
+        # There should only be the controller and the preprovisioned device
+        assert len(device_registry.devices) == 2
+
+
+@pytest.mark.usefixtures("integration")
 async def test_on_node_added_not_ready(
-    hass: HomeAssistant, zp3111_not_ready_state, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    zp3111_not_ready_state: NodeDataType,
+    client: MagicMock,
 ) -> None:
     """Test we handle a node added event with a non-ready node."""
-    dev_reg = dr.async_get(hass)
     device_id = f"{client.driver.controller.home_id}-{zp3111_not_ready_state['nodeId']}"
 
     assert len(hass.states.async_all()) == 1
-    assert len(dev_reg.devices) == 1
+    assert len(device_registry.devices) == 1
 
     node_state = deepcopy(zp3111_not_ready_state)
     node_state["isSecure"] = False
@@ -228,22 +503,24 @@ async def test_on_node_added_not_ready(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     # no extended device identifier yet
     assert len(device.identifiers) == 1
 
-    ent_reg = er.async_get(hass)
-    entities = er.async_entries_for_device(ent_reg, device.id)
+    entities = er.async_entries_for_device(entity_registry, device.id)
     # the only entities are the node status sensor, last_seen sensor, and ping button
     assert len(entities) == 3
 
 
 async def test_existing_node_ready(
-    hass: HomeAssistant, client, multisensor_6, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test we handle a ready node that exists during integration setup."""
-    dev_reg = dr.async_get(hass)
     node = multisensor_6
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
     air_temperature_device_id_ext = (
@@ -256,22 +533,24 @@ async def test_existing_node_ready(
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
     assert device
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id_ext)}
     )
 
 
 async def test_existing_node_reinterview(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     client: Client,
-    multisensor_6_state: dict,
+    multisensor_6_state: NodeDataType,
     multisensor_6: Node,
     integration: MockConfigEntry,
 ) -> None:
     """Test we handle a node re-interview firing a node ready event."""
-    dev_reg = dr.async_get(hass)
     node = multisensor_6
     assert client.driver is not None
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
@@ -285,9 +564,11 @@ async def test_existing_node_reinterview(
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
     assert device
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id_ext)}
     )
     assert device.sw_version == "1.12"
@@ -310,54 +591,61 @@ async def test_existing_node_reinterview(
 
     assert state
     assert state.state != STATE_UNAVAILABLE
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
     assert device
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id_ext)}
     )
     assert device.sw_version == "1.13"
 
 
 async def test_existing_node_not_ready(
-    hass: HomeAssistant, zp3111_not_ready, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    zp3111_not_ready: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test we handle a non-ready node that exists during integration setup."""
-    dev_reg = dr.async_get(hass)
     node = zp3111_not_ready
     device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
     assert device.name == f"Node {node.node_id}"
     assert not device.manufacturer
     assert not device.model
     assert not device.sw_version
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     # no extended device identifier yet
     assert len(device.identifiers) == 1
 
-    ent_reg = er.async_get(hass)
-    entities = er.async_entries_for_device(ent_reg, device.id)
+    entities = er.async_entries_for_device(entity_registry, device.id)
     # the only entities are the node status sensor, last_seen sensor, and ping button
     assert len(entities) == 3
 
 
 async def test_existing_node_not_replaced_when_not_ready(
     hass: HomeAssistant,
-    zp3111,
-    zp3111_not_ready_state,
-    zp3111_state,
-    client,
-    integration,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    zp3111: Node,
+    zp3111_not_ready_state: NodeDataType,
+    zp3111_state: NodeDataType,
+    integration: MockConfigEntry,
 ) -> None:
     """Test when a node added event with a non-ready node is received.
 
     The existing node should not be replaced, and no customization should be lost.
     """
-    dev_reg = dr.async_get(hass)
-    er_reg = er.async_get(hass)
-    kitchen_area = ar.async_get(hass).async_create("Kitchen")
+    kitchen_area = area_registry.async_create("Kitchen")
 
     device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
     device_id_ext = (
@@ -365,7 +653,7 @@ async def test_existing_node_not_replaced_when_not_ready(
         f"{zp3111.product_type}:{zp3111.product_id}"
     )
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     assert device.name == "4-in-1 Sensor"
     assert not device.name_by_user
@@ -373,18 +661,20 @@ async def test_existing_node_not_replaced_when_not_ready(
     assert device.model == "ZP3111-5"
     assert device.sw_version == "5.1"
     assert not device.area_id
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device == device_registry.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
 
     motion_entity = "binary_sensor.4_in_1_sensor_motion_detection"
     state = hass.states.get(motion_entity)
     assert state
     assert state.name == "4-in-1 Sensor Motion detection"
 
-    dev_reg.async_update_device(
+    device_registry.async_update_device(
         device.id, name_by_user="Custom Device Name", area_id=kitchen_area.id
     )
 
-    custom_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    custom_device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert custom_device
     assert custom_device.name == "4-in-1 Sensor"
     assert custom_device.name_by_user == "Custom Device Name"
@@ -392,12 +682,12 @@ async def test_existing_node_not_replaced_when_not_ready(
     assert custom_device.model == "ZP3111-5"
     assert device.sw_version == "5.1"
     assert custom_device.area_id == kitchen_area.id
-    assert custom_device == dev_reg.async_get_device(
+    assert custom_device == device_registry.async_get_device(
         identifiers={(DOMAIN, device_id_ext)}
     )
 
     custom_entity = "binary_sensor.custom_motion_sensor"
-    er_reg.async_update_entity(
+    entity_registry.async_update_entity(
         motion_entity, new_entity_id=custom_entity, name="Custom Entity Name"
     )
     await hass.async_block_till_done()
@@ -421,9 +711,11 @@ async def test_existing_node_not_replaced_when_not_ready(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device == device_registry.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
     assert device.id == custom_device.id
     assert device.identifiers == custom_device.identifiers
     assert device.name == f"Node {zp3111.node_id}"
@@ -449,9 +741,11 @@ async def test_existing_node_not_replaced_when_not_ready(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device == device_registry.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
     assert device.id == custom_device.id
     assert device.identifiers == custom_device.identifiers
     assert device.name == "4-in-1 Sensor"
@@ -467,21 +761,23 @@ async def test_existing_node_not_replaced_when_not_ready(
     assert state.name == "Custom Entity Name"
 
 
+@pytest.mark.usefixtures("client")
 async def test_null_name(
-    hass: HomeAssistant, client, null_name_check, integration
+    hass: HomeAssistant,
+    null_name_check: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that node without a name gets a generic node name."""
     node = null_name_check
     assert hass.states.get(f"switch.node_{node.node_id}")
 
 
+@pytest.mark.usefixtures("addon_installed", "addon_info")
 async def test_start_addon(
     hass: HomeAssistant,
-    addon_installed,
-    install_addon,
-    addon_options,
-    set_addon_options,
-    start_addon,
+    install_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test start the Z-Wave JS add-on during entry setup."""
     device = "/test"
@@ -489,12 +785,16 @@ async def test_start_addon(
     s2_access_control_key = "s2_access_control"
     s2_authenticated_key = "s2_authenticated"
     s2_unauthenticated_key = "s2_unauthenticated"
+    lr_s2_access_control_key = "lr_s2_access_control"
+    lr_s2_authenticated_key = "lr_s2_authenticated"
     addon_options = {
         "device": device,
         "s0_legacy_key": s0_legacy_key,
         "s2_access_control_key": s2_access_control_key,
         "s2_authenticated_key": s2_authenticated_key,
         "s2_unauthenticated_key": s2_unauthenticated_key,
+        "lr_s2_access_control_key": lr_s2_access_control_key,
+        "lr_s2_authenticated_key": lr_s2_authenticated_key,
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -506,6 +806,8 @@ async def test_start_addon(
             "s2_access_control_key": s2_access_control_key,
             "s2_authenticated_key": s2_authenticated_key,
             "s2_unauthenticated_key": s2_unauthenticated_key,
+            "lr_s2_access_control_key": lr_s2_access_control_key,
+            "lr_s2_authenticated_key": lr_s2_authenticated_key,
         },
     )
     entry.add_to_hass(hass)
@@ -517,19 +819,18 @@ async def test_start_addon(
     assert install_addon.call_count == 0
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "core_zwave_js", {"options": addon_options}
+        "core_zwave_js", AddonsOptions(config=addon_options)
     )
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
 
+@pytest.mark.usefixtures("addon_not_installed", "addon_info")
 async def test_install_addon(
     hass: HomeAssistant,
-    addon_not_installed,
-    install_addon,
-    addon_options,
-    set_addon_options,
-    start_addon,
+    install_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test install and start the Z-Wave JS add-on during entry setup."""
     device = "/test"
@@ -563,23 +864,21 @@ async def test_install_addon(
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 1
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "core_zwave_js", {"options": addon_options}
+        "core_zwave_js", AddonsOptions(config=addon_options)
     )
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
 
-@pytest.mark.parametrize("addon_info_side_effect", [HassioAPIError("Boom")])
+@pytest.mark.usefixtures("addon_installed", "addon_info", "set_addon_options")
+@pytest.mark.parametrize("addon_info_side_effect", [SupervisorError("Boom")])
 async def test_addon_info_failure(
     hass: HomeAssistant,
-    addon_installed,
-    install_addon,
-    addon_options,
-    set_addon_options,
-    start_addon,
+    install_addon: AsyncMock,
+    start_addon: AsyncMock,
 ) -> None:
     """Test failure to get add-on info for Z-Wave JS add-on during entry setup."""
     device = "/test"
@@ -599,6 +898,7 @@ async def test_addon_info_failure(
     assert start_addon.call_count == 0
 
 
+@pytest.mark.usefixtures("addon_running", "addon_info", "client")
 @pytest.mark.parametrize(
     (
         "old_device",
@@ -611,6 +911,10 @@ async def test_addon_info_failure(
         "new_s2_authenticated_key",
         "old_s2_unauthenticated_key",
         "new_s2_unauthenticated_key",
+        "old_lr_s2_access_control_key",
+        "new_lr_s2_access_control_key",
+        "old_lr_s2_authenticated_key",
+        "new_lr_s2_authenticated_key",
     ),
     [
         (
@@ -624,27 +928,32 @@ async def test_addon_info_failure(
             "new789",
             "old987",
             "new987",
+            "old654",
+            "new654",
+            "old321",
+            "new321",
         )
     ],
 )
 async def test_addon_options_changed(
     hass: HomeAssistant,
-    client,
-    addon_installed,
-    addon_running,
-    install_addon,
-    addon_options,
-    start_addon,
-    old_device,
-    new_device,
-    old_s0_legacy_key,
-    new_s0_legacy_key,
-    old_s2_access_control_key,
-    new_s2_access_control_key,
-    old_s2_authenticated_key,
-    new_s2_authenticated_key,
-    old_s2_unauthenticated_key,
-    new_s2_unauthenticated_key,
+    install_addon: AsyncMock,
+    addon_options: dict[str, Any],
+    start_addon: AsyncMock,
+    old_device: str,
+    new_device: str,
+    old_s0_legacy_key: str,
+    new_s0_legacy_key: str,
+    old_s2_access_control_key: str,
+    new_s2_access_control_key: str,
+    old_s2_authenticated_key: str,
+    new_s2_authenticated_key: str,
+    old_s2_unauthenticated_key: str,
+    new_s2_unauthenticated_key: str,
+    old_lr_s2_access_control_key: str,
+    new_lr_s2_access_control_key: str,
+    old_lr_s2_authenticated_key: str,
+    new_lr_s2_authenticated_key: str,
 ) -> None:
     """Test update config entry data on entry setup if add-on options changed."""
     addon_options["device"] = new_device
@@ -652,6 +961,8 @@ async def test_addon_options_changed(
     addon_options["s2_access_control_key"] = new_s2_access_control_key
     addon_options["s2_authenticated_key"] = new_s2_authenticated_key
     addon_options["s2_unauthenticated_key"] = new_s2_unauthenticated_key
+    addon_options["lr_s2_access_control_key"] = new_lr_s2_access_control_key
+    addon_options["lr_s2_authenticated_key"] = new_lr_s2_authenticated_key
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -663,6 +974,8 @@ async def test_addon_options_changed(
             "s2_access_control_key": old_s2_access_control_key,
             "s2_authenticated_key": old_s2_authenticated_key,
             "s2_unauthenticated_key": old_s2_unauthenticated_key,
+            "lr_s2_access_control_key": old_lr_s2_access_control_key,
+            "lr_s2_authenticated_key": old_lr_s2_authenticated_key,
         },
     )
     entry.add_to_hass(hass)
@@ -670,16 +983,19 @@ async def test_addon_options_changed(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data["usb_path"] == new_device
     assert entry.data["s0_legacy_key"] == new_s0_legacy_key
     assert entry.data["s2_access_control_key"] == new_s2_access_control_key
     assert entry.data["s2_authenticated_key"] == new_s2_authenticated_key
     assert entry.data["s2_unauthenticated_key"] == new_s2_unauthenticated_key
+    assert entry.data["lr_s2_access_control_key"] == new_lr_s2_access_control_key
+    assert entry.data["lr_s2_authenticated_key"] == new_lr_s2_authenticated_key
     assert install_addon.call_count == 0
     assert start_addon.call_count == 0
 
 
+@pytest.mark.usefixtures("addon_running")
 @pytest.mark.parametrize(
     (
         "addon_version",
@@ -692,34 +1008,31 @@ async def test_addon_options_changed(
     [
         ("1.0.0", True, 1, 1, None, None),
         ("1.0.0", False, 0, 0, None, None),
-        ("1.0.0", True, 1, 1, HassioAPIError("Boom"), None),
+        ("1.0.0", True, 1, 1, SupervisorError("Boom"), None),
         ("1.0.0", True, 0, 1, None, HassioAPIError("Boom")),
     ],
 )
 async def test_update_addon(
     hass: HomeAssistant,
-    client,
-    addon_info,
-    addon_installed,
-    addon_running,
-    create_backup,
-    update_addon,
-    addon_options,
-    addon_version,
-    update_available,
-    update_calls,
-    backup_calls,
-    update_addon_side_effect,
-    create_backup_side_effect,
-    version_state,
+    client: MagicMock,
+    addon_info: AsyncMock,
+    create_backup: AsyncMock,
+    update_addon: AsyncMock,
+    addon_options: dict[str, Any],
+    addon_version: str,
+    update_available: bool,
+    update_calls: int,
+    backup_calls: int,
+    update_addon_side_effect: Exception | None,
+    create_backup_side_effect: Exception | None,
 ) -> None:
     """Test update the Z-Wave JS add-on during entry setup."""
     device = "/test"
     network_key = "abc123"
     addon_options["device"] = device
     addon_options["network_key"] = network_key
-    addon_info.return_value["version"] = addon_version
-    addon_info.return_value["update_available"] = update_available
+    addon_info.return_value.version = addon_version
+    addon_info.return_value.update_available = update_available
     create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
     client.connect.side_effect = InvalidServerVersion(
@@ -745,7 +1058,11 @@ async def test_update_addon(
     assert update_addon.call_count == update_calls
 
 
-async def test_issue_registry(hass: HomeAssistant, client, version_state) -> None:
+async def test_issue_registry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Test issue registry."""
     device = "/test"
     network_key = "abc123"
@@ -771,8 +1088,7 @@ async def test_issue_registry(hass: HomeAssistant, client, version_state) -> Non
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
-    issue_reg = ir.async_get(hass)
-    assert issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+    assert issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
 
     async def connect():
         await asyncio.sleep(0)
@@ -783,25 +1099,23 @@ async def test_issue_registry(hass: HomeAssistant, client, version_state) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
-    assert not issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+    assert not issue_registry.async_get_issue(DOMAIN, "invalid_server_version")
 
 
+@pytest.mark.usefixtures("addon_running", "client")
 @pytest.mark.parametrize(
     ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
-        (HassioAPIError("Boom"), ConfigEntryState.LOADED),
+        (SupervisorError("Boom"), ConfigEntryState.FAILED_UNLOAD),
     ],
 )
 async def test_stop_addon(
     hass: HomeAssistant,
-    client,
-    addon_installed,
-    addon_running,
-    addon_options,
-    stop_addon,
-    stop_addon_side_effect,
-    entry_state,
+    addon_options: dict[str, Any],
+    stop_addon: AsyncMock,
+    stop_addon_side_effect: Exception | None,
+    entry_state: ConfigEntryState,
 ) -> None:
     """Test stop the Z-Wave JS add-on on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
@@ -833,15 +1147,15 @@ async def test_stop_addon(
 
     assert entry.state == entry_state
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
 
 
+@pytest.mark.usefixtures("addon_installed")
 async def test_remove_entry(
     hass: HomeAssistant,
-    addon_installed,
-    stop_addon,
-    create_backup,
-    uninstall_addon,
+    stop_addon: AsyncMock,
+    create_backup: AsyncMock,
+    uninstall_addon: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test remove the config entry."""
@@ -872,7 +1186,7 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -880,7 +1194,7 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_zwave_js")
+    assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
@@ -890,12 +1204,12 @@ async def test_remove_entry(
     # test add-on stop failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    stop_addon.side_effect = HassioAPIError()
+    stop_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 0
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
@@ -914,7 +1228,7 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -933,12 +1247,12 @@ async def test_remove_entry(
     # test add-on uninstall failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    uninstall_addon.side_effect = HassioAPIError()
+    uninstall_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -946,18 +1260,18 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_zwave_js")
+    assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
 
 
+@pytest.mark.usefixtures("climate_radio_thermostat_ct100_plus", "lock_schlage_be469")
 async def test_removed_device(
     hass: HomeAssistant,
-    client,
-    climate_radio_thermostat_ct100_plus,
-    lock_schlage_be469,
-    integration,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that the device registry gets updated when a device gets removed."""
     driver = client.driver
@@ -966,8 +1280,9 @@ async def test_removed_device(
     assert len(driver.controller.nodes) == 3
 
     # Make sure there are the same number of devices
-    dev_reg = dr.async_get(hass)
-    device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, integration.entry_id
+    )
     assert len(device_entries) == 3
 
     # Remove a node and reload the entry
@@ -976,32 +1291,44 @@ async def test_removed_device(
     await hass.async_block_till_done()
 
     # Assert that the node was removed from the device registry
-    device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, integration.entry_id
+    )
     assert len(device_entries) == 2
     assert (
-        dev_reg.async_get_device(identifiers={get_device_id(driver, old_node)}) is None
+        device_registry.async_get_device(identifiers={get_device_id(driver, old_node)})
+        is None
     )
 
 
-async def test_suggested_area(hass: HomeAssistant, client, eaton_rf9640_dimmer) -> None:
+@pytest.mark.usefixtures("client", "eaton_rf9640_dimmer")
+async def test_suggested_area(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that suggested area works."""
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity = ent_reg.async_get(EATON_RF9640_ENTITY)
-    assert dev_reg.async_get(entity.device_id).area_id is not None
+    entity_entry = entity_registry.async_get(EATON_RF9640_ENTITY)
+    assert entity_entry
+    assert entity_entry.device_id is not None
+    device = device_registry.async_get(entity_entry.device_id)
+    assert device
+    assert device.area_id is not None
 
 
 async def test_node_removed(
-    hass: HomeAssistant, multisensor_6_state, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6_state,
+    client: MagicMock,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that device gets removed when node gets removed."""
-    dev_reg = dr.async_get(hass)
     node = Node(client, deepcopy(multisensor_6_state))
     device_id = f"{client.driver.controller.home_id}-{node.node_id}"
     event = {
@@ -1013,7 +1340,7 @@ async def test_node_removed(
 
     client.driver.controller.receive_event(Event("node added", event))
     await hass.async_block_till_done()
-    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    old_device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert old_device
     assert old_device.id
 
@@ -1022,14 +1349,18 @@ async def test_node_removed(
     client.driver.controller.emit("node removed", event)
     await hass.async_block_till_done()
     # Assert device has been removed
-    assert not dev_reg.async_get(old_device.id)
+    assert not device_registry.async_get(old_device.id)
 
 
 async def test_replace_same_node(
-    hass: HomeAssistant, multisensor_6, multisensor_6_state, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6: Node,
+    multisensor_6_state: NodeDataType,
+    client: MagicMock,
+    integration: MockConfigEntry,
 ) -> None:
     """Test when a node is replaced with itself that the device remains."""
-    dev_reg = dr.async_get(hass)
     node_id = multisensor_6.node_id
     multisensor_6_state = deepcopy(multisensor_6_state)
 
@@ -1039,9 +1370,9 @@ async def test_replace_same_node(
         f"{multisensor_6.product_type}:{multisensor_6.product_id}"
     )
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id)}
     )
     assert device.manufacturer == "AEON Labs"
@@ -1065,7 +1396,7 @@ async def test_replace_same_node(
     await hass.async_block_till_done()
 
     # Device should still be there after the node was removed
-    device = dev_reg.async_get(dev_id)
+    device = device_registry.async_get(dev_id)
     assert device
 
     # When the node is replaced, a non-ready node added event is emitted
@@ -1103,7 +1434,7 @@ async def test_replace_same_node(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    device = dev_reg.async_get(dev_id)
+    device = device_registry.async_get(dev_id)
     assert device
 
     event = Event(
@@ -1119,10 +1450,10 @@ async def test_replace_same_node(
     await hass.async_block_till_done()
 
     # Device is the same
-    device = dev_reg.async_get(dev_id)
+    device = device_registry.async_get(dev_id)
     assert device
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id)}
     )
     assert device.manufacturer == "AEON Labs"
@@ -1133,15 +1464,15 @@ async def test_replace_same_node(
 
 async def test_replace_different_node(
     hass: HomeAssistant,
-    multisensor_6,
-    multisensor_6_state,
-    hank_binary_switch_state,
-    client,
-    integration,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6: Node,
+    multisensor_6_state: NodeDataType,
+    hank_binary_switch_state: NodeDataType,
+    client: MagicMock,
+    integration: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test when a node is replaced with a different node."""
-    dev_reg = dr.async_get(hass)
     node_id = multisensor_6.node_id
     state = deepcopy(hank_binary_switch_state)
     state["nodeId"] = node_id
@@ -1157,9 +1488,9 @@ async def test_replace_different_node(
         f"{state['productId']}"
     )
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
-    assert device == dev_reg.async_get_device(
+    assert device == device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id_ext)}
     )
     assert device.manufacturer == "AEON Labs"
@@ -1182,7 +1513,7 @@ async def test_replace_different_node(
     await hass.async_block_till_done()
 
     # Device should still be there after the node was removed
-    device = dev_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id_ext)}
     )
     assert device
@@ -1225,7 +1556,7 @@ async def test_replace_different_node(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    device = dev_reg.async_get(dev_id)
+    device = device_registry.async_get(dev_id)
     assert device
 
     event = Event(
@@ -1242,16 +1573,18 @@ async def test_replace_different_node(
 
     # node ID based device identifier should be moved from the old multisensor device
     # to the new hank device and both the old and new devices should exist.
-    new_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    new_device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert new_device
-    hank_device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    hank_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, hank_device_id_ext)}
+    )
     assert hank_device
     assert hank_device == new_device
     assert hank_device.identifiers == {
         (DOMAIN, device_id),
         (DOMAIN, hank_device_id_ext),
     }
-    multisensor_6_device = dev_reg.async_get_device(
+    multisensor_6_device = device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id_ext)}
     )
     assert multisensor_6_device
@@ -1282,7 +1615,9 @@ async def test_replace_different_node(
     await hass.async_block_till_done()
 
     # Device should still be there after the node was removed
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, hank_device_id_ext)}
+    )
     assert device
     assert len(device.identifiers) == 2
 
@@ -1339,13 +1674,15 @@ async def test_replace_different_node(
 
     # node ID based device identifier should be moved from the new hank device
     # to the old multisensor device and both the old and new devices should exist.
-    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    old_device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert old_device
-    hank_device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    hank_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, hank_device_id_ext)}
+    )
     assert hank_device
     assert hank_device != old_device
     assert hank_device.identifiers == {(DOMAIN, hank_device_id_ext)}
-    multisensor_6_device = dev_reg.async_get_device(
+    multisensor_6_device = device_registry.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id_ext)}
     )
     assert multisensor_6_device
@@ -1362,53 +1699,33 @@ async def test_replace_different_node(
     driver = client.driver
     client.driver = None
 
-    await ws_client.send_json(
-        {
-            "id": 1,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": integration.entry_id,
-            "device_id": hank_device.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(hank_device.id, integration.entry_id)
     assert not response["success"]
 
     client.driver = driver
 
     # Attempting to remove the hank device should pass, but removing the multisensor should not
-    await ws_client.send_json(
-        {
-            "id": 2,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": integration.entry_id,
-            "device_id": hank_device.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(hank_device.id, integration.entry_id)
     assert response["success"]
 
-    await ws_client.send_json(
-        {
-            "id": 3,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": integration.entry_id,
-            "device_id": multisensor_6_device.id,
-        }
+    response = await ws_client.remove_device(
+        multisensor_6_device.id, integration.entry_id
     )
-    response = await ws_client.receive_json()
     assert not response["success"]
 
 
 async def test_node_model_change(
-    hass: HomeAssistant, zp3111, client, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    zp3111: Node,
+    client: MagicMock,
+    integration: MockConfigEntry,
 ) -> None:
     """Test when a node's model is changed due to an updated device config file.
 
     The device and entities should not be removed.
     """
-    dev_reg = dr.async_get(hass)
-    er_reg = er.async_get(hass)
-
     device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
     device_id_ext = (
         f"{device_id}-{zp3111.manufacturer_id}:"
@@ -1416,9 +1733,11 @@ async def test_node_model_change(
     )
 
     # Verify device and entities have default names/ids
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device == device_registry.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
     assert device.manufacturer == "Vision Security"
     assert device.model == "ZP3111-5"
     assert device.name == "4-in-1 Sensor"
@@ -1432,18 +1751,20 @@ async def test_node_model_change(
     assert state.name == "4-in-1 Sensor Motion detection"
 
     # Customize device and entity names/ids
-    dev_reg.async_update_device(device.id, name_by_user="Custom Device Name")
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device_registry.async_update_device(device.id, name_by_user="Custom Device Name")
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     assert device.id == dev_id
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device == device_registry.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
     assert device.manufacturer == "Vision Security"
     assert device.model == "ZP3111-5"
     assert device.name == "4-in-1 Sensor"
     assert device.name_by_user == "Custom Device Name"
 
     custom_entity = "binary_sensor.custom_motion_sensor"
-    er_reg.async_update_entity(
+    entity_registry.async_update_entity(
         motion_entity, new_entity_id=custom_entity, name="Custom Entity Name"
     )
     await hass.async_block_till_done()
@@ -1469,7 +1790,7 @@ async def test_node_model_change(
     await hass.async_block_till_done()
 
     # Device name changes, but the customization is the same
-    device = dev_reg.async_get(dev_id)
+    device = device_registry.async_get(dev_id)
     assert device
     assert device.id == dev_id
     assert device.manufacturer == "New Device Manufacturer"
@@ -1483,8 +1804,11 @@ async def test_node_model_change(
     assert state.name == "Custom Entity Name"
 
 
+@pytest.mark.usefixtures("zp3111", "integration")
 async def test_disabled_node_status_entity_on_node_replaced(
-    hass: HomeAssistant, zp3111_state, zp3111, client, integration
+    hass: HomeAssistant,
+    zp3111_state: NodeDataType,
+    client: MagicMock,
 ) -> None:
     """Test when node replacement event is received, node status sensor is removed."""
     node_status_entity = "sensor.4_in_1_sensor_node_status"
@@ -1510,18 +1834,15 @@ async def test_disabled_node_status_entity_on_node_replaced(
 
 
 async def test_disabled_entity_on_value_removed(
-    hass: HomeAssistant, zp3111, client, integration
+    hass: HomeAssistant,
+    zp3111: Node,
+    client: MagicMock,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that when entity primary values are removed the entity is removed."""
-    er_reg = er.async_get(hass)
-
-    # re-enable this default-disabled entity
-    sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
-    er_reg.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
-    await hass.async_block_till_done()
 
     # must reload the integration when enabling an entity
     await hass.config_entries.async_unload(integration.entry_id)
@@ -1531,10 +1852,6 @@ async def test_disabled_entity_on_value_removed(
     await hass.config_entries.async_setup(integration.entry_id)
     await hass.async_block_till_done()
     assert integration.state is ConfigEntryState.LOADED
-
-    state = hass.states.get(sensor_cover_entity)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
 
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
@@ -1629,10 +1946,6 @@ async def test_disabled_entity_on_value_removed(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get(sensor_cover_entity)
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
     assert state.state == STATE_UNAVAILABLE
@@ -1648,7 +1961,6 @@ async def test_disabled_entity_on_value_removed(
         | {
             battery_level_entity,
             binary_cover_entity,
-            sensor_cover_entity,
             idle_cover_status_button_entity,
         }
         == new_unavailable_entities
@@ -1656,7 +1968,10 @@ async def test_disabled_entity_on_value_removed(
 
 
 async def test_identify_event(
-    hass: HomeAssistant, client, multisensor_6, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test controller identify event."""
     # One config entry scenario
@@ -1703,7 +2018,9 @@ async def test_identify_event(
     assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
 
 
-async def test_server_logging(hass: HomeAssistant, client) -> None:
+async def test_server_logging(
+    hass: HomeAssistant, client: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automatic server logging functionality."""
 
     def _reset_mocks():
@@ -1722,83 +2039,93 @@ async def test_server_logging(hass: HomeAssistant, client) -> None:
 
     # Setup logger and set log level to debug to trigger event listener
     assert await async_setup_component(hass, "logger", {"logger": {}})
-    assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.INFO
-    client.async_send_command.reset_mock()
-    await hass.services.async_call(
-        LOGGER_DOMAIN, SERVICE_SET_LEVEL, {"zwave_js_server": "debug"}, blocking=True
-    )
-    await hass.async_block_till_done()
     assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.DEBUG
+    client.async_send_command.reset_mock()
+    async with async_call_logger_set_level(
+        "zwave_js_server", "DEBUG", hass=hass, caplog=caplog
+    ):
+        assert logging.getLogger("zwave_js_server").getEffectiveLevel() == logging.DEBUG
 
-    # Validate that the server logging was enabled
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args[0][0] == {
-        "command": "driver.update_log_config",
-        "config": {"level": "debug"},
-    }
-    assert client.enable_server_logging.called
-    assert not client.disable_server_logging.called
+        # Validate that the server logging was enabled
+        assert len(client.async_send_command.call_args_list) == 1
+        assert client.async_send_command.call_args[0][0] == {
+            "command": "driver.update_log_config",
+            "config": {"level": "debug"},
+        }
+        assert client.enable_server_logging.called
+        assert not client.disable_server_logging.called
 
-    _reset_mocks()
+        _reset_mocks()
 
-    # Emulate server by setting log level to debug
-    event = Event(
-        type="log config updated",
-        data={
-            "source": "driver",
-            "event": "log config updated",
-            "config": {
-                "enabled": False,
-                "level": "debug",
-                "logToFile": True,
-                "filename": "test",
-                "forceConsole": True,
+        # Emulate server by setting log level to debug
+        event = Event(
+            type="log config updated",
+            data={
+                "source": "driver",
+                "event": "log config updated",
+                "config": {
+                    "enabled": False,
+                    "level": "debug",
+                    "logToFile": True,
+                    "filename": "test",
+                    "forceConsole": True,
+                },
             },
-        },
-    )
-    client.driver.receive_event(event)
+        )
+        client.driver.receive_event(event)
 
-    # "Enable" server logging and unload the entry
-    client.server_logging_enabled = True
-    await hass.config_entries.async_unload(entry.entry_id)
+        # "Enable" server logging and unload the entry
+        client.server_logging_enabled = True
+        await hass.config_entries.async_unload(entry.entry_id)
 
-    # Validate that the server logging was disabled
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args[0][0] == {
-        "command": "driver.update_log_config",
-        "config": {"level": "info"},
-    }
-    assert not client.enable_server_logging.called
-    assert client.disable_server_logging.called
+        # Validate that the server logging was disabled
+        assert len(client.async_send_command.call_args_list) == 1
+        assert client.async_send_command.call_args[0][0] == {
+            "command": "driver.update_log_config",
+            "config": {"level": "info"},
+        }
+        assert not client.enable_server_logging.called
+        assert client.disable_server_logging.called
 
-    _reset_mocks()
+        _reset_mocks()
 
-    # Validate that the server logging doesn't get enabled because HA thinks it already
-    # is enabled
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(client.async_send_command.call_args_list) == 0
-    assert not client.enable_server_logging.called
-    assert not client.disable_server_logging.called
+        # Validate that the server logging doesn't get enabled because HA thinks it already
+        # is enabled
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(client.async_send_command.call_args_list) == 2
+        assert client.async_send_command.call_args_list[0][0][0] == {
+            "command": "controller.get_provisioning_entries",
+        }
+        assert client.async_send_command.call_args_list[1][0][0] == {
+            "command": "controller.get_provisioning_entry",
+            "dskOrNodeId": 1,
+        }
+        assert not client.enable_server_logging.called
+        assert not client.disable_server_logging.called
 
-    _reset_mocks()
+        _reset_mocks()
 
-    # "Disable" server logging and unload the entry
-    client.server_logging_enabled = False
-    await hass.config_entries.async_unload(entry.entry_id)
+        # "Disable" server logging and unload the entry
+        client.server_logging_enabled = False
+        await hass.config_entries.async_unload(entry.entry_id)
 
-    # Validate that the server logging was not disabled because HA thinks it is already
-    # is disabled
-    assert len(client.async_send_command.call_args_list) == 0
-    assert not client.enable_server_logging.called
-    assert not client.disable_server_logging.called
+        # Validate that the server logging was not disabled because HA thinks it is already
+        # is disabled
+        assert len(client.async_send_command.call_args_list) == 0
+        assert not client.enable_server_logging.called
+        assert not client.disable_server_logging.called
 
 
 async def test_factory_reset_node(
-    hass: HomeAssistant, client, multisensor_6, multisensor_6_state, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    multisensor_6: Node,
+    multisensor_6_state: NodeDataType,
+    integration: MockConfigEntry,
 ) -> None:
     """Test when a node is removed because it was reset."""
-    dev_reg = dr.async_get(hass)
     # One config entry scenario
     remove_event = Event(
         type="node removed",
@@ -1820,7 +2147,7 @@ async def test_factory_reset_node(
     assert "with the home ID" not in notifications[msg_id]["message"]
     async_dismiss(hass, msg_id)
     await hass.async_block_till_done()
-    assert not dev_reg.async_get_device(identifiers={dev_id})
+    assert not device_registry.async_get_device(identifiers={dev_id})
 
     # Add mock config entry to simulate having multiple entries
     new_entry = MockConfigEntry(domain=DOMAIN)

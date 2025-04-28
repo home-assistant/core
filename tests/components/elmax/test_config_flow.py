@@ -1,11 +1,12 @@
 """Tests for the Elmax config flow."""
 
+from ipaddress import IPv4Address, IPv6Address
 from unittest.mock import patch
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
+import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import zeroconf
+from homeassistant import config_entries
 from homeassistant.components.elmax.const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -21,13 +22,15 @@ from homeassistant.components.elmax.const import (
     CONF_ELMAX_USERNAME,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import (
     MOCK_DIRECT_CERT,
     MOCK_DIRECT_HOST,
     MOCK_DIRECT_HOST_CHANGED,
+    MOCK_DIRECT_HOST_V6,
     MOCK_DIRECT_PORT,
     MOCK_DIRECT_SSL,
     MOCK_PANEL_ID,
@@ -37,12 +40,13 @@ from . import (
     MOCK_USERNAME,
     MOCK_WRONG_PANEL_PIN,
 )
+from .conftest import MOCK_DIRECT_BASE_URI_V6
 
 from tests.common import MockConfigEntry
 
-MOCK_ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    ip_address=MOCK_DIRECT_HOST,
-    ip_addresses=[MOCK_DIRECT_HOST],
+MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
+    ip_address=IPv4Address(address=MOCK_DIRECT_HOST),
+    ip_addresses=[IPv4Address(address=MOCK_DIRECT_HOST)],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
@@ -54,9 +58,9 @@ MOCK_ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     },
     type="_elmax-ssl._tcp",
 )
-MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = zeroconf.ZeroconfServiceInfo(
-    ip_address=MOCK_DIRECT_HOST_CHANGED,
-    ip_addresses=[MOCK_DIRECT_HOST_CHANGED],
+MOCK_ZEROCONF_DISCOVERY_INFO_V6 = ZeroconfServiceInfo(
+    ip_address=IPv6Address(address=MOCK_DIRECT_HOST_V6),
+    ip_addresses=[IPv6Address(address=MOCK_DIRECT_HOST_V6)],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
@@ -68,9 +72,23 @@ MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = zeroconf.ZeroconfServiceInfo(
     },
     type="_elmax-ssl._tcp",
 )
-MOCK_ZEROCONF_DISCOVERY_INFO_NOT_SUPPORTED = zeroconf.ZeroconfServiceInfo(
-    ip_address=MOCK_DIRECT_HOST,
-    ip_addresses=[MOCK_DIRECT_HOST],
+MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = ZeroconfServiceInfo(
+    ip_address=IPv4Address(address=MOCK_DIRECT_HOST_CHANGED),
+    ip_addresses=[IPv4Address(address=MOCK_DIRECT_HOST_CHANGED)],
+    hostname="VideoBox.local",
+    name="VideoBox",
+    port=443,
+    properties={
+        "idl": MOCK_PANEL_ID,
+        "idr": MOCK_PANEL_ID,
+        "v1": "PHANTOM64PRO_GSM 11.9.844",
+        "v2": "4.9.13",
+    },
+    type="_elmax-ssl._tcp",
+)
+MOCK_ZEROCONF_DISCOVERY_INFO_NOT_SUPPORTED = ZeroconfServiceInfo(
+    ip_address=IPv4Address(MOCK_DIRECT_HOST),
+    ip_addresses=[IPv4Address(MOCK_DIRECT_HOST)],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
@@ -89,7 +107,7 @@ async def test_show_menu(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "choose_mode"
 
 
@@ -116,7 +134,7 @@ async def test_direct_setup(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_direct_show_form(hass: HomeAssistant) -> None:
@@ -134,7 +152,7 @@ async def test_direct_show_form(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             set_mode_result["flow_id"], {"next_step_id": CONF_ELMAX_MODE_DIRECT}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == CONF_ELMAX_MODE_DIRECT
         assert result["errors"] is None
 
@@ -168,33 +186,45 @@ async def test_cloud_setup(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_zeroconf_form_setup_api_not_supported(hass):
+async def test_zeroconf_form_setup_api_not_supported(hass: HomeAssistant) -> None:
     """Test the zeroconf setup case."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DISCOVERY_INFO_NOT_SUPPORTED,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
 
 
-async def test_zeroconf_discovery(hass):
+async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
     """Test discovery of Elmax local api panel."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DISCOVERY_INFO,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_setup"
     assert result["errors"] is None
 
 
-async def test_zeroconf_setup_show_form(hass):
+async def test_zeroconf_discovery_ipv6(hass: HomeAssistant) -> None:
+    """Test discovery of Elmax local api panel."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY_INFO_V6,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_setup"
+    assert result["errors"] is None
+
+
+async def test_zeroconf_setup_show_form(hass: HomeAssistant) -> None:
     """Test discovery shows a form when activated."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -206,11 +236,11 @@ async def test_zeroconf_setup_show_form(hass):
         result["flow_id"],
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_setup"
 
 
-async def test_zeroconf_setup(hass):
+async def test_zeroconf_setup(hass: HomeAssistant) -> None:
     """Test the successful creation of config entry via discovery flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -227,10 +257,31 @@ async def test_zeroconf_setup(hass):
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_zeroconf_already_configured(hass):
+@pytest.mark.parametrize("base_uri", [MOCK_DIRECT_BASE_URI_V6])
+async def test_zeroconf_ipv6_setup(hass: HomeAssistant) -> None:
+    """Test the successful creation of config entry via discovery flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY_INFO_V6,
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+            CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Ensure local discovery aborts when same panel is already added to ha."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -252,11 +303,11 @@ async def test_zeroconf_already_configured(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DISCOVERY_INFO,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_panel_changed_ip(hass):
+async def test_zeroconf_panel_changed_ip(hass: HomeAssistant) -> None:
     """Ensure local discovery updates the panel data when a the panel changes its IP."""
     # Simulate an entry already exists for ip MOCK_DIRECT_HOST.
     config_entry = MockConfigEntry(
@@ -283,7 +334,7 @@ async def test_zeroconf_panel_changed_ip(hass):
     )
 
     # Expect we abort the configuration as "already configured"
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     # Expect the panel ip has been updated.
@@ -330,7 +381,7 @@ async def test_one_config_allowed_cloud(hass: HomeAssistant) -> None:
             CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -355,7 +406,7 @@ async def test_cloud_invalid_credentials(hass: HomeAssistant) -> None:
             },
         )
         assert login_result["step_id"] == CONF_ELMAX_MODE_CLOUD
-        assert login_result["type"] == data_entry_flow.FlowResultType.FORM
+        assert login_result["type"] is FlowResultType.FORM
         assert login_result["errors"] == {"base": "invalid_auth"}
 
 
@@ -380,7 +431,7 @@ async def test_cloud_connection_error(hass: HomeAssistant) -> None:
             },
         )
         assert login_result["step_id"] == CONF_ELMAX_MODE_CLOUD
-        assert login_result["type"] == data_entry_flow.FlowResultType.FORM
+        assert login_result["type"] is FlowResultType.FORM
         assert login_result["errors"] == {"base": "network_error"}
 
 
@@ -407,7 +458,7 @@ async def test_direct_connection_error(hass: HomeAssistant) -> None:
             },
         )
         assert result["step_id"] == CONF_ELMAX_MODE_DIRECT
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "network_error"}
 
 
@@ -434,7 +485,7 @@ async def test_direct_wrong_panel_code(hass: HomeAssistant) -> None:
             },
         )
         assert result["step_id"] == CONF_ELMAX_MODE_DIRECT
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -466,7 +517,7 @@ async def test_unhandled_error(hass: HomeAssistant) -> None:
             },
         )
         assert result["step_id"] == "panels"
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
 
 
@@ -499,7 +550,7 @@ async def test_invalid_pin(hass: HomeAssistant) -> None:
             },
         )
         assert result["step_id"] == "panels"
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_pin"}
 
 
@@ -525,7 +576,7 @@ async def test_no_online_panel(hass: HomeAssistant) -> None:
             },
         )
         assert login_result["step_id"] == CONF_ELMAX_MODE_CLOUD
-        assert login_result["type"] == data_entry_flow.FlowResultType.FORM
+        assert login_result["type"] is FlowResultType.FORM
         assert login_result["errors"] == {"base": "no_panel_online"}
 
 
@@ -543,21 +594,8 @@ async def test_show_reauth(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data={
-            CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-            CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-            CONF_ELMAX_USERNAME: MOCK_USERNAME,
-            CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-        },
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
 
@@ -576,24 +614,11 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     # Trigger reauth
+    reauth_result = await entry.start_reauth_flow(hass)
     with patch(
         "homeassistant.components.elmax.async_setup_entry",
         return_value=True,
     ):
-        reauth_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "unique_id": entry.unique_id,
-                "entry_id": entry.entry_id,
-            },
-            data={
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-                CONF_ELMAX_USERNAME: MOCK_USERNAME,
-                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-            },
-        )
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
@@ -602,7 +627,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
             },
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         await hass.async_block_till_done()
         assert result["reason"] == "reauth_successful"
 
@@ -623,24 +648,11 @@ async def test_reauth_panel_disappeared(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     # Trigger reauth
+    reauth_result = await entry.start_reauth_flow(hass)
     with patch(
         "elmax_api.http.Elmax.list_control_panels",
         return_value=[],
     ):
-        reauth_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "unique_id": entry.unique_id,
-                "entry_id": entry.entry_id,
-            },
-            data={
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-                CONF_ELMAX_USERNAME: MOCK_USERNAME,
-                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-            },
-        )
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
@@ -650,7 +662,7 @@ async def test_reauth_panel_disappeared(hass: HomeAssistant) -> None:
             },
         )
         assert result["step_id"] == "reauth_confirm"
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "reauth_panel_disappeared"}
 
 
@@ -669,24 +681,11 @@ async def test_reauth_invalid_pin(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     # Trigger reauth
+    reauth_result = await entry.start_reauth_flow(hass)
     with patch(
         "elmax_api.http.Elmax.get_panel_status",
         side_effect=ElmaxBadPinError(),
     ):
-        reauth_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "unique_id": entry.unique_id,
-                "entry_id": entry.entry_id,
-            },
-            data={
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-                CONF_ELMAX_USERNAME: MOCK_USERNAME,
-                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-            },
-        )
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
@@ -696,7 +695,7 @@ async def test_reauth_invalid_pin(hass: HomeAssistant) -> None:
             },
         )
         assert result["step_id"] == "reauth_confirm"
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_pin"}
 
 
@@ -715,24 +714,11 @@ async def test_reauth_bad_login(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     # Trigger reauth
+    reauth_result = await entry.start_reauth_flow(hass)
     with patch(
         "elmax_api.http.Elmax.login",
         side_effect=ElmaxBadLoginError(),
     ):
-        reauth_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "unique_id": entry.unique_id,
-                "entry_id": entry.entry_id,
-            },
-            data={
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-                CONF_ELMAX_USERNAME: MOCK_USERNAME,
-                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-            },
-        )
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
@@ -742,5 +728,5 @@ async def test_reauth_bad_login(hass: HomeAssistant) -> None:
             },
         )
         assert result["step_id"] == "reauth_confirm"
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}

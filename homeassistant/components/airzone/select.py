@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final
 
-from aioairzone.common import GrilleAngle, SleepTimeout
+from aioairzone.common import GrilleAngle, OperationMode, SleepTimeout
 from aioairzone.const import (
     API_COLD_ANGLE,
     API_HEAT_ANGLE,
+    API_MODE,
     API_SLEEP,
     AZD_COLD_ANGLE,
     AZD_HEAT_ANGLE,
+    AZD_MASTER,
+    AZD_MODE,
+    AZD_MODES,
     AZD_SLEEP,
     AZD_ZONES,
 )
@@ -20,10 +25,9 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 from .entity import AirzoneEntity, AirzoneZoneEntity
 
 
@@ -33,6 +37,9 @@ class AirzoneSelectDescription(SelectEntityDescription):
 
     api_param: str
     options_dict: dict[str, int]
+    options_fn: Callable[[dict[str, Any], dict[str, int]], list[str]] = (
+        lambda zone_data, value: list(value)
+    )
 
 
 GRILLE_ANGLE_DICT: Final[dict[str, int]] = {
@@ -42,12 +49,41 @@ GRILLE_ANGLE_DICT: Final[dict[str, int]] = {
     "40deg": GrilleAngle.DEG_40,
 }
 
+MODE_DICT: Final[dict[str, int]] = {
+    "cool": OperationMode.COOLING,
+    "dry": OperationMode.DRY,
+    "fan": OperationMode.FAN,
+    "heat": OperationMode.HEATING,
+    "heat_cool": OperationMode.AUTO,
+    "stop": OperationMode.STOP,
+}
+
 SLEEP_DICT: Final[dict[str, int]] = {
     "off": SleepTimeout.SLEEP_OFF,
     "30m": SleepTimeout.SLEEP_30,
     "60m": SleepTimeout.SLEEP_60,
     "90m": SleepTimeout.SLEEP_90,
 }
+
+
+def main_zone_options(
+    zone_data: dict[str, Any],
+    options: dict[str, int],
+) -> list[str]:
+    """Filter available modes."""
+    modes = zone_data.get(AZD_MODES, [])
+    return [k for k, v in options.items() if v in modes]
+
+
+MAIN_ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
+    AirzoneSelectDescription(
+        api_param=API_MODE,
+        key=AZD_MODE,
+        options_dict=MODE_DICT,
+        options_fn=main_zone_options,
+        translation_key="modes",
+    ),
+)
 
 
 ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
@@ -79,23 +115,52 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add Airzone sensors from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    """Add Airzone select from a config_entry."""
+    coordinator = entry.runtime_data
 
-    async_add_entities(
-        AirzoneZoneSelect(
-            coordinator,
-            description,
-            entry,
-            system_zone_id,
-            zone_data,
-        )
-        for description in ZONE_SELECT_TYPES
-        for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items()
-        if description.key in zone_data
-    )
+    added_zones: set[str] = set()
+
+    def _async_entity_listener() -> None:
+        """Handle additions of select."""
+
+        zones_data = coordinator.data.get(AZD_ZONES, {})
+        received_zones = set(zones_data)
+        new_zones = received_zones - added_zones
+        if new_zones:
+            entities: list[AirzoneZoneSelect] = [
+                AirzoneZoneSelect(
+                    coordinator,
+                    description,
+                    entry,
+                    system_zone_id,
+                    zones_data.get(system_zone_id),
+                )
+                for system_zone_id in new_zones
+                for description in MAIN_ZONE_SELECT_TYPES
+                if description.key in zones_data.get(system_zone_id)
+                and zones_data.get(system_zone_id).get(AZD_MASTER) is True
+            ]
+            entities += [
+                AirzoneZoneSelect(
+                    coordinator,
+                    description,
+                    entry,
+                    system_zone_id,
+                    zones_data.get(system_zone_id),
+                )
+                for system_zone_id in new_zones
+                for description in ZONE_SELECT_TYPES
+                if description.key in zones_data.get(system_zone_id)
+            ]
+            async_add_entities(entities)
+            added_zones.update(new_zones)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
+    _async_entity_listener()
 
 
 class AirzoneBaseSelect(AirzoneEntity, SelectEntity):
@@ -138,6 +203,11 @@ class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
             f"{self._attr_unique_id}_{system_zone_id}_{description.key}"
         )
         self.entity_description = description
+
+        self._attr_options = self.entity_description.options_fn(
+            zone_data, description.options_dict
+        )
+
         self.values_dict = {v: k for k, v in description.options_dict.items()}
 
         self._async_update_attrs()

@@ -5,11 +5,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Generic, TypeVar
+from typing import Any
 
 from aiowithings import (
     Activity,
+    Device,
     Goals,
+    MeasurementPosition,
     MeasurementType,
     SleepSummary,
     Workout,
@@ -22,7 +24,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     PERCENTAGE,
     Platform,
@@ -33,12 +35,12 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from . import WithingsData
+from . import WithingsConfigEntry
 from .const import (
     DOMAIN,
     LOGGER,
@@ -51,12 +53,13 @@ from .const import (
 from .coordinator import (
     WithingsActivityDataUpdateCoordinator,
     WithingsDataUpdateCoordinator,
+    WithingsDeviceDataUpdateCoordinator,
     WithingsGoalsDataUpdateCoordinator,
     WithingsMeasurementDataUpdateCoordinator,
     WithingsSleepDataUpdateCoordinator,
     WithingsWorkoutDataUpdateCoordinator,
 )
-from .entity import WithingsEntity
+from .entity import WithingsDeviceEntity, WithingsEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -64,6 +67,7 @@ class WithingsMeasurementSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
     measurement_type: MeasurementType
+    measurement_position: MeasurementPosition | None = None
 
 
 MEASUREMENT_SENSORS: dict[
@@ -118,7 +122,7 @@ MEASUREMENT_SENSORS: dict[
         measurement_type=MeasurementType.HEIGHT,
         translation_key="height",
         native_unit_of_measurement=UnitOfLength.METERS,
-        suggested_display_precision=1,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -261,6 +265,47 @@ MEASUREMENT_SENSORS: dict[
 }
 
 
+def get_positional_measurement_description(
+    measurement_type: MeasurementType, measurement_position: MeasurementPosition
+) -> WithingsMeasurementSensorEntityDescription | None:
+    """Get the sensor description for a measurement type."""
+    if measurement_position not in (
+        MeasurementPosition.TORSO,
+        MeasurementPosition.LEFT_ARM,
+        MeasurementPosition.RIGHT_ARM,
+        MeasurementPosition.LEFT_LEG,
+        MeasurementPosition.RIGHT_LEG,
+    ) or measurement_type not in (
+        MeasurementType.MUSCLE_MASS_FOR_SEGMENTS,
+        MeasurementType.FAT_FREE_MASS_FOR_SEGMENTS,
+        MeasurementType.FAT_MASS_FOR_SEGMENTS,
+    ):
+        return None
+    return WithingsMeasurementSensorEntityDescription(
+        key=f"{measurement_type.name.lower()}_{measurement_position.name.lower()}",
+        measurement_type=measurement_type,
+        measurement_position=measurement_position,
+        translation_key=f"{measurement_type.name.lower()}_{measurement_position.name.lower()}",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    )
+
+
+def get_measurement_description(
+    measurement: tuple[MeasurementType, MeasurementPosition | None],
+) -> WithingsMeasurementSensorEntityDescription | None:
+    """Get the sensor description for a measurement type."""
+    measurement_type, measurement_position = measurement
+    if measurement_position is not None:
+        return get_positional_measurement_description(
+            measurement_type, measurement_position
+        )
+    return MEASUREMENT_SENSORS.get(measurement_type)
+
+
 @dataclass(frozen=True, kw_only=True)
 class WithingsSleepSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
@@ -281,6 +326,7 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.deep_sleep_duration,
         translation_key="deep_sleep",
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -289,6 +335,7 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.sleep_latency,
         translation_key="time_to_sleep",
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -298,6 +345,7 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.wake_up_latency,
         translation_key="time_to_wakeup",
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -331,6 +379,7 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.light_sleep_duration,
         translation_key="light_sleep",
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -340,6 +389,7 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.rem_sleep_duration,
         translation_key="rem_sleep",
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -380,6 +430,9 @@ SLEEP_SENSORS = [
         key="sleep_snoring",
         value_fn=lambda sleep_summary: sleep_summary.snoring,
         translation_key="snoring",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -403,6 +456,7 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.total_time_awake,
         translation_key="wakeup_time",
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -608,6 +662,24 @@ WORKOUT_SENSORS = [
 ]
 
 
+@dataclass(frozen=True, kw_only=True)
+class WithingsDeviceSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
+
+    value_fn: Callable[[Device], StateType]
+
+
+DEVICE_SENSORS = [
+    WithingsDeviceSensorEntityDescription(
+        key="battery",
+        translation_key="battery",
+        options=["low", "medium", "high"],
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda device: device.battery,
+    )
+]
+
+
 def get_current_goals(goals: Goals) -> set[str]:
     """Return a list of present goals."""
     result = set()
@@ -619,23 +691,21 @@ def get_current_goals(goals: Goals) -> set[str]:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: WithingsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
     ent_reg = er.async_get(hass)
 
-    withings_data: WithingsData = hass.data[DOMAIN][entry.entry_id]
+    withings_data = entry.runtime_data
 
     measurement_coordinator = withings_data.measurement_coordinator
 
     entities: list[SensorEntity] = []
     entities.extend(
-        WithingsMeasurementSensor(
-            measurement_coordinator, MEASUREMENT_SENSORS[measurement_type]
-        )
+        WithingsMeasurementSensor(measurement_coordinator, description)
         for measurement_type in measurement_coordinator.data
-        if measurement_type in MEASUREMENT_SENSORS
+        if (description := get_measurement_description(measurement_type)) is not None
     )
 
     current_measurement_types = set(measurement_coordinator.data)
@@ -647,10 +717,10 @@ async def async_setup_entry(
         if new_measurement_types:
             current_measurement_types.update(new_measurement_types)
             async_add_entities(
-                WithingsMeasurementSensor(
-                    measurement_coordinator, MEASUREMENT_SENSORS[measurement_type]
-                )
+                WithingsMeasurementSensor(measurement_coordinator, description)
                 for measurement_type in new_measurement_types
+                if (description := get_measurement_description(measurement_type))
+                is not None
             )
 
     measurement_coordinator.async_add_listener(_async_measurement_listener)
@@ -760,19 +830,61 @@ async def async_setup_entry(
             _async_add_workout_entities
         )
 
+    device_coordinator = withings_data.device_coordinator
+
+    current_devices: set[str] = set()
+
+    def _async_device_listener() -> None:
+        """Add device entities."""
+        received_devices = set(device_coordinator.data)
+        new_devices = received_devices - current_devices
+        old_devices = current_devices - received_devices
+        if new_devices:
+            device_registry = dr.async_get(hass)
+            for device_id in new_devices:
+                if device := device_registry.async_get_device({(DOMAIN, device_id)}):
+                    if any(
+                        (
+                            config_entry := hass.config_entries.async_get_entry(
+                                config_entry_id
+                            )
+                        )
+                        and config_entry.state == ConfigEntryState.LOADED
+                        for config_entry_id in device.config_entries
+                    ):
+                        continue
+                async_add_entities(
+                    WithingsDeviceSensor(device_coordinator, description, device_id)
+                    for description in DEVICE_SENSORS
+                )
+                current_devices.add(device_id)
+
+        if old_devices:
+            device_registry = dr.async_get(hass)
+            for device_id in old_devices:
+                if device := device_registry.async_get_device({(DOMAIN, device_id)}):
+                    device_registry.async_update_device(
+                        device.id, remove_config_entry_id=entry.entry_id
+                    )
+                    current_devices.remove(device_id)
+
+    device_coordinator.async_add_listener(_async_device_listener)
+
+    _async_device_listener()
+
     if not entities:
         LOGGER.warning(
-            "No data found for Withings entry %s, sensors will be added when new data is available"
+            "No data found for Withings entry %s, sensors will be added when new data is available",
+            entry.title,
         )
 
     async_add_entities(entities)
 
 
-_T = TypeVar("_T", bound=WithingsDataUpdateCoordinator)
-_ED = TypeVar("_ED", bound=SensorEntityDescription)
-
-
-class WithingsSensor(WithingsEntity[_T], SensorEntity, Generic[_T, _ED]):
+class WithingsSensor[
+    _T: WithingsDataUpdateCoordinator[Any],
+    _ED: SensorEntityDescription,
+](WithingsEntity[_T], SensorEntity):
     """Implementation of a Withings sensor."""
 
     entity_description: _ED
@@ -798,14 +910,23 @@ class WithingsMeasurementSensor(
     @property
     def native_value(self) -> float:
         """Return the state of the entity."""
-        return self.coordinator.data[self.entity_description.measurement_type]
+        return self.coordinator.data[
+            (
+                self.entity_description.measurement_type,
+                self.entity_description.measurement_position,
+            )
+        ]
 
     @property
     def available(self) -> bool:
         """Return if the sensor is available."""
         return (
             super().available
-            and self.entity_description.measurement_type in self.coordinator.data
+            and (
+                self.entity_description.measurement_type,
+                self.entity_description.measurement_position,
+            )
+            in self.coordinator.data
         )
 
 
@@ -875,3 +996,24 @@ class WithingsWorkoutSensor(
         if not self.coordinator.data:
             return None
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class WithingsDeviceSensor(WithingsDeviceEntity, SensorEntity):
+    """Implementation of a Withings workout sensor."""
+
+    entity_description: WithingsDeviceSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: WithingsDeviceDataUpdateCoordinator,
+        entity_description: WithingsDeviceSensorEntityDescription,
+        device_id: str,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, device_id, entity_description.key)
+        self.entity_description = entity_description
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        return self.entity_description.value_fn(self.device)

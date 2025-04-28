@@ -5,7 +5,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import category_registry as cr, config_validation as cv
 
@@ -130,6 +130,8 @@ def _entry_dict(entry: cr.CategoryEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     return {
         "category_id": entry.category_id,
+        "created_at": entry.created_at.timestamp(),
         "icon": entry.icon,
+        "modified_at": entry.modified_at.timestamp(),
         "name": entry.name,
     }

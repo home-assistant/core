@@ -10,7 +10,9 @@ import pysma
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
     CONF_HOST,
+    CONF_MAC,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
@@ -19,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -72,7 +75,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=sma_device_info["type"],
         name=sma_device_info["name"],
         sw_version=sma_device_info["sw_version"],
+        serial_number=sma_device_info["serial"],
     )
+
+    # Add the MAC address to connections, if it comes via DHCP
+    if CONF_MAC in entry.data:
+        device_info[ATTR_CONNECTIONS] = {
+            (dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])
+        }
 
     # Define the coordinator
     async def async_update_data():
@@ -92,6 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="sma",
         update_method=async_update_data,
         update_interval=interval,
@@ -135,3 +146,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data[PYSMA_REMOVE_LISTENER]()
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate entry."""
+
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:
+        # 1 -> 2: Unique ID from integer to string
+        if entry.minor_version == 1:
+            minor_version = 2
+            hass.config_entries.async_update_entry(
+                entry, unique_id=str(entry.unique_id), minor_version=minor_version
+            )
+
+    _LOGGER.debug("Migration successful")
+
+    return True

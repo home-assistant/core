@@ -22,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -67,7 +67,45 @@ class PropertyZWaveJSEntityDescription(BinarySensorEntityDescription):
 
 
 # Mappings for Notification sensors
-# https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/notifications.json
+# https://github.com/zwave-js/specs/blob/master/Registries/Notification%20Command%20Class%2C%20list%20of%20assigned%20Notifications.xlsx
+#
+# Mapping rules:
+# The catch all description should not have a device class and be marked as diagnostic.
+#
+# The following notifications have been moved to diagnostic:
+# Smoke Alarm
+# - Alarm silenced
+# - Replacement required
+# - Replacement required, End-of-life
+# - Maintenance required, planned periodic inspection
+# - Maintenance required, dust in device
+# CO Alarm
+# - Carbon monoxide test
+# - Replacement required
+# - Replacement required, End-of-life
+# - Alarm silenced
+# - Maintenance required, planned periodic inspection
+# CO2 Alarm
+# - Carbon dioxide test
+# - Replacement required
+# - Replacement required, End-of-life
+# - Alarm silenced
+# - Maintenance required, planned periodic inspection
+# Heat Alarm
+# - Rapid temperature rise (location provided)
+# - Rapid temperature rise
+# - Rapid temperature fall (location provided)
+# - Rapid temperature fall
+# - Heat alarm test
+# - Alarm silenced
+# - Replacement required, End-of-life
+# - Maintenance required, dust in device
+# - Maintenance required, planned periodic inspection
+
+# Water Alarm
+# - Replace water filter
+# - Sump pump failure
+
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
     NotificationZWaveJSEntityDescription(
         # NotificationType 1: Smoke Alarm - State Id's 1 and 2 - Smoke detected
@@ -76,9 +114,16 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
     NotificationZWaveJSEntityDescription(
+        # NotificationType 1: Smoke Alarm - State Id's 4, 5, 7, 8
+        key=NOTIFICATION_SMOKE_ALARM,
+        states=("4", "5", "7", "8"),
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
         # NotificationType 1: Smoke Alarm - All other State Id's
         key=NOTIFICATION_SMOKE_ALARM,
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 2: Carbon Monoxide - State Id's 1 and 2
@@ -87,9 +132,16 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.CO,
     ),
     NotificationZWaveJSEntityDescription(
+        # NotificationType 2: Carbon Monoxide - State Id 4, 5, 7
+        key=NOTIFICATION_CARBON_MONOOXIDE,
+        states=("4", "5", "7"),
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
         # NotificationType 2: Carbon Monoxide - All other State Id's
         key=NOTIFICATION_CARBON_MONOOXIDE,
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 3: Carbon Dioxide - State Id's 1 and 2
@@ -98,9 +150,16 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.GAS,
     ),
     NotificationZWaveJSEntityDescription(
+        # NotificationType 3: Carbon Dioxide - State Id's 4, 5, 7
+        key=NOTIFICATION_CARBON_DIOXIDE,
+        states=("4", "5", "7"),
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
         # NotificationType 3: Carbon Dioxide - All other State Id's
         key=NOTIFICATION_CARBON_DIOXIDE,
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 4: Heat - State Id's 1, 2, 5, 6 (heat/underheat)
@@ -109,20 +168,34 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.HEAT,
     ),
     NotificationZWaveJSEntityDescription(
-        # NotificationType 4: Heat - All other State Id's
+        # NotificationType 4: Heat - State ID's 8, A, B
         key=NOTIFICATION_HEAT,
+        states=("8", "10", "11"),
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
-        # NotificationType 5: Water - State Id's 1, 2, 3, 4
+        # NotificationType 4: Heat - All other State Id's
+        key=NOTIFICATION_HEAT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
+        # NotificationType 5: Water - State Id's 1, 2, 3, 4, 6, 7, 8, 9, 0A
         key=NOTIFICATION_WATER,
-        states=("1", "2", "3", "4"),
+        states=("1", "2", "3", "4", "6", "7", "8", "9", "10"),
         device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
+    NotificationZWaveJSEntityDescription(
+        # NotificationType 5: Water - State Id's B
+        key=NOTIFICATION_WATER,
+        states=("11",),
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 5: Water - All other State Id's
         key=NOTIFICATION_WATER,
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 6: Access Control - State Id's 1, 2, 3, 4 (Lock)
@@ -214,16 +287,22 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.SOUND,
     ),
     NotificationZWaveJSEntityDescription(
-        # NotificationType 18: Gas
+        # NotificationType 18: Gas - State Id's 1, 2, 3, 4
         key=NOTIFICATION_GAS,
         states=("1", "2", "3", "4"),
         device_class=BinarySensorDeviceClass.GAS,
     ),
     NotificationZWaveJSEntityDescription(
-        # NotificationType 18: Gas
+        # NotificationType 18: Gas - State Id 6
         key=NOTIFICATION_GAS,
         states=("6",),
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
+        # NotificationType 18: Gas - All other State Id's
+        key=NOTIFICATION_GAS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -248,13 +327,23 @@ BOOLEAN_SENSOR_MAPPINGS: dict[int, BinarySensorEntityDescription] = {
 }
 
 
+@callback
+def is_valid_notification_binary_sensor(
+    info: ZwaveDiscoveryInfo,
+) -> bool | NotificationZWaveJSEntityDescription:
+    """Return if the notification CC Value is valid as binary sensor."""
+    if not info.primary_value.metadata.states:
+        return False
+    return len(info.primary_value.metadata.states) > 1
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave binary sensor from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_binary_sensor(info: ZwaveDiscoveryInfo) -> None:
@@ -264,14 +353,18 @@ async def async_setup_entry(
         entities: list[BinarySensorEntity] = []
 
         if info.platform_hint == "notification":
+            # ensure the notification CC Value is valid as binary sensor
+            if not is_valid_notification_binary_sensor(info):
+                return
             # Get all sensors from Notification CC states
             for state_key in info.primary_value.metadata.states:
                 # ignore idle key (0)
                 if state_key == "0":
                     continue
-
-                notification_description: NotificationZWaveJSEntityDescription | None = None
-
+                # get (optional) description for this state
+                notification_description: (
+                    NotificationZWaveJSEntityDescription | None
+                ) = None
                 for description in NOTIFICATION_SENSOR_MAPPINGS:
                     if (
                         int(description.key)
@@ -287,7 +380,6 @@ async def async_setup_entry(
                     and notification_description.off_state == state_key
                 ):
                     continue
-
                 entities.append(
                     ZWaveNotificationBinarySensor(
                         config_entry, driver, info, state_key, notification_description

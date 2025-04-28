@@ -1,98 +1,103 @@
-"""Intents for the client integration."""
+"""Intents for the climate integration."""
 
 from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import intent
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, intent
 
-from . import DOMAIN, ClimateEntity
-
-INTENT_GET_TEMPERATURE = "HassClimateGetTemperature"
+from . import (
+    ATTR_TEMPERATURE,
+    DOMAIN,
+    INTENT_SET_TEMPERATURE,
+    SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
+)
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the climate intents."""
-    intent.async_register(hass, GetTemperatureIntent())
+    intent.async_register(hass, SetTemperatureIntent())
 
 
-class GetTemperatureIntent(intent.IntentHandler):
-    """Handle GetTemperature intents."""
+class SetTemperatureIntent(intent.IntentHandler):
+    """Handle SetTemperature intents."""
 
-    intent_type = INTENT_GET_TEMPERATURE
-    slot_schema = {vol.Optional("area"): str, vol.Optional("name"): str}
+    intent_type = INTENT_SET_TEMPERATURE
+    description = "Sets the target temperature of a climate device or entity"
+    slot_schema = {
+        vol.Required("temperature"): vol.Coerce(float),
+        vol.Optional("area"): intent.non_empty_string,
+        vol.Optional("name"): intent.non_empty_string,
+        vol.Optional("floor"): intent.non_empty_string,
+        vol.Optional("preferred_area_id"): cv.string,
+        vol.Optional("preferred_floor_id"): cv.string,
+    }
+    platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
 
-        component: EntityComponent[ClimateEntity] = hass.data[DOMAIN]
-        entities: list[ClimateEntity] = list(component.entities)
-        climate_entity: ClimateEntity | None = None
-        climate_state: State | None = None
+        temperature: float = slots["temperature"]["value"]
 
-        if not entities:
-            raise intent.IntentHandleError("No climate entities")
+        name: str | None = None
+        if "name" in slots:
+            name = slots["name"]["value"]
 
-        name_slot = slots.get("name", {})
-        entity_name: str | None = name_slot.get("value")
-        entity_text: str | None = name_slot.get("text")
+        area_name: str | None = None
+        if "area" in slots:
+            area_name = slots["area"]["value"]
 
-        area_slot = slots.get("area", {})
-        area_id = area_slot.get("value")
+        floor_name: str | None = None
+        if "floor" in slots:
+            floor_name = slots["floor"]["value"]
 
-        if area_id:
-            # Filter by area and optionally name
-            area_name = area_slot.get("text")
+        match_constraints = intent.MatchTargetsConstraints(
+            name=name,
+            area_name=area_name,
+            floor_name=floor_name,
+            domains=[DOMAIN],
+            assistant=intent_obj.assistant,
+            features=ClimateEntityFeature.TARGET_TEMPERATURE,
+            single_target=True,
+        )
+        match_preferences = intent.MatchTargetsPreferences(
+            area_id=slots.get("preferred_area_id", {}).get("value"),
+            floor_id=slots.get("preferred_floor_id", {}).get("value"),
+        )
+        match_result = intent.async_match_targets(
+            hass, match_constraints, match_preferences
+        )
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
 
-            for maybe_climate in intent.async_match_states(
-                hass, name=entity_name, area_name=area_id, domains=[DOMAIN]
-            ):
-                climate_state = maybe_climate
-                break
+        assert match_result.states
+        climate_state = match_result.states[0]
 
-            if climate_state is None:
-                raise intent.NoStatesMatchedError(
-                    name=entity_text or entity_name,
-                    area=area_name or area_id,
-                    domains={DOMAIN},
-                    device_classes=None,
-                )
-
-            climate_entity = component.get_entity(climate_state.entity_id)
-        elif entity_name:
-            # Filter by name
-            for maybe_climate in intent.async_match_states(
-                hass, name=entity_name, domains=[DOMAIN]
-            ):
-                climate_state = maybe_climate
-                break
-
-            if climate_state is None:
-                raise intent.NoStatesMatchedError(
-                    name=entity_name,
-                    area=None,
-                    domains={DOMAIN},
-                    device_classes=None,
-                )
-
-            climate_entity = component.get_entity(climate_state.entity_id)
-        else:
-            # First entity
-            climate_entity = entities[0]
-            climate_state = hass.states.get(climate_entity.entity_id)
-
-        assert climate_entity is not None
-
-        if climate_state is None:
-            raise intent.IntentHandleError(f"No state for {climate_entity.name}")
-
-        assert climate_state is not None
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            service_data={ATTR_TEMPERATURE: temperature},
+            target={ATTR_ENTITY_ID: climate_state.entity_id},
+            blocking=True,
+        )
 
         response = intent_obj.create_response()
-        response.response_type = intent.IntentResponseType.QUERY_ANSWER
+        response.response_type = intent.IntentResponseType.ACTION_DONE
+        response.async_set_results(
+            success_results=[
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.ENTITY,
+                    name=climate_state.name,
+                    id=climate_state.entity_id,
+                )
+            ]
+        )
         response.async_set_states(matched_states=[climate_state])
         return response

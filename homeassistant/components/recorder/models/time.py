@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import overload
 
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,13 +16,11 @@ EMPTY_JSON_OBJECT = "{}"
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:
@@ -36,13 +34,11 @@ def process_timestamp(ts: datetime | None) -> datetime | None:
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: None) -> None:
-    ...
+def process_timestamp_to_utc_isoformat(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: datetime) -> str:
-    ...
+def process_timestamp_to_utc_isoformat(ts: datetime) -> str: ...
 
 
 def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
@@ -56,22 +52,9 @@ def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
     return ts.astimezone(dt_util.UTC).isoformat()
 
 
-def process_datetime_to_timestamp(ts: datetime) -> float:
-    """Process a datebase datetime to epoch.
-
-    Mirrors the behavior of process_timestamp_to_utc_isoformat
-    except it returns the epoch time.
-    """
-    if ts.tzinfo is None or ts.tzinfo == dt_util.UTC:
-        return dt_util.utc_to_timestamp(ts)
-    return ts.timestamp()
-
-
 def datetime_to_timestamp_or_none(dt: datetime | None) -> float | None:
     """Convert a datetime to a timestamp."""
-    if dt is None:
-        return None
-    return dt_util.utc_to_timestamp(dt)
+    return None if dt is None else dt.timestamp()
 
 
 def timestamp_to_datetime_or_none(ts: float | None) -> datetime | None:

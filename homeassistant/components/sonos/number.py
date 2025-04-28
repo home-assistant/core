@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SONOS_CREATE_LEVELS
 from .entity import SonosEntity
@@ -28,7 +28,7 @@ LEVEL_TYPES = {
     "music_surround_level": (-15, 15),
 }
 
-SocoFeatures = list[tuple[str, tuple[int, int]]]
+type SocoFeatures = list[tuple[str, tuple[int, int]]]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ LEVEL_FROM_NUMBER = {"balance": _balance_from_number}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sonos number platform from a config entry."""
 

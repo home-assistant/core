@@ -13,16 +13,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN, SIGNAL_EVENTS_CHANGED, SIGNAL_POSITION_CHANGED
-from .entity import Sun
+from .entity import Sun, SunConfigEntry
 
 ENTITY_ID_SENSOR_FORMAT = SENSOR_DOMAIN + ".sun_{}"
 
@@ -107,11 +106,13 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SunConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sun sensor platform."""
 
-    sun: Sun = hass.data[DOMAIN]
+    sun = entry.runtime_data
 
     async_add_entities(
         [SunSensor(sun, description, entry.entry_id) for description in SENSOR_TYPES]

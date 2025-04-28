@@ -8,11 +8,11 @@ from syrupy.assertion import SnapshotAssertion
 from wyoming.info import Info
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.wyoming.const import DOMAIN
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import EMPTY_INFO, SATELLITE_INFO, STT_INFO, TTS_INFO
 
@@ -46,7 +46,7 @@ async def test_form_stt(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -62,7 +62,7 @@ async def test_form_stt(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test ASR"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -76,7 +76,7 @@ async def test_form_tts(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -92,7 +92,7 @@ async def test_form_tts(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test TTS"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -119,7 +119,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -141,7 +141,7 @@ async def test_no_supported_services(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "no_services"
 
 
@@ -159,7 +159,7 @@ async def test_hassio_addon_discovery(
         context={"source": config_entries.SOURCE_HASSIO},
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "hassio_confirm"
     assert result.get("description_placeholders") == {"addon": "Piper"}
 
@@ -169,7 +169,7 @@ async def test_hassio_addon_discovery(
     ) as mock_wyoming:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2 == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -178,19 +178,20 @@ async def test_hassio_addon_discovery(
 
 async def test_hassio_addon_already_configured(hass: HomeAssistant) -> None:
     """Test we abort discovery if the add-on is already configured."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"host": "mock-piper", "port": "10200"},
-        unique_id="1234",
-    ).add_to_hass(hass)
+        data={"host": "mock-piper", "port": 10200},
+    )
+    entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=ADDON_DISCOVERY,
         context={"source": config_entries.SOURCE_HASSIO},
     )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+    assert entry.unique_id == "1234"
 
 
 async def test_hassio_addon_cannot_connect(hass: HomeAssistant) -> None:
@@ -207,7 +208,7 @@ async def test_hassio_addon_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "cannot_connect"}
 
 
@@ -225,7 +226,7 @@ async def test_hassio_addon_no_supported_services(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "no_services"
 
 
@@ -245,14 +246,14 @@ async def test_zeroconf_discovery(
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "zeroconf_confirm"
     assert result.get("description_placeholders") == {
         "name": SATELLITE_INFO.satellite.name
     }
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2 == snapshot
 
 
@@ -262,17 +263,20 @@ async def test_zeroconf_discovery_no_port(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test discovery when the zeroconf service does not have a port."""
-    with patch(
-        "homeassistant.components.wyoming.data.load_wyoming_info",
-        return_value=SATELLITE_INFO,
-    ), patch.object(ZEROCONF_DISCOVERY, "port", None):
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch.object(ZEROCONF_DISCOVERY, "port", None),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=ZEROCONF_DISCOVERY,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "no_port"
 
 
@@ -292,5 +296,31 @@ async def test_zeroconf_discovery_no_services(
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "no_services"
+
+
+async def test_zeroconf_discovery_already_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test config flow initiated by Supervisor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "127.0.0.1", "port": 12345},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=ZEROCONF_DISCOVERY,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert entry.unique_id == "test_zeroconf_name._wyoming._tcp.local._Test Satellite"

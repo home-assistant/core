@@ -1,0 +1,18 @@
+# serializer version: 1
+# name: test_setup_config_entry
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'changed_by': None,
+      'code_arm_required': True,
+      'code_format': <CodeFormat.NUMBER: 'number'>,
+      'friendly_name': 'My template',
+      'supported_features': <AlarmControlPanelEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'alarm_control_panel.my_template',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'armed_away',
+  })
+# ---

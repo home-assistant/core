@@ -10,12 +10,12 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingFaceEntity,
 )
 from homeassistant.const import ATTR_NAME, CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant, split_entity_id
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FACES = "faces"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FACES): {cv.string: cv.isfile},
         vol.Optional(CONF_CONFIDENCE, default=0.6): vol.Coerce(float),

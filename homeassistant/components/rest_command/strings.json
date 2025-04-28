@@ -7,13 +7,13 @@
   },
   "exceptions": {
     "timeout": {
-      "message": "Timeout when calling resource '{request_url}'"
+      "message": "Timeout when calling resource \"{request_url}\""
     },
     "client_error": {
-      "message": "Client error occurred when calling resource '{request_url}'"
+      "message": "Client error occurred when calling resource \"{request_url}\""
     },
     "decoding_error": {
-      "message": "The response of '{request_url}' could not be decoded as {decoding_type}"
+      "message": "The response of \"{request_url}\" could not be decoded as {decoding_type}"
     }
   }
 }

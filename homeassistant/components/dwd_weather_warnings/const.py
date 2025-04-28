@@ -14,6 +14,7 @@ DOMAIN: Final = "dwd_weather_warnings"
 
 CONF_REGION_NAME: Final = "region_name"
 CONF_REGION_IDENTIFIER: Final = "region_identifier"
+CONF_REGION_DEVICE_TRACKER: Final = "region_device_tracker"
 
 ATTR_REGION_NAME: Final = "region_name"
 ATTR_REGION_ID: Final = "region_id"

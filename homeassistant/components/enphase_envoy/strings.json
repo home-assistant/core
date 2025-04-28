@@ -10,7 +10,33 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Enphase Envoy gateway."
+          "host": "The hostname or IP address of your Enphase Envoy gateway.",
+          "username": "Installer or Enphase Cloud username",
+          "password": "Blank or Enphase Cloud password"
+        }
+      },
+      "reconfigure": {
+        "description": "[%key:component::enphase_envoy::config::step::user::description%]",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "[%key:component::enphase_envoy::config::step::user::data_description::host%]",
+          "username": "[%key:component::enphase_envoy::config::step::user::data_description::username%]",
+          "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "[%key:component::enphase_envoy::config::step::user::description%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::enphase_envoy::config::step::user::data_description::username%]",
+          "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]"
         }
       }
     },
@@ -21,7 +47,24 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The serial number of the device does not match the previous serial number"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Envoy {serial} {host} options",
+        "data": {
+          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activities. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
+          "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares."
+        },
+        "data_description": {
+          "diagnostics_include_fixtures": "Include fixtures in diagnostics report",
+          "disable_keep_alive": "May resolve communication issues with some Envoy firmwares."
+        }
+      }
     }
   },
   "entity": {
@@ -143,6 +186,18 @@
       "lifetime_consumption_phase": {
         "name": "Lifetime energy consumption {phase_name}"
       },
+      "balanced_net_consumption": {
+        "name": "Balanced net power consumption"
+      },
+      "lifetime_balanced_net_consumption": {
+        "name": "Lifetime balanced net energy consumption"
+      },
+      "balanced_net_consumption_phase": {
+        "name": "Balanced net power consumption {phase_name}"
+      },
+      "lifetime_balanced_net_consumption_phase": {
+        "name": "Lifetime balanced net energy consumption {phase_name}"
+      },
       "lifetime_net_consumption": {
         "name": "Lifetime net energy consumption"
       },
@@ -158,11 +213,29 @@
       "net_ct_voltage": {
         "name": "Voltage net consumption CT"
       },
+      "net_ct_current": {
+        "name": "Net consumption CT current"
+      },
+      "net_ct_powerfactor": {
+        "name": "Power factor net consumption CT"
+      },
       "net_ct_metering_status": {
         "name": "Metering status net consumption CT"
       },
       "net_ct_status_flags": {
         "name": "Meter status flags active net consumption CT"
+      },
+      "production_ct_frequency": {
+        "name": "Frequency production CT"
+      },
+      "production_ct_voltage": {
+        "name": "Voltage production CT"
+      },
+      "production_ct_current": {
+        "name": "Production CT current"
+      },
+      "production_ct_powerfactor": {
+        "name": "Power factor production CT"
       },
       "production_ct_metering_status": {
         "name": "Metering status production CT"
@@ -179,8 +252,17 @@
       "battery_discharge": {
         "name": "Current battery discharge"
       },
+      "storage_ct_frequency": {
+        "name": "Frequency storage CT"
+      },
       "storage_ct_voltage": {
         "name": "Voltage storage CT"
+      },
+      "storage_ct_current": {
+        "name": "Storage CT current"
+      },
+      "storage_ct_powerfactor": {
+        "name": "Power factor storage CT"
       },
       "storage_ct_metering_status": {
         "name": "Metering status storage CT"
@@ -203,11 +285,29 @@
       "net_ct_voltage_phase": {
         "name": "Voltage net consumption CT {phase_name}"
       },
+      "net_ct_current_phase": {
+        "name": "Net consumption CT current {phase_name}"
+      },
+      "net_ct_powerfactor_phase": {
+        "name": "Power factor net consumption CT {phase_name}"
+      },
       "net_ct_metering_status_phase": {
         "name": "Metering status net consumption CT {phase_name}"
       },
       "net_ct_status_flags_phase": {
         "name": "Meter status flags active net consumption CT {phase_name}"
+      },
+      "production_ct_frequency_phase": {
+        "name": "Frequency production CT {phase_name}"
+      },
+      "production_ct_voltage_phase": {
+        "name": "Voltage production CT {phase_name}"
+      },
+      "production_ct_current_phase": {
+        "name": "Production CT current {phase_name}"
+      },
+      "production_ct_powerfactor_phase": {
+        "name": "Power factor production CT {phase_name}"
       },
       "production_ct_metering_status_phase": {
         "name": "Metering status production CT {phase_name}"
@@ -224,8 +324,17 @@
       "battery_discharge_phase": {
         "name": "Current battery discharge {phase_name}"
       },
+      "storage_ct_frequency_phase": {
+        "name": "Frequency storage CT {phase_name}"
+      },
       "storage_ct_voltage_phase": {
         "name": "Voltage storage CT {phase_name}"
+      },
+      "storage_ct_current_phase": {
+        "name": "Storage CT current {phase_name}"
+      },
+      "storage_ct_powerfactor_phase": {
+        "name": "Power factor storage CT {phase_name}"
       },
       "storage_ct_metering_status_phase": {
         "name": "Metering status storage CT {phase_name}"
@@ -247,6 +356,30 @@
       },
       "configured_reserve_soc": {
         "name": "Configured reserve battery level"
+      },
+      "acb_battery_state": {
+        "name": "Battery state",
+        "state": {
+          "discharging": "[%key:common::state::discharging%]",
+          "idle": "[%key:common::state::idle%]",
+          "charging": "[%key:common::state::charging%]",
+          "full": "Full"
+        }
+      },
+      "acb_available_energy": {
+        "name": "Available ACB battery energy"
+      },
+      "acb_max_capacity": {
+        "name": "ACB Battery capacity"
+      },
+      "aggregated_available_energy": {
+        "name": "Aggregated available battery energy"
+      },
+      "aggregated_max_capacity": {
+        "name": "Aggregated Battery capacity"
+      },
+      "aggregated_soc": {
+        "name": "Aggregated battery soc"
       }
     },
     "switch": {
@@ -256,6 +389,20 @@
       "grid_enabled": {
         "name": "Grid enabled"
       }
+    }
+  },
+  "exceptions": {
+    "unexpected_device": {
+      "message": "Unexpected Envoy serial-number found at {host}; expected {expected_serial}, found {actual_serial}"
+    },
+    "authentication_error": {
+      "message": "Envoy authentication failure on {host}: {args}"
+    },
+    "envoy_error": {
+      "message": "Error communicating with Envoy API on {host}: {args}"
+    },
+    "action_error": {
+      "message": "Failed to execute {action} for {entity}, host: {host}: {args}"
     }
   }
 }

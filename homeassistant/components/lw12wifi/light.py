@@ -13,17 +13,17 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "LW-12 FC"
 DEFAULT_PORT = 5000
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,

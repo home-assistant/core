@@ -23,6 +23,12 @@ _COMMON_ARGUMENTS: dict[str, list[str]] = {
     "hass": ["HomeAssistant", "HomeAssistant | None"]
 }
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
+_KNOWN_GENERIC_TYPES: set[str] = {
+    "ConfigEntry",
+}
+_KNOWN_GENERIC_TYPES_TUPLE = tuple(_KNOWN_GENERIC_TYPES)
+
+_FORCE_ANNOTATION_PLATFORMS = ["config_flow"]
 
 
 class _Special(Enum):
@@ -49,10 +55,14 @@ class TypeHintMatch:
         """Confirm if function should be checked."""
         return (
             self.function_name == node.name
-            or self.has_async_counterpart
-            and node.name == f"async_{self.function_name}"
-            or self.function_name.endswith("*")
-            and node.name.startswith(self.function_name[:-1])
+            or (
+                self.has_async_counterpart
+                and node.name == f"async_{self.function_name}"
+            )
+            or (
+                self.function_name.endswith("*")
+                and node.name.startswith(self.function_name[:-1])
+            )
         )
 
 
@@ -65,7 +75,7 @@ class ClassTypeHintMatch:
     matches: list[TypeHintMatch]
 
 
-_INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\]))"
+_INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\])|(?:\[\]))"
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     # or "dict | list | None"
@@ -75,7 +85,7 @@ _INNER_MATCH_POSSIBILITIES = [i + 1 for i in range(5)]
 _TYPE_HINT_MATCHERS.update(
     {
         f"x_of_y_{i}": re.compile(
-            rf"^(\w+)\[{_INNER_MATCH}" + f", {_INNER_MATCH}" * (i - 1) + r"\]$"
+            rf"^([\w\.]+)\[{_INNER_MATCH}" + f", {_INNER_MATCH}" * (i - 1) + r"\]$"
         )
         for i in _INNER_MATCH_POSSIBILITIES
     }
@@ -94,19 +104,25 @@ _METHOD_MATCH: list[TypeHintMatch] = [
 _TEST_FIXTURES: dict[str, list[str] | str] = {
     "aioclient_mock": "AiohttpClientMocker",
     "aiohttp_client": "ClientSessionGenerator",
+    "aiohttp_server": "Callable[[], TestServer]",
     "area_registry": "AreaRegistry",
+    "async_test_recorder": "RecorderInstanceContextManager",
     "async_setup_recorder_instance": "RecorderInstanceGenerator",
     "caplog": "pytest.LogCaptureFixture",
+    "capsys": "pytest.CaptureFixture[str]",
     "current_request_with_host": "None",
     "device_registry": "DeviceRegistry",
     "enable_bluetooth": "None",
     "enable_custom_integrations": "None",
+    "enable_missing_statistics": "bool",
     "enable_nightly_purge": "bool",
     "enable_statistics": "bool",
     "enable_schema_validation": "bool",
     "entity_registry": "EntityRegistry",
     "entity_registry_enabled_by_default": "None",
+    "event_loop": "AbstractEventLoop",
     "freezer": "FrozenDateTimeFactory",
+    "hass": "HomeAssistant",
     "hass_access_token": "str",
     "hass_admin_credential": "Credentials",
     "hass_admin_user": "MockUser",
@@ -118,38 +134,44 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "hass_owner_user": "MockUser",
     "hass_read_only_access_token": "str",
     "hass_read_only_user": "MockUser",
-    "hass_recorder": "Callable[..., HomeAssistant]",
     "hass_storage": "dict[str, Any]",
     "hass_supervisor_access_token": "str",
     "hass_supervisor_user": "MockUser",
     "hass_ws_client": "WebSocketGenerator",
+    "init_tts_cache_dir_side_effect": "Any",
     "issue_registry": "IssueRegistry",
-    "legacy_auth": "LegacyApiPasswordAuthProvider",
     "local_auth": "HassAuthProvider",
-    "mock_async_zeroconf": "None",
+    "mock_async_zeroconf": "MagicMock",
     "mock_bleak_scanner_start": "MagicMock",
     "mock_bluetooth": "None",
     "mock_bluetooth_adapters": "None",
+    "mock_conversation_agent": "MockAgent",
     "mock_device_tracker_conf": "list[Device]",
-    "mock_get_source_ip": "None",
+    "mock_get_source_ip": "_patch",
     "mock_hass_config": "None",
     "mock_hass_config_yaml": "None",
-    "mock_zeroconf": "None",
+    "mock_tts_cache_dir": "Path",
+    "mock_tts_get_cache_files": "MagicMock",
+    "mock_tts_init_cache_dir": "MagicMock",
+    "mock_zeroconf": "MagicMock",
+    "monkeypatch": "pytest.MonkeyPatch",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
     "mqtt_mock_entry": "MqttMockHAClientGenerator",
     "recorder_db_url": "str",
     "recorder_mock": "Recorder",
-    "requests_mock": "requests_mock.Mocker",
+    "request": "pytest.FixtureRequest",
+    "requests_mock": "Mocker",
+    "service_calls": "list[ServiceCall]",
     "snapshot": "SnapshotAssertion",
+    "socket_enabled": "None",
     "stub_blueprint_populate": "None",
     "tmp_path": "Path",
     "tmpdir": "py.path.local",
+    "tts_mutagen_mock": "MagicMock",
+    "unused_tcp_port_factory": "Callable[[], int]",
+    "unused_udp_port_factory": "Callable[[], int]",
 }
-_TEST_FUNCTION_MATCH = TypeHintMatch(
-    function_name="test_*",
-    return_type=None,
-)
 
 
 _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
@@ -230,7 +252,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigEntry",
-                2: "AddEntitiesCallback",
+                2: "AddConfigEntryEntitiesCallback",
             },
             return_type=None,
         ),
@@ -572,6 +594,16 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="async_step_*",
                     arg_types={},
                     return_type="ConfigFlowResult",
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="ConfigSubentryFlow",
+            matches=[
+                TypeHintMatch(
+                    function_name="async_step_*",
+                    arg_types={},
+                    return_type="SubentryFlowResult",
                 ),
             ],
         ),
@@ -1000,6 +1032,34 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=None,
                     has_async_counterpart=True,
                 ),
+                TypeHintMatch(
+                    function_name="async_handle_async_webrtc_offer",
+                    arg_types={
+                        1: "str",
+                        2: "str",
+                        3: "WebRTCSendMessage",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_on_webrtc_candidate",
+                    arg_types={
+                        1: "str",
+                        2: "RTCIceCandidateInit",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="close_webrtc_session",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="_async_get_webrtc_client_configuration",
+                    return_type="WebRTCClientConfiguration",
+                ),
             ],
         ),
     ],
@@ -1025,11 +1085,11 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="current_humidity",
-                    return_type=["int", None],
+                    return_type=["float", None],
                 ),
                 TypeHintMatch(
                     function_name="target_humidity",
-                    return_type=["int", None],
+                    return_type=["float", None],
                 ),
                 TypeHintMatch(
                     function_name="hvac_mode",
@@ -1171,11 +1231,11 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="min_humidity",
-                    return_type="int",
+                    return_type="float",
                 ),
                 TypeHintMatch(
                     function_name="max_humidity",
-                    return_type="int",
+                    return_type="float",
                 ),
             ],
         ),
@@ -1301,7 +1361,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="source_type",
-                    return_type=["SourceType", "str"],
+                    return_type="SourceType",
                 ),
             ],
         ),
@@ -1314,7 +1374,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="location_accuracy",
-                    return_type="int",
+                    return_type="float",
                 ),
                 TypeHintMatch(
                     function_name="location_name",
@@ -1358,6 +1418,16 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type="bool",
                 ),
             ],
+        ),
+    ],
+    "entity": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
     ],
     "fan": [
@@ -1549,11 +1619,11 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="min_humidity",
-                    return_type=["int"],
+                    return_type=["float"],
                 ),
                 TypeHintMatch(
                     function_name="max_humidity",
-                    return_type=["int"],
+                    return_type=["float"],
                 ),
                 TypeHintMatch(
                     function_name="mode",
@@ -1565,7 +1635,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="target_humidity",
-                    return_type=["int", None],
+                    return_type=["float", None],
                 ),
                 TypeHintMatch(
                     function_name="set_humidity",
@@ -1742,39 +1812,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
-                ),
-            ],
-        ),
-    ],
-    "mailbox": [
-        ClassTypeHintMatch(
-            base_class="Mailbox",
-            matches=[
-                TypeHintMatch(
-                    function_name="media_type",
-                    return_type="str",
-                ),
-                TypeHintMatch(
-                    function_name="can_delete",
-                    return_type="bool",
-                ),
-                TypeHintMatch(
-                    function_name="has_media",
-                    return_type="bool",
-                ),
-                TypeHintMatch(
-                    function_name="async_get_media",
-                    arg_types={1: "str"},
-                    return_type="bytes",
-                ),
-                TypeHintMatch(
-                    function_name="async_get_messages",
-                    return_type="list[dict[str, Any]]",
-                ),
-                TypeHintMatch(
-                    function_name="async_delete",
-                    arg_types={1: "str"},
-                    return_type="bool",
                 ),
             ],
         ),
@@ -2541,7 +2578,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="in_progress",
-                    return_type=["bool", "int", None],
+                    return_type=["bool", None],
                 ),
                 TypeHintMatch(
                     function_name="latest_version",
@@ -2562,6 +2599,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="title",
                     return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="update_percentage",
+                    return_type=["int", "float", None],
                 ),
                 TypeHintMatch(
                     function_name="install",
@@ -2905,6 +2946,10 @@ def _is_valid_type(
     if expected_type == "...":
         return isinstance(node, nodes.Const) and node.value == Ellipsis
 
+    # Special case for an empty list, such as Callable[[], TestServer]
+    if expected_type == "[]":
+        return isinstance(node, nodes.List) and not node.elts
+
     # Special case for `xxx | yyy`
     if match := _TYPE_HINT_MATCHERS["a_or_b"].match(expected_type):
         return (
@@ -2965,6 +3010,25 @@ def _is_valid_type(
         and in_return
         and isinstance(node, nodes.Name)
         and node.name in ("float", "int")
+    ):
+        return True
+
+    # Special case for int in argument type
+    if (
+        expected_type == "int"
+        and not in_return
+        and isinstance(node, nodes.Name)
+        and node.name in ("float", "int")
+    ):
+        return True
+
+    # Allow subscripts or type aliases for generic types
+    if (
+        isinstance(node, nodes.Subscript)
+        and isinstance(node.value, nodes.Name)
+        and node.value.name in _KNOWN_GENERIC_TYPES
+    ) or (
+        isinstance(node, nodes.Name) and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
     ):
         return True
 
@@ -3064,11 +3128,6 @@ def _get_module_platform(module_name: str) -> str | None:
     return platform.lstrip(".") if platform else "__init__"
 
 
-def _is_test_function(module_name: str, node: nodes.FunctionDef) -> bool:
-    """Return True if function is a pytest function."""
-    return module_name.startswith("tests.") and node.name.startswith("test_")
-
-
 class HassTypeHintChecker(BaseChecker):
     """Checker for setup type hints."""
 
@@ -3084,6 +3143,12 @@ class HassTypeHintChecker(BaseChecker):
             "Return type should be %s in %s",
             "hass-return-type",
             "Used when method return type is incorrect",
+        ),
+        "W7433": (
+            "Argument %s is of type %s and could be moved to "
+            "`@pytest.mark.usefixtures` decorator in %s",
+            "hass-consider-usefixtures-decorator",
+            "Used when an argument type is None and could be a fixture",
         ),
     }
     options = (
@@ -3101,27 +3166,31 @@ class HassTypeHintChecker(BaseChecker):
 
     _class_matchers: list[ClassTypeHintMatch]
     _function_matchers: list[TypeHintMatch]
-    _module_name: str
+    _module_node: nodes.Module
+    _module_platform: str | None
+    _in_test_module: bool
 
     def visit_module(self, node: nodes.Module) -> None:
         """Populate matchers for a Module node."""
         self._class_matchers = []
         self._function_matchers = []
-        self._module_name = node.name
+        self._module_node = node
+        self._module_platform = _get_module_platform(node.name)
+        self._in_test_module = node.name.startswith("tests.")
 
-        if (module_platform := _get_module_platform(node.name)) is None:
+        if self._in_test_module or self._module_platform is None:
             return
 
-        if module_platform in _PLATFORMS:
+        if self._module_platform in _PLATFORMS:
             self._function_matchers.extend(_FUNCTION_MATCH["__any_platform__"])
 
-        if function_matches := _FUNCTION_MATCH.get(module_platform):
+        if function_matches := _FUNCTION_MATCH.get(self._module_platform):
             self._function_matchers.extend(function_matches)
 
-        if class_matches := _CLASS_MATCH.get(module_platform):
+        if class_matches := _CLASS_MATCH.get(self._module_platform):
             self._class_matchers.extend(class_matches)
 
-        if property_matches := _INHERITANCE_MATCH.get(module_platform):
+        if property_matches := _INHERITANCE_MATCH.get(self._module_platform):
             self._class_matchers.extend(property_matches)
 
         self._class_matchers.reverse()
@@ -3131,7 +3200,12 @@ class HassTypeHintChecker(BaseChecker):
     ) -> bool:
         """Check if we can skip the function validation."""
         return (
-            self.linter.config.ignore_missing_annotations
+            # test modules are excluded from ignore_missing_annotations
+            not self._in_test_module
+            # some modules have checks forced
+            and self._module_platform not in _FORCE_ANNOTATION_PLATFORMS
+            # other modules are only checked ignore_missing_annotations
+            and self.linter.config.ignore_missing_annotations
             and node.returns is None
             and not _has_valid_annotations(annotations)
         )
@@ -3184,6 +3258,24 @@ class HassTypeHintChecker(BaseChecker):
         if self._ignore_function(node, annotations):
             return
 
+        # Check method or function matchers.
+        if node.is_method():
+            matchers = _METHOD_MATCH
+        else:
+            if self._in_test_module and node.parent is self._module_node:
+                if node.name.startswith("test_"):
+                    self._check_test_function(node, False)
+                    return
+                if (decoratornames := node.decoratornames()) and (
+                    # `@pytest.fixture`
+                    "_pytest.fixtures.fixture" in decoratornames
+                    # `@pytest.fixture(...)`
+                    or "_pytest.fixtures.FixtureFunctionMarker" in decoratornames
+                ):
+                    self._check_test_function(node, True)
+                    return
+            matchers = self._function_matchers
+
         # Check that common arguments are correctly typed.
         for arg_name, expected_type in _COMMON_ARGUMENTS.items():
             arg_node, annotation = _get_named_annotation(node, arg_name)
@@ -3194,13 +3286,6 @@ class HassTypeHintChecker(BaseChecker):
                     args=(arg_name, expected_type, node.name),
                 )
 
-        # Check method or function matchers.
-        if node.is_method():
-            matchers = _METHOD_MATCH
-        else:
-            matchers = self._function_matchers
-            if _is_test_function(self._module_name, node):
-                self._check_test_function(node, annotations)
         for match in matchers:
             if not match.need_to_check_function(node):
                 continue
@@ -3217,11 +3302,7 @@ class HassTypeHintChecker(BaseChecker):
         # Check that all positional arguments are correctly annotated.
         if match.arg_types:
             for key, expected_type in match.arg_types.items():
-                if (
-                    node.args.args[key].name in _COMMON_ARGUMENTS
-                    or _is_test_function(self._module_name, node)
-                    and node.args.args[key].name in _TEST_FIXTURES
-                ):
+                if node.args.args[key].name in _COMMON_ARGUMENTS:
                     # It has already been checked, avoid double-message
                     continue
                 if not _is_valid_type(expected_type, annotations[key]):
@@ -3234,11 +3315,7 @@ class HassTypeHintChecker(BaseChecker):
         # Check that all keyword arguments are correctly annotated.
         if match.named_arg_types is not None:
             for arg_name, expected_type in match.named_arg_types.items():
-                if (
-                    arg_name in _COMMON_ARGUMENTS
-                    or _is_test_function(self._module_name, node)
-                    and arg_name in _TEST_FIXTURES
-                ):
+                if arg_name in _COMMON_ARGUMENTS:
                     # It has already been checked, avoid double-message
                     continue
                 arg_node, annotation = _get_named_annotation(node, arg_name)
@@ -3267,19 +3344,23 @@ class HassTypeHintChecker(BaseChecker):
                 args=(match.return_type or "None", node.name),
             )
 
-    def _check_test_function(
-        self, node: nodes.FunctionDef, annotations: list[nodes.NodeNG | None]
-    ) -> None:
-        # Check the return type.
-        if not _is_valid_return_type(_TEST_FUNCTION_MATCH, node.returns):
+    def _check_test_function(self, node: nodes.FunctionDef, is_fixture: bool) -> None:
+        # Check the return type, should always be `None` for test_*** functions.
+        if not is_fixture and not _is_valid_type(None, node.returns, True):
             self.add_message(
                 "hass-return-type",
                 node=node,
-                args=(_TEST_FUNCTION_MATCH.return_type or "None", node.name),
+                args=("None", node.name),
             )
         # Check that all positional arguments are correctly annotated.
         for arg_name, expected_type in _TEST_FIXTURES.items():
             arg_node, annotation = _get_named_annotation(node, arg_name)
+            if arg_node and expected_type == "None" and not is_fixture:
+                self.add_message(
+                    "hass-consider-usefixtures-decorator",
+                    node=arg_node,
+                    args=(arg_name, expected_type, node.name),
+                )
             if arg_node and not _is_valid_type(expected_type, annotation):
                 self.add_message(
                     "hass-argument-type",

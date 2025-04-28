@@ -1,6 +1,7 @@
 """Common fixtures for the Schlage tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 from pyschlage.lock import Lock
@@ -10,11 +11,13 @@ from homeassistant.components.schlage.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from . import MockSchlageConfigEntry
+
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry() -> MockSchlageConfigEntry:
     """Mock ConfigEntry."""
     return MockConfigEntry(
         title="asdf@asdf.com",
@@ -30,11 +33,11 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def mock_added_config_entry(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: MockSchlageConfigEntry,
     mock_pyschlage_auth: Mock,
     mock_schlage: Mock,
     mock_lock: Mock,
-) -> MockConfigEntry:
+) -> MockSchlageConfigEntry:
     """Mock ConfigEntry that's been added to HA."""
     mock_schlage.locks.return_value = [mock_lock]
     mock_schlage.users.return_value = []
@@ -46,7 +49,7 @@ async def mock_added_config_entry(
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.schlage.async_setup_entry", return_value=True
@@ -70,21 +73,28 @@ def mock_pyschlage_auth() -> Mock:
 
 
 @pytest.fixture
-def mock_lock() -> Mock:
+def mock_lock(mock_lock_attrs: dict[str, Any]) -> Mock:
     """Mock Lock fixture."""
     mock_lock = create_autospec(Lock)
-    mock_lock.configure_mock(
-        device_id="test",
-        name="Vault Door",
-        model_name="<model-name>",
-        is_locked=False,
-        is_jammed=False,
-        battery_level=20,
-        firmware_version="1.0",
-        lock_and_leave_enabled=True,
-        beeper_enabled=True,
-    )
+    mock_lock.configure_mock(**mock_lock_attrs)
     mock_lock.logs.return_value = []
     mock_lock.last_changed_by.return_value = "thumbturn"
     mock_lock.keypad_disabled.return_value = False
     return mock_lock
+
+
+@pytest.fixture
+def mock_lock_attrs() -> dict[str, Any]:
+    """Attributes for a mock lock."""
+    return {
+        "device_id": "test",
+        "name": "Vault Door",
+        "model_name": "<model-name>",
+        "is_locked": False,
+        "is_jammed": False,
+        "battery_level": 20,
+        "auto_lock_time": 15,
+        "firmware_version": "1.0",
+        "lock_and_leave_enabled": True,
+        "beeper_enabled": True,
+    }

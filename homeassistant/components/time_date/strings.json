@@ -66,18 +66,5 @@
         "name": "[%key:component::time_date::selector::display_options::options::time_utc%]"
       }
     }
-  },
-  "issues": {
-    "deprecated_beat": {
-      "title": "The `{config_key}` Time & Date sensor is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::time_date::issues::deprecated_beat::title%]",
-            "description": "Please remove the `{config_key}` key from the {integration} config entry options and click submit to fix this issue."
-          }
-        }
-      }
-    }
   }
 }

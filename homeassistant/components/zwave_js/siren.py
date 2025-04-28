@@ -18,7 +18,7 @@ from homeassistant.components.siren import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -30,10 +30,10 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Siren entity from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_siren(info: ZwaveDiscoveryInfo) -> None:
@@ -63,7 +63,8 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
         super().__init__(config_entry, driver, info)
         # Entity class attributes
         self._attr_available_tones = {
-            int(id): val for id, val in self.info.primary_value.metadata.states.items()
+            int(state_id): val
+            for state_id, val in self.info.primary_value.metadata.states.items()
         }
         self._attr_supported_features = (
             SirenEntityFeature.TURN_ON

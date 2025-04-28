@@ -1,0 +1,97 @@
+# serializer version: 1
+# name: test_binary_sensor[binary_sensor.fake_profile_device_connection_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.fake_profile_device_connection_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Device connection status',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_connection_status',
+    'unique_id': 'xyz12_this_device_nextdns_connection_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.fake_profile_device_connection_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Fake Profile Device connection status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.fake_profile_device_connection_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.fake_profile_device_profile_connection_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.fake_profile_device_profile_connection_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Device profile connection status',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_profile_connection_status',
+    'unique_id': 'xyz12_this_device_profile_connection_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.fake_profile_device_profile_connection_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Fake Profile Device profile connection status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.fake_profile_device_profile_connection_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

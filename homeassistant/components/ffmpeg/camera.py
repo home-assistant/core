@@ -9,11 +9,15 @@ from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    Camera,
+    CameraEntityFeature,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -28,7 +32,7 @@ from . import (
 DEFAULT_NAME = "FFmpeg"
 DEFAULT_ARGUMENTS = "-pred 1"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_INPUT): cv.string,
         vol.Optional(CONF_EXTRA_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,

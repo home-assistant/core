@@ -24,12 +24,12 @@ from flux_led.protocol import (
 )
 from flux_led.scanner import FluxLEDDiscovery
 
-from homeassistant.components import dhcp
 from homeassistant.components.flux_led.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -49,7 +49,7 @@ SHORT_MAC_ADDRESS = "DDEEFF"
 DEFAULT_ENTRY_TITLE = f"{MODEL_DESCRIPTION} {SHORT_MAC_ADDRESS}"
 
 
-DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY = DhcpServiceInfo(
     hostname=MODEL,
     ip=IP_ADDRESS,
     macaddress=format_mac(MAC_ADDRESS).replace(":", ""),
@@ -241,12 +241,15 @@ def _patch_discovery(device=None, no_device=False):
 
     @contextmanager
     def _patcher():
-        with patch(
-            "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
-            new=_discovery,
-        ), patch(
-            "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
-            return_value=[] if no_device else [device or FLUX_DISCOVERY],
+        with (
+            patch(
+                "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
+                new=_discovery,
+            ),
+            patch(
+                "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
+                return_value=[] if no_device else [device or FLUX_DISCOVERY],
+            ),
         ):
             yield
 

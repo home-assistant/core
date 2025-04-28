@@ -8,13 +8,12 @@ from pathlib import Path
 from typing import Any
 
 from aiohttp import CookieJar
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import NVR
-from pyunifiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect import ProtectApiClient
+from uiprotect.data import NVR
+from uiprotect.exceptions import ClientError, NotAuthorized
 from unifi_discovery import async_console_is_alive
 import voluptuous as vol
 
-from homeassistant.components import dhcp, ssdp
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     ConfigEntry,
@@ -36,6 +35,8 @@ from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
@@ -104,18 +105,17 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Init the config flow."""
         super().__init__()
-        self.entry: ConfigEntry | None = None
         self._discovered_device: dict[str, str] = {}
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         _LOGGER.debug("Starting discovery via: %s", discovery_info)
         return await self._async_discovery_handoff()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered UniFi device."""
         _LOGGER.debug("Starting discovery via: %s", discovery_info)
@@ -226,7 +226,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     @callback
     def _async_create_entry(self, title: str, data: dict[str, Any]) -> ConfigFlowResult:
@@ -261,7 +261,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
             verify_ssl=verify_ssl,
-            cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect_cache")),
+            cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
+            config_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
         )
 
         errors = {}
@@ -294,8 +295,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -303,21 +302,21 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauth."""
         errors: dict[str, str] = {}
-        assert self.entry is not None
 
         # prepopulate fields
-        form_data = {**self.entry.data}
+        reauth_entry = self._get_reauth_entry()
+        form_data = {**reauth_entry.data}
         if user_input is not None:
             form_data.update(user_input)
 
             # validate login data
             _, errors = await self._async_get_nvr_data(form_data)
             if not errors:
-                return self.async_update_reload_and_abort(self.entry, data=form_data)
+                return self.async_update_reload_and_abort(reauth_entry, data=form_data)
 
         self.context["title_placeholders"] = {
-            "name": self.entry.title,
-            "ip_address": self.entry.data[CONF_HOST],
+            "name": reauth_entry.title,
+            "ip_address": reauth_entry.data[CONF_HOST],
         }
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -377,10 +376,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

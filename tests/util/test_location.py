@@ -5,8 +5,9 @@ from unittest.mock import Mock, patch
 import aiohttp
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.util.location as location_util
+from homeassistant.util import location as location_util
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -28,13 +29,13 @@ DISTANCE_MILES = 3632.78
 
 
 @pytest.fixture
-async def session(hass):
+async def session(hass: HomeAssistant) -> aiohttp.ClientSession:
     """Return aioclient session."""
     return async_get_clientsession(hass)
 
 
 @pytest.fixture
-async def raising_session():
+async def raising_session() -> Mock:
     """Return an aioclient session that only fails."""
     return Mock(get=Mock(side_effect=aiohttp.ClientError))
 
@@ -76,7 +77,7 @@ def test_get_miles() -> None:
 
 
 async def test_detect_location_info_whoami(
-    aioclient_mock: AiohttpClientMocker, session
+    aioclient_mock: AiohttpClientMocker, session: aiohttp.ClientSession
 ) -> None:
     """Test detect location info using services.home-assistant.io/whoami."""
     aioclient_mock.get(location_util.WHOAMI_URL, text=load_fixture("whoami.json"))
@@ -99,7 +100,9 @@ async def test_detect_location_info_whoami(
     assert info.use_metric
 
 
-async def test_dev_url(aioclient_mock: AiohttpClientMocker, session) -> None:
+async def test_dev_url(
+    aioclient_mock: AiohttpClientMocker, session: aiohttp.ClientSession
+) -> None:
     """Test usage of dev URL."""
     aioclient_mock.get(location_util.WHOAMI_URL_DEV, text=load_fixture("whoami.json"))
     with patch("homeassistant.util.location.HA_VERSION", "1.0.dev0"):
@@ -110,7 +113,7 @@ async def test_dev_url(aioclient_mock: AiohttpClientMocker, session) -> None:
     assert info.currency == "XXX"
 
 
-async def test_whoami_query_raises(raising_session) -> None:
+async def test_whoami_query_raises(raising_session: Mock) -> None:
     """Test whoami query when the request to API fails."""
     info = await location_util._get_whoami(raising_session)
     assert info is None

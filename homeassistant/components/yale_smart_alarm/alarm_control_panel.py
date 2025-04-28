@@ -13,27 +13,26 @@ from yalesmartalarmclient.const import (
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import COORDINATOR, DOMAIN, STATE_MAP, YALE_ALL_ERRORS
+from . import YaleConfigEntry
+from .const import DOMAIN, STATE_MAP, YALE_ALL_ERRORS
 from .coordinator import YaleDataUpdateCoordinator
 from .entity import YaleAlarmEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: YaleConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the alarm entry."""
 
-    async_add_entities(
-        [YaleAlarmDevice(coordinator=hass.data[DOMAIN][entry.entry_id][COORDINATOR])]
-    )
+    async_add_entities([YaleAlarmDevice(coordinator=entry.runtime_data)])
 
 
 class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
@@ -49,7 +48,7 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
     def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize the Yale Alarm Device."""
         super().__init__(coordinator)
-        self._attr_unique_id = coordinator.entry.entry_id
+        self._attr_unique_id = coordinator.config_entry.entry_id
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -86,7 +85,7 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
                 translation_domain=DOMAIN,
                 translation_key="set_alarm",
                 translation_placeholders={
-                    "name": self.coordinator.entry.data[CONF_NAME],
+                    "name": self.coordinator.config_entry.title,
                     "error": str(error),
                 },
             ) from error
@@ -108,6 +107,6 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
         return super().available
 
     @property
-    def state(self) -> StateType:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the alarm."""
         return STATE_MAP.get(self.coordinator.data["alarm"])

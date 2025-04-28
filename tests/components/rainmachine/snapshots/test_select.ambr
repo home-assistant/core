@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_select_entities[select.12345_freeze_protection_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0°C',
+        '2°C',
+        '5°C',
+        '10°C',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.12345_freeze_protection_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Freeze protection temperature',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'freeze_protection_temperature',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_freeze_protection_temperature',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.12345_freeze_protection_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '12345 Freeze protection temperature',
+      'options': list([
+        '0°C',
+        '2°C',
+        '5°C',
+        '10°C',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.12345_freeze_protection_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2°C',
+  })
+# ---

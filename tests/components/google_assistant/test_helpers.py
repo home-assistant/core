@@ -14,9 +14,9 @@ from homeassistant.components.google_assistant.const import (
     SOURCE_LOCAL,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
-from homeassistant.components.matter.models import MatterDeviceInfo
-from homeassistant.config import async_process_ha_core_config
+from homeassistant.components.matter import MatterDeviceInfo
 from homeassistant.core import HomeAssistant, State
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -316,7 +316,7 @@ async def test_sync_notifications(agents) -> None:
         config, "async_sync_notification", return_value=HTTPStatus.NO_CONTENT
     ) as mock:
         await config.async_sync_notification_all("1234", {})
-        assert not agents or bool(mock.mock_calls) and agents
+        assert not agents or (bool(mock.mock_calls) and agents)
 
 
 @pytest.mark.parametrize(
@@ -344,7 +344,10 @@ def test_supported_features_string(caplog: pytest.LogCaptureFixture) -> None:
         State("test.entity_id", "on", {"supported_features": "invalid"}),
     )
     assert entity.is_supported() is False
-    assert "Entity test.entity_id contains invalid supported_features value invalid"
+    assert (
+        "Entity test.entity_id contains invalid supported_features value invalid"
+        in caplog.text
+    )
 
 
 def test_request_data() -> None:

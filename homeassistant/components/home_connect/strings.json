@@ -1,11 +1,20 @@
 {
+  "common": {
+    "confirmed": "Confirmed",
+    "present": "Present"
+  },
   "config": {
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Home Connect integration needs to re-authenticate your account"
       }
     },
     "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
@@ -17,14 +26,523 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication error: {error}. Please, re-authenticate your account"
+    },
+    "appliance_not_found": {
+      "message": "Appliance for device ID {device_id} not found"
+    },
+    "device_entry_not_found": {
+      "message": "Device entry for device ID {device_id} not found"
+    },
+    "config_entry_not_found": {
+      "message": "Config entry for device ID {device_id} not found"
+    },
+    "turn_on_light": {
+      "message": "Error turning on {entity_id}: {error}"
+    },
+    "turn_off_light": {
+      "message": "Error turning off {entity_id}: {error}"
+    },
+    "set_light_brightness": {
+      "message": "Error setting brightness of {entity_id}: {error}"
+    },
+    "select_light_custom_color": {
+      "message": "Error selecting custom color of {entity_id}: {error}"
+    },
+    "set_light_color": {
+      "message": "Error setting color of {entity_id}: {error}"
+    },
+    "set_setting_entity": {
+      "message": "Error assigning the value \"{value}\" to the setting \"{key}\" for {entity_id}: {error}"
+    },
+    "set_setting": {
+      "message": "Error assigning the value \"{value}\" to the setting \"{key}\": {error}"
+    },
+    "turn_on": {
+      "message": "Error turning on {entity_id} ({key}): {error}"
+    },
+    "turn_off": {
+      "message": "Error turning off {entity_id} ({key}): {error}"
+    },
+    "select_program": {
+      "message": "Error selecting program {program}: {error}"
+    },
+    "start_program": {
+      "message": "Error starting program {program}: {error}"
+    },
+    "pause_program": {
+      "message": "Error pausing program: {error}"
+    },
+    "stop_program": {
+      "message": "Error stopping program: {error}"
+    },
+    "set_options_active_program": {
+      "message": "Error setting options for the active program: {error}"
+    },
+    "set_options_selected_program": {
+      "message": "Error setting options for the selected program: {error}"
+    },
+    "execute_command": {
+      "message": "Error executing command {command}: {error}"
+    },
+    "power_on": {
+      "message": "Error turning on {appliance_name}: {error}"
+    },
+    "power_off": {
+      "message": "Error turning off {appliance_name} with value \"{value}\": {error}"
+    },
+    "turn_off_not_supported": {
+      "message": "{appliance_name} does not support turning off or entering standby mode."
+    },
+    "unable_to_retrieve_turn_off": {
+      "message": "Unable to turn off {appliance_name} because its support for turning off or entering standby mode could not be determined."
+    },
+    "fetch_api_error": {
+      "message": "Error obtaining data from the API: {error}"
+    },
+    "required_program_or_one_option_at_least": {
+      "message": "A program or at least one of the possible options for a program should be specified"
+    },
+    "set_option": {
+      "message": "Error setting the option for the program: {error}"
+    }
+  },
+  "issues": {
+    "home_connect_too_many_connected_paired_events": {
+      "title": "{appliance_name} sent too many connected or paired events",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::home_connect_too_many_connected_paired_events::title%]",
+            "description": "The appliance \"{appliance_name}\" has been reported as connected or paired {times} times in less than {time_window} minutes, so refreshes on connected or paired events has been disabled to avoid exceeding the API rate limit.\n\nPlease refer to the [Home Connect Wi-Fi requirements and recommendations]({home_connect_resource_url}). If everything seems right with your network configuration, restart the appliance.\n\nClick \"submit\" to re-enable the updates.\nIf the issue persists, please create an issue in the [Home Assistant core repository]({home_assistant_core_new_issue_url})."
+          }
+        }
+      }
+    },
+    "deprecated_time_alarm_clock_in_automations_scripts": {
+      "title": "Deprecated alarm clock entity detected in some automations or scripts",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock_in_automations_scripts::title%]",
+            "description": "The alarm clock entity `{entity_id}`, which is deprecated because it's being moved to the `number` platform, is used in the following automations or scripts:\n{items}\n\nPlease, fix this issue by updating your automations or scripts to use the new `number` entity."
+          }
+        }
+      }
+    },
+    "deprecated_time_alarm_clock": {
+      "title": "Deprecated alarm clock entity",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock::title%]",
+            "description": "The alarm clock entity `{entity_id}` is deprecated because it's being moved to the `number` platform.\n\nPlease use the new `number` entity."
+          }
+        }
+      }
+    },
+    "deprecated_command_actions": {
+      "title": "The command related actions are deprecated in favor of the new buttons",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_command_actions::title%]",
+            "description": "The `pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please update your automations, scripts and panels that use this action to use the button entities instead, and press on submit to fix the issue."
+          }
+        }
+      }
+    },
+    "deprecated_program_switch_in_automations_scripts": {
+      "title": "Deprecated program switch detected in some automations or scripts",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_program_switch_in_automations_scripts::title%]",
+            "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
+          }
+        }
+      }
+    },
+    "deprecated_program_switch": {
+      "title": "Deprecated program switch entities",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_program_switch::title%]",
+            "description": "The switch entity `{entity_id}` and all the other program switches are deprecated.\n\nPlease use the active program select entity instead."
+          }
+        }
+      }
+    },
+    "deprecated_set_program_and_option_actions": {
+      "title": "The executed action is deprecated",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_set_program_and_option_actions::title%]",
+            "description": "`start_program`, `select_program`, `set_option_active`, and `set_option_selected` actions are deprecated and will be removed in the {remove_release} release, please use the `{new_action_key}` action instead. For the executed action:\n{deprecated_action_yaml}\nyou can do the following transformation using the recognized options:\n  {new_action_yaml}\nIf the option is not in the recognized options, please submit an issue or a pull request requesting the addition of the option at {repo_link}."
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "affects_to": {
+      "options": {
+        "active_program": "Active program",
+        "selected_program": "Selected program"
+      }
+    },
+    "programs": {
+      "options": {
+        "consumer_products_cleaning_robot_program_cleaning_clean_all": "Clean all",
+        "consumer_products_cleaning_robot_program_cleaning_clean_map": "Clean map",
+        "consumer_products_cleaning_robot_program_basic_go_home": "Go home",
+        "consumer_products_coffee_maker_program_beverage_ristretto": "Ristretto",
+        "consumer_products_coffee_maker_program_beverage_espresso": "Espresso",
+        "consumer_products_coffee_maker_program_beverage_espresso_doppio": "Espresso doppio",
+        "consumer_products_coffee_maker_program_beverage_coffee": "Coffee",
+        "consumer_products_coffee_maker_program_beverage_x_l_coffee": "XL coffee",
+        "consumer_products_coffee_maker_program_beverage_caffe_grande": "Caffe grande",
+        "consumer_products_coffee_maker_program_beverage_espresso_macchiato": "Espresso macchiato",
+        "consumer_products_coffee_maker_program_beverage_cappuccino": "Cappuccino",
+        "consumer_products_coffee_maker_program_beverage_latte_macchiato": "Latte macchiato",
+        "consumer_products_coffee_maker_program_beverage_caffe_latte": "Caffe latte",
+        "consumer_products_coffee_maker_program_beverage_milk_froth": "Milk froth",
+        "consumer_products_coffee_maker_program_beverage_warm_milk": "Warm milk",
+        "consumer_products_coffee_maker_program_coffee_world_kleiner_brauner": "Kleiner brauner",
+        "consumer_products_coffee_maker_program_coffee_world_grosser_brauner": "Grosser brauner",
+        "consumer_products_coffee_maker_program_coffee_world_verlaengerter": "Verlaengerter",
+        "consumer_products_coffee_maker_program_coffee_world_verlaengerter_braun": "Verlaengerter braun",
+        "consumer_products_coffee_maker_program_coffee_world_wiener_melange": "Wiener melange",
+        "consumer_products_coffee_maker_program_coffee_world_flat_white": "Flat white",
+        "consumer_products_coffee_maker_program_coffee_world_cortado": "Cortado",
+        "consumer_products_coffee_maker_program_coffee_world_cafe_cortado": "Cafe cortado",
+        "consumer_products_coffee_maker_program_coffee_world_cafe_con_leche": "Cafe con leche",
+        "consumer_products_coffee_maker_program_coffee_world_cafe_au_lait": "Cafe au lait",
+        "consumer_products_coffee_maker_program_coffee_world_doppio": "Doppio",
+        "consumer_products_coffee_maker_program_coffee_world_kaapi": "Kaapi",
+        "consumer_products_coffee_maker_program_coffee_world_koffie_verkeerd": "Koffie verkeerd",
+        "consumer_products_coffee_maker_program_coffee_world_galao": "Galao",
+        "consumer_products_coffee_maker_program_coffee_world_garoto": "Garoto",
+        "consumer_products_coffee_maker_program_coffee_world_americano": "Americano",
+        "consumer_products_coffee_maker_program_coffee_world_red_eye": "Red eye",
+        "consumer_products_coffee_maker_program_coffee_world_black_eye": "Black eye",
+        "consumer_products_coffee_maker_program_coffee_world_dead_eye": "Dead eye",
+        "consumer_products_coffee_maker_program_beverage_hot_water": "Hot water",
+        "dishcare_dishwasher_program_pre_rinse": "Pre_rinse",
+        "dishcare_dishwasher_program_auto_1": "Auto 1",
+        "dishcare_dishwasher_program_auto_2": "Auto 2",
+        "dishcare_dishwasher_program_auto_3": "Auto 3",
+        "dishcare_dishwasher_program_eco_50": "Eco 50ºC",
+        "dishcare_dishwasher_program_quick_45": "Quick 45ºC",
+        "dishcare_dishwasher_program_intensiv_70": "Intensive 70ºC",
+        "dishcare_dishwasher_program_normal_65": "Normal 65ºC",
+        "dishcare_dishwasher_program_glas_40": "Glass 40ºC",
+        "dishcare_dishwasher_program_glass_care": "Glass care",
+        "dishcare_dishwasher_program_night_wash": "Night wash",
+        "dishcare_dishwasher_program_quick_65": "Quick 65ºC",
+        "dishcare_dishwasher_program_normal_45": "Normal 45ºC",
+        "dishcare_dishwasher_program_intensiv_45": "Intensive 45ºC",
+        "dishcare_dishwasher_program_auto_half_load": "Auto half load",
+        "dishcare_dishwasher_program_intensiv_power": "Intensive power",
+        "dishcare_dishwasher_program_magic_daily": "Magic daily",
+        "dishcare_dishwasher_program_super_60": "Super 60ºC",
+        "dishcare_dishwasher_program_kurz_60": "Kurz 60ºC",
+        "dishcare_dishwasher_program_express_sparkle_65": "Express sparkle 65ºC",
+        "dishcare_dishwasher_program_machine_care": "Machine care",
+        "dishcare_dishwasher_program_steam_fresh": "Steam fresh",
+        "dishcare_dishwasher_program_maximum_cleaning": "Maximum cleaning",
+        "dishcare_dishwasher_program_mixed_load": "Mixed load",
+        "laundry_care_dryer_program_cotton": "Cotton",
+        "laundry_care_dryer_program_synthetic": "Synthetic",
+        "laundry_care_dryer_program_mix": "Mix",
+        "laundry_care_dryer_program_blankets": "Blankets",
+        "laundry_care_dryer_program_business_shirts": "Business shirts",
+        "laundry_care_dryer_program_down_feathers": "Down feathers",
+        "laundry_care_dryer_program_hygiene": "Hygiene",
+        "laundry_care_dryer_program_jeans": "Jeans",
+        "laundry_care_dryer_program_outdoor": "Outdoor",
+        "laundry_care_dryer_program_synthetic_refresh": "Synthetic refresh",
+        "laundry_care_dryer_program_towels": "Towels",
+        "laundry_care_dryer_program_delicates": "Delicates",
+        "laundry_care_dryer_program_super_40": "Super 40ºC",
+        "laundry_care_dryer_program_shirts_15": "Shirts 15ºC",
+        "laundry_care_dryer_program_pillow": "Pillow",
+        "laundry_care_dryer_program_anti_shrink": "Anti shrink",
+        "laundry_care_dryer_program_my_time_my_drying_time": "My drying time",
+        "laundry_care_dryer_program_time_cold": "Cold (variable time)",
+        "laundry_care_dryer_program_time_warm": "Warm (variable time)",
+        "laundry_care_dryer_program_in_basket": "In basket",
+        "laundry_care_dryer_program_time_cold_fix_time_cold_20": "Cold (20 min)",
+        "laundry_care_dryer_program_time_cold_fix_time_cold_30": "Cold (30 min)",
+        "laundry_care_dryer_program_time_cold_fix_time_cold_60": "Cold (60 min)",
+        "laundry_care_dryer_program_time_warm_fix_time_warm_30": "Warm (30 min)",
+        "laundry_care_dryer_program_time_warm_fix_time_warm_40": "Warm (40 min)",
+        "laundry_care_dryer_program_time_warm_fix_time_warm_60": "Warm (60 min)",
+        "laundry_care_dryer_program_dessous": "Dessous",
+        "cooking_common_program_hood_automatic": "Automatic",
+        "cooking_common_program_hood_venting": "Venting",
+        "cooking_common_program_hood_delayed_shut_off": "Delayed shut off",
+        "cooking_oven_program_heating_mode_pre_heating": "Pre-heating",
+        "cooking_oven_program_heating_mode_hot_air": "Hot air",
+        "cooking_oven_program_heating_mode_hot_air_eco": "Hot air eco",
+        "cooking_oven_program_heating_mode_hot_air_grilling": "Hot air grilling",
+        "cooking_oven_program_heating_mode_top_bottom_heating": "Top bottom heating",
+        "cooking_oven_program_heating_mode_top_bottom_heating_eco": "Top bottom heating eco",
+        "cooking_oven_program_heating_mode_bottom_heating": "Bottom heating",
+        "cooking_oven_program_heating_mode_pizza_setting": "Pizza setting",
+        "cooking_oven_program_heating_mode_slow_cook": "Slow cook",
+        "cooking_oven_program_heating_mode_intensive_heat": "Intensive heat",
+        "cooking_oven_program_heating_mode_keep_warm": "Keep warm",
+        "cooking_oven_program_heating_mode_preheat_ovenware": "Preheat ovenware",
+        "cooking_oven_program_heating_mode_frozen_heatup_special": "Special Heat-Up for frozen products",
+        "cooking_oven_program_heating_mode_desiccation": "Desiccation",
+        "cooking_oven_program_heating_mode_defrost": "Defrost",
+        "cooking_oven_program_heating_mode_proof": "Proof",
+        "cooking_oven_program_heating_mode_hot_air_30_steam": "Hot air + 30 RH",
+        "cooking_oven_program_heating_mode_hot_air_60_steam": "Hot air + 60 RH",
+        "cooking_oven_program_heating_mode_hot_air_80_steam": "Hot air + 80 RH",
+        "cooking_oven_program_heating_mode_hot_air_100_steam": "Hot air + 100 RH",
+        "cooking_oven_program_heating_mode_sabbath_programme": "Sabbath programme",
+        "cooking_oven_program_microwave_90_watt": "90 Watt",
+        "cooking_oven_program_microwave_180_watt": "180 Watt",
+        "cooking_oven_program_microwave_360_watt": "360 Watt",
+        "cooking_oven_program_microwave_600_watt": "600 Watt",
+        "cooking_oven_program_microwave_900_watt": "900 Watt",
+        "cooking_oven_program_microwave_1000_watt": "1000 Watt",
+        "cooking_oven_program_microwave_max": "Max",
+        "cooking_oven_program_heating_mode_warming_drawer": "Warming drawer",
+        "laundry_care_washer_program_cotton": "Cotton",
+        "laundry_care_washer_program_cotton_cotton_eco": "Cotton eco",
+        "laundry_care_washer_program_cotton_eco_4060": "Cotton eco 40/60ºC",
+        "laundry_care_washer_program_cotton_colour": "Cotton color",
+        "laundry_care_washer_program_easy_care": "Easy care",
+        "laundry_care_washer_program_mix": "Mix",
+        "laundry_care_washer_program_mix_night_wash": "Mix night wash",
+        "laundry_care_washer_program_delicates_silk": "Delicates silk",
+        "laundry_care_washer_program_wool": "Wool",
+        "laundry_care_washer_program_sensitive": "Sensitive",
+        "laundry_care_washer_program_auto_30": "Auto 30ºC",
+        "laundry_care_washer_program_auto_40": "Auto 40ºC",
+        "laundry_care_washer_program_auto_60": "Auto 60ºC",
+        "laundry_care_washer_program_chiffon": "Chiffon",
+        "laundry_care_washer_program_curtains": "Curtains",
+        "laundry_care_washer_program_dark_wash": "Dark wash",
+        "laundry_care_washer_program_dessous": "Dessous",
+        "laundry_care_washer_program_monsoon": "Monsoon",
+        "laundry_care_washer_program_outdoor": "Outdoor",
+        "laundry_care_washer_program_plush_toy": "Plush toy",
+        "laundry_care_washer_program_shirts_blouses": "Shirts blouses",
+        "laundry_care_washer_program_sport_fitness": "Sport fitness",
+        "laundry_care_washer_program_towels": "Towels",
+        "laundry_care_washer_program_water_proof": "Water proof",
+        "laundry_care_washer_program_power_speed_59": "Power speed <59 min",
+        "laundry_care_washer_program_super_153045_super_15": "Super 15 min",
+        "laundry_care_washer_program_super_153045_super_1530": "Super 15/30 min",
+        "laundry_care_washer_program_down_duvet_duvet": "Down duvet",
+        "laundry_care_washer_program_rinse_rinse_spin_drain": "Rinse spin drain",
+        "laundry_care_washer_program_drum_clean": "Drum clean",
+        "laundry_care_washer_dryer_program_cotton": "Cotton",
+        "laundry_care_washer_dryer_program_cotton_eco_4060": "Cotton eco 40/60ºC",
+        "laundry_care_washer_dryer_program_mix": "Mix",
+        "laundry_care_washer_dryer_program_easy_care": "Easy care",
+        "laundry_care_washer_dryer_program_wash_and_dry_60": "Wash and dry (60 min)",
+        "laundry_care_washer_dryer_program_wash_and_dry_90": "Wash and dry (90 min)"
+      }
+    },
+    "available_maps": {
+      "options": {
+        "consumer_products_cleaning_robot_enum_type_available_maps_temp_map": "Temporary map",
+        "consumer_products_cleaning_robot_enum_type_available_maps_map1": "Map 1",
+        "consumer_products_cleaning_robot_enum_type_available_maps_map2": "Map 2",
+        "consumer_products_cleaning_robot_enum_type_available_maps_map3": "Map 3"
+      }
+    },
+    "cleaning_mode": {
+      "options": {
+        "consumer_products_cleaning_robot_enum_type_cleaning_modes_silent": "Silent",
+        "consumer_products_cleaning_robot_enum_type_cleaning_modes_standard": "Standard",
+        "consumer_products_cleaning_robot_enum_type_cleaning_modes_power": "Power"
+      }
+    },
+    "bean_amount": {
+      "options": {
+        "consumer_products_coffee_maker_enum_type_bean_amount_very_mild": "Very mild",
+        "consumer_products_coffee_maker_enum_type_bean_amount_mild": "Mild",
+        "consumer_products_coffee_maker_enum_type_bean_amount_mild_plus": "Mild +",
+        "consumer_products_coffee_maker_enum_type_bean_amount_normal": "Normal",
+        "consumer_products_coffee_maker_enum_type_bean_amount_normal_plus": "Normal +",
+        "consumer_products_coffee_maker_enum_type_bean_amount_strong": "Strong",
+        "consumer_products_coffee_maker_enum_type_bean_amount_strong_plus": "Strong +",
+        "consumer_products_coffee_maker_enum_type_bean_amount_very_strong": "Very strong",
+        "consumer_products_coffee_maker_enum_type_bean_amount_very_strong_plus": "Very strong +",
+        "consumer_products_coffee_maker_enum_type_bean_amount_extra_strong": "Extra strong",
+        "consumer_products_coffee_maker_enum_type_bean_amount_double_shot": "Double shot",
+        "consumer_products_coffee_maker_enum_type_bean_amount_double_shot_plus": "Double shot +",
+        "consumer_products_coffee_maker_enum_type_bean_amount_double_shot_plus_plus": "Double shot ++",
+        "consumer_products_coffee_maker_enum_type_bean_amount_triple_shot": "Triple shot",
+        "consumer_products_coffee_maker_enum_type_bean_amount_triple_shot_plus": "Triple shot +",
+        "consumer_products_coffee_maker_enum_type_bean_amount_coffee_ground": "Coffee ground"
+      }
+    },
+    "coffee_temperature": {
+      "options": {
+        "consumer_products_coffee_maker_enum_type_coffee_temperature_88_c": "88ºC",
+        "consumer_products_coffee_maker_enum_type_coffee_temperature_90_c": "90ºC",
+        "consumer_products_coffee_maker_enum_type_coffee_temperature_92_c": "92ºC",
+        "consumer_products_coffee_maker_enum_type_coffee_temperature_94_c": "94ºC",
+        "consumer_products_coffee_maker_enum_type_coffee_temperature_95_c": "95ºC",
+        "consumer_products_coffee_maker_enum_type_coffee_temperature_96_c": "96ºC"
+      }
+    },
+    "bean_container": {
+      "options": {
+        "consumer_products_coffee_maker_enum_type_bean_container_selection_right": "Right",
+        "consumer_products_coffee_maker_enum_type_bean_container_selection_left": "Left"
+      }
+    },
+    "flow_rate": {
+      "options": {
+        "consumer_products_coffee_maker_enum_type_flow_rate_normal": "Normal",
+        "consumer_products_coffee_maker_enum_type_flow_rate_intense": "Intense",
+        "consumer_products_coffee_maker_enum_type_flow_rate_intense_plus": "Intense +"
+      }
+    },
+    "coffee_milk_ratio": {
+      "options": {
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_10_percent": "10%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_20_percent": "20%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_25_percent": "25%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_30_percent": "30%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_40_percent": "40%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent": "50%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_55_percent": "55%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_60_percent": "60%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_65_percent": "65%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_67_percent": "67%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_70_percent": "70%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_75_percent": "75%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_80_percent": "80%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_85_percent": "85%",
+        "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_90_percent": "90%"
+      }
+    },
+    "hot_water_temperature": {
+      "options": {
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_white_tea": "White tea",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_green_tea": "Green tea",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_black_tea": "Black tea",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_50_c": "50ºC",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_55_c": "55ºC",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_60_c": "60ºC",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_65_c": "65ºC",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_70_c": "70ºC",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_75_c": "75ºC",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_80_c": "80ºC",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_85_c": "85ºC",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_90_c": "90ºC",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_95_c": "95ºC",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_97_c": "97ºC",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_122_f": "122ºF",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_131_f": "131ºF",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_140_f": "140ºF",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_149_f": "149ºF",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_158_f": "158ºF",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_167_f": "167ºF",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_176_f": "176ºF",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_185_f": "185ºF",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_194_f": "194ºF",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_203_f": "203ºF",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_max": "Max"
+      }
+    },
+    "drying_target": {
+      "options": {
+        "laundry_care_dryer_enum_type_drying_target_iron_dry": "Iron dry",
+        "laundry_care_dryer_enum_type_drying_target_gentle_dry": "Gentle dry",
+        "laundry_care_dryer_enum_type_drying_target_cupboard_dry": "Cupboard dry",
+        "laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus": "Cupboard dry +",
+        "laundry_care_dryer_enum_type_drying_target_extra_dry": "Extra dry"
+      }
+    },
+    "venting_level": {
+      "options": {
+        "cooking_hood_enum_type_stage_fan_off": "Fan off",
+        "cooking_hood_enum_type_stage_fan_stage_01": "Fan stage 1",
+        "cooking_hood_enum_type_stage_fan_stage_02": "Fan stage 2",
+        "cooking_hood_enum_type_stage_fan_stage_03": "Fan stage 3",
+        "cooking_hood_enum_type_stage_fan_stage_04": "Fan stage 4",
+        "cooking_hood_enum_type_stage_fan_stage_05": "Fan stage 5"
+      }
+    },
+    "intensive_level": {
+      "options": {
+        "cooking_hood_enum_type_intensive_stage_intensive_stage_off": "Intensive stage off",
+        "cooking_hood_enum_type_intensive_stage_intensive_stage1": "Intensive stage 1",
+        "cooking_hood_enum_type_intensive_stage_intensive_stage2": "Intensive stage 2"
+      }
+    },
+    "warming_level": {
+      "options": {
+        "cooking_oven_enum_type_warming_level_low": "[%key:common::state::low%]",
+        "cooking_oven_enum_type_warming_level_medium": "[%key:common::state::medium%]",
+        "cooking_oven_enum_type_warming_level_high": "[%key:common::state::high%]"
+      }
+    },
+    "washer_temperature": {
+      "options": {
+        "laundry_care_washer_enum_type_temperature_cold": "Cold",
+        "laundry_care_washer_enum_type_temperature_g_c_20": "20ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_30": "30ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_40": "40ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_50": "50ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_60": "60ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_70": "70ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_80": "80ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_90": "90ºC clothes",
+        "laundry_care_washer_enum_type_temperature_ul_cold": "Cold",
+        "laundry_care_washer_enum_type_temperature_ul_warm": "Warm",
+        "laundry_care_washer_enum_type_temperature_ul_hot": "Hot",
+        "laundry_care_washer_enum_type_temperature_ul_extra_hot": "Extra hot"
+      }
+    },
+    "spin_speed": {
+      "options": {
+        "laundry_care_washer_enum_type_spin_speed_off": "[%key:common::state::off%]",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_400": "400 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_600": "600 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_700": "700 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_800": "800 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_900": "900 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_1000": "1000 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_1200": "1200 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_1400": "1400 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_1600": "1600 rpm",
+        "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]",
+        "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:common::state::low%]",
+        "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:common::state::medium%]",
+        "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:common::state::high%]"
+      }
+    },
+    "vario_perfect": {
+      "options": {
+        "laundry_care_common_enum_type_vario_perfect_off": "[%key:common::state::off%]",
+        "laundry_care_common_enum_type_vario_perfect_eco_perfect": "Eco perfect",
+        "laundry_care_common_enum_type_vario_perfect_speed_perfect": "Speed perfect"
+      }
+    }
+  },
   "services": {
     "start_program": {
       "name": "Start program",
       "description": "Selects a program and starts it.",
       "fields": {
         "device_id": {
-          "name": "Device ID",
-          "description": "Id of the device."
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
         },
         "program": { "name": "Program", "description": "Program to select." },
         "key": { "name": "Option key", "description": "Key of the option." },
@@ -40,8 +558,8 @@
       "description": "Selects a program without starting it.",
       "fields": {
         "device_id": {
-          "name": "Device ID",
-          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
         },
         "program": {
           "name": "[%key:component::home_connect::services::start_program::fields::program::name%]",
@@ -61,13 +579,197 @@
         }
       }
     },
+    "set_program_and_options": {
+      "name": "Set program and options",
+      "description": "Starts or selects a program with options or sets the options for the active or the selected program.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "ID of the device."
+        },
+        "affects_to": {
+          "name": "Affects to",
+          "description": "Selects if the program affected by the action should be the active or the selected program."
+        },
+        "program": {
+          "name": "Program",
+          "description": "Program to select"
+        },
+        "consumer_products_cleaning_robot_option_reference_map_id": {
+          "name": "Reference map ID",
+          "description": "Defines which reference map is to be used."
+        },
+        "consumer_products_cleaning_robot_option_cleaning_mode": {
+          "name": "Cleaning mode",
+          "description": "Defines the favoured cleaning mode."
+        },
+        "consumer_products_coffee_maker_option_bean_amount": {
+          "name": "Bean amount",
+          "description": "Describes the amount of coffee beans used in a coffee machine program."
+        },
+        "consumer_products_coffee_maker_option_fill_quantity": {
+          "name": "Fill quantity",
+          "description": "Describes the amount of water (in ml) used in a coffee machine program."
+        },
+        "consumer_products_coffee_maker_option_coffee_temperature": {
+          "name": "Coffee Temperature",
+          "description": "Describes the coffee temperature used in a coffee machine program."
+        },
+        "consumer_products_coffee_maker_option_bean_container": {
+          "name": "Bean container",
+          "description": "Defines the preferred bean container."
+        },
+        "consumer_products_coffee_maker_option_flow_rate": {
+          "name": "Flow rate",
+          "description": "Defines the water-coffee contact time. The duration extends to coffee intensity."
+        },
+        "consumer_products_coffee_maker_option_multiple_beverages": {
+          "name": "Multiple beverages",
+          "description": "Defines if double dispensing is enabled."
+        },
+        "consumer_products_coffee_maker_option_coffee_milk_ratio": {
+          "name": "Coffee milk ratio",
+          "description": "Defines the amount of milk."
+        },
+        "consumer_products_coffee_maker_option_hot_water_temperature": {
+          "name": "Hot water temperature",
+          "description": "Defines the temperature suitable for the type of tea."
+        },
+        "b_s_h_common_option_start_in_relative": {
+          "name": "Start in relative",
+          "description": "Defines in how many time the program should start."
+        },
+        "dishcare_dishwasher_option_intensiv_zone": {
+          "name": "Intensive zone",
+          "description": "Defines if the cleaning is done with higher spray pressure on the lower basket for very dirty pots and pans."
+        },
+        "dishcare_dishwasher_option_brilliance_dry": {
+          "name": "Brilliance dry",
+          "description": "Defines if the program sequence is optimized with a special drying cycle to ensure more shine on glasses and plastic items."
+        },
+        "dishcare_dishwasher_option_vario_speed_plus": {
+          "name": "Vario speed +",
+          "description": "Defines if the program run time is reduced by up to 66% with the usual optimum cleaning and drying."
+        },
+        "dishcare_dishwasher_option_silence_on_demand": {
+          "name": "Silence on demand",
+          "description": "Defines if the extra silent mode is activated for a selected period of time."
+        },
+        "dishcare_dishwasher_option_half_load": {
+          "name": "Half load",
+          "description": "Defines if economical cleaning is enabled for smaller loads. This reduces energy and water consumption and also saves time. The utensils can be placed in the upper and lower baskets."
+        },
+        "dishcare_dishwasher_option_extra_dry": {
+          "name": "Extra dry",
+          "description": "Defines if improved drying for glasses and plasticware is enabled."
+        },
+        "dishcare_dishwasher_option_hygiene_plus": {
+          "name": "Hygiene +",
+          "description": "Defines if the cleaning is done with increased temperature. This ensures maximum hygienic cleanliness for regular use."
+        },
+        "dishcare_dishwasher_option_eco_dry": {
+          "name": "Eco dry",
+          "description": "Defines if the door is opened automatically for extra energy efficient and effective drying."
+        },
+        "dishcare_dishwasher_option_zeolite_dry": {
+          "name": "Zeolite dry",
+          "description": "Defines if the program sequence is optimized with special drying cycle ensures improved drying for glasses, plates and plasticware."
+        },
+        "laundry_care_dryer_option_drying_target": {
+          "name": "Drying target",
+          "description": "Describes the drying target for a dryer program."
+        },
+        "cooking_hood_option_venting_level": {
+          "name": "Venting level",
+          "description": "Defines the required fan setting."
+        },
+        "cooking_hood_option_intensive_level": {
+          "name": "Intensive level",
+          "description": "Defines the intensive setting."
+        },
+        "cooking_oven_option_setpoint_temperature": {
+          "name": "Setpoint temperature",
+          "description": "Defines the target cavity temperature, which will be hold by the oven."
+        },
+        "b_s_h_common_option_duration": {
+          "name": "Duration",
+          "description": "Defines the run-time of the program. Afterwards, the appliance is stopped."
+        },
+        "cooking_oven_option_fast_pre_heat": {
+          "name": "Fast pre-heat",
+          "description": "Defines if the cooking compartment is heated up quickly. Please note that the setpoint temperature has to be equal to or higher than 100 °C or 212 °F. Otherwise, the fast pre-heat option is not activated."
+        },
+        "cooking_oven_option_warming_level": {
+          "name": "Warming level",
+          "description": "Defines the level of the warming drawer."
+        },
+        "laundry_care_washer_option_temperature": {
+          "name": "Temperature",
+          "description": "Defines the temperature of the washing program."
+        },
+        "laundry_care_washer_option_spin_speed": {
+          "name": "Spin speed",
+          "description": "Defines the spin speed of a washer program."
+        },
+        "b_s_h_common_option_finish_in_relative": {
+          "name": "Finish in relative",
+          "description": "Defines when the program should end in seconds."
+        },
+        "laundry_care_washer_option_i_dos1_active": {
+          "name": "i-Dos 1 Active",
+          "description": "Defines if the detergent feed is activated / deactivated. (i-Dos content 1)"
+        },
+        "laundry_care_washer_option_i_dos2_active": {
+          "name": "i-Dos 2 Active",
+          "description": "Defines if the detergent feed is activated / deactivated. (i-Dos content 2)"
+        },
+        "laundry_care_washer_option_vario_perfect": {
+          "name": "Vario perfect",
+          "description": "Defines if a cycle saves energy (Eco Perfect) or time (Speed Perfect)."
+        }
+      },
+      "sections": {
+        "cleaning_robot_options": {
+          "name": "Cleaning robot options",
+          "description": "Options for cleaning robots."
+        },
+        "coffee_maker_options": {
+          "name": "Coffee maker options",
+          "description": "Options for coffee makers."
+        },
+        "dish_washer_options": {
+          "name": "Dishwasher options",
+          "description": "Options for dishwashers."
+        },
+        "dryer_options": {
+          "name": "Dryer options",
+          "description": "Options for dryers (and washer dryers)."
+        },
+        "hood_options": {
+          "name": "Hood options",
+          "description": "Options for hoods."
+        },
+        "oven_options": {
+          "name": "Oven options",
+          "description": "Options for ovens."
+        },
+        "warming_drawer_options": {
+          "name": "Warming drawer options",
+          "description": "Options for warming drawers."
+        },
+        "washer_options": {
+          "name": "Washer options",
+          "description": "Options for washers (and washer dryers)."
+        }
+      }
+    },
     "pause_program": {
       "name": "Pause program",
       "description": "Pauses the current running program.",
       "fields": {
         "device_id": {
-          "name": "Device ID",
-          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
         }
       }
     },
@@ -76,8 +778,8 @@
       "description": "Resumes a paused program.",
       "fields": {
         "device_id": {
-          "name": "Device ID",
-          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
         }
       }
     },
@@ -86,8 +788,8 @@
       "description": "Sets an option for the active program.",
       "fields": {
         "device_id": {
-          "name": "Device ID",
-          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
         },
         "key": {
           "name": "Key",
@@ -101,18 +803,18 @@
     },
     "set_option_selected": {
       "name": "Set selected program option",
-      "description": "Sets an option for the selected program.",
+      "description": "Sets options for the selected program.",
       "fields": {
         "device_id": {
-          "name": "Device ID",
-          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
         },
         "key": {
-          "name": "Key",
+          "name": "[%key:component::home_connect::services::start_program::fields::key::name%]",
           "description": "[%key:component::home_connect::services::start_program::fields::key::description%]"
         },
         "value": {
-          "name": "Value",
+          "name": "[%key:component::home_connect::services::start_program::fields::value::name%]",
           "description": "[%key:component::home_connect::services::start_program::fields::value::description%]"
         }
       }
@@ -122,11 +824,1173 @@
       "description": "Changes a setting.",
       "fields": {
         "device_id": {
-          "name": "Device ID",
-          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]"
         },
         "key": { "name": "Key", "description": "Key of the setting." },
         "value": { "name": "Value", "description": "Value of the setting." }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "remote_control": {
+        "name": "Remote control"
+      },
+      "remote_start": {
+        "name": "Remote start"
+      },
+      "local_control": {
+        "name": "Local control"
+      },
+      "battery_charging_state": {
+        "name": "Battery charging state"
+      },
+      "charging_connection": {
+        "name": "Charging connection"
+      },
+      "dust_box_inserted": {
+        "name": "Dust box",
+        "state": {
+          "on": "Inserted",
+          "off": "Not inserted"
+        }
+      },
+      "lifted": {
+        "name": "Lifted"
+      },
+      "lost": {
+        "name": "Lost"
+      },
+      "bottle_cooler_door": {
+        "name": "Bottle cooler door"
+      },
+      "common_chiller_door": {
+        "name": "Common chiller door"
+      },
+      "chiller_door": {
+        "name": "Chiller door"
+      },
+      "left_chiller_door": {
+        "name": "Left chiller door"
+      },
+      "right_chiller_door": {
+        "name": "Right chiller door"
+      },
+      "flex_compartment_door": {
+        "name": "Flex compartment door"
+      },
+      "freezer_door": {
+        "name": "Freezer door"
+      },
+      "refrigerator_door": {
+        "name": "Refrigerator door"
+      },
+      "wine_compartment_door": {
+        "name": "Wine compartment door"
+      }
+    },
+    "button": {
+      "open_door": {
+        "name": "Open door"
+      },
+      "partly_open_door": {
+        "name": "Partly open door"
+      },
+      "pause_program": {
+        "name": "Pause program"
+      },
+      "resume_program": {
+        "name": "Resume program"
+      },
+      "stop_program": {
+        "name": "Stop program"
+      }
+    },
+    "light": {
+      "cooking_lighting": {
+        "name": "Functional light"
+      },
+      "ambient_light": {
+        "name": "Ambient light"
+      },
+      "external_light": {
+        "name": "External light"
+      },
+      "internal_light": {
+        "name": "Internal light"
+      }
+    },
+    "number": {
+      "alarm_clock": {
+        "name": "Alarm clock"
+      },
+      "refrigerator_setpoint_temperature": {
+        "name": "Refrigerator temperature"
+      },
+      "freezer_setpoint_temperature": {
+        "name": "Freezer temperature"
+      },
+      "bottle_cooler_setpoint_temperature": {
+        "name": "Bottle cooler temperature"
+      },
+      "chiller_left_setpoint_temperature": {
+        "name": "Chiller left temperature"
+      },
+      "chiller_setpoint_temperature": {
+        "name": "Chiller temperature"
+      },
+      "chiller_right_setpoint_temperature": {
+        "name": "Chiller right temperature"
+      },
+      "wine_compartment_setpoint_temperature": {
+        "name": "Wine compartment temperature"
+      },
+      "wine_compartment_2_setpoint_temperature": {
+        "name": "Wine compartment 2 temperature"
+      },
+      "wine_compartment_3_setpoint_temperature": {
+        "name": "Wine compartment 3 temperature"
+      },
+      "color_temperature_percent": {
+        "name": "Functional light color temperature percent"
+      },
+      "washer_i_dos_1_base_level": {
+        "name": "i-Dos 1 base level"
+      },
+      "washer_i_dos_2_base_level": {
+        "name": "i-Dos 2 base level"
+      },
+      "duration": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_duration::name%]"
+      },
+      "start_in_relative": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_start_in_relative::name%]"
+      },
+      "finish_in_relative": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_finish_in_relative::name%]"
+      },
+      "fill_quantity": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_fill_quantity::name%]"
+      },
+      "setpoint_temperature": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_oven_option_setpoint_temperature::name%]"
+      }
+    },
+    "select": {
+      "selected_program": {
+        "name": "Selected program",
+        "state": {
+          "consumer_products_cleaning_robot_program_cleaning_clean_all": "[%key:component::home_connect::selector::programs::options::consumer_products_cleaning_robot_program_cleaning_clean_all%]",
+          "consumer_products_cleaning_robot_program_cleaning_clean_map": "[%key:component::home_connect::selector::programs::options::consumer_products_cleaning_robot_program_cleaning_clean_map%]",
+          "consumer_products_cleaning_robot_program_basic_go_home": "[%key:component::home_connect::selector::programs::options::consumer_products_cleaning_robot_program_basic_go_home%]",
+          "consumer_products_coffee_maker_program_beverage_ristretto": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_ristretto%]",
+          "consumer_products_coffee_maker_program_beverage_espresso": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_espresso%]",
+          "consumer_products_coffee_maker_program_beverage_espresso_doppio": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_espresso_doppio%]",
+          "consumer_products_coffee_maker_program_beverage_coffee": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_coffee%]",
+          "consumer_products_coffee_maker_program_beverage_x_l_coffee": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_x_l_coffee%]",
+          "consumer_products_coffee_maker_program_beverage_caffe_grande": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_caffe_grande%]",
+          "consumer_products_coffee_maker_program_beverage_espresso_macchiato": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_espresso_macchiato%]",
+          "consumer_products_coffee_maker_program_beverage_cappuccino": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_cappuccino%]",
+          "consumer_products_coffee_maker_program_beverage_latte_macchiato": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_latte_macchiato%]",
+          "consumer_products_coffee_maker_program_beverage_caffe_latte": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_caffe_latte%]",
+          "consumer_products_coffee_maker_program_beverage_milk_froth": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_milk_froth%]",
+          "consumer_products_coffee_maker_program_beverage_warm_milk": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_warm_milk%]",
+          "consumer_products_coffee_maker_program_coffee_world_kleiner_brauner": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_kleiner_brauner%]",
+          "consumer_products_coffee_maker_program_coffee_world_grosser_brauner": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_grosser_brauner%]",
+          "consumer_products_coffee_maker_program_coffee_world_verlaengerter": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_verlaengerter%]",
+          "consumer_products_coffee_maker_program_coffee_world_verlaengerter_braun": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_verlaengerter_braun%]",
+          "consumer_products_coffee_maker_program_coffee_world_wiener_melange": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_wiener_melange%]",
+          "consumer_products_coffee_maker_program_coffee_world_flat_white": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_flat_white%]",
+          "consumer_products_coffee_maker_program_coffee_world_cortado": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_cortado%]",
+          "consumer_products_coffee_maker_program_coffee_world_cafe_cortado": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_cafe_cortado%]",
+          "consumer_products_coffee_maker_program_coffee_world_cafe_con_leche": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_cafe_con_leche%]",
+          "consumer_products_coffee_maker_program_coffee_world_cafe_au_lait": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_cafe_au_lait%]",
+          "consumer_products_coffee_maker_program_coffee_world_doppio": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_doppio%]",
+          "consumer_products_coffee_maker_program_coffee_world_kaapi": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_kaapi%]",
+          "consumer_products_coffee_maker_program_coffee_world_koffie_verkeerd": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_koffie_verkeerd%]",
+          "consumer_products_coffee_maker_program_coffee_world_galao": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_galao%]",
+          "consumer_products_coffee_maker_program_coffee_world_garoto": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_garoto%]",
+          "consumer_products_coffee_maker_program_coffee_world_americano": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_americano%]",
+          "consumer_products_coffee_maker_program_coffee_world_red_eye": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_red_eye%]",
+          "consumer_products_coffee_maker_program_coffee_world_black_eye": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_black_eye%]",
+          "consumer_products_coffee_maker_program_coffee_world_dead_eye": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_dead_eye%]",
+          "consumer_products_coffee_maker_program_beverage_hot_water": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_hot_water%]",
+          "dishcare_dishwasher_program_pre_rinse": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_pre_rinse%]",
+          "dishcare_dishwasher_program_auto_1": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_auto_1%]",
+          "dishcare_dishwasher_program_auto_2": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_auto_2%]",
+          "dishcare_dishwasher_program_auto_3": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_auto_3%]",
+          "dishcare_dishwasher_program_eco_50": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_eco_50%]",
+          "dishcare_dishwasher_program_quick_45": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_quick_45%]",
+          "dishcare_dishwasher_program_intensiv_70": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_70%]",
+          "dishcare_dishwasher_program_normal_65": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_normal_65%]",
+          "dishcare_dishwasher_program_glas_40": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_glas_40%]",
+          "dishcare_dishwasher_program_glass_care": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_glass_care%]",
+          "dishcare_dishwasher_program_night_wash": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_night_wash%]",
+          "dishcare_dishwasher_program_quick_65": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_quick_65%]",
+          "dishcare_dishwasher_program_normal_45": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_normal_45%]",
+          "dishcare_dishwasher_program_intensiv_45": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_45%]",
+          "dishcare_dishwasher_program_auto_half_load": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_auto_half_load%]",
+          "dishcare_dishwasher_program_intensiv_power": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_power%]",
+          "dishcare_dishwasher_program_magic_daily": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_magic_daily%]",
+          "dishcare_dishwasher_program_super_60": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_super_60%]",
+          "dishcare_dishwasher_program_kurz_60": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_kurz_60%]",
+          "dishcare_dishwasher_program_express_sparkle_65": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_express_sparkle_65%]",
+          "dishcare_dishwasher_program_machine_care": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_machine_care%]",
+          "dishcare_dishwasher_program_steam_fresh": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_steam_fresh%]",
+          "dishcare_dishwasher_program_maximum_cleaning": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_maximum_cleaning%]",
+          "dishcare_dishwasher_program_mixed_load": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_mixed_load%]",
+          "laundry_care_dryer_program_cotton": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_cotton%]",
+          "laundry_care_dryer_program_synthetic": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_synthetic%]",
+          "laundry_care_dryer_program_mix": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_mix%]",
+          "laundry_care_dryer_program_blankets": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_blankets%]",
+          "laundry_care_dryer_program_business_shirts": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_business_shirts%]",
+          "laundry_care_dryer_program_down_feathers": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_down_feathers%]",
+          "laundry_care_dryer_program_hygiene": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_hygiene%]",
+          "laundry_care_dryer_program_jeans": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_jeans%]",
+          "laundry_care_dryer_program_outdoor": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_outdoor%]",
+          "laundry_care_dryer_program_synthetic_refresh": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_synthetic_refresh%]",
+          "laundry_care_dryer_program_towels": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_towels%]",
+          "laundry_care_dryer_program_delicates": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_delicates%]",
+          "laundry_care_dryer_program_super_40": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_super_40%]",
+          "laundry_care_dryer_program_shirts_15": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_shirts_15%]",
+          "laundry_care_dryer_program_pillow": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_pillow%]",
+          "laundry_care_dryer_program_anti_shrink": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_anti_shrink%]",
+          "laundry_care_dryer_program_my_time_my_drying_time": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_my_time_my_drying_time%]",
+          "laundry_care_dryer_program_time_cold": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_cold%]",
+          "laundry_care_dryer_program_time_warm": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_warm%]",
+          "laundry_care_dryer_program_in_basket": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_in_basket%]",
+          "laundry_care_dryer_program_time_cold_fix_time_cold_20": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_cold_fix_time_cold_20%]",
+          "laundry_care_dryer_program_time_cold_fix_time_cold_30": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_cold_fix_time_cold_30%]",
+          "laundry_care_dryer_program_time_cold_fix_time_cold_60": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_cold_fix_time_cold_60%]",
+          "laundry_care_dryer_program_time_warm_fix_time_warm_30": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_warm_fix_time_warm_30%]",
+          "laundry_care_dryer_program_time_warm_fix_time_warm_40": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_warm_fix_time_warm_40%]",
+          "laundry_care_dryer_program_time_warm_fix_time_warm_60": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_warm_fix_time_warm_60%]",
+          "laundry_care_dryer_program_dessous": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_dessous%]",
+          "cooking_common_program_hood_automatic": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_automatic%]",
+          "cooking_common_program_hood_venting": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_venting%]",
+          "cooking_common_program_hood_delayed_shut_off": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_delayed_shut_off%]",
+          "cooking_oven_program_heating_mode_pre_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_pre_heating%]",
+          "cooking_oven_program_heating_mode_hot_air": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air%]",
+          "cooking_oven_program_heating_mode_hot_air_eco": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_eco%]",
+          "cooking_oven_program_heating_mode_hot_air_grilling": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_grilling%]",
+          "cooking_oven_program_heating_mode_top_bottom_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_top_bottom_heating%]",
+          "cooking_oven_program_heating_mode_top_bottom_heating_eco": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_top_bottom_heating_eco%]",
+          "cooking_oven_program_heating_mode_bottom_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bottom_heating%]",
+          "cooking_oven_program_heating_mode_pizza_setting": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_pizza_setting%]",
+          "cooking_oven_program_heating_mode_slow_cook": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_slow_cook%]",
+          "cooking_oven_program_heating_mode_intensive_heat": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_intensive_heat%]",
+          "cooking_oven_program_heating_mode_keep_warm": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_keep_warm%]",
+          "cooking_oven_program_heating_mode_preheat_ovenware": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_preheat_ovenware%]",
+          "cooking_oven_program_heating_mode_frozen_heatup_special": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_frozen_heatup_special%]",
+          "cooking_oven_program_heating_mode_desiccation": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_desiccation%]",
+          "cooking_oven_program_heating_mode_defrost": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_defrost%]",
+          "cooking_oven_program_heating_mode_proof": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_proof%]",
+          "cooking_oven_program_heating_mode_hot_air_30_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_30_steam%]",
+          "cooking_oven_program_heating_mode_hot_air_60_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_60_steam%]",
+          "cooking_oven_program_heating_mode_hot_air_80_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_80_steam%]",
+          "cooking_oven_program_heating_mode_hot_air_100_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_100_steam%]",
+          "cooking_oven_program_heating_mode_sabbath_programme": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_sabbath_programme%]",
+          "cooking_oven_program_microwave_90_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_90_watt%]",
+          "cooking_oven_program_microwave_180_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_180_watt%]",
+          "cooking_oven_program_microwave_360_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_360_watt%]",
+          "cooking_oven_program_microwave_600_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_600_watt%]",
+          "cooking_oven_program_microwave_900_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_900_watt%]",
+          "cooking_oven_program_microwave_1000_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_1000_watt%]",
+          "cooking_oven_program_microwave_max": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_max%]",
+          "cooking_oven_program_heating_mode_warming_drawer": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_warming_drawer%]",
+          "laundry_care_washer_program_cotton": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_cotton%]",
+          "laundry_care_washer_program_cotton_cotton_eco": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_cotton_cotton_eco%]",
+          "laundry_care_washer_program_cotton_eco_4060": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_cotton_eco_4060%]",
+          "laundry_care_washer_program_cotton_colour": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_cotton_colour%]",
+          "laundry_care_washer_program_easy_care": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_easy_care%]",
+          "laundry_care_washer_program_mix": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_mix%]",
+          "laundry_care_washer_program_mix_night_wash": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_mix_night_wash%]",
+          "laundry_care_washer_program_delicates_silk": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_delicates_silk%]",
+          "laundry_care_washer_program_wool": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_wool%]",
+          "laundry_care_washer_program_sensitive": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_sensitive%]",
+          "laundry_care_washer_program_auto_30": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_auto_30%]",
+          "laundry_care_washer_program_auto_40": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_auto_40%]",
+          "laundry_care_washer_program_auto_60": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_auto_60%]",
+          "laundry_care_washer_program_chiffon": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_chiffon%]",
+          "laundry_care_washer_program_curtains": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_curtains%]",
+          "laundry_care_washer_program_dark_wash": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_dark_wash%]",
+          "laundry_care_washer_program_dessous": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_dessous%]",
+          "laundry_care_washer_program_monsoon": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_monsoon%]",
+          "laundry_care_washer_program_outdoor": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_outdoor%]",
+          "laundry_care_washer_program_plush_toy": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_plush_toy%]",
+          "laundry_care_washer_program_shirts_blouses": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_shirts_blouses%]",
+          "laundry_care_washer_program_sport_fitness": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_sport_fitness%]",
+          "laundry_care_washer_program_towels": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_towels%]",
+          "laundry_care_washer_program_water_proof": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_water_proof%]",
+          "laundry_care_washer_program_power_speed_59": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_power_speed_59%]",
+          "laundry_care_washer_program_super_153045_super_15": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_super_153045_super_15%]",
+          "laundry_care_washer_program_super_153045_super_1530": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_super_153045_super_1530%]",
+          "laundry_care_washer_program_down_duvet_duvet": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_down_duvet_duvet%]",
+          "laundry_care_washer_program_rinse_rinse_spin_drain": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_rinse_rinse_spin_drain%]",
+          "laundry_care_washer_program_drum_clean": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_drum_clean%]",
+          "laundry_care_washer_dryer_program_cotton": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_cotton%]",
+          "laundry_care_washer_dryer_program_cotton_eco_4060": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_cotton_eco_4060%]",
+          "laundry_care_washer_dryer_program_mix": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_mix%]",
+          "laundry_care_washer_dryer_program_easy_care": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_easy_care%]",
+          "laundry_care_washer_dryer_program_wash_and_dry_60": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_wash_and_dry_60%]",
+          "laundry_care_washer_dryer_program_wash_and_dry_90": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_wash_and_dry_90%]"
+        }
+      },
+      "active_program": {
+        "name": "Active program",
+        "state": {
+          "consumer_products_cleaning_robot_program_cleaning_clean_all": "[%key:component::home_connect::selector::programs::options::consumer_products_cleaning_robot_program_cleaning_clean_all%]",
+          "consumer_products_cleaning_robot_program_cleaning_clean_map": "[%key:component::home_connect::selector::programs::options::consumer_products_cleaning_robot_program_cleaning_clean_map%]",
+          "consumer_products_cleaning_robot_program_basic_go_home": "[%key:component::home_connect::selector::programs::options::consumer_products_cleaning_robot_program_basic_go_home%]",
+          "consumer_products_coffee_maker_program_beverage_ristretto": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_ristretto%]",
+          "consumer_products_coffee_maker_program_beverage_espresso": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_espresso%]",
+          "consumer_products_coffee_maker_program_beverage_espresso_doppio": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_espresso_doppio%]",
+          "consumer_products_coffee_maker_program_beverage_coffee": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_coffee%]",
+          "consumer_products_coffee_maker_program_beverage_x_l_coffee": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_x_l_coffee%]",
+          "consumer_products_coffee_maker_program_beverage_caffe_grande": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_caffe_grande%]",
+          "consumer_products_coffee_maker_program_beverage_espresso_macchiato": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_espresso_macchiato%]",
+          "consumer_products_coffee_maker_program_beverage_cappuccino": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_cappuccino%]",
+          "consumer_products_coffee_maker_program_beverage_latte_macchiato": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_latte_macchiato%]",
+          "consumer_products_coffee_maker_program_beverage_caffe_latte": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_caffe_latte%]",
+          "consumer_products_coffee_maker_program_beverage_milk_froth": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_milk_froth%]",
+          "consumer_products_coffee_maker_program_beverage_warm_milk": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_warm_milk%]",
+          "consumer_products_coffee_maker_program_coffee_world_kleiner_brauner": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_kleiner_brauner%]",
+          "consumer_products_coffee_maker_program_coffee_world_grosser_brauner": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_grosser_brauner%]",
+          "consumer_products_coffee_maker_program_coffee_world_verlaengerter": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_verlaengerter%]",
+          "consumer_products_coffee_maker_program_coffee_world_verlaengerter_braun": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_verlaengerter_braun%]",
+          "consumer_products_coffee_maker_program_coffee_world_wiener_melange": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_wiener_melange%]",
+          "consumer_products_coffee_maker_program_coffee_world_flat_white": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_flat_white%]",
+          "consumer_products_coffee_maker_program_coffee_world_cortado": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_cortado%]",
+          "consumer_products_coffee_maker_program_coffee_world_cafe_cortado": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_cafe_cortado%]",
+          "consumer_products_coffee_maker_program_coffee_world_cafe_con_leche": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_cafe_con_leche%]",
+          "consumer_products_coffee_maker_program_coffee_world_cafe_au_lait": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_cafe_au_lait%]",
+          "consumer_products_coffee_maker_program_coffee_world_doppio": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_doppio%]",
+          "consumer_products_coffee_maker_program_coffee_world_kaapi": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_kaapi%]",
+          "consumer_products_coffee_maker_program_coffee_world_koffie_verkeerd": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_koffie_verkeerd%]",
+          "consumer_products_coffee_maker_program_coffee_world_galao": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_galao%]",
+          "consumer_products_coffee_maker_program_coffee_world_garoto": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_garoto%]",
+          "consumer_products_coffee_maker_program_coffee_world_americano": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_americano%]",
+          "consumer_products_coffee_maker_program_coffee_world_red_eye": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_red_eye%]",
+          "consumer_products_coffee_maker_program_coffee_world_black_eye": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_black_eye%]",
+          "consumer_products_coffee_maker_program_coffee_world_dead_eye": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_coffee_world_dead_eye%]",
+          "consumer_products_coffee_maker_program_beverage_hot_water": "[%key:component::home_connect::selector::programs::options::consumer_products_coffee_maker_program_beverage_hot_water%]",
+          "dishcare_dishwasher_program_pre_rinse": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_pre_rinse%]",
+          "dishcare_dishwasher_program_auto_1": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_auto_1%]",
+          "dishcare_dishwasher_program_auto_2": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_auto_2%]",
+          "dishcare_dishwasher_program_auto_3": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_auto_3%]",
+          "dishcare_dishwasher_program_eco_50": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_eco_50%]",
+          "dishcare_dishwasher_program_quick_45": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_quick_45%]",
+          "dishcare_dishwasher_program_intensiv_70": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_70%]",
+          "dishcare_dishwasher_program_normal_65": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_normal_65%]",
+          "dishcare_dishwasher_program_glas_40": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_glas_40%]",
+          "dishcare_dishwasher_program_glass_care": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_glass_care%]",
+          "dishcare_dishwasher_program_night_wash": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_night_wash%]",
+          "dishcare_dishwasher_program_quick_65": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_quick_65%]",
+          "dishcare_dishwasher_program_normal_45": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_normal_45%]",
+          "dishcare_dishwasher_program_intensiv_45": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_45%]",
+          "dishcare_dishwasher_program_auto_half_load": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_auto_half_load%]",
+          "dishcare_dishwasher_program_intensiv_power": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_power%]",
+          "dishcare_dishwasher_program_magic_daily": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_magic_daily%]",
+          "dishcare_dishwasher_program_super_60": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_super_60%]",
+          "dishcare_dishwasher_program_kurz_60": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_kurz_60%]",
+          "dishcare_dishwasher_program_express_sparkle_65": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_express_sparkle_65%]",
+          "dishcare_dishwasher_program_machine_care": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_machine_care%]",
+          "dishcare_dishwasher_program_steam_fresh": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_steam_fresh%]",
+          "dishcare_dishwasher_program_maximum_cleaning": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_maximum_cleaning%]",
+          "dishcare_dishwasher_program_mixed_load": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_mixed_load%]",
+          "laundry_care_dryer_program_cotton": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_cotton%]",
+          "laundry_care_dryer_program_synthetic": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_synthetic%]",
+          "laundry_care_dryer_program_mix": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_mix%]",
+          "laundry_care_dryer_program_blankets": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_blankets%]",
+          "laundry_care_dryer_program_business_shirts": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_business_shirts%]",
+          "laundry_care_dryer_program_down_feathers": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_down_feathers%]",
+          "laundry_care_dryer_program_hygiene": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_hygiene%]",
+          "laundry_care_dryer_program_jeans": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_jeans%]",
+          "laundry_care_dryer_program_outdoor": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_outdoor%]",
+          "laundry_care_dryer_program_synthetic_refresh": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_synthetic_refresh%]",
+          "laundry_care_dryer_program_towels": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_towels%]",
+          "laundry_care_dryer_program_delicates": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_delicates%]",
+          "laundry_care_dryer_program_super_40": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_super_40%]",
+          "laundry_care_dryer_program_shirts_15": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_shirts_15%]",
+          "laundry_care_dryer_program_pillow": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_pillow%]",
+          "laundry_care_dryer_program_anti_shrink": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_anti_shrink%]",
+          "laundry_care_dryer_program_my_time_my_drying_time": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_my_time_my_drying_time%]",
+          "laundry_care_dryer_program_time_cold": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_cold%]",
+          "laundry_care_dryer_program_time_warm": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_warm%]",
+          "laundry_care_dryer_program_in_basket": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_in_basket%]",
+          "laundry_care_dryer_program_time_cold_fix_time_cold_20": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_cold_fix_time_cold_20%]",
+          "laundry_care_dryer_program_time_cold_fix_time_cold_30": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_cold_fix_time_cold_30%]",
+          "laundry_care_dryer_program_time_cold_fix_time_cold_60": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_cold_fix_time_cold_60%]",
+          "laundry_care_dryer_program_time_warm_fix_time_warm_30": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_warm_fix_time_warm_30%]",
+          "laundry_care_dryer_program_time_warm_fix_time_warm_40": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_warm_fix_time_warm_40%]",
+          "laundry_care_dryer_program_time_warm_fix_time_warm_60": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_time_warm_fix_time_warm_60%]",
+          "laundry_care_dryer_program_dessous": "[%key:component::home_connect::selector::programs::options::laundry_care_dryer_program_dessous%]",
+          "cooking_common_program_hood_automatic": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_automatic%]",
+          "cooking_common_program_hood_venting": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_venting%]",
+          "cooking_common_program_hood_delayed_shut_off": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_delayed_shut_off%]",
+          "cooking_oven_program_heating_mode_pre_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_pre_heating%]",
+          "cooking_oven_program_heating_mode_hot_air": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air%]",
+          "cooking_oven_program_heating_mode_hot_air_eco": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_eco%]",
+          "cooking_oven_program_heating_mode_hot_air_grilling": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_grilling%]",
+          "cooking_oven_program_heating_mode_top_bottom_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_top_bottom_heating%]",
+          "cooking_oven_program_heating_mode_top_bottom_heating_eco": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_top_bottom_heating_eco%]",
+          "cooking_oven_program_heating_mode_bottom_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bottom_heating%]",
+          "cooking_oven_program_heating_mode_pizza_setting": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_pizza_setting%]",
+          "cooking_oven_program_heating_mode_slow_cook": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_slow_cook%]",
+          "cooking_oven_program_heating_mode_intensive_heat": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_intensive_heat%]",
+          "cooking_oven_program_heating_mode_keep_warm": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_keep_warm%]",
+          "cooking_oven_program_heating_mode_preheat_ovenware": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_preheat_ovenware%]",
+          "cooking_oven_program_heating_mode_frozen_heatup_special": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_frozen_heatup_special%]",
+          "cooking_oven_program_heating_mode_desiccation": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_desiccation%]",
+          "cooking_oven_program_heating_mode_defrost": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_defrost%]",
+          "cooking_oven_program_heating_mode_proof": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_proof%]",
+          "cooking_oven_program_heating_mode_hot_air_30_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_30_steam%]",
+          "cooking_oven_program_heating_mode_hot_air_60_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_60_steam%]",
+          "cooking_oven_program_heating_mode_hot_air_80_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_80_steam%]",
+          "cooking_oven_program_heating_mode_hot_air_100_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_100_steam%]",
+          "cooking_oven_program_heating_mode_sabbath_programme": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_sabbath_programme%]",
+          "cooking_oven_program_microwave_90_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_90_watt%]",
+          "cooking_oven_program_microwave_180_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_180_watt%]",
+          "cooking_oven_program_microwave_360_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_360_watt%]",
+          "cooking_oven_program_microwave_600_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_600_watt%]",
+          "cooking_oven_program_microwave_900_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_900_watt%]",
+          "cooking_oven_program_microwave_1000_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_1000_watt%]",
+          "cooking_oven_program_microwave_max": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_max%]",
+          "cooking_oven_program_heating_mode_warming_drawer": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_warming_drawer%]",
+          "laundry_care_washer_program_cotton": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_cotton%]",
+          "laundry_care_washer_program_cotton_cotton_eco": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_cotton_cotton_eco%]",
+          "laundry_care_washer_program_cotton_eco_4060": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_cotton_eco_4060%]",
+          "laundry_care_washer_program_cotton_colour": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_cotton_colour%]",
+          "laundry_care_washer_program_easy_care": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_easy_care%]",
+          "laundry_care_washer_program_mix": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_mix%]",
+          "laundry_care_washer_program_mix_night_wash": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_mix_night_wash%]",
+          "laundry_care_washer_program_delicates_silk": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_delicates_silk%]",
+          "laundry_care_washer_program_wool": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_wool%]",
+          "laundry_care_washer_program_sensitive": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_sensitive%]",
+          "laundry_care_washer_program_auto_30": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_auto_30%]",
+          "laundry_care_washer_program_auto_40": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_auto_40%]",
+          "laundry_care_washer_program_auto_60": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_auto_60%]",
+          "laundry_care_washer_program_chiffon": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_chiffon%]",
+          "laundry_care_washer_program_curtains": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_curtains%]",
+          "laundry_care_washer_program_dark_wash": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_dark_wash%]",
+          "laundry_care_washer_program_dessous": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_dessous%]",
+          "laundry_care_washer_program_monsoon": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_monsoon%]",
+          "laundry_care_washer_program_outdoor": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_outdoor%]",
+          "laundry_care_washer_program_plush_toy": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_plush_toy%]",
+          "laundry_care_washer_program_shirts_blouses": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_shirts_blouses%]",
+          "laundry_care_washer_program_sport_fitness": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_sport_fitness%]",
+          "laundry_care_washer_program_towels": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_towels%]",
+          "laundry_care_washer_program_water_proof": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_water_proof%]",
+          "laundry_care_washer_program_power_speed_59": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_power_speed_59%]",
+          "laundry_care_washer_program_super_153045_super_15": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_super_153045_super_15%]",
+          "laundry_care_washer_program_super_153045_super_1530": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_super_153045_super_1530%]",
+          "laundry_care_washer_program_down_duvet_duvet": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_down_duvet_duvet%]",
+          "laundry_care_washer_program_rinse_rinse_spin_drain": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_rinse_rinse_spin_drain%]",
+          "laundry_care_washer_program_drum_clean": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_drum_clean%]",
+          "laundry_care_washer_dryer_program_cotton": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_cotton%]",
+          "laundry_care_washer_dryer_program_cotton_eco_4060": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_cotton_eco_4060%]",
+          "laundry_care_washer_dryer_program_mix": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_mix%]",
+          "laundry_care_washer_dryer_program_easy_care": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_easy_care%]",
+          "laundry_care_washer_dryer_program_wash_and_dry_60": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_wash_and_dry_60%]",
+          "laundry_care_washer_dryer_program_wash_and_dry_90": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_wash_and_dry_90%]"
+        }
+      },
+      "current_map": {
+        "name": "Current map",
+        "state": {
+          "consumer_products_cleaning_robot_enum_type_available_maps_temp_map": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_temp_map%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map1": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map1%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map2": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map2%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map3": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map3%]"
+        }
+      },
+      "functional_light_color_temperature": {
+        "name": "Functional light color temperature",
+        "state": {
+          "cooking_hood_enum_type_color_temperature_custom": "Custom",
+          "cooking_hood_enum_type_color_temperature_warm": "Warm",
+          "cooking_hood_enum_type_color_temperature_warm_to_neutral": "Warm to Neutral",
+          "cooking_hood_enum_type_color_temperature_neutral": "Neutral",
+          "cooking_hood_enum_type_color_temperature_neutral_to_cold": "Neutral to Cold",
+          "cooking_hood_enum_type_color_temperature_cold": "Cold"
+        }
+      },
+      "ambient_light_color": {
+        "name": "Ambient light color",
+        "state": {
+          "b_s_h_common_enum_type_ambient_light_color_custom_color": "Custom"
+        }
+      },
+      "reference_map_id": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_cleaning_robot_option_reference_map_id::name%]",
+        "state": {
+          "consumer_products_cleaning_robot_enum_type_available_maps_temp_map": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_temp_map%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map1": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map1%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map2": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map2%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map3": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map3%]"
+        }
+      },
+      "cleaning_mode": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_cleaning_robot_option_cleaning_mode::name%]",
+        "state": {
+          "consumer_products_cleaning_robot_enum_type_cleaning_modes_silent": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_modes_silent%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_modes_standard": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_modes_standard%]",
+          "consumer_products_cleaning_robot_enum_type_cleaning_modes_power": "[%key:component::home_connect::selector::cleaning_mode::options::consumer_products_cleaning_robot_enum_type_cleaning_modes_power%]"
+        }
+      },
+      "bean_amount": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_bean_amount::name%]",
+        "state": {
+          "consumer_products_coffee_maker_enum_type_bean_amount_very_mild": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_very_mild%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_mild": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_mild%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_mild_plus": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_mild_plus%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_normal": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_normal%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_normal_plus": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_normal_plus%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_strong": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_strong%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_strong_plus": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_strong_plus%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_very_strong": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_very_strong%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_very_strong_plus": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_very_strong_plus%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_extra_strong": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_extra_strong%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_double_shot": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_double_shot%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_double_shot_plus": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_double_shot_plus%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_double_shot_plus_plus": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_double_shot_plus_plus%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_triple_shot": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_triple_shot%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_triple_shot_plus": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_triple_shot_plus%]",
+          "consumer_products_coffee_maker_enum_type_bean_amount_coffee_ground": "[%key:component::home_connect::selector::bean_amount::options::consumer_products_coffee_maker_enum_type_bean_amount_coffee_ground%]"
+        }
+      },
+      "coffee_temperature": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_coffee_temperature::name%]",
+        "state": {
+          "consumer_products_coffee_maker_enum_type_coffee_temperature_88_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_88_c%]",
+          "consumer_products_coffee_maker_enum_type_coffee_temperature_90_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_90_c%]",
+          "consumer_products_coffee_maker_enum_type_coffee_temperature_92_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_92_c%]",
+          "consumer_products_coffee_maker_enum_type_coffee_temperature_94_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_94_c%]",
+          "consumer_products_coffee_maker_enum_type_coffee_temperature_95_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_95_c%]",
+          "consumer_products_coffee_maker_enum_type_coffee_temperature_96_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_96_c%]"
+        }
+      },
+      "bean_container": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_bean_container::name%]",
+        "state": {
+          "consumer_products_coffee_maker_enum_type_bean_container_selection_right": "[%key:component::home_connect::selector::bean_container::options::consumer_products_coffee_maker_enum_type_bean_container_selection_right%]",
+          "consumer_products_coffee_maker_enum_type_bean_container_selection_left": "[%key:component::home_connect::selector::bean_container::options::consumer_products_coffee_maker_enum_type_bean_container_selection_left%]"
+        }
+      },
+      "flow_rate": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_flow_rate::name%]",
+        "state": {
+          "consumer_products_coffee_maker_enum_type_flow_rate_normal": "[%key:component::home_connect::selector::flow_rate::options::consumer_products_coffee_maker_enum_type_flow_rate_normal%]",
+          "consumer_products_coffee_maker_enum_type_flow_rate_intense": "[%key:component::home_connect::selector::flow_rate::options::consumer_products_coffee_maker_enum_type_flow_rate_intense%]",
+          "consumer_products_coffee_maker_enum_type_flow_rate_intense_plus": "[%key:component::home_connect::selector::flow_rate::options::consumer_products_coffee_maker_enum_type_flow_rate_intense_plus%]"
+        }
+      },
+      "coffee_milk_ratio": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_coffee_milk_ratio::name%]",
+        "state": {
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_10_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_10_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_20_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_20_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_25_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_25_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_30_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_30_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_40_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_40_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_55_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_55_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_60_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_60_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_65_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_65_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_67_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_67_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_70_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_70_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_75_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_75_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_80_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_80_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_85_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_85_percent%]",
+          "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_90_percent": "[%key:component::home_connect::selector::coffee_milk_ratio::options::consumer_products_coffee_maker_enum_type_coffee_milk_ratio_90_percent%]"
+        }
+      },
+      "hot_water_temperature": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_hot_water_temperature::name%]",
+        "state": {
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_white_tea": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_white_tea%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_green_tea": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_green_tea%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_black_tea": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_black_tea%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_50_c": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_50_c%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_55_c": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_55_c%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_60_c": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_60_c%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_65_c": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_65_c%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_70_c": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_70_c%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_75_c": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_75_c%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_80_c": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_80_c%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_85_c": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_85_c%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_90_c": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_90_c%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_95_c": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_95_c%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_97_c": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_97_c%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_122_f": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_122_f%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_131_f": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_131_f%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_140_f": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_140_f%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_149_f": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_149_f%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_158_f": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_158_f%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_167_f": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_167_f%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_176_f": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_176_f%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_185_f": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_185_f%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_194_f": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_194_f%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_203_f": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_203_f%]",
+          "consumer_products_coffee_maker_enum_type_hot_water_temperature_max": "[%key:component::home_connect::selector::hot_water_temperature::options::consumer_products_coffee_maker_enum_type_hot_water_temperature_max%]"
+        }
+      },
+      "drying_target": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_dryer_option_drying_target::name%]",
+        "state": {
+          "laundry_care_dryer_enum_type_drying_target_iron_dry": "[%key:component::home_connect::selector::drying_target::options::laundry_care_dryer_enum_type_drying_target_iron_dry%]",
+          "laundry_care_dryer_enum_type_drying_target_gentle_dry": "[%key:component::home_connect::selector::drying_target::options::laundry_care_dryer_enum_type_drying_target_gentle_dry%]",
+          "laundry_care_dryer_enum_type_drying_target_cupboard_dry": "[%key:component::home_connect::selector::drying_target::options::laundry_care_dryer_enum_type_drying_target_cupboard_dry%]",
+          "laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus": "[%key:component::home_connect::selector::drying_target::options::laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus%]",
+          "laundry_care_dryer_enum_type_drying_target_extra_dry": "[%key:component::home_connect::selector::drying_target::options::laundry_care_dryer_enum_type_drying_target_extra_dry%]"
+        }
+      },
+      "venting_level": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_hood_option_venting_level::name%]",
+        "state": {
+          "cooking_hood_enum_type_stage_fan_off": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_off%]",
+          "cooking_hood_enum_type_stage_fan_stage_01": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_01%]",
+          "cooking_hood_enum_type_stage_fan_stage_02": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_02%]",
+          "cooking_hood_enum_type_stage_fan_stage_03": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_03%]",
+          "cooking_hood_enum_type_stage_fan_stage_04": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_04%]",
+          "cooking_hood_enum_type_stage_fan_stage_05": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_05%]"
+        }
+      },
+      "intensive_level": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_hood_option_intensive_level::name%]",
+        "state": {
+          "cooking_hood_enum_type_intensive_stage_intensive_stage_off": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage_off%]",
+          "cooking_hood_enum_type_intensive_stage_intensive_stage1": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage1%]",
+          "cooking_hood_enum_type_intensive_stage_intensive_stage2": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage2%]"
+        }
+      },
+      "warming_level": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_oven_option_warming_level::name%]",
+        "state": {
+          "cooking_oven_enum_type_warming_level_low": "[%key:common::state::low%]",
+          "cooking_oven_enum_type_warming_level_medium": "[%key:common::state::medium%]",
+          "cooking_oven_enum_type_warming_level_high": "[%key:common::state::high%]"
+        }
+      },
+      "washer_temperature": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_temperature::name%]",
+        "state": {
+          "laundry_care_washer_enum_type_temperature_cold": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_cold%]",
+          "laundry_care_washer_enum_type_temperature_g_c_20": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_20%]",
+          "laundry_care_washer_enum_type_temperature_g_c_30": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_30%]",
+          "laundry_care_washer_enum_type_temperature_g_c_40": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_40%]",
+          "laundry_care_washer_enum_type_temperature_g_c_50": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_50%]",
+          "laundry_care_washer_enum_type_temperature_g_c_60": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_60%]",
+          "laundry_care_washer_enum_type_temperature_g_c_70": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_70%]",
+          "laundry_care_washer_enum_type_temperature_g_c_80": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_80%]",
+          "laundry_care_washer_enum_type_temperature_g_c_90": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_90%]",
+          "laundry_care_washer_enum_type_temperature_ul_cold": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_ul_cold%]",
+          "laundry_care_washer_enum_type_temperature_ul_warm": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_ul_warm%]",
+          "laundry_care_washer_enum_type_temperature_ul_hot": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_ul_hot%]",
+          "laundry_care_washer_enum_type_temperature_ul_extra_hot": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_ul_extra_hot%]"
+        }
+      },
+      "spin_speed": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_spin_speed::name%]",
+        "state": {
+          "laundry_care_washer_enum_type_spin_speed_off": "[%key:common::state::off%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_400%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_600": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_600%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_700": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_700%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_800": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_800%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_900": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_900%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_1000": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1000%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_1200": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1200%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_1400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1400%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_1600": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1600%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:common::state::low%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:common::state::medium%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:common::state::high%]"
+        }
+      },
+      "vario_perfect": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_vario_perfect::name%]",
+        "state": {
+          "laundry_care_common_enum_type_vario_perfect_off": "[%key:common::state::off%]",
+          "laundry_care_common_enum_type_vario_perfect_eco_perfect": "[%key:component::home_connect::selector::vario_perfect::options::laundry_care_common_enum_type_vario_perfect_eco_perfect%]",
+          "laundry_care_common_enum_type_vario_perfect_speed_perfect": "[%key:component::home_connect::selector::vario_perfect::options::laundry_care_common_enum_type_vario_perfect_speed_perfect%]"
+        }
+      }
+    },
+    "sensor": {
+      "program_progress": {
+        "name": "Program progress"
+      },
+      "program_finish_time": {
+        "name": "Program finish time"
+      },
+      "operation_state": {
+        "name": "Operation state",
+        "state": {
+          "inactive": "Inactive",
+          "ready": "Ready",
+          "delayedstart": "Delayed start",
+          "run": "Running",
+          "pause": "[%key:common::state::paused%]",
+          "actionrequired": "Action required",
+          "finished": "Finished",
+          "error": "[%key:common::state::error%]",
+          "aborting": "Aborting"
+        }
+      },
+      "door": {
+        "name": "Door",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "locked": "[%key:common::state::locked%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
+      "coffee_counter": {
+        "name": "Coffees"
+      },
+      "powder_coffee_counter": {
+        "name": "Powder coffees"
+      },
+      "hot_water_counter": {
+        "name": "Hot water"
+      },
+      "hot_water_cups_counter": {
+        "name": "Hot water cups"
+      },
+      "hot_milk_counter": {
+        "name": "Hot milk cups"
+      },
+      "frothy_milk_counter": {
+        "name": "Frothy milk cups"
+      },
+      "milk_counter": {
+        "name": "Milk cups"
+      },
+      "coffee_and_milk_counter": {
+        "name": "Coffee and milk cups"
+      },
+      "ristretto_espresso_counter": {
+        "name": "Ristretto espresso cups"
+      },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "camera_state": {
+        "name": "Camera state",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "sleeping": "Sleeping",
+          "ready": "Ready",
+          "streaminglocal": "Streaming local",
+          "streamingcloud": "Streaming cloud",
+          "streaminglocal_and_cloud": "Streaming local and cloud",
+          "error": "[%key:common::state::error%]"
+        }
+      },
+      "last_selected_map": {
+        "name": "Last selected map",
+        "state": {
+          "tempmap": "Temporary map",
+          "map1": "Map 1",
+          "map2": "Map 2",
+          "map3": "Map 3"
+        }
+      },
+      "oven_current_cavity_temperature": {
+        "name": "Current oven cavity temperature"
+      },
+      "program_aborted": {
+        "name": "Program aborted",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "program_finished": {
+        "name": "Program finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "alarm_clock_elapsed": {
+        "name": "Alarm clock elapsed",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "preheat_finished": {
+        "name": "Pre-heat finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "regular_preheat_finished": {
+        "name": "Regular pre-heat finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "drying_process_finished": {
+        "name": "Drying process finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "salt_nearly_empty": {
+        "name": "Salt nearly empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "rinse_aid_nearly_empty": {
+        "name": "Rinse aid nearly empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "bean_container_empty": {
+        "name": "Bean container empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "water_tank_empty": {
+        "name": "Water tank empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "drip_tray_full": {
+        "name": "Drip tray full",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "keep_milk_tank_cool": {
+        "name": "Keep milk tank cool",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "descaling_in_20_cups": {
+        "name": "Descaling in 20 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "descaling_in_15_cups": {
+        "name": "Descaling in 15 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "descaling_in_10_cups": {
+        "name": "Descaling in 10 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "descaling_in_5_cups": {
+        "name": "Descaling in 5 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_should_be_descaled": {
+        "name": "Device should be descaled",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_descaling_overdue": {
+        "name": "Device descaling overdue",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_descaling_blockage": {
+        "name": "Device descaling blockage",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_should_be_cleaned": {
+        "name": "Device should be cleaned",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_cleaning_overdue": {
+        "name": "Device cleaning overdue",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in20cups": {
+        "name": "Calc'N'Clean in 20 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in15cups": {
+        "name": "Calc'N'Clean in 15 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in10cups": {
+        "name": "Calc'N'Clean in 10 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in5cups": {
+        "name": "Calc'N'Clean in 5 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_should_be_calc_n_cleaned": {
+        "name": "Device should be Calc'N'Cleaned",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_calc_n_clean_overdue": {
+        "name": "Device Calc'N'Clean overdue",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_calc_n_clean_blockage": {
+        "name": "Device Calc'N'Clean blockage",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "freezer_door_alarm": {
+        "name": "Freezer door alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "refrigerator_door_alarm": {
+        "name": "Refrigerator door alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "freezer_temperature_alarm": {
+        "name": "Freezer temperature alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "empty_dust_box_and_clean_filter": {
+        "name": "Empty dust box and clean filter",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "robot_is_stuck": {
+        "name": "Robot is stuck",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "docking_station_not_found": {
+        "name": "Docking station not found",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "poor_i_dos_1_fill_level": {
+        "name": "Poor i-Dos 1 fill level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "poor_i_dos_2_fill_level": {
+        "name": "Poor i-Dos 2 fill level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "grease_filter_max_saturation_nearly_reached": {
+        "name": "Grease filter max saturation nearly reached",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "grease_filter_max_saturation_reached": {
+        "name": "Grease filter max saturation reached",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "cup_warmer": {
+        "name": "Cup warmer"
+      },
+      "refrigerator_super_mode": {
+        "name": "Refrigerator super mode"
+      },
+      "freezer_super_mode": {
+        "name": "Freezer super mode"
+      },
+      "eco_mode": {
+        "name": "Eco mode"
+      },
+      "sabbath_mode": {
+        "name": "Sabbath mode"
+      },
+      "vacation_mode": {
+        "name": "Vacation mode"
+      },
+      "fresh_mode": {
+        "name": "Fresh mode"
+      },
+      "dispenser_enabled": {
+        "name": "Dispenser",
+        "state": {
+          "off": "[%key:common::state::disabled%]",
+          "on": "[%key:common::state::enabled%]"
+        }
+      },
+      "door_assistant_fridge": {
+        "name": "Fridge door assistant"
+      },
+      "door_assistant_freezer": {
+        "name": "Freezer door assistant"
+      },
+      "multiple_beverages": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_multiple_beverages::name%]"
+      },
+      "intensiv_zone": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_intensiv_zone::name%]"
+      },
+      "brilliance_dry": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_brilliance_dry::name%]"
+      },
+      "vario_speed_plus": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_vario_speed_plus::name%]"
+      },
+      "silence_on_demand": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_silence_on_demand::name%]"
+      },
+      "half_load": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_half_load::name%]"
+      },
+      "extra_dry": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_extra_dry::name%]"
+      },
+      "hygiene_plus": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_hygiene_plus::name%]"
+      },
+      "eco_dry": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_eco_dry::name%]"
+      },
+      "zeolite_dry": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_zeolite_dry::name%]"
+      },
+      "fast_pre_heat": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_oven_option_fast_pre_heat::name%]"
+      },
+      "i_dos1_active": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos1_active::name%]"
+      },
+      "i_dos2_active": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos2_active::name%]"
+      }
+    },
+    "time": {
+      "alarm_clock": {
+        "name": "Alarm clock"
       }
     }
   }

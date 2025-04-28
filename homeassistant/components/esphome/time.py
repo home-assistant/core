@@ -3,31 +3,15 @@
 from __future__ import annotations
 
 from datetime import time
+from functools import partial
 
 from aioesphomeapi import TimeInfo, TimeState
 
 from homeassistant.components.time import TimeEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up esphome times based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=TimeInfo,
-        entity_type=EsphomeTime,
-        state_type=TimeState,
-    )
+PARALLEL_UPDATES = 0
 
 
 class EsphomeTime(EsphomeEntity[TimeInfo, TimeState], TimeEntity):
@@ -45,3 +29,11 @@ class EsphomeTime(EsphomeEntity[TimeInfo, TimeState], TimeEntity):
     async def async_set_value(self, value: time) -> None:
         """Update the current time."""
         self._client.time_command(self._key, value.hour, value.minute, value.second)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=TimeInfo,
+    entity_type=EsphomeTime,
+    state_type=TimeState,
+)

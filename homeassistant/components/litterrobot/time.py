@@ -10,28 +10,21 @@ from typing import Any, Generic
 from pylitterbot import LitterRobot3
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .entity import LitterRobotEntity, _RobotT
-from .hub import LitterRobotHub
-
-
-@dataclass(frozen=True)
-class RequiredKeysMixin(Generic[_RobotT]):
-    """A class that describes robot time entity required keys."""
-
-    value_fn: Callable[[_RobotT], time | None]
-    set_fn: Callable[[_RobotT, time], Coroutine[Any, Any, bool]]
+from .coordinator import LitterRobotConfigEntry
+from .entity import LitterRobotEntity, _WhiskerEntityT
 
 
-@dataclass(frozen=True)
-class RobotTimeEntityDescription(TimeEntityDescription, RequiredKeysMixin[_RobotT]):
+@dataclass(frozen=True, kw_only=True)
+class RobotTimeEntityDescription(TimeEntityDescription, Generic[_WhiskerEntityT]):
     """A class that describes robot time entities."""
+
+    value_fn: Callable[[_WhiskerEntityT], time | None]
+    set_fn: Callable[[_WhiskerEntityT, time], Coroutine[Any, Any, bool]]
 
 
 def _as_local_time(start: datetime | None) -> time | None:
@@ -44,34 +37,37 @@ LITTER_ROBOT_3_SLEEP_START = RobotTimeEntityDescription[LitterRobot3](
     translation_key="sleep_mode_start_time",
     entity_category=EntityCategory.CONFIG,
     value_fn=lambda robot: _as_local_time(robot.sleep_mode_start_time),
-    set_fn=lambda robot, value: robot.set_sleep_mode(
-        robot.sleep_mode_enabled, value.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    set_fn=(
+        lambda robot, value: robot.set_sleep_mode(
+            robot.sleep_mode_enabled,
+            value.replace(tzinfo=dt_util.get_default_time_zone()),
+        )
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LitterRobotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
-        [
-            LitterRobotTimeEntity(
-                robot=robot, hub=hub, description=LITTER_ROBOT_3_SLEEP_START
-            )
-            for robot in hub.litter_robots()
-            if isinstance(robot, LitterRobot3)
-        ]
+        LitterRobotTimeEntity(
+            robot=robot,
+            coordinator=coordinator,
+            description=LITTER_ROBOT_3_SLEEP_START,
+        )
+        for robot in coordinator.litter_robots()
+        if isinstance(robot, LitterRobot3)
     )
 
 
-class LitterRobotTimeEntity(LitterRobotEntity[_RobotT], TimeEntity):
+class LitterRobotTimeEntity(LitterRobotEntity[_WhiskerEntityT], TimeEntity):
     """Litter-Robot time entity."""
 
-    entity_description: RobotTimeEntityDescription[_RobotT]
+    entity_description: RobotTimeEntityDescription[_WhiskerEntityT]
 
     @property
     def native_value(self) -> time | None:

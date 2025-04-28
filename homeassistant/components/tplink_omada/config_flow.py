@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 import re
-from types import MappingProxyType
 from typing import Any, NamedTuple
 from urllib.parse import urlsplit
 
@@ -45,7 +44,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def create_omada_client(
-    hass: HomeAssistant, data: MappingProxyType[str, Any]
+    hass: HomeAssistant, data: Mapping[str, Any]
 ) -> OmadaClient:
     """Create a TP-Link Omada client API for the given config entry."""
 
@@ -84,7 +83,7 @@ class HubInfo(NamedTuple):
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> HubInfo:
     """Validate the user input allows us to connect."""
 
-    client = await create_omada_client(hass, MappingProxyType(data))
+    client = await create_omada_client(hass, data)
     controller_id = await client.login()
     name = await client.get_controller_name()
     sites = await client.get_sites()
@@ -179,15 +178,9 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if info is not None:
                 # Auth successful - update the config entry with the new credentials
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=self._omada_opts
                 )
-                assert entry is not None
-                self.hass.config_entries.async_update_entry(
-                    entry, data=self._omada_opts
-                )
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -218,7 +211,7 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
         except OmadaClientException as ex:
             _LOGGER.error("Unexpected API error: %s", ex)
             errors["base"] = "unknown"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return None

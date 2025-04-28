@@ -1,9 +1,49 @@
 {
   "domain": "onkyo",
   "name": "Onkyo",
-  "codeowners": [],
+  "codeowners": ["@arturpragacz", "@eclair4151"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
-  "iot_class": "local_polling",
-  "loggers": ["eiscp"],
-  "requirements": ["onkyo-eiscp==1.2.7"]
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["pyeiscp"],
+  "requirements": ["pyeiscp==0.0.7"],
+  "ssdp": [
+    {
+      "manufacturer": "ONKYO",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "manufacturer": "ONKYO",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2"
+    },
+    {
+      "manufacturer": "ONKYO",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3"
+    },
+    {
+      "manufacturer": "Onkyo & Pioneer Corporation",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "manufacturer": "Onkyo & Pioneer Corporation",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2"
+    },
+    {
+      "manufacturer": "Onkyo & Pioneer Corporation",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3"
+    },
+    {
+      "manufacturer": "Pioneer",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "manufacturer": "Pioneer",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2"
+    },
+    {
+      "manufacturer": "Pioneer",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3"
+    }
+  ]
 }

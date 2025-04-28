@@ -10,20 +10,17 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from . import name_short_mac
-from .const import DOMAIN
+from . import EmonitorConfigEntry, name_short_mac
 
 SENSORS = (
     SensorEntityDescription(key="inst_power"),
@@ -40,11 +37,11 @@ SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EmonitorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     channels = coordinator.data.channels
     entities: list[EmonitorPowerSensor] = []
     seen_channels = set()
@@ -63,7 +60,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
+class EmonitorPowerSensor(CoordinatorEntity[EmonitorStatus], SensorEntity):
     """Representation of an Emonitor power sensor entity."""
 
     _attr_device_class = SensorDeviceClass.POWER
@@ -81,7 +78,8 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self.channel_number = channel_number
         super().__init__(coordinator)
-        mac_address = self.emonitor_status.network.mac_address
+        emonitor_status = self.coordinator.data
+        mac_address = emonitor_status.network.mac_address
         device_name = name_short_mac(mac_address[-6:])
         label = self.channel_data.label or str(channel_number)
         if description.translation_key is not None:
@@ -94,24 +92,21 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
             manufacturer="Powerhouse Dynamics, Inc.",
             name=device_name,
-            sw_version=self.emonitor_status.hardware.firmware_version,
+            sw_version=emonitor_status.hardware.firmware_version,
         )
+        self._attr_extra_state_attributes = {"channel": channel_number}
+        self._attr_native_value = self._paired_attr(self.entity_description.key)
 
     @property
     def channels(self) -> dict[int, EmonitorChannel]:
         """Return the channels dict."""
-        channels: dict[int, EmonitorChannel] = self.emonitor_status.channels
+        channels: dict[int, EmonitorChannel] = self.coordinator.data.channels
         return channels
 
     @property
     def channel_data(self) -> EmonitorChannel:
         """Return the channel data."""
         return self.channels[self.channel_number]
-
-    @property
-    def emonitor_status(self) -> EmonitorStatus:
-        """Return the EmonitorStatus."""
-        return self.coordinator.data
 
     def _paired_attr(self, attr_name: str) -> float:
         """Cumulative attributes for channel and paired channel."""
@@ -121,12 +116,8 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
             attr_val += getattr(self.channels[paired_channel], attr_name)
         return attr_val
 
-    @property
-    def native_value(self) -> StateType:
-        """State of the sensor."""
-        return self._paired_attr(self.entity_description.key)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, int]:
-        """Return the device specific state attributes."""
-        return {"channel": self.channel_number}
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_native_value = self._paired_attr(self.entity_description.key)
+        return super()._handle_coordinator_update()

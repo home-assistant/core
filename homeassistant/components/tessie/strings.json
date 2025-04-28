@@ -1,5 +1,9 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
     "error": {
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -44,7 +48,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "off": "Normal",
+              "off": "[%key:common::state::normal%]",
               "on": "Keep mode",
               "dog": "Dog mode",
               "camp": "Camp mode"
@@ -59,9 +63,6 @@
       },
       "charge_state_charge_port_latch": {
         "name": "Charge cable lock"
-      },
-      "vehicle_state_speed_limit_mode_active": {
-        "name": "Speed limit"
       }
     },
     "media_player": {
@@ -74,9 +75,9 @@
         "name": "Charging",
         "state": {
           "starting": "Starting",
-          "charging": "Charging",
-          "disconnected": "Disconnected",
-          "stopped": "Stopped",
+          "charging": "[%key:common::state::charging%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "stopped": "[%key:common::state::stopped%]",
           "complete": "Complete",
           "no_power": "No power"
         }
@@ -167,6 +168,60 @@
       },
       "drive_state_active_route_destination": {
         "name": "Destination"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "energy_left": {
+        "name": "Energy left"
+      },
+      "generator_power": {
+        "name": "Generator power"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "grid_services_power": {
+        "name": "Grid services power"
+      },
+      "load_power": {
+        "name": "Load power"
+      },
+      "percentage_charged": {
+        "name": "Percentage charged"
+      },
+      "solar_power": {
+        "name": "Solar power"
+      },
+      "total_pack_energy": {
+        "name": "Total pack energy"
+      },
+      "vin": {
+        "name": "Vehicle"
+      },
+      "vpp_backup_reserve_percent": {
+        "name": "VPP backup reserve"
+      },
+      "wall_connector_fault_state": {
+        "name": "Fault state code"
+      },
+      "wall_connector_power": {
+        "name": "Power"
+      },
+      "wall_connector_state": {
+        "name": "State",
+        "state": {
+          "booting": "Booting",
+          "charging": "[%key:common::state::charging%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "connected": "[%key:common::state::connected%]",
+          "scheduled": "Scheduled",
+          "negotiating": "Negotiating",
+          "error": "[%key:common::state::error%]",
+          "charging_finished": "Charging finished",
+          "waiting_car": "Waiting car",
+          "charging_reduced": "Charging reduced"
+        }
       }
     },
     "cover": {
@@ -181,6 +236,9 @@
       },
       "vehicle_state_rt": {
         "name": "Trunk"
+      },
+      "vehicle_state_sun_roof_state": {
+        "name": "Sunroof"
       }
     },
     "select": {
@@ -188,71 +246,108 @@
         "name": "Seat heater left",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_right": {
         "name": "Seat heater right",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_rear_left": {
         "name": "Seat heater rear left",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_rear_center": {
         "name": "Seat heater rear center",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_rear_right": {
         "name": "Seat heater rear right",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_third_row_left": {
         "name": "Seat heater third row left",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "climate_state_seat_heater_third_row_right": {
         "name": "Seat heater third row right",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
+      },
+      "climate_state_seat_fan_front_left": {
+        "name": "Seat cooler left",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
+      },
+      "climate_state_seat_fan_front_right": {
+        "name": "Seat cooler right",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
+      },
+      "components_customer_preferred_export_rule": {
+        "name": "Allow export",
+        "state": {
+          "battery_ok": "Battery",
+          "never": "Never",
+          "pv_only": "Solar only"
+        }
+      },
+      "default_real_mode": {
+        "name": "Operation mode",
+        "state": {
+          "autonomous": "Autonomous",
+          "backup": "Backup",
+          "self_consumption": "Self consumption"
         }
       }
     },
     "binary_sensor": {
+      "backup_capable": {
+        "name": "Backup capable"
+      },
       "state": {
         "name": "Status"
       },
-      "charge_state_battery_heater_on": {
+      "climate_state_battery_heater": {
         "name": "Battery heater"
       },
       "charge_state_charge_enable_request": {
@@ -290,6 +385,15 @@
       },
       "climate_state_cabin_overheat_protection_actively_cooling": {
         "name": "Cabin overheat protection actively cooling"
+      },
+      "components_grid_services_enabled": {
+        "name": "Grid services enabled"
+      },
+      "storm_mode_active": {
+        "name": "Storm watch active"
+      },
+      "grid_services_active": {
+        "name": "Grid services active"
       },
       "vehicle_state_dashcam_state": {
         "name": "Dashcam"
@@ -355,7 +459,7 @@
       }
     },
     "switch": {
-      "charge_state_charge_enable_request": {
+      "charge_state_charging_state": {
         "name": "Charge"
       },
       "climate_state_defrost_mode": {
@@ -369,9 +473,18 @@
       },
       "climate_state_steering_wheel_heater": {
         "name": "Steering wheel heater"
+      },
+      "components_disallow_charge_from_grid_with_solar_installed": {
+        "name": "Allow charging from grid"
+      },
+      "user_settings_storm_mode_enabled": {
+        "name": "Storm watch"
       }
     },
     "number": {
+      "backup_reserve_percent": {
+        "name": "Backup reserve"
+      },
       "charge_state_charge_current_request": {
         "name": "Charge current"
       },
@@ -380,6 +493,9 @@
       },
       "vehicle_state_speed_limit_mode_current_limit_mph": {
         "name": "Speed limit"
+      },
+      "off_grid_vehicle_charging_reserve_percent": {
+        "name": "Off-grid reserve"
       }
     },
     "update": {
@@ -390,7 +506,7 @@
   },
   "exceptions": {
     "unknown": {
-      "message": "An unknown issue occured changing {name}."
+      "message": "An unknown issue occurred changing {name}."
     },
     "not_supported": {
       "message": "{name} is not supported."
@@ -405,10 +521,13 @@
       "message": "{name} is already inactive."
     },
     "incorrect_pin": {
-      "message": "Incorrect pin for {name}."
+      "message": "Incorrect PIN for {name}."
     },
     "no_cable": {
       "message": "Insert cable to lock"
+    },
+    "command_failed": {
+      "message": "Command failed, {message}"
     }
   }
 }

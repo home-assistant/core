@@ -14,8 +14,8 @@
   ],
   "quality_scale": "internal",
   "requirements": [
-    "aiodhcpwatcher==1.0.0",
-    "aiodiscover==2.0.0",
-    "cached_ipaddress==0.3.0"
+    "aiodhcpwatcher==1.1.1",
+    "aiodiscover==2.6.1",
+    "cached-ipaddress==0.10.0"
   ]
 }

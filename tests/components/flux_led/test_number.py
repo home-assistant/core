@@ -21,10 +21,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import (
     DEFAULT_ENTRY_TITLE,
@@ -292,7 +292,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
     assert state.state == "4"
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -314,7 +314,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
     bulb.async_set_device_config.assert_called_with(pixels_per_segment=100)
     bulb.async_set_device_config.reset_mock()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -335,7 +335,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
     bulb.async_set_device_config.assert_called_with(music_pixels_per_segment=100)
     bulb.async_set_device_config.reset_mock()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -356,7 +356,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
     bulb.async_set_device_config.assert_called_with(segments=5)
     bulb.async_set_device_config.reset_mock()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,

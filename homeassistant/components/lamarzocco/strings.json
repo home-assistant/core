@@ -1,12 +1,13 @@
 {
   "config": {
-    "flow_title": "La Marzocco Espresso {host}",
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "machine_not_found": "Discovered machine not found in given account",
       "no_machines": "No machines found in account",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
@@ -21,14 +22,22 @@
           "password": "Your password from the La Marzocco app"
         }
       },
-      "machine_selection": {
-        "description": "Select the machine you want to integrate. Set the \"IP\" to get access to shot time related sensors.",
+      "bluetooth_selection": {
+        "description": "Select your device from available Bluetooth devices.",
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]",
+          "mac": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "mac": "Select the Bluetooth device that is your machine"
+        }
+      },
+      "machine_selection": {
+        "description": "Select the machine you want to integrate.",
+        "data": {
           "machine": "Machine"
         },
         "data_description": {
-          "host": "Local IP address of the machine"
+          "machine": "Select the machine you want to integrate"
         }
       },
       "reauth_confirm": {
@@ -39,6 +48,16 @@
         "data_description": {
           "password": "[%key:component::lamarzocco::config::step::user::data_description::password%]"
         }
+      },
+      "reconfigure": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::lamarzocco::config::step::user::data_description::username%]",
+          "password": "[%key:component::lamarzocco::config::step::user::data_description::password%]"
+        }
       }
     }
   },
@@ -46,19 +65,27 @@
     "step": {
       "init": {
         "data": {
-          "title": "Update Configuration",
           "use_bluetooth": "Use Bluetooth"
+        },
+        "data_description": {
+          "use_bluetooth": "Should the integration try to use Bluetooth to control the machine?"
         }
       }
     }
   },
   "entity": {
     "binary_sensor": {
+      "backflush_enabled": {
+        "name": "Backflush active"
+      },
       "brew_active": {
         "name": "Brewing active"
       },
       "water_tank": {
         "name": "Water tank empty"
+      },
+      "websocket_connected": {
+        "name": "WebSocket connected"
       }
     },
     "button": {
@@ -68,48 +95,40 @@
     },
     "calendar": {
       "auto_on_off_schedule": {
-        "name": "Auto on/off schedule"
+        "name": "Auto on/off schedule ({id})"
       }
     },
     "number": {
       "coffee_temp": {
         "name": "Coffee target temperature"
       },
-      "dose_key": {
-        "name": "Dose Key {key}"
+      "smart_standby_time": {
+        "name": "Smart standby time"
       },
-      "prebrew_on": {
-        "name": "Prebrew on time"
-      },
-      "prebrew_on_key": {
-        "name": "Prebrew on time Key {key}"
-      },
-      "prebrew_off": {
-        "name": "Prebrew off time"
-      },
-      "prebrew_off_key": {
-        "name": "Prebrew off time Key {key}"
-      },
-      "preinfusion_off": {
+      "preinfusion_time": {
         "name": "Preinfusion time"
       },
-      "preinfusion_off_key": {
-        "name": "Preinfusion time Key {key}"
+      "prebrew_time_on": {
+        "name": "Prebrew on time"
       },
-      "steam_temp": {
-        "name": "Steam target temperature"
-      },
-      "tea_water_duration": {
-        "name": "Tea water duration"
+      "prebrew_time_off": {
+        "name": "Prebrew off time"
       }
     },
     "select": {
       "prebrew_infusion_select": {
         "name": "Prebrew/-infusion mode",
         "state": {
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "prebrew": "Prebrew",
           "preinfusion": "Preinfusion"
+        }
+      },
+      "smart_standby_mode": {
+        "name": "Smart standby mode",
+        "state": {
+          "last_brewing": "Last brewing",
+          "power_on": "Power on"
         }
       },
       "steam_temp_select": {
@@ -122,25 +141,22 @@
       }
     },
     "sensor": {
-      "current_temp_coffee": {
-        "name": "Current coffee temperature"
+      "coffee_boiler_ready_time": {
+        "name": "Coffee boiler ready time"
       },
-      "current_temp_steam": {
-        "name": "Current steam temperature"
+      "steam_boiler_ready_time": {
+        "name": "Steam boiler ready time"
       },
-      "drink_stats_coffee": {
-        "name": "Total coffees made"
-      },
-      "drink_stats_flushing": {
-        "name": "Total flushes made"
-      },
-      "shot_timer": {
-        "name": "Shot timer"
+      "last_cleaning_time": {
+        "name": "Last cleaning time"
       }
     },
     "switch": {
       "auto_on_off": {
-        "name": "Auto on/off"
+        "name": "Auto on/off ({id})"
+      },
+      "smart_standby_enabled": {
+        "name": "Smart standby enabled"
       },
       "steam_boiler": {
         "name": "Steam boiler"
@@ -153,6 +169,41 @@
       "gateway_firmware": {
         "name": "Gateway firmware"
       }
+    }
+  },
+  "issues": {
+    "unsupported_gateway_firmware": {
+      "title": "Unsupported gateway firmware",
+      "description": "Gateway firmware {gateway_version} is no longer supported by this integration, please update."
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Error while communicating with the API"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
+    "auto_on_off_error": {
+      "message": "Error while setting auto on/off to {state} for {id}"
+    },
+    "button_error": {
+      "message": "Error while executing button {key}"
+    },
+    "number_exception": {
+      "message": "Error while setting value {value} for number {key}"
+    },
+    "select_option_error": {
+      "message": "Error while setting select option {option} for {key}"
+    },
+    "switch_on_error": {
+      "message": "Error while turning on switch {key}"
+    },
+    "switch_off_error": {
+      "message": "Error while turning off switch {key}"
+    },
+    "update_failed": {
+      "message": "Error while updating {key}"
     }
   }
 }

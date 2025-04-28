@@ -31,6 +31,8 @@ from .const import (
 from .discovery import async_discover_devices, async_trigger_discovery
 from .models import WizData
 
+type WizConfigEntry = ConfigEntry[WizData]
+
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
@@ -94,13 +96,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if bulb.power_monitoring is not False:
                 power: float | None = await bulb.get_power()
                 return power
-            return None
         except WIZ_EXCEPTIONS as ex:
             raise UpdateFailed(f"Failed to update device at {ip_address}: {ex}") from ex
+        return None
 
     coordinator = DataUpdateCoordinator(
         hass=hass,
         logger=_LOGGER,
+        config_entry=entry,
         name=entry.title,
         update_interval=timedelta(seconds=15),
         update_method=_async_update,
@@ -113,9 +116,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady as err:
+    except ConfigEntryNotReady:
         await bulb.async_close()
-        raise err
+        raise
 
     async def _async_shutdown_on_stop(event: Event) -> None:
         await bulb.async_close()
@@ -135,9 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await bulb.start_push(_async_push_update)
     bulb.set_discovery_callback(lambda bulb: async_trigger_discovery(hass, [bulb]))
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WizData(
-        coordinator=coordinator, bulb=bulb, scenes=scenes
-    )
+    entry.runtime_data = WizData(coordinator=coordinator, bulb=bulb, scenes=scenes)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -147,6 +148,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data: WizData = hass.data[DOMAIN].pop(entry.entry_id)
-        await data.bulb.async_close()
+        await entry.runtime_data.bulb.async_close()
     return unload_ok

@@ -9,12 +9,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -25,7 +24,7 @@ from .const import (
     ATTR_NEAREST_DIST_TO,
     DOMAIN,
 )
-from .coordinator import ProximityDataUpdateCoordinator
+from .coordinator import ProximityConfigEntry, ProximityDataUpdateCoordinator
 
 DIRECTIONS = ["arrived", "away_from", "stationary", "towards"]
 
@@ -81,11 +80,13 @@ def _device_info(coordinator: ProximityDataUpdateCoordinator) -> DeviceInfo:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ProximityConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the proximity sensors."""
 
-    coordinator: ProximityDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[ProximitySensor | ProximityTrackedEntitySensor] = [
         ProximitySensor(description, coordinator)

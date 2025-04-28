@@ -41,11 +41,11 @@ async def test_load_unload_entry(
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -62,6 +62,8 @@ async def test_config_exceptions(
     config_error: IntegrationError,
 ) -> None:
     """Test if the correct config error is raised when connecting to the api fails."""
+    config_entry.add_to_hass(hass)
+
     with (
         patch(
             "homeassistant.components.blue_current.Client.validate_api_token",
@@ -69,7 +71,6 @@ async def test_config_exceptions(
         ),
         pytest.raises(config_error),
     ):
-        config_entry.add_to_hass(hass)
         await async_setup_entry(hass, config_entry)
 
 

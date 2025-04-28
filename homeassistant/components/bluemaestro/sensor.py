@@ -8,11 +8,9 @@ from bluemaestro_ble import (
     Units,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -29,10 +27,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
-from .const import DOMAIN
+from . import BlueMaestroConfigEntry
 from .device import device_key_to_bluetooth_entity_key
 
 SENSOR_DESCRIPTIONS = {
@@ -75,6 +73,7 @@ SENSOR_DESCRIPTIONS = {
     ): SensorEntityDescription(
         key=f"{BlueMaestroSensorDeviceClass.DEW_POINT}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
+        translation_key="dew_point",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -110,22 +109,17 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
-        entity_names={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
-            for device_key, sensor_values in sensor_update.entity_values.items()
-        },
+        entity_names={},
     )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: BlueMaestroConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the BlueMaestro BLE sensors."""
-    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator = entry.runtime_data
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
@@ -136,7 +130,9 @@ async def async_setup_entry(
 
 
 class BlueMaestroBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[float | int | None, SensorUpdate]
+    ],
     SensorEntity,
 ):
     """Representation of a BlueMaestro sensor."""

@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
     CharacteristicsTypes,
+    CurrentFanStateValues,
     CurrentHeaterCoolerStateValues,
     HeatingCoolingCurrentValues,
     HeatingCoolingTargetValues,
@@ -16,6 +17,7 @@ from aiohomekit.model.characteristics import (
 )
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
+from propcache.api import cached_property
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -39,7 +41,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -48,12 +50,6 @@ from homeassistant.util.percentage import (
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,7 +111,7 @@ HASS_FAN_MODE_TO_HOMEKIT_ROTATION = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homekit climate."""
     hkid: str = config_entry.data["AccessoryPairingID"]
@@ -140,7 +136,6 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     """The base HomeKit Controller climate entity."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _async_reconfigure(self) -> None:
@@ -489,6 +484,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
             CharacteristicsTypes.TEMPERATURE_TARGET,
             CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET,
+            CharacteristicsTypes.FAN_STATE_CURRENT,
         ]
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -637,7 +633,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET)
 
     @property
-    def min_humidity(self) -> int:
+    def min_humidity(self) -> float:
         """Return the minimum humidity."""
         min_humidity = self.service[
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
@@ -647,7 +643,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         return super().min_humidity
 
     @property
-    def max_humidity(self) -> int:
+    def max_humidity(self) -> float:
         """Return the maximum humidity."""
         max_humidity = self.service[
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
@@ -663,15 +659,27 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         # e.g. a thermostat is "heating" a room to 75 degrees Fahrenheit.
         # Can be 0 - 2 (Off, Heat, Cool)
 
+        target = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_CURRENT)
+        current_hass_value = CURRENT_MODE_HOMEKIT_TO_HASS.get(value)
+
+        # If a device has a fan state (such as an Ecobee thermostat)
+        # show the Fan state when the device is otherwise idle.
+        if (
+            current_hass_value == HVACAction.IDLE
+            and self.service.has(CharacteristicsTypes.FAN_STATE_CURRENT)
+            and self.service.value(CharacteristicsTypes.FAN_STATE_CURRENT)
+            == CurrentFanStateValues.ACTIVE
+        ):
+            return HVACAction.FAN
+
         # If the HVAC is switched off, it must be idle
         # This works around a bug in some devices (like Eve radiator valves) that
         # return they are heating when they are not.
-        target = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if target == HeatingCoolingTargetValues.OFF:
             return HVACAction.IDLE
 
-        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_CURRENT)
-        return CURRENT_MODE_HOMEKIT_TO_HASS.get(value)
+        return current_hass_value
 
     @property
     def hvac_mode(self) -> HVACMode:

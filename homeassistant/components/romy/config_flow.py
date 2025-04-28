@@ -5,15 +5,15 @@ from __future__ import annotations
 import romy
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER
 
 
-class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RomyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for ROMY."""
 
     VERSION = 1
@@ -26,7 +26,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step."""
         errors: dict[str, str] = {}
 
@@ -59,7 +59,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_password(
         self, user_input: dict[str, str] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Unlock the robots local http interface with password."""
         errors: dict[str, str] = {}
 
@@ -84,8 +84,8 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> config_entries.ConfigFlowResult:
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
         LOGGER.debug("Zeroconf discovery_info: %s", discovery_info)
@@ -125,7 +125,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a confirmation flow initiated by zeroconf."""
         if user_input is None:
             return self.async_show_form(
@@ -137,7 +137,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self._async_step_finish_config()
 
-    async def _async_step_finish_config(self) -> config_entries.ConfigFlowResult:
+    async def _async_step_finish_config(self) -> ConfigFlowResult:
         """Finish the configuration setup."""
         return self.async_create_entry(
             title=self.robot_name_given_by_user,

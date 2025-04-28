@@ -6,19 +6,13 @@ import ipaddress
 import logging
 from typing import NamedTuple
 
-from vallox_websocket_api import MetricData, Profile, Vallox, ValloxApiException
+from vallox_websocket_api import Profile, Vallox, ValloxApiException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
 
 from .const import (
     DEFAULT_FAN_SPEED_AWAY,
@@ -26,8 +20,9 @@ from .const import (
     DEFAULT_FAN_SPEED_HOME,
     DEFAULT_NAME,
     DOMAIN,
-    STATE_SCAN_INTERVAL,
+    I18N_KEY_TO_VALLOX_PROFILE,
 )
+from .coordinator import ValloxDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +60,18 @@ SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
     }
 )
 
+ATTR_PROFILE = "profile"
+ATTR_DURATION = "duration"
+
+SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
+    {
+        vol.Required(ATTR_PROFILE): vol.In(I18N_KEY_TO_VALLOX_PROFILE),
+        vol.Optional(ATTR_DURATION): vol.All(
+            vol.Coerce(int), vol.Clamp(min=1, max=65535)
+        ),
+    }
+)
+
 
 class ServiceMethodDetails(NamedTuple):
     """Details for SERVICE_TO_METHOD mapping."""
@@ -76,6 +83,7 @@ class ServiceMethodDetails(NamedTuple):
 SERVICE_SET_PROFILE_FAN_SPEED_HOME = "set_profile_fan_speed_home"
 SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
 SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
+SERVICE_SET_PROFILE = "set_profile"
 
 SERVICE_TO_METHOD = {
     SERVICE_SET_PROFILE_FAN_SPEED_HOME: ServiceMethodDetails(
@@ -90,11 +98,10 @@ SERVICE_TO_METHOD = {
         method="async_set_profile_fan_speed_boost",
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
     ),
+    SERVICE_SET_PROFILE: ServiceMethodDetails(
+        method="async_set_profile", schema=SERVICE_SCHEMA_SET_PROFILE
+    ),
 }
-
-
-class ValloxDataUpdateCoordinator(DataUpdateCoordinator[MetricData]):  # pylint: disable=hass-enforce-coordinator-module
-    """The DataUpdateCoordinator for Vallox."""
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -104,22 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client = Vallox(host)
 
-    async def async_update_data() -> MetricData:
-        """Fetch state update."""
-        _LOGGER.debug("Updating Vallox state cache")
-
-        try:
-            return await client.fetch_metric_data()
-        except ValloxApiException as err:
-            raise UpdateFailed("Error during state cache update") from err
-
-    coordinator = ValloxDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"{name} DataUpdateCoordinator",
-        update_interval=STATE_SCAN_INTERVAL,
-        update_method=async_update_data,
-    )
+    coordinator = ValloxDataUpdateCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -161,7 +153,7 @@ class ValloxServiceHandler:
     """Services implementation."""
 
     def __init__(
-        self, client: Vallox, coordinator: DataUpdateCoordinator[MetricData]
+        self, client: Vallox, coordinator: ValloxDataUpdateCoordinator
     ) -> None:
         """Initialize the proxy."""
         self._client = client
@@ -175,11 +167,10 @@ class ValloxServiceHandler:
 
         try:
             await self._client.set_fan_speed(Profile.HOME, fan_speed)
-            return True
-
         except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Home profile: %s", err)
             return False
+        return True
 
     async def async_set_profile_fan_speed_away(
         self, fan_speed: int = DEFAULT_FAN_SPEED_AWAY
@@ -189,11 +180,10 @@ class ValloxServiceHandler:
 
         try:
             await self._client.set_fan_speed(Profile.AWAY, fan_speed)
-            return True
-
         except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Away profile: %s", err)
             return False
+        return True
 
     async def async_set_profile_fan_speed_boost(
         self, fan_speed: int = DEFAULT_FAN_SPEED_BOOST
@@ -203,11 +193,26 @@ class ValloxServiceHandler:
 
         try:
             await self._client.set_fan_speed(Profile.BOOST, fan_speed)
-            return True
-
         except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Boost profile: %s", err)
             return False
+        return True
+
+    async def async_set_profile(
+        self, profile: str, duration: int | None = None
+    ) -> bool:
+        """Activate profile for given duration."""
+        _LOGGER.debug("Activating profile %s for %s min", profile, duration)
+        try:
+            await self._client.set_profile(
+                I18N_KEY_TO_VALLOX_PROFILE[profile], duration
+            )
+        except ValloxApiException as err:
+            _LOGGER.error(
+                "Error setting profile %d for duration %s: %s", profile, duration, err
+            )
+            return False
+        return True
 
     async def async_handle(self, call: ServiceCall) -> None:
         """Dispatch a service call."""
@@ -227,24 +232,3 @@ class ValloxServiceHandler:
         # be observed by all parties involved.
         if result:
             await self._coordinator.async_request_refresh()
-
-
-class ValloxEntity(CoordinatorEntity[ValloxDataUpdateCoordinator]):
-    """Representation of a Vallox entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, name: str, coordinator: ValloxDataUpdateCoordinator) -> None:
-        """Initialize a Vallox entity."""
-        super().__init__(coordinator)
-
-        self._device_uuid = self.coordinator.data.uuid
-        assert self.coordinator.config_entry is not None
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self._device_uuid))},
-            manufacturer=DEFAULT_NAME,
-            model=self.coordinator.data.model,
-            name=name,
-            sw_version=self.coordinator.data.sw_version,
-            configuration_url=f"http://{self.coordinator.config_entry.data[CONF_HOST]}",
-        )

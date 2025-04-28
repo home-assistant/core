@@ -4,35 +4,30 @@ from __future__ import annotations
 
 from datetime import time, timedelta
 import logging
-from typing import TYPE_CHECKING, final
+from typing import final
 
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN, SERVICE_SET_VALUE
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+_LOGGER = logging.getLogger(__name__)
 
-
+DATA_COMPONENT: HassKey[EntityComponent[TimeEntity]] = HassKey(DOMAIN)
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-_LOGGER = logging.getLogger(__name__)
 
 __all__ = ["DOMAIN", "TimeEntity", "TimeEntityDescription"]
 
@@ -44,7 +39,7 @@ async def _async_set_value(entity: TimeEntity, service_call: ServiceCall) -> Non
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Time entities."""
-    component = hass.data[DOMAIN] = EntityComponent[TimeEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[TimeEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -58,14 +53,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[TimeEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[TimeEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class TimeEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -79,7 +72,7 @@ class TimeEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Time entity."""
 
     entity_description: TimeEntityDescription
-    _attr_native_value: time | None
+    _attr_native_value: time | None = None
     _attr_device_class: None = None
     _attr_state: None = None
 

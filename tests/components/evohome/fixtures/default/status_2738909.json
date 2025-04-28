@@ -1,0 +1,105 @@
+{
+  "locationId": "2738909",
+  "gateways": [
+    {
+      "gatewayId": "2499896",
+      "temperatureControlSystems": [
+        {
+          "systemId": "3432522",
+          "zones": [
+            {
+              "zoneId": "3432521",
+              "name": "Dead Zone",
+              "temperatureStatus": { "isAvailable": false },
+              "setpointStatus": {
+                "targetHeatTemperature": 17.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "activeFaults": []
+            },
+            {
+              "zoneId": "3432576",
+              "name": "Main Room",
+              "temperatureStatus": { "temperature": 19.0, "isAvailable": true },
+              "setpointStatus": {
+                "targetHeatTemperature": 17.0,
+                "setpointMode": "PermanentOverride"
+              },
+              "activeFaults": []
+            },
+            {
+              "zoneId": "3432577",
+              "name": "Front Room",
+              "temperatureStatus": { "temperature": 19.0, "isAvailable": true },
+              "setpointStatus": {
+                "targetHeatTemperature": 21.0,
+                "setpointMode": "TemporaryOverride",
+                "until": "2022-03-07T19:00:00Z"
+              },
+              "activeFaults": []
+            },
+            {
+              "zoneId": "3432578",
+              "temperatureStatus": { "temperature": 20.0, "isAvailable": true },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 17.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Kitchen"
+            },
+            {
+              "zoneId": "3432579",
+              "temperatureStatus": { "temperature": 20.0, "isAvailable": true },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 16.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Bathroom Dn"
+            },
+            {
+              "zoneId": "3432580",
+              "temperatureStatus": { "temperature": 21.0, "isAvailable": true },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 16.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Main Bedroom"
+            },
+            {
+              "zoneId": "3449703",
+              "temperatureStatus": { "temperature": 19.5, "isAvailable": true },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 17.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Kids Room"
+            },
+            {
+              "zoneId": "3450733",
+              "temperatureStatus": { "temperature": 19.5, "isAvailable": true },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 14.0,
+                "setpointMode": "PermanentOverride"
+              },
+              "name": "Spare Room"
+            }
+          ],
+          "dhw": {
+            "dhwId": "3933910",
+            "temperatureStatus": { "temperature": 23.0, "isAvailable": true },
+            "stateStatus": { "state": "Off", "mode": "PermanentOverride" },
+            "activeFaults": []
+          },
+          "activeFaults": [],
+          "systemModeStatus": { "mode": "AutoWithEco", "isPermanent": true }
+        }
+      ],
+      "activeFaults": []
+    }
+  ]
+}

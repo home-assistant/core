@@ -24,8 +24,6 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
     ClimateEntity,
@@ -37,7 +35,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DATA_CLIENT, DOMAIN
@@ -99,10 +97,10 @@ ATTR_FAN_STATE = "fan_state"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave climate from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_climate(info: ZwaveDiscoveryInfo) -> None:
@@ -130,7 +128,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     """Representation of a Z-Wave climate."""
 
     _attr_precision = PRECISION_TENTHS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
@@ -421,7 +418,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        min_temp = DEFAULT_MIN_TEMP
+        min_temp = 0.0  # Not using DEFAULT_MIN_TEMP to allow wider range
         base_unit: str = UnitOfTemperature.CELSIUS
         try:
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])
@@ -437,7 +434,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        max_temp = DEFAULT_MAX_TEMP
+        max_temp = 50.0  # Not using DEFAULT_MAX_TEMP to allow wider range
         base_unit: str = UnitOfTemperature.CELSIUS
         try:
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])

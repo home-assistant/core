@@ -16,5 +16,18 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_integration": {
+      "title": "The Linear Garage Door integration will be removed",
+      "description": "The Linear Garage Door integration will be removed as it has been replaced by the [Nice G.O.]({nice_go}) integration. Please migrate to the new integration.\n\nTo resolve this issue, please remove all Linear Garage Door entries from your configuration and add the new Nice G.O. integration. [Click here to see your existing Linear Garage Door integration entries]({entries})."
+    }
   }
 }

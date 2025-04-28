@@ -8,11 +8,16 @@
     },
     "condition_type": {
       "is_locked": "{entity_name} is locked",
-      "is_unlocked": "{entity_name} is unlocked"
+      "is_unlocked": "{entity_name} is unlocked",
+      "is_open": "{entity_name} is open"
     },
     "trigger_type": {
       "locked": "{entity_name} locked",
-      "unlocked": "{entity_name} unlocked"
+      "unlocked": "{entity_name} unlocked",
+      "open": "{entity_name} opened"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {
@@ -22,6 +27,8 @@
         "jammed": "Jammed",
         "locked": "[%key:common::state::locked%]",
         "locking": "Locking",
+        "open": "[%key:common::state::open%]",
+        "opening": "[%key:common::state::opening%]",
         "unlocked": "[%key:common::state::unlocked%]",
         "unlocking": "Unlocking"
       },

@@ -1,6 +1,12 @@
 """The tests for the Template select platform."""
 
+from typing import Any
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant import setup
+from homeassistant.components import select, template
 from homeassistant.components.input_select import (
     ATTR_OPTION as INPUT_SELECT_ATTR_OPTION,
     ATTR_OPTIONS as INPUT_SELECT_ATTR_OPTIONS,
@@ -14,15 +20,79 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION as SELECT_SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.components.template import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, async_capture_events
+from .conftest import ConfigurationStyle
 
-_TEST_SELECT = "select.template_select"
+from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
+
+_TEST_OBJECT_ID = "template_select"
+_TEST_SELECT = f"select.{_TEST_OBJECT_ID}"
 # Represent for select's current_option
 _OPTION_INPUT_SELECT = "input_select.option"
+
+
+async def async_setup_modern_format(
+    hass: HomeAssistant, count: int, select_config: dict[str, Any]
+) -> None:
+    """Do setup of select integration via new format."""
+    config = {"template": {"select": select_config}}
+
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def setup_select(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    select_config: dict[str, Any],
+) -> None:
+    """Do setup of select integration."""
+    if style == ConfigurationStyle.MODERN:
+        await async_setup_modern_format(
+            hass, count, {"name": _TEST_OBJECT_ID, **select_config}
+        )
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the config flow."""
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "select",
+            "state": "{{ 'on' }}",
+            "options": "{{ ['off', 'on', 'auto'] }}",
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.my_template")
+    assert state is not None
+    assert state == snapshot
 
 
 async def test_missing_optional_config(hass: HomeAssistant) -> None:
@@ -132,7 +202,9 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
     assert hass.states.async_all("select") == []
 
 
-async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
+async def test_templates_with_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls: list[ServiceCall]
+) -> None:
     """Test templates with values from other entities."""
     with assert_setup_component(1, "input_select"):
         assert await setup.async_setup_component(
@@ -187,8 +259,7 @@ async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
     await hass.async_start()
     await hass.async_block_till_done()
 
-    ent_reg = async_get(hass)
-    entry = ent_reg.async_get(_TEST_SELECT)
+    entry = entity_registry.async_get(_TEST_SELECT)
     assert entry
     assert entry.unique_id == "b-a"
 
@@ -233,6 +304,7 @@ async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
 async def test_trigger_select(hass: HomeAssistant) -> None:
     """Test trigger based template select."""
     events = async_capture_events(hass, "test_number_event")
+    action_events = async_capture_events(hass, "action_event")
     assert await setup.async_setup_component(
         hass,
         "template",
@@ -243,13 +315,23 @@ async def test_trigger_select(hass: HomeAssistant) -> None:
                 {
                     "unique_id": "listening-test-event",
                     "trigger": {"platform": "event", "event_type": "test_event"},
+                    "variables": {"beer": "{{ trigger.event.data.beer }}"},
+                    "action": [
+                        {"event": "action_event", "event_data": {"beer": "{{ beer }}"}}
+                    ],
                     "select": [
                         {
                             "name": "Hello Name",
                             "unique_id": "hello_name-id",
                             "state": "{{ trigger.event.data.beer }}",
                             "options": "{{ trigger.event.data.beers }}",
-                            "select_option": {"event": "test_number_event"},
+                            "select_option": {
+                                "event": "test_number_event",
+                                "event_data": {
+                                    "entity_id": "{{ this.entity_id }}",
+                                    "beer": "{{ beer }}",
+                                },
+                            },
                             "optimistic": True,
                         },
                     ],
@@ -277,6 +359,12 @@ async def test_trigger_select(hass: HomeAssistant) -> None:
     assert state.state == "duff"
     assert state.attributes["options"] == ["duff", "alamo"]
 
+    assert len(action_events) == 1
+    assert action_events[0].event_type == "action_event"
+    beer = action_events[0].data.get("beer")
+    assert beer is not None
+    assert beer == "duff"
+
     await hass.services.async_call(
         SELECT_DOMAIN,
         SELECT_SERVICE_SELECT_OPTION,
@@ -285,9 +373,21 @@ async def test_trigger_select(hass: HomeAssistant) -> None:
     )
     assert len(events) == 1
     assert events[0].event_type == "test_number_event"
+    entity_id = events[0].data.get("entity_id")
+    assert entity_id is not None
+    assert entity_id == "select.hello_name"
+
+    beer = events[0].data.get("beer")
+    assert beer is not None
+    assert beer == "duff"
 
 
-def _verify(hass, expected_current_option, expected_options, entity_name=_TEST_SELECT):
+def _verify(
+    hass: HomeAssistant,
+    expected_current_option: str,
+    expected_options: list[str],
+    entity_name: str = _TEST_SELECT,
+) -> None:
     """Verify select's state."""
     state = hass.states.get(entity_name)
     attributes = state.attributes
@@ -427,3 +527,76 @@ async def test_template_icon_with_trigger(hass: HomeAssistant) -> None:
     state = hass.states.get(_TEST_SELECT)
     assert state.state == "a"
     assert state.attributes[ATTR_ICON] == "mdi:greater"
+
+
+async def test_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for device for select template."""
+
+    device_config_entry = MockConfigEntry()
+    device_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    await hass.async_block_till_done()
+    assert device_entry is not None
+    assert device_entry.id is not None
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "select",
+            "state": "{{ 'on' }}",
+            "options": "{{ ['off', 'on', 'auto'] }}",
+            "device_id": device_entry.id,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    template_entity = entity_registry.async_get("select.my_template")
+    assert template_entity is not None
+    assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize(
+    ("count", "select_config"),
+    [
+        (
+            1,
+            {
+                "state": "{{ 'b' }}",
+                "select_option": [],
+                "options": "{{ ['a', 'b'] }}",
+                "optimistic": True,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [
+        ConfigurationStyle.MODERN,
+    ],
+)
+async def test_empty_action_config(hass: HomeAssistant, setup_select) -> None:
+    """Test configuration with empty script."""
+    await hass.services.async_call(
+        select.DOMAIN,
+        select.SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: _TEST_SELECT, "option": "a"},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == "a"

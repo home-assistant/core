@@ -5,11 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import COORDINATOR, DOMAIN
+from . import YaleConfigEntry
+from .const import DOMAIN, YALE_ALL_ERRORS
 from .coordinator import YaleDataUpdateCoordinator
 from .entity import YaleAlarmEntity
 
@@ -23,14 +24,12 @@ BUTTON_TYPES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: YaleConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the button from a config entry."""
 
-    coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [YalePanicButton(coordinator, description) for description in BUTTON_TYPES]
@@ -57,6 +56,16 @@ class YalePanicButton(YaleAlarmEntity, ButtonEntity):
         if TYPE_CHECKING:
             assert self.coordinator.yale, "Connection to API is missing"
 
-        await self.hass.async_add_executor_job(
-            self.coordinator.yale.trigger_panic_button
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                self.coordinator.yale.trigger_panic_button
+            )
+        except YALE_ALL_ERRORS as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="could_not_trigger_panic",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "error": str(error),
+                },
+            ) from error

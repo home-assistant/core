@@ -28,26 +28,27 @@ async def user_flow(hass: HomeAssistant) -> str:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     return result["flow_id"]
 
 
+@pytest.mark.parametrize(
+    "fixture", ["webmin_update_without_mac.json", "webmin_update.json"]
+)
 async def test_form_user(
-    hass: HomeAssistant,
-    user_flow: str,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, user_flow: str, mock_setup_entry: AsyncMock, fixture: str
 ) -> None:
     """Test a successful user initiated flow."""
     with patch(
         "homeassistant.components.webmin.helpers.WebminInstance.update",
-        return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
+        return_value=load_json_object_fixture(fixture, DOMAIN),
     ):
         result = await hass.config_entries.flow.async_configure(
             user_flow, TEST_USER_INPUT
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USER_INPUT[CONF_HOST]
     assert result["options"] == TEST_USER_INPUT
 
@@ -73,7 +74,7 @@ async def test_form_user(
         (Exception, "unknown"),
         (
             Fault("5", "Webmin module net does not exist"),
-            "Fault 5: Webmin module net does not exist",
+            "unknown",
         ),
     ],
 )
@@ -89,7 +90,7 @@ async def test_form_user_errors(
             user_flow, TEST_USER_INPUT
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error_type}
 
@@ -101,7 +102,7 @@ async def test_form_user_errors(
             result["flow_id"], TEST_USER_INPUT
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USER_INPUT[CONF_HOST]
     assert result["options"] == TEST_USER_INPUT
 
@@ -121,7 +122,7 @@ async def test_duplicate_entry(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USER_INPUT[CONF_HOST]
     assert result["options"] == TEST_USER_INPUT
 
@@ -137,5 +138,5 @@ async def test_duplicate_entry(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

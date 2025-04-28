@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from homeassistant.helpers import entity
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
 from .const import DOMAIN
-from .satellite import SatelliteDevice
+from .devices import SatelliteDevice
 
 
 class WyomingSatelliteEntity(entity.Entity):
@@ -21,4 +21,5 @@ class WyomingSatelliteEntity(entity.Entity):
         self._attr_unique_id = f"{device.satellite_id}-{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.satellite_id)},
+            entry_type=DeviceEntryType.SERVICE,
         )

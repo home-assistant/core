@@ -18,9 +18,9 @@ from urllib.parse import urlparse
 from aiounifi.interfaces.sites import Sites
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
-    ConfigEntry,
+    SOURCE_REAUTH,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -33,9 +33,15 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MODEL_DESCRIPTION,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
+from . import UnifiConfigEntry
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -76,7 +82,7 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: UnifiConfigEntry,
     ) -> UnifiOptionsFlowHandler:
         """Get the options flow for this handler."""
         return UnifiOptionsFlowHandler(config_entry)
@@ -84,7 +90,6 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
     def __init__(self) -> None:
         """Initialize the UniFi Network flow."""
         self.config: dict[str, Any] = {}
-        self.reauth_config_entry: ConfigEntry | None = None
         self.reauth_schema: dict[vol.Marker, Any] = {}
 
     async def async_step_user(
@@ -116,13 +121,14 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
 
             else:
                 if (
-                    self.reauth_config_entry
-                    and self.reauth_config_entry.unique_id is not None
-                    and self.reauth_config_entry.unique_id in self.sites
-                ):
-                    return await self.async_step_site(
-                        {CONF_SITE_ID: self.reauth_config_entry.unique_id}
+                    self.source == SOURCE_REAUTH
+                    and (
+                        (reauth_unique_id := self._get_reauth_entry().unique_id)
+                        is not None
                     )
+                    and reauth_unique_id in self.sites
+                ):
+                    return await self.async_step_site({CONF_SITE_ID: reauth_unique_id})
 
                 return await self.async_step_site()
 
@@ -158,16 +164,16 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
             config_entry = await self.async_set_unique_id(unique_id)
             abort_reason = "configuration_updated"
 
-            if self.reauth_config_entry:
-                config_entry = self.reauth_config_entry
+            if self.source == SOURCE_REAUTH:
+                config_entry = self._get_reauth_entry()
                 abort_reason = "reauth_successful"
 
             if config_entry:
-                hub: UnifiHub | None = self.hass.data.get(UNIFI_DOMAIN, {}).get(
-                    config_entry.entry_id
-                )
-
-                if hub and hub.available:
+                if (
+                    config_entry.state is ConfigEntryState.LOADED
+                    and (hub := config_entry.runtime_data)
+                    and hub.available
+                ):
                     return self.async_abort(reason="already_configured")
 
                 return self.async_update_reload_and_abort(
@@ -190,36 +196,32 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
-        config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert config_entry
-        self.reauth_config_entry = config_entry
+        reauth_entry = self._get_reauth_entry()
 
         self.context["title_placeholders"] = {
-            CONF_HOST: config_entry.data[CONF_HOST],
-            CONF_SITE_ID: config_entry.title,
+            CONF_HOST: reauth_entry.data[CONF_HOST],
+            CONF_SITE_ID: reauth_entry.title,
         }
 
         self.reauth_schema = {
-            vol.Required(CONF_HOST, default=config_entry.data[CONF_HOST]): str,
-            vol.Required(CONF_USERNAME, default=config_entry.data[CONF_USERNAME]): str,
+            vol.Required(CONF_HOST, default=reauth_entry.data[CONF_HOST]): str,
+            vol.Required(CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=config_entry.data[CONF_PORT]): int,
+            vol.Required(CONF_PORT, default=reauth_entry.data[CONF_PORT]): int,
             vol.Required(
-                CONF_VERIFY_SSL, default=config_entry.data[CONF_VERIFY_SSL]
+                CONF_VERIFY_SSL, default=reauth_entry.data[CONF_VERIFY_SSL]
             ): bool,
         }
 
         return await self.async_step_user()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered UniFi device."""
         parsed_url = urlparse(discovery_info.ssdp_location)
-        model_description = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_DESCRIPTION]
-        mac_address = format_mac(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
+        model_description = discovery_info.upnp[ATTR_UPNP_MODEL_DESCRIPTION]
+        mac_address = format_mac(discovery_info.upnp[ATTR_UPNP_SERIAL])
 
         self.config = {
             CONF_HOST: parsed_url.hostname,
@@ -237,9 +239,9 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
 
         if (port := MODEL_PORTS.get(model_description)) is not None:
             self.config[CONF_PORT] = port
-            self.context[
-                "configuration_url"
-            ] = f"https://{self.config[CONF_HOST]}:{port}"
+            self.context["configuration_url"] = (
+                f"https://{self.config[CONF_HOST]}:{port}"
+            )
 
         return await self.async_step_user()
 
@@ -249,18 +251,15 @@ class UnifiOptionsFlowHandler(OptionsFlow):
 
     hub: UnifiHub
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: UnifiConfigEntry) -> None:
         """Initialize UniFi Network options flow."""
-        self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the UniFi Network options."""
-        if self.config_entry.entry_id not in self.hass.data[UNIFI_DOMAIN]:
-            return self.async_abort(reason="integration_not_setup")
-        self.hub = self.hass.data[UNIFI_DOMAIN][self.config_entry.entry_id]
+        self.hub = self.config_entry.runtime_data
         self.options[CONF_BLOCK_CLIENT] = self.hub.config.option_block_clients
 
         if self.show_advanced_options:
@@ -279,9 +278,9 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         clients_to_block = {}
 
         for client in self.hub.api.clients.values():
-            clients_to_block[
-                client.mac
-            ] = f"{client.name or client.hostname} ({client.mac})"
+            clients_to_block[client.mac] = (
+                f"{client.name or client.hostname} ({client.mac})"
+            )
 
         return self.async_show_form(
             step_id="simple_options",
@@ -410,9 +409,9 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         clients_to_block = {}
 
         for client in self.hub.api.clients.values():
-            clients_to_block[
-                client.mac
-            ] = f"{client.name or client.hostname} ({client.mac})"
+            clients_to_block[client.mac] = (
+                f"{client.name or client.hostname} ({client.mac})"
+            )
 
         selected_clients_to_block = [
             client

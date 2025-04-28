@@ -11,7 +11,6 @@ from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
 import voluptuous as vol
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -22,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import DEFAULT_PORT, DOMAIN, LOGGER
@@ -31,6 +31,8 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fully Kiosk Browser."""
 
     VERSION = 1
+
+    host: str
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -64,7 +66,7 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
             description_placeholders["error_detail"] = str(error.args)
             return None
-        except Exception as error:  # pylint: disable=broad-except
+        except Exception as error:  # noqa: BLE001
             LOGGER.exception("Unexpected exception: %s", error)
             errors["base"] = "unknown"
             description_placeholders["error_detail"] = str(error.args)
@@ -135,15 +137,13 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            result = await self._create_entry(
-                self.context[CONF_HOST], user_input, errors
-            )
+            result = await self._create_entry(self.host, user_input, errors)
             if result:
                 return result
 
         placeholders = {
             "name": self._discovered_device_info["deviceName"],
-            CONF_HOST: self.context[CONF_HOST],
+            CONF_HOST: self.host,
         }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -168,6 +168,6 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(device_id)
         self._abort_if_unique_id_configured()
 
-        self.context[CONF_HOST] = device_info["hostname4"]
+        self.host = device_info["hostname4"]
         self._discovered_device_info = device_info
         return await self.async_step_discovery_confirm()

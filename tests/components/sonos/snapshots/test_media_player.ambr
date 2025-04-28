@@ -1,0 +1,83 @@
+# serializer version: 1
+# name: test_entity_basic[media_player.zone_a-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.zone_a',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'sonos',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 4127295>,
+    'translation_key': None,
+    'unique_id': 'RINCON_test',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_basic[media_player.zone_a-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Zone A',
+      'group_members': list([
+        'media_player.zone_a',
+      ]),
+      'is_volume_muted': False,
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'repeat': <RepeatMode.OFF: 'off'>,
+      'shuffle': False,
+      'supported_features': <MediaPlayerEntityFeature: 4127295>,
+      'volume_level': 0.19,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.zone_a',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_media_get_queue
+  dict({
+    'media_player.zone_a': list([
+      dict({
+        'media_album_name': 'Abbey Road',
+        'media_artist': 'The Beatles',
+        'media_content_id': 'x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3',
+        'media_title': 'Something',
+      }),
+      dict({
+        'media_album_name': 'Abbey Road',
+        'media_artist': 'The Beatles',
+        'media_content_id': 'x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/01%20Come%20Together.mp3',
+        'media_title': 'Come Together',
+      }),
+      dict({
+        'media_album_name': None,
+        'media_artist': None,
+        'media_content_id': 'x-file-cifs://192.168.42.10/music/TrackWithNoAlbumOrCreator.mp3',
+        'media_title': 'Track with no album or creator',
+      }),
+    ]),
+  })
+# ---

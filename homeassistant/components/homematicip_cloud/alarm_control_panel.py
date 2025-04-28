@@ -9,19 +9,14 @@ from homematicip.functionalHomes import SecurityAndAlarmHome
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as HMIPC_DOMAIN
+from .const import DOMAIN
 from .hap import AsyncHome, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,10 +27,10 @@ CONST_ALARM_CONTROL_PANEL_NAME = "HmIP Alarm Control Panel"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
+    hap = hass.data[DOMAIN][config_entry.unique_id]
     async_add_entities([HomematicipAlarmControlPanelEntity(hap)])
 
 
@@ -47,39 +42,39 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_code_arm_required = False
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
         self._home: AsyncHome = hap.home
-        _LOGGER.info("Setting up %s", self.name)
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
-            identifiers={(HMIPC_DOMAIN, f"ACP {self._home.id}")},
+            identifiers={(DOMAIN, f"ACP {self._home.id}")},
             manufacturer="eQ-3",
             model=CONST_ALARM_CONTROL_PANEL_NAME,
             name=self.name,
-            via_device=(HMIPC_DOMAIN, self._home.id),
+            via_device=(DOMAIN, self._home.id),
         )
 
     @property
-    def state(self) -> str:
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the alarm control panel."""
         # check for triggered alarm
         if self._security_and_alarm.alarmActive:
-            return STATE_ALARM_TRIGGERED
+            return AlarmControlPanelState.TRIGGERED
 
         activation_state = self._home.get_security_zones_activation()
         # check arm_away
         if activation_state == (True, True):
-            return STATE_ALARM_ARMED_AWAY
+            return AlarmControlPanelState.ARMED_AWAY
         # check arm_home
         if activation_state == (False, True):
-            return STATE_ALARM_ARMED_HOME
+            return AlarmControlPanelState.ARMED_HOME
 
-        return STATE_ALARM_DISARMED
+        return AlarmControlPanelState.DISARMED
 
     @property
     def _security_and_alarm(self) -> SecurityAndAlarmHome:
@@ -87,15 +82,15 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self._home.set_security_zones_activation(False, False)
+        await self._home.set_security_zones_activation_async(False, False)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self._home.set_security_zones_activation(False, True)
+        await self._home.set_security_zones_activation_async(False, True)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._home.set_security_zones_activation(True, True)
+        await self._home.set_security_zones_activation_async(True, True)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

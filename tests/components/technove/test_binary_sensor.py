@@ -8,7 +8,7 @@ import pytest
 from syrupy import SnapshotAssertion
 from technove import TechnoVEError
 
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -43,7 +43,9 @@ async def test_sensors(
 
 @pytest.mark.parametrize(
     "entity_id",
-    ["binary_sensor.technove_station_static_ip"],
+    [
+        "binary_sensor.technove_station_static_ip",
+    ],
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_disabled_by_default_binary_sensors(
@@ -64,9 +66,9 @@ async def test_binary_sensor_update_failure(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator update failure."""
-    entity_id = "binary_sensor.technove_station_charging"
+    entity_id = "binary_sensor.technove_station_power_sharing_mode"
 
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     mock_technove.update.side_effect = TechnoVEError("Test error")
     freezer.tick(timedelta(minutes=5, seconds=1))

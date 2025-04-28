@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
@@ -56,7 +56,7 @@ class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
             serial_number = await validate_api(user_input)
         except (ConnectionError, DiscoveryError):
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

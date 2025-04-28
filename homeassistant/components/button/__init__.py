@@ -5,37 +5,33 @@ from __future__ import annotations
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, final
+from typing import final
 
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN, SERVICE_PRESS
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+_LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[ButtonEntity]] = HassKey(DOMAIN)
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ButtonDeviceClass(StrEnum):
@@ -53,14 +49,14 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(ButtonDeviceClass))
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Button entities."""
-    component = hass.data[DOMAIN] = EntityComponent[ButtonEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[ButtonEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
 
     component.async_register_entity_service(
         SERVICE_PRESS,
-        {},
+        None,
         "_async_press_action",
     )
 
@@ -69,14 +65,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[ButtonEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[ButtonEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class ButtonEntityDescription(EntityDescription, frozen_or_thawed=True):

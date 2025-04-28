@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import timedelta
 import logging
 from random import randrange
-from types import MappingProxyType
 from typing import Any, Self
 
 import metno
@@ -31,6 +30,8 @@ URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/comp
 
 _LOGGER = logging.getLogger(__name__)
 
+type MetWeatherConfigEntry = ConfigEntry[MetDataUpdateCoordinator]
+
 
 class CannotConnect(HomeAssistantError):
     """Unable to connect to the web site."""
@@ -39,7 +40,7 @@ class CannotConnect(HomeAssistantError):
 class MetWeatherData:
     """Keep data for Met.no weather entities."""
 
-    def __init__(self, hass: HomeAssistant, config: MappingProxyType[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, config: Mapping[str, Any]) -> None:
         """Initialise the weather entity data."""
         self.hass = hass
         self._config = config
@@ -80,7 +81,7 @@ class MetWeatherData:
         if not resp:
             raise CannotConnect
         self.current_weather_data = self._weather_data.get_current_weather()
-        time_zone = dt_util.DEFAULT_TIME_ZONE
+        time_zone = dt_util.get_default_time_zone()
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False, 0)
         self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
         return self
@@ -89,7 +90,11 @@ class MetWeatherData:
 class MetDataUpdateCoordinator(DataUpdateCoordinator[MetWeatherData]):
     """Class to manage fetching Met data."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    config_entry: MetWeatherConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: MetWeatherConfigEntry
+    ) -> None:
         """Initialize global Met data updater."""
         self._unsub_track_home: Callable[[], None] | None = None
         self.weather = MetWeatherData(hass, config_entry.data)
@@ -97,7 +102,13 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator[MetWeatherData]):
 
         update_interval = timedelta(minutes=randrange(55, 65))
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=update_interval,
+        )
 
     async def _async_update_data(self) -> MetWeatherData:
         """Fetch data from Met."""

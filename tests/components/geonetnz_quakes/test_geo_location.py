@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
@@ -183,8 +183,9 @@ async def test_setup_imperial(
 
     # Patching 'utcnow' to gain more control over the timed update.
     freezer.move_to(dt_util.utcnow())
-    with patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update, patch(
-        "aio_geojson_client.feed.GeoJsonFeed.last_timestamp", create=True
+    with (
+        patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update,
+        patch("aio_geojson_client.feed.GeoJsonFeed.last_timestamp", create=True),
     ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
         assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)

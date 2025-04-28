@@ -23,7 +23,7 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reauth_email: str | None = None
+    _reauth_email: str
 
     async def _async_validate_credentials(
         self, email: str, password: str
@@ -36,7 +36,7 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.get_devices()
         except AOSmithInvalidCredentialsException:
             return "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown"
 
@@ -85,21 +85,16 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user's reauth credentials."""
         errors: dict[str, str] = {}
-        if user_input is not None and self._reauth_email is not None:
-            email = self._reauth_email
+        if user_input:
             password = user_input[CONF_PASSWORD]
-            entry_id = self.context["entry_id"]
 
-            if entry := self.hass.config_entries.async_get_entry(entry_id):
-                error = await self._async_validate_credentials(email, password)
-                if error is None:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data=entry.data | user_input,
-                    )
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-                errors["base"] = error
+            error = await self._async_validate_credentials(self._reauth_email, password)
+            if error is None:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates=user_input,
+                )
+            errors["base"] = error
 
         return self.async_show_form(
             step_id="reauth_confirm",

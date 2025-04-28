@@ -8,7 +8,10 @@ from random import randint
 from enturclient import EnturPublicTransportData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -17,12 +20,11 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle, dt as dt_util
 
 API_CLIENT_NAME = "homeassistant-{}"
 
@@ -46,7 +48,7 @@ ICONS = {
 
 SCAN_INTERVAL = timedelta(seconds=45)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_IDS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
@@ -238,9 +240,9 @@ class EnturPublicTransportSensor(SensorEntity):
         self._attributes[ATTR_NEXT_UP_AT] = calls[1].expected_departure_time.strftime(
             "%H:%M"
         )
-        self._attributes[
-            ATTR_NEXT_UP_IN
-        ] = f"{due_in_minutes(calls[1].expected_departure_time)} min"
+        self._attributes[ATTR_NEXT_UP_IN] = (
+            f"{due_in_minutes(calls[1].expected_departure_time)} min"
+        )
         self._attributes[ATTR_NEXT_UP_REALTIME] = calls[1].is_realtime
         self._attributes[ATTR_NEXT_UP_DELAY] = calls[1].delay_in_min
 

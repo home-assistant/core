@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/minecraft_server",
   "iot_class": "local_polling",
   "loggers": ["dnspython", "mcstatus"],
-  "quality_scale": "gold",
+  "quality_scale": "silver",
   "requirements": ["mcstatus==11.1.1"]
 }

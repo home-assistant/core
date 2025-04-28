@@ -4,23 +4,27 @@
     "condition_type": {
       "is_apparent_power": "Current {entity_name} apparent power",
       "is_aqi": "Current {entity_name} air quality index",
+      "is_area": "Current {entity_name} area",
       "is_atmospheric_pressure": "Current {entity_name} atmospheric pressure",
       "is_battery_level": "Current {entity_name} battery level",
+      "is_blood_glucose_concentration": "Current {entity_name} blood glucose concentration",
       "is_carbon_monoxide": "Current {entity_name} carbon monoxide concentration level",
       "is_carbon_dioxide": "Current {entity_name} carbon dioxide concentration level",
+      "is_conductivity": "Current {entity_name} conductivity",
       "is_current": "Current {entity_name} current",
       "is_data_rate": "Current {entity_name} data rate",
       "is_data_size": "Current {entity_name} data size",
       "is_distance": "Current {entity_name} distance",
       "is_duration": "Current {entity_name} duration",
       "is_energy": "Current {entity_name} energy",
+      "is_energy_distance": "Current {entity_name} energy per distance",
       "is_frequency": "Current {entity_name} frequency",
       "is_gas": "Current {entity_name} gas",
       "is_humidity": "Current {entity_name} humidity",
       "is_illuminance": "Current {entity_name} illuminance",
       "is_irradiance": "Current {entity_name} irradiance",
       "is_moisture": "Current {entity_name} moisture",
-      "is_monetary": "Current {entity_name} money",
+      "is_monetary": "Current {entity_name} balance",
       "is_nitrogen_dioxide": "Current {entity_name} nitrogen dioxide concentration level",
       "is_nitrogen_monoxide": "Current {entity_name} nitrogen monoxide concentration level",
       "is_nitrous_oxide": "Current {entity_name} nitrous oxide concentration level",
@@ -48,28 +52,33 @@
       "is_volume_flow_rate": "Current {entity_name} volume flow rate",
       "is_water": "Current {entity_name} water",
       "is_weight": "Current {entity_name} weight",
+      "is_wind_direction": "Current {entity_name} wind direction",
       "is_wind_speed": "Current {entity_name} wind speed"
     },
     "trigger_type": {
       "apparent_power": "{entity_name} apparent power changes",
       "aqi": "{entity_name} air quality index changes",
+      "area": "{entity_name} area changes",
       "atmospheric_pressure": "{entity_name} atmospheric pressure changes",
       "battery_level": "{entity_name} battery level changes",
+      "blood_glucose_concentration": "{entity_name} blood glucose concentration changes",
       "carbon_monoxide": "{entity_name} carbon monoxide concentration changes",
       "carbon_dioxide": "{entity_name} carbon dioxide concentration changes",
+      "conductivity": "{entity_name} conductivity changes",
       "current": "{entity_name} current changes",
       "data_rate": "{entity_name} data rate changes",
       "data_size": "{entity_name} data size changes",
       "distance": "{entity_name} distance changes",
       "duration": "{entity_name} duration changes",
       "energy": "{entity_name} energy changes",
+      "energy_distance": "{entity_name} energy per distance changes",
       "frequency": "{entity_name} frequency changes",
       "gas": "{entity_name} gas changes",
       "humidity": "{entity_name} humidity changes",
       "illuminance": "{entity_name} illuminance changes",
       "irradiance": "{entity_name} irradiance changes",
       "moisture": "{entity_name} moisture changes",
-      "monetary": "{entity_name} money changes",
+      "monetary": "{entity_name} balance changes",
       "nitrogen_dioxide": "{entity_name} nitrogen dioxide concentration changes",
       "nitrogen_monoxide": "{entity_name} nitrogen monoxide concentration changes",
       "nitrous_oxide": "{entity_name} nitrous oxide concentration changes",
@@ -97,7 +106,13 @@
       "volume_flow_rate": "{entity_name} volume flow rate changes",
       "water": "{entity_name} water changes",
       "weight": "{entity_name} weight changes",
+      "wind_direction": "{entity_name} wind direction changes",
       "wind_speed": "{entity_name} wind speed changes"
+    },
+    "extra_fields": {
+      "above": "[%key:common::device_automation::extra_fields::above%]",
+      "below": "[%key:common::device_automation::extra_fields::below%]",
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {
@@ -136,17 +151,26 @@
     "aqi": {
       "name": "Air quality index"
     },
+    "area": {
+      "name": "Area"
+    },
     "atmospheric_pressure": {
       "name": "Atmospheric pressure"
     },
     "battery": {
       "name": "Battery"
     },
+    "blood_glucose_concentration": {
+      "name": "Blood glucose concentration"
+    },
     "carbon_monoxide": {
       "name": "Carbon monoxide"
     },
     "carbon_dioxide": {
       "name": "Carbon dioxide"
+    },
+    "conductivity": {
+      "name": "Conductivity"
     },
     "current": {
       "name": "Current"
@@ -162,6 +186,9 @@
     },
     "energy": {
       "name": "Energy"
+    },
+    "energy_distance": {
+      "name": "Energy per distance"
     },
     "energy_storage": {
       "name": "Stored energy"
@@ -251,10 +278,10 @@
       "name": "Timestamp"
     },
     "volatile_organic_compounds": {
-      "name": "VOCs"
+      "name": "Volatile organic compounds"
     },
     "volatile_organic_compounds_parts": {
-      "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
+      "name": "Volatile organic compounds parts"
     },
     "voltage": {
       "name": "Voltage"
@@ -274,8 +301,25 @@
     "weight": {
       "name": "Weight"
     },
+    "wind_direction": {
+      "name": "Wind direction"
+    },
     "wind_speed": {
       "name": "Wind speed"
+    }
+  },
+  "issues": {
+    "mean_type_changed": {
+      "title": "The mean type of {statistic_id} has changed",
+      "description": ""
+    },
+    "state_class_removed": {
+      "title": "{statistic_id} no longer has a state class",
+      "description": ""
+    },
+    "units_changed": {
+      "title": "The unit of {statistic_id} has changed",
+      "description": ""
     }
   }
 }

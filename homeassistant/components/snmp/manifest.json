@@ -1,9 +1,10 @@
 {
   "domain": "snmp",
   "name": "SNMP",
-  "codeowners": [],
+  "codeowners": ["@nmaggioni"],
   "documentation": "https://www.home-assistant.io/integrations/snmp",
   "iot_class": "local_polling",
   "loggers": ["pyasn1", "pysmi", "pysnmp"],
-  "requirements": ["pysnmp-lextudio==6.0.11"]
+  "quality_scale": "legacy",
+  "requirements": ["pysnmp==6.2.6"]
 }

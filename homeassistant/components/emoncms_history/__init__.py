@@ -16,8 +16,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import state as state_helper
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -86,15 +85,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
 
         if payload_dict:
-            payload = "{%s}" % ",".join(
-                f"{key}:{val}" for key, val in payload_dict.items()
-            )
+            payload = ",".join(f"{key}:{val}" for key, val in payload_dict.items())
 
             send_data(
                 conf.get(CONF_URL),
                 conf.get(CONF_API_KEY),
                 str(conf.get(CONF_INPUTNODE)),
-                payload,
+                f"{{{payload}}}",
             )
 
         track_point_in_time(

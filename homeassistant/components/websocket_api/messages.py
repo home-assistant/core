@@ -15,9 +15,8 @@ from homeassistant.const import (
     COMPRESSED_STATE_LAST_UPDATED,
     COMPRESSED_STATE_STATE,
 )
-from homeassistant.core import Event, State
+from homeassistant.core import CompressedState, Event, EventStateChangedData
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import (
     JSON_DUMP,
     find_paths_unserializable_data,
@@ -110,7 +109,7 @@ def event_message(iden: int, event: Any) -> dict[str, Any]:
     return {"id": iden, "type": "event", "event": event}
 
 
-def cached_event_message(iden: int, event: Event) -> bytes:
+def cached_event_message(message_id_as_bytes: bytes, event: Event) -> bytes:
     """Return an event message.
 
     Serialize to json once per message.
@@ -123,7 +122,7 @@ def cached_event_message(iden: int, event: Event) -> bytes:
         (
             _partial_cached_event_message(event)[:-1],
             b',"id":',
-            str(iden).encode(),
+            message_id_as_bytes,
             b"}",
         )
     )
@@ -142,7 +141,9 @@ def _partial_cached_event_message(event: Event) -> bytes:
     )
 
 
-def cached_state_diff_message(iden: int, event: Event[EventStateChangedData]) -> bytes:
+def cached_state_diff_message(
+    message_id_as_bytes: bytes, event: Event[EventStateChangedData]
+) -> bytes:
     """Return an event message.
 
     Serialize to json once per message.
@@ -155,7 +156,7 @@ def cached_state_diff_message(iden: int, event: Event[EventStateChangedData]) ->
         (
             _partial_cached_state_diff_message(event)[:-1],
             b',"id":',
-            str(iden).encode(),
+            message_id_as_bytes,
             b"}",
         )
     )
@@ -176,7 +177,14 @@ def _partial_cached_state_diff_message(event: Event[EventStateChangedData]) -> b
     )
 
 
-def _state_diff_event(event: Event[EventStateChangedData]) -> dict:
+def _state_diff_event(
+    event: Event[EventStateChangedData],
+) -> dict[
+    str,
+    list[str]
+    | dict[str, CompressedState]
+    | dict[str, dict[str, dict[str, str | list[str]]]],
+]:
     """Convert a state_changed event to the minimal version.
 
     State update example
@@ -187,21 +195,10 @@ def _state_diff_event(event: Event[EventStateChangedData]) -> dict:
         "r": [entity_id,…]
     }
     """
-    if (event_new_state := event.data["new_state"]) is None:
+    if (new_state := event.data["new_state"]) is None:
         return {ENTITY_EVENT_REMOVE: [event.data["entity_id"]]}
-    if (event_old_state := event.data["old_state"]) is None:
-        return {
-            ENTITY_EVENT_ADD: {
-                event_new_state.entity_id: event_new_state.as_compressed_state
-            }
-        }
-    return _state_diff(event_old_state, event_new_state)
-
-
-def _state_diff(
-    old_state: State, new_state: State
-) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:
-    """Create a diff dict that can be used to overlay changes."""
+    if (old_state := event.data["old_state"]) is None:
+        return {ENTITY_EVENT_ADD: {new_state.entity_id: new_state.as_compressed_state}}
     additions: dict[str, Any] = {}
     diff: dict[str, dict[str, Any]] = {STATE_DIFF_ADDITIONS: additions}
     new_state_context = new_state.context
@@ -210,7 +207,7 @@ def _state_diff(
         additions[COMPRESSED_STATE_STATE] = new_state.state
     if old_state.last_changed != new_state.last_changed:
         additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed_timestamp
-    elif old_state.last_updated != new_state.last_updated:
+    elif old_state.last_updated_timestamp != new_state.last_updated_timestamp:
         additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated_timestamp
     if old_state_context.parent_id != new_state_context.parent_id:
         additions[COMPRESSED_STATE_CONTEXT] = {"parent_id": new_state_context.parent_id}
@@ -227,9 +224,12 @@ def _state_diff(
     if (old_attributes := old_state.attributes) != (
         new_attributes := new_state.attributes
     ):
-        for key, value in new_attributes.items():
-            if old_attributes.get(key) != value:
-                additions.setdefault(COMPRESSED_STATE_ATTRIBUTES, {})[key] = value
+        if added := {
+            key: value
+            for key, value in new_attributes.items()
+            if key not in old_attributes or old_attributes[key] != value
+        }:
+            additions[COMPRESSED_STATE_ATTRIBUTES] = added
         if removed := old_attributes.keys() - new_attributes:
             # sets are not JSON serializable by default so we convert to list
             # here if there are any values to avoid jumping into the json_encoder_default

@@ -4,21 +4,19 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_CYCLE,
@@ -32,33 +30,30 @@ from .const import (
     SERVICE_SELECT_PREVIOUS,
 )
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+_LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[SelectEntity]] = HassKey(DOMAIN)
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-_LOGGER = logging.getLogger(__name__)
 
 __all__ = [
     "ATTR_CYCLE",
     "ATTR_OPTION",
     "ATTR_OPTIONS",
     "DOMAIN",
-    "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
-    "SelectEntity",
-    "SelectEntityDescription",
+    "PLATFORM_SCHEMA_BASE",
     "SERVICE_SELECT_FIRST",
     "SERVICE_SELECT_LAST",
     "SERVICE_SELECT_NEXT",
     "SERVICE_SELECT_OPTION",
     "SERVICE_SELECT_PREVIOUS",
+    "SelectEntity",
+    "SelectEntityDescription",
 ]
 
 # mypy: disallow-any-generics
@@ -66,20 +61,20 @@ __all__ = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Select entities."""
-    component = hass.data[DOMAIN] = EntityComponent[SelectEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[SelectEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
 
     component.async_register_entity_service(
         SERVICE_SELECT_FIRST,
-        {},
+        None,
         SelectEntity.async_first.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_LAST,
-        {},
+        None,
         SelectEntity.async_last.__name__,
     )
 
@@ -106,14 +101,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[SelectEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[SelectEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class SelectEntityDescription(EntityDescription, frozen_or_thawed=True):

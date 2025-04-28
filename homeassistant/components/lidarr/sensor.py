@@ -14,14 +14,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LidarrEntity
-from .const import BYTE_SIZES, DOMAIN
-from .coordinator import LidarrDataUpdateCoordinator, T
+from .const import BYTE_SIZES
+from .coordinator import LidarrConfigEntry, LidarrDataUpdateCoordinator, T
+from .entity import LidarrEntity
 
 
 def get_space(data: list[LidarrRootFolder], name: str) -> str:
@@ -63,10 +62,13 @@ class LidarrSensorEntityDescription(
     """Class to describe a Lidarr sensor."""
 
     attributes_fn: Callable[[T], dict[str, str] | None] = lambda _: None
-    description_fn: Callable[
-        [LidarrSensorEntityDescription[T], LidarrRootFolder],
-        tuple[LidarrSensorEntityDescription[T], str] | None,
-    ] | None = None
+    description_fn: (
+        Callable[
+            [LidarrSensorEntityDescription[T], LidarrRootFolder],
+            tuple[LidarrSensorEntityDescription[T], str] | None,
+        ]
+        | None
+    ) = None
 
 
 SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
@@ -82,7 +84,7 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
     "queue": LidarrSensorEntityDescription[LidarrQueue](
         key="queue",
         translation_key="queue",
-        native_unit_of_measurement="Albums",
+        native_unit_of_measurement="albums",
         value_fn=lambda data, _: data.totalRecords,
         state_class=SensorStateClass.TOTAL,
         attributes_fn=lambda data: {i.title: queue_str(i) for i in data.records},
@@ -90,7 +92,7 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
     "wanted": LidarrSensorEntityDescription[LidarrQueue](
         key="wanted",
         translation_key="wanted",
-        native_unit_of_measurement="Albums",
+        native_unit_of_measurement="albums",
         value_fn=lambda data, _: data.totalRecords,
         state_class=SensorStateClass.TOTAL,
         entity_registry_enabled_default=False,
@@ -98,21 +100,26 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
             album.title: album.artist.artistName for album in data.records
         },
     ),
+    "albums": LidarrSensorEntityDescription[int](
+        key="albums",
+        translation_key="albums",
+        native_unit_of_measurement="albums",
+        value_fn=lambda data, _: data,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
+    ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LidarrConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lidarr sensors based on a config entry."""
-    coordinators: dict[str, LidarrDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
     entities: list[LidarrSensor[Any]] = []
     for coordinator_type, description in SENSOR_TYPES.items():
-        coordinator = coordinators[coordinator_type]
+        coordinator = getattr(entry.runtime_data, coordinator_type)
         if coordinator_type != "disk_space":
             entities.append(LidarrSensor(coordinator, description))
         else:
@@ -152,10 +159,8 @@ class LidarrSensor(LidarrEntity[T], SensorEntity):
 
 def queue_str(item: LidarrQueueItem) -> str:
     """Return string description of queue item."""
-    if (
-        item.sizeleft > 0
-        and item.timeleft == "00:00:00"
-        or not hasattr(item, "trackedDownloadState")
+    if (item.sizeleft > 0 and item.timeleft == "00:00:00") or not hasattr(
+        item, "trackedDownloadState"
     ):
         return "stopped"
     return item.trackedDownloadState

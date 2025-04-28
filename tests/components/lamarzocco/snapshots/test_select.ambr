@@ -2,7 +2,7 @@
 # name: test_pre_brew_infusion_select[GS3 AV]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234 Prebrew/-infusion mode',
+      'friendly_name': 'GS012345 Prebrew/-infusion mode',
       'options': list([
         'disabled',
         'prebrew',
@@ -10,11 +10,11 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.gs01234_prebrew_infusion_mode',
+    'entity_id': 'select.gs012345_prebrew_infusion_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'preinfusion',
   })
 # ---
 # name: test_pre_brew_infusion_select[GS3 AV].1
@@ -30,12 +30,13 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.gs01234_prebrew_infusion_mode',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.gs012345_prebrew_infusion_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -52,14 +53,14 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_infusion_select',
-    'unique_id': 'GS01234_prebrew_infusion_select',
+    'unique_id': 'GS012345_prebrew_infusion_select',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_pre_brew_infusion_select[Linea Mini]
+# name: test_pre_brew_infusion_select[Linea Micra]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LM01234 Prebrew/-infusion mode',
+      'friendly_name': 'MR012345 Prebrew/-infusion mode',
       'options': list([
         'disabled',
         'prebrew',
@@ -67,11 +68,69 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.lm01234_prebrew_infusion_mode',
+    'entity_id': 'select.mr012345_prebrew_infusion_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'preinfusion',
+  })
+# ---
+# name: test_pre_brew_infusion_select[Linea Micra].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disabled',
+        'prebrew',
+        'preinfusion',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mr012345_prebrew_infusion_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Prebrew/-infusion mode',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'prebrew_infusion_select',
+    'unique_id': 'MR012345_prebrew_infusion_select',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_pre_brew_infusion_select[Linea Mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LM012345 Prebrew/-infusion mode',
+      'options': list([
+        'disabled',
+        'prebrew',
+        'preinfusion',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.lm012345_prebrew_infusion_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
   })
 # ---
 # name: test_pre_brew_infusion_select[Linea Mini].1
@@ -87,12 +146,13 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.lm01234_prebrew_infusion_mode',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.lm012345_prebrew_infusion_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -109,47 +169,46 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_infusion_select',
-    'unique_id': 'LM01234_prebrew_infusion_select',
+    'unique_id': 'LM012345_prebrew_infusion_select',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_pre_brew_infusion_select[Micra]
+# name: test_smart_standby_mode
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MR01234 Prebrew/-infusion mode',
+      'friendly_name': 'GS012345 Smart standby mode',
       'options': list([
-        'disabled',
-        'prebrew',
-        'preinfusion',
+        'power_on',
+        'last_brewing',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mr01234_prebrew_infusion_mode',
+    'entity_id': 'select.gs012345_smart_standby_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'power_on',
   })
 # ---
-# name: test_pre_brew_infusion_select[Micra].1
+# name: test_smart_standby_mode.1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'disabled',
-        'prebrew',
-        'preinfusion',
+        'power_on',
+        'last_brewing',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.mr01234_prebrew_infusion_mode',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.gs012345_smart_standby_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -161,19 +220,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Prebrew/-infusion mode',
+    'original_name': 'Smart standby mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'prebrew_infusion_select',
-    'unique_id': 'MR01234_prebrew_infusion_select',
+    'translation_key': 'smart_standby_mode',
+    'unique_id': 'GS012345_smart_standby_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_steam_boiler_level[Micra]
+# name: test_steam_boiler_level[Linea Micra]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MR01234 Steam level',
+      'friendly_name': 'MR012345 Steam level',
       'options': list([
         '1',
         '2',
@@ -181,14 +240,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mr01234_steam_level',
+    'entity_id': 'select.mr012345_steam_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
 # ---
-# name: test_steam_boiler_level[Micra].1
+# name: test_steam_boiler_level[Linea Micra].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -201,12 +260,13 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.mr01234_steam_level',
+    'entity_id': 'select.mr012345_steam_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -223,7 +283,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'steam_temp_select',
-    'unique_id': 'MR01234_steam_temp_select',
+    'unique_id': 'MR012345_steam_temp_select',
     'unit_of_measurement': None,
   })
 # ---

@@ -1,6 +1,7 @@
 """Tests for the Input slider component."""
 
 import datetime
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -45,7 +46,7 @@ INITIAL_DATETIME = f"{INITIAL_DATE} {INITIAL_TIME}"
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -78,7 +79,9 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def async_set_date_and_time(hass, entity_id, dt_value):
+async def async_set_date_and_time(
+    hass: HomeAssistant, entity_id: str, dt_value: datetime.datetime
+) -> None:
     """Set date and / or time of input_datetime."""
     await hass.services.async_call(
         DOMAIN,
@@ -92,7 +95,9 @@ async def async_set_date_and_time(hass, entity_id, dt_value):
     )
 
 
-async def async_set_datetime(hass, entity_id, dt_value):
+async def async_set_datetime(
+    hass: HomeAssistant, entity_id: str, dt_value: datetime.datetime
+) -> None:
     """Set date and / or time of input_datetime."""
     await hass.services.async_call(
         DOMAIN,
@@ -102,7 +107,9 @@ async def async_set_datetime(hass, entity_id, dt_value):
     )
 
 
-async def async_set_timestamp(hass, entity_id, timestamp):
+async def async_set_timestamp(
+    hass: HomeAssistant, entity_id: str, timestamp: float
+) -> None:
     """Set date and / or time of input_datetime."""
     await hass.services.async_call(
         DOMAIN,
@@ -208,6 +215,34 @@ async def test_set_datetime_3(hass: HomeAssistant) -> None:
     assert state.attributes["minute"] == 46
     assert state.attributes["second"] == 30
     assert state.attributes["timestamp"] == dt_obj.timestamp()
+
+
+async def test_set_datetime_4(hass: HomeAssistant) -> None:
+    """Test set_datetime method using timestamp 0."""
+    await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"test_datetime": {"has_time": True, "has_date": True}}}
+    )
+
+    entity_id = "input_datetime.test_datetime"
+
+    dt_obj = datetime.datetime(
+        1969, 12, 31, 16, 00, 00, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
+
+    await async_set_timestamp(hass, entity_id, 0)
+
+    state = hass.states.get(entity_id)
+    assert state.state == dt_obj.strftime(FORMAT_DATETIME)
+    assert state.attributes["has_time"]
+    assert state.attributes["has_date"]
+
+    assert state.attributes["year"] == 1969
+    assert state.attributes["month"] == 12
+    assert state.attributes["day"] == 31
+    assert state.attributes["hour"] == 16
+    assert state.attributes["minute"] == 00
+    assert state.attributes["second"] == 0
+    assert state.attributes["timestamp"] == 0
 
 
 async def test_set_datetime_time(hass: HomeAssistant) -> None:
@@ -688,7 +723,7 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
 
 async def test_timestamp(hass: HomeAssistant) -> None:
     """Test timestamp."""
-    hass.config.set_time_zone("America/Los_Angeles")
+    await hass.config.async_set_time_zone("America/Los_Angeles")
 
     assert await async_setup_component(
         hass,

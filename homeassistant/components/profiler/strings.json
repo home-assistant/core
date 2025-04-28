@@ -4,9 +4,6 @@
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "services": {
@@ -93,6 +90,10 @@
           "description": "Whether to enable or disable asyncio debug."
         }
       }
+    },
+    "log_current_tasks": {
+      "name": "Log current asyncio tasks",
+      "description": "Logs all the current asyncio tasks."
     }
   }
 }

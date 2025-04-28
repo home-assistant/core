@@ -27,15 +27,21 @@ async def init_integration(
     device_type: int,
 ) -> None:
     """Initialize integration for testing."""
-    with patch(
-        "pymystrom.get_device_info",
-        side_effect=AsyncMock(return_value=get_default_device_response(device_type)),
-    ), patch(
-        "homeassistant.components.mystrom._get_mystrom_bulb",
-        return_value=MyStromBulbMock("6001940376EB", get_default_bulb_state()),
-    ), patch(
-        "homeassistant.components.mystrom._get_mystrom_switch",
-        return_value=MyStromSwitchMock(get_default_switch_state()),
+    with (
+        patch(
+            "pymystrom.get_device_info",
+            side_effect=AsyncMock(
+                return_value=get_default_device_response(device_type)
+            ),
+        ),
+        patch(
+            "homeassistant.components.mystrom._get_mystrom_bulb",
+            return_value=MyStromBulbMock("6001940376EB", get_default_bulb_state()),
+        ),
+        patch(
+            "homeassistant.components.mystrom._get_mystrom_switch",
+            return_value=MyStromSwitchMock(get_default_switch_state()),
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -91,20 +97,23 @@ async def test_init_of_unknown_bulb(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test the initialization of a unknown myStrom bulb."""
-    with patch(
-        "pymystrom.get_device_info",
-        side_effect=AsyncMock(return_value={"type": 102, "mac": DEVICE_MAC}),
-    ), patch("pymystrom.bulb.MyStromBulb.get_state", return_value={}), patch(
-        "pymystrom.bulb.MyStromBulb.bulb_type", "new_type"
-    ), patch(
-        "pymystrom.bulb.MyStromBulb.mac",
-        new_callable=PropertyMock,
-        return_value=DEVICE_MAC,
+    with (
+        patch(
+            "pymystrom.get_device_info",
+            side_effect=AsyncMock(return_value={"type": 102, "mac": DEVICE_MAC}),
+        ),
+        patch("pymystrom.bulb.MyStromBulb.get_state", return_value={}),
+        patch("pymystrom.bulb.MyStromBulb.bulb_type", "new_type"),
+        patch(
+            "pymystrom.bulb.MyStromBulb.mac",
+            new_callable=PropertyMock,
+            return_value=DEVICE_MAC,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_init_of_unknown_device(
@@ -118,38 +127,45 @@ async def test_init_of_unknown_device(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_init_cannot_connect_because_of_device_info(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test error handling for failing get_device_info."""
-    with patch(
-        "pymystrom.get_device_info",
-        side_effect=MyStromConnectionError(),
-    ), patch("pymystrom.switch.MyStromSwitch.get_state", return_value={}), patch(
-        "pymystrom.bulb.MyStromBulb.get_state", return_value={}
+    with (
+        patch(
+            "pymystrom.get_device_info",
+            side_effect=MyStromConnectionError(),
+        ),
+        patch("pymystrom.switch.MyStromSwitch.get_state", return_value={}),
+        patch("pymystrom.bulb.MyStromBulb.get_state", return_value={}),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_init_cannot_connect_because_of_get_state(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test error handling for failing get_state."""
-    with patch(
-        "pymystrom.get_device_info",
-        side_effect=AsyncMock(return_value=get_default_device_response(101)),
-    ), patch(
-        "pymystrom.switch.MyStromSwitch.get_state", side_effect=MyStromConnectionError()
-    ), patch(
-        "pymystrom.bulb.MyStromBulb.get_state", side_effect=MyStromConnectionError()
+    with (
+        patch(
+            "pymystrom.get_device_info",
+            side_effect=AsyncMock(return_value=get_default_device_response(101)),
+        ),
+        patch(
+            "pymystrom.switch.MyStromSwitch.get_state",
+            side_effect=MyStromConnectionError(),
+        ),
+        patch(
+            "pymystrom.bulb.MyStromBulb.get_state", side_effect=MyStromConnectionError()
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

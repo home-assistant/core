@@ -1,9 +1,8 @@
 """Provide common Renault fixtures."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 import contextlib
 from types import MappingProxyType
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -21,7 +20,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.renault.async_setup_entry", return_value=True
@@ -51,21 +50,24 @@ def get_config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture(name="patch_renault_account")
-async def patch_renault_account(hass: HomeAssistant) -> RenaultAccount:
+async def patch_renault_account(hass: HomeAssistant) -> AsyncGenerator[RenaultAccount]:
     """Create a Renault account."""
     renault_account = RenaultAccount(
         MOCK_ACCOUNT_ID,
         websession=aiohttp_client.async_get_clientsession(hass),
     )
-    with patch("renault_api.renault_session.RenaultSession.login"), patch(
-        "renault_api.renault_client.RenaultClient.get_api_account",
-        return_value=renault_account,
+    with (
+        patch("renault_api.renault_session.RenaultSession.login"),
+        patch(
+            "renault_api.renault_client.RenaultClient.get_api_account",
+            return_value=renault_account,
+        ),
     ):
         yield renault_account
 
 
 @pytest.fixture(name="patch_get_vehicles")
-def patch_get_vehicles(vehicle_type: str):
+def patch_get_vehicles(vehicle_type: str) -> Generator[None]:
     """Mock fixtures."""
     with patch(
         "renault_api.renault_account.RenaultAccount.get_vehicles",
@@ -120,125 +122,100 @@ def _get_fixtures(vehicle_type: str) -> MappingProxyType:
     }
 
 
+@contextlib.contextmanager
+def patch_get_vehicle_data() -> Generator[dict[str, AsyncMock]]:
+    """Mock get_vehicle_data methods."""
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_battery_status"
+        ) as get_battery_status,
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode"
+        ) as get_charge_mode,
+        patch("renault_api.renault_vehicle.RenaultVehicle.get_cockpit") as get_cockpit,
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status"
+        ) as get_hvac_status,
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_location"
+        ) as get_location,
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_lock_status"
+        ) as get_lock_status,
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_res_state"
+        ) as get_res_state,
+    ):
+        yield {
+            "battery_status": get_battery_status,
+            "charge_mode": get_charge_mode,
+            "cockpit": get_cockpit,
+            "hvac_status": get_hvac_status,
+            "location": get_location,
+            "lock_status": get_lock_status,
+            "res_state": get_res_state,
+        }
+
+
 @pytest.fixture(name="fixtures_with_data")
-def patch_fixtures_with_data(vehicle_type: str):
+def patch_fixtures_with_data(vehicle_type: str) -> Generator[dict[str, AsyncMock]]:
     """Mock fixtures."""
     mock_fixtures = _get_fixtures(vehicle_type)
 
-    with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_battery_status",
-        return_value=mock_fixtures["battery_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode",
-        return_value=mock_fixtures["charge_mode"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_cockpit",
-        return_value=mock_fixtures["cockpit"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
-        return_value=mock_fixtures["hvac_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_location",
-        return_value=mock_fixtures["location"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
-        return_value=mock_fixtures["lock_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
-        return_value=mock_fixtures["res_state"],
-    ):
-        yield
+    with patch_get_vehicle_data() as patches:
+        for key, value in patches.items():
+            value.return_value = mock_fixtures[key]
+        yield patches
 
 
 @pytest.fixture(name="fixtures_with_no_data")
-def patch_fixtures_with_no_data():
+def patch_fixtures_with_no_data() -> Generator[dict[str, AsyncMock]]:
     """Mock fixtures."""
     mock_fixtures = _get_fixtures("")
 
-    with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_battery_status",
-        return_value=mock_fixtures["battery_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode",
-        return_value=mock_fixtures["charge_mode"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_cockpit",
-        return_value=mock_fixtures["cockpit"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
-        return_value=mock_fixtures["hvac_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_location",
-        return_value=mock_fixtures["location"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
-        return_value=mock_fixtures["lock_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
-        return_value=mock_fixtures["res_state"],
-    ):
-        yield
-
-
-@contextlib.contextmanager
-def _patch_fixtures_with_side_effect(side_effect: Any):
-    """Mock fixtures."""
-    with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_battery_status",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_cockpit",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_location",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
-        side_effect=side_effect,
-    ):
-        yield
+    with patch_get_vehicle_data() as patches:
+        for key, value in patches.items():
+            value.return_value = mock_fixtures[key]
+        yield patches
 
 
 @pytest.fixture(name="fixtures_with_access_denied_exception")
-def patch_fixtures_with_access_denied_exception():
+def patch_fixtures_with_access_denied_exception() -> Generator[dict[str, AsyncMock]]:
     """Mock fixtures."""
     access_denied_exception = exceptions.AccessDeniedException(
         "err.func.403",
         "Access is denied for this resource",
     )
 
-    with _patch_fixtures_with_side_effect(access_denied_exception):
-        yield
+    with patch_get_vehicle_data() as patches:
+        for value in patches.values():
+            value.side_effect = access_denied_exception
+        yield patches
 
 
 @pytest.fixture(name="fixtures_with_invalid_upstream_exception")
-def patch_fixtures_with_invalid_upstream_exception():
+def patch_fixtures_with_invalid_upstream_exception() -> Generator[dict[str, AsyncMock]]:
     """Mock fixtures."""
     invalid_upstream_exception = exceptions.InvalidUpstreamException(
         "err.tech.500",
         "Invalid response from the upstream server (The request sent to the GDC is erroneous) ; 502 Bad Gateway",
     )
 
-    with _patch_fixtures_with_side_effect(invalid_upstream_exception):
-        yield
+    with patch_get_vehicle_data() as patches:
+        for value in patches.values():
+            value.side_effect = invalid_upstream_exception
+        yield patches
 
 
 @pytest.fixture(name="fixtures_with_not_supported_exception")
-def patch_fixtures_with_not_supported_exception():
+def patch_fixtures_with_not_supported_exception() -> Generator[dict[str, AsyncMock]]:
     """Mock fixtures."""
     not_supported_exception = exceptions.NotSupportedException(
         "err.tech.501",
         "This feature is not technically supported by this gateway",
     )
 
-    with _patch_fixtures_with_side_effect(not_supported_exception):
-        yield
+    with patch_get_vehicle_data() as patches:
+        for value in patches.values():
+            value.side_effect = not_supported_exception
+        yield patches

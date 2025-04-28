@@ -14,17 +14,14 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .controller import OmadaSiteController
-from .coordinator import OmadaCoordinator
+from . import OmadaConfigEntry
+from .coordinator import POLL_DEVICES, OmadaCoordinator, OmadaDevicesCoordinator
 from .entity import OmadaDeviceEntity
 
-POLL_DELAY_IDLE = 6 * 60 * 60
 POLL_DELAY_UPGRADE = 60
 
 
@@ -35,15 +32,30 @@ class FirmwareUpdateStatus(NamedTuple):
     firmware: OmadaFirmwareUpdate | None
 
 
-class OmadaFirmwareUpdateCoodinator(OmadaCoordinator[FirmwareUpdateStatus]):  # pylint: disable=hass-enforce-coordinator-module
-    """Coordinator for getting details about ports on a switch."""
+class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):  # pylint: disable=hass-enforce-class-module
+    """Coordinator for getting details about available firmware updates for Omada devices."""
 
-    def __init__(self, hass: HomeAssistant, omada_client: OmadaSiteClient) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaSiteClient,
+        devices_coordinator: OmadaDevicesCoordinator,
+    ) -> None:
         """Initialize my coordinator."""
-        super().__init__(hass, omada_client, "Firmware Updates", POLL_DELAY_IDLE)
+        super().__init__(
+            hass, config_entry, omada_client, "Firmware Updates", poll_delay=None
+        )
+
+        self._devices_coordinator = devices_coordinator
+        self._config_entry = config_entry
+
+        config_entry.async_on_unload(
+            devices_coordinator.async_add_listener(self._handle_devices_update)
+        )
 
     async def _get_firmware_updates(self) -> list[FirmwareUpdateStatus]:
-        devices = await self.omada_client.get_devices()
+        devices = self._devices_coordinator.data.values()
 
         updates = [
             FirmwareUpdateStatus(
@@ -55,12 +67,12 @@ class OmadaFirmwareUpdateCoodinator(OmadaCoordinator[FirmwareUpdateStatus]):  # 
             for d in devices
         ]
 
-        # During a firmware upgrade, poll more frequently
-        self.update_interval = timedelta(
+        # During a firmware upgrade, poll device list more frequently
+        self._devices_coordinator.update_interval = timedelta(
             seconds=(
                 POLL_DELAY_UPGRADE
                 if any(u.device.fw_download for u in updates)
-                else POLL_DELAY_IDLE
+                else POLL_DEVICES
             )
         )
         return updates
@@ -69,26 +81,37 @@ class OmadaFirmwareUpdateCoodinator(OmadaCoordinator[FirmwareUpdateStatus]):  # 
         """Poll the state of Omada Devices firmware update availability."""
         return {d.device.mac: d for d in await self._get_firmware_updates()}
 
+    @callback
+    def _handle_devices_update(self) -> None:
+        """Handle updated data from the devices coordinator."""
+        # Trigger a refresh of our data, based on the updated device list
+        self._config_entry.async_create_background_task(
+            self.hass, self.async_request_refresh(), "Omada Firmware Update Refresh"
+        )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: OmadaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
-    omada_client = controller.omada_client
+    controller = config_entry.runtime_data
 
-    devices = await omada_client.get_devices()
+    devices = controller.devices_coordinator.data
 
-    coordinator = OmadaFirmwareUpdateCoodinator(hass, omada_client)
+    coordinator = OmadaFirmwareUpdateCoordinator(
+        hass, config_entry, controller.omada_client, controller.devices_coordinator
+    )
 
-    async_add_entities(OmadaDeviceUpdate(coordinator, device) for device in devices)
+    async_add_entities(
+        OmadaDeviceUpdate(coordinator, device) for device in devices.values()
+    )
     await coordinator.async_request_refresh()
 
 
 class OmadaDeviceUpdate(
-    OmadaDeviceEntity[FirmwareUpdateStatus],
+    OmadaDeviceEntity[OmadaFirmwareUpdateCoordinator],
     UpdateEntity,
 ):
     """Firmware update status for Omada SDN devices."""
@@ -98,12 +121,11 @@ class OmadaDeviceUpdate(
         | UpdateEntityFeature.PROGRESS
         | UpdateEntityFeature.RELEASE_NOTES
     )
-    _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
 
     def __init__(
         self,
-        coordinator: OmadaFirmwareUpdateCoodinator,
+        coordinator: OmadaFirmwareUpdateCoordinator,
         device: OmadaListDevice,
     ) -> None:
         """Initialize the update entity."""

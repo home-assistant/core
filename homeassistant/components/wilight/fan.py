@@ -19,20 +19,23 @@ from pywilight.wilight_device import PyWiLightDevice
 from homeassistant.components.fan import DIRECTION_FORWARD, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
 
-from . import DOMAIN, WiLightDevice
+from .const import DOMAIN
+from .entity import WiLightDevice
 from .parent_device import WiLightParent
 
 ORDERED_NAMED_FAN_SPEEDS = [WL_SPEED_LOW, WL_SPEED_MEDIUM, WL_SPEED_HIGH]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiLight lights from a config entry."""
     parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]
@@ -57,7 +60,12 @@ class WiLightFan(WiLightDevice, FanEntity):
 
     _attr_name = None
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.DIRECTION
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
 
     def __init__(self, api_device: PyWiLightDevice, index: str, item_name: str) -> None:
         """Initialize the device."""

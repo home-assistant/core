@@ -11,7 +11,7 @@
       "2fa": {
         "title": "Two-factor authentication",
         "data": {
-          "2fa": "Two-factor code"
+          "pin": "Two-factor code"
         },
         "description": "Enter the PIN sent via email or SMS"
       }
@@ -55,15 +55,9 @@
     }
   },
   "services": {
-    "blink_update": {
-      "name": "Update",
-      "description": "Forces a refresh.",
-      "fields": {
-        "device_id": {
-          "name": "Device ID",
-          "description": "The Blink device id."
-        }
-      }
+    "record": {
+      "name": "Record",
+      "description": "Requests camera to record a clip."
     },
     "trigger_camera": {
       "name": "Trigger camera",
@@ -81,7 +75,7 @@
     },
     "save_recent_clips": {
       "name": "Save recent clips",
-      "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_{name}.mp4\".",
+      "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_[camera name].mp4\".",
       "fields": {
         "file_path": {
           "name": "Output directory",
@@ -90,32 +84,50 @@
       }
     },
     "send_pin": {
-      "name": "Send pin",
-      "description": "Sends a new PIN to blink for 2FA.",
+      "name": "Send PIN",
+      "description": "Sends a new PIN to Blink for 2FA.",
       "fields": {
         "pin": {
-          "name": "Pin",
-          "description": "PIN received from blink. Leave empty if you only received a verification email."
+          "name": "PIN",
+          "description": "PIN received from Blink. Leave empty if you only received a verification email."
         },
         "config_entry_id": {
           "name": "Integration ID",
-          "description": "The Blink Integration id."
+          "description": "The Blink Integration ID."
         }
       }
     }
   },
   "exceptions": {
     "integration_not_found": {
-      "message": "Integration '{target}' not found in registry"
+      "message": "Integration \"{target}\" not found in registry."
     },
     "no_path": {
       "message": "Can't write to directory {target}, no access to path!"
     },
     "cant_write": {
-      "message": "Can't write to file"
+      "message": "Can't write to file."
     },
     "not_loaded": {
-      "message": "{target} is not loaded"
+      "message": "{target} is not loaded."
+    },
+    "failed_arm": {
+      "message": "Blink failed to arm camera."
+    },
+    "failed_disarm": {
+      "message": "Blink failed to disarm camera."
+    },
+    "failed_clip": {
+      "message": "Blink failed to record a clip."
+    },
+    "failed_snap": {
+      "message": "Blink failed to snap a picture."
+    },
+    "failed_arm_motion": {
+      "message": "Blink failed to arm camera motion detection."
+    },
+    "failed_disarm_motion": {
+      "message": "Blink failed to disarm camera motion detection."
     }
   },
   "issues": {

@@ -4,13 +4,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import collections
 from collections.abc import Callable
 from contextlib import suppress
-import json
 import logging
 from timeit import default_timer as timer
-from typing import TypeVar
 
 from homeassistant import core
 from homeassistant.const import EVENT_STATE_CHANGED
@@ -19,12 +16,10 @@ from homeassistant.helpers.event import (
     async_track_state_change,
     async_track_state_change_event,
 )
-from homeassistant.helpers.json import JSON_DUMP, JSONEncoder
+from homeassistant.helpers.json import JSON_DUMP
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
-
-_CallableT = TypeVar("_CallableT", bound=Callable)
 
 BENCHMARKS: dict[str, Callable] = {}
 
@@ -56,14 +51,14 @@ async def run_benchmark(bench):
     await hass.async_stop()
 
 
-def benchmark(func: _CallableT) -> _CallableT:
+def benchmark[_CallableT: Callable](func: _CallableT) -> _CallableT:
     """Decorate to mark a benchmark."""
     BENCHMARKS[func.__name__] = func
     return func
 
 
 @benchmark
-async def fire_events(hass):
+async def fire_events(hass: core.HomeAssistant) -> float:
     """Fire a million events."""
     count = 0
     event_name = "benchmark_event"
@@ -90,7 +85,7 @@ async def fire_events(hass):
 
 
 @benchmark
-async def fire_events_with_filter(hass):
+async def fire_events_with_filter(hass: core.HomeAssistant) -> float:
     """Fire a million events with a filter that rejects them."""
     count = 0
     event_name = "benchmark_event"
@@ -122,7 +117,7 @@ async def fire_events_with_filter(hass):
 
 
 @benchmark
-async def state_changed_helper(hass):
+async def state_changed_helper(hass: core.HomeAssistant) -> float:
     """Run a million events through state changed helper with 1000 entities."""
     count = 0
     entity_id = "light.kitchen"
@@ -146,7 +141,7 @@ async def state_changed_helper(hass):
     }
 
     for _ in range(10**6):
-        hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)
+        hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)  # type: ignore[misc]
 
     start = timer()
 
@@ -156,7 +151,7 @@ async def state_changed_helper(hass):
 
 
 @benchmark
-async def state_changed_event_helper(hass):
+async def state_changed_event_helper(hass: core.HomeAssistant) -> float:
     """Run a million events through state changed event helper with 1000 entities."""
     count = 0
     entity_id = "light.kitchen"
@@ -179,7 +174,7 @@ async def state_changed_event_helper(hass):
     }
 
     for _ in range(events_to_fire):
-        hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)
+        hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)  # type: ignore[misc]
 
     start = timer()
 
@@ -191,7 +186,7 @@ async def state_changed_event_helper(hass):
 
 
 @benchmark
-async def state_changed_event_filter_helper(hass):
+async def state_changed_event_filter_helper(hass: core.HomeAssistant) -> float:
     """Run a million events through state changed event helper.
 
     With 1000 entities that all get filtered.
@@ -217,7 +212,7 @@ async def state_changed_event_filter_helper(hass):
     }
 
     for _ in range(events_to_fire):
-        hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)
+        hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)  # type: ignore[misc]
 
     start = timer()
 
@@ -229,7 +224,7 @@ async def state_changed_event_filter_helper(hass):
 
 
 @benchmark
-async def filtering_entity_id(hass):
+async def filtering_entity_id(hass: core.HomeAssistant) -> float:
     """Run a 100k state changes through entity filter."""
     config = {
         "include": {
@@ -294,7 +289,7 @@ async def filtering_entity_id(hass):
 
 
 @benchmark
-async def valid_entity_id(hass):
+async def valid_entity_id(hass: core.HomeAssistant) -> float:
     """Run valid entity ID a million times."""
     start = timer()
     for _ in range(10**6):
@@ -303,7 +298,7 @@ async def valid_entity_id(hass):
 
 
 @benchmark
-async def json_serialize_states(hass):
+async def json_serialize_states(hass: core.HomeAssistant) -> float:
     """Serialize million states with websocket default encoder."""
     states = [
         core.State("light.kitchen", "on", {"friendly_name": "Kitchen Lights"})
@@ -313,48 +308,3 @@ async def json_serialize_states(hass):
     start = timer()
     JSON_DUMP(states)
     return timer() - start
-
-
-def _create_state_changed_event_from_old_new(
-    entity_id, event_time_fired, old_state, new_state
-):
-    """Create a state changed event from a old and new state."""
-    attributes = {}
-    if new_state is not None:
-        attributes = new_state.get("attributes")
-    attributes_json = json.dumps(attributes, cls=JSONEncoder)
-    if attributes_json == "null":
-        attributes_json = "{}"
-    row = collections.namedtuple(
-        "Row",
-        [
-            "event_type"
-            "event_data"
-            "time_fired"
-            "context_id"
-            "context_user_id"
-            "state"
-            "entity_id"
-            "domain"
-            "attributes"
-            "state_id",
-            "old_state_id",
-        ],
-    )
-
-    row.event_type = EVENT_STATE_CHANGED
-    row.event_data = "{}"
-    row.attributes = attributes_json
-    row.time_fired = event_time_fired
-    row.state = new_state and new_state.get("state")
-    row.entity_id = entity_id
-    row.domain = entity_id and core.split_entity_id(entity_id)[0]
-    row.context_id = None
-    row.context_user_id = None
-    row.old_state_id = old_state and 1
-    row.state_id = new_state and 1
-
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import logbook
-
-    return logbook.LazyEventPartialState(row, {})

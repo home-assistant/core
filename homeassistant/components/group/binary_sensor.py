@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as BINARY_SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -26,7 +26,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
@@ -36,7 +39,7 @@ DEFAULT_NAME = "Binary Sensor Group"
 CONF_ALL = "all"
 REG_KEY = f"{BINARY_SENSOR_DOMAIN}_registry"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(BINARY_SENSOR_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -70,7 +73,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Binary Sensor Group config entry."""
     registry = er.async_get(hass)

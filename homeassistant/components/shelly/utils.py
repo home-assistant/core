@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta
-from ipaddress import IPv4Address
-from types import MappingProxyType
-from typing import Any, cast
+from ipaddress import IPv4Address, IPv6Address, ip_address
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
@@ -22,36 +22,50 @@ from aioshelly.const import (
     RPC_GENERATIONS,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
+from yarl import URL
 
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir, singleton
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    async_get as dr_async_get,
-    format_mac,
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers.entity_registry import async_get as er_async_get
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+    singleton,
+)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.dt import utcnow
 
 from .const import (
+    API_WS_URL,
     BASIC_INPUTS_EVENTS_TYPES,
+    COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
     GEN1_RELEASE_URL,
+    GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
     LOGGER,
+    MAX_SCRIPT_SIZE,
     RPC_INPUTS_EVENTS_TYPES,
+    SHAIR_MAX_WORK_HOURS,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
+    SHELLY_EMIT_EVENT_PATTERN,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
+    VIRTUAL_COMPONENTS_MAP,
 )
 
 
@@ -60,7 +74,7 @@ def async_remove_shelly_entity(
     hass: HomeAssistant, domain: str, unique_id: str
 ) -> None:
     """Remove a Shelly entity."""
-    entity_reg = er_async_get(hass)
+    entity_reg = er.async_get(hass)
     entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
     if entity_id:
         LOGGER.debug("Removing entity: %s", entity_id)
@@ -131,7 +145,7 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     else:
         base = ord("1")
 
-    return f"{entity_name} channel {chr(int(block.channel)+base)}"
+    return f"{entity_name} channel {chr(int(block.channel) + base)}"
 
 
 def is_block_momentary_input(
@@ -167,14 +181,36 @@ def is_block_momentary_input(
     return button_type in momentary_types
 
 
+def is_block_exclude_from_relay(settings: dict[str, Any], block: Block) -> bool:
+    """Return true if block should be excluded from switch platform."""
+
+    if settings.get("mode") == "roller":
+        return True
+
+    if TYPE_CHECKING:
+        assert block.channel is not None
+
+    return is_block_channel_type_light(settings, int(block.channel))
+
+
 def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
     delta_uptime = utcnow() - timedelta(seconds=uptime)
 
     if (
         not last_uptime
-        or abs((delta_uptime - last_uptime).total_seconds()) > UPTIME_DEVIATION
+        or (diff := abs((delta_uptime - last_uptime).total_seconds()))
+        > UPTIME_DEVIATION
     ):
+        if last_uptime:
+            LOGGER.debug(
+                "Time deviation %s > %s: uptime=%s, last_uptime=%s, delta_uptime=%s",
+                diff,
+                UPTIME_DEVIATION,
+                uptime,
+                last_uptime,
+                delta_uptime,
+            )
         return delta_uptime
 
     return last_uptime
@@ -194,7 +230,7 @@ def get_block_input_triggers(
         subtype = "button"
     else:
         assert block.channel
-        subtype = f"button{int(block.channel)+1}"
+        subtype = f"button{int(block.channel) + 1}"
 
     if device.settings["device"]["type"] in SHBTN_MODELS:
         trigger_types = SHBTN_INPUTS_EVENTS_TYPES
@@ -252,7 +288,7 @@ class ShellyReceiver(HomeAssistantView):
     """Handle pushes from Shelly Gen2 devices."""
 
     requires_auth = False
-    url = "/api/shelly/ws"
+    url = API_WS_URL
     name = "api:shelly:ws"
 
     def __init__(self, ws_server: WsServer) -> None:
@@ -302,9 +338,30 @@ def get_info_gen(info: dict[str, Any]) -> int:
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
     if get_info_gen(info) in RPC_GENERATIONS:
-        return cast(str, MODEL_NAMES.get(info["model"], info["model"]))
+        return cast(str, MODEL_NAMES.get(info[CONF_MODEL], info[CONF_MODEL]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
+
+
+def get_shelly_model_name(
+    model: str,
+    sleep_period: int,
+    device: BlockDevice | RpcDevice,
+) -> str | None:
+    """Get Shelly model name.
+
+    Assume that XMOD devices are not sleepy devices.
+    """
+    if (
+        sleep_period == 0
+        and isinstance(device, RpcDevice)
+        and (model_name := device.xmod_info.get("n"))
+    ):
+        # Use the model name from XMOD data
+        return cast(str, model_name)
+
+    # Use the model name from aioshelly
+    return cast(str, MODEL_NAMES.get(model))
 
 
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
@@ -314,13 +371,19 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     device_name = device.name
     entity_name: str | None = None
     if key in device.config:
-        entity_name = device.config[key].get("name", device_name)
+        entity_name = device.config[key].get("name")
 
     if entity_name is None:
-        if key.startswith(("input:", "light:", "switch:")):
-            return f"{device_name} {key.replace(':', '_')}"
+        channel = key.split(":")[0]
+        channel_id = key.split(":")[-1]
+        if key.startswith(("cover:", "input:", "light:", "switch:", "thermostat:")):
+            return f"{device_name} {channel.title()} {channel_id}"
+        if key.startswith(("cct", "rgb:", "rgbw:")):
+            return f"{device_name} {channel.upper()} light {channel_id}"
         if key.startswith("em1"):
-            return f"{device_name} EM{key.split(':')[-1]}"
+            return f"{device_name} EM{channel_id}"
+        if key.startswith(("boolean:", "enum:", "number:", "text:")):
+            return f"{channel.title()} {channel_id}"
         return device_name
 
     return entity_name
@@ -397,7 +460,7 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
             continue
 
         for trigger_type in RPC_INPUTS_EVENTS_TYPES:
-            subtype = f"button{id_+1}"
+            subtype = f"button{id_ + 1}"
             triggers.append((trigger_type, subtype))
 
     return triggers
@@ -410,10 +473,10 @@ def update_device_fw_info(
     """Update the firmware version information in the device registry."""
     assert entry.unique_id
 
-    dev_reg = dr_async_get(hass)
+    dev_reg = dr.async_get(hass)
     if device := dev_reg.async_get_device(
         identifiers={(DOMAIN, entry.entry_id)},
-        connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
+        connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
     ):
         if device.sw_version == shellydevice.firmware_version:
             return
@@ -441,8 +504,13 @@ def mac_address_from_name(name: str) -> str | None:
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     """Return release URL or None."""
-    if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
+    if (
+        beta and gen in BLOCK_GENERATIONS
+    ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
+
+    if beta:
+        return GEN2_BETA_RELEASE_URL
 
     return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL
 
@@ -462,7 +530,7 @@ def async_create_issue_unsupported_firmware(
         translation_key="unsupported_firmware",
         translation_placeholders={
             "device_name": entry.title,
-            "ip_address": entry.data["host"],
+            "ip_address": entry.data[CONF_HOST],
         },
     )
 
@@ -477,6 +545,149 @@ def is_rpc_wifi_stations_disabled(
     return True
 
 
-def get_http_port(data: MappingProxyType[str, Any]) -> int:
+def get_http_port(data: Mapping[str, Any]) -> int:
     """Get port from config entry data."""
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
+
+
+def get_host(host: str) -> str:
+    """Get the device IP address or hostname."""
+    try:
+        ip_object = ip_address(host)
+    except ValueError:
+        # host contains hostname
+        return host
+
+    if isinstance(ip_object, IPv6Address):
+        return f"[{host}]"
+
+    return host
+
+
+@callback
+def async_remove_shelly_rpc_entities(
+    hass: HomeAssistant, domain: str, mac: str, keys: list[str]
+) -> None:
+    """Remove RPC based Shelly entity."""
+    entity_reg = er.async_get(hass)
+    for key in keys:
+        if entity_id := entity_reg.async_get_entity_id(domain, DOMAIN, f"{mac}-{key}"):
+            LOGGER.debug("Removing entity: %s", entity_id)
+            entity_reg.async_remove(entity_id)
+
+
+def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
+    """Return True if 'thermostat:<IDent>' is present in the status."""
+    return f"thermostat:{ident}" in status
+
+
+def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
+    """Return a list of virtual component IDs for a platform."""
+    component = VIRTUAL_COMPONENTS_MAP.get(platform)
+
+    if not component:
+        return []
+
+    ids: list[str] = []
+
+    for comp_type in component["types"]:
+        ids.extend(
+            k
+            for k, v in config.items()
+            if k.startswith(comp_type) and v["meta"]["ui"]["view"] in component["modes"]
+        )
+
+    return ids
+
+
+@callback
+def async_remove_orphaned_entities(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    mac: str,
+    platform: str,
+    keys: Iterable[str],
+    key_suffix: str | None = None,
+) -> None:
+    """Remove orphaned entities."""
+    orphaned_entities = []
+    entity_reg = er.async_get(hass)
+    device_reg = dr.async_get(hass)
+
+    if not (
+        devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
+    ):
+        return
+
+    device_id = devices[0].id
+    entities = er.async_entries_for_device(entity_reg, device_id, True)
+    for entity in entities:
+        if not entity.entity_id.startswith(platform):
+            continue
+        if key_suffix is not None and key_suffix not in entity.unique_id:
+            continue
+        # we are looking for the component ID, e.g. boolean:201, em1data:1
+        if not (match := COMPONENT_ID_PATTERN.search(entity.unique_id)):
+            continue
+
+        key = match.group()
+        if key not in keys:
+            orphaned_entities.append(entity.unique_id.split("-", 1)[1])
+
+    if orphaned_entities:
+        async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
+
+
+def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
+    """Return the RPC websocket URL."""
+    try:
+        raw_url = get_url(hass, prefer_external=False, allow_cloud=False)
+    except NoURLAvailableError:
+        LOGGER.debug("URL not available, skipping outbound websocket setup")
+        return None
+    url = URL(raw_url)
+    ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
+    return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))
+
+
+async def get_rpc_script_event_types(device: RpcDevice, id: int) -> list[str]:
+    """Return a list of event types for a specific script."""
+    code_response = await device.script_getcode(id, bytes_to_read=MAX_SCRIPT_SIZE)
+    matches = SHELLY_EMIT_EVENT_PATTERN.finditer(code_response["data"])
+    return sorted([*{str(event_type.group(1)) for event_type in matches}])
+
+
+def is_rpc_exclude_from_relay(
+    settings: dict[str, Any], status: dict[str, Any], channel: str
+) -> bool:
+    """Return true if rpc channel should be excludeed from switch platform."""
+    ch = int(channel.split(":")[1])
+    if is_rpc_thermostat_internal_actuator(status):
+        return True
+
+    return is_rpc_channel_type_light(settings, ch)
+
+
+def get_shelly_air_lamp_life(lamp_seconds: int) -> float:
+    """Return Shelly Air lamp life in percentage."""
+    lamp_hours = lamp_seconds / 3600
+    if lamp_hours >= SHAIR_MAX_WORK_HOURS:
+        return 0.0
+    return 100 * (1 - lamp_hours / SHAIR_MAX_WORK_HOURS)
+
+
+async def get_rpc_scripts_event_types(
+    device: RpcDevice, ignore_scripts: list[str]
+) -> dict[int, list[str]]:
+    """Return a dict of all scripts and their event types."""
+    script_instances = get_rpc_key_instances(device.status, "script")
+    script_events = {}
+    for script in script_instances:
+        script_name = get_rpc_entity_name(device, script)
+        if script_name in ignore_scripts:
+            continue
+
+        script_id = int(script.split(":")[-1])
+        script_events[script_id] = await get_rpc_script_event_types(device, script_id)
+
+    return script_events

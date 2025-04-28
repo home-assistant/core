@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import re
-from typing import TYPE_CHECKING, Generic, TypeVar
 
 from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -17,24 +17,16 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.system_info import is_official_image
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-
-_HAFFmpegT = TypeVar("_HAFFmpegT", bound=HAFFmpeg)
+from homeassistant.util.signal_type import SignalType
+from homeassistant.util.system_info import is_official_image
 
 DOMAIN = "ffmpeg"
 
@@ -138,10 +130,9 @@ async def async_get_image(
         else:
             extra_cmd += " " + size_cmd
 
-    image = await asyncio.shield(
+    return await asyncio.shield(
         ffmpeg.get_image(input_source, output_format=output_format, extra_cmd=extra_cmd)
     )
-    return image
 
 
 class FFmpegManager:
@@ -185,7 +176,7 @@ class FFmpegManager:
         return CONTENT_TYPE_MULTIPART.format("ffserver")
 
 
-class FFmpegBase(Entity, Generic[_HAFFmpegT]):
+class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=hass-enforce-class-module
     """Interface object for FFmpeg."""
 
     _attr_should_poll = False

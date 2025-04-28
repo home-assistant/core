@@ -17,36 +17,28 @@ from homeassistant.components.event import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import (
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_STATE_TOPIC,
-    PAYLOAD_EMPTY_JSON,
-    PAYLOAD_NONE,
-)
-from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-)
+from .const import CONF_STATE_TOPIC, PAYLOAD_EMPTY_JSON, PAYLOAD_NONE
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
+    DATA_MQTT,
     MqttValueTemplate,
     MqttValueTemplateException,
     PayloadSentinel,
     ReceiveMessage,
-    ReceivePayloadType,
 )
-from .util import get_mqtt_data
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_EVENT_TYPES = "event_types"
 
@@ -81,10 +73,10 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT event through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttEvent,
@@ -104,7 +96,7 @@ class MqttEvent(MqttEntity, EventEntity):
     _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -116,98 +108,84 @@ class MqttEvent(MqttEntity, EventEntity):
             self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
+    @callback
+    def _event_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        if msg.retain:
+            _LOGGER.debug(
+                "Ignoring event trigger from replayed retained payload '%s' on topic %s",
+                msg.payload,
+                msg.topic,
+            )
+            return
+        event_attributes: dict[str, Any] = {}
+        event_type: str
+        try:
+            payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+        except MqttValueTemplateException as exc:
+            _LOGGER.warning(exc)
+            return
+        if (
+            not payload
+            or payload is PayloadSentinel.DEFAULT
+            or payload in (PAYLOAD_NONE, PAYLOAD_EMPTY_JSON)
+        ):
+            _LOGGER.debug(
+                "Ignoring empty payload '%s' after rendering for topic %s",
+                payload,
+                msg.topic,
+            )
+            return
+        try:
+            event_attributes = json_loads_object(payload)
+            event_type = str(event_attributes.pop(event.ATTR_EVENT_TYPE))
+            _LOGGER.debug(
+                (
+                    "JSON event data detected after processing payload '%s' on"
+                    " topic %s, type %s, attributes %s"
+                ),
+                payload,
+                msg.topic,
+                event_type,
+                event_attributes,
+            )
+        except KeyError:
+            _LOGGER.warning(
+                "`event_type` missing in JSON event payload, '%s' on topic %s",
+                payload,
+                msg.topic,
+            )
+            return
+        except JSON_DECODE_EXCEPTIONS:
+            _LOGGER.warning(
+                (
+                    "No valid JSON event payload detected, "
+                    "value after processing payload"
+                    " '%s' on topic %s"
+                ),
+                payload,
+                msg.topic,
+            )
+            return
+        try:
+            self._trigger_event(event_type, event_attributes)
+        except ValueError:
+            _LOGGER.warning(
+                "Invalid event type %s for %s received on topic %s, payload %s",
+                event_type,
+                self.entity_id,
+                msg.topic,
+                payload,
+            )
+            return
+        mqtt_data = self.hass.data[DATA_MQTT]
+        mqtt_data.state_write_requests.write_state_request(self)
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, dict[str, Any]] = {}
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            if msg.retain:
-                _LOGGER.debug(
-                    "Ignoring event trigger from replayed retained payload '%s' on topic %s",
-                    msg.payload,
-                    msg.topic,
-                )
-                return
-            event_attributes: dict[str, Any] = {}
-            event_type: str
-            try:
-                payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
-            except MqttValueTemplateException as exc:
-                _LOGGER.warning(exc)
-                return
-            if (
-                not payload
-                or payload is PayloadSentinel.DEFAULT
-                or payload in (PAYLOAD_NONE, PAYLOAD_EMPTY_JSON)
-            ):
-                _LOGGER.debug(
-                    "Ignoring empty payload '%s' after rendering for topic %s",
-                    payload,
-                    msg.topic,
-                )
-                return
-            try:
-                event_attributes = json_loads_object(payload)
-                event_type = str(event_attributes.pop(event.ATTR_EVENT_TYPE))
-                _LOGGER.debug(
-                    (
-                        "JSON event data detected after processing payload '%s' on"
-                        " topic %s, type %s, attributes %s"
-                    ),
-                    payload,
-                    msg.topic,
-                    event_type,
-                    event_attributes,
-                )
-            except KeyError:
-                _LOGGER.warning(
-                    (
-                        "`event_type` missing in JSON event payload, "
-                        " '%s' on topic %s"
-                    ),
-                    payload,
-                    msg.topic,
-                )
-                return
-            except JSON_DECODE_EXCEPTIONS:
-                _LOGGER.warning(
-                    (
-                        "No valid JSON event payload detected, "
-                        "value after processing payload"
-                        " '%s' on topic %s"
-                    ),
-                    payload,
-                    msg.topic,
-                )
-                return
-            try:
-                self._trigger_event(event_type, event_attributes)
-            except ValueError:
-                _LOGGER.warning(
-                    "Invalid event type %s for %s received on topic %s, payload %s",
-                    event_type,
-                    self.entity_id,
-                    msg.topic,
-                    payload,
-                )
-                return
-            mqtt_data = get_mqtt_data(self.hass)
-            mqtt_data.state_write_requests.write_state_request(self)
-
-        topics["state_topic"] = {
-            "topic": self._config[CONF_STATE_TOPIC],
-            "msg_callback": message_received,
-            "qos": self._config[CONF_QOS],
-            "encoding": self._config[CONF_ENCODING] or None,
-        }
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
-        )
+        self.add_subscription(CONF_STATE_TOPIC, self._event_received, None)
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)

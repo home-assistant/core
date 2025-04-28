@@ -9,7 +9,6 @@ from boschshcpy import (
     SHCCamera360,
     SHCCameraEyes,
     SHCLightSwitch,
-    SHCSession,
     SHCSmartPlug,
     SHCSmartPlugCompact,
 )
@@ -20,13 +19,12 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DATA_SESSION, DOMAIN
+from . import BoschConfigEntry
 from .entity import SHCEntity
 
 
@@ -43,21 +41,21 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
     "smartplug": SHCSwitchEntityDescription(
         key="smartplug",
         device_class=SwitchDeviceClass.OUTLET,
-        on_key="state",
+        on_key="switchstate",
         on_value=SHCSmartPlug.PowerSwitchService.State.ON,
         should_poll=False,
     ),
     "smartplugcompact": SHCSwitchEntityDescription(
         key="smartplugcompact",
         device_class=SwitchDeviceClass.OUTLET,
-        on_key="state",
+        on_key="switchstate",
         on_value=SHCSmartPlugCompact.PowerSwitchService.State.ON,
         should_poll=False,
     ),
     "lightswitch": SHCSwitchEntityDescription(
         key="lightswitch",
         device_class=SwitchDeviceClass.SWITCH,
-        on_key="state",
+        on_key="switchstate",
         on_value=SHCLightSwitch.PowerSwitchService.State.ON,
         should_poll=False,
     ),
@@ -80,11 +78,11 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BoschConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC switch platform."""
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data
 
     entities: list[SwitchEntity] = [
         SHCSwitch(

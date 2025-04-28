@@ -10,7 +10,6 @@ from glances_api.exceptions import (
     GlancesApiNoDataAvailable,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -27,21 +26,19 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN
-from .coordinator import GlancesDataUpdateCoordinator
+from .coordinator import GlancesConfigEntry, GlancesDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: GlancesConfigEntry
+) -> bool:
     """Set up Glances from config entry."""
     try:
         api = await get_api(hass, dict(config_entry.data))
@@ -54,26 +51,22 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = GlancesDataUpdateCoordinator(hass, config_entry, api)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
+    config_entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GlancesConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.data[DOMAIN]:
-            del hass.data[DOMAIN]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:
     """Return the api from glances_api."""
     httpx_client = get_async_client(hass, verify_ssl=entry_data[CONF_VERIFY_SSL])
-    for version in (3, 2):
+    for version in (4, 3):
         api = Glances(
             host=entry_data[CONF_HOST],
             port=entry_data[CONF_PORT],
@@ -88,19 +81,9 @@ async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:
         except GlancesApiNoDataAvailable as err:
             _LOGGER.debug("Failed to connect to Glances API v%s: %s", version, err)
             continue
-        if version == 2:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_version",
-                breaks_in_ha_version="2024.8.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_version",
-            )
         _LOGGER.debug("Connected to Glances API v%s", version)
         return api
-    raise ServerVersionMismatch("Could not connect to Glances API version 2 or 3")
+    raise ServerVersionMismatch("Could not connect to Glances API version 3 or 4")
 
 
 class ServerVersionMismatch(HomeAssistantError):

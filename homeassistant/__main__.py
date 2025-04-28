@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import suppress
 import faulthandler
 import os
 import sys
 import threading
 
+from .backup_restore import restore_backup
 from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
 
 FAULT_LOG_FILENAME = "home-assistant.log.fault"
@@ -146,9 +148,7 @@ def get_arguments() -> argparse.Namespace:
         help="Skips validation of operating system",
     )
 
-    arguments = parser.parse_args()
-
-    return arguments
+    return parser.parse_args()
 
 
 def check_threads() -> None:
@@ -183,6 +183,9 @@ def main() -> int:
         return scripts.run(args.script)
 
     config_dir = os.path.abspath(os.path.join(os.getcwd(), args.config))
+    if restore_backup(config_dir):
+        return RESTART_EXIT_CODE
+
     ensure_config_path(config_dir)
 
     # pylint: disable-next=import-outside-toplevel
@@ -210,8 +213,10 @@ def main() -> int:
         exit_code = runner.run(runtime_conf)
         faulthandler.disable()
 
-    if os.path.getsize(fault_file_name) == 0:
-        os.remove(fault_file_name)
+    # It's possible for the fault file to disappear, so suppress obvious errors
+    with suppress(FileNotFoundError):
+        if os.path.getsize(fault_file_name) == 0:
+            os.remove(fault_file_name)
 
     check_threads()
 

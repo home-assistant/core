@@ -1,0 +1,283 @@
+# serializer version: 1
+# name: test_binary_sensors[binary_sensor.12345_freeze_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_freeze_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Freeze restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'freeze',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_freeze',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_freeze_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '12345 Freeze restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_freeze_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_hourly_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_hourly_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hourly restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'hourly',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_hourly',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_hourly_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '12345 Hourly restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_hourly_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_month_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_month_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Month restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'month',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_month',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_month_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '12345 Month restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_month_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_rain_delay_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_rain_delay_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rain delay restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'raindelay',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_raindelay',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_rain_delay_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '12345 Rain delay restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_rain_delay_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_rain_sensor_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_rain_sensor_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rain sensor restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rainsensor',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_rainsensor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_rain_sensor_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '12345 Rain sensor restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_rain_sensor_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_weekday_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_weekday_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Weekday restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'weekday',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_weekday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_weekday_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '12345 Weekday restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_weekday_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

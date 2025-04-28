@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
@@ -37,6 +37,7 @@
       "long_press": "Long Press",
       "long_double_press": "Long Double Press",
       "long_triple_press": "Long Triple Press",
+      "hold_press": "Hold Press",
       "rotate_right": "Rotate Right",
       "rotate_left": "Rotate Left"
     },
@@ -56,7 +57,8 @@
               "triple_press": "Triple press",
               "long_press": "Long press",
               "long_double_press": "Long double press",
-              "long_triple_press": "Long triple press"
+              "long_triple_press": "Long triple press",
+              "hold_press": "Hold press"
             }
           }
         }

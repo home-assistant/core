@@ -1,0 +1,180 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "different_device": "The information entered is from a different Peblar EV charger.",
+      "no_serial_number": "The discovered Peblar device did not provide a serial number.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::peblar::config::step::user::data_description::password%]"
+        },
+        "description": "Reauthenticate with your Peblar EV charger.\n\nTo do so, you will need to enter your new password you use to log in to the Peblar EV charger's web interface."
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "[%key:component::peblar::config::step::user::data_description::host%]",
+          "password": "[%key:component::peblar::config::step::user::data_description::password%]"
+        },
+        "description": "Reconfigure your Peblar EV charger.\n\nThis allows you to change the IP address of your Peblar EV charger and the password you use to log in to its web interface."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Peblar EV charger on your home network.",
+          "password": "The same password as you use to log in to the Peblar EV charger's local web interface."
+        },
+        "description": "Set up your Peblar EV charger to integrate with Home Assistant.\n\nTo do so, you will need to get the IP address of your Peblar EV charger and the password you use to log in to its web interface.\n\nHome Assistant will automatically configure your Peblar EV charger for use with Home Assistant."
+      },
+      "zeroconf_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::peblar::config::step::user::data_description::password%]"
+        },
+        "description": "Set up your Peblar EV charger {hostname}, on IP address {host}, to integrate with Home Assistant\n\nTo do so, you will need the password you use to log in to the Peblar EV charger's web interface.\n\nHome Assistant will automatically configure your Peblar EV charger for use with Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "active_error_codes": {
+        "name": "Active errors"
+      },
+      "active_warning_codes": {
+        "name": "Active warnings"
+      }
+    },
+    "number": {
+      "charge_current_limit": {
+        "name": "Charge limit"
+      }
+    },
+    "select": {
+      "smart_charging": {
+        "name": "Smart charging",
+        "state": {
+          "default": "Default",
+          "fast_solar": "Fast solar",
+          "pure_solar": "Pure solar",
+          "scheduled": "Scheduled",
+          "smart_solar": "Smart solar"
+        }
+      }
+    },
+    "sensor": {
+      "charge_current_limit_source": {
+        "name": "Limit source",
+        "state": {
+          "charging_cable": "Charging cable",
+          "current_limiter": "Current limiter",
+          "dynamic_load_balancing": "Dynamic load balancing",
+          "external_power_limit": "External power limit",
+          "group_load_balancing": "Group load balancing",
+          "hardware_limitation": "Hardware limitation",
+          "high_temperature": "High temperature",
+          "household_power_limit": "Household power limit",
+          "installation_limit": "Installation limit",
+          "local_modbus_api": "Modbus API",
+          "local_rest_api": "REST API",
+          "local_scheduled_charging": "Scheduled charging",
+          "ocpp_smart_charging": "OCPP smart charging",
+          "overcurrent_protection": "Overcurrent protection",
+          "phase_imbalance": "Phase imbalance",
+          "power_factor": "Power factor",
+          "solar_charging": "Solar charging"
+        }
+      },
+      "cp_state": {
+        "name": "State",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "error": "[%key:common::state::error%]",
+          "fault": "Fault",
+          "invalid": "Invalid",
+          "no_ev_connected": "No EV connected",
+          "suspended": "Suspended"
+        }
+      },
+      "current_phase_1": {
+        "name": "Current phase 1"
+      },
+      "current_phase_2": {
+        "name": "Current phase 2"
+      },
+      "current_phase_3": {
+        "name": "Current phase 3"
+      },
+      "energy_session": {
+        "name": "Session energy"
+      },
+      "energy_total": {
+        "name": "Lifetime energy"
+      },
+      "power_phase_1": {
+        "name": "Power phase 1"
+      },
+      "power_phase_2": {
+        "name": "Power phase 2"
+      },
+      "power_phase_3": {
+        "name": "Power phase 3"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "voltage_phase_1": {
+        "name": "Voltage phase 1"
+      },
+      "voltage_phase_2": {
+        "name": "Voltage phase 2"
+      },
+      "voltage_phase_3": {
+        "name": "Voltage phase 3"
+      }
+    },
+    "switch": {
+      "charge": {
+        "name": "Charge"
+      },
+      "force_single_phase": {
+        "name": "Force single phase"
+      }
+    },
+    "update": {
+      "customization": {
+        "name": "Customization"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_error": {
+      "message": "An authentication failure occurred while communicating with the Peblar EV charger."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with the Peblar EV charger: {error}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Peblar EV charger: {error}"
+    }
+  }
+}

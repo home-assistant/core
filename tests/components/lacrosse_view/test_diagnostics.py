@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.lacrosse_view import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -25,13 +26,18 @@ async def test_entry_diagnostics(
     )
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_SENSOR]
+    sensor = TEST_SENSOR.model_copy()
+    status = sensor.data
+    sensor.data = None
+
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch("lacrosse_view.LaCrosse.get_devices", return_value=[sensor]),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-        == snapshot
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    ) == snapshot(exclude=props("created_at", "modified_at"))

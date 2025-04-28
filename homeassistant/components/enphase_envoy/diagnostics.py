@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import copy
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from attr import asdict
+from pyenphase.envoy import Envoy
+from pyenphase.exceptions import EnvoyError
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -21,8 +23,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
 
-from .const import DOMAIN
-from .coordinator import EnphaseUpdateCoordinator
+from .const import OPTION_DIAGNOSTICS_INCLUDE_FIXTURES
+from .coordinator import EnphaseConfigEntry
 
 CONF_TITLE = "title"
 CLEAN_TEXT = "<<envoyserial>>"
@@ -38,11 +40,55 @@ TO_REDACT = {
 }
 
 
+async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
+    """Collect Envoy endpoints to use for test fixture set."""
+    fixture_data: dict[str, Any] = {}
+    end_points = [
+        "/info",
+        "/api/v1/production",
+        "/api/v1/production/inverters",
+        "/production.json",
+        "/production.json?details=1",
+        "/production",
+        "/ivp/ensemble/power",
+        "/ivp/ensemble/inventory",
+        "/ivp/ensemble/dry_contacts",
+        "/ivp/ensemble/status",
+        "/ivp/ensemble/secctrl",
+        "/ivp/ss/dry_contact_settings",
+        "/admin/lib/tariff",
+        "/ivp/ss/gen_config",
+        "/ivp/ss/gen_schedule",
+        "/ivp/sc/pvlimit",
+        "/ivp/ss/pel_settings",
+        "/ivp/ensemble/generator",
+        "/ivp/meters",
+        "/ivp/meters/readings",
+        "/home,",
+    ]
+
+    for end_point in end_points:
+        try:
+            response = await envoy.request(end_point)
+            fixture_data[end_point] = response.text.replace("\n", "").replace(
+                serial, CLEAN_TEXT
+            )
+            fixture_data[f"{end_point}_log"] = json_dumps(
+                {
+                    "headers": dict(response.headers.items()),
+                    "code": response.status_code,
+                }
+            )
+        except EnvoyError as err:
+            fixture_data[f"{end_point}_log"] = {"Error": repr(err)}
+    return fixture_data
+
+
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: EnphaseConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     if TYPE_CHECKING:
         assert coordinator.envoy.data
@@ -63,8 +109,12 @@ async def async_get_config_entry_diagnostics(
             if state := hass.states.get(entity.entity_id):
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
-            entities.append({"entity": asdict(entity), "state": state_dict})
-        device_entities.append({"device": asdict(device), "entities": entities})
+            entity_dict = asdict(entity)
+            entity_dict.pop("_cache", None)
+            entities.append({"entity": entity_dict, "state": state_dict})
+        device_dict = asdict(device)
+        device_dict.pop("_cache", None)
+        device_entities.append({"device": device_dict, "entities": entities})
 
     # remove envoy serial
     old_serial = coordinator.envoy_serial_number
@@ -98,11 +148,25 @@ async def async_get_config_entry_diagnostics(
         "inverters": envoy_data.inverters,
         "tariff": envoy_data.tariff,
     }
+    # Add Envoy active interface information to report
+    active_interface: dict[str, Any] = {}
+    if coordinator.interface:
+        active_interface = {
+            "name": (interface := coordinator.interface).primary_interface,
+            "interface type": interface.interface_type,
+            "mac": interface.mac,
+            "uses dhcp": interface.dhcp,
+            "firmware build date": datetime.fromtimestamp(
+                interface.software_build_epoch
+            ).strftime("%Y-%m-%d %H:%M:%S"),
+            "envoy timezone": interface.timezone,
+        }
 
     envoy_properties: dict[str, Any] = {
         "envoy_firmware": envoy.firmware,
         "part_number": envoy.part_number,
         "envoy_model": envoy.envoy_model,
+        "active interface": active_interface,
         "supported_features": [feature.name for feature in envoy.supported_features],
         "phase_mode": envoy.phase_mode,
         "phase_count": envoy.phase_count,
@@ -113,12 +177,17 @@ async def async_get_config_entry_diagnostics(
         "ct_storage_meter": envoy.storage_meter_type,
     }
 
+    fixture_data: dict[str, Any] = {}
+    if entry.options.get(OPTION_DIAGNOSTICS_INCLUDE_FIXTURES, False):
+        fixture_data = await _get_fixture_collection(envoy=envoy, serial=old_serial)
+
     diagnostic_data: dict[str, Any] = {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "envoy_properties": envoy_properties,
         "raw_data": json_loads(coordinator_data_cleaned),
         "envoy_model_data": envoy_model,
         "envoy_entities_by_device": json_loads(device_entities_cleaned),
+        "fixtures": fixture_data,
     }
 
     return diagnostic_data

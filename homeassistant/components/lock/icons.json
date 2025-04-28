@@ -5,14 +5,22 @@
       "state": {
         "jammed": "mdi:lock-alert",
         "locking": "mdi:lock-clock",
-        "unlocked": "mdi:lock-open",
+        "open": "mdi:lock-open-variant",
+        "opening": "mdi:lock-clock",
+        "unlocked": "mdi:lock-open-variant",
         "unlocking": "mdi:lock-clock"
       }
     }
   },
   "services": {
-    "lock": "mdi:lock",
-    "open": "mdi:door-open",
-    "unlock": "mdi:lock-open"
+    "lock": {
+      "service": "mdi:lock"
+    },
+    "open": {
+      "service": "mdi:door-open"
+    },
+    "unlock": {
+      "service": "mdi:lock-open-variant"
+    }
   }
 }

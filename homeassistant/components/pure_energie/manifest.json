@@ -5,8 +5,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pure_energie",
   "iot_class": "local_polling",
-  "quality_scale": "platinum",
-  "requirements": ["gridnet==5.0.0"],
+  "requirements": ["gridnet==5.0.1"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

@@ -30,17 +30,22 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     ManualTriggerSensorEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -75,13 +80,10 @@ async def async_setup_platform(
 
     name: Template = conf[CONF_NAME]
     query_str: str = conf[CONF_QUERY]
-    value_template: Template | None = conf.get(CONF_VALUE_TEMPLATE)
+    value_template: ValueTemplate | None = conf.get(CONF_VALUE_TEMPLATE)
     column_name: str = conf[CONF_COLUMN_NAME]
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
     db_url: str = resolve_db_url(hass, conf.get(CONF_DB_URL))
-
-    if value_template is not None:
-        value_template.hass = hass
 
     trigger_entity_config = {CONF_NAME: name}
     for key in TRIGGER_ENTITY_OPTIONS:
@@ -103,7 +105,9 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor from config entry."""
 
@@ -113,15 +117,13 @@ async def async_setup_entry(
     template: str | None = entry.options.get(CONF_VALUE_TEMPLATE)
     column_name: str = entry.options[CONF_COLUMN_NAME]
 
-    value_template: Template | None = None
+    value_template: ValueTemplate | None = None
     if template is not None:
         try:
-            value_template = Template(template)
+            value_template = ValueTemplate(template, hass)
             value_template.ensure_valid()
         except TemplateError:
             value_template = None
-        if value_template is not None:
-            value_template.hass = hass
 
     name_template = Template(name, hass)
     trigger_entity_config = {CONF_NAME: name_template, CONF_UNIQUE_ID: entry.entry_id}
@@ -178,11 +180,11 @@ async def async_setup_sensor(
     trigger_entity_config: ConfigType,
     query_str: str,
     column_name: str,
-    value_template: Template | None,
+    value_template: ValueTemplate | None,
     unique_id: str | None,
     db_url: str,
     yaml: bool,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor."""
     try:
@@ -307,13 +309,15 @@ def _generate_lambda_stmt(query: str) -> StatementLambdaElement:
 class SQLSensor(ManualTriggerSensorEntity):
     """Representation of an SQL sensor."""
 
+    _unrecorded_attributes = frozenset({MATCH_ALL})
+
     def __init__(
         self,
         trigger_entity_config: ConfigType,
         sessmaker: scoped_session,
         query: str,
         column: str,
-        value_template: Template | None,
+        value_template: ValueTemplate | None,
         yaml: bool,
         use_database_executor: bool,
     ) -> None:
@@ -333,8 +337,15 @@ class SQLSensor(ManualTriggerSensorEntity):
                 entry_type=DeviceEntryType.SERVICE,
                 identifiers={(DOMAIN, unique_id)},
                 manufacturer="SQL",
-                name=self.name,
+                name=self._rendered.get(CONF_NAME),
             )
+
+    @property
+    def name(self) -> str | None:
+        """Name of the entity."""
+        if self.has_entity_name:
+            return self._attr_name
+        return self._rendered.get(CONF_NAME)
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
@@ -349,14 +360,14 @@ class SQLSensor(ManualTriggerSensorEntity):
     async def async_update(self) -> None:
         """Retrieve sensor data from the query using the right executor."""
         if self._use_database_executor:
-            data = await get_instance(self.hass).async_add_executor_job(self._update)
+            await get_instance(self.hass).async_add_executor_job(self._update)
         else:
-            data = await self.hass.async_add_executor_job(self._update)
-        self._process_manual_data(data)
+            await self.hass.async_add_executor_job(self._update)
 
-    def _update(self) -> Any:
+    def _update(self) -> None:
         """Retrieve sensor data from the query."""
         data = None
+        extra_state_attributes = {}
         self._attr_extra_state_attributes = {}
         sess: scoped_session = self.sessionmaker()
         try:
@@ -381,15 +392,19 @@ class SQLSensor(ManualTriggerSensorEntity):
                     value = value.isoformat()
                 elif isinstance(value, (bytes, bytearray)):
                     value = f"0x{value.hex()}"
+                extra_state_attributes[key] = value
                 self._attr_extra_state_attributes[key] = value
 
         if data is not None and isinstance(data, (bytes, bytearray)):
             data = f"0x{data.hex()}"
 
         if data is not None and self._template is not None:
-            self._attr_native_value = (
-                self._template.async_render_with_possible_json_value(data, None)
-            )
+            variables = self._template_variables_with_value(data)
+            if self._render_availability_template(variables):
+                self._attr_native_value = self._template.async_render_as_value_template(
+                    self.entity_id, variables, None
+                )
+                self._process_manual_data(variables)
         else:
             self._attr_native_value = data
 
@@ -397,4 +412,3 @@ class SQLSensor(ManualTriggerSensorEntity):
             _LOGGER.warning("%s returned no results", self._query)
 
         sess.close()
-        return data

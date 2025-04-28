@@ -10,26 +10,12 @@ from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaFlowFormStep,
-    SchemaOptionsFlowHandler,
-)
 
-from .const import CONF_FORECAST, DOMAIN
-
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_FORECAST, default=False): bool,
-    }
-)
-OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
-}
+from .const import DOMAIN
 
 
 class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -87,9 +73,3 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
-        """Options callback for AccuWeather."""
-        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

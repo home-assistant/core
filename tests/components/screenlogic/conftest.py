@@ -5,7 +5,13 @@ import pytest
 from homeassistant.components.screenlogic import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 
-from . import MOCK_ADAPTER_IP, MOCK_ADAPTER_MAC, MOCK_ADAPTER_NAME, MOCK_ADAPTER_PORT
+from . import (
+    MOCK_ADAPTER_IP,
+    MOCK_ADAPTER_MAC,
+    MOCK_ADAPTER_NAME,
+    MOCK_ADAPTER_PORT,
+    MOCK_CONFIG_ENTRY_ID,
+)
 
 from tests.common import MockConfigEntry
 
@@ -24,5 +30,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_SCAN_INTERVAL: 30,
         },
         unique_id=MOCK_ADAPTER_MAC,
-        entry_id="screenlogictest",
+        entry_id=MOCK_CONFIG_ENTRY_ID,
     )

@@ -15,7 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
@@ -50,6 +50,12 @@ async def test_switches(
         (
             "switch.technove_station_auto_charge",
             "set_auto_charge",
+            {"enabled": True},
+            {"enabled": False},
+        ),
+        (
+            "switch.technove_station_charging_enabled",
+            "set_charging_enabled",
             {"enabled": True},
             {"enabled": False},
         ),
@@ -96,6 +102,10 @@ async def test_switch_on_off(
             "switch.technove_station_auto_charge",
             "set_auto_charge",
         ),
+        (
+            "switch.technove_station_charging_enabled",
+            "set_charging_enabled",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -130,6 +140,10 @@ async def test_invalid_response(
             "switch.technove_station_auto_charge",
             "set_auto_charge",
         ),
+        (
+            "switch.technove_station_charging_enabled",
+            "set_charging_enabled",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -157,3 +171,31 @@ async def test_connection_error(
     assert method_mock.call_count == 1
     assert (state := hass.states.get(state.entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_disable_charging_auto_charge(
+    hass: HomeAssistant,
+    mock_technove: MagicMock,
+) -> None:
+    """Test failure to disable charging when the station is in auto charge mode."""
+    entity_id = "switch.technove_station_charging_enabled"
+    state = hass.states.get(entity_id)
+
+    # Enable auto-charge mode
+    device = mock_technove.update.return_value
+    device.info.auto_charge = True
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="auto-charge is enabled",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert (state := hass.states.get(state.entity_id))
+    assert state.state != STATE_UNAVAILABLE

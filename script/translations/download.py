@@ -4,17 +4,17 @@
 from __future__ import annotations
 
 import json
-import os
-import pathlib
+from pathlib import Path
 import re
 import subprocess
+from typing import Any
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
-from .util import get_lokalise_token, load_json_from_path
+from .util import flatten_translations, get_lokalise_token, load_json_from_path
 
 FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
-DOWNLOAD_DIR = pathlib.Path("build/translations-download").absolute()
+DOWNLOAD_DIR = Path("build/translations-download").absolute()
 
 
 def run_download_docker():
@@ -39,6 +39,8 @@ def run_download_docker():
             CORE_PROJECT_ID,
             "--original-filenames=false",
             "--replace-breaks=false",
+            "--filter-data",
+            "nonfuzzy",
             "--export-empty-as",
             "skip",
             "--format",
@@ -54,35 +56,32 @@ def run_download_docker():
         raise ExitApp("Failed to download translations")
 
 
-def save_json(filename: str, data: list | dict):
-    """Save JSON data to a file.
-
-    Returns True on success.
-    """
-    data = json.dumps(data, sort_keys=True, indent=4)
-    with open(filename, "w", encoding="utf-8") as fdesc:
-        fdesc.write(data)
-        return True
-    return False
+def save_json(filename: Path, data: list | dict) -> None:
+    """Save JSON data to a file."""
+    filename.write_text(json.dumps(data, sort_keys=True, indent=4), encoding="utf-8")
 
 
-def get_component_path(lang, component):
+def get_component_path(lang, component) -> Path | None:
     """Get the component translation path."""
-    if os.path.isdir(os.path.join("homeassistant", "components", component)):
-        return os.path.join(
-            "homeassistant", "components", component, "translations", f"{lang}.json"
+    if (Path("homeassistant") / "components" / component).is_dir():
+        return (
+            Path("homeassistant")
+            / "components"
+            / component
+            / "translations"
+            / f"{lang}.json"
         )
     return None
 
 
-def get_platform_path(lang, component, platform):
+def get_platform_path(lang, component, platform) -> Path:
     """Get the platform translation path."""
-    return os.path.join(
-        "homeassistant",
-        "components",
-        component,
-        "translations",
-        f"{platform}.{lang}.json",
+    return (
+        Path("homeassistant")
+        / "components"
+        / component
+        / "translations"
+        / f"{platform}.{lang}.json"
     )
 
 
@@ -105,7 +104,15 @@ def save_language_translations(lang, translations):
                     f"Skipping {lang} for {component}, as the integration doesn't seem to exist."
                 )
                 continue
-            os.makedirs(os.path.dirname(path), exist_ok=True)
+            if not (
+                Path("homeassistant") / "components" / component / "strings.json"
+            ).exists():
+                print(
+                    f"Skipping {lang} for {component}, as the integration doesn't have a strings.json file."
+                )
+                continue
+            path.parent.mkdir(parents=True, exist_ok=True)
+            base_translations = pick_keys(component, base_translations)
             save_json(path, base_translations)
 
         if "platform" not in component_translations:
@@ -115,7 +122,7 @@ def save_language_translations(lang, translations):
             "platform"
         ].items():
             path = get_platform_path(lang, component, platform)
-            os.makedirs(os.path.dirname(path), exist_ok=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
             save_json(path, platform_translations)
 
 
@@ -131,6 +138,32 @@ def delete_old_translations():
     """Delete old translations."""
     for fil in INTEGRATIONS_DIR.glob("*/translations/*"):
         fil.unlink()
+
+
+def get_current_keys(component: str) -> dict[str, Any]:
+    """Get the current keys for a component."""
+    strings_path = Path("homeassistant") / "components" / component / "strings.json"
+    return load_json_from_path(strings_path)
+
+
+def pick_keys(component: str, translations: dict[str, Any]) -> dict[str, Any]:
+    """Pick the keys that are in the current strings."""
+    flat_translations = flatten_translations(translations)
+    flat_current_keys = flatten_translations(get_current_keys(component))
+    flatten_result = {}
+    for key in flat_current_keys:
+        if key in flat_translations:
+            flatten_result[key] = flat_translations[key]
+    result = {}
+    for key, value in flatten_result.items():
+        parts = key.split("::")
+        d = result
+        for part in parts[:-1]:
+            if part not in d:
+                d[part] = {}
+            d = d[part]
+        d[parts[-1]] = value
+    return result
 
 
 def run():

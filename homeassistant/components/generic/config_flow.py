@@ -5,11 +5,11 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import contextlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import web
 from httpx import HTTPStatusError, RequestError, TimeoutException
@@ -17,8 +17,10 @@ import PIL.Image
 import voluptuous as vol
 import yarl
 
+from homeassistant.components import websocket_api
 from homeassistant.components.camera import (
     CAMERA_IMAGE_TIMEOUT,
+    DOMAIN as CAMERA_DOMAIN,
     DynamicStreamSettings,
     _async_get_image,
 )
@@ -29,6 +31,7 @@ from homeassistant.components.stream import (
     HLS_PROVIDER,
     RTSP_TRANSPORTS,
     SOURCE_TIMEOUT,
+    Stream,
     create_stream,
 )
 from homeassistant.config_entries import (
@@ -47,10 +50,11 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import UnknownFlow
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util import slugify
 
 from .camera import GenericCamera, generate_auth
@@ -78,6 +82,15 @@ DEFAULT_DATA = {
 
 SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
 IMAGE_PREVIEWS_ACTIVE = "previews"
+
+
+class InvalidStreamException(HomeAssistantError):
+    """Error to indicate an invalid stream."""
+
+    def __init__(self, error: str, details: str | None = None) -> None:
+        """Initialize the error."""
+        super().__init__(error)
+        self.details = details
 
 
 def build_schema(
@@ -158,6 +171,8 @@ async def async_test_still(
     """Verify that the still image is valid before we create an entity."""
     fmt = None
     if not (url := info.get(CONF_STILL_IMAGE_URL)):
+        # If user didn't specify a still image URL,the automatically generated
+        # still image that stream generates is always jpeg.
         return {}, info.get(CONF_CONTENT_TYPE, "image/jpeg")
     try:
         if not isinstance(url, template_helper.Template):
@@ -232,16 +247,16 @@ def slug(
     return None
 
 
-async def async_test_stream(
+async def async_test_and_preview_stream(
     hass: HomeAssistant, info: Mapping[str, Any]
-) -> dict[str, str]:
-    """Verify that the stream is valid before we create an entity."""
+) -> Stream | None:
+    """Verify that the stream is valid before we create an entity.
+
+    Returns the stream object if valid. Raises InvalidStreamException if not.
+    The stream object is used to preview the video in the UI.
+    """
     if not (stream_source := info.get(CONF_STREAM_SOURCE)):
-        return {}
-    # Import from stream.worker as stream cannot reexport from worker
-    # without forcing the av dependency on default_config
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.stream.worker import StreamWorkerError
+        return None
 
     if not isinstance(stream_source, template_helper.Template):
         stream_source = template_helper.Template(stream_source, hass)
@@ -249,7 +264,7 @@ async def async_test_stream(
         stream_source = stream_source.async_render(parse_result=False)
     except TemplateError as err:
         _LOGGER.warning("Problem rendering template %s: %s", stream_source, err)
-        return {CONF_STREAM_SOURCE: "template_error"}
+        raise InvalidStreamException("template_error") from err
     stream_options: dict[str, str | bool | float] = {}
     if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
         stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
@@ -258,10 +273,10 @@ async def async_test_stream(
 
     try:
         url = yarl.URL(stream_source)
-    except ValueError:
-        return {CONF_STREAM_SOURCE: "malformed_url"}
+    except ValueError as err:
+        raise InvalidStreamException("malformed_url") from err
     if not url.is_absolute():
-        return {CONF_STREAM_SOURCE: "relative_url"}
+        raise InvalidStreamException("relative_url")
     if not url.user and not url.password:
         username = info.get(CONF_USERNAME)
         password = info.get(CONF_PASSWORD)
@@ -274,29 +289,30 @@ async def async_test_stream(
             stream_source,
             stream_options,
             DynamicStreamSettings(),
-            "test_stream",
+            f"{DOMAIN}.test_stream",
         )
         hls_provider = stream.add_provider(HLS_PROVIDER)
-        await stream.start()
-        if not await hls_provider.part_recv(timeout=SOURCE_TIMEOUT):
-            hass.async_create_task(stream.stop())
-            return {CONF_STREAM_SOURCE: "timeout"}
-        await stream.stop()
-    except StreamWorkerError as err:
-        return {CONF_STREAM_SOURCE: str(err)}
-    except PermissionError:
-        return {CONF_STREAM_SOURCE: "stream_not_permitted"}
+    except PermissionError as err:
+        raise InvalidStreamException("stream_not_permitted") from err
     except OSError as err:
         if err.errno == EHOSTUNREACH:
-            return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}
+            raise InvalidStreamException("stream_no_route_to_host") from err
         if err.errno == EIO:  # input/output error
-            return {CONF_STREAM_SOURCE: "stream_io_error"}
-        raise err
-    return {}
+            raise InvalidStreamException("stream_io_error") from err
+        raise
+    except HomeAssistantError as err:
+        if "Stream integration is not set up" in str(err):
+            raise InvalidStreamException("stream_not_set_up") from err
+        raise
+    await stream.start()
+    if not await hls_provider.part_recv(timeout=SOURCE_TIMEOUT):
+        hass.async_create_task(stream.stop())
+        raise InvalidStreamException("timeout")
+    return stream
 
 
-def register_preview(hass: HomeAssistant) -> None:
-    """Set up previews for camera feeds during config flow."""
+def register_still_preview(hass: HomeAssistant) -> None:
+    """Set up still image preview for camera feeds during config flow."""
     hass.data.setdefault(DOMAIN, {})
 
     if not hass.data[DOMAIN].get(IMAGE_PREVIEWS_ACTIVE):
@@ -312,6 +328,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize Generic ConfigFlow."""
+        self.preview_image_settings: dict[str, Any] = {}
+        self.preview_stream: Stream | None = None
         self.user_input: dict[str, Any] = {}
         self.title = ""
 
@@ -320,15 +338,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> GenericOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return GenericOptionsFlowHandler(config_entry)
-
-    def check_for_existing(self, options: dict[str, Any]) -> bool:
-        """Check whether an existing entry is using the same URLs."""
-        return any(
-            entry.options.get(CONF_STILL_IMAGE_URL) == options.get(CONF_STILL_IMAGE_URL)
-            and entry.options.get(CONF_STREAM_SOURCE) == options.get(CONF_STREAM_SOURCE)
-            for entry in self._async_current_entries()
-        )
+        return GenericOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -344,26 +354,25 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_still_image_or_stream_url"
             else:
                 errors, still_format = await async_test_still(hass, user_input)
-                errors = errors | await async_test_stream(hass, user_input)
+                try:
+                    self.preview_stream = await async_test_and_preview_stream(
+                        hass, user_input
+                    )
+                except InvalidStreamException as err:
+                    errors[CONF_STREAM_SOURCE] = str(err)
+                    self.preview_stream = None
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
-                    user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
                     still_url = user_input.get(CONF_STILL_IMAGE_URL)
                     stream_url = user_input.get(CONF_STREAM_SOURCE)
                     name = (
                         slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
                     )
-                    if still_url is None:
-                        # If user didn't specify a still image URL,
-                        # The automatically generated still image that stream generates
-                        # is always jpeg
-                        user_input[CONF_CONTENT_TYPE] = "image/jpeg"
                     self.user_input = user_input
                     self.title = name
-
                     # temporary preview for user to check the image
-                    self.context["preview_cam"] = user_input
-                    return await self.async_step_user_confirm_still()
+                    self.preview_image_settings = user_input
+                    return await self.async_step_user_confirm()
         elif self.user_input:
             user_input = self.user_input
         else:
@@ -374,36 +383,44 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_user_confirm_still(
+    async def async_step_user_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user clicking confirm after still preview."""
         if user_input:
+            if ha_stream := self.preview_stream:
+                # Kill off the temp stream we created.
+                await ha_stream.stop()
             if not user_input.get(CONF_CONFIRMED_OK):
                 return await self.async_step_user()
             return self.async_create_entry(
                 title=self.title, data={}, options=self.user_input
             )
-        register_preview(self.hass)
-        preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
+        register_still_preview(self.hass)
         return self.async_show_form(
-            step_id="user_confirm_still",
+            step_id="user_confirm",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_CONFIRMED_OK, default=False): bool,
                 }
             ),
-            description_placeholders={"preview_url": preview_url},
             errors=None,
+            preview="generic_camera",
         )
+
+    @staticmethod
+    async def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview WS API."""
+        websocket_api.async_register_command(hass, ws_start_preview)
 
 
 class GenericOptionsFlowHandler(OptionsFlow):
     """Handle Generic IP Camera options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize Generic IP Camera options flow."""
-        self.config_entry = config_entry
+        self.preview_image_settings: dict[str, Any] = {}
+        self.preview_stream: Stream | None = None
         self.user_input: dict[str, Any] = {}
 
     async def async_step_init(
@@ -413,30 +430,36 @@ class GenericOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
         hass = self.hass
 
-        if user_input is not None:
-            errors, still_format = await async_test_still(
-                hass, self.config_entry.options | user_input
-            )
-            errors = errors | await async_test_stream(hass, user_input)
-            still_url = user_input.get(CONF_STILL_IMAGE_URL)
-            if not errors:
-                if still_url is None:
-                    # If user didn't specify a still image URL,
-                    # The automatically generated still image that stream generates
-                    # is always jpeg
-                    still_format = "image/jpeg"
-                data = {
-                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: self.config_entry.options.get(
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
-                    ),
-                    **user_input,
-                    CONF_CONTENT_TYPE: still_format
-                    or self.config_entry.options.get(CONF_CONTENT_TYPE),
-                }
-                self.user_input = data
-                # temporary preview for user to check the image
-                self.context["preview_cam"] = data
-                return await self.async_step_confirm_still()
+        if user_input:
+            # Secondary validation because serialised vol can't seem to handle this complexity:
+            if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
+                CONF_STREAM_SOURCE
+            ):
+                errors["base"] = "no_still_image_or_stream_url"
+            else:
+                errors, still_format = await async_test_still(hass, user_input)
+                try:
+                    self.preview_stream = await async_test_and_preview_stream(
+                        hass, user_input
+                    )
+                except InvalidStreamException as err:
+                    errors[CONF_STREAM_SOURCE] = str(err)
+                    self.preview_stream = None
+                if not errors:
+                    data = {
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS: self.config_entry.options.get(
+                            CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                        ),
+                        **user_input,
+                        CONF_CONTENT_TYPE: still_format
+                        or self.config_entry.options.get(CONF_CONTENT_TYPE),
+                    }
+                    self.user_input = data
+                    # temporary preview for user to check the image
+                    self.preview_image_settings = data
+                    return await self.async_step_user_confirm()
+        elif self.user_input:
+            user_input = self.user_input
         return self.async_show_form(
             step_id="init",
             data_schema=build_schema(
@@ -447,29 +470,36 @@ class GenericOptionsFlowHandler(OptionsFlow):
             errors=errors,
         )
 
-    async def async_step_confirm_still(
+    async def async_step_user_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user clicking confirm after still preview."""
         if user_input:
+            if ha_stream := self.preview_stream:
+                # Kill off the temp stream we created.
+                await ha_stream.stop()
             if not user_input.get(CONF_CONFIRMED_OK):
                 return await self.async_step_init()
             return self.async_create_entry(
                 title=self.config_entry.title,
                 data=self.user_input,
             )
-        register_preview(self.hass)
-        preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
+        register_still_preview(self.hass)
         return self.async_show_form(
-            step_id="confirm_still",
+            step_id="user_confirm",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_CONFIRMED_OK, default=False): bool,
                 }
             ),
-            description_placeholders={"preview_url": preview_url},
             errors=None,
+            preview="generic_camera",
         )
+
+    @staticmethod
+    async def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview WS API."""
+        websocket_api.async_register_command(hass, ws_start_preview)
 
 
 class CameraImagePreview(HomeAssistantView):
@@ -486,15 +516,17 @@ class CameraImagePreview(HomeAssistantView):
     async def get(self, request: web.Request, flow_id: str) -> web.Response:
         """Start a GET request."""
         _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
-        try:
-            flow = self.hass.config_entries.flow.async_get(flow_id)
-        except UnknownFlow:
-            try:
-                flow = self.hass.config_entries.options.async_get(flow_id)
-            except UnknownFlow as exc:
-                _LOGGER.warning("Unknown flow while getting image preview")
-                raise web.HTTPNotFound from exc
-        user_input = flow["context"]["preview_cam"]
+        flow = cast(
+            GenericIPCamConfigFlow,
+            self.hass.config_entries.flow._progress.get(flow_id),  # noqa: SLF001
+        ) or cast(
+            GenericOptionsFlowHandler,
+            self.hass.config_entries.options._progress.get(flow_id),  # noqa: SLF001
+        )
+        if not flow:
+            _LOGGER.warning("Unknown flow while getting image preview")
+            raise web.HTTPNotFound
+        user_input = flow.preview_image_settings
         camera = GenericCamera(self.hass, user_input, flow_id, "preview")
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
@@ -504,3 +536,66 @@ class CameraImagePreview(HomeAssistantView):
             CAMERA_IMAGE_TIMEOUT,
         )
         return web.Response(body=image.content, content_type=image.content_type)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "generic_camera/start_preview",
+        vol.Required("flow_id"): str,
+        vol.Optional("flow_type"): vol.Any("config_flow", "options_flow"),
+        vol.Optional("user_input"): dict,
+    }
+)
+@websocket_api.async_response
+async def ws_start_preview(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Generate websocket handler for the camera still/stream preview."""
+    _LOGGER.debug("Generating websocket handler for generic camera preview")
+
+    flow_id = msg["flow_id"]
+    flow: GenericIPCamConfigFlow | GenericOptionsFlowHandler
+    if msg.get("flow_type", "config_flow") == "config_flow":
+        flow = cast(
+            GenericIPCamConfigFlow,
+            hass.config_entries.flow._progress.get(flow_id),  # noqa: SLF001
+        )
+    else:  # (flow type == "options flow")
+        flow = cast(
+            GenericOptionsFlowHandler,
+            hass.config_entries.options._progress.get(flow_id),  # noqa: SLF001
+        )
+    user_input = flow.preview_image_settings
+
+    # Create an EntityPlatform, needed for name translations
+    platform = await async_prepare_setup_platform(hass, {}, CAMERA_DOMAIN, DOMAIN)
+    entity_platform = EntityPlatform(
+        hass=hass,
+        logger=_LOGGER,
+        domain=CAMERA_DOMAIN,
+        platform_name=DOMAIN,
+        platform=platform,
+        scan_interval=timedelta(seconds=3600),
+        entity_namespace=None,
+    )
+    await entity_platform.async_load_translations()
+
+    ha_still_url = None
+    ha_stream_url = None
+
+    if user_input.get(CONF_STILL_IMAGE_URL):
+        ha_still_url = f"/api/generic/preview_flow_image/{msg['flow_id']}?t={datetime.now().isoformat()}"
+        _LOGGER.debug("Got preview still URL: %s", ha_still_url)
+
+    if ha_stream := flow.preview_stream:
+        ha_stream_url = ha_stream.endpoint_url(HLS_PROVIDER)
+        _LOGGER.debug("Got preview stream URL: %s", ha_stream_url)
+
+    connection.send_message(
+        websocket_api.event_message(
+            msg["id"],
+            {"attributes": {"still_url": ha_still_url, "stream_url": ha_stream_url}},
+        )
+    )

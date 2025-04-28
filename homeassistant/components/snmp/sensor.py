@@ -11,10 +11,6 @@ from pysnmp.error import PySnmpError
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
-    ContextData,
-    ObjectIdentity,
-    ObjectType,
-    SnmpEngine,
     Udp6TransportTarget,
     UdpTransportTarget,
     UsmUserData,
@@ -24,7 +20,10 @@ from pysnmp.proto.rfc1902 import Opaque
 from pysnmp.proto.rfc1905 import NoSuchObject
 import voluptuous as vol
 
-from homeassistant.components.sensor import CONF_STATE_CLASS, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
@@ -38,7 +37,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
@@ -46,6 +45,7 @@ from homeassistant.helpers.trigger_template_entity import (
     CONF_PICTURE,
     TEMPLATE_SENSOR_BASE_SCHEMA,
     ManualTriggerSensorEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -71,6 +71,7 @@ from .const import (
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
 )
+from .util import async_create_request_cmd_args
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +87,7 @@ TRIGGER_ENTITY_OPTIONS = (
     CONF_UNIT_OF_MEASUREMENT,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BASEOID): cv.string,
         vol.Optional(CONF_ACCEPT_ERRORS, default=False): cv.boolean,
@@ -94,7 +95,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEFAULT_VALUE): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
         vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SNMP_VERSIONS),
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_AUTH_KEY): cv.string,
@@ -119,7 +122,7 @@ async def async_setup_platform(
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     community = config.get(CONF_COMMUNITY)
-    baseoid = config.get(CONF_BASEOID)
+    baseoid: str = config[CONF_BASEOID]
     version = config[CONF_VERSION]
     username = config.get(CONF_USERNAME)
     authkey = config.get(CONF_AUTH_KEY)
@@ -145,27 +148,18 @@ async def async_setup_platform(
             authproto = "none"
         if not privkey:
             privproto = "none"
-
-        request_args = [
-            SnmpEngine(),
-            UsmUserData(
-                username,
-                authKey=authkey or None,
-                privKey=privkey or None,
-                authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-                privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
-            ),
-            target,
-            ContextData(),
-        ]
+        auth_data = UsmUserData(
+            username,
+            authKey=authkey or None,
+            privKey=privkey or None,
+            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
+            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
+        )
     else:
-        request_args = [
-            SnmpEngine(),
-            CommunityData(community, mpModel=SNMP_VERSIONS[version]),
-            target,
-            ContextData(),
-        ]
-    get_result = await getCmd(*request_args, ObjectType(ObjectIdentity(baseoid)))
+        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
+
+    request_args = await async_create_request_cmd_args(hass, auth_data, target, baseoid)
+    get_result = await getCmd(*request_args)
     errindication, _, _, _ = get_result
 
     if errindication and not accept_errors:
@@ -182,9 +176,7 @@ async def async_setup_platform(
             continue
         trigger_entity_config[key] = config[key]
 
-    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
-        value_template.hass = hass
+    value_template: ValueTemplate | None = config.get(CONF_VALUE_TEMPLATE)
 
     data = SnmpData(request_args, baseoid, accept_errors, default_value)
     async_add_entities([SnmpSensor(hass, data, trigger_entity_config, value_template)])
@@ -200,7 +192,7 @@ class SnmpSensor(ManualTriggerSensorEntity):
         hass: HomeAssistant,
         data: SnmpData,
         config: ConfigType,
-        value_template: Template | None,
+        value_template: ValueTemplate | None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(hass, config)
@@ -217,17 +209,16 @@ class SnmpSensor(ManualTriggerSensorEntity):
         """Get the latest data and updates the states."""
         await self.data.async_update()
 
-        raw_value = self.data.value
-
+        variables = self._template_variables_with_value(self.data.value)
         if (value := self.data.value) is None:
             value = STATE_UNKNOWN
         elif self._value_template is not None:
-            value = self._value_template.async_render_with_possible_json_value(
-                value, STATE_UNKNOWN
+            value = self._value_template.async_render_as_value_template(
+                self.entity_id, variables, STATE_UNKNOWN
             )
 
         self._attr_native_value = value
-        self._process_manual_data(raw_value)
+        self._process_manual_data(variables)
 
 
 class SnmpData:
@@ -244,9 +235,7 @@ class SnmpData:
     async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
 
-        get_result = await getCmd(
-            *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
-        )
+        get_result = await getCmd(*self._request_args)
         errindication, errstatus, errindex, restable = get_result
 
         if errindication and not self._accept_errors:
@@ -270,7 +259,7 @@ class SnmpData:
             "SNMP OID %s received type=%s and data %s",
             self._baseoid,
             type(value),
-            bytes(value),
+            value,
         )
         if isinstance(value, NoSuchObject):
             _LOGGER.error(
@@ -289,8 +278,7 @@ class SnmpData:
             try:
                 decoded_value, _ = decoder.decode(bytes(value))
                 return str(decoded_value)
-            # pylint: disable=broad-except
-            except Exception as decode_exception:
+            except Exception as decode_exception:  # noqa: BLE001
                 _LOGGER.error(
                     "SNMP error in decoding opaque type: %s", decode_exception
                 )

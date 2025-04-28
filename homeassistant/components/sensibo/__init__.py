@@ -15,29 +15,27 @@ from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import SensiboDataUpdateCoordinator
 from .util import NoDevicesError, NoUsernameError, async_validate_api
 
+type SensiboConfigEntry = ConfigEntry[SensiboDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
     """Set up Sensibo from a config entry."""
 
     coordinator = SensiboDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
     """Unload Sensibo config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        del hass.data[DOMAIN][entry.entry_id]
-        if not hass.data[DOMAIN]:
-            del hass.data[DOMAIN]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
     """Migrate old entry."""
     # Change entry unique id from api_key to username
     if entry.version == 1:
@@ -59,7 +57,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: SensiboConfigEntry, device: DeviceEntry
 ) -> bool:
     """Remove Sensibo config entry from a device."""
     entity_registry = er.async_get(hass)

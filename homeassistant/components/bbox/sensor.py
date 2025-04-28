@@ -10,7 +10,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_MONITORED_VARIABLES, CONF_NAME, UnitOfDataRate
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -80,7 +80,7 @@ SENSOR_TYPES_UPTIME: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in (*SENSOR_TYPES, *SENSOR_TYPES_UPTIME)]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_VARIABLES): vol.All(
             cv.ensure_list, [vol.In(SENSOR_KEYS)]

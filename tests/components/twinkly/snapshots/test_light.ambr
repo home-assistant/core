@@ -1,0 +1,80 @@
+# serializer version: 1
+# name: test_entities[light.tree_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'effect_list': list([
+        '1 Rainbow',
+        '2 Flare',
+      ]),
+      'supported_color_modes': list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.tree_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'twinkly',
+    'previous_unique_id': None,
+    'supported_features': <LightEntityFeature: 4>,
+    'translation_key': 'light',
+    'unique_id': '00:2d:13:3b:aa:bb',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[light.tree_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 26,
+      'color_mode': <ColorMode.RGB: 'rgb'>,
+      'effect': '1 Rainbow',
+      'effect_list': list([
+        '1 Rainbow',
+        '2 Flare',
+      ]),
+      'friendly_name': 'Tree 1',
+      'hs_color': tuple(
+        0.0,
+        0.0,
+      ),
+      'rgb_color': tuple(
+        255,
+        255,
+        255,
+      ),
+      'supported_color_modes': list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+      'supported_features': <LightEntityFeature: 4>,
+      'xy_color': tuple(
+        0.323,
+        0.329,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.tree_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

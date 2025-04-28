@@ -5,8 +5,9 @@ from __future__ import annotations
 import configparser
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 from urllib.parse import urlparse
+from uuid import UUID
 
 import aiohttp
 import attr
@@ -40,7 +41,7 @@ class ChromecastInfo:
     is_dynamic_group = attr.ib(type=bool | None, default=None)
 
     @property
-    def friendly_name(self) -> str:
+    def friendly_name(self) -> str | None:
         """Return the Friendly Name."""
         return self.cast_info.friendly_name
 
@@ -50,7 +51,7 @@ class ChromecastInfo:
         return self.cast_info.cast_type == CAST_TYPE_GROUP
 
     @property
-    def uuid(self) -> bool:
+    def uuid(self) -> UUID:
         """Return the UUID."""
         return self.cast_info.uuid
 
@@ -111,7 +112,10 @@ class ChromecastInfo:
         is_dynamic_group = False
         http_group_status = None
         http_group_status = dial.get_multizone_status(
-            None,
+            # We pass services which will be used for the HTTP request, and we
+            # don't care about the host in http_group_status.dynamic_groups so
+            # we pass an empty string to simplify the code.
+            "",
             services=self.cast_info.services,
             zconf=ChromeCastZeroconf.get_zeroconf(),
         )
@@ -129,7 +133,7 @@ class ChromecastInfo:
 class ChromeCastZeroconf:
     """Class to hold a zeroconf instance."""
 
-    __zconf: zeroconf.HaZeroconf | None = None
+    __zconf: ClassVar[zeroconf.HaZeroconf | None] = None
 
     @classmethod
     def set_zeroconf(cls, zconf: zeroconf.HaZeroconf) -> None:
@@ -162,7 +166,7 @@ class CastStatusListener(
         self._valid = True
         self._mz_mgr = mz_mgr
 
-        if cast_device._cast_info.is_audio_group:
+        if cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.add_multizone(chromecast)
         if mz_only:
             return
@@ -170,7 +174,7 @@ class CastStatusListener(
         chromecast.register_status_listener(self)
         chromecast.socket_client.media_controller.register_status_listener(self)
         chromecast.register_connection_listener(self)
-        if not cast_device._cast_info.is_audio_group:
+        if not cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.register_listener(chromecast.uuid, self)
 
     def new_cast_status(self, status):
@@ -214,8 +218,7 @@ class CastStatusListener(
 
         All following callbacks won't be forwarded.
         """
-        # pylint: disable-next=protected-access
-        if self._cast_device._cast_info.is_audio_group:
+        if self._cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.remove_multizone(self._uuid)
         else:
             self._mz_mgr.deregister_listener(self._uuid, self)
@@ -249,7 +252,7 @@ async def _fetch_playlist(hass, url, supported_content_types):
     """Fetch a playlist from the given url."""
     try:
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-        async with session.get(url, timeout=5) as resp:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
             charset = resp.charset or "utf-8"
             if resp.content_type in supported_content_types:
                 raise PlaylistSupported

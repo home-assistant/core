@@ -9,7 +9,7 @@ from requests.exceptions import RequestException
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .connectivity import ObihaiConnection
 from .const import DOMAIN, LOGGER, OBIHAI
@@ -18,7 +18,9 @@ SCAN_INTERVAL = datetime.timedelta(seconds=5)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Obihai sensor entries."""
 
@@ -106,18 +108,18 @@ class ObihaiServiceSensors(SensorEntity):
 
             if not self.requester.available:
                 self.requester.available = True
-                LOGGER.info("Connection restored")
+                LOGGER.warning("Connection restored")
             self._attr_available = True
-
-            return
 
         except RequestException as exc:
             if self.requester.available:
                 LOGGER.warning("Connection failed, Obihai offline? %s", exc)
+            self._attr_native_value = None
+            self._attr_available = False
+            self.requester.available = False
         except IndexError as exc:
             if self.requester.available:
                 LOGGER.warning("Connection failed, bad response: %s", exc)
-
-        self._attr_native_value = None
-        self._attr_available = False
-        self.requester.available = False
+            self._attr_native_value = None
+            self._attr_available = False
+            self.requester.available = False

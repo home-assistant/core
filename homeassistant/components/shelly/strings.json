@@ -17,30 +17,54 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Username for the device's web panel.",
+          "password": "Password for the device's web panel."
         }
       },
       "reauth_confirm": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::shelly::config::step::credentials::data_description::username%]",
+          "password": "[%key:component::shelly::config::step::credentials::data_description::password%]"
         }
       },
       "confirm_discovery": {
         "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
+      },
+      "reconfigure": {
+        "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::shelly::config::step::user::data_description::host%]",
+          "port": "[%key:component::shelly::config::step::user::data_description::port%]"
+        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "custom_port_not_supported": "Gen1 device does not support custom port.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
-      "custom_port_not_supported": "Gen1 device does not support custom port."
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unsupported_firmware": "The device is using an unsupported firmware version.",
+      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
+      "ipv6_not_supported": "IPv6 is not supported.",
+      "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "device_automation": {
@@ -72,8 +96,15 @@
         "description": "Bluetooth scanning can be active or passive. With active, the Shelly requests data from nearby devices; with passive, the Shelly receives unsolicited data from nearby devices.",
         "data": {
           "ble_scanner_mode": "Bluetooth scanner mode"
+        },
+        "data_description": {
+          "ble_scanner_mode": "The scanner mode to use for Bluetooth scanning."
         }
       }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner."
     }
   },
   "selector": {
@@ -91,7 +122,6 @@
         "state_attributes": {
           "detected": {
             "state": {
-              "unknown": "Unknown",
               "none": "None",
               "mild": "Mild",
               "heavy": "Heavy",
@@ -124,20 +154,55 @@
       }
     },
     "sensor": {
+      "gas_detected": {
+        "state": {
+          "none": "None",
+          "mild": "Mild",
+          "heavy": "Heavy",
+          "test": "Test"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "none": "[%key:component::shelly::entity::sensor::gas_detected::state::none%]",
+              "mild": "[%key:component::shelly::entity::sensor::gas_detected::state::mild%]",
+              "heavy": "[%key:component::shelly::entity::sensor::gas_detected::state::heavy%]",
+              "test": "[%key:component::shelly::entity::sensor::gas_detected::state::test%]"
+            }
+          }
+        }
+      },
       "operation": {
         "state": {
-          "unknown": "Unknown",
           "warmup": "Warm-up",
-          "normal": "Normal",
-          "fault": "Fault"
+          "normal": "[%key:common::state::normal%]",
+          "fault": "[%key:common::state::fault%]"
         },
         "state_attributes": {
           "self_test": {
             "state": {
-              "not_completed": "Not completed",
-              "completed": "Completed",
-              "running": "Running",
-              "pending": "Pending"
+              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
+              "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
+              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
+              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
+            }
+          }
+        }
+      },
+      "self_test": {
+        "state": {
+          "not_completed": "Not completed",
+          "completed": "Completed",
+          "running": "Running",
+          "pending": "Pending"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
+              "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
+              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
+              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
             }
           }
         }
@@ -146,13 +211,53 @@
         "state": {
           "checking": "Checking",
           "closed": "[%key:common::state::closed%]",
-          "closing": "Closing",
+          "closing": "[%key:common::state::closing%]",
           "failure": "Failure",
           "opened": "Opened",
-          "opening": "Opening",
-          "unknown": "[%key:component::shelly::entity::sensor::operation::state::unknown%]"
+          "opening": "[%key:common::state::opening%]"
         }
       }
+    }
+  },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed for {device}, please update your credentials"
+    },
+    "device_communication_error": {
+      "message": "Device communication error occurred for {device}"
+    },
+    "device_communication_action_error": {
+      "message": "Device communication error occurred while calling action for {entity} of {device}"
+    },
+    "device_not_found": {
+      "message": "{device} not found while configuring device automation triggers"
+    },
+    "firmware_unsupported": {
+      "message": "{device} is running an unsupported firmware, please update the firmware"
+    },
+    "invalid_trigger": {
+      "message": "Invalid device automation trigger (type, subtype): {trigger}"
+    },
+    "ota_update_connection_error": {
+      "message": "Device communication error occurred while triggering OTA update for {device}"
+    },
+    "ota_update_rpc_error": {
+      "message": "RPC call error occurred while triggering OTA update for {device}"
+    },
+    "rpc_call_action_error": {
+      "message": "RPC call error occurred while calling action for {entity} of {device}"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from {device}"
+    },
+    "update_error_device_disconnected": {
+      "message": "An error occurred while retrieving data from {device} because it is disconnected"
+    },
+    "update_error_reconnect_error": {
+      "message": "An error occurred while reconnecting to {device}"
+    },
+    "update_error_sleeping_device": {
+      "message": "Sleeping device did not update within {period} seconds interval"
     }
   },
   "issues": {
@@ -163,14 +268,6 @@
     "push_update_failure": {
       "title": "Shelly device {device_name} push update failure",
       "description": "Home Assistant is not receiving push updates from the Shelly device {device_name} with IP address {ip_address}. Check the CoIoT configuration in the web panel of the device and your network configuration."
-    },
-    "deprecated_valve_switch": {
-      "title": "The switch entity for Shelly Gas Valve is deprecated",
-      "description": "The switch entity for Shelly Gas Valve is deprecated. A valve entity {entity} is available and should be used going forward. For this new valve entity you need to use {service} service."
-    },
-    "deprecated_valve_switch_entity": {
-      "title": "Deprecated switch entity for Shelly Gas Valve detected in {info}",
-      "description": "Your Shelly Gas Valve entity `{entity}` is being used in `{info}`. A valve entity is available and should be used going forward.\n\nPlease adjust `{info}` to fix this issue."
     },
     "unsupported_firmware": {
       "title": "Unsupported firmware for device {device_name}",

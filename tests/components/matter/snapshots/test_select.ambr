@@ -1,0 +1,2141 @@
+# serializer version: 1
+# name: test_selects[color_temperature_light][select.mock_color_temperature_light_lighting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Dark',
+        'Medium',
+        'Light',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_color_temperature_light_lighting',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lighting',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[color_temperature_light][select.mock_color_temperature_light_lighting-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Color Temperature Light Lighting',
+      'options': list([
+        'Dark',
+        'Medium',
+        'Light',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_color_temperature_light_lighting',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Dark',
+  })
+# ---
+# name: test_selects[color_temperature_light][select.mock_color_temperature_light_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_color_temperature_light_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[color_temperature_light][select.mock_color_temperature_light_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Color Temperature Light Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_color_temperature_light_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[dimmable_light][select.mock_dimmable_light_led_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Red',
+        'Orange',
+        'Lemon',
+        'Lime',
+        'Green',
+        'Teal',
+        'Cyan',
+        'Aqua',
+        'Blue',
+        'Violet',
+        'Magenta',
+        'Pink',
+        'White',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_dimmable_light_led_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED Color',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-6-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[dimmable_light][select.mock_dimmable_light_led_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Dimmable Light LED Color',
+      'options': list([
+        'Red',
+        'Orange',
+        'Lemon',
+        'Lime',
+        'Green',
+        'Teal',
+        'Cyan',
+        'Aqua',
+        'Blue',
+        'Violet',
+        'Magenta',
+        'Pink',
+        'White',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_dimmable_light_led_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Aqua',
+  })
+# ---
+# name: test_selects[dimmable_light][select.mock_dimmable_light_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_dimmable_light_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[dimmable_light][select.mock_dimmable_light_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Dimmable Light Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_dimmable_light_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[dimmable_plugin_unit][select.dimmable_plugin_unit_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dimmable_plugin_unit_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[dimmable_plugin_unit][select.dimmable_plugin_unit_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dimmable Plugin Unit Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dimmable_plugin_unit_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[door_lock][select.mock_door_lock_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[door_lock][select.mock_door_lock_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[eve_energy_plug][select.eve_energy_plug_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.eve_energy_plug_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[eve_energy_plug][select.eve_energy_plug_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy Plug Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.eve_energy_plug_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[eve_energy_plug_patched][select.eve_energy_plug_patched_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.eve_energy_plug_patched_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[eve_energy_plug_patched][select.eve_energy_plug_patched_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy Plug Patched Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.eve_energy_plug_patched_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[eve_thermo][select.eve_thermo_temperature_display_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.eve_thermo_temperature_display_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[eve_thermo][select.eve_thermo_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.eve_thermo_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
+  })
+# ---
+# name: test_selects[extended_color_light][select.mock_extended_color_light_lighting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Dark',
+        'Medium',
+        'Light',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_extended_color_light_lighting',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lighting',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[extended_color_light][select.mock_extended_color_light_lighting-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Extended Color Light Lighting',
+      'options': list([
+        'Dark',
+        'Medium',
+        'Light',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_extended_color_light_lighting',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Dark',
+  })
+# ---
+# name: test_selects[extended_color_light][select.mock_extended_color_light_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_extended_color_light_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[extended_color_light][select.mock_extended_color_light_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Extended Color Light Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_extended_color_light_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_dimming_edge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Leading',
+        'Trailing',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.inovelli_dimming_edge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dimming Edge',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-3-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_dimming_edge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Dimming Edge',
+      'options': list([
+        'Leading',
+        'Trailing',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.inovelli_dimming_edge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Leading',
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_dimming_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Instant',
+        '500ms',
+        '800ms',
+        '1s',
+        '1.5s',
+        '2s',
+        '2.5s',
+        '3s',
+        '3.5s',
+        '4s',
+        '5s',
+        '6s',
+        '7s',
+        '8s',
+        '10s',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.inovelli_dimming_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dimming Speed',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_dimming_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Dimming Speed',
+      'options': list([
+        'Instant',
+        '500ms',
+        '800ms',
+        '1s',
+        '1.5s',
+        '2s',
+        '2.5s',
+        '3s',
+        '3.5s',
+        '4s',
+        '5s',
+        '6s',
+        '7s',
+        '8s',
+        '10s',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.inovelli_dimming_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2s',
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_led_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Red',
+        'Orange',
+        'Lemon',
+        'Lime',
+        'Green',
+        'Teal',
+        'Cyan',
+        'Aqua',
+        'Blue',
+        'Violet',
+        'Magenta',
+        'Pink',
+        'White',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.inovelli_led_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED Color',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-6-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_led_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli LED Color',
+      'options': list([
+        'Red',
+        'Orange',
+        'Lemon',
+        'Lime',
+        'Green',
+        'Teal',
+        'Cyan',
+        'Aqua',
+        'Blue',
+        'Violet',
+        'Magenta',
+        'Pink',
+        'White',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.inovelli_led_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Lemon',
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Power-on behavior on startup (1)',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_6-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_6',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup (6)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-6-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_6-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Power-on behavior on startup (6)',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.inovelli_power_on_behavior_on_startup_6',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_relay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Relay Click Enable',
+        'Relay Click Disable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.inovelli_relay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Relay',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-5-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_relay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Relay',
+      'options': list([
+        'Relay Click Enable',
+        'Relay Click Disable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.inovelli_relay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Relay Click Disable',
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_smart_bulb_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Smart Bulb Disable',
+        'Smart Bulb Enable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.inovelli_smart_bulb_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smart Bulb Mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-2-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_smart_bulb_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Smart Bulb Mode',
+      'options': list([
+        'Smart Bulb Disable',
+        'Smart Bulb Enable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.inovelli_smart_bulb_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Smart Bulb Disable',
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_switch_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'OnOff+Single',
+        'OnOff+Dumb',
+        'OnOff+AUX',
+        'OnOff+Full Wave',
+        'Dimmer+Single',
+        'Dimmer+Dumb',
+        'Dimmer+Aux',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.inovelli_switch_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch Mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[multi_endpoint_light][select.inovelli_switch_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Switch Mode',
+      'options': list([
+        'OnOff+Single',
+        'OnOff+Dumb',
+        'OnOff+AUX',
+        'OnOff+Full Wave',
+        'Dimmer+Single',
+        'Dimmer+Dumb',
+        'Dimmer+Aux',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.inovelli_switch_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Dimmer+Single',
+  })
+# ---
+# name: test_selects[on_off_plugin_unit][select.mock_onoffpluginunit_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_onoffpluginunit_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[on_off_plugin_unit][select.mock_onoffpluginunit_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock OnOffPluginUnit Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_onoffpluginunit_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[onoff_light][select.mock_onoff_light_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[onoff_light][select.mock_onoff_light_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock OnOff Light Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock OnOff Light Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[onoff_light_no_name][select.mock_light_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_light_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[onoff_light_no_name][select.mock_light_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Light Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_light_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[onoff_light_with_levelcontrol_present][select.d215s_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.d215s_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[onoff_light_with_levelcontrol_present][select.d215s_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'D215S Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.d215s_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[silabs_evse_charging][select.evse_energy_management_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'No energy management (forecast only)',
+        'Device optimizes (no local or grid control)',
+        'Optimized within building',
+        'Optimized for grid',
+        'Optimized for grid and building',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.evse_energy_management_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Energy management mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_energy_management_mode',
+    'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-MatterDeviceEnergyManagementMode-159-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[silabs_evse_charging][select.evse_energy_management_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'evse Energy management mode',
+      'options': list([
+        'No energy management (forecast only)',
+        'Device optimizes (no local or grid control)',
+        'Optimized within building',
+        'Optimized for grid',
+        'Optimized for grid and building',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.evse_energy_management_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Optimized for grid',
+  })
+# ---
+# name: test_selects[silabs_evse_charging][select.evse_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Manual',
+        'Auto-scheduled',
+        'Solar',
+        'Auto-scheduled with Solar charging',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.evse_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-MatterEnergyEvseMode-157-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[silabs_evse_charging][select.evse_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'evse Mode',
+      'options': list([
+        'Manual',
+        'Auto-scheduled',
+        'Solar',
+        'Auto-scheduled with Solar charging',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.evse_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Auto-scheduled',
+  })
+# ---
+# name: test_selects[silabs_laundrywasher][select.laundrywasher_number_of_rinses-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'normal',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.laundrywasher_number_of_rinses',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Number of rinses',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'laundry_washer_number_of_rinses',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-MatterLaundryWasherNumberOfRinses-83-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[silabs_laundrywasher][select.laundrywasher_number_of_rinses-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LaundryWasher Number of rinses',
+      'options': list([
+        'off',
+        'normal',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.laundrywasher_number_of_rinses',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[silabs_laundrywasher][select.laundrywasher_spin_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Off',
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.laundrywasher_spin_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Spin speed',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'laundry_washer_spin_speed',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-LaundryWasherControlsSpinSpeed-83-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[silabs_laundrywasher][select.laundrywasher_spin_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LaundryWasher Spin speed',
+      'options': list([
+        'Off',
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.laundrywasher_spin_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Off',
+  })
+# ---
+# name: test_selects[silabs_laundrywasher][select.laundrywasher_temperature_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Cold',
+        'Colors',
+        'Whites',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.laundrywasher_temperature_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_level',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-TemperatureControlSelectedTemperatureLevel-86-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[silabs_laundrywasher][select.laundrywasher_temperature_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LaundryWasher Temperature level',
+      'options': list([
+        'Cold',
+        'Colors',
+        'Whites',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.laundrywasher_temperature_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Colors',
+  })
+# ---
+# name: test_selects[silabs_water_heater][select.water_heater_energy_management_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'No energy management (forecast only)',
+        'Device optimizes (no local or grid control)',
+        'Optimized within building',
+        'Optimized for grid',
+        'Optimized for grid and building',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.water_heater_energy_management_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Energy management mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_energy_management_mode',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-MatterDeviceEnergyManagementMode-159-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[silabs_water_heater][select.water_heater_energy_management_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Water Heater Energy management mode',
+      'options': list([
+        'No energy management (forecast only)',
+        'Device optimizes (no local or grid control)',
+        'Optimized within building',
+        'Optimized for grid',
+        'Optimized for grid and building',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.water_heater_energy_management_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'No energy management (forecast only)',
+  })
+# ---
+# name: test_selects[switch_unit][select.mock_switchunit_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_switchunit_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[switch_unit][select.mock_switchunit_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock SwitchUnit Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_switchunit_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Longan link HVAC Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
+  })
+# ---
+# name: test_selects[vacuum_cleaner][select.mock_vacuum_clean_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Quick',
+        'Auto',
+        'Deep Clean',
+        'Quiet',
+        'Max Vac',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_vacuum_clean_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clean mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'clean_mode',
+    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[vacuum_cleaner][select.mock_vacuum_clean_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Vacuum Clean mode',
+      'options': list([
+        'Quick',
+        'Auto',
+        'Deep Clean',
+        'Quiet',
+        'Max Vac',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_vacuum_clean_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Quick',
+  })
+# ---
+# name: test_selects[yandex_smart_socket][select.yndx_00540_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.yndx_00540_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[yandex_smart_socket][select.yndx_00540_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'YNDX-00540 Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.yndx_00540_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

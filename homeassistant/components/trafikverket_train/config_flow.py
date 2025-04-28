@@ -3,41 +3,39 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
 import logging
 from typing import Any
 
-from pytrafikverket import TrafikverketTrain
-from pytrafikverket.exceptions import (
+from pytrafikverket import (
     InvalidAuthentication,
-    MultipleTrainStationsFound,
-    NoTrainAnnouncementFound,
     NoTrainStationFound,
+    StationInfoModel,
+    TrafikverketTrain,
     UnknownError,
 )
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
     TextSelector,
     TimeSelector,
 )
-import homeassistant.util.dt as dt_util
 
 from .const import CONF_FILTER_PRODUCT, CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
-from .util import create_unique_id, next_departuredate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,65 +66,45 @@ DATA_SCHEMA_REAUTH = vol.Schema(
 )
 
 
-async def validate_input(
+async def validate_station(
     hass: HomeAssistant,
     api_key: str,
-    train_from: str,
-    train_to: str,
-    train_time: str | None,
-    weekdays: list[str],
-    product_filter: str | None,
-) -> dict[str, str]:
+    train_station: str,
+    field: str,
+) -> tuple[list[StationInfoModel], dict[str, str]]:
     """Validate input from user input."""
     errors: dict[str, str] = {}
-
-    when = dt_util.now()
-    if train_time:
-        departure_day = next_departuredate(weekdays)
-        if _time := dt_util.parse_time(train_time):
-            when = datetime.combine(
-                departure_day,
-                _time,
-                dt_util.get_time_zone(hass.config.time_zone),
-            )
-
+    stations = []
     try:
         web_session = async_get_clientsession(hass)
         train_api = TrafikverketTrain(web_session, api_key)
-        from_station = await train_api.async_get_train_station(train_from)
-        to_station = await train_api.async_get_train_station(train_to)
-        if train_time:
-            await train_api.async_get_train_stop(
-                from_station, to_station, when, product_filter
-            )
-        else:
-            await train_api.async_get_next_train_stop(
-                from_station, to_station, when, product_filter
-            )
+        stations = await train_api.async_search_train_stations(train_station)
     except InvalidAuthentication:
         errors["base"] = "invalid_auth"
     except NoTrainStationFound:
-        errors["base"] = "invalid_station"
-    except MultipleTrainStationsFound:
-        errors["base"] = "more_stations"
-    except NoTrainAnnouncementFound:
-        errors["base"] = "no_trains"
+        errors[field] = "invalid_station"
     except UnknownError as error:
         _LOGGER.error("Unknown error occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
-    except Exception as error:  # pylint: disable=broad-exception-caught
-        _LOGGER.error("Unknown exception occurred during validation %s", str(error))
+    except Exception:
+        _LOGGER.exception("Unknown exception occurred during validation")
         errors["base"] = "cannot_connect"
 
-    return errors
+    return (stations, errors)
 
 
 class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trafikverket Train integration."""
 
-    VERSION = 1
+    VERSION = 2
+    MINOR_VERSION = 1
 
-    entry: ConfigEntry | None
+    _from_stations: list[StationInfoModel]
+    _to_stations: list[StationInfoModel]
+    _time: str | None
+    _days: list
+    _product: str | None
+    _data: dict[str, Any]
 
     @staticmethod
     @callback
@@ -134,14 +112,12 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> TVTrainOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return TVTrainOptionsFlowHandler(config_entry)
+        return TVTrainOptionsFlowHandler()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication with Trafikverket."""
-
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -153,26 +129,18 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             api_key = user_input[CONF_API_KEY]
 
-            assert self.entry is not None
-            errors = await validate_input(
+            reauth_entry = self._get_reauth_entry()
+            _, errors = await validate_station(
                 self.hass,
                 api_key,
-                self.entry.data[CONF_FROM],
-                self.entry.data[CONF_TO],
-                self.entry.data.get(CONF_TIME),
-                self.entry.data[CONF_WEEKDAY],
-                self.entry.options.get(CONF_FILTER_PRODUCT),
+                reauth_entry.data[CONF_FROM],
+                CONF_FROM,
             )
             if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **self.entry.data,
-                        CONF_API_KEY: api_key,
-                    },
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_KEY: api_key},
                 )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -181,6 +149,18 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the user step."""
+        return await self.async_step_initial(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the user step."""
+        return await self.async_step_initial(user_input)
+
+    async def async_step_initial(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step."""
@@ -201,22 +181,101 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
             if train_time:
                 name = f"{train_from} to {train_to} at {train_time}"
 
-            errors = await validate_input(
-                self.hass,
-                api_key,
-                train_from,
-                train_to,
-                train_time,
-                train_days,
-                filter_product,
+            self._from_stations, from_errors = await validate_station(
+                self.hass, api_key, train_from, CONF_FROM
             )
+            self._to_stations, to_errors = await validate_station(
+                self.hass, api_key, train_to, CONF_TO
+            )
+            errors = {**from_errors, **to_errors}
+
             if not errors:
-                unique_id = create_unique_id(
-                    train_from, train_to, train_time, train_days
+                if len(self._from_stations) == 1 and len(self._to_stations) == 1:
+                    self._async_abort_entries_match(
+                        {
+                            CONF_API_KEY: api_key,
+                            CONF_FROM: self._from_stations[0].signature,
+                            CONF_TO: self._to_stations[0].signature,
+                            CONF_TIME: train_time,
+                            CONF_WEEKDAY: train_days,
+                            CONF_FILTER_PRODUCT: filter_product,
+                        }
+                    )
+
+                    if self.source == SOURCE_RECONFIGURE:
+                        reconfigure_entry = self._get_reconfigure_entry()
+                        return self.async_update_reload_and_abort(
+                            reconfigure_entry,
+                            title=name,
+                            data={
+                                CONF_API_KEY: api_key,
+                                CONF_NAME: name,
+                                CONF_FROM: self._from_stations[0].signature,
+                                CONF_TO: self._to_stations[0].signature,
+                                CONF_TIME: train_time,
+                                CONF_WEEKDAY: train_days,
+                            },
+                            options={CONF_FILTER_PRODUCT: filter_product},
+                        )
+                    return self.async_create_entry(
+                        title=name,
+                        data={
+                            CONF_API_KEY: api_key,
+                            CONF_NAME: name,
+                            CONF_FROM: self._from_stations[0].signature,
+                            CONF_TO: self._to_stations[0].signature,
+                            CONF_TIME: train_time,
+                            CONF_WEEKDAY: train_days,
+                        },
+                        options={CONF_FILTER_PRODUCT: filter_product},
+                    )
+                self._data = user_input
+                return await self.async_step_select_stations()
+
+        return self.async_show_form(
+            step_id="initial",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, user_input or {}
+            ),
+            errors=errors,
+        )
+
+    async def async_step_select_stations(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the select station step."""
+        if user_input is not None:
+            api_key: str = self._data[CONF_API_KEY]
+            train_from: str = (
+                user_input.get(CONF_FROM) or self._from_stations[0].signature
+            )
+            train_to: str = user_input.get(CONF_TO) or self._to_stations[0].signature
+            train_time: str | None = self._data.get(CONF_TIME)
+            train_days: list = self._data[CONF_WEEKDAY]
+            filter_product: str | None = self._data[CONF_FILTER_PRODUCT]
+
+            if filter_product == "":
+                filter_product = None
+
+            name = f"{self._data[CONF_FROM]} to {self._data[CONF_TO]}"
+            if train_time:
+                name = (
+                    f"{self._data[CONF_FROM]} to {self._data[CONF_TO]} at {train_time}"
                 )
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
+            self._async_abort_entries_match(
+                {
+                    CONF_API_KEY: api_key,
+                    CONF_FROM: train_from,
+                    CONF_TO: train_to,
+                    CONF_TIME: train_time,
+                    CONF_WEEKDAY: train_days,
+                    CONF_FILTER_PRODUCT: filter_product,
+                }
+            )
+            if self.source == SOURCE_RECONFIGURE:
+                reconfigure_entry = self._get_reconfigure_entry()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
                     title=name,
                     data={
                         CONF_API_KEY: api_key,
@@ -228,17 +287,49 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                     options={CONF_FILTER_PRODUCT: filter_product},
                 )
+            return self.async_create_entry(
+                title=name,
+                data={
+                    CONF_API_KEY: api_key,
+                    CONF_NAME: name,
+                    CONF_FROM: train_from,
+                    CONF_TO: train_to,
+                    CONF_TIME: train_time,
+                    CONF_WEEKDAY: train_days,
+                },
+                options={CONF_FILTER_PRODUCT: filter_product},
+            )
+        from_options = [
+            SelectOptionDict(value=station.signature, label=station.station_name)
+            for station in self._from_stations
+        ]
+        to_options = [
+            SelectOptionDict(value=station.signature, label=station.station_name)
+            for station in self._to_stations
+        ]
+        schema = {}
+        if len(from_options) > 1:
+            schema[vol.Required(CONF_FROM)] = SelectSelector(
+                SelectSelectorConfig(
+                    options=from_options, mode=SelectSelectorMode.DROPDOWN, sort=True
+                )
+            )
+        if len(to_options) > 1:
+            schema[vol.Required(CONF_TO)] = SelectSelector(
+                SelectSelectorConfig(
+                    options=to_options, mode=SelectSelectorMode.DROPDOWN, sort=True
+                )
+            )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="select_stations",
             data_schema=self.add_suggested_values_to_schema(
-                DATA_SCHEMA, user_input or {}
+                vol.Schema(schema), user_input or {}
             ),
-            errors=errors,
         )
 
 
-class TVTrainOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class TVTrainOptionsFlowHandler(OptionsFlow):
     """Handle Trafikverket Train options."""
 
     async def async_step_init(
@@ -256,7 +347,7 @@ class TVTrainOptionsFlowHandler(OptionsFlowWithConfigEntry):
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(OPTION_SCHEMA),
-                user_input or self.options,
+                user_input or self.config_entry.options,
             ),
             errors=errors,
         )

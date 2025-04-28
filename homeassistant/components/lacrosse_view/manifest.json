@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/lacrosse_view",
   "iot_class": "cloud_polling",
   "loggers": ["lacrosse_view"],
-  "requirements": ["lacrosse-view==1.0.1"]
+  "requirements": ["lacrosse-view==1.1.1"]
 }

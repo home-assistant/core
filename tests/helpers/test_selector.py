@@ -1,12 +1,13 @@
 """Test selectors."""
 
 from enum import Enum
+from typing import Any
 
 import pytest
 import voluptuous as vol
 
 from homeassistant.helpers import selector
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 
 FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
 
@@ -55,6 +56,8 @@ def _test_selector(
     config = {selector_type: schema}
     selector.validate_selector(config)
     selector_instance = selector.selector(config)
+    assert selector_instance == selector.selector(config)
+    assert selector_instance != 5
     # We do not allow enums in the config, as they cannot serialize
     assert not any(isinstance(val, Enum) for val in selector_instance.config.values())
 
@@ -74,7 +77,7 @@ def _test_selector(
         "selector": {selector_type: selector_instance.config}
     }
     # Test serialized selector can be dumped to YAML
-    yaml.dump(selector_instance.serialize())
+    yaml_util.dump(selector_instance.serialize())
 
 
 @pytest.mark.parametrize(
@@ -85,6 +88,7 @@ def _test_selector(
         ({"integration": "zha"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf"}, ("abc123",), (None,)),
         ({"model": "mock-model"}, ("abc123",), (None,)),
+        ({"model_id": "mock-model_id"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf", "model": "mock-model"}, ("abc123",), (None,)),
         (
             {"integration": "zha", "manufacturer": "mock-manuf", "model": "mock-model"},
@@ -282,6 +286,8 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"filter": [{"supported_features": ["blah"]}]},
         # Unknown feature enum
         {"filter": [{"supported_features": ["blah.FooEntityFeature.blah"]}]},
+        # Unknown feature enum
+        {"filter": [{"supported_features": ["light.FooEntityFeature.blah"]}]},
         # Unknown feature enum member
         {"filter": [{"supported_features": ["light.LightEntityFeature.blah"]}]},
     ],
@@ -735,13 +741,19 @@ def test_attribute_selector_schema(
             (
                 {"seconds": 10},
                 {"days": 10},  # Days is allowed also if `enable_day` is not set
+                {"milliseconds": 500},
             ),
             (None, {}),
         ),
         (
-            {"enable_day": True},
-            ({"seconds": 10}, {"days": 10}),
+            {"enable_day": True, "enable_millisecond": True},
+            ({"seconds": 10}, {"days": 10}, {"milliseconds": 500}),
             (None, {}),
+        ),
+        (
+            {"allow_negative": False},
+            ({"seconds": 10}, {"days": 10}),
+            (None, {}, {"seconds": -1}),
         ),
     ],
 )
@@ -968,6 +980,7 @@ def test_datetime_selector_schema(schema, valid_selections, invalid_selections) 
     ("schema", "valid_selections", "invalid_selections"),
     [({}, ("abc123", "{{ now() }}"), (None, "{{ incomplete }", "{% if True %}Hi!"))],
 )
+@pytest.mark.usefixtures("hass")
 def test_template_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test template selector."""
     _test_selector("template", schema, valid_selections, invalid_selections)
@@ -1104,6 +1117,13 @@ def test_condition_selector_schema(
                         "below": 20,
                     }
                 ],
+                [
+                    {
+                        "platform": "numeric_state",
+                        "entity_id": ["sensor.temperature"],
+                        "below": 20,
+                    }
+                ],
                 [],
             ),
             ("abc"),
@@ -1112,7 +1132,24 @@ def test_condition_selector_schema(
 )
 def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test trigger sequence selector."""
-    _test_selector("trigger", schema, valid_selections, invalid_selections)
+
+    def _custom_trigger_serializer(
+        triggers: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        res = []
+        for trigger in triggers:
+            if "trigger" in trigger:
+                trigger["platform"] = trigger.pop("trigger")
+            res.append(trigger)
+        return res
+
+    _test_selector(
+        "trigger",
+        schema,
+        valid_selections,
+        invalid_selections,
+        _custom_trigger_serializer,
+    )
 
 
 @pytest.mark.parametrize(
@@ -1142,3 +1179,86 @@ def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -
 def test_qr_code_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test QR code selector."""
     _test_selector("qr_code", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        ({}, ("abc123",), (None,)),
+        (
+            {"multiple": True},
+            ((["abc123", "def456"],)),
+            (None, "abc123", ["abc123", None]),
+        ),
+    ],
+)
+def test_label_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test label selector."""
+    _test_selector("label", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        ({}, ("abc123",), (None,)),
+        ({"entity": {}}, ("abc123",), (None,)),
+        ({"entity": {"domain": "light"}}, ("abc123",), (None,)),
+        (
+            {"entity": {"domain": "binary_sensor", "device_class": "motion"}},
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "entity": {
+                    "domain": "binary_sensor",
+                    "device_class": "motion",
+                    "integration": "demo",
+                }
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "entity": [
+                    {"domain": "light"},
+                    {"domain": "binary_sensor", "device_class": "motion"},
+                ]
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {"device": {"integration": "demo", "model": "mock-model"}},
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "device": [
+                    {"integration": "demo", "model": "mock-model"},
+                    {"integration": "other-demo", "model": "other-mock-model"},
+                ]
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "entity": {"domain": "binary_sensor", "device_class": "motion"},
+                "device": {"integration": "demo", "model": "mock-model"},
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {"multiple": True},
+            ((["abc123", "def456"],)),
+            (None, "abc123", ["abc123", None]),
+        ),
+    ],
+)
+def test_floor_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test floor selector."""
+    _test_selector("floor", schema, valid_selections, invalid_selections)

@@ -3,16 +3,23 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from copy import deepcopy
 import inspect
 from json import JSONDecodeError, JSONEncoder
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from pathlib import Path
+from typing import Any
 
-from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
+from propcache.api import cached_property
+
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -23,17 +30,11 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
-from homeassistant.util import json as json_util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import WriteError
+from homeassistant.util.hass_dict import HassKey
 
 from . import json as json_helper
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from ..backports.functools import cached_property
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
@@ -42,14 +43,14 @@ MAX_LOAD_CONCURRENTLY = 6
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_SEMAPHORE = "storage_semaphore"
+STORAGE_SEMAPHORE: HassKey[asyncio.Semaphore] = HassKey("storage_semaphore")
+STORAGE_MANAGER: HassKey[_StoreManager] = HassKey("storage_manager")
 
-
-_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
+MANAGER_CLEANUP_DELAY = 60
 
 
 @bind_hass
-async def async_migrator(
+async def async_migrator[_T: Mapping[str, Any] | Sequence[Any]](
     hass: HomeAssistant,
     old_path: str,
     store: Store[_T],
@@ -88,8 +89,145 @@ async def async_migrator(
     return config
 
 
+def get_internal_store_manager(hass: HomeAssistant) -> _StoreManager:
+    """Get the store manager.
+
+    This function is not part of the API and should only be
+    used in the Home Assistant core internals. It is not
+    guaranteed to be stable.
+    """
+    if STORAGE_MANAGER not in hass.data:
+        manager = _StoreManager(hass)
+        hass.data[STORAGE_MANAGER] = manager
+    return hass.data[STORAGE_MANAGER]
+
+
+class _StoreManager:
+    """Class to help storing data.
+
+    The store manager is used to cache and manage storage files.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize storage manager class."""
+        self._hass = hass
+        self._invalidated: set[str] = set()
+        self._files: set[str] | None = None
+        self._data_preload: dict[str, json_util.JsonValueType] = {}
+        self._storage_path: Path = Path(hass.config.config_dir).joinpath(STORAGE_DIR)
+        self._cancel_cleanup: asyncio.TimerHandle | None = None
+
+    async def async_initialize(self) -> None:
+        """Initialize the storage manager."""
+        hass = self._hass
+        await hass.async_add_executor_job(self._initialize_files)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED,
+            self._async_schedule_cleanup,
+        )
+
+    @callback
+    def async_invalidate(self, key: str) -> None:
+        """Invalidate cache.
+
+        Store calls this when its going to save data
+        to ensure that the cache is not used after that.
+        """
+        if "/" not in key:
+            self._invalidated.add(key)
+            self._data_preload.pop(key, None)
+
+    @callback
+    def async_fetch(
+        self, key: str
+    ) -> tuple[bool, json_util.JsonValueType | None] | None:
+        """Fetch data from cache."""
+        #
+        # If the key is invalidated, we don't need to check the cache
+        # If async_initialize has not been called yet, we don't know
+        # if the file exists or not so its a cache miss
+        #
+        # It is very important that we check if self._files is None
+        # because we do not want to incorrectly return a cache miss
+        # because async_initialize has not been called yet as it would
+        # cause the Store to return None when it should not.
+        #
+        # The "/" in key check is to prevent the cache from being used
+        # for subdirs in case we have a key like "hacs/XXX"
+        #
+        if "/" in key or key in self._invalidated or self._files is None:
+            _LOGGER.debug("%s: Cache miss", key)
+            return None
+
+        # If async_initialize has been called and the key is not in self._files
+        # then the file does not exist
+        if key not in self._files:
+            _LOGGER.debug("%s: Cache hit, does not exist", key)
+            return (False, None)
+
+        # If the key is in the preload cache, return it
+        if data := self._data_preload.pop(key, None):
+            _LOGGER.debug("%s: Cache hit data", key)
+            return (True, data)
+
+        _LOGGER.debug("%s: Cache miss, not preloaded", key)
+        return None
+
+    @callback
+    def _async_schedule_cleanup(self, _event: Event) -> None:
+        """Schedule the cleanup of old files."""
+        self._cancel_cleanup = self._hass.loop.call_later(
+            MANAGER_CLEANUP_DELAY, self._async_cleanup
+        )
+        # Handle the case where we stop in the first 60s
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP,
+            self._async_cancel_and_cleanup,
+        )
+
+    @callback
+    def _async_cancel_and_cleanup(self, _event: Event) -> None:
+        """Cancel the cleanup of old files."""
+        self._async_cleanup()
+        if self._cancel_cleanup:
+            self._cancel_cleanup.cancel()
+            self._cancel_cleanup = None
+
+    @callback
+    def _async_cleanup(self) -> None:
+        """Cleanup unused cache.
+
+        If nothing consumes the cache 60s after startup or when we
+        stop Home Assistant, we'll clear the cache.
+        """
+        self._data_preload.clear()
+
+    async def async_preload(self, keys: Iterable[str]) -> None:
+        """Cache the keys."""
+        # If async_initialize has not been called yet, we can't preload
+        if self._files is not None and (existing := self._files.intersection(keys)):
+            await self._hass.async_add_executor_job(self._preload, existing)
+
+    def _preload(self, keys: Iterable[str]) -> None:
+        """Cache the keys."""
+        storage_path = self._storage_path
+        data_preload = self._data_preload
+        for key in keys:
+            storage_file: Path = storage_path.joinpath(key)
+            try:
+                if storage_file.is_file():
+                    data_preload[key] = json_util.load_json(storage_file)
+            except Exception as ex:  # noqa: BLE001
+                _LOGGER.debug("Error loading %s: %s", key, ex)
+
+    def _initialize_files(self) -> None:
+        """Initialize the cache."""
+        if self._storage_path.exists():
+            self._files = set(os.listdir(self._storage_path))
+
+
 @bind_hass
-class Store(Generic[_T]):
+class Store[_T: Mapping[str, Any] | Sequence[Any]]:
     """Class to help storing data."""
 
     def __init__(
@@ -114,16 +252,24 @@ class Store(Generic[_T]):
         self._delay_handle: asyncio.TimerHandle | None = None
         self._unsub_final_write_listener: CALLBACK_TYPE | None = None
         self._write_lock = asyncio.Lock()
-        self._load_task: asyncio.Future[_T | None] | None = None
+        self._load_future: asyncio.Future[_T | None] | None = None
         self._encoder = encoder
         self._atomic_writes = atomic_writes
         self._read_only = read_only
         self._next_write_time = 0.0
+        self._manager = get_internal_store_manager(hass)
 
     @cached_property
     def path(self):
         """Return the config path."""
         return self.hass.config.path(STORAGE_DIR, self.key)
+
+    def make_read_only(self) -> None:
+        """Make the store read-only.
+
+        This method is irreversible.
+        """
+        self._read_only = True
 
     async def async_load(self) -> _T | None:
         """Load data.
@@ -135,27 +281,32 @@ class Store(Generic[_T]):
         Will ensure that when a call comes in while another one is in progress,
         the second call will wait and return the result of the first call.
         """
-        if self._load_task:
-            return await self._load_task
+        if self._load_future:
+            return await self._load_future
 
-        load_task = self.hass.async_create_task(
-            self._async_load(), f"Storage load {self.key}", eager_start=True
-        )
-        if not load_task.done():
-            # Only set the load task if it didn't complete immediately
-            self._load_task = load_task
-        return await load_task
+        self._load_future = self.hass.loop.create_future()
+        try:
+            result = await self._async_load()
+        except BaseException as ex:
+            self._load_future.set_exception(ex)
+            # Ensure the future is marked as retrieved
+            # since if there is no concurrent call it
+            # will otherwise never be retrieved.
+            self._load_future.exception()
+            raise
+        else:
+            self._load_future.set_result(result)
+        finally:
+            self._load_future = None
+
+        return result
 
     async def _async_load(self) -> _T | None:
         """Load the data and ensure the task is removed."""
         if STORAGE_SEMAPHORE not in self.hass.data:
             self.hass.data[STORAGE_SEMAPHORE] = asyncio.Semaphore(MAX_LOAD_CONCURRENTLY)
-
-        try:
-            async with self.hass.data[STORAGE_SEMAPHORE]:
-                return await self._async_load_data()
-        finally:
-            self._load_task = None
+        async with self.hass.data[STORAGE_SEMAPHORE]:
+            return await self._async_load_data()
 
     async def _async_load_data(self):
         """Load the data."""
@@ -170,6 +321,10 @@ class Store(Generic[_T]):
             # We make a copy because code might assume it's safe to mutate loaded data
             # and we don't want that to mess with what we're trying to store.
             data = deepcopy(data)
+        elif cache := self._manager.async_fetch(self.key):
+            exists, data = cache
+            if not exists:
+                return None
         else:
             try:
                 data = await self.hass.async_add_executor_job(
@@ -324,7 +479,7 @@ class Store(Generic[_T]):
             # wrote. Reschedule the timer to the next write time.
             self._async_reschedule_delayed_write(self._next_write_time)
             return
-        self.hass.async_create_task(
+        self.hass.async_create_task_internal(
             self._async_callback_delayed_write(), eager_start=True
         )
 
@@ -333,7 +488,8 @@ class Store(Generic[_T]):
         """Ensure that we write if we quit before delay has passed."""
         if self._unsub_final_write_listener is None:
             self._unsub_final_write_listener = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_callback_final_write
+                EVENT_HOMEASSISTANT_FINAL_WRITE,
+                self._async_callback_final_write,
             )
 
     @callback
@@ -366,6 +522,7 @@ class Store(Generic[_T]):
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
         async with self._write_lock:
+            self._manager.async_invalidate(self.key)
             self._async_cleanup_delay_listener()
             self._async_cleanup_final_write_listener()
 
@@ -409,6 +566,7 @@ class Store(Generic[_T]):
 
     async def async_remove(self) -> None:
         """Remove all data."""
+        self._manager.async_invalidate(self.key)
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
 

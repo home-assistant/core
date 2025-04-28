@@ -3,10 +3,10 @@
 from pykoplenti import SettingsData
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.kostal_plenticore.helper import Plenticore
+from homeassistant.components.kostal_plenticore.coordinator import Plenticore
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import ANY, MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -54,6 +54,10 @@ async def test_entry_diagnostics(
             "source": "user",
             "unique_id": None,
             "disabled_by": None,
+            "created_at": ANY,
+            "modified_at": ANY,
+            "discovery_keys": {},
+            "subentries": [],
         },
         "client": {
             "version": "api_version='0.2.0' hostname='scb' name='PUCK RESTful API' sw_version='01.16.05025'",

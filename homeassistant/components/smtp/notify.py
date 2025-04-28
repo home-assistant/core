@@ -19,7 +19,7 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import (
@@ -34,11 +34,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
-from homeassistant.util.ssl import client_context
+from homeassistant.util import dt as dt_util
+from homeassistant.util.ssl import create_client_context
 
 from .const import (
     ATTR_HTML,
@@ -60,7 +60,7 @@ PLATFORMS = [Platform.NOTIFY]
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
         vol.Required(CONF_SENDER): vol.Email(),
@@ -86,6 +86,7 @@ def get_service(
 ) -> MailNotificationService | None:
     """Get the mail notification service."""
     setup_reload_service(hass, DOMAIN, PLATFORMS)
+    ssl_context = create_client_context() if config[CONF_VERIFY_SSL] else None
     mail_service = MailNotificationService(
         config[CONF_SERVER],
         config[CONF_PORT],
@@ -98,6 +99,7 @@ def get_service(
         config.get(CONF_SENDER_NAME),
         config[CONF_DEBUG],
         config[CONF_VERIFY_SSL],
+        ssl_context,
     )
 
     if mail_service.connection_is_valid():
@@ -122,6 +124,7 @@ class MailNotificationService(BaseNotificationService):
         sender_name,
         debug,
         verify_ssl,
+        ssl_context,
     ):
         """Initialize the SMTP service."""
         self._server = server
@@ -136,23 +139,23 @@ class MailNotificationService(BaseNotificationService):
         self.debug = debug
         self._verify_ssl = verify_ssl
         self.tries = 2
+        self._ssl_context = ssl_context
 
     def connect(self):
         """Connect/authenticate to SMTP Server."""
-        ssl_context = client_context() if self._verify_ssl else None
         if self.encryption == "tls":
             mail = smtplib.SMTP_SSL(
                 self._server,
                 self._port,
                 timeout=self._timeout,
-                context=ssl_context,
+                context=self._ssl_context,
             )
         else:
             mail = smtplib.SMTP(self._server, self._port, timeout=self._timeout)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
         if self.encryption == "starttls":
-            mail.starttls(context=ssl_context)
+            mail.starttls(context=self._ssl_context)
             mail.ehlo()
         if self.username and self.password:
             mail.login(self.username, self.password)
@@ -287,9 +290,9 @@ def _attach_file(hass, atch_name, content_id=""):
             atch_name,
         )
         attachment = MIMEApplication(file_bytes, Name=os.path.basename(atch_name))
-        attachment[
-            "Content-Disposition"
-        ] = f'attachment; filename="{os.path.basename(atch_name)}"'
+        attachment["Content-Disposition"] = (
+            f'attachment; filename="{os.path.basename(atch_name)}"'
+        )
     else:
         if content_id:
             attachment.add_header("Content-ID", f"<{content_id}>")

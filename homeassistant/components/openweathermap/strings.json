@@ -5,7 +5,7 @@
     },
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "Failed to connect: {error}"
     },
     "step": {
       "user": {
@@ -29,6 +29,34 @@
           "mode": "[%key:common::config_flow::data::mode%]"
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_v25": {
+      "title": "OpenWeatherMap API V2.5 deprecated",
+      "fix_flow": {
+        "step": {
+          "migrate": {
+            "title": "OpenWeatherMap API V2.5 deprecated",
+            "description": "OWM API v2.5 will be closed in June 2024.\nYou need to migrate all your OpenWeatherMap integrations to v3.0.\n\nBefore the migration, you must have an active subscription (be aware that subscription activation can take up to 2h). After your subscription is activated, select **Submit** to migrate the integration to API V3.0. Read the documentation for more information."
+          }
+        },
+        "error": {
+          "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+          "cannot_connect": "Failed to connect: {error}"
+        }
+      }
+    }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "name": "Get minute forecast",
+      "description": "Retrieves a minute-by-minute weather forecast for one hour."
+    }
+  },
+  "exceptions": {
+    "service_minute_forecast_mode": {
+      "message": "Minute forecast is available only when {name} mode is set to v3.0"
     }
   }
 }

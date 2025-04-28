@@ -8,18 +8,54 @@
         "default": "mdi:debug-step-into"
       }
     },
+    "button": {
+      "sync_clock": {
+        "default": "mdi:clock-check-outline"
+      }
+    },
+    "number": {
+      "cutting_height": {
+        "default": "mdi:grass"
+      }
+    },
     "select": {
       "headlight_mode": {
         "default": "mdi:car-light-high"
       }
     },
     "sensor": {
+      "error": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "my_lawn_last_time_completed": {
+        "default": "mdi:clock-outline"
+      },
+      "my_lawn_progress": {
+        "default": "mdi:collage"
+      },
       "number_of_charging_cycles": {
         "default": "mdi:battery-sync-outline"
       },
       "number_of_collisions": {
         "default": "mdi:counter"
+      },
+      "restricted_reason": {
+        "default": "mdi:tooltip-question"
+      },
+      "work_area_last_time_completed": {
+        "default": "mdi:clock-outline"
+      },
+      "work_area_progress": {
+        "default": "mdi:collage"
       }
+    }
+  },
+  "services": {
+    "override_schedule": {
+      "service": "mdi:debug-step-over"
+    },
+    "override_schedule_work_area": {
+      "service": "mdi:land-fields"
     }
   }
 }

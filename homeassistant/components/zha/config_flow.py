@@ -10,10 +10,11 @@ from typing import Any
 import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
+from zha.application.const import RadioType
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant.components import onboarding, usb, zeroconf
+from homeassistant.components import onboarding, usb
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
@@ -32,16 +33,13 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
 
-from .core.const import (
-    CONF_BAUDRATE,
-    CONF_FLOW_CONTROL,
-    CONF_RADIO_TYPE,
-    DOMAIN,
-    RadioType,
-)
+from .const import CONF_BAUDRATE, CONF_FLOW_CONTROL, CONF_RADIO_TYPE, DOMAIN
 from .radio_manager import (
     DEVICE_SCHEMA,
     HARDWARE_DISCOVERY_SCHEMA,
@@ -74,8 +72,17 @@ UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 
 REPAIR_MY_URL = "https://my.home-assistant.io/redirect/repairs/"
 
-DEFAULT_ZHA_ZEROCONF_PORT = 6638
-ESPHOME_API_PORT = 6053
+LEGACY_ZEROCONF_PORT = 6638
+LEGACY_ZEROCONF_ESPHOME_API_PORT = 6053
+
+ZEROCONF_SERVICE_TYPE = "_zigbee-coordinator._tcp.local."
+ZEROCONF_PROPERTIES_SCHEMA = vol.Schema(
+    {
+        vol.Required("radio_type"): vol.All(str, vol.In([t.name for t in RadioType])),
+        vol.Required("serial_number"): str,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def _format_backup_choice(
@@ -97,7 +104,8 @@ def _format_backup_choice(
 
 async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
     """List all serial ports, including the Yellow radio and the multi-PAN addon."""
-    ports = await hass.async_add_executor_job(serial.tools.list_ports.comports)
+    ports: list[ListPortInfo] = []
+    ports.extend(await hass.async_add_executor_job(serial.tools.list_ports.comports))
 
     # Add useful info to the Yellow's serial port selection screen
     try:
@@ -105,29 +113,35 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
     except HomeAssistantError:
         pass
     else:
-        yellow_radio = next(p for p in ports if p.device == "/dev/ttyAMA1")
-        yellow_radio.description = "Yellow Zigbee module"
-        yellow_radio.manufacturer = "Nabu Casa"
+        # PySerial does not properly handle the Yellow's serial port with the CM5
+        # so we manually include it
+        port = ListPortInfo(device="/dev/ttyAMA1", skip_link_detection=True)
+        port.description = "Yellow Zigbee module"
+        port.manufacturer = "Nabu Casa"
 
-    # Present the multi-PAN addon as a setup option, if it's available
-    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
-        hass
-    )
+        ports = [p for p in ports if not p.device.startswith("/dev/ttyAMA")]
+        ports.insert(0, port)
 
-    try:
-        addon_info = await multipan_manager.async_get_addon_info()
-    except (AddonError, KeyError):
-        addon_info = None
-
-    if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
-        addon_port = ListPortInfo(
-            device=silabs_multiprotocol_addon.get_zigbee_socket(),
-            skip_link_detection=True,
+    if is_hassio(hass):
+        # Present the multi-PAN addon as a setup option, if it's available
+        multipan_manager = (
+            await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(hass)
         )
 
-        addon_port.description = "Multiprotocol add-on"
-        addon_port.manufacturer = "Nabu Casa"
-        ports.append(addon_port)
+        try:
+            addon_info = await multipan_manager.async_get_addon_info()
+        except (AddonError, KeyError):
+            addon_info = None
+
+        if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
+            addon_port = ListPortInfo(
+                device=silabs_multiprotocol_addon.get_zigbee_socket(),
+                skip_link_detection=True,
+            )
+
+            addon_port.description = "Multiprotocol add-on"
+            addon_port.manufacturer = "Nabu Casa"
+            ports.append(addon_port)
 
     return ports
 
@@ -136,6 +150,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
     """Mixin for common ZHA flow steps and forms."""
 
     _hass: HomeAssistant
+    _title: str
 
     def __init__(self) -> None:
         """Initialize flow instance."""
@@ -143,22 +158,20 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         self._hass = None  # type: ignore[assignment]
         self._radio_mgr = ZhaRadioManager()
-        self._title: str | None = None
 
     @property
-    def hass(self):
+    def hass(self) -> HomeAssistant:
         """Return hass."""
         return self._hass
 
     @hass.setter
-    def hass(self, hass):
+    def hass(self, hass: HomeAssistant) -> None:
         """Set hass."""
         self._hass = hass
         self._radio_mgr.hass = hass
 
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
-        assert self._title is not None
         assert self._radio_mgr.radio_type is not None
         assert self._radio_mgr.device_path is not None
         assert self._radio_mgr.device_settings is not None
@@ -221,10 +234,10 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             return await self.async_step_verify_radio()
 
         # Pre-select the currently configured port
-        default_port = vol.UNDEFINED
+        default_port: vol.Undefined | str = vol.UNDEFINED
 
         if self._radio_mgr.device_path is not None:
-            for description, port in zip(list_of_ports, ports):
+            for description, port in zip(list_of_ports, ports, strict=False):
                 if port.device == self._radio_mgr.device_path:
                     default_port = description
                     break
@@ -251,7 +264,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             return await self.async_step_manual_port_config()
 
         # Pre-select the current radio type
-        default = vol.UNDEFINED
+        default: vol.Undefined | str = vol.UNDEFINED
 
         if self._radio_mgr.radio_type is not None:
             default = self._radio_mgr.radio_type.description
@@ -580,9 +593,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: self._title},
         )
 
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         vid = discovery_info.vid
         pid = discovery_info.pid
@@ -617,38 +628,69 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
-        # Hostname is format: livingroom.local.
-        local_name = discovery_info.hostname[:-1]
-        port = discovery_info.port or DEFAULT_ZHA_ZEROCONF_PORT
+        # Transform legacy zeroconf discovery into the new format
+        if discovery_info.type != ZEROCONF_SERVICE_TYPE:
+            port = discovery_info.port or LEGACY_ZEROCONF_PORT
+            name = discovery_info.name
 
-        # Fix incorrect port for older TubesZB devices
-        if "tube" in local_name and port == ESPHOME_API_PORT:
-            port = DEFAULT_ZHA_ZEROCONF_PORT
+            # Fix incorrect port for older TubesZB devices
+            if "tube" in name and port == LEGACY_ZEROCONF_ESPHOME_API_PORT:
+                port = LEGACY_ZEROCONF_PORT
 
-        if "radio_type" in discovery_info.properties:
-            self._radio_mgr.radio_type = self._radio_mgr.parse_radio_type(
-                discovery_info.properties["radio_type"]
+            # Determine the radio type
+            if "radio_type" in discovery_info.properties:
+                radio_type = discovery_info.properties["radio_type"]
+            elif "efr32" in name:
+                radio_type = RadioType.ezsp.name
+            elif "zigate" in name:
+                radio_type = RadioType.zigate.name
+            else:
+                radio_type = RadioType.znp.name
+
+            fallback_title = name.split("._", 1)[0]
+            title = discovery_info.properties.get("name", fallback_title)
+
+            discovery_info = ZeroconfServiceInfo(
+                ip_address=discovery_info.ip_address,
+                ip_addresses=discovery_info.ip_addresses,
+                port=port,
+                hostname=discovery_info.hostname,
+                type=ZEROCONF_SERVICE_TYPE,
+                name=f"{title}.{ZEROCONF_SERVICE_TYPE}",
+                properties={
+                    "radio_type": radio_type,
+                    # To maintain backwards compatibility
+                    "serial_number": discovery_info.hostname.removesuffix(".local."),
+                },
             )
-        elif "efr32" in local_name:
-            self._radio_mgr.radio_type = RadioType.ezsp
-        else:
-            self._radio_mgr.radio_type = RadioType.znp
 
-        node_name = local_name.removesuffix(".local")
-        device_path = f"socket://{discovery_info.host}:{port}"
+        try:
+            discovery_props = ZEROCONF_PROPERTIES_SCHEMA(discovery_info.properties)
+        except vol.Invalid:
+            return self.async_abort(reason="invalid_zeroconf_data")
+
+        radio_type = self._radio_mgr.parse_radio_type(discovery_props["radio_type"])
+        device_path = f"socket://{discovery_info.host}:{discovery_info.port}"
+        title = discovery_info.name.removesuffix(f".{ZEROCONF_SERVICE_TYPE}")
 
         await self._set_unique_id_and_update_ignored_flow(
-            unique_id=node_name,
+            unique_id=discovery_props["serial_number"],
             device_path=device_path,
         )
 
-        self.context["title_placeholders"] = {CONF_NAME: node_name}
-        self._title = device_path
+        self.context["title_placeholders"] = {CONF_NAME: title}
+        self._title = title
         self._radio_mgr.device_path = device_path
+        self._radio_mgr.radio_type = radio_type
+        self._radio_mgr.device_settings = {
+            CONF_DEVICE_PATH: device_path,
+            CONF_BAUDRATE: 115200,
+            CONF_FLOW_CONTROL: None,
+        }
 
         return await self.async_step_confirm()
 
@@ -686,8 +728,6 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         super().__init__()
-        self.config_entry = config_entry
-
         self._radio_mgr.device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
         self._radio_mgr.device_settings = config_entry.data[CONF_DEVICE]
         self._radio_mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]

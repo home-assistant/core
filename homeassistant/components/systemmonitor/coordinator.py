@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import os
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from psutil import Process
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
@@ -16,6 +16,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from . import SystemMonitorConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,17 +40,29 @@ class SensorData:
 
     def as_dict(self) -> dict[str, Any]:
         """Return as dict."""
+        disk_usage = None
+        if self.disk_usage:
+            disk_usage = {k: str(v) for k, v in self.disk_usage.items()}
+        io_counters = None
+        if self.io_counters:
+            io_counters = {k: str(v) for k, v in self.io_counters.items()}
+        addresses = None
+        if self.addresses:
+            addresses = {k: str(v) for k, v in self.addresses.items()}
+        temperatures = None
+        if self.temperatures:
+            temperatures = {k: str(v) for k, v in self.temperatures.items()}
         return {
-            "disk_usage": {k: str(v) for k, v in self.disk_usage.items()},
+            "disk_usage": disk_usage,
             "swap": str(self.swap),
             "memory": str(self.memory),
-            "io_counters": {k: str(v) for k, v in self.io_counters.items()},
-            "addresses": {k: str(v) for k, v in self.addresses.items()},
+            "io_counters": io_counters,
+            "addresses": addresses,
             "load": str(self.load),
             "cpu_percent": str(self.cpu_percent),
             "boot_time": str(self.boot_time),
             "processes": str(self.processes),
-            "temperatures": {k: str(v) for k, v in self.temperatures.items()},
+            "temperatures": temperatures,
         }
 
 
@@ -71,6 +86,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: SystemMonitorConfigEntry,
         psutil_wrapper: ha_psutil.PsutilWrapper,
         arguments: list[str],
     ) -> None:
@@ -78,6 +94,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="System Monitor update coordinator",
             update_interval=DEFAULT_SCAN_INTERVAL,
             always_update=False,
@@ -87,9 +104,9 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         self.boot_time: datetime | None = None
 
         self._initial_update: bool = True
-        self.update_subscribers: dict[
-            tuple[str, str], set[str]
-        ] = self.set_subscribers_tuples(arguments)
+        self.update_subscribers: dict[tuple[str, str], set[str]] = (
+            self.set_subscribers_tuples(arguments)
+        )
 
     def set_subscribers_tuples(
         self, arguments: list[str]

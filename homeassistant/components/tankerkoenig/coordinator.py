@@ -17,25 +17,29 @@ from aiotankerkoenig import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_SHOW_ON_MAP
+from homeassistant.const import ATTR_ID, CONF_API_KEY, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_FUEL_TYPES, CONF_STATIONS
+from .const import CONF_STATIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type TankerkoenigConfigEntry = ConfigEntry[TankerkoenigDataUpdateCoordinator]
 
-class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
+
+class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInfo]]):
     """Get the latest data from the API."""
+
+    config_entry: TankerkoenigConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
-        name: str,
+        config_entry: TankerkoenigConfigEntry,
         update_interval: int,
     ) -> None:
         """Initialize the data object."""
@@ -43,17 +47,18 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass=hass,
             logger=_LOGGER,
-            name=name,
+            config_entry=config_entry,
+            name=config_entry.unique_id or DOMAIN,
             update_interval=timedelta(minutes=update_interval),
         )
 
-        self._selected_stations: list[str] = entry.data[CONF_STATIONS]
+        self._selected_stations: list[str] = self.config_entry.data[CONF_STATIONS]
         self.stations: dict[str, Station] = {}
-        self.fuel_types: list[str] = entry.data[CONF_FUEL_TYPES]
-        self.show_on_map: bool = entry.options[CONF_SHOW_ON_MAP]
+        self.show_on_map: bool = self.config_entry.options[CONF_SHOW_ON_MAP]
 
         self._tankerkoenig = Tankerkoenig(
-            api_key=entry.data[CONF_API_KEY], session=async_get_clientsession(hass)
+            api_key=self.config_entry.data[CONF_API_KEY],
+            session=async_get_clientsession(hass),
         )
 
     async def async_setup(self) -> None:
@@ -80,6 +85,27 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
                 continue
 
             self.stations[station_id] = station
+
+        entity_reg = er.async_get(self.hass)
+        for entity in er.async_entries_for_config_entry(
+            entity_reg, self.config_entry.entry_id
+        ):
+            if entity.unique_id.split("_")[0] not in self._selected_stations:
+                _LOGGER.debug("Removing obsolete entity entry %s", entity.entity_id)
+                entity_reg.async_remove(entity.entity_id)
+
+        device_reg = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if not any(
+                (ATTR_ID, station_id) in device.identifiers
+                for station_id in self._selected_stations
+            ):
+                _LOGGER.debug("Removing obsolete device entry %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
         if len(self.stations) > 10:
             _LOGGER.warning(

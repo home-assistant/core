@@ -6,8 +6,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, intent
 
 from . import (
     ATTR_AVAILABLE_MODES,
@@ -33,27 +32,30 @@ class HumidityHandler(intent.IntentHandler):
     """Handle set humidity intents."""
 
     intent_type = INTENT_HUMIDITY
+    description = "Set desired humidity level"
     slot_schema = {
-        vol.Required("name"): cv.string,
+        vol.Required("name"): intent.non_empty_string,
         vol.Required("humidity"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
     }
+    platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        states = list(
-            intent.async_match_states(
-                hass,
-                name=slots["name"]["value"],
-                states=hass.states.async_all(DOMAIN),
-            )
+
+        match_constraints = intent.MatchTargetsConstraints(
+            name=slots["name"]["value"],
+            domains=[DOMAIN],
+            assistant=intent_obj.assistant,
         )
+        match_result = intent.async_match_targets(hass, match_constraints)
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
 
-        if not states:
-            raise intent.IntentHandleError("No entities matched")
-
-        state = states[0]
+        state = match_result.states[0]
         service_data = {ATTR_ENTITY_ID: state.entity_id}
 
         humidity = slots["humidity"]["value"]
@@ -85,27 +87,29 @@ class SetModeHandler(intent.IntentHandler):
     """Handle set humidity intents."""
 
     intent_type = INTENT_MODE
+    description = "Set humidifier mode"
     slot_schema = {
-        vol.Required("name"): cv.string,
+        vol.Required("name"): intent.non_empty_string,
         vol.Required("mode"): cv.string,
     }
+    platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        states = list(
-            intent.async_match_states(
-                hass,
-                name=slots["name"]["value"],
-                states=hass.states.async_all(DOMAIN),
-            )
+        match_constraints = intent.MatchTargetsConstraints(
+            name=slots["name"]["value"],
+            domains=[DOMAIN],
+            assistant=intent_obj.assistant,
         )
+        match_result = intent.async_match_targets(hass, match_constraints)
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
 
-        if not states:
-            raise intent.IntentHandleError("No entities matched")
-
-        state = states[0]
+        state = match_result.states[0]
         service_data = {ATTR_ENTITY_ID: state.entity_id}
 
         intent.async_test_feature(state, HumidifierEntityFeature.MODES, "modes")

@@ -8,8 +8,6 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.rest.const import DEFAULT_METHOD
-from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
     CONF_INDEX,
@@ -139,7 +137,9 @@ async def test_scrape_uom_and_classes(hass: HomeAssistant) -> None:
     assert state.attributes[CONF_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
-async def test_scrape_unique_id(hass: HomeAssistant) -> None:
+async def test_scrape_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test Scrape sensor for unique id."""
     config = {
         DOMAIN: return_integration_config(
@@ -165,8 +165,7 @@ async def test_scrape_unique_id(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.current_temp")
     assert state.state == "22.1"
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.current_temp")
+    entry = entity_registry.async_get("sensor.current_temp")
     assert entry
     assert entry.unique_id == "very_unique_id"
 
@@ -261,7 +260,7 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
 
         mocker.payload = "test_scrape_sensor_no_data"
         async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.ha_version")
     assert state is not None
@@ -444,12 +443,14 @@ async def test_scrape_sensor_errors(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_class")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
     state2 = hass.states.get("sensor.ha_class2")
-    assert state2.state == STATE_UNKNOWN
+    assert state2.state == STATE_UNAVAILABLE
 
 
-async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
+async def test_scrape_sensor_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test Scrape sensor with unique_id."""
     config = {
         DOMAIN: [
@@ -476,22 +477,22 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.ha_version")
     assert state.state == "Current Version: 2021.12.10"
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("sensor.ha_version")
+    entity = entity_registry.async_get("sensor.ha_version")
 
     assert entity.unique_id == "ha_version_unique_id"
 
 
 async def test_setup_config_entry(
-    hass: HomeAssistant, loaded_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    loaded_entry: MockConfigEntry,
 ) -> None:
     """Test setup from config entry."""
 
     state = hass.states.get("sensor.current_version")
     assert state.state == "Current Version: 2021.12.10"
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("sensor.current_version")
+    entity = entity_registry.async_get("sensor.current_version")
 
     assert entity.unique_id == "3699ef88-69e6-11ed-a1eb-0242ac120002"
 
@@ -541,7 +542,7 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
         hass,
         dt_util.utcnow() + timedelta(minutes=10),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == "Current Version: 2021.12.10"
@@ -555,7 +556,7 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
         hass,
         dt_util.utcnow() + timedelta(minutes=20),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == STATE_UNAVAILABLE
@@ -568,7 +569,7 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
         hass,
         dt_util.utcnow() + timedelta(minutes=30),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.get_values_with_template")
     assert state.state == "Current Version: 2021.12.10"
@@ -581,9 +582,9 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
     [
         {
             CONF_RESOURCE: "https://www.home-assistant.io",
-            CONF_METHOD: DEFAULT_METHOD,
+            CONF_METHOD: "GET",
             CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
-            CONF_TIMEOUT: DEFAULT_TIMEOUT,
+            CONF_TIMEOUT: 10,
             CONF_ENCODING: DEFAULT_ENCODING,
             SENSOR_DOMAIN: [
                 {
@@ -593,6 +594,8 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
                     CONF_INDEX: 0,
                     CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
                     CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
+                    CONF_ICON: 'mdi:o{{ "n" if states("sensor.input1")=="on" else "ff" }}',
+                    CONF_PICTURE: 'o{{ "n" if states("sensor.input1")=="on" else "ff" }}.jpg',
                 }
             ],
         }
@@ -608,17 +611,109 @@ async def test_availability(
     hass.states.async_set("sensor.input1", "on")
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.current_version")
     assert state.state == "2021.12.10"
+    assert state.attributes["icon"] == "mdi:on"
+    assert state.attributes["entity_picture"] == "on.jpg"
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
 
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.current_version")
     assert state.state == STATE_UNAVAILABLE
+    assert "icon" not in state.attributes
+    assert "entity_picture" not in state.attributes
+
+
+async def test_template_render_with_availability_syntax_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test availability template render with syntax errors."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        "select": ".current-version h1",
+                        "name": "Current version",
+                        "unique_id": "ha_version_unique_id",
+                        CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                        CONF_AVAILABILITY: "{{ what_the_heck == 2 }}",
+                    }
+                ]
+            )
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_sensor")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "2021.12.10"
+
+    assert (
+        "Error rendering availability template for sensor.current_version: UndefinedError: 'what_the_heck' is undefined"
+        in caplog.text
+    )
+
+
+async def test_availability_blocks_value_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test availability blocks value_template from rendering."""
+    error = "Error parsing value for sensor.current_version: 'x' is undefined"
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        "select": ".current-version h1",
+                        "name": "Current version",
+                        "unique_id": "ha_version_unique_id",
+                        CONF_VALUE_TEMPLATE: "{{ x - 1 }}",
+                        CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
+                    }
+                ]
+            )
+        ]
+    }
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+
+    mocker = MockRestData("test_scrape_sensor")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert error not in caplog.text
+
+    state = hass.states.get("sensor.current_version")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set("sensor.input1", "on")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=10),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert error in caplog.text

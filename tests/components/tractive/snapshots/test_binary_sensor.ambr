@@ -1,0 +1,96 @@
+# serializer version: 1
+# name: test_binary_sensor[binary_sensor.test_pet_tracker_battery_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_pet_tracker_battery_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+    'original_icon': None,
+    'original_name': 'Tracker battery charging',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tracker_battery_charging',
+    'unique_id': 'pet_id_123_battery_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_pet_tracker_battery_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery_charging',
+      'friendly_name': 'Test Pet Tracker battery charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_pet_tracker_battery_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_pet_tracker_power_saving-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_pet_tracker_power_saving',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tracker power saving',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tracker_power_saving',
+    'unique_id': 'pet_id_123_power_saving',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_pet_tracker_power_saving-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Pet Tracker power saving',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_pet_tracker_power_saving',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

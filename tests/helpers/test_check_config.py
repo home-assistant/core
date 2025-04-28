@@ -9,12 +9,12 @@ import voluptuous as vol
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.check_config import (
     CheckConfigError,
     HomeAssistantConfig,
     async_check_ha_config_file,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.requirements import RequirementsNotFound
 
 from tests.common import (
@@ -121,10 +121,14 @@ async def test_integrationt_requirement_not_found(hass: HomeAssistant) -> None:
     """Test errors if integration with a requirement not found not found."""
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "test_custom_component:"}
-    with patch(
-        "homeassistant.helpers.check_config.async_get_integration_with_requirements",
-        side_effect=RequirementsNotFound("test_custom_component", ["any"]),
-    ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+    with (
+        patch(
+            "homeassistant.helpers.check_config.async_get_integration_with_requirements",
+            side_effect=RequirementsNotFound("test_custom_component", ["any"]),
+        ),
+        patch("os.path.isfile", return_value=True),
+        patch_yaml_files(files),
+    ):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
@@ -170,10 +174,14 @@ async def test_integration_import_error(hass: HomeAssistant) -> None:
     """Test errors if integration with a requirement not found not found."""
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:"}
-    with patch(
-        "homeassistant.loader.Integration.async_get_component",
-        side_effect=ImportError("blablabla"),
-    ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+    with (
+        patch(
+            "homeassistant.loader.Integration.async_get_component",
+            side_effect=ImportError("blablabla"),
+        ),
+        patch("os.path.isfile", return_value=True),
+        patch_yaml_files(files),
+    ):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
@@ -336,10 +344,15 @@ async def test_config_platform_import_error(hass: HomeAssistant) -> None:
     """Test errors if config platform fails to import."""
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: beer"}
-    with patch(
-        "homeassistant.loader.Integration.async_get_platform",
-        side_effect=ImportError("blablabla"),
-    ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+    with (
+        patch(
+            "homeassistant.loader.Integration.async_get_platform",
+            side_effect=ImportError("blablabla"),
+        ),
+        patch("os.path.isfile", return_value=True),
+        patch("homeassistant.loader.Integration.platforms_exists", return_value=True),
+        patch_yaml_files(files),
+    ):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
@@ -356,10 +369,15 @@ async def test_platform_import_error(hass: HomeAssistant) -> None:
     """Test errors if platform not found."""
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: demo"}
-    with patch(
-        "homeassistant.loader.Integration.async_get_platform",
-        side_effect=[None, ImportError("blablabla")],
-    ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+    with (
+        patch(
+            "homeassistant.loader.Integration.async_get_platform",
+            side_effect=[None, ImportError("blablabla")],
+        ),
+        patch("homeassistant.loader.Integration.platforms_exists", return_value=True),
+        patch("os.path.isfile", return_value=True),
+        patch_yaml_files(files),
+    ):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 

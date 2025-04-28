@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Generic, TypeVar, cast
 
-from pyprusalink.types import JobInfo, PrinterState, PrinterStatus
+from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
 from pyprusalink.types_legacy import LegacyPrinterStatus
 
 from homeassistant.components.sensor import (
@@ -24,14 +24,16 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
-from . import DOMAIN, PrusaLinkEntity, PrusaLinkUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import PrusaLinkUpdateCoordinator
+from .entity import PrusaLinkEntity
 
-T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
+T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
 
 
 @dataclass(frozen=True)
@@ -146,13 +148,19 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             translation_key="progress",
             native_unit_of_measurement=PERCENTAGE,
             value_fn=lambda data: cast(float, data["progress"]),
-            available_fn=lambda data: data.get("progress") is not None,
+            available_fn=lambda data: (
+                data.get("progress") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
         ),
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.filename",
             translation_key="filename",
             value_fn=lambda data: cast(str, data["file"]["display_name"]),
-            available_fn=lambda data: data.get("file") is not None,
+            available_fn=lambda data: (
+                data.get("file") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
         ),
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.start",
@@ -162,7 +170,10 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
                 lambda data: (utcnow() - timedelta(seconds=data["time_printing"])),
                 timedelta(minutes=2),
             ),
-            available_fn=lambda data: data.get("time_printing") is not None,
+            available_fn=lambda data: (
+                data.get("time_printing") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
         ),
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.finish",
@@ -172,7 +183,20 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
                 lambda data: (utcnow() + timedelta(seconds=data["time_remaining"])),
                 timedelta(minutes=2),
             ),
-            available_fn=lambda data: data.get("time_remaining") is not None,
+            available_fn=lambda data: (
+                data.get("time_remaining") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
+        ),
+    ),
+    "info": (
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="info.nozzle_diameter",
+            translation_key="nozzle_diameter",
+            native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+            device_class=SensorDeviceClass.DISTANCE,
+            value_fn=lambda data: cast(str, data["nozzle_diameter"]),
+            entity_registry_enabled_default=False,
         ),
     ),
 }
@@ -181,7 +205,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PrusaLink sensor based on a config entry."""
     coordinators: dict[str, PrusaLinkUpdateCoordinator] = hass.data[DOMAIN][

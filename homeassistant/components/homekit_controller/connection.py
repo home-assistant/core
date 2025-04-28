@@ -9,10 +9,11 @@ from functools import partial
 import logging
 from operator import attrgetter
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from aiohomekit import Controller
 from aiohomekit.controller import TransportType
+from aiohomekit.controller.ble.discovery import BleDiscovery
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
@@ -22,7 +23,7 @@ from aiohomekit.model import Accessories, Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
+from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
@@ -57,9 +58,9 @@ BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
-AddAccessoryCb = Callable[[Accessory], bool]
-AddServiceCb = Callable[[Service], bool]
-AddCharacteristicCb = Callable[[Characteristic], bool]
+type AddAccessoryCb = Callable[[Accessory], bool]
+type AddServiceCb = Callable[[Service], bool]
+type AddCharacteristicCb = Callable[[Characteristic], bool]
 
 
 def valid_serial_number(serial: str) -> bool:
@@ -110,7 +111,7 @@ class HKDevice:
         # A list of callbacks that turn HK characteristics into entities
         self.char_factories: list[AddCharacteristicCb] = []
 
-        # The platorms we have forwarded the config entry so far. If a new
+        # The platforms we have forwarded the config entry so far. If a new
         # accessory is added to a bridge we may have to load additional
         # platforms. We don't want to load all platforms up front if its just
         # a lightbulb. And we don't want to forward a config entry twice
@@ -153,6 +154,7 @@ class HKDevice:
         self._subscriptions: dict[tuple[int, int], set[CALLBACK_TYPE]] = {}
         self._pending_subscribes: set[tuple[int, int]] = set()
         self._subscribe_timer: CALLBACK_TYPE | None = None
+        self._load_platforms_lock = asyncio.Lock()
 
     @property
     def entity_map(self) -> Accessories:
@@ -286,7 +288,6 @@ class HKDevice:
                 self.hass.bus.async_listen(
                     EVENT_HOMEASSISTANT_STARTED,
                     self._async_populate_ble_accessory_state,
-                    run_immediately=True,
                 )
             )
         else:
@@ -322,13 +323,13 @@ class HKDevice:
                     self.hass,
                     self.async_update_available_state,
                     timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
-                    name=f"HomeKit Device {self.unique_id} BLE availability "
-                    "check poll",
+                    name=f"HomeKit Device {self.unique_id} BLE availability check poll",
                 )
             )
             # BLE devices always get an RSSI sensor as well
             if "sensor" not in self.platforms:
-                await self._async_load_platforms({"sensor"})
+                async with self._load_platforms_lock:
+                    await self._async_load_platforms({"sensor"})
 
     @callback
     def _async_start_polling(self) -> None:
@@ -372,6 +373,16 @@ class HKDevice:
         if not self.unreliable_serial_numbers:
             identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
 
+        connections: set[tuple[str, str]] = set()
+        if self.pairing.transport == Transport.BLE and (
+            discovery := self.pairing.controller.discoveries.get(
+                normalize_hkid(self.unique_id)
+            )
+        ):
+            connections = {
+                (dr.CONNECTION_BLUETOOTH, cast(BleDiscovery, discovery).device.address),
+            }
+
         device_info = DeviceInfo(
             identifiers={
                 (
@@ -379,11 +390,13 @@ class HKDevice:
                     f"{self.unique_id}:aid:{accessory.aid}",
                 )
             },
+            connections=connections,
             name=accessory.name,
             manufacturer=accessory.manufacturer,
             model=accessory.model,
             sw_version=accessory.firmware_revision,
             hw_version=accessory.hardware_revision,
+            serial_number=accessory.serial_number,
         )
 
         if accessory.aid != 1:
@@ -430,7 +443,7 @@ class HKDevice:
                 continue
 
             if self.config_entry.entry_id not in device.config_entries:
-                _LOGGER.info(
+                _LOGGER.warning(
                     (
                         "Found candidate device for %s:aid:%s, but owned by a different"
                         " config entry, skipping"
@@ -440,7 +453,7 @@ class HKDevice:
                 )
                 continue
 
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Migrating device identifiers for %s:aid:%s",
                 self.unique_id,
                 accessory.aid,
@@ -804,6 +817,7 @@ class HKDevice:
 
     async def _async_load_platforms(self, platforms: set[str]) -> None:
         """Load a group of platforms."""
+        assert self._load_platforms_lock.locked(), "Must be called with lock held"
         if not (to_load := platforms - self.platforms):
             return
         self.platforms.update(to_load)
@@ -813,22 +827,23 @@ class HKDevice:
 
     async def async_load_platforms(self) -> None:
         """Load any platforms needed by this HomeKit device."""
-        to_load: set[str] = set()
-        for accessory in self.entity_map.accessories:
-            for service in accessory.services:
-                if service.type in HOMEKIT_ACCESSORY_DISPATCH:
-                    platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
-                    if platform not in self.platforms:
-                        to_load.add(platform)
-
-                for char in service.characteristics:
-                    if char.type in CHARACTERISTIC_PLATFORMS:
-                        platform = CHARACTERISTIC_PLATFORMS[char.type]
+        async with self._load_platforms_lock:
+            to_load: set[str] = set()
+            for accessory in self.entity_map.accessories:
+                for service in accessory.services:
+                    if service.type in HOMEKIT_ACCESSORY_DISPATCH:
+                        platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
                         if platform not in self.platforms:
                             to_load.add(platform)
 
-        if to_load:
-            await self._async_load_platforms(to_load)
+                    for char in service.characteristics:
+                        if char.type in CHARACTERISTIC_PLATFORMS:
+                            platform = CHARACTERISTIC_PLATFORMS[char.type]
+                            if platform not in self.platforms:
+                                to_load.add(platform)
+
+            if to_load:
+                await self._async_load_platforms(to_load)
 
     @callback
     def async_update_available_state(self, *_: Any) -> None:
@@ -841,7 +856,8 @@ class HKDevice:
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Poll state of all entities attached to this bridge/accessory."""
-        if not self.pollable_characteristics:
+        to_poll = self.pollable_characteristics
+        if not to_poll:
             self.async_update_available_state()
             _LOGGER.debug(
                 "HomeKit connection not polling any characteristics: %s", self.unique_id
@@ -861,7 +877,7 @@ class HKDevice:
             return
 
         if self._polling_lock_warned:
-            _LOGGER.info(
+            _LOGGER.warning(
                 (
                     "HomeKit device no longer detecting back pressure - not"
                     " skipping poll: %s"
@@ -874,9 +890,7 @@ class HKDevice:
             _LOGGER.debug("Starting HomeKit device update: %s", self.unique_id)
 
             try:
-                new_values_dict = await self.get_characteristics(
-                    self.pollable_characteristics
-                )
+                new_values_dict = await self.get_characteristics(to_poll)
             except AccessoryNotFoundError:
                 # Not only did the connection fail, but also the accessory is not
                 # visible on the network.

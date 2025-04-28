@@ -19,7 +19,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ComponentSetup = Callable[[], Awaitable[None]]
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 BUILD = "homeassistant.components.google_mail.api.build"
 CLIENT_ID = "1234"

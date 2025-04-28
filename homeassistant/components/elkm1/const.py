@@ -6,6 +6,7 @@ from elkm1_lib.const import Max
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CODE, CONF_ZONE
+from homeassistant.helpers.typing import VolDictType
 
 DOMAIN = "elkm1"
 
@@ -48,6 +49,6 @@ ATTR_CHANGED_BY_ID = "changed_by_id"
 ATTR_CHANGED_BY_TIME = "changed_by_time"
 ATTR_VALUE = "value"
 
-ELK_USER_CODE_SERVICE_SCHEMA = {
+ELK_USER_CODE_SERVICE_SCHEMA: VolDictType = {
     vol.Required(ATTR_CODE): vol.All(vol.Coerce(int), vol.Range(0, 999999))
 }

@@ -18,11 +18,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import PlenticoreDataFormatter, SettingDataUpdateCoordinator
+from .coordinator import SettingDataUpdateCoordinator
+from .helper import PlenticoreDataFormatter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +73,9 @@ NUMBER_SETTINGS_DATA = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Kostal Plenticore Number entities."""
     plenticore = hass.data[DOMAIN][entry.entry_id]
@@ -81,11 +84,7 @@ async def async_setup_entry(
 
     available_settings_data = await plenticore.client.get_settings()
     settings_data_update_coordinator = SettingDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Settings Data",
-        timedelta(seconds=30),
-        plenticore,
+        hass, entry, _LOGGER, "Settings Data", timedelta(seconds=30), plenticore
     )
 
     for description in NUMBER_SETTINGS_DATA:

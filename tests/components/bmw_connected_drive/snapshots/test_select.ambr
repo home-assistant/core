@@ -1,109 +1,333 @@
 # serializer version: 1
-# name: test_entity_state_attrs
-  list([
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'iX xDrive50 AC Charging Limit',
-        'options': list([
-          '6',
-          '7',
-          '8',
-          '9',
-          '10',
-          '11',
-          '12',
-          '13',
-          '14',
-          '15',
-          '16',
-          '20',
-          '32',
-        ]),
-        'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.ix_xdrive50_ac_charging_limit',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '16',
+# name: test_entity_state_attrs[select.i3_rex_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
     }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'iX xDrive50 Charging Mode',
-        'options': list([
-          'IMMEDIATE_CHARGING',
-          'DELAYED_CHARGING',
-        ]),
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.ix_xdrive50_charging_mode',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'IMMEDIATE_CHARGING',
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
+      ]),
     }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 AC Charging Limit',
-        'options': list([
-          '6',
-          '7',
-          '8',
-          '9',
-          '10',
-          '11',
-          '12',
-          '13',
-          '14',
-          '15',
-          '16',
-          '20',
-          '32',
-        ]),
-        'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.i4_edrive40_ac_charging_limit',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '16',
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.i3_rex_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
     }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Charging Mode',
-        'options': list([
-          'IMMEDIATE_CHARGING',
-          'DELAYED_CHARGING',
-        ]),
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.i4_edrive40_charging_mode',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'IMMEDIATE_CHARGING',
+    'name': None,
+    'options': dict({
     }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Charging Mode',
-        'options': list([
-          'IMMEDIATE_CHARGING',
-          'DELAYED_CHARGING',
-        ]),
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.i3_rex_charging_mode',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'DELAYED_CHARGING',
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_mode',
+    'unique_id': 'WBY00000000REXI01-charging_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[select.i3_rex_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i3 (+ REX) Charging mode',
+      'options': list([
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
+      ]),
     }),
-  ])
+    'context': <ANY>,
+    'entity_id': 'select.i3_rex_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'delayed_charging',
+  })
+# ---
+# name: test_entity_state_attrs[select.i4_edrive40_ac_charging_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '6',
+        '7',
+        '8',
+        '9',
+        '10',
+        '11',
+        '12',
+        '13',
+        '14',
+        '15',
+        '16',
+        '20',
+        '32',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.i4_edrive40_ac_charging_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'AC charging limit',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ac_limit',
+    'unique_id': 'WBA00000000DEMO02-ac_limit',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_entity_state_attrs[select.i4_edrive40_ac_charging_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i4 eDrive40 AC charging limit',
+      'options': list([
+        '6',
+        '7',
+        '8',
+        '9',
+        '10',
+        '11',
+        '12',
+        '13',
+        '14',
+        '15',
+        '16',
+        '20',
+        '32',
+      ]),
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.i4_edrive40_ac_charging_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16',
+  })
+# ---
+# name: test_entity_state_attrs[select.i4_edrive40_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.i4_edrive40_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_mode',
+    'unique_id': 'WBA00000000DEMO02-charging_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[select.i4_edrive40_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i4 eDrive40 Charging mode',
+      'options': list([
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.i4_edrive40_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'immediate_charging',
+  })
+# ---
+# name: test_entity_state_attrs[select.ix_xdrive50_ac_charging_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '6',
+        '7',
+        '8',
+        '9',
+        '10',
+        '11',
+        '12',
+        '13',
+        '14',
+        '15',
+        '16',
+        '20',
+        '32',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ix_xdrive50_ac_charging_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'AC charging limit',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ac_limit',
+    'unique_id': 'WBA00000000DEMO01-ac_limit',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_entity_state_attrs[select.ix_xdrive50_ac_charging_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'iX xDrive50 AC charging limit',
+      'options': list([
+        '6',
+        '7',
+        '8',
+        '9',
+        '10',
+        '11',
+        '12',
+        '13',
+        '14',
+        '15',
+        '16',
+        '20',
+        '32',
+      ]),
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ix_xdrive50_ac_charging_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16',
+  })
+# ---
+# name: test_entity_state_attrs[select.ix_xdrive50_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ix_xdrive50_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_mode',
+    'unique_id': 'WBA00000000DEMO01-charging_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[select.ix_xdrive50_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'iX xDrive50 Charging mode',
+      'options': list([
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ix_xdrive50_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'immediate_charging',
+  })
 # ---

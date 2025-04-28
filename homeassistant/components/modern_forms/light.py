@@ -11,17 +11,13 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEnti
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
-from . import (
-    ModernFormsDataUpdateCoordinator,
-    ModernFormsDeviceEntity,
-    modernforms_exception_handler,
-)
+from . import modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
@@ -31,6 +27,8 @@ from .const import (
     SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
     SERVICE_SET_LIGHT_SLEEP_TIMER,
 )
+from .coordinator import ModernFormsDataUpdateCoordinator
+from .entity import ModernFormsDeviceEntity
 
 BRIGHTNESS_RANGE = (1, 255)
 
@@ -38,7 +36,7 @@ BRIGHTNESS_RANGE = (1, 255)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Modern Forms platform from config entry."""
 
@@ -64,7 +62,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
-        {},
+        None,
         "async_clear_light_sleep_timer",
     )
 

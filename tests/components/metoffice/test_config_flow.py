@@ -8,6 +8,7 @@ import requests_mock
 from homeassistant import config_entries
 from homeassistant.components.metoffice.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .const import (
     METOFFICE_CONFIG_WAVERTREE,
@@ -33,7 +34,7 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -45,7 +46,7 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_SITE_NAME_WAVERTREE
     assert result2["data"] == {
         "api_key": TEST_API_KEY,
@@ -90,7 +91,7 @@ async def test_form_already_configured(
         data=METOFFICE_CONFIG_WAVERTREE,
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -112,7 +113,7 @@ async def test_form_cannot_connect(
         {"api_key": TEST_API_KEY},
     )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -132,5 +133,5 @@ async def test_form_unknown_error(
         {"api_key": TEST_API_KEY},
     )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}

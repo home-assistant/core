@@ -6,12 +6,12 @@ from asyncio import Event, get_running_loop
 import logging
 from threading import Thread
 
-import debugpy
+import debugpy  # noqa: T100
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -60,7 +60,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ready = Event()
 
             def waitfor():
-                debugpy.wait_for_client()
+                debugpy.wait_for_client()  # noqa: T100
                 hass.loop.call_soon_threadsafe(ready.set)
 
             Thread(target=waitfor).start()

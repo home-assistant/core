@@ -7,6 +7,7 @@ import logging
 import re
 import sys
 import traceback
+from types import FrameType
 from typing import Any, cast
 
 import voluptuous as vol
@@ -15,10 +16,10 @@ from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-KeyType = tuple[str, tuple[str, int], str | None]
+type KeyType = tuple[str, tuple[str, int], tuple[str, int, str] | None]
 
 CONF_MAX_ENTRIES = "max_entries"
 CONF_FIRE_EVENT = "fire_event"
@@ -65,16 +66,18 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 def _figure_out_source(
     record: logging.LogRecord,
     paths_re: re.Pattern[str],
-    extracted_tb: traceback.StackSummary | None = None,
+    extracted_tb: list[tuple[FrameType, int]] | None = None,
 ) -> tuple[str, int]:
     """Figure out where a log message came from."""
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
     if record.exc_info:
+        source: list[tuple[FrameType, int]] = extracted_tb or list(
+            traceback.walk_tb(record.exc_info[2])
+        )
         stack = [
-            (x[0], x[1])
-            for x in (extracted_tb or traceback.extract_tb(record.exc_info[2]))
+            (tb_frame.f_code.co_filename, tb_line_no) for tb_frame, tb_line_no in source
         ]
         for i, (filename, _) in enumerate(stack):
             # Slice the stack to the first frame that matches
@@ -103,7 +106,7 @@ def _figure_out_source(
         # and since this code is running in the event loop, we need to avoid
         # blocking I/O.
 
-        frame = sys._getframe(4)  # pylint: disable=protected-access
+        frame = sys._getframe(4)  # noqa: SLF001
         #
         # We use _getframe with 4 to skip the following frames:
         #
@@ -149,10 +152,10 @@ def _safe_get_message(record: logging.LogRecord) -> str:
     """
     try:
         return record.getMessage()
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:  # noqa: BLE001
         try:
             return f"Bad logger message: {record.msg} ({record.args})"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             return f"Bad logger message: {ex}"
 
 
@@ -160,23 +163,23 @@ class LogEntry:
     """Store HA log entries."""
 
     __slots__ = (
+        "count",
+        "exception",
         "first_occurred",
-        "timestamp",
-        "name",
+        "key",
         "level",
         "message",
-        "exception",
-        "extracted_tb",
+        "name",
         "root_cause",
         "source",
-        "count",
-        "key",
+        "timestamp",
     )
 
     def __init__(
         self,
         record: logging.LogRecord,
         paths_re: re.Pattern,
+        formatter: logging.Formatter | None = None,
         figure_out_source: bool = False,
     ) -> None:
         """Initialize a log entry."""
@@ -187,20 +190,26 @@ class LogEntry:
         # This must be manually tested when changing the code.
         self.message = deque([_safe_get_message(record)], maxlen=5)
         self.exception = ""
-        self.root_cause: str | None = None
-        extracted_tb: traceback.StackSummary | None = None
+        self.root_cause: tuple[str, int, str] | None = None
+        extracted_tb: list[tuple[FrameType, int]] | None = None
         if record.exc_info:
-            self.exception = "".join(traceback.format_exception(*record.exc_info))
-            if extracted := traceback.extract_tb(record.exc_info[2]):
+            if formatter and record.exc_text is None:
+                record.exc_text = formatter.formatException(record.exc_info)
+            self.exception = record.exc_text or ""
+            if extracted := list(traceback.walk_tb(record.exc_info[2])):
                 # Last line of traceback contains the root cause of the exception
                 extracted_tb = extracted
-                self.root_cause = str(extracted[-1])
+                tb_frame, tb_line_no = extracted[-1]
+                self.root_cause = (
+                    tb_frame.f_code.co_filename,
+                    tb_line_no,
+                    tb_frame.f_code.co_name,
+                )
         if figure_out_source:
             self.source = _figure_out_source(record, paths_re, extracted_tb)
         else:
             self.source = (record.pathname, record.lineno)
         self.count = 1
-        self.extracted_tb = extracted_tb
         self.key = (self.name, self.source, self.root_cause)
 
     def to_dict(self) -> dict[str, Any]:
@@ -275,7 +284,9 @@ class LogErrorHandler(logging.Handler):
         default upper limit is set to 50 (older entries are discarded) but can
         be changed if needed.
         """
-        entry = LogEntry(record, self.paths_re, figure_out_source=True)
+        entry = LogEntry(
+            record, self.paths_re, formatter=self.formatter, figure_out_source=True
+        )
         self.records.add_entry(entry)
         if self.fire_event:
             self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
@@ -288,9 +299,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass_path: str = HOMEASSISTANT_PATH[0]
     config_dir = hass.config.config_dir
-    paths_re = re.compile(
-        r"(?:{})/(.*)".format("|".join([re.escape(x) for x in (hass_path, config_dir)]))
-    )
+    paths_re = re.compile(rf"(?:{re.escape(hass_path)}|{re.escape(config_dir)})/(.*)")
     handler = LogErrorHandler(
         hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT], paths_re
     )

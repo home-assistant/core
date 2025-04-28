@@ -15,3 +15,9 @@ PLATFORMS = [
 ]
 
 INVALID_AUTH_ERRORS = (EnvoyAuthenticationError, EnvoyAuthenticationRequired)
+
+OPTION_DIAGNOSTICS_INCLUDE_FIXTURES = "diagnostics_include_fixtures"
+OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE = False
+
+OPTION_DISABLE_KEEP_ALIVE = "disable_keep_alive"
+OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE = False

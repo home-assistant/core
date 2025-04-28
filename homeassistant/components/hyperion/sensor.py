@@ -19,22 +19,21 @@ from hyperion.const import (
 )
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import (
+    HyperionConfigEntry,
     get_hyperion_device_id,
     get_hyperion_unique_id,
     listen_for_instance_updates,
 )
 from .const import (
-    CONF_INSTANCE_CLIENTS,
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
     HYPERION_MODEL_NAME,
@@ -62,12 +61,11 @@ def _sensor_unique_id(server_id: str, instance_num: int, suffix: str) -> str:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: HyperionConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Hyperion platform from config entry."""
-    entry_data = hass.data[DOMAIN][config_entry.entry_id]
-    server_id = config_entry.unique_id
+    server_id = entry.unique_id
 
     @callback
     def instance_add(instance_num: int, instance_name: str) -> None:
@@ -78,7 +76,7 @@ async def async_setup_entry(
                 server_id,
                 instance_num,
                 instance_name,
-                entry_data[CONF_INSTANCE_CLIENTS][instance_num],
+                entry.runtime_data.instance_clients[instance_num],
                 PRIORITY_SENSOR_DESCRIPTION,
             )
         ]
@@ -98,7 +96,7 @@ async def async_setup_entry(
                 ),
             )
 
-    listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
+    listen_for_instance_updates(hass, entry, instance_add, instance_remove)
 
 
 class HyperionSensor(SensorEntity):
@@ -191,13 +189,13 @@ class HyperionVisiblePrioritySensor(HyperionSensor):
             if priority[KEY_COMPONENTID] == "COLOR":
                 state_value = priority[KEY_VALUE][KEY_RGB]
             else:
-                state_value = priority[KEY_OWNER]
+                state_value = priority.get(KEY_OWNER)
 
             attrs = {
                 "component_id": priority[KEY_COMPONENTID],
                 "origin": priority[KEY_ORIGIN],
                 "priority": priority[KEY_PRIORITY],
-                "owner": priority[KEY_OWNER],
+                "owner": priority.get(KEY_OWNER),
             }
 
             if priority[KEY_COMPONENTID] == "COLOR":

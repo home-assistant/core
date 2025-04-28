@@ -1,0 +1,76 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  dependency-transparency: done
+  action-setup:
+    status: done
+    comment: |
+      The integration only has an entity service, registered in the platform.
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions: done
+  brands: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow: done
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: no configuration options
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: todo
+    comment: Discovery not implemented, yet.
+  discovery:
+    status: todo
+    comment: |
+      Most of the mowers are connected with a SIM card, some of the also have a
+      Wifi connection. Check, if discovery with Wifi is possible
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: no configuration possible
+  repair-issues: done
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

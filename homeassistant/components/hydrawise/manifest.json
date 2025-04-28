@@ -1,10 +1,10 @@
 {
   "domain": "hydrawise",
   "name": "Hunter Hydrawise",
-  "codeowners": ["@dknowles2", "@ptcryan"],
+  "codeowners": ["@dknowles2", "@thomaskistler", "@ptcryan"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hydrawise",
   "iot_class": "cloud_polling",
   "loggers": ["pydrawise"],
-  "requirements": ["pydrawise==2024.3.0"]
+  "requirements": ["pydrawise==2025.3.0"]
 }

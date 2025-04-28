@@ -1,13 +1,7 @@
 """Support for MQTT vacuums."""
 
-# The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
-# and was removed with HA Core 2024.2.0
-# The use of the schema attribute with MQTT vacuum was deprecated with HA Core 2024.2
-# the attribute will be remove with HA Core 2024.8
-
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 from typing import Any, cast
 
@@ -16,63 +10,47 @@ import voluptuous as vol
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
     ENTITY_ID_FORMAT,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_RETURNING,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_NAME,
-    STATE_IDLE,
-    STATE_PAUSED,
-)
-from homeassistant.core import HomeAssistant, async_get_hass, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolSchemaType
 from homeassistant.util.json import json_loads_object
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import (
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_SCHEMA,
-    CONF_STATE_TOPIC,
-    DOMAIN,
-)
-from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
 
-LEGACY = "legacy"
-STATE = "state"
+PARALLEL_UPDATES = 0
 
 BATTERY = "battery_level"
 FAN_SPEED = "fan_speed"
 STATE = "state"
 
-POSSIBLE_STATES: dict[str, str] = {
-    STATE_IDLE: STATE_IDLE,
-    STATE_DOCKED: STATE_DOCKED,
-    STATE_ERROR: STATE_ERROR,
-    STATE_PAUSED: STATE_PAUSED,
-    STATE_RETURNING: STATE_RETURNING,
-    STATE_CLEANING: STATE_CLEANING,
+STATE_IDLE = "idle"
+STATE_DOCKED = "docked"
+STATE_ERROR = "error"
+STATE_PAUSED = "paused"
+STATE_RETURNING = "returning"
+STATE_CLEANING = "cleaning"
+
+POSSIBLE_STATES: dict[str, VacuumActivity] = {
+    STATE_IDLE: VacuumActivity.IDLE,
+    STATE_DOCKED: VacuumActivity.DOCKED,
+    STATE_ERROR: VacuumActivity.ERROR,
+    STATE_PAUSED: VacuumActivity.PAUSED,
+    STATE_RETURNING: VacuumActivity.RETURNING,
+    STATE_CLEANING: VacuumActivity.CLEANING,
 }
 
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
@@ -164,39 +142,7 @@ MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
 MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
-def _fail_legacy_config(discovery: bool) -> Callable[[ConfigType], ConfigType]:
-    @callback
-    def _fail_legacy_config_callback(config: ConfigType) -> ConfigType:
-        """Fail the legacy schema."""
-        if CONF_SCHEMA not in config:
-            return config
-
-        if config[CONF_SCHEMA] == "legacy":
-            raise vol.Invalid(
-                "The support for the `legacy` MQTT vacuum schema has been removed"
-            )
-
-        if discovery:
-            return config
-
-        translation_key = "deprecation_mqtt_schema_vacuum_yaml"
-        hass = async_get_hass()
-        async_create_issue(
-            hass,
-            DOMAIN,
-            translation_key,
-            breaks_in_ha_version="2024.8.0",
-            is_fixable=False,
-            translation_key=translation_key,
-            learn_more_url=MQTT_VACUUM_DOCS_URL,
-            severity=IssueSeverity.WARNING,
-        )
-        return config
-
-    return _fail_legacy_config_callback
-
-
-VACUUM_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
             cv.ensure_list, [cv.string]
@@ -220,30 +166,19 @@ VACUUM_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
         ),
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_SCHEMA): vol.All(vol.Lower, vol.Any(LEGACY, STATE)),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = vol.All(
-    _fail_legacy_config(discovery=True),
-    VACUUM_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
-    cv.deprecated(CONF_SCHEMA),
-)
-
-PLATFORM_SCHEMA_MODERN = vol.All(
-    _fail_legacy_config(discovery=False),
-    VACUUM_BASE_SCHEMA,
-    cv.deprecated(CONF_SCHEMA),
-)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT vacuum through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttStateVacuum,
@@ -279,7 +214,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -322,53 +257,38 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self._attr_fan_speed = self._state_attrs.get(FAN_SPEED, 0)
         self._attr_battery_level = max(0, min(100, self._state_attrs.get(BATTERY, 0)))
 
+    @callback
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle state MQTT message."""
+        payload = json_loads_object(msg.payload)
+        if STATE in payload and (
+            (state := payload[STATE]) in POSSIBLE_STATES or state is None
+        ):
+            self._attr_activity = (
+                POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
+            )
+            del payload[STATE]
+        self._update_state_attributes(payload)
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, Any] = {}
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(
-            self, {"_attr_battery_level", "_attr_fan_speed", "_attr_state"}
-        )
-        def state_message_received(msg: ReceiveMessage) -> None:
-            """Handle state MQTT message."""
-            payload = json_loads_object(msg.payload)
-            if STATE in payload and (
-                (state := payload[STATE]) in POSSIBLE_STATES or state is None
-            ):
-                self._attr_state = (
-                    POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
-                )
-                del payload[STATE]
-            self._update_state_attributes(payload)
-
-        if state_topic := self._config.get(CONF_STATE_TOPIC):
-            topics["state_position_topic"] = {
-                "topic": state_topic,
-                "msg_callback": state_message_received,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-            }
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_message_received,
+            {"_attr_battery_level", "_attr_fan_speed", "_attr_activity"},
         )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
         """Publish a command."""
         if self._command_topic is None:
             return
-
-        await self.async_publish(
-            self._command_topic,
-            self._payloads[_FEATURE_PAYLOADS[feature]],
-            qos=self._config[CONF_QOS],
-            retain=self._config[CONF_RETAIN],
-            encoding=self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._command_topic, self._payloads[_FEATURE_PAYLOADS[feature]]
         )
         self.async_write_ha_state()
 
@@ -404,13 +324,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             or (fan_speed not in self.fan_speed_list)
         ):
             return
-        await self.async_publish(
-            self._set_fan_speed_topic,
-            fan_speed,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._set_fan_speed_topic, fan_speed)
 
     async def async_send_command(
         self,
@@ -430,10 +344,4 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             payload = json_dumps(message)
         else:
             payload = command
-        await self.async_publish(
-            self._send_command_topic,
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._send_command_topic, payload)

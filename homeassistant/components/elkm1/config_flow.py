@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Self
 
 from elkm1_lib.discovery import ElkSystem
 from elkm1_lib.elk import Elk
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -21,7 +20,8 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.typing import DiscoveryInfoType, VolDictType
 from homeassistant.util import slugify
 from homeassistant.util.network import is_ip_address
 
@@ -52,7 +52,7 @@ PROTOCOL_MAP = {
 
 VALIDATE_TIMEOUT = 35
 
-BASE_SCHEMA = {
+BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_USERNAME, default=""): str,
     vol.Optional(CONF_PASSWORD, default=""): str,
 }
@@ -132,13 +132,15 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    host: str | None = None
+
     def __init__(self) -> None:
         """Initialize the elkm1 config flow."""
         self._discovered_device: ElkSystem | None = None
         self._discovered_devices: dict[str, ElkSystem] = {}
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = ElkSystem(
@@ -174,14 +176,11 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 or hostname_from_url(entry.data[CONF_HOST]) == host
             ):
                 if async_update_entry_from_discovery(self.hass, entry, device):
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
-        self.context[CONF_HOST] = host
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == host:
-                return self.async_abort(reason="already_in_progress")
+        self.host = host
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
         # Handled ignored case since _async_current_entries
         # is called with include_ignore=False
         self._abort_if_unique_id_configured()
@@ -191,6 +190,10 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_abort(reason="cannot_connect")
         return await self.async_step_discovery_confirm()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow.host == self.host
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -250,7 +253,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}, None
         except InvalidAuth:
             return {CONF_PASSWORD: "invalid_auth"}, None
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}, None
 
@@ -337,10 +340,10 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
         _LOGGER.debug("Elk is importing from yaml")
-        url = _make_url_from_data(user_input)
+        url = _make_url_from_data(import_data)
 
         if self._url_already_configured(url):
             return self.async_abort(reason="address_already_configured")
@@ -359,7 +362,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
 
-        errors, result = await self._async_create_or_error(user_input, True)
+        errors, result = await self._async_create_or_error(import_data, True)
         if errors:
             return self.async_abort(reason=list(errors.values())[0])
         assert result is not None

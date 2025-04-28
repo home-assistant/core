@@ -4,7 +4,7 @@ from typing import Any
 
 from switchbot_api import AirConditionerCommands
 
-import homeassistant.components.climate as FanState
+from homeassistant.components import climate as FanState
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
 from .const import DOMAIN
@@ -42,18 +42,18 @@ _DEFAULT_SWITCHBOT_FAN_MODE = _SWITCHBOT_FAN_MODES[FanState.FAN_AUTO]
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
-        SwitchBotCloudAirConditionner(data.api, device, coordinator)
+        SwitchBotCloudAirConditioner(data.api, device, coordinator)
         for device, coordinator in data.devices.climates
     )
 
 
-class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
-    """Representation of a SwitchBot air conditionner.
+class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity):
+    """Representation of a SwitchBot air conditioner.
 
     As it is an IR device, we don't know the actual state.
     """
@@ -79,8 +79,9 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.FAN_ONLY
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature = 21
+    _attr_target_temperature_step = 1
+    _attr_precision = 1
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     async def _do_send_command(
         self,
@@ -95,9 +96,9 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
         new_fan_speed = _SWITCHBOT_FAN_MODES.get(
             fan_mode or self._attr_fan_mode, _DEFAULT_SWITCHBOT_FAN_MODE
         )
-        await self.send_command(
+        await self.send_api_command(
             AirConditionerCommands.SET_ALL,
-            parameters=f"{new_temperature},{new_mode},{new_fan_speed},on",
+            parameters=f"{int(new_temperature)},{new_mode},{new_fan_speed},on",
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

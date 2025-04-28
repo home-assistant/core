@@ -125,6 +125,7 @@ as part of a config flow.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -158,15 +159,18 @@ from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallba
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
 
-StoreResultType = Callable[[str, Credentials], str]
-RetrieveResultType = Callable[[str, str], Credentials | None]
-
+type StoreResultType = Callable[[str, Credentials], str]
+type RetrieveResultType = Callable[[str, str], Credentials | None]
+DATA_STORE: HassKey[StoreResultType] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+DELETE_CURRENT_TOKEN_DELAY = 2
 
 
 @bind_hass
@@ -174,14 +178,14 @@ def create_auth_code(
     hass: HomeAssistant, client_id: str, credential: Credentials
 ) -> str:
     """Create an authorization code to fetch tokens."""
-    return cast(StoreResultType, hass.data[DOMAIN])(client_id, credential)
+    return hass.data[DATA_STORE](client_id, credential)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Component to allow users to login."""
     store_result, retrieve_result = _create_auth_code_store()
 
-    hass.data[DOMAIN] = store_result
+    hass.data[DATA_STORE] = store_result
 
     hass.http.register_view(TokenView(retrieve_result))
     hass.http.register_view(RevokeTokenView())
@@ -194,9 +198,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_delete_refresh_token)
     websocket_api.async_register_command(hass, websocket_delete_all_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_sign_path)
+    websocket_api.async_register_command(hass, websocket_refresh_token_set_expiry)
 
-    await login_flow.async_setup(hass, store_result)
-    await mfa_setup_flow.async_setup(hass)
+    login_flow.async_setup(hass, store_result)
+    mfa_setup_flow.async_setup(hass)
 
     return True
 
@@ -260,10 +265,10 @@ class TokenView(HomeAssistantView):
             return await RevokeTokenView.post(self, request)  # type: ignore[arg-type]
 
         if grant_type == "authorization_code":
-            return await self._async_handle_auth_code(hass, data, request.remote)
+            return await self._async_handle_auth_code(hass, data, request)
 
         if grant_type == "refresh_token":
-            return await self._async_handle_refresh_token(hass, data, request.remote)
+            return await self._async_handle_refresh_token(hass, data, request)
 
         return self.json(
             {"error": "unsupported_grant_type"}, status_code=HTTPStatus.BAD_REQUEST
@@ -273,7 +278,7 @@ class TokenView(HomeAssistantView):
         self,
         hass: HomeAssistant,
         data: MultiDictProxy[str],
-        remote_addr: str | None,
+        request: web.Request,
     ) -> web.Response:
         """Handle authorization code request."""
         client_id = data.get("client_id")
@@ -313,7 +318,7 @@ class TokenView(HomeAssistantView):
         )
         try:
             access_token = hass.auth.async_create_access_token(
-                refresh_token, remote_addr
+                refresh_token, request.remote
             )
         except InvalidAuthError as exc:
             return self.json(
@@ -341,9 +346,9 @@ class TokenView(HomeAssistantView):
         self,
         hass: HomeAssistant,
         data: MultiDictProxy[str],
-        remote_addr: str | None,
+        request: web.Request,
     ) -> web.Response:
-        """Handle authorization code request."""
+        """Handle refresh token request."""
         client_id = data.get("client_id")
         if client_id is not None and not indieauth.verify_client_id(client_id):
             return self.json(
@@ -381,7 +386,7 @@ class TokenView(HomeAssistantView):
 
         try:
             access_token = hass.auth.async_create_access_token(
-                refresh_token, remote_addr
+                refresh_token, request.remote
             )
         except InvalidAuthError as exc:
             return self.json(
@@ -540,7 +545,7 @@ async def websocket_create_long_lived_access_token(
     try:
         access_token = hass.auth.async_create_access_token(refresh_token)
     except InvalidAuthError as exc:
-        connection.send_error(msg["id"], websocket_api.const.ERR_UNAUTHORIZED, str(exc))
+        connection.send_error(msg["id"], websocket_api.ERR_UNAUTHORIZED, str(exc))
         return
 
     connection.send_result(msg["id"], access_token)
@@ -562,18 +567,23 @@ def websocket_refresh_tokens(
         else:
             auth_provider_type = None
 
+        expire_at = None
+        if refresh.expire_at:
+            expire_at = dt_util.utc_from_timestamp(refresh.expire_at)
+
         tokens.append(
             {
-                "id": refresh.id,
+                "auth_provider_type": auth_provider_type,
+                "client_icon": refresh.client_icon,
                 "client_id": refresh.client_id,
                 "client_name": refresh.client_name,
-                "client_icon": refresh.client_icon,
-                "type": refresh.token_type,
                 "created_at": refresh.created_at,
+                "expire_at": expire_at,
+                "id": refresh.id,
                 "is_current": refresh.id == current_id,
                 "last_used_at": refresh.last_used_at,
                 "last_used_ip": refresh.last_used_ip,
-                "auth_provider_type": auth_provider_type,
+                "type": refresh.token_type,
             }
         )
 
@@ -633,11 +643,8 @@ def websocket_delete_all_refresh_tokens(
             continue
         try:
             hass.auth.async_remove_refresh_token(token)
-        except Exception as err:  # pylint: disable=broad-except
-            getLogger(__name__).exception(
-                "During refresh token removal, the following error occurred: %s",
-                err,
-            )
+        except Exception:
+            getLogger(__name__).exception("Error during refresh token removal")
             remove_failed = True
 
     if remove_failed:
@@ -647,11 +654,34 @@ def websocket_delete_all_refresh_tokens(
     else:
         connection.send_result(msg["id"], {})
 
+    async def _delete_current_token_soon() -> None:
+        """Delete the current token after a delay.
+
+        We do not want to delete the current token immediately as it will
+        close the connection.
+
+        This is implemented as a tracked task to ensure the token
+        is still deleted if Home Assistant is shut down during
+        the delay.
+
+        It should not be refactored to use a call_later as that
+        would not be tracked and the token would not be deleted
+        if Home Assistant was shut down during the delay.
+        """
+        try:
+            await asyncio.sleep(DELETE_CURRENT_TOKEN_DELAY)
+        finally:
+            # If the task is cancelled because we are shutting down, delete
+            # the token right away.
+            hass.auth.async_remove_refresh_token(current_refresh_token)
+
     if delete_current_token and (
         not limit_token_types or current_refresh_token.token_type == token_type
     ):
-        # This will close the connection so we need to send the result first.
-        hass.loop.call_soon(hass.auth.async_remove_refresh_token, current_refresh_token)
+        # Deleting the token will close the connection so we need
+        # to do it with a delay in a tracked task to ensure it still
+        # happens if Home Assistant is shutting down.
+        hass.async_create_task(_delete_current_token_soon())
 
 
 @websocket_api.websocket_command(
@@ -679,3 +709,26 @@ def websocket_sign_path(
             },
         )
     )
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/refresh_token_set_expiry",
+        vol.Required("refresh_token_id"): str,
+        vol.Required("enable_expiry"): bool,
+    }
+)
+@websocket_api.ws_require_user()
+def websocket_refresh_token_set_expiry(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle a set expiry of a refresh token request."""
+    refresh_token = connection.user.refresh_tokens.get(msg["refresh_token_id"])
+
+    if refresh_token is None:
+        connection.send_error(msg["id"], "invalid_token_id", "Received invalid token")
+        return
+
+    hass.auth.async_set_expiry(refresh_token, enable_expiry=msg["enable_expiry"])
+    connection.send_result(msg["id"], {})

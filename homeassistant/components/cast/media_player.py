@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import wraps
 import json
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -51,9 +51,9 @@ from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_url
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
 from .const import (
@@ -85,18 +85,12 @@ APP_IDS_UNRELIABLE_MEDIA_INFO = ("Netflix",)
 
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
 
-
-_CastDeviceT = TypeVar("_CastDeviceT", bound="CastDevice")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-_FuncType = Callable[Concatenate[_CastDeviceT, _P], _R]
-_ReturnFuncType = Callable[Concatenate[_CastDeviceT, _P], _R]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
 
 
-def api_error(
+def api_error[_CastDeviceT: CastDevice, **_P, _R](
     func: _FuncType[_CastDeviceT, _P, _R],
-) -> _ReturnFuncType[_CastDeviceT, _P, _R]:
+) -> _FuncType[_CastDeviceT, _P, _R]:
     """Handle PyChromecastError and reraise a HomeAssistantError."""
 
     @wraps(func)
@@ -146,7 +140,7 @@ def _async_create_cast_device(hass: HomeAssistant, info: ChromecastInfo):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cast from a config entry."""
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
@@ -699,7 +693,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             # an arbitrary cast app, generally for UX.
             if "app_id" in app_data:
                 app_id = app_data.pop("app_id")
-                _LOGGER.info("Starting Cast app by ID %s", app_id)
+                _LOGGER.debug("Starting Cast app by ID %s", app_id)
                 await self.hass.async_add_executor_job(self._start_app, app_id)
                 if app_data:
                     _LOGGER.warning(

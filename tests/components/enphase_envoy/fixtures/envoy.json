@@ -1,0 +1,59 @@
+{
+  "serial_number": "1234",
+  "firmware": "7.6.175",
+  "part_number": "123456789",
+  "envoy_model": "Envoy",
+  "supported_features": 65,
+  "phase_mode": null,
+  "phase_count": 1,
+  "active_phase_count": 0,
+  "ct_meter_count": 0,
+  "consumption_meter_type": null,
+  "production_meter_type": null,
+  "storage_meter_type": null,
+  "data": {
+    "encharge_inventory": null,
+    "encharge_power": null,
+    "encharge_aggregate": null,
+    "enpower": null,
+    "system_consumption": null,
+    "system_net_consumption": null,
+    "system_production": {
+      "watt_hours_lifetime": 1234,
+      "watt_hours_last_7_days": 1234,
+      "watt_hours_today": 1234,
+      "watts_now": 1234
+    },
+    "system_consumption_phases": null,
+    "system_net_consumption_phases": null,
+    "system_production_phases": null,
+    "ctmeter_production": null,
+    "ctmeter_consumption": null,
+    "ctmeter_storage": null,
+    "ctmeter_production_phases": null,
+    "ctmeter_consumption_phases": null,
+    "ctmeter_storage_phases": null,
+    "dry_contact_status": {},
+    "dry_contact_settings": {},
+    "inverters": {
+      "1": {
+        "serial_number": "1",
+        "last_report_date": 1,
+        "last_report_watts": 1,
+        "max_report_watts": 1
+      }
+    },
+    "tariff": null,
+    "raw": {
+      "varies_by": "firmware_version"
+    }
+  },
+  "interface_information": {
+    "primary_interface": "eth0",
+    "interface_type": "ethernet",
+    "mac": "00:11:22:33:44:55",
+    "dhcp": true,
+    "software_build_epoch": 1719503966,
+    "timezone": "Europe/Amsterdam"
+  }
+}

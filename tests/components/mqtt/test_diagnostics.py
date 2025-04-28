@@ -6,6 +6,7 @@ from unittest.mock import ANY
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -16,16 +17,17 @@ from tests.components.diagnostics import (
 )
 from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 
-default_config = {
-    "birth_message": {},
+default_entry_data = {
     "broker": "mock-broker",
+}
+default_entry_options = {
+    "birth_message": {},
 }
 
 
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     hass_client: ClientSessionGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
@@ -38,7 +40,7 @@ async def test_entry_diagnostics(
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "connected": True,
         "devices": [],
-        "mqtt_config": default_config,
+        "mqtt_config": {"data": default_entry_data, "options": default_entry_options},
         "mqtt_debug_info": {"entities": [], "triggers": []},
     }
 
@@ -123,7 +125,7 @@ async def test_entry_diagnostics(
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "connected": True,
         "devices": [expected_device],
-        "mqtt_config": default_config,
+        "mqtt_config": {"data": default_entry_data, "options": default_entry_options},
         "mqtt_debug_info": expected_debug_info,
     }
 
@@ -132,33 +134,41 @@ async def test_entry_diagnostics(
     ) == {
         "connected": True,
         "device": expected_device,
-        "mqtt_config": default_config,
+        "mqtt_config": {"data": default_entry_data, "options": default_entry_options},
         "mqtt_debug_info": expected_debug_info,
     }
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
     [
-        {
-            mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_BIRTH_MESSAGE: {},
-            mqtt.CONF_PASSWORD: "hunter2",
-            mqtt.CONF_USERNAME: "my_user",
-        }
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PASSWORD: "hunter2",
+                CONF_USERNAME: "my_user",
+            },
+            {
+                mqtt.CONF_BIRTH_MESSAGE: {},
+            },
+        )
     ],
 )
 async def test_redact_diagnostics(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hass_client: ClientSessionGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test redacting diagnostics."""
     mqtt_mock = await mqtt_mock_entry()
-    expected_config = dict(default_config)
-    expected_config["password"] = "**REDACTED**"
-    expected_config["username"] = "**REDACTED**"
+    expected_config = {
+        "data": dict(default_entry_data),
+        "options": dict(default_entry_options),
+    }
+    expected_config["data"]["password"] = "**REDACTED**"
+    expected_config["data"]["username"] = "**REDACTED**"
 
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     mqtt_mock.connected = True
@@ -265,9 +275,10 @@ async def test_redact_diagnostics(
     }
 
     # Disable the entity and remove the state
-    ent_registry = er.async_get(hass)
-    device_tracker_entry = er.async_entries_for_device(ent_registry, device_entry.id)[0]
-    ent_registry.async_update_entity(
+    device_tracker_entry = er.async_entries_for_device(
+        entity_registry, device_entry.id
+    )[0]
+    entity_registry.async_update_entity(
         device_tracker_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
     hass.states.async_remove(device_tracker_entry.entity_id)

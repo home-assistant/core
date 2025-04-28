@@ -6,7 +6,7 @@ from homeassistant.components.light import ATTR_RGBW_COLOR, ColorMode, LightEnti
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import MicroBeesUpdateCoordinator
@@ -14,7 +14,9 @@ from .entity import MicroBeesActuatorEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Config entry."""
     coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
@@ -60,19 +62,19 @@ class MBLight(MicroBeesActuatorEntity, LightEntity):
         sendCommand = await self.coordinator.microbees.sendCommand(
             self.actuator_id, 1, color=self._attr_rgbw_color
         )
-        if sendCommand:
-            self.actuator.value = True
-            self.async_write_ha_state()
-        else:
+        if not sendCommand:
             raise HomeAssistantError(f"Failed to turn on {self.name}")
+
+        self.actuator.value = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         sendCommand = await self.coordinator.microbees.sendCommand(
             self.actuator_id, 0, color=self._attr_rgbw_color
         )
-        if sendCommand:
-            self.actuator.value = False
-            self.async_write_ha_state()
-        else:
+        if not sendCommand:
             raise HomeAssistantError(f"Failed to turn off {self.name}")
+
+        self.actuator.value = False
+        self.async_write_ha_state()

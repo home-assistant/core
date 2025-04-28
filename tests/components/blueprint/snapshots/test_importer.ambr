@@ -1,6 +1,6 @@
 # serializer version: 1
 # name: test_extract_blueprint_from_community_topic
-  NodeDictClass({
+  dict({
     'brightness': NodeDictClass({
       'default': 50,
       'description': 'Brightness of the light(s) when turning on',
@@ -97,7 +97,7 @@
   })
 # ---
 # name: test_fetch_blueprint_from_community_url
-  NodeDictClass({
+  dict({
     'brightness': NodeDictClass({
       'default': 50,
       'description': 'Brightness of the light(s) when turning on',
@@ -194,7 +194,7 @@
   })
 # ---
 # name: test_fetch_blueprint_from_github_gist_url
-  NodeDictClass({
+  dict({
     'light_entity': NodeDictClass({
       'name': 'Light',
       'selector': dict({

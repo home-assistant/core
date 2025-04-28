@@ -6,24 +6,23 @@ from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_DEVICE, DOMAIN
+from . import SwitcherConfigEntry
 
 TO_REDACT = {"device_id", "device_key", "ip_address", "mac_address"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: SwitcherConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    devices = hass.data[DOMAIN][DATA_DEVICE]
+    coordinators = entry.runtime_data
 
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "devices": [asdict(devices[d].data) for d in devices],
+            "devices": [asdict(coordinators[d].data) for d in coordinators],
         },
         TO_REDACT,
     )

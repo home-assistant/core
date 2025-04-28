@@ -5,12 +5,11 @@ from __future__ import annotations
 from contextlib import suppress
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import FullyKioskConfigEntry
 from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
@@ -54,11 +53,11 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FullyKioskConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fully Kiosk Browser number entities."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         FullyNumberEntity(coordinator, entity)

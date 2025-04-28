@@ -1,6 +1,10 @@
 {
   "services": {
-    "aux": "mdi:audio-input-stereo-minijack",
-    "panic": "mdi:fire"
+    "aux": {
+      "service": "mdi:audio-input-stereo-minijack"
+    },
+    "panic": {
+      "service": "mdi:fire"
+    }
   }
 }

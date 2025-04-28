@@ -15,25 +15,17 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import MOCK_SERIAL
 
-from tests.common import MockConfigEntry
-
 ENTITY_ID = f"remote.kaleidescape_device_{MOCK_SERIAL}"
 
 
-async def test_entity(
-    hass: HomeAssistant,
-    mock_device: MagicMock,
-    mock_integration: MockConfigEntry,
-) -> None:
+@pytest.mark.usefixtures("mock_device", "mock_integration")
+async def test_entity(hass: HomeAssistant) -> None:
     """Test entity attributes."""
     assert hass.states.get(ENTITY_ID)
 
 
-async def test_commands(
-    hass: HomeAssistant,
-    mock_device: MagicMock,
-    mock_integration: MockConfigEntry,
-) -> None:
+@pytest.mark.usefixtures("mock_integration")
+async def test_commands(hass: HomeAssistant, mock_device: MagicMock) -> None:
     """Test service calls."""
     await hass.services.async_call(
         REMOTE_DOMAIN,
@@ -140,11 +132,8 @@ async def test_commands(
     assert mock_device.menu_toggle.call_count == 1
 
 
-async def test_unknown_command(
-    hass: HomeAssistant,
-    mock_device: MagicMock,
-    mock_integration: MockConfigEntry,
-) -> None:
+@pytest.mark.usefixtures("mock_device", "mock_integration")
+async def test_unknown_command(hass: HomeAssistant) -> None:
     """Test service calls."""
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(

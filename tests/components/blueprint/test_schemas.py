@@ -52,6 +52,24 @@ _LOGGER = logging.getLogger(__name__)
                 },
             }
         },
+        # With input sections
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "input": {
+                    "section_a": {
+                        "input": {"some_placeholder": None},
+                    },
+                    "section_b": {
+                        "name": "Section",
+                        "description": "A section with no inputs",
+                        "input": {},
+                    },
+                    "some_placeholder_2": None,
+                },
+            }
+        },
     ],
 )
 def test_blueprint_schema(blueprint) -> None:
@@ -91,6 +109,34 @@ def test_blueprint_schema(blueprint) -> None:
                 "domain": "automation",
                 "homeassistant": {
                     "min_version": "1000000.invalid.0",
+                },
+            }
+        },
+        # Duplicate inputs in sections (1 of 2)
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "input": {
+                    "section_a": {
+                        "input": {"some_placeholder": None},
+                    },
+                    "section_b": {
+                        "input": {"some_placeholder": None},
+                    },
+                },
+            }
+        },
+        # Duplicate inputs in sections (2 of 2)
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "input": {
+                    "section_a": {
+                        "input": {"some_placeholder": None},
+                    },
+                    "some_placeholder": None,
                 },
             }
         },

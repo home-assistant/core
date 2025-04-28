@@ -19,8 +19,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 from .const import (
     ACTION_OFF,
@@ -59,7 +59,7 @@ from .scanner import YeelightScanner
 _LOGGER = logging.getLogger(__name__)
 
 
-YEELIGHT_FLOW_TRANSITION_SCHEMA = {
+YEELIGHT_FLOW_TRANSITION_SCHEMA: VolDictType = {
     vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
     vol.Optional(ATTR_ACTION, default=ACTION_RECOVER): vol.Any(
         ACTION_RECOVER, ACTION_OFF, ACTION_STAY

@@ -1,10 +1,11 @@
 """Test the onboarding views."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import os
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -12,14 +13,17 @@ from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 
 from . import mock_storage
 
 from tests.common import (
     CLIENT_ID,
     CLIENT_REDIRECT_URI,
+    MockModule,
     MockUser,
+    mock_integration,
+    mock_platform,
     register_auth_provider,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -27,15 +31,15 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def auth_active(hass):
+async def auth_active(hass: HomeAssistant) -> None:
     """Ensure auth is always active."""
-    hass.loop.run_until_complete(
-        register_auth_provider(hass, {"type": "homeassistant"})
-    )
+    await register_auth_provider(hass, {"type": "homeassistant"})
 
 
 @pytest.fixture(name="rpi")
-async def rpi_fixture(hass, aioclient_mock, mock_supervisor):
+async def rpi_fixture(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_supervisor
+) -> None:
     """Mock core info with rpi."""
     aioclient_mock.get(
         "http://127.0.0.1/core/info",
@@ -49,7 +53,9 @@ async def rpi_fixture(hass, aioclient_mock, mock_supervisor):
 
 
 @pytest.fixture(name="no_rpi")
-async def no_rpi_fixture(hass, aioclient_mock, mock_supervisor):
+async def no_rpi_fixture(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_supervisor
+) -> None:
     """Mock core info with rpi."""
     aioclient_mock.get(
         "http://127.0.0.1/core/info",
@@ -63,47 +69,51 @@ async def no_rpi_fixture(hass, aioclient_mock, mock_supervisor):
 
 
 @pytest.fixture(name="mock_supervisor")
-async def mock_supervisor_fixture(hass, aioclient_mock):
+async def mock_supervisor_fixture(
+    aioclient_mock: AiohttpClientMocker,
+    store_info: AsyncMock,
+    supervisor_is_connected: AsyncMock,
+    resolution_info: AsyncMock,
+) -> AsyncGenerator[None]:
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
+        "http://127.0.0.1/network/info",
         json={
             "result": "ok",
             "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
+                "host_internet": True,
+                "supervisor_internet": True,
             },
         },
     )
-    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_host_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_store",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_supervisor_info",
-        return_value={"diagnostics": True},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_os_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_ingress_panels",
-        return_value={"panels": {}},
-    ), patch.dict(
-        os.environ,
-        {"SUPERVISOR_TOKEN": "123456"},
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_host_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_supervisor_info",
+            return_value={"diagnostics": True},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_os_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_ingress_panels",
+            return_value={"panels": {}},
+        ),
+        patch.dict(
+            os.environ,
+            {"SUPERVISOR_TOKEN": "123456"},
+        ),
     ):
         yield
 
@@ -111,16 +121,18 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
 @pytest.fixture
 def mock_default_integrations():
     """Mock the default integrations set up during onboarding."""
-    with patch(
-        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
-    ), patch(
-        "homeassistant.components.rpi_power.binary_sensor.new_under_voltage"
-    ), patch(
-        "homeassistant.components.met.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.radio_browser.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.shopping_list.async_setup_entry", return_value=True
+    with (
+        patch("homeassistant.components.rpi_power.config_flow.new_under_voltage"),
+        patch("homeassistant.components.rpi_power.binary_sensor.new_under_voltage"),
+        patch("homeassistant.components.met.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.radio_browser.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.shopping_list.async_setup_entry",
+            return_value=True,
+        ),
     ):
         yield
 
@@ -180,10 +192,9 @@ async def test_onboarding_user(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_client_no_auth: ClientSessionGenerator,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test creating a new user."""
-    area_registry = ar.async_get(hass)
-
     # Create an existing area to mimic an integration creating an area
     # before onboarding is done.
     area_registry.async_create("Living Room")
@@ -516,32 +527,6 @@ async def test_onboarding_core_sets_up_radio_browser(
     assert len(hass.config_entries.async_entries("radio_browser")) == 1
 
 
-async def test_onboarding_core_sets_up_rpi_power(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    hass_client: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    rpi,
-    mock_default_integrations,
-) -> None:
-    """Test that the core step sets up rpi_power on RPi."""
-    mock_storage(hass_storage, {"done": [const.STEP_USER]})
-
-    assert await async_setup_component(hass, "onboarding", {})
-    await hass.async_block_till_done()
-
-    client = await hass_client()
-
-    resp = await client.post("/api/onboarding/core_config")
-
-    assert resp.status == 200
-
-    await hass.async_block_till_done()
-
-    rpi_power_state = hass.states.get("binary_sensor.rpi_power_status")
-    assert rpi_power_state
-
-
 async def test_onboarding_core_no_rpi_power(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -639,12 +624,21 @@ async def test_onboarding_installation_type(
         assert resp_content["installation_type"] == "Home Assistant Core"
 
 
-async def test_onboarding_installation_type_after_done(
+@pytest.mark.parametrize(
+    ("method", "view", "kwargs"),
+    [
+        ("get", "installation_type", {}),
+    ],
+)
+async def test_onboarding_view_after_done(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_client: ClientSessionGenerator,
+    method: str,
+    view: str,
+    kwargs: dict[str, Any],
 ) -> None:
-    """Test raising for installation type after onboarding."""
+    """Test raising after onboarding."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
     assert await async_setup_component(hass, "onboarding", {})
@@ -652,7 +646,7 @@ async def test_onboarding_installation_type_after_done(
 
     client = await hass_client()
 
-    resp = await client.get("/api/onboarding/installation_type")
+    resp = await client.request(method, f"/api/onboarding/{view}", **kwargs)
 
     assert resp.status == 401
 
@@ -716,3 +710,138 @@ async def test_complete_onboarding(
     listener_3 = Mock()
     onboarding.async_add_listener(hass, listener_3)
     listener_3.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    ("domain", "expected_result"),
+    [
+        ("onboarding", {"integration_loaded": True}),
+        ("non_existing_domain", {"integration_loaded": False}),
+    ],
+)
+async def test_wait_integration(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    domain: str,
+    expected_result: dict[str, Any],
+) -> None:
+    """Test we can get wait for an integration to load."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    req = await client.post("/api/onboarding/integration/wait", json={"domain": domain})
+
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data == expected_result
+
+
+async def test_wait_integration_startup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test we can get wait for an integration to load during startup."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+    client = await hass_client()
+
+    setup_stall = asyncio.Event()
+    setup_started = asyncio.Event()
+
+    async def mock_setup(hass: HomeAssistant, _) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup=mock_setup))
+
+    # The integration is not loaded, and is also not scheduled to load
+    req = await client.post("/api/onboarding/integration/wait", json={"domain": "test"})
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data == {"integration_loaded": False}
+
+    # Mark the component as scheduled to be loaded
+    async_set_domains_to_be_loaded(hass, {"test"})
+
+    # Start loading the component, including its config entries
+    hass.async_create_task(async_setup_component(hass, "test", {}))
+    await setup_started.wait()
+
+    # The component is not yet loaded
+    assert "test" not in hass.config.components
+
+    # Allow setup to proceed
+    setup_stall.set()
+
+    # The component is scheduled to load, this will block until the config entry is loaded
+    req = await client.post("/api/onboarding/integration/wait", json={"domain": "test"})
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data == {"integration_loaded": True}
+
+    # The component has been loaded
+    assert "test" in hass.config.components
+
+
+async def test_not_setup_platform_if_onboarded(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test if onboarding is done, we don't setup platforms."""
+    mock_storage(hass_storage, {"done": onboarding.STEPS})
+
+    platform_mock = Mock(async_setup_views=AsyncMock(), spec=["async_setup_views"])
+    mock_platform(hass, "test.onboarding", platform_mock)
+    assert await async_setup_component(hass, "test", {})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    assert len(platform_mock.async_setup_views.mock_calls) == 0
+
+
+async def test_setup_platform_if_not_onboarded(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test if onboarding is not done, we setup platforms."""
+    platform_mock = Mock(async_setup_views=AsyncMock(), spec=["async_setup_views"])
+    mock_platform(hass, "test.onboarding", platform_mock)
+    assert await async_setup_component(hass, "test", {})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    platform_mock.async_setup_views.assert_awaited_once_with(hass, {"done": []})
+
+
+@pytest.mark.parametrize(
+    "platform_mock",
+    [
+        Mock(some_method=AsyncMock(), spec=["some_method"]),
+        Mock(spec=[]),
+    ],
+)
+async def test_bad_platform(
+    hass: HomeAssistant,
+    platform_mock: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test loading onboarding platform which doesn't have the expected methods."""
+    mock_platform(hass, "test.onboarding", platform_mock)
+    assert await async_setup_component(hass, "test", {})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    assert platform_mock.mock_calls == []
+    assert "'test.onboarding' is not a valid onboarding platform" in caplog.text

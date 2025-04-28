@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import _LOGGER, CONF_RESTORE_LIGHT_STATE, DOMAIN, UOM_PERCENTAGE
@@ -24,7 +24,9 @@ ATTR_LAST_BRIGHTNESS = "last_brightness"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ISY light platform."""
     isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
@@ -114,8 +116,5 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         if not (last_state := await self.async_get_last_state()):
             return
 
-        if (
-            ATTR_LAST_BRIGHTNESS in last_state.attributes
-            and last_state.attributes[ATTR_LAST_BRIGHTNESS]
-        ):
-            self._last_brightness = last_state.attributes[ATTR_LAST_BRIGHTNESS]
+        if last_brightness := last_state.attributes.get(ATTR_LAST_BRIGHTNESS):
+            self._last_brightness = last_brightness

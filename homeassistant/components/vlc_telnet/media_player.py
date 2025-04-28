@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate, Literal
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
@@ -22,30 +22,37 @@ from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DOMAIN, LOGGER
+from . import VlcConfigEntry
+from .const import DEFAULT_NAME, DOMAIN, LOGGER
 
 MAX_VOLUME = 500
 
-_VlcDeviceT = TypeVar("_VlcDeviceT", bound="VlcDevice")
-_P = ParamSpec("_P")
+
+def _get_str(data: dict, key: str) -> str | None:
+    """Get a value from a dictionary and cast it to a string or None."""
+    if value := data.get(key):
+        return str(value)
+    return None
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: VlcConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the vlc platform."""
     # CONF_NAME is only present in imported YAML.
     name = entry.data.get(CONF_NAME) or DEFAULT_NAME
-    vlc = hass.data[DOMAIN][entry.entry_id][DATA_VLC]
-    available = hass.data[DOMAIN][entry.entry_id][DATA_AVAILABLE]
+    vlc = entry.runtime_data.vlc
+    available = entry.runtime_data.available
 
     async_add_entities([VlcDevice(entry, vlc, name, available)], True)
 
 
-def catch_vlc_errors(
+def catch_vlc_errors[_VlcDeviceT: VlcDevice, **_P](
     func: Callable[Concatenate[_VlcDeviceT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_VlcDeviceT, _P], Coroutine[Any, Any, None]]:
     """Catch VLC errors."""
@@ -58,7 +65,6 @@ def catch_vlc_errors(
         except CommandError as err:
             LOGGER.error("Command error: %s", err)
         except ConnectError as err:
-            # pylint: disable=protected-access
             if self._attr_available:
                 LOGGER.error("Connection error: %s", err)
                 self._attr_available = False
@@ -127,7 +133,7 @@ class VlcDevice(MediaPlayerEntity):
 
             self._attr_state = MediaPlayerState.IDLE
             self._attr_available = True
-            LOGGER.info("Connected to vlc host: %s", self._vlc.host)
+            LOGGER.debug("Connected to vlc host: %s", self._vlc.host)
 
         status = await self._vlc.status()
         LOGGER.debug("Status: %s", status)
@@ -155,10 +161,10 @@ class VlcDevice(MediaPlayerEntity):
         data = info.data
         LOGGER.debug("Info data: %s", data)
 
-        self._attr_media_album_name = data.get("data", {}).get("album")
-        self._attr_media_artist = data.get("data", {}).get("artist")
-        self._attr_media_title = data.get("data", {}).get("title")
-        now_playing = data.get("data", {}).get("now_playing")
+        self._attr_media_album_name = _get_str(data.get("data", {}), "album")
+        self._attr_media_artist = _get_str(data.get("data", {}), "artist")
+        self._attr_media_title = _get_str(data.get("data", {}), "title")
+        now_playing = _get_str(data.get("data", {}), "now_playing")
 
         # Many radio streams put artist/title/album in now_playing and title is the station name.
         if now_playing:
@@ -171,13 +177,13 @@ class VlcDevice(MediaPlayerEntity):
 
         # Fall back to filename.
         if data_info := data.get("data"):
-            self._attr_media_title = data_info["filename"]
+            media_title = _get_str(data_info, "filename")
 
             # Strip out auth signatures if streaming local media
-            if (media_title := self.media_title) and (
-                pos := media_title.find("?authSig=")
-            ) != -1:
+            if media_title and (pos := media_title.find("?authSig=")) != -1:
                 self._attr_media_title = media_title[:pos]
+            else:
+                self._attr_media_title = media_title
 
     @catch_vlc_errors
     async def async_media_seek(self, position: float) -> None:
@@ -271,7 +277,7 @@ class VlcDevice(MediaPlayerEntity):
     @catch_vlc_errors
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
-        shuffle_command = "on" if shuffle else "off"
+        shuffle_command: Literal["on", "off"] = "on" if shuffle else "off"
         await self._vlc.random(shuffle_command)
 
     async def async_browse_media(

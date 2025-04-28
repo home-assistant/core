@@ -32,7 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
 
@@ -205,10 +205,13 @@ async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (38.1, -3.1))
 
-    with patch(
-        "georss_ign_sismologia_client.feed_manager.IgnSismologiaFeed",
-        wraps=IgnSismologiaFeed,
-    ) as mock_feed, patch("georss_client.feed.GeoRssFeed.update") as mock_feed_update:
+    with (
+        patch(
+            "georss_ign_sismologia_client.feed_manager.IgnSismologiaFeed",
+            wraps=IgnSismologiaFeed,
+        ) as mock_feed,
+        patch("georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):

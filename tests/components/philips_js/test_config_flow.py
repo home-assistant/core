@@ -5,9 +5,10 @@ from unittest.mock import ANY
 from haphilipsjs import PairingFailure
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     MOCK_CONFIG,
@@ -43,7 +44,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -52,14 +53,14 @@ async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Philips TV (1234567890)"
     assert result2["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reauth(
-    hass: HomeAssistant, mock_setup_entry, mock_config_entry, mock_tv
+    hass: HomeAssistant, mock_setup_entry, mock_config_entry: MockConfigEntry, mock_tv
 ) -> None:
     """Test we get the form."""
 
@@ -68,17 +69,9 @@ async def test_reauth(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert len(mock_setup_entry.mock_calls) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -88,7 +81,7 @@ async def test_reauth(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_config_entry.data == MOCK_CONFIG | {"system": mock_tv.system}
     assert len(mock_setup_entry.mock_calls) == 2
@@ -105,7 +98,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_tv) -> None:
         result["flow_id"], MOCK_USERINPUT
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -120,7 +113,7 @@ async def test_form_unexpected_error(hass: HomeAssistant, mock_tv) -> None:
         result["flow_id"], MOCK_USERINPUT
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -131,7 +124,7 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -139,7 +132,7 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
         MOCK_USERINPUT,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_tv.setTransport.assert_called_with(True)
@@ -162,6 +155,7 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
         "version": 1,
         "options": {},
         "minor_version": 1,
+        "subentries": (),
     }
 
     await hass.async_block_till_done()
@@ -178,7 +172,7 @@ async def test_pair_request_failed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -204,14 +198,14 @@ async def test_pair_grant_failed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_USERINPUT,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_tv.setTransport.assert_called_with(True)
@@ -223,7 +217,7 @@ async def test_pair_grant_failed(
         result["flow_id"], {"pin": "1234"}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"pin": "invalid_pin"}
 
     # Test with unexpected failure
@@ -255,12 +249,12 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_ALLOW_NOTIFY: True}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {CONF_ALLOW_NOTIFY: True}

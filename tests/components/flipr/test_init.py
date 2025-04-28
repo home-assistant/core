@@ -1,29 +1,29 @@
 """Tests for init methods."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
-from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_flipr_client: AsyncMock,
+) -> None:
     """Test unload entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_EMAIL: "dummylogin",
-            CONF_PASSWORD: "dummypass",
-            CONF_FLIPR_ID: "FLIP1",
-        },
-        unique_id="123456",
-    )
-    entry.add_to_hass(hass)
-    with patch("homeassistant.components.flipr.coordinator.FliprAPIRestClient"):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        await hass.config_entries.async_unload(entry.entry_id)
-        assert entry.state == ConfigEntryState.NOT_LOADED
+
+    mock_flipr_client.search_all_ids.return_value = {
+        "flipr": ["myfliprid"],
+        "hub": ["hubid"],
+    }
+
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED

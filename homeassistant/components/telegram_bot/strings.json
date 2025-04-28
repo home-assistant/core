@@ -14,7 +14,7 @@
         },
         "target": {
           "name": "Target",
-          "description": "An array of pre-authorized chat_ids to send the notification to. If not present, first allowed chat_id is the default."
+          "description": "An array of pre-authorized chat IDs to send the notification to. If not present, first allowed chat ID is the default."
         },
         "parse_mode": {
           "name": "Parse mode",
@@ -30,7 +30,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send message. Will help with timeout errors (poor internet connection, etc)s."
+          "description": "Timeout for sending the message in seconds. Will help with timeout errors (poor Internet connection, etc)."
         },
         "keyboard": {
           "name": "Keyboard",
@@ -45,8 +45,12 @@
           "description": "Tag for sent message."
         },
         "reply_to_message_id": {
-          "name": "Reply to message id",
+          "name": "Reply to message ID",
           "description": "Mark the message as a reply to a previous message."
+        },
+        "message_thread_id": {
+          "name": "Message thread ID",
+          "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only."
         }
       }
     },
@@ -80,7 +84,7 @@
         },
         "target": {
           "name": "Target",
-          "description": "An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default."
+          "description": "An array of pre-authorized chat IDs to send the document to. If not present, first allowed chat ID is the default."
         },
         "parse_mode": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]",
@@ -92,11 +96,11 @@
         },
         "verify_ssl": {
           "name": "Verify SSL",
-          "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server."
+          "description": "Enable or disable SSL certificate verification. Disable if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server."
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send photo."
+          "description": "Timeout for sending the photo in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -113,6 +117,10 @@
         "reply_to_message_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
       }
     },
@@ -158,7 +166,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send sticker."
+          "description": "Timeout for sending the sticker in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -175,6 +183,10 @@
         "reply_to_message_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
       }
     },
@@ -241,6 +253,10 @@
         "reply_to_message_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
       }
     },
@@ -290,7 +306,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send video."
+          "description": "Timeout for sending the video in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -307,6 +323,10 @@
         "reply_to_message_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
       }
     },
@@ -352,7 +372,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send voice."
+          "description": "Timeout for sending the voice in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -369,6 +389,10 @@
         "reply_to_message_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
       }
     },
@@ -418,7 +442,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send document."
+          "description": "Timeout for sending the document in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -435,6 +459,10 @@
         "reply_to_message_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
       }
     },
@@ -452,7 +480,7 @@
         },
         "target": {
           "name": "Target",
-          "description": "An array of pre-authorized chat_ids to send the location to. If not present, first allowed chat_id is the default."
+          "description": "An array of pre-authorized chat IDs to send the location to. If not present, first allowed chat ID is the default."
         },
         "disable_notification": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]",
@@ -477,6 +505,10 @@
         "reply_to_message_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
       }
     },
@@ -498,11 +530,11 @@
         },
         "is_anonymous": {
           "name": "Is anonymous",
-          "description": "If the poll needs to be anonymous, defaults to True."
+          "description": "If the poll needs to be anonymous. This is the default."
         },
         "allows_multiple_answers": {
           "name": "Allow multiple answers",
-          "description": "If the poll allows multiple answers, defaults to False."
+          "description": "If the poll allows multiple answers."
         },
         "open_period": {
           "name": "Open period",
@@ -514,7 +546,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send poll."
+          "description": "Timeout for sending the poll in seconds."
         },
         "message_tag": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
@@ -523,6 +555,10 @@
         "reply_to_message_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]"
+        },
+        "message_thread_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]",
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]"
         }
       }
     },
@@ -532,11 +568,11 @@
       "fields": {
         "message_id": {
           "name": "Message ID",
-          "description": "Id of the message to edit."
+          "description": "ID of the message to edit."
         },
         "chat_id": {
           "name": "Chat ID",
-          "description": "The chat_id where to edit the message."
+          "description": "ID of the chat where to edit the message."
         },
         "message": {
           "name": "Message",
@@ -570,7 +606,7 @@
         },
         "chat_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
-          "description": "The chat_id where to edit the caption."
+          "description": "ID of the chat where to edit the caption."
         },
         "caption": {
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]",
@@ -584,7 +620,7 @@
     },
     "edit_replymarkup": {
       "name": "Edit reply markup",
-      "description": "Edit the inline keyboard of a previously sent message.",
+      "description": "Edits the inline keyboard of a previously sent message.",
       "fields": {
         "message_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
@@ -592,7 +628,7 @@
         },
         "chat_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
-          "description": "The chat_id where to edit the reply_markup."
+          "description": "ID of the chat where to edit the reply markup."
         },
         "inline_keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
@@ -610,7 +646,7 @@
         },
         "callback_query_id": {
           "name": "Callback query ID",
-          "description": "Unique id of the callback response."
+          "description": "Unique ID of the callback response."
         },
         "show_alert": {
           "name": "Show alert",
@@ -618,7 +654,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for sending the answer."
+          "description": "Timeout for sending the answer in seconds."
         }
       }
     },
@@ -628,13 +664,23 @@
       "fields": {
         "message_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
-          "description": "Id of the message to delete."
+          "description": "ID of the message to delete."
         },
         "chat_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
-          "description": "The chat_id where to delete the message."
+          "description": "ID of the chat where to delete the message."
         }
       }
+    }
+  },
+  "issues": {
+    "proxy_params_auth_deprecation": {
+      "title": "{telegram_bot}: Proxy authentication should be moved to the URL",
+      "description": "Authentication details for the the proxy configured in the {telegram_bot} integration should be moved into the {proxy_url} instead. Please update your configuration and restart Home Assistant to fix this issue.\n\nThe {proxy_params} config key will be removed in a future release."
+    },
+    "proxy_params_deprecation": {
+      "title": "{telegram_bot}: Proxy params option will be removed",
+      "description": "The {proxy_params} config key for the {telegram_bot} integration will be removed in a future release.\n\nAuthentication can now be provided through the {proxy_url} key.\n\nThe underlying library has changed to {httpx} which is incompatible with previous parameters. If you still need this functionality for other options, please leave a comment on the learn more link.\n\nPlease update your configuration to remove the {proxy_params} key and restart Home Assistant to fix this issue."
     }
   }
 }

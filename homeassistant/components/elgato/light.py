@@ -8,21 +8,21 @@ from elgato import ElgatoError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
+from homeassistant.util import color as color_util
 
-from .const import DOMAIN, SERVICE_IDENTIFY
-from .coordinator import ElgatoDataUpdateCoordinator
+from .const import SERVICE_IDENTIFY
+from .coordinator import ElgatoConfigEntry, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
 PARALLEL_UPDATES = 1
@@ -30,17 +30,17 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: ElgatoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Elgato Light based on a config entry."""
-    coordinator: ElgatoDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities([ElgatoLight(coordinator)])
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_IDENTIFY,
-        {},
+        None,
         ElgatoLight.async_identify.__name__,
     )
 
@@ -49,8 +49,8 @@ class ElgatoLight(ElgatoEntity, LightEntity):
     """Defines an Elgato Light."""
 
     _attr_name = None
-    _attr_min_mireds = 143
-    _attr_max_mireds = 344
+    _attr_min_color_temp_kelvin = 2900  # 344 Mireds
+    _attr_max_color_temp_kelvin = 7000  # 143 Mireds
 
     def __init__(self, coordinator: ElgatoDataUpdateCoordinator) -> None:
         """Initialize Elgato Light."""
@@ -59,10 +59,18 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         self._attr_unique_id = coordinator.data.info.serial_number
 
         # Elgato Light supporting color, have a different temperature range
-        if self.coordinator.data.settings.power_on_hue is not None:
+        if (
+            self.coordinator.data.info.product_name
+            in (
+                "Elgato Light Strip",
+                "Elgato Light Strip Pro",
+            )
+            or self.coordinator.data.settings.power_on_hue
+            or self.coordinator.data.state.hue is not None
+        ):
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
-            self._attr_min_mireds = 153
-            self._attr_max_mireds = 285
+            self._attr_min_color_temp_kelvin = 3500  # 285 Mireds
+            self._attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
     @property
     def brightness(self) -> int | None:
@@ -70,9 +78,11 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         return round((self.coordinator.data.state.brightness * 255) / 100)
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the CT color value in mireds."""
-        return self.coordinator.data.state.temperature
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        if (mired_temperature := self.coordinator.data.state.temperature) is None:
+            return None
+        return color_util.color_temperature_mired_to_kelvin(mired_temperature)
 
     @property
     def color_mode(self) -> str | None:
@@ -108,7 +118,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        temperature = kwargs.get(ATTR_COLOR_TEMP)
+        temperature_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
 
         hue = None
         saturation = None
@@ -125,12 +135,18 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         if (
             brightness
             and ATTR_HS_COLOR not in kwargs
-            and ATTR_COLOR_TEMP not in kwargs
+            and ATTR_COLOR_TEMP_KELVIN not in kwargs
             and self.supported_color_modes
             and ColorMode.HS in self.supported_color_modes
             and self.color_mode == ColorMode.COLOR_TEMP
         ):
-            temperature = self.color_temp
+            temperature_kelvin = self.color_temp_kelvin
+
+        temperature = (
+            None
+            if temperature_kelvin is None
+            else color_util.color_temperature_kelvin_to_mired(temperature_kelvin)
+        )
 
         try:
             await self.coordinator.client.light(

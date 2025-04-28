@@ -23,7 +23,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.radio_browser.async_setup_entry", return_value=True

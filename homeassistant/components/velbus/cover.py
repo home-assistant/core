@@ -11,29 +11,33 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: VelbusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    await hass.data[DOMAIN][entry.entry_id]["tsk"]
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    async_add_entities(VelbusCover(channel) for channel in cntrl.get_all("cover"))
+    await entry.runtime_data.scan_task
+    async_add_entities(
+        VelbusCover(channel)
+        for channel in entry.runtime_data.controller.get_all_cover()
+    )
 
 
 class VelbusCover(VelbusEntity, CoverEntity):
     """Representation a Velbus cover."""
 
     _channel: VelbusBlind
+    _assumed_closed: bool
 
     def __init__(self, channel: VelbusBlind) -> None:
         """Initialize the cover."""
@@ -51,21 +55,30 @@ class VelbusCover(VelbusEntity, CoverEntity):
                 | CoverEntityFeature.CLOSE
                 | CoverEntityFeature.STOP
             )
+            self._attr_assumed_state = True
+            # guess the state to get the open/closed icons somewhat working
+            self._assumed_closed = False
 
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self._channel.is_closed()
+        if self._channel.support_position():
+            return self._channel.is_closed()
+        return self._assumed_closed
 
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
-        return self._channel.is_opening()
+        if opening := self._channel.is_opening():
+            self._assumed_closed = False
+        return opening
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
-        return self._channel.is_closing()
+        if closing := self._channel.is_closing():
+            self._assumed_closed = True
+        return closing
 
     @property
     def current_cover_position(self) -> int | None:

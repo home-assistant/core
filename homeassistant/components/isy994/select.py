@@ -34,7 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import _LOGGER, DOMAIN, UOM_INDEX
@@ -45,7 +45,7 @@ from .models import IsyData
 def time_string(i: int) -> str:
     """Return a formatted ramp rate time string."""
     if i >= 60:
-        return f"{(float(i)/60):.1f} {UnitOfTime.MINUTES}"
+        return f"{(float(i) / 60):.1f} {UnitOfTime.MINUTES}"
     return f"{i} {UnitOfTime.SECONDS}"
 
 
@@ -56,7 +56,7 @@ BACKLIGHT_MEMORY_FILTER = {"memory": DEV_BL_ADDR, "cmd1": DEV_CMD_MEMORY_WRITE}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX select entities from config entry."""
     isy_data: IsyData = hass.data[DOMAIN][config_entry.entry_id]

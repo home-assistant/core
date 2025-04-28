@@ -37,7 +37,7 @@ async def test_init_success(
     """Test successful setup and unload."""
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -45,17 +45,19 @@ async def test_init_success(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_data", "responses", "config_entry_state"),
+    ("config_entry_data", "responses", "config_entry_state", "config_flow_steps"),
     [
         (
             CONFIG_ENTRY_DATA,
             [mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE)],
             ConfigEntryState.SETUP_RETRY,
+            [],
         ),
         (
             CONFIG_ENTRY_DATA,
             [mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR)],
             ConfigEntryState.SETUP_RETRY,
+            [],
         ),
         (
             CONFIG_ENTRY_DATA,
@@ -64,6 +66,7 @@ async def test_init_success(
                 mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE),
             ],
             ConfigEntryState.SETUP_RETRY,
+            [],
         ),
         (
             CONFIG_ENTRY_DATA,
@@ -72,6 +75,13 @@ async def test_init_success(
                 mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR),
             ],
             ConfigEntryState.SETUP_RETRY,
+            [],
+        ),
+        (
+            CONFIG_ENTRY_DATA,
+            [mock_response_error(HTTPStatus.FORBIDDEN)],
+            ConfigEntryState.SETUP_ERROR,
+            ["reauth_confirm"],
         ),
     ],
     ids=[
@@ -79,16 +89,21 @@ async def test_init_success(
         "server-error",
         "coordinator-unavailable",
         "coordinator-server-error",
+        "forbidden",
     ],
 )
 async def test_communication_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     config_entry_state: list[ConfigEntryState],
+    config_flow_steps: list[str],
 ) -> None:
     """Test unable to talk to device on startup, which fails setup."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == config_entry_state
+
+    flows = hass.config_entries.flow.async_progress()
+    assert [flow["step_id"] for flow in flows] == config_flow_steps
 
 
 @pytest.mark.parametrize(
@@ -112,17 +127,17 @@ async def test_fix_unique_id(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.NOT_LOADED
+    assert entries[0].state is ConfigEntryState.NOT_LOADED
     assert entries[0].unique_id is None
     assert entries[0].data.get(CONF_MAC) is None
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Verify config entry now has a unique id
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
     assert entries[0].unique_id == MAC_ADDRESS_UNIQUE_ID
     assert entries[0].data.get(CONF_MAC) == MAC_ADDRESS
 
@@ -170,7 +185,7 @@ async def test_fix_unique_id_failure(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     # Config entry is loaded, but not updated
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id is None
 
     assert expected_warning in caplog.text
@@ -204,7 +219,7 @@ async def test_fix_unique_id_duplicate(
     responses.extend(responses_copy)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == MAC_ADDRESS_UNIQUE_ID
 
     assert "Unable to fix missing unique id (already exists)" in caplog.text
@@ -305,7 +320,7 @@ async def test_fix_entity_unique_ids(
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_entry = entity_registry.async_get(entity_entry.id)
     assert entity_entry
@@ -421,7 +436,7 @@ async def test_fix_duplicate_device_ids(
     assert len(device_entries) == 2
 
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Only the device with the new format exists
     device_entries = dr.async_entries_for_config_entry(

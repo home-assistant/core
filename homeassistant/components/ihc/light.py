@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_DIMMABLE, CONF_OFF_ID, CONF_ON_ID, DOMAIN, IHC_CONTROLLER
-from .ihcdevice import IHCDevice
+from .entity import IHCEntity
 from .util import async_pulse, async_set_bool, async_set_int
 
 
@@ -50,7 +50,7 @@ def setup_platform(
     add_entities(devices)
 
 
-class IhcLight(IHCDevice, LightEntity):
+class IhcLight(IHCEntity, LightEntity):
     """Representation of a IHC light.
 
     For dimmable lights, the associated IHC resource should be a light

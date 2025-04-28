@@ -36,11 +36,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_rfx_object
+from . import DeviceTuple, async_setup_platform_entry, get_rfx_object
 from .const import ATTR_EVENT
+from .entity import RfxtrxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ def _rssi_convert(value: int | None) -> str | None:
     """Rssi is given as dBm value."""
     if value is None:
         return None
-    return f"{value*8-120}"
+    return f"{value * 8 - 120}"
 
 
 @dataclass(frozen=True)
@@ -149,7 +150,7 @@ SENSOR_TYPES = (
         translation_key="total_energy_usage",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     ),
     RfxtrxSensorEntityDescription(
         key="Voltage",
@@ -160,7 +161,8 @@ SENSOR_TYPES = (
     RfxtrxSensorEntityDescription(
         key="Wind direction",
         translation_key="wind_direction",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         native_unit_of_measurement=DEGREE,
     ),
     RfxtrxSensorEntityDescription(
@@ -181,13 +183,11 @@ SENSOR_TYPES = (
         key="Count",
         translation_key="count",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Counter value",
         translation_key="counter_value",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Chill",
@@ -242,7 +242,7 @@ SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""
 

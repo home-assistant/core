@@ -27,7 +27,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
@@ -74,7 +74,9 @@ SUPPORTED_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBee climate."""
     coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -90,7 +92,6 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
 
     _attr_fan_modes = SUPPORTED_FAN_MODES
     _attr_target_temperature_step = 1
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -181,7 +182,7 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
             await self.coordinator.api.set_state(self._device.id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             raise HomeAssistantError(
-                f"Failed to set {self.name} state {state}, error: {str(exp)}"
+                f"Failed to set {self.name} state {state}, error: {exp!s}"
             ) from exp
 
         await self.coordinator.async_refresh()

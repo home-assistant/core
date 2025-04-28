@@ -11,23 +11,7 @@ from homeassistant.setup import async_setup_component
 from . import async_load_json_fixture
 
 from tests.common import MockConfigEntry
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
-
-
-async def remove_device(
-    ws_client: MockHAClientWebSocket, device_id: str, config_entry_id: str
-) -> bool:
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 1,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]
+from tests.typing import WebSocketGenerator
 
 
 async def test_config_entry_not_ready(
@@ -84,12 +68,10 @@ async def test_load_unload_config_entry(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.entry_id in hass.data[DOMAIN]
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.entry_id not in hass.data[DOMAIN]
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
@@ -116,19 +98,15 @@ async def test_device_remove_devices(
             )
         },
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), device_entry.id, mock_config_entry.entry_id
-        )
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, mock_config_entry.entry_id)
+    assert not response["success"]
+
     old_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "OLD-DEVICE-UUID")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), old_device_entry.id, mock_config_entry.entry_id
-        )
-        is True
+    response = await client.remove_device(
+        old_device_entry.id, mock_config_entry.entry_id
     )
+    assert response["success"]

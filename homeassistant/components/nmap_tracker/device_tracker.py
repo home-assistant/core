@@ -5,11 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NmapDevice, NmapDeviceScanner, short_hostname, signal_device_update
 from .const import DOMAIN
@@ -18,7 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Nmap Tracker component."""
     nmap_tracker = hass.data[DOMAIN][entry.entry_id]
@@ -94,11 +96,6 @@ class NmapTrackerEntity(ScannerEntity):
         if not self._device.hostname:
             return None
         return short_hostname(self._device.hostname)
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return tracker source type."""
-        return SourceType.ROUTER
 
     @callback
     def async_process_update(self, online: bool) -> None:

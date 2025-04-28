@@ -1,16 +1,23 @@
 """Common methods used across tests for TotalConnect."""
 
+from typing import Any
 from unittest.mock import patch
 
 from total_connect_client import ArmingState, ResultCode, ZoneStatus, ZoneType
 
-from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
+from homeassistant.components.totalconnect.const import (
+    AUTO_BYPASS,
+    CODE_REQUIRED,
+    CONF_USERCODES,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-LOCATION_ID = "123456"
+LOCATION_ID = 123456
 
 DEVICE_INFO_BASIC_1 = {
     "DeviceID": "987654",
@@ -42,19 +49,14 @@ USER = {
     "UserFeatureList": "Master=0,User Administration=0,Configuration Administration=0",
 }
 
-RESPONSE_AUTHENTICATE = {
+RESPONSE_SESSION_DETAILS = {
     "ResultCode": ResultCode.SUCCESS.value,
-    "SessionID": 1,
+    "ResultData": "Success",
+    "SessionID": "12345",
     "Locations": LOCATIONS,
     "ModuleFlags": MODULE_FLAGS,
     "UserInfo": USER,
 }
-
-RESPONSE_AUTHENTICATE_FAILED = {
-    "ResultCode": ResultCode.BAD_USER_OR_PASSWORD.value,
-    "ResultData": "test bad authentication",
-}
-
 
 PARTITION_DISARMED = {
     "PartitionID": "1",
@@ -206,6 +208,17 @@ ZONE_7 = {
     "CanBeBypassed": 0,
 }
 
+# ZoneType security that cannot be bypassed is a Button on the alarm panel
+ZONE_8 = {
+    "ZoneID": 8,
+    "ZoneDescription": "Button",
+    "ZoneStatus": ZoneStatus.FAULT,
+    "ZoneTypeId": ZoneType.SECURITY,
+    "PartitionId": "1",
+    "CanBeBypassed": 0,
+}
+
+
 ZONE_INFO = [ZONE_NORMAL, ZONE_2, ZONE_3, ZONE_4, ZONE_5, ZONE_6, ZONE_7]
 ZONES = {"ZoneInfo": ZONE_INFO}
 
@@ -318,10 +331,18 @@ RESPONSE_USER_CODE_INVALID = {
     "ResultData": "testing user code invalid",
 }
 RESPONSE_SUCCESS = {"ResultCode": ResultCode.SUCCESS.value}
+RESPONSE_ZONE_BYPASS_SUCCESS = {
+    "ResultCode": ResultCode.SUCCESS.value,
+    "ResultData": "None",
+}
+RESPONSE_ZONE_BYPASS_FAILURE = {
+    "ResultCode": ResultCode.FAILED_TO_BYPASS_ZONE.value,
+    "ResultData": "None",
+}
 
 USERNAME = "username@me.com"
 PASSWORD = "password"
-USERCODES = {123456: "7890"}
+USERCODES = {LOCATION_ID: "7890"}
 CONFIG_DATA = {
     CONF_USERNAME: USERNAME,
     CONF_PASSWORD: PASSWORD,
@@ -329,14 +350,17 @@ CONFIG_DATA = {
 }
 CONFIG_DATA_NO_USERCODES = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
 
+OPTIONS_DATA = {AUTO_BYPASS: False, CODE_REQUIRED: False}
+OPTIONS_DATA_CODE_REQUIRED = {AUTO_BYPASS: False, CODE_REQUIRED: True}
+
 PARTITION_DETAILS_1 = {
-    "PartitionID": 1,
+    "PartitionID": "1",
     "ArmingState": ArmingState.DISARMED.value,
     "PartitionName": "Test1",
 }
 
 PARTITION_DETAILS_2 = {
-    "PartitionID": 2,
+    "PartitionID": "2",
     "ArmingState": ArmingState.DISARMED.value,
     "PartitionName": "Test2",
 }
@@ -373,26 +397,46 @@ RESPONSE_GET_ZONE_DETAILS_SUCCESS = {
 TOTALCONNECT_REQUEST = (
     "homeassistant.components.totalconnect.TotalConnectClient.request"
 )
+TOTALCONNECT_GET_CONFIG = (
+    "homeassistant.components.totalconnect.TotalConnectClient._get_configuration"
+)
+TOTALCONNECT_REQUEST_TOKEN = (
+    "homeassistant.components.totalconnect.TotalConnectClient._request_token"
+)
 
 
-async def setup_platform(hass, platform):
+async def setup_platform(
+    hass: HomeAssistant, platform: Any, code_required: bool = False
+) -> MockConfigEntry:
     """Set up the TotalConnect platform."""
     # first set up a config entry and add it to hass
-    mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA)
+    if code_required:
+        mock_entry = MockConfigEntry(
+            domain=DOMAIN, data=CONFIG_DATA, options=OPTIONS_DATA_CODE_REQUIRED
+        )
+    else:
+        mock_entry = MockConfigEntry(
+            domain=DOMAIN, data=CONFIG_DATA, options=OPTIONS_DATA
+        )
     mock_entry.add_to_hass(hass)
 
     responses = [
-        RESPONSE_AUTHENTICATE,
+        RESPONSE_SESSION_DETAILS,
         RESPONSE_PARTITION_DETAILS,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
         RESPONSE_DISARMED,
     ]
 
-    with patch("homeassistant.components.totalconnect.PLATFORMS", [platform]), patch(
-        TOTALCONNECT_REQUEST,
-        side_effect=responses,
-    ) as mock_request:
+    with (
+        patch("homeassistant.components.totalconnect.PLATFORMS", [platform]),
+        patch(
+            TOTALCONNECT_REQUEST,
+            side_effect=responses,
+        ) as mock_request,
+        patch(TOTALCONNECT_GET_CONFIG, side_effect=None),
+        patch(TOTALCONNECT_REQUEST_TOKEN, side_effect=None),
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
         assert mock_request.call_count == 5
     await hass.async_block_till_done()
@@ -400,24 +444,28 @@ async def setup_platform(hass, platform):
     return mock_entry
 
 
-async def init_integration(hass):
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the TotalConnect integration."""
     # first set up a config entry and add it to hass
-    mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA)
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA, options=OPTIONS_DATA)
     mock_entry.add_to_hass(hass)
 
     responses = [
-        RESPONSE_AUTHENTICATE,
+        RESPONSE_SESSION_DETAILS,
         RESPONSE_PARTITION_DETAILS,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
         RESPONSE_DISARMED,
     ]
 
-    with patch(
-        TOTALCONNECT_REQUEST,
-        side_effect=responses,
-    ) as mock_request:
+    with (
+        patch(
+            TOTALCONNECT_REQUEST,
+            side_effect=responses,
+        ) as mock_request,
+        patch(TOTALCONNECT_GET_CONFIG, side_effect=None),
+        patch(TOTALCONNECT_REQUEST_TOKEN, side_effect=None),
+    ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         assert mock_request.call_count == 5
     await hass.async_block_till_done()

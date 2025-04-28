@@ -5,11 +5,10 @@ from unittest.mock import MagicMock, patch
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import pytest
 
-from homeassistant.components import litterrobot
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_START,
-    STATE_DOCKED,
+    VacuumActivity,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
@@ -17,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .common import CONFIG, VACUUM_ENTITY_ID, remove_device
+from .common import CONFIG, DOMAIN, VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
 from tests.common import MockConfigEntry
@@ -30,7 +29,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
-    assert vacuum.state == STATE_DOCKED
+    assert vacuum.state == VacuumActivity.DOCKED
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
@@ -41,8 +40,6 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
     getattr(mock_account.robots[0], "start_cleaning").assert_called_once()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.data[litterrobot.DOMAIN] == {}
 
 
 @pytest.mark.parametrize(
@@ -59,13 +56,13 @@ async def test_entry_not_setup(
 ) -> None:
     """Test being able to handle config entry not setup."""
     entry = MockConfigEntry(
-        domain=litterrobot.DOMAIN,
-        data=CONFIG[litterrobot.DOMAIN],
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
     )
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.litterrobot.hub.Account.connect",
+        "homeassistant.components.litterrobot.coordinator.Account.connect",
         side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -87,20 +84,13 @@ async def test_device_remove_devices(
     assert entity.unique_id == "LR3C012345-litter_box"
 
     device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), device_entry.id, config_entry.entry_id
-        )
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(litterrobot.DOMAIN, "test-serial", "remove-serial")},
+        identifiers={(DOMAIN, "test-serial", "remove-serial")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]

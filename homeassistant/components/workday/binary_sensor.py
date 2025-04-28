@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Final
 
 from holidays import (
+    PUBLIC,
     HolidayBase,
     __version__ as python_holidays_version,
     country_holidays,
@@ -15,19 +16,27 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
-from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HomeAssistant,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
+    CONF_CATEGORY,
     CONF_EXCLUDES,
     CONF_OFFSET,
     CONF_PROVINCE,
@@ -61,8 +70,52 @@ def validate_dates(holiday_list: list[str]) -> list[str]:
     return calc_holidays
 
 
+def _get_obj_holidays(
+    country: str | None,
+    province: str | None,
+    year: int,
+    language: str | None,
+    categories: list[str] | None,
+) -> HolidayBase:
+    """Get the object for the requested country and year."""
+    if not country:
+        return HolidayBase()
+
+    set_categories = None
+    if categories:
+        category_list = [PUBLIC]
+        category_list.extend(categories)
+        set_categories = tuple(category_list)
+
+    obj_holidays: HolidayBase = country_holidays(
+        country,
+        subdiv=province,
+        years=[year, year + 1],
+        language=language,
+        categories=set_categories,
+    )
+    if (
+        (supported_languages := obj_holidays.supported_languages)
+        and language
+        and language.startswith("en")
+    ):
+        for lang in supported_languages:
+            if lang.startswith("en"):
+                obj_holidays = country_holidays(
+                    country,
+                    subdiv=province,
+                    years=year,
+                    language=lang,
+                    categories=set_categories,
+                )
+            LOGGER.debug("Changing language from %s to %s", language, lang)
+    return obj_holidays
+
+
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Workday sensor."""
     add_holidays: list[str] = entry.options[CONF_ADD_HOLIDAYS]
@@ -74,33 +127,15 @@ async def async_setup_entry(
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
     language: str | None = entry.options.get(CONF_LANGUAGE)
+    categories: list[str] | None = entry.options.get(CONF_CATEGORY)
 
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
-
-    if country:
-        obj_holidays: HolidayBase = country_holidays(
-            country,
-            subdiv=province,
-            years=year,
-            language=language,
-        )
-        if (
-            supported_languages := obj_holidays.supported_languages
-        ) and language == "en":
-            for lang in supported_languages:
-                if lang.startswith("en"):
-                    obj_holidays = country_holidays(
-                        country,
-                        subdiv=province,
-                        years=year,
-                        language=lang,
-                    )
-                LOGGER.debug("Changing language from %s to %s", language, lang)
-    else:
-        obj_holidays = HolidayBase()
-
+    obj_holidays: HolidayBase = await hass.async_add_executor_job(
+        _get_obj_holidays, country, province, year, language, categories
+    )
     calc_add_holidays: list[str] = validate_dates(add_holidays)
     calc_remove_holidays: list[str] = validate_dates(remove_holidays)
+    next_year = dt_util.now().year + 1
 
     # Add custom holidays
     try:
@@ -124,26 +159,28 @@ async def async_setup_entry(
                     LOGGER.debug("Removed %s by name '%s'", holiday, remove_holiday)
         except KeyError as unmatched:
             LOGGER.warning("No holiday found matching %s", unmatched)
-            if dt_util.parse_date(remove_holiday):
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"bad_date_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
-                    is_fixable=True,
-                    is_persistent=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="bad_date_holiday",
-                    translation_placeholders={
-                        CONF_COUNTRY: country if country else "-",
-                        "title": entry.title,
-                        CONF_REMOVE_HOLIDAYS: remove_holiday,
-                    },
-                    data={
-                        "entry_id": entry.entry_id,
-                        "country": country,
-                        "named_holiday": remove_holiday,
-                    },
-                )
+            if _date := dt_util.parse_date(remove_holiday):
+                if _date.year <= next_year:
+                    # Only check and raise issues for current and next year
+                    async_create_issue(
+                        hass,
+                        DOMAIN,
+                        f"bad_date_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                        is_fixable=True,
+                        is_persistent=False,
+                        severity=IssueSeverity.WARNING,
+                        translation_key="bad_date_holiday",
+                        translation_placeholders={
+                            CONF_COUNTRY: country if country else "-",
+                            "title": entry.title,
+                            CONF_REMOVE_HOLIDAYS: remove_holiday,
+                        },
+                        data={
+                            "entry_id": entry.entry_id,
+                            "country": country,
+                            "named_holiday": remove_holiday,
+                        },
+                    )
             else:
                 async_create_issue(
                     hass,
@@ -191,7 +228,6 @@ async def async_setup_entry(
                 entry.entry_id,
             )
         ],
-        True,
     )
 
 
@@ -201,6 +237,8 @@ class IsWorkdaySensor(BinarySensorEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = DOMAIN
+    _attr_should_poll = False
+    unsub: CALLBACK_TYPE | None = None
 
     def __init__(
         self,
@@ -248,11 +286,34 @@ class IsWorkdaySensor(BinarySensorEntity):
 
         return False
 
-    async def async_update(self) -> None:
-        """Get date and look whether it is a holiday."""
-        self._attr_is_on = self.date_is_workday(dt_util.now())
+    def get_next_interval(self, now: datetime) -> datetime:
+        """Compute next time an update should occur."""
+        tomorrow = dt_util.as_local(now) + timedelta(days=1)
+        return dt_util.start_of_local_day(tomorrow)
 
-    async def check_date(self, check_date: date) -> ServiceResponse:
+    def _update_state_and_setup_listener(self) -> None:
+        """Update state and setup listener for next interval."""
+        now = dt_util.now()
+        self.update_data(now)
+        self.unsub = async_track_point_in_utc_time(
+            self.hass, self.point_in_time_listener, self.get_next_interval(now)
+        )
+
+    @callback
+    def point_in_time_listener(self, time_date: datetime) -> None:
+        """Get the latest data and update state."""
+        self._update_state_and_setup_listener()
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Set up first update."""
+        self._update_state_and_setup_listener()
+
+    def update_data(self, now: datetime) -> None:
+        """Get date and look whether it is a holiday."""
+        self._attr_is_on = self.date_is_workday(now)
+
+    def check_date(self, check_date: date) -> ServiceResponse:
         """Service to check if date is workday or not."""
         return {"workday": self.date_is_workday(check_date)}
 

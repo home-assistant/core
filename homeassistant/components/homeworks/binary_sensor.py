@@ -13,9 +13,9 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeworksData, HomeworksEntity, HomeworksKeypad
+from . import HomeworksData, HomeworksKeypad
 from .const import (
     CONF_ADDR,
     CONF_BUTTONS,
@@ -25,23 +25,26 @@ from .const import (
     CONF_NUMBER,
     DOMAIN,
 )
+from .entity import HomeworksEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homeworks binary sensors."""
     data: HomeworksData = hass.data[DOMAIN][entry.entry_id]
     controller = data.controller
     controller_id = entry.options[CONF_CONTROLLER_ID]
-    devs = []
+    entities = []
     for keypad in entry.options.get(CONF_KEYPADS, []):
         for button in keypad[CONF_BUTTONS]:
             if not button[CONF_LED]:
                 continue
-            dev = HomeworksBinarySensor(
+            entity = HomeworksBinarySensor(
                 controller,
                 data.keypads[keypad[CONF_ADDR]],
                 controller_id,
@@ -50,8 +53,8 @@ async def async_setup_entry(
                 button[CONF_NAME],
                 button[CONF_NUMBER],
             )
-            devs.append(dev)
-    async_add_entities(devs, True)
+            entities.append(entity)
+    async_add_entities(entities, True)
 
 
 class HomeworksBinarySensor(HomeworksEntity, BinarySensorEntity):

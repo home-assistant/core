@@ -121,7 +121,7 @@ class WaterSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/m³)
 
 
-SourceType = (
+type SourceType = (
     GridSourceType
     | SolarSourceType
     | BatterySourceType
@@ -135,6 +135,13 @@ class DeviceConsumption(TypedDict):
 
     # This is an ever increasing value
     stat_consumption: str
+
+    # An optional custom name for display in energy graphs
+    name: str | None
+
+    # An optional statistic_id identifying a device
+    # that includes this device's consumption in its total
+    included_in_stat: str | None
 
 
 class EnergyPreferences(TypedDict):
@@ -287,6 +294,8 @@ ENERGY_SOURCE_SCHEMA = vol.All(
 DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
     {
         vol.Required("stat_consumption"): str,
+        vol.Optional("name"): str,
+        vol.Optional("included_in_stat"): str,
     }
 )
 
@@ -327,7 +336,7 @@ class EnergyManager:
             "device_consumption",
         ):
             if key in update:
-                data[key] = update[key]  # type: ignore[literal-required]
+                data[key] = update[key]
 
         self.data = data
         self._store.async_delay_save(lambda: data, 60)

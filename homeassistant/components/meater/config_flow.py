@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from meater import AuthenticationError, MeaterApi, ServiceUnavailableError
@@ -13,6 +14,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 USER_SCHEMA = vol.Schema(
@@ -84,7 +87,8 @@ class MeaterConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except ServiceUnavailableError:
             errors["base"] = "service_unavailable_error"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown_auth_error"
         else:
             data = {"username": username, "password": password}

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from requests.exceptions import HTTPError
 from requests.models import Response
-from todoist_api_python.models import Collaborator, Due, Label, Project, Task
+from todoist_api_python.models import Collaborator, Due, Label, Project, Section, Task
 
 from homeassistant.components.todoist import DOMAIN
 from homeassistant.const import CONF_TOKEN, Platform
@@ -18,13 +18,14 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry
 
 PROJECT_ID = "project-id-1"
+SECTION_ID = "section-id-1"
 SUMMARY = "A task"
 TOKEN = "some-token"
 TODAY = dt_util.now().strftime("%Y-%m-%d")
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.todoist.async_setup_entry", return_value=True
@@ -69,6 +70,7 @@ def make_api_task(
         section_id=None,
         url="https://todoist.com",
         sync_id=None,
+        duration=None,
     )
 
 
@@ -93,9 +95,18 @@ def mock_api(tasks: list[Task]) -> AsyncMock:
             url="",
             is_inbox_project=False,
             is_team_inbox=False,
+            can_assign_tasks=False,
             order=1,
             parent_id=None,
             view_style="list",
+        )
+    ]
+    api.get_sections.return_value = [
+        Section(
+            id=SECTION_ID,
+            project_id=PROJECT_ID,
+            name="Section Name",
+            order=1,
         )
     ]
     api.get_labels.return_value = [
@@ -153,9 +164,10 @@ async def mock_setup_integration(
     """Mock setup of the todoist integration."""
     if todoist_config_entry is not None:
         todoist_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.todoist.TodoistAPIAsync", return_value=api
-    ), patch("homeassistant.components.todoist.PLATFORMS", platforms):
+    with (
+        patch("homeassistant.components.todoist.TodoistAPIAsync", return_value=api),
+        patch("homeassistant.components.todoist.PLATFORMS", platforms),
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield

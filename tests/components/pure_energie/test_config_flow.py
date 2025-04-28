@@ -5,12 +5,12 @@ from unittest.mock import MagicMock
 
 from gridnet import GridNetConnectionError
 
-from homeassistant.components import zeroconf
 from homeassistant.components.pure_energie.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
 async def test_full_user_flow_implementation(
@@ -25,14 +25,14 @@ async def test_full_user_flow_implementation(
     )
 
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
     )
 
     assert result.get("title") == "Pure Energie Meter"
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == "192.168.1.123"
     assert "result" in result
@@ -48,7 +48,7 @@ async def test_full_zeroconf_flow_implementationn(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.123"),
             ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
@@ -64,14 +64,14 @@ async def test_full_zeroconf_flow_implementationn(
         CONF_NAME: "Pure Energie Meter",
     }
     assert result.get("step_id") == "zeroconf_confirm"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
     assert result2.get("title") == "Pure Energie Meter"
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
 
     assert "data" in result2
     assert result2["data"][CONF_HOST] == "192.168.1.123"
@@ -90,7 +90,7 @@ async def test_connection_error(
         data={CONF_HOST: "example.com"},
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
 
@@ -104,7 +104,7 @@ async def test_zeroconf_connection_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.123"),
             ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
@@ -115,5 +115,5 @@ async def test_zeroconf_connection_error(
         ),
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"

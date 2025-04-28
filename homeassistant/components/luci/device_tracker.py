@@ -8,8 +8,8 @@ from openwrt_luci_rpc import OpenWrtRpc
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> LuciDeviceScanner | None:
     """Validate the configuration and return a Luci scanner."""
-    scanner = LuciDeviceScanner(config[DOMAIN])
+    scanner = LuciDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -71,11 +71,10 @@ class LuciDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        name = next(
+        return next(
             (result.hostname for result in self.last_results if result.mac == device),
             None,
         )
-        return name
 
     def get_extra_attributes(self, device):
         """Get extra attributes of a device.

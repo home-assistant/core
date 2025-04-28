@@ -24,7 +24,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import _generate_mock_feed_entry
 
@@ -57,9 +57,10 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_georss_client.feed.GeoRssFeed.update"
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch("aio_georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         latitude = 32.87336
         longitude = -117.22743

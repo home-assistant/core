@@ -9,20 +9,20 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "myfiosgateway.com"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_SSL, default=True): cv.boolean,
@@ -35,7 +35,7 @@ def get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> QuantumGatewayDeviceScanner | None:
     """Validate the configuration and return a Quantum Gateway scanner."""
-    scanner = QuantumGatewayDeviceScanner(config[DOMAIN])
+    scanner = QuantumGatewayDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 

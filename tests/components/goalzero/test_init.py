@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import CONF_DATA, async_init_integration, create_entry, create_mocked_yeti
 
@@ -25,7 +25,7 @@ async def test_setup_config_and_unload(hass: HomeAssistant) -> None:
     with patch("homeassistant.components.goalzero.Yeti", return_value=mocked_yeti):
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.data == CONF_DATA
 
@@ -46,7 +46,7 @@ async def test_setup_config_entry_incorrectly_formatted_mac(
     with patch("homeassistant.components.goalzero.Yeti", return_value=mocked_yeti):
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.data == CONF_DATA
 
@@ -64,7 +64,7 @@ async def test_async_setup_entry_not_ready(hass: HomeAssistant) -> None:
         side_effect=exceptions.ConnectError,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_update_failed(

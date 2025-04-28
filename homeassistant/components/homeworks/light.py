@@ -13,32 +13,35 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeworksData, HomeworksEntity
+from . import HomeworksData
 from .const import CONF_ADDR, CONF_CONTROLLER_ID, CONF_DIMMERS, CONF_RATE, DOMAIN
+from .entity import HomeworksEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homeworks lights."""
     data: HomeworksData = hass.data[DOMAIN][entry.entry_id]
     controller = data.controller
     controller_id = entry.options[CONF_CONTROLLER_ID]
-    devs = []
+    entities = []
     for dimmer in entry.options.get(CONF_DIMMERS, []):
-        dev = HomeworksLight(
+        entity = HomeworksLight(
             controller,
             controller_id,
             dimmer[CONF_ADDR],
             dimmer[CONF_NAME],
             dimmer[CONF_RATE],
         )
-        devs.append(dev)
-    async_add_entities(devs, True)
+        entities.append(entity)
+    async_add_entities(entities, True)
 
 
 class HomeworksLight(HomeworksEntity, LightEntity):

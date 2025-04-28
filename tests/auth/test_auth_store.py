@@ -1,17 +1,14 @@
 """Tests for the auth store."""
 
 import asyncio
-from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.auth import auth_store
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 MOCK_STORAGE_DATA = {
     "version": 1,
@@ -201,13 +198,13 @@ async def test_system_groups_store_id_and_name(
 async def test_loading_only_once(hass: HomeAssistant) -> None:
     """Test only one storage load is allowed."""
     store = auth_store.AuthStore(hass)
-    with patch(
-        "homeassistant.helpers.entity_registry.async_get"
-    ) as mock_ent_registry, patch(
-        "homeassistant.helpers.device_registry.async_get"
-    ) as mock_dev_registry, patch(
-        "homeassistant.helpers.storage.Store.async_load", return_value=None
-    ) as mock_load:
+    with (
+        patch("homeassistant.helpers.entity_registry.async_get") as mock_ent_registry,
+        patch("homeassistant.helpers.device_registry.async_get") as mock_dev_registry,
+        patch(
+            "homeassistant.helpers.storage.Store.async_load", return_value=None
+        ) as mock_load,
+    ):
         await store.async_load()
         with pytest.raises(RuntimeError, match="Auth storage is already loaded"):
             await store.async_load()
@@ -220,68 +217,64 @@ async def test_loading_only_once(hass: HomeAssistant) -> None:
         assert results[0] == results[1]
 
 
-async def test_add_expire_at_property(
+async def test_dont_change_expire_at_on_load(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test we correctly add expired_at property if not existing."""
-    now = dt_util.utcnow()
-    with freeze_time(now):
-        hass_storage[auth_store.STORAGE_KEY] = {
-            "version": 1,
-            "data": {
-                "credentials": [],
-                "users": [
-                    {
-                        "id": "user-id",
-                        "is_active": True,
-                        "is_owner": True,
-                        "name": "Paulus",
-                        "system_generated": False,
-                    },
-                    {
-                        "id": "system-id",
-                        "is_active": True,
-                        "is_owner": True,
-                        "name": "Hass.io",
-                        "system_generated": True,
-                    },
-                ],
-                "refresh_tokens": [
-                    {
-                        "access_token_expiration": 1800.0,
-                        "client_id": "http://localhost:8123/",
-                        "created_at": "2018-10-03T13:43:19.774637+00:00",
-                        "id": "user-token-id",
-                        "jwt_key": "some-key",
-                        "last_used_at": str(now - timedelta(days=10)),
-                        "token": "some-token",
-                        "user_id": "user-id",
-                        "version": "1.2.3",
-                    },
-                    {
-                        "access_token_expiration": 1800.0,
-                        "client_id": "http://localhost:8123/",
-                        "created_at": "2018-10-03T13:43:19.774637+00:00",
-                        "id": "user-token-id2",
-                        "jwt_key": "some-key2",
-                        "token": "some-token",
-                        "user_id": "user-id",
-                    },
-                ],
-            },
-        }
+    """Test we correctly don't modify expired_at store load."""
+    hass_storage[auth_store.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "credentials": [],
+            "users": [
+                {
+                    "id": "user-id",
+                    "is_active": True,
+                    "is_owner": True,
+                    "name": "Paulus",
+                    "system_generated": False,
+                },
+                {
+                    "id": "system-id",
+                    "is_active": True,
+                    "is_owner": True,
+                    "name": "Hass.io",
+                    "system_generated": True,
+                },
+            ],
+            "refresh_tokens": [
+                {
+                    "access_token_expiration": 1800.0,
+                    "client_id": "http://localhost:8123/",
+                    "created_at": "2018-10-03T13:43:19.774637+00:00",
+                    "id": "user-token-id",
+                    "jwt_key": "some-key",
+                    "token": "some-token",
+                    "user_id": "user-id",
+                    "version": "1.2.3",
+                },
+                {
+                    "access_token_expiration": 1800.0,
+                    "client_id": "http://localhost:8123/",
+                    "created_at": "2018-10-03T13:43:19.774637+00:00",
+                    "id": "user-token-id2",
+                    "jwt_key": "some-key2",
+                    "token": "some-token",
+                    "user_id": "user-id",
+                    "expire_at": 1724133771.079745,
+                },
+            ],
+        },
+    }
 
-        store = auth_store.AuthStore(hass)
-        await store.async_load()
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
 
     users = await store.async_get_users()
 
     assert len(users[0].refresh_tokens) == 2
     token1, token2 = users[0].refresh_tokens.values()
-    assert token1.expire_at
-    assert token1.expire_at == now.timestamp() + timedelta(days=80).total_seconds()
-    assert token2.expire_at
-    assert token2.expire_at == now.timestamp() + timedelta(days=90).total_seconds()
+    assert not token1.expire_at
+    assert token2.expire_at == 1724133771.079745
 
 
 async def test_loading_does_not_write_right_away(
@@ -305,3 +298,84 @@ async def test_loading_does_not_write_right_away(
     # Once for the task
     await hass.async_block_till_done()
     assert hass_storage[auth_store.STORAGE_KEY] != {}
+
+
+async def test_add_remove_user_affects_tokens(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test adding and removing a user removes the tokens."""
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+    user = await store.async_create_user("Test User")
+    assert user.name == "Test User"
+    refresh_token = await store.async_create_refresh_token(
+        user, "client_id", "access_token_expiration"
+    )
+    assert user.refresh_tokens == {refresh_token.id: refresh_token}
+    assert await store.async_get_user(user.id) == user
+    assert store.async_get_refresh_token(refresh_token.id) == refresh_token
+    assert store.async_get_refresh_token_by_token(refresh_token.token) == refresh_token
+    await store.async_remove_user(user)
+    assert store.async_get_refresh_token(refresh_token.id) is None
+    assert store.async_get_refresh_token_by_token(refresh_token.token) is None
+    assert user.refresh_tokens == {}
+
+
+async def test_set_expiry_date(
+    hass: HomeAssistant, hass_storage: dict[str, Any], freezer: FrozenDateTimeFactory
+) -> None:
+    """Test set expiry date of a refresh token."""
+    hass_storage[auth_store.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "credentials": [],
+            "users": [
+                {
+                    "id": "user-id",
+                    "is_active": True,
+                    "is_owner": True,
+                    "name": "Paulus",
+                    "system_generated": False,
+                },
+            ],
+            "refresh_tokens": [
+                {
+                    "access_token_expiration": 1800.0,
+                    "client_id": "http://localhost:8123/",
+                    "created_at": "2018-10-03T13:43:19.774637+00:00",
+                    "id": "user-token-id",
+                    "jwt_key": "some-key",
+                    "token": "some-token",
+                    "user_id": "user-id",
+                    "expire_at": 1724133771.079745,
+                },
+            ],
+        },
+    }
+
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+
+    users = await store.async_get_users()
+
+    assert len(users[0].refresh_tokens) == 1
+    (token,) = users[0].refresh_tokens.values()
+    assert token.expire_at == 1724133771.079745
+
+    store.async_set_expiry(token, enable_expiry=False)
+    assert token.expire_at is None
+
+    freezer.tick(auth_store.DEFAULT_SAVE_DELAY * 2)
+    # Once for scheduling the task
+    await hass.async_block_till_done()
+    # Once for the task
+    await hass.async_block_till_done()
+
+    # verify token is saved without expire_at
+    assert (
+        hass_storage[auth_store.STORAGE_KEY]["data"]["refresh_tokens"][0]["expire_at"]
+        is None
+    )
+
+    store.async_set_expiry(token, enable_expiry=True)
+    assert token.expire_at is not None

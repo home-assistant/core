@@ -21,7 +21,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfEnergy,
@@ -32,15 +31,17 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
 
-from .const import DOMAIN
+from . import RenaultConfigEntry
 from .coordinator import T
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
-from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,14 +59,13 @@ class RenaultSensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RenaultConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultSensor[Any]] = [
         description.entity_class(vehicle, description)
-        for vehicle in proxy.vehicles.values()
+        for vehicle in config_entry.runtime_data.vehicles.values()
         for description in SENSOR_TYPES
         if description.coordinator in vehicle.coordinators
         and (not description.requires_fuel or vehicle.details.uses_fuel())
@@ -200,7 +200,13 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         translation_key="plug_state",
         device_class=SensorDeviceClass.ENUM,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
-        options=["unplugged", "plugged", "plug_error", "plug_unknown"],
+        options=[
+            "unplugged",
+            "plugged",
+            "plugged_waiting_for_charge",
+            "plug_error",
+            "plug_unknown",
+        ],
         value_lambda=_get_plug_state_formatted,
     ),
     RenaultSensorEntityDescription(

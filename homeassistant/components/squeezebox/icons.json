@@ -1,8 +1,32 @@
 {
+  "entity": {
+    "sensor": {
+      "info_total_albums": {
+        "default": "mdi:album"
+      },
+      "info_total_artists": {
+        "default": "mdi:account-music"
+      },
+      "info_total_genres": {
+        "default": "mdi:drama-masks"
+      },
+      "info_total_songs": {
+        "default": "mdi:file-music"
+      },
+      "player_count": {
+        "default": "mdi:folder-play"
+      },
+      "other_player_count": {
+        "default": "mdi:folder-play-outline"
+      }
+    }
+  },
   "services": {
-    "call_method": "mdi:console",
-    "call_query": "mdi:database",
-    "sync": "mdi:sync",
-    "unsync": "mdi:sync-off"
+    "call_method": {
+      "service": "mdi:console"
+    },
+    "call_query": {
+      "service": "mdi:database"
+    }
   }
 }

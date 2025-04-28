@@ -10,7 +10,10 @@ from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
+from asyncio import Lock
+import base64
 from collections.abc import Awaitable, Callable
+import hashlib
 from http import HTTPStatus
 from json import JSONDecodeError
 import logging
@@ -24,18 +27,26 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries
-from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import async_get_application_credentials
+from homeassistant.util.hass_dict import HassKey
 
+from . import http
 from .aiohttp_client import async_get_clientsession
 from .network import NoURLAvailableError
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_JWT_SECRET = "oauth2_jwt_secret"
-DATA_IMPLEMENTATIONS = "oauth2_impl"
-DATA_PROVIDERS = "oauth2_providers"
+DATA_IMPLEMENTATIONS: HassKey[dict[str, dict[str, AbstractOAuth2Implementation]]] = (
+    HassKey("oauth2_impl")
+)
+DATA_PROVIDERS: HassKey[
+    dict[
+        str,
+        Callable[[HomeAssistant, str], Awaitable[list[AbstractOAuth2Implementation]]],
+    ]
+] = HassKey("oauth2_providers")
 AUTH_CALLBACK_PATH = "/auth/external/callback"
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/oauth"
@@ -44,6 +55,21 @@ CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
 OAUTH_AUTHORIZE_URL_TIMEOUT_SEC = 30
 OAUTH_TOKEN_TIMEOUT_SEC = 30
+
+
+@callback
+def async_get_redirect_uri(hass: HomeAssistant) -> str:
+    """Return the redirect uri."""
+    if "my" in hass.config.components:
+        return MY_AUTH_CALLBACK_PATH
+
+    if (req := http.current_request.get()) is None:
+        raise RuntimeError("No current request in context")
+
+    if (ha_host := req.headers.get(HEADER_FRONTEND_BASE)) is None:
+        raise RuntimeError("No header in request")
+
+    return f"{ha_host}{AUTH_CALLBACK_PATH}"
 
 
 class AbstractOAuth2Implementation(ABC):
@@ -135,20 +161,16 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        if "my" in self.hass.config.components:
-            return MY_AUTH_CALLBACK_PATH
-
-        if (req := http.current_request.get()) is None:
-            raise RuntimeError("No current request in context")
-
-        if (ha_host := req.headers.get(HEADER_FRONTEND_BASE)) is None:
-            raise RuntimeError("No header in request")
-
-        return f"{ha_host}{AUTH_CALLBACK_PATH}"
+        return async_get_redirect_uri(self.hass)
 
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
+        return {}
+
+    @property
+    def extra_token_resolve_data(self) -> dict:
+        """Extra data for the token resolve request."""
         return {}
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
@@ -171,13 +193,13 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
-        return await self._token_request(
-            {
-                "grant_type": "authorization_code",
-                "code": external_data["code"],
-                "redirect_uri": external_data["state"]["redirect_uri"],
-            }
-        )
+        request_data: dict = {
+            "grant_type": "authorization_code",
+            "code": external_data["code"],
+            "redirect_uri": external_data["state"]["redirect_uri"],
+        }
+        request_data.update(self.extra_token_resolve_data)
+        return await self._token_request(request_data)
 
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
@@ -196,7 +218,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
         data["client_id"] = self.client_id
 
-        if self.client_secret is not None:
+        if self.client_secret:
             data["client_secret"] = self.client_secret
 
         _LOGGER.debug("Sending token request to %s", self.token_url)
@@ -216,6 +238,100 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             )
         resp.raise_for_status()
         return cast(dict, await resp.json())
+
+
+class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
+    """Local OAuth2 implementation with PKCE."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        client_id: str,
+        authorize_url: str,
+        token_url: str,
+        client_secret: str = "",
+        code_verifier_length: int = 128,
+    ) -> None:
+        """Initialize local auth implementation."""
+        super().__init__(
+            hass,
+            domain,
+            client_id,
+            client_secret,
+            authorize_url,
+            token_url,
+        )
+
+        # Generate code verifier
+        self.code_verifier = LocalOAuth2ImplementationWithPkce.generate_code_verifier(
+            code_verifier_length
+        )
+
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url.
+
+        If you want to override this method,
+        calling super is mandatory (for adding scopes):
+        ```
+        @def extra_authorize_data(self) -> dict:
+            data: dict = {
+                "scope": "openid profile email",
+            }
+            data.update(super().extra_authorize_data)
+            return data
+        ```
+        """
+        return {
+            "code_challenge": LocalOAuth2ImplementationWithPkce.compute_code_challenge(
+                self.code_verifier
+            ),
+            "code_challenge_method": "S256",
+        }
+
+    @property
+    def extra_token_resolve_data(self) -> dict:
+        """Extra data that needs to be included in the token resolve request.
+
+        If you want to override this method,
+        calling super is mandatory (for adding `someKey`):
+        ```
+        @def extra_token_resolve_data(self) -> dict:
+            data: dict = {
+                "someKey": "someValue",
+            }
+            data.update(super().extra_token_resolve_data)
+            return data
+        ```
+        """
+
+        return {"code_verifier": self.code_verifier}
+
+    @staticmethod
+    def generate_code_verifier(code_verifier_length: int = 128) -> str:
+        """Generate a code verifier."""
+        if not 43 <= code_verifier_length <= 128:
+            msg = (
+                "Parameter `code_verifier_length` must validate"
+                "`43 <= code_verifier_length <= 128`."
+            )
+            raise ValueError(msg)
+        return secrets.token_urlsafe(96)[:code_verifier_length]
+
+    @staticmethod
+    def compute_code_challenge(code_verifier: str) -> str:
+        """Compute the code challenge."""
+        if not 43 <= len(code_verifier) <= 128:
+            msg = (
+                "Parameter `code_verifier` must validate "
+                "`43 <= len(code_verifier) <= 128`."
+            )
+            raise ValueError(msg)
+
+        hashed = hashlib.sha256(code_verifier.encode("ascii")).digest()
+        encoded = base64.urlsafe_b64encode(hashed)
+        return encoded.decode("ascii").replace("=", "")
 
 
 class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
@@ -398,10 +514,7 @@ async def async_get_implementations(
     hass: HomeAssistant, domain: str
 ) -> dict[str, AbstractOAuth2Implementation]:
     """Return OAuth2 implementations for specified domain."""
-    registered = cast(
-        dict[str, AbstractOAuth2Implementation],
-        hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {}),
-    )
+    registered = hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {})
 
     if DATA_PROVIDERS not in hass.data:
         return registered
@@ -439,9 +552,9 @@ def async_add_implementation_provider(
 
     If no implementation found, return None.
     """
-    hass.data.setdefault(DATA_PROVIDERS, {})[
-        provider_domain
-    ] = async_provide_implementation
+    hass.data.setdefault(DATA_PROVIDERS, {})[provider_domain] = (
+        async_provide_implementation
+    )
 
 
 class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
@@ -501,6 +614,7 @@ class OAuth2Session:
         self.hass = hass
         self.config_entry = config_entry
         self.implementation = implementation
+        self._token_lock = Lock()
 
     @property
     def token(self) -> dict:
@@ -517,14 +631,15 @@ class OAuth2Session:
 
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
-        if self.valid_token:
-            return
+        async with self._token_lock:
+            if self.valid_token:
+                return
 
-        new_token = await self.implementation.async_refresh_token(self.token)
+            new_token = await self.implementation.async_refresh_token(self.token)
 
-        self.hass.config_entries.async_update_entry(
-            self.config_entry, data={**self.config_entry.data, "token": new_token}
-        )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data={**self.config_entry.data, "token": new_token}
+            )
 
     async def async_request(
         self, method: str, url: str, **kwargs: Any

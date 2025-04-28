@@ -8,7 +8,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_THEME,
@@ -38,7 +38,9 @@ THEME_ENTITY = SelectEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LIFX from a config entry."""
     coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -50,7 +52,10 @@ async def async_setup_entry(
             LIFXInfraredBrightnessSelectEntity(coordinator, INFRARED_BRIGHTNESS_ENTITY)
         )
 
-    if lifx_features(coordinator.device)["multizone"] is True:
+    if (
+        lifx_features(coordinator.device)["multizone"] is True
+        or lifx_features(coordinator.device)["matrix"] is True
+    ):
         entities.append(LIFXThemeSelectEntity(coordinator, THEME_ENTITY))
 
     async_add_entities(entities)

@@ -19,20 +19,6 @@ from homeassistant.util import utcnow
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def remove_device(ws_client, device_id, config_entry_id):
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]
-
-
 def ceiling_fan_with_breeze(name: str):
     """Create a ceiling fan with given name with breeze support."""
     return {
@@ -63,14 +49,16 @@ async def setup_bond_entity(
     """Set up Bond entity."""
     config_entry.add_to_hass(hass)
 
-    with patch_start_bpup(), patch_bond_bridge(enabled=patch_bridge), patch_bond_token(
-        enabled=patch_token
-    ), patch_bond_version(enabled=patch_version), patch_bond_device_ids(
-        enabled=patch_device_ids
-    ), patch_setup_entry("cover", enabled=patch_platforms), patch_setup_entry(
-        "fan", enabled=patch_platforms
-    ), patch_setup_entry("light", enabled=patch_platforms), patch_setup_entry(
-        "switch", enabled=patch_platforms
+    with (
+        patch_start_bpup(),
+        patch_bond_bridge(enabled=patch_bridge),
+        patch_bond_token(enabled=patch_token),
+        patch_bond_version(enabled=patch_version),
+        patch_bond_device_ids(enabled=patch_device_ids),
+        patch_setup_entry("cover", enabled=patch_platforms),
+        patch_setup_entry("fan", enabled=patch_platforms),
+        patch_setup_entry("light", enabled=patch_platforms),
+        patch_setup_entry("switch", enabled=patch_platforms),
     ):
         return await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -81,11 +69,11 @@ async def setup_platform(
     discovered_device: dict[str, Any],
     *,
     bond_device_id: str = "bond-device-id",
-    bond_version: dict[str, Any] = None,
-    props: dict[str, Any] = None,
-    state: dict[str, Any] = None,
-    bridge: dict[str, Any] = None,
-    token: dict[str, Any] = None,
+    bond_version: dict[str, Any] | None = None,
+    props: dict[str, Any] | None = None,
+    state: dict[str, Any] | None = None,
+    bridge: dict[str, Any] | None = None,
+    token: dict[str, Any] | None = None,
 ):
     """Set up the specified Bond platform."""
     mock_entry = MockConfigEntry(
@@ -94,16 +82,16 @@ async def setup_platform(
     )
     mock_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.bond.PLATFORMS", [platform]
-    ), patch_bond_version(return_value=bond_version), patch_bond_bridge(
-        return_value=bridge
-    ), patch_bond_token(return_value=token), patch_bond_device_ids(
-        return_value=[bond_device_id]
-    ), patch_start_bpup(), patch_bond_device(
-        return_value=discovered_device
-    ), patch_bond_device_properties(return_value=props), patch_bond_device_state(
-        return_value=state
+    with (
+        patch("homeassistant.components.bond.PLATFORMS", [platform]),
+        patch_bond_version(return_value=bond_version),
+        patch_bond_bridge(return_value=bridge),
+        patch_bond_token(return_value=token),
+        patch_bond_device_ids(return_value=[bond_device_id]),
+        patch_start_bpup(),
+        patch_bond_device(return_value=discovered_device),
+        patch_bond_device_properties(return_value=props),
+        patch_bond_device_state(return_value=state),
     ):
         assert await async_setup_component(hass, BOND_DOMAIN, {})
         await hass.async_block_till_done()

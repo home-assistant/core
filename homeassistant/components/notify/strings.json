@@ -1,5 +1,10 @@
 {
   "title": "Notifications",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::notify::title%]"
+    }
+  },
   "services": {
     "notify": {
       "name": "Send a notification",
@@ -19,13 +24,27 @@
         },
         "data": {
           "name": "Data",
-          "description": "Some integrations provide extended functionality. For information on how to use _data_, refer to the integration documentation."
+          "description": "Some integrations provide extended functionality via this field. For more information, refer to the integration documentation."
+        }
+      }
+    },
+    "send_message": {
+      "name": "Send a notification message",
+      "description": "Sends a notification message.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Your notification message."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification message."
         }
       }
     },
     "persistent_notification": {
       "name": "Send a persistent notification",
-      "description": "Sends a notification that is visible in the **Notifications** panel.",
+      "description": "Sends a notification that is visible in the notifications panel.",
       "fields": {
         "message": {
           "name": "Message",
@@ -37,7 +56,31 @@
         },
         "data": {
           "name": "Data",
-          "description": "Some integrations provide extended functionality. For information on how to use _data_, refer to the integration documentation.."
+          "description": "Some integrations provide extended functionality via this field. For more information, refer to the integration documentation."
+        }
+      }
+    }
+  },
+  "issues": {
+    "migrate_notify": {
+      "title": "Migration of {integration_title} notify action",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The {integration_title} `notify` action(s) are migrated. A new `notify` entity is available now to replace each legacy `notify` action.\n\nUpdate any automations to use the new `notify.send_message` action exposed with this new entity. When this is done, fix this issue and restart Home Assistant.",
+            "title": "Migrate legacy {integration_title} notify action for domain `{domain}`"
+          }
+        }
+      }
+    },
+    "migrate_notify_service": {
+      "title": "Legacy action notify.{service_name} still being used",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The {integration_title} `notify.{service_name}` action is migrated, but it seems the old `notify` action is still being used.\n\nA new `notify` entity is available now to replace each legacy `notify` action.\n\nUpdate any automations or scripts to use the new `notify.send_message` action exposed with this new entity. When this is done, select Submit and restart Home Assistant.",
+            "title": "Migrate legacy {integration_title} notify action for domain `{domain}`"
+          }
         }
       }
     }

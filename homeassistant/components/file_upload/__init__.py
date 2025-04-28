@@ -21,9 +21,11 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import raise_if_invalid_filename
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid_hex
 
 DOMAIN = "file_upload"
+_DATA: HassKey[FileUploadData] = HassKey(DOMAIN)
 
 ONE_MEGABYTE = 1024 * 1024
 MAX_SIZE = 100 * ONE_MEGABYTE
@@ -41,7 +43,7 @@ def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Iterator[Path]:
     if DOMAIN not in hass.data:
         raise ValueError("File does not exist")
 
-    file_upload_data: FileUploadData = hass.data[DOMAIN]
+    file_upload_data = hass.data[_DATA]
 
     if not file_upload_data.has_file(file_id):
         raise ValueError("File does not exist")
@@ -128,7 +130,7 @@ class FileUploadView(HomeAssistantView):
     async def _upload_file(self, request: web.Request) -> web.Response:
         """Handle uploaded file."""
         # Increase max payload
-        request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
+        request._client_max_size = MAX_SIZE  # noqa: SLF001
 
         reader = await request.multipart()
         file_field_reader = await reader.next()
@@ -149,14 +151,14 @@ class FileUploadView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         file_id = ulid_hex()
 
-        if DOMAIN not in hass.data:
-            hass.data[DOMAIN] = await FileUploadData.create(hass)
+        if _DATA not in hass.data:
+            hass.data[_DATA] = await FileUploadData.create(hass)
 
-        file_upload_data: FileUploadData = hass.data[DOMAIN]
+        file_upload_data = hass.data[_DATA]
         file_dir = file_upload_data.file_dir(file_id)
-        queue: SimpleQueue[
-            tuple[bytes, asyncio.Future[None] | None] | None
-        ] = SimpleQueue()
+        queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = (
+            SimpleQueue()
+        )
 
         def _sync_queue_consumer() -> None:
             file_dir.mkdir()
@@ -206,7 +208,7 @@ class FileUploadView(HomeAssistantView):
             raise web.HTTPNotFound
 
         file_id = data["file_id"]
-        file_upload_data: FileUploadData = hass.data[DOMAIN]
+        file_upload_data = hass.data[_DATA]
 
         if file_upload_data.files.pop(file_id, None) is None:
             raise web.HTTPNotFound

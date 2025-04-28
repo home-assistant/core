@@ -6,11 +6,11 @@ from unittest.mock import patch
 from aiohttp import ClientError as HTTPClientError
 
 from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
-from homeassistant.components.ssdp import ATTR_UPNP_SERIAL
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL
 
 from . import (
     HOST,
@@ -33,7 +33,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_show_ssdp_form(
@@ -47,7 +47,7 @@ async def test_show_ssdp_form(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ssdp_confirm"
     assert result["description_placeholders"] == {CONF_NAME: HOST}
 
@@ -65,7 +65,7 @@ async def test_cannot_connect(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -83,7 +83,7 @@ async def test_ssdp_cannot_connect(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -100,7 +100,7 @@ async def test_ssdp_confirm_cannot_connect(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -117,7 +117,7 @@ async def test_user_device_exists_abort(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -134,7 +134,7 @@ async def test_ssdp_device_exists_abort(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -152,7 +152,7 @@ async def test_ssdp_with_receiver_id_device_exists_abort(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -171,7 +171,7 @@ async def test_unknown_error(
             data=user_input,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -190,7 +190,7 @@ async def test_ssdp_unknown_error(
             data=discovery_info,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -209,7 +209,7 @@ async def test_ssdp_confirm_unknown_error(
             data=discovery_info,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -224,7 +224,7 @@ async def test_full_user_flow_implementation(
         context={CONF_SOURCE: SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     user_input = MOCK_USER_INPUT.copy()
@@ -234,7 +234,7 @@ async def test_full_user_flow_implementation(
             user_input=user_input,
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
 
     assert result["data"]
@@ -253,7 +253,7 @@ async def test_full_ssdp_flow_implementation(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ssdp_confirm"
     assert result["description_placeholders"] == {CONF_NAME: HOST}
 
@@ -261,7 +261,7 @@ async def test_full_ssdp_flow_implementation(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
 
     assert result["data"]

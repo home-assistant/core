@@ -124,9 +124,14 @@ def test_enforce_super_call(
     walker = ASTWalker(linter)
     walker.add_checker(super_call_checker)
 
-    with patch.object(
-        hass_enforce_super_call, "METHODS", new={"added_to_hass", "async_added_to_hass"}
-    ), assert_no_messages(linter):
+    with (
+        patch.object(
+            hass_enforce_super_call,
+            "METHODS",
+            new={"added_to_hass", "async_added_to_hass"},
+        ),
+        assert_no_messages(linter),
+    ):
         walker.walk(root_node)
 
 
@@ -204,19 +209,24 @@ def test_enforce_super_call_bad(
     walker.add_checker(super_call_checker)
     node = root_node.body[node_idx].body[0]
 
-    with patch.object(
-        hass_enforce_super_call, "METHODS", new={"added_to_hass", "async_added_to_hass"}
-    ), assert_adds_messages(
-        linter,
-        MessageTest(
-            msg_id="hass-missing-super-call",
-            node=node,
-            line=node.lineno,
-            args=(node.name,),
-            col_offset=node.col_offset,
-            end_line=node.position.end_lineno,
-            end_col_offset=node.position.end_col_offset,
-            confidence=INFERENCE,
+    with (
+        patch.object(
+            hass_enforce_super_call,
+            "METHODS",
+            new={"added_to_hass", "async_added_to_hass"},
+        ),
+        assert_adds_messages(
+            linter,
+            MessageTest(
+                msg_id="hass-missing-super-call",
+                node=node,
+                line=node.lineno,
+                args=(node.name,),
+                col_offset=node.col_offset,
+                end_line=node.position.end_lineno,
+                end_col_offset=node.position.end_col_offset,
+                confidence=INFERENCE,
+            ),
         ),
     ):
         walker.walk(root_node)

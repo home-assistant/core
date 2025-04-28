@@ -6,20 +6,18 @@ from typing import TYPE_CHECKING
 
 from goalzero import Yeti, exceptions
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN
-from .coordinator import GoalZeroDataUpdateCoordinator
+from .coordinator import GoalZeroConfigEntry, GoalZeroDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoalZeroConfigEntry) -> bool:
     """Set up Goal Zero Yeti from a config entry."""
 
     mac = entry.unique_id
@@ -38,16 +36,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except exceptions.ConnectError as ex:
         raise ConfigEntryNotReady(f"Failed to connect to device: {ex}") from ex
 
-    coordinator = GoalZeroDataUpdateCoordinator(hass, api)
-    await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = GoalZeroDataUpdateCoordinator(hass, entry, api)
+    await entry.runtime_data.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GoalZeroConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

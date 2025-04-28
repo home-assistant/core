@@ -2,118 +2,288 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 import pytest
 from pyvlx import PyVLXException
 
-from homeassistant import data_entry_flow
 from homeassistant.components.velux import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
-DUMMY_DATA: dict[str, Any] = {
-    CONF_HOST: "127.0.0.1",
-    CONF_PASSWORD: "NotAStrongPassword",
-}
-
-PYVLX_CONFIG_FLOW_CONNECT_FUNCTION_PATH = (
-    "homeassistant.components.velux.config_flow.PyVLX.connect"
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip="127.0.0.1",
+    hostname="VELUX_KLF_LAN_ABCD",
+    macaddress="64618400abcd",
 )
-PYVLX_CONFIG_FLOW_CLASS_PATH = "homeassistant.components.velux.config_flow.PyVLX"
-
-error_types_to_test: list[tuple[Exception, str]] = [
-    (PyVLXException("DUMMY"), "cannot_connect"),
-    (Exception("DUMMY"), "unknown"),
-]
-
-pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_user_success(hass: HomeAssistant) -> None:
+async def test_user_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_velux_client: AsyncMock,
+) -> None:
     """Test starting a flow by user with valid values."""
-    with patch(PYVLX_CONFIG_FLOW_CLASS_PATH, autospec=True) as client_mock:
-        result: dict[str, Any] = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-        client_mock.return_value.disconnect.assert_called_once()
-        client_mock.return_value.connect.assert_called_once()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["title"] == DUMMY_DATA[CONF_HOST]
-        assert result["data"] == DUMMY_DATA
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.1",
+            CONF_PASSWORD: "NotAStrongPassword",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "127.0.0.1"
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PASSWORD: "NotAStrongPassword",
+    }
+    assert not result["result"].unique_id
+
+    mock_velux_client.disconnect.assert_called_once()
+    mock_velux_client.connect.assert_called_once()
 
 
-@pytest.mark.parametrize(("error", "error_name"), error_types_to_test)
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (PyVLXException("DUMMY"), "cannot_connect"),
+        (Exception("DUMMY"), "unknown"),
+    ],
+)
 async def test_user_errors(
-    hass: HomeAssistant, error: Exception, error_name: str
+    hass: HomeAssistant,
+    mock_velux_client: AsyncMock,
+    exception: Exception,
+    error: str,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test starting a flow by user but with exceptions."""
-    with patch(
-        PYVLX_CONFIG_FLOW_CONNECT_FUNCTION_PATH, side_effect=error
-    ) as connect_mock:
-        result: dict[str, Any] = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
-        )
 
-        connect_mock.assert_called_once()
+    mock_velux_client.connect.side_effect = exception
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": error_name}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
-async def test_import_valid_config(hass: HomeAssistant) -> None:
-    """Test import initialized flow with valid config."""
-    with patch(PYVLX_CONFIG_FLOW_CLASS_PATH, autospec=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=DUMMY_DATA,
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["title"] == DUMMY_DATA[CONF_HOST]
-        assert result["data"] == DUMMY_DATA
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.1",
+            CONF_PASSWORD: "NotAStrongPassword",
+        },
+    )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error}
 
-@pytest.mark.parametrize("flow_source", [SOURCE_IMPORT, SOURCE_USER])
-async def test_flow_duplicate_entry(hass: HomeAssistant, flow_source: str) -> None:
-    """Test import initialized flow with a duplicate entry."""
-    with patch(PYVLX_CONFIG_FLOW_CLASS_PATH, autospec=True):
-        conf_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN, title=DUMMY_DATA[CONF_HOST], data=DUMMY_DATA
-        )
+    mock_velux_client.connect.assert_called_once()
 
-        conf_entry.add_to_hass(hass)
+    mock_velux_client.connect.side_effect = None
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": flow_source},
-            data=DUMMY_DATA,
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.1",
+            CONF_PASSWORD: "NotAStrongPassword",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.parametrize(("error", "error_name"), error_types_to_test)
-async def test_import_errors(
-    hass: HomeAssistant, error: Exception, error_name: str
+async def test_user_flow_duplicate_entry(
+    hass: HomeAssistant,
+    mock_user_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test import initialized flow with exceptions."""
-    with patch(
-        PYVLX_CONFIG_FLOW_CONNECT_FUNCTION_PATH,
-        side_effect=error,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=DUMMY_DATA,
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == error_name
+    """Test initialized flow with a duplicate entry."""
+    mock_user_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.1",
+            CONF_PASSWORD: "NotAStrongPassword",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery(
+    hass: HomeAssistant,
+    mock_velux_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test we can setup from dhcp discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "NotAStrongPassword"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "VELUX_KLF_ABCD"
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_MAC: "64:61:84:00:ab:cd",
+        CONF_NAME: "VELUX_KLF_ABCD",
+        CONF_PASSWORD: "NotAStrongPassword",
+    }
+    assert result["result"].unique_id == "VELUX_KLF_ABCD"
+
+    mock_velux_client.disconnect.assert_called()
+    mock_velux_client.connect.assert_called()
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (PyVLXException("DUMMY"), "cannot_connect"),
+        (Exception("DUMMY"), "unknown"),
+    ],
+)
+async def test_dhcp_discovery_errors(
+    hass: HomeAssistant,
+    mock_velux_client: AsyncMock,
+    exception: Exception,
+    error: str,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test we can setup from dhcp discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    mock_velux_client.connect.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "NotAStrongPassword"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["errors"] == {"base": error}
+
+    mock_velux_client.connect.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "NotAStrongPassword"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "VELUX_KLF_ABCD"
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_MAC: "64:61:84:00:ab:cd",
+        CONF_NAME: "VELUX_KLF_ABCD",
+        CONF_PASSWORD: "NotAStrongPassword",
+    }
+
+
+async def test_dhcp_discovery_already_configured(
+    hass: HomeAssistant,
+    mock_velux_client: AsyncMock,
+    mock_discovered_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test dhcp discovery when already configured."""
+    mock_discovered_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discover_unique_id(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_velux_client: AsyncMock,
+    mock_user_config_entry: MockConfigEntry,
+) -> None:
+    """Test dhcp discovery when already configured."""
+    mock_user_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_user_config_entry.entry_id)
+
+    assert mock_user_config_entry.state is ConfigEntryState.LOADED
+    assert mock_user_config_entry.unique_id is None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_user_config_entry.unique_id == "VELUX_KLF_ABCD"
+
+
+async def test_dhcp_discovery_not_loaded(
+    hass: HomeAssistant,
+    mock_velux_client: AsyncMock,
+    mock_user_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test dhcp discovery when entry with same host not loaded."""
+    mock_user_config_entry.add_to_hass(hass)
+
+    assert mock_user_config_entry.state is not ConfigEntryState.LOADED
+    assert mock_user_config_entry.unique_id is None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_user_config_entry.unique_id is None

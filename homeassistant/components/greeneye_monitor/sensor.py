@@ -115,7 +115,7 @@ async def async_setup_platform(
         on_new_monitor(monitor)
 
 
-UnderlyingSensorType = (
+type UnderlyingSensorType = (
     greeneye.monitor.Channel
     | greeneye.monitor.PulseCounter
     | greeneye.monitor.TemperatureSensor
@@ -220,12 +220,11 @@ class PulseCounter(GEMSensor):
         if self._sensor.pulses_per_second is None:
             return None
 
-        result = (
+        return (
             self._sensor.pulses_per_second
             * self._counted_quantity_per_pulse
             * self._seconds_per_time_unit
         )
-        return result
 
     @property
     def _seconds_per_time_unit(self) -> int:

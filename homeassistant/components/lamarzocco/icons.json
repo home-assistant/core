@@ -14,6 +14,12 @@
           "on": "mdi:cup-water",
           "off": "mdi:cup-off"
         }
+      },
+      "backflush_enabled": {
+        "default": "mdi:water-off",
+        "state": {
+          "on": "mdi:water"
+        }
       }
     },
     "button": {
@@ -26,25 +32,29 @@
         "default": "mdi:thermometer-water"
       },
       "dose": {
-        "default": "mdi:weight-kilogram"
+        "default": "mdi:cup-water"
       },
-      "steam_temp": {
-        "default": "mdi:thermometer-water"
+      "smart_standby_time": {
+        "default": "mdi:timer"
       },
-      "prebrew_off": {
+      "preinfusion_time": {
+        "default": "mdi:water"
+      },
+      "prebrew_time_on": {
+        "default": "mdi:water"
+      },
+      "prebrew_time_off": {
         "default": "mdi:water-off"
-      },
-      "prebrew_on": {
-        "default": "mdi:water"
-      },
-      "preinfusion_off": {
-        "default": "mdi:water"
-      },
-      "tea_water_duration": {
-        "default": "mdi:timer-sand"
       }
     },
     "select": {
+      "smart_standby_mode": {
+        "default": "mdi:power",
+        "state": {
+          "poweron": "mdi:power",
+          "lastbrewing": "mdi:coffee"
+        }
+      },
       "steam_temp_select": {
         "default": "mdi:thermometer",
         "state": {
@@ -58,25 +68,19 @@
         "state": {
           "disabled": "mdi:water-pump-off",
           "prebrew": "mdi:water-pump",
-          "preinfusion": "mdi:water-pump"
+          "typeb": "mdi:water-pump"
         }
       }
     },
     "sensor": {
-      "drink_stats_coffee": {
-        "default": "mdi:chart-line"
+      "coffee_boiler_ready_time": {
+        "default": "mdi:av-timer"
       },
-      "drink_stats_flushing": {
-        "default": "mdi:chart-line"
+      "last_cleaning_time": {
+        "default": "mdi:spray-bottle"
       },
-      "shot_timer": {
-        "default": "mdi:timer"
-      },
-      "current_temp_coffee": {
-        "default": "mdi:thermometer"
-      },
-      "current_temp_steam": {
-        "default": "mdi:thermometer"
+      "steam_boiler_ready_time": {
+        "default": "mdi:av-timer"
       }
     },
     "switch": {
@@ -92,6 +96,12 @@
         "state": {
           "on": "mdi:alarm",
           "off": "mdi:alarm-off"
+        }
+      },
+      "smart_standby_enabled": {
+        "state": {
+          "on": "mdi:sleep",
+          "off": "mdi:sleep-off"
         }
       },
       "steam_boiler": {

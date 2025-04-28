@@ -57,6 +57,15 @@ def light(name: str):
     }
 
 
+def motorized_shade(name: str):
+    """Create a motorized shade with a given name."""
+    return {
+        "name": name,
+        "type": DeviceType.MOTORIZED_SHADES,
+        "actions": [Action.OPEN, Action.OPEN_NEXT, Action.CLOSE, Action.CLOSE_NEXT],
+    }
+
+
 async def test_entity_registry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -180,3 +189,38 @@ async def test_press_button(hass: HomeAssistant) -> None:
     mock_action.assert_called_once_with(
         "test-device-id", Action(Action.START_DECREASING_BRIGHTNESS)
     )
+
+
+async def test_motorized_shade_actions(hass: HomeAssistant) -> None:
+    """Tests motorized shade open next and close next actions."""
+    await setup_platform(
+        hass,
+        BUTTON_DOMAIN,
+        motorized_shade("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    assert hass.states.get("button.name_1_open_next")
+    assert hass.states.get("button.name_1_close_next")
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.name_1_open_next"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with("test-device-id", Action(Action.OPEN_NEXT))
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.name_1_close_next"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with("test-device-id", Action(Action.CLOSE_NEXT))

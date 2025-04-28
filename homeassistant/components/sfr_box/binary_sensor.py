@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING
 
 from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, WanInfo
 
@@ -17,18 +17,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import SFRDataUpdateCoordinator
 from .models import DomainData
 
-_T = TypeVar("_T")
-
 
 @dataclass(frozen=True, kw_only=True)
-class SFRBoxBinarySensorEntityDescription(BinarySensorEntityDescription, Generic[_T]):
+class SFRBoxBinarySensorEntityDescription[_T](BinarySensorEntityDescription):
     """Description for SFR Box binary sensors."""
 
     value_fn: Callable[[_T], bool | None]
@@ -64,30 +62,35 @@ WAN_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[WanInfo], ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
     data: DomainData = hass.data[DOMAIN][entry.entry_id]
+    system_info = data.system.data
+    if TYPE_CHECKING:
+        assert system_info is not None
 
     entities: list[SFRBoxBinarySensor] = [
-        SFRBoxBinarySensor(data.wan, description, data.system.data)
+        SFRBoxBinarySensor(data.wan, description, system_info)
         for description in WAN_SENSOR_TYPES
     ]
-    if (net_infra := data.system.data.net_infra) == "adsl":
+    if (net_infra := system_info.net_infra) == "adsl":
         entities.extend(
-            SFRBoxBinarySensor(data.dsl, description, data.system.data)
+            SFRBoxBinarySensor(data.dsl, description, system_info)
             for description in DSL_SENSOR_TYPES
         )
     elif net_infra == "ftth":
         entities.extend(
-            SFRBoxBinarySensor(data.ftth, description, data.system.data)
+            SFRBoxBinarySensor(data.ftth, description, system_info)
             for description in FTTH_SENSOR_TYPES
         )
 
     async_add_entities(entities)
 
 
-class SFRBoxBinarySensor(
+class SFRBoxBinarySensor[_T](
     CoordinatorEntity[SFRDataUpdateCoordinator[_T]], BinarySensorEntity
 ):
     """SFR Box sensor."""
@@ -114,4 +117,6 @@ class SFRBoxBinarySensor(
     @property
     def is_on(self) -> bool | None:
         """Return the native value of the device."""
+        if self.coordinator.data is None:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)

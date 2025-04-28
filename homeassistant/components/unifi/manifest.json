@@ -7,8 +7,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["aiounifi"],
-  "quality_scale": "platinum",
-  "requirements": ["aiounifi==72"],
+  "requirements": ["aiounifi==83"],
   "ssdp": [
     {
       "manufacturer": "Ubiquiti Networks",
@@ -21,6 +20,10 @@
     {
       "manufacturer": "Ubiquiti Networks",
       "modelDescription": "UniFi Dream Machine SE"
+    },
+    {
+      "manufacturer": "Ubiquiti Networks",
+      "modelDescription": "UniFi Dream Machine Pro Max"
     }
   ]
 }

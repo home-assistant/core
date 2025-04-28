@@ -11,7 +11,7 @@ from wyoming.wake import Detect, Detection
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .data import WyomingService, load_wyoming_info
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wyoming wake-word-detection."""
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
@@ -89,6 +89,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
             """Get the next chunk from audio stream."""
             async for chunk_bytes in stream:
                 return chunk_bytes
+            return None
 
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
@@ -187,8 +188,8 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                     for task in pending:
                         task.cancel()
 
-        except (OSError, WyomingError) as err:
-            _LOGGER.exception("Error processing audio stream: %s", err)
+        except (OSError, WyomingError):
+            _LOGGER.exception("Error processing audio stream")
 
         return None
 

@@ -7,13 +7,15 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import RenaultConfigEntry
 from .entity import RenaultEntity
-from .renault_hub import RenaultHub
+
+# Coordinator is used to centralize the data updates
+# but renault servers are unreliable and it's safer to queue action calls
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -26,14 +28,13 @@ class RenaultButtonEntityDescription(ButtonEntityDescription):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RenaultConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultButtonEntity] = [
         RenaultButtonEntity(vehicle, description)
-        for vehicle in proxy.vehicles.values()
+        for vehicle in config_entry.runtime_data.vehicles.values()
         for description in BUTTON_TYPES
         if not description.requires_electricity or vehicle.details.uses_electricity()
     ]

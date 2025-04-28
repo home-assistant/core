@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from bluetooth_data_tools import human_readable_name
-from led_ble import BLEAK_EXCEPTIONS, LEDBLE
+from led_ble import BLEAK_EXCEPTIONS, LEDBLE, CharacteristicMissingError
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -66,9 +66,11 @@ class LedBleConfigFlow(ConfigFlow, domain=DOMAIN):
             led_ble = LEDBLE(discovery_info.device)
             try:
                 await led_ble.update()
+            except CharacteristicMissingError:
+                return self.async_abort(reason="not_supported")
             except BLEAK_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:

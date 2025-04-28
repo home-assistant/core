@@ -10,6 +10,12 @@
       "disk_free": {
         "default": "mdi:harddisk"
       },
+      "diskio_read": {
+        "default": "mdi:harddisk"
+      },
+      "diskio_write": {
+        "default": "mdi:harddisk"
+      },
       "memory_usage": {
         "default": "mdi:memory"
       },
@@ -45,6 +51,21 @@
       },
       "raid_used": {
         "default": "mdi:harddisk"
+      },
+      "uptime": {
+        "default": "mdi:clock-time-eight-outline"
+      },
+      "gpu_processor_usage": {
+        "default": "mdi:expansion-card"
+      },
+      "gpu_memory_usage": {
+        "default": "mdi:memory"
+      },
+      "network_rx": {
+        "default": "mdi:transmission-tower"
+      },
+      "network_tx": {
+        "default": "mdi:transmission-tower"
       }
     }
   }

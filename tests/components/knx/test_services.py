@@ -111,7 +111,7 @@ async def test_send(
     expected_apci,
 ) -> None:
     """Test `knx.send` service."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     await hass.services.async_call(
         "knx",
@@ -127,7 +127,7 @@ async def test_send(
 
 async def test_read(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.read` service."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     # send read telegram
     await hass.services.async_call("knx", "read", {"address": "1/1/1"}, blocking=True)
@@ -150,11 +150,10 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     events = async_capture_events(hass, "knx_event")
     test_address = "1/2/3"
 
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     # no event registered
     await knx.receive_write(test_address, True)
-    await hass.async_block_till_done()
     assert len(events) == 0
 
     # register event with `type`
@@ -165,7 +164,6 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
         blocking=True,
     )
     await knx.receive_write(test_address, (0x04, 0xD2))
-    await hass.async_block_till_done()
     assert len(events) == 1
     typed_event = events.pop()
     assert typed_event.data["data"] == (0x04, 0xD2)
@@ -179,7 +177,6 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
         blocking=True,
     )
     await knx.receive_write(test_address, True)
-    await hass.async_block_till_done()
     assert len(events) == 0
 
     # register event without `type`
@@ -188,7 +185,6 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     await knx.receive_write(test_address, True)
     await knx.receive_write(test_address, False)
-    await hass.async_block_till_done()
     assert len(events) == 2
     untyped_event_2 = events.pop()
     assert untyped_event_2.data["data"] is False
@@ -204,7 +200,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     test_entity = "fake.entity"
     test_attribute = "fake_attribute"
 
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     # no exposure registered
     hass.states.async_set(test_entity, STATE_ON, {})
@@ -269,13 +265,15 @@ async def test_reload_service(
     knx: KNXTestKit,
 ) -> None:
     """Test reload service."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
-    with patch(
-        "homeassistant.components.knx.async_unload_entry", wraps=knx_async_unload_entry
-    ) as mock_unload_entry, patch(
-        "homeassistant.components.knx.async_setup_entry"
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.knx.async_unload_entry",
+            wraps=knx_async_unload_entry,
+        ) as mock_unload_entry,
+        patch("homeassistant.components.knx.async_setup_entry") as mock_setup_entry,
+    ):
         await hass.services.async_call(
             "knx",
             "reload",
@@ -287,8 +285,8 @@ async def test_reload_service(
 
 async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test service setup failed."""
-    await knx.setup_integration({})
-    await knx.mock_config_entry.async_unload(hass)
+    await knx.setup_integration()
+    await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -297,4 +295,4 @@ async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> Non
             {"address": "1/2/3", "payload": True, "response": False},
             blocking=True,
         )
-        assert str(exc_info.value) == "KNX entry not loaded"
+    assert str(exc_info.value) == "KNX entry not loaded"

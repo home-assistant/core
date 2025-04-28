@@ -30,7 +30,7 @@ async def test_diagnostics(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     entry_dict = async_redact_data(mock_config_entry.as_dict(), TO_REDACT)
 
@@ -38,4 +38,4 @@ async def test_diagnostics(
         hass, hass_client, mock_config_entry
     )
 
-    assert result["entry"] == entry_dict
+    assert result["entry"] == entry_dict | {"discovery_keys": {}}

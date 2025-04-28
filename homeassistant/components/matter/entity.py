@@ -2,24 +2,30 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
-from collections.abc import Callable
-from contextlib import suppress
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import datetime
+import functools
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
-from chip.clusters.Objects import ClusterAttributeDescriptor, NullValue
-from matter_server.common.helpers.util import create_attribute_path
+from chip.clusters import Objects as clusters
+from chip.clusters.Objects import ClusterAttributeDescriptor, ClusterCommand, NullValue
+from matter_server.common.errors import MatterError
+from matter_server.common.helpers.util import (
+    create_attribute_path,
+    create_attribute_path_from_attribute,
+)
 from matter_server.common.models import EventType, ServerInfoMessage
+from propcache.api import cached_property
 
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN, ID_TYPE_DEVICE_ID
+from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id
 
 if TYPE_CHECKING:
@@ -30,12 +36,22 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
-# For some manually polled values (e.g. custom clusters) we perform
-# an additional poll as soon as a secondary value changes.
-# For example update the energy consumption meter when a relay is toggled
-# of an energy metering powerplug. The below constant defined the delay after
-# which we poll the primary value (debounced).
-EXTRA_POLL_DELAY = 3.0
+
+def catch_matter_error[_R, **P](
+    func: Callable[Concatenate[MatterEntity, P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[MatterEntity, P], Coroutine[Any, Any, _R]]:
+    """Catch Matter errors and convert to Home Assistant error."""
+
+    @functools.wraps(func)
+    async def wrapper(self: MatterEntity, *args: P.args, **kwargs: P.kwargs) -> _R:
+        """Catch Matter errors and convert to Home Assistant error."""
+        try:
+            return await func(self, *args, **kwargs)
+        except MatterError as err:
+            error_msg = str(err) or err.__class__.__name__
+            raise HomeAssistantError(error_msg) from err
+
+    return wrapper
 
 
 @dataclass(frozen=True)
@@ -44,12 +60,17 @@ class MatterEntityDescription(EntityDescription):
 
     # convert the value from the primary attribute to the value used by HA
     measurement_to_ha: Callable[[Any], Any] | None = None
+    ha_to_native_value: Callable[[Any], Any] | None = None
+    command_timeout: int | None = None
 
 
 class MatterEntity(Entity):
     """Entity class for Matter devices."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
+    _name_postfix: str | None = None
+    _platform_translation_key: str | None = None
 
     def __init__(
         self,
@@ -80,8 +101,37 @@ class MatterEntity(Entity):
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
         self._attr_available = self._endpoint.node.available
-        self._attr_should_poll = entity_info.should_poll
-        self._extra_poll_timer_unsub: CALLBACK_TYPE | None = None
+        # mark endpoint postfix if the device has the primary attribute on multiple endpoints
+        if not self._endpoint.node.is_bridge_device and any(
+            ep
+            for ep in self._endpoint.node.endpoints.values()
+            if ep != self._endpoint
+            and ep.has_attribute(None, entity_info.primary_attribute)
+        ):
+            self._name_postfix = str(self._endpoint.endpoint_id)
+            if self._platform_translation_key and not self.translation_key:
+                self._attr_translation_key = self._platform_translation_key
+
+        # prefer the label attribute for the entity name
+        # Matter has a way for users and/or vendors to specify a name for an endpoint
+        # which is always preferred over a standard HA (generated) name
+        for attr in (
+            clusters.FixedLabel.Attributes.LabelList,
+            clusters.UserLabel.Attributes.LabelList,
+        ):
+            if not (labels := self.get_matter_attribute_value(attr)):
+                continue
+            for label in labels:
+                if label.label not in ["Label", "Button"]:
+                    continue
+                # fixed or user label found: use it
+                label_value: str = label.value
+                # in the case the label is only the label id, use it as postfix only
+                if label_value.isnumeric():
+                    self._name_postfix = label_value
+                else:
+                    self._attr_name = label_value
+                break
 
         # make sure to update the attributes once
         self._update_from_device()
@@ -107,9 +157,6 @@ class MatterEntity(Entity):
                     attr_path_filter=attr_path,
                 )
             )
-        await self.matter_client.subscribe_attribute(
-            self._endpoint.node.node_id, sub_paths
-        )
         # subscribe to node (availability changes)
         self._unsubscribes.append(
             self.matter_client.subscribe_events(
@@ -118,46 +165,62 @@ class MatterEntity(Entity):
                 node_filter=self._endpoint.node.node_id,
             )
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        if self._extra_poll_timer_unsub:
-            self._extra_poll_timer_unsub()
-        for unsub in self._unsubscribes:
-            with suppress(ValueError):
-                # suppress ValueError to prevent race conditions
-                unsub()
-
-    async def async_update(self) -> None:
-        """Call when the entity needs to be updated."""
-        if not self._endpoint.node.available:
-            # skip poll when the node is not (yet) available
-            return
-        # manually poll/refresh the primary value
-        await self.matter_client.refresh_attribute(
-            self._endpoint.node.node_id,
-            self.get_matter_attribute_path(self._entity_info.primary_attribute),
+        # subscribe to FeatureMap attribute (as that can dynamically change)
+        self._unsubscribes.append(
+            self.matter_client.subscribe_events(
+                callback=self._on_featuremap_update,
+                event_filter=EventType.ATTRIBUTE_UPDATED,
+                node_filter=self._endpoint.node.node_id,
+                attr_path_filter=create_attribute_path(
+                    endpoint=self._endpoint.endpoint_id,
+                    cluster_id=self._entity_info.primary_attribute.cluster_id,
+                    attribute_id=FEATUREMAP_ATTRIBUTE_ID,
+                ),
+            )
         )
-        self._update_from_device()
+
+    @cached_property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity."""
+        if hasattr(self, "_attr_name"):
+            # an explicit entity name was defined, we use that
+            return self._attr_name
+        name = super().name
+        if name and self._name_postfix:
+            name = f"{name} ({self._name_postfix})"
+        return name
 
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
         """Call on update from the device."""
         self._attr_available = self._endpoint.node.available
-        if self._attr_should_poll:
-            # secondary attribute updated of a polled primary value
-            # enforce poll of the primary value a few seconds later
-            if self._extra_poll_timer_unsub:
-                self._extra_poll_timer_unsub()
-            self._extra_poll_timer_unsub = async_call_later(
-                self.hass, EXTRA_POLL_DELAY, self._do_extra_poll
-            )
-            return
         self._update_from_device()
         self.async_write_ha_state()
 
     @callback
-    @abstractmethod
+    def _on_featuremap_update(
+        self, event: EventType, data: tuple[int, str, int] | None
+    ) -> None:
+        """Handle FeatureMap attribute updates."""
+        if data is None:
+            return
+        new_value = data[2]
+        # handle edge case where a Feature is removed from a cluster
+        if (
+            self._entity_info.discovery_schema.featuremap_contains is not None
+            and not bool(
+                new_value & self._entity_info.discovery_schema.featuremap_contains
+            )
+        ):
+            # this entity is no longer supported by the device
+            ent_reg = er.async_get(self.hass)
+            ent_reg.async_remove(self.entity_id)
+
+            return
+        # all other cases, just update the entity
+        self._on_matter_event(event, data)
+
+    @callback
     def _update_from_device(self) -> None:
         """Update data from Matter device."""
 
@@ -180,8 +243,37 @@ class MatterEntity(Entity):
             self._endpoint.endpoint_id, attribute.cluster_id, attribute.attribute_id
         )
 
-    @callback
-    def _do_extra_poll(self, called_at: datetime) -> None:
-        """Perform (extra) poll of primary value."""
-        # scheduling the regulat update is enough to perform a poll/refresh
-        self.async_schedule_update_ha_state(True)
+    @catch_matter_error
+    async def send_device_command(
+        self,
+        command: ClusterCommand,
+        **kwargs: Any,
+    ) -> None:
+        """Send device command on the primary attribute's endpoint."""
+        await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=command,
+            **kwargs,
+        )
+
+    @catch_matter_error
+    async def write_attribute(
+        self,
+        value: Any,
+        matter_attribute: type[ClusterAttributeDescriptor] | None = None,
+    ) -> Any:
+        """Write an attribute(value) on the primary endpoint.
+
+        If matter_attribute is not provided, the primary attribute of the entity is used.
+        """
+        if matter_attribute is None:
+            matter_attribute = self._entity_info.primary_attribute
+        return await self.matter_client.write_attribute(
+            node_id=self._endpoint.node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                self._endpoint.endpoint_id,
+                matter_attribute,
+            ),
+            value=value,
+        )

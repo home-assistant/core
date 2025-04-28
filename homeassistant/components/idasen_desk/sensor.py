@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -14,13 +12,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfLength
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DeskData, IdasenDeskCoordinator
-from .const import DOMAIN
+from .coordinator import IdasenDeskConfigEntry, IdasenDeskCoordinator
+from .entity import IdasenDeskEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -46,51 +42,32 @@ SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: IdasenDeskConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Idasen Desk sensors."""
-    data: DeskData = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
-        IdasenDeskSensor(
-            data.address, data.device_info, data.coordinator, sensor_description
-        )
+        IdasenDeskSensor(coordinator, sensor_description)
         for sensor_description in SENSORS
     )
 
 
-class IdasenDeskSensor(CoordinatorEntity[IdasenDeskCoordinator], SensorEntity):
+class IdasenDeskSensor(IdasenDeskEntity, SensorEntity):
     """IdasenDesk sensor."""
 
     entity_description: IdasenDeskSensorDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        address: str,
-        device_info: DeviceInfo,
         coordinator: IdasenDeskCoordinator,
         description: IdasenDeskSensorDescription,
     ) -> None:
         """Initialize the IdasenDesk sensor entity."""
-        super().__init__(coordinator)
+        super().__init__(f"{description.key}-{coordinator.address}", coordinator)
         self.entity_description = description
 
-        self._attr_unique_id = f"{description.key}-{address}"
-        self._attr_device_info = device_info
-        self._address = address
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._update_native_value()
-
-    @callback
-    def _handle_coordinator_update(self, *args: Any) -> None:
-        """Handle data update."""
-        self._update_native_value()
-        super()._handle_coordinator_update()
-
-    def _update_native_value(self) -> None:
-        """Update the native value attribute."""
-        self._attr_native_value = self.entity_description.value_fn(self.coordinator)
+    @property
+    def native_value(self) -> float | None:
+        """Return the value reported by the sensor."""
+        return self.entity_description.value_fn(self.coordinator)

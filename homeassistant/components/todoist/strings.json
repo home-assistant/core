@@ -20,6 +20,14 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "exceptions": {
+    "project_invalid": {
+      "message": "Invalid project name \"{project}\""
+    },
+    "section_invalid": {
+      "message": "Project \"{project}\" has no section \"{section}\""
+    }
+  },
   "services": {
     "new_task": {
       "name": "New task",
@@ -29,9 +37,17 @@
           "name": "Content",
           "description": "The name of the task."
         },
+        "description": {
+          "name": "Description",
+          "description": "A description for the task."
+        },
         "project": {
           "name": "Project",
           "description": "The name of the project this task should belong to."
+        },
+        "section": {
+          "name": "Section",
+          "description": "The name of a section within the project to add the task to."
         },
         "labels": {
           "name": "Labels",
@@ -39,7 +55,7 @@
         },
         "assignee": {
           "name": "Assignee",
-          "description": "A members username of a shared project to assign this task to."
+          "description": "The username of a shared project's member to assign this task to."
         },
         "priority": {
           "name": "Priority",
@@ -47,11 +63,11 @@
         },
         "due_date_string": {
           "name": "Due date string",
-          "description": "The day this task is due, in natural language."
+          "description": "The time this task is due, in natural language."
         },
         "due_date_lang": {
           "name": "Due date language",
-          "description": "The language of due_date_string."
+          "description": "The language of 'Due date string'."
         },
         "due_date": {
           "name": "Due date",
@@ -59,15 +75,15 @@
         },
         "reminder_date_string": {
           "name": "Reminder date string",
-          "description": "When should user be reminded of this task, in natural language."
+          "description": "When the user should be reminded of this task, in natural language."
         },
         "reminder_date_lang": {
-          "name": "Reminder data language",
-          "description": "The language of reminder_date_string."
+          "name": "Reminder date language",
+          "description": "The language of 'Reminder date string'."
         },
         "reminder_date": {
           "name": "Reminder date",
-          "description": "When should user be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone."
+          "description": "When the user should be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone."
         }
       }
     }

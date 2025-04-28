@@ -18,17 +18,16 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import UnifiConfigEntry
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
 )
-from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
 
@@ -68,11 +67,11 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: UnifiConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update entities for UniFi Network integration."""
-    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
+    config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities,
         UnifiDeviceUpdateEntity,
         ENTITY_DESCRIPTIONS,
@@ -97,7 +96,7 @@ class UnifiDeviceUpdateEntity(UnifiEntity[_HandlerT, _DataT], UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        await self.entity_description.control_fn(self.hub.api, self._obj_id)
+        await self.entity_description.control_fn(self.api, self._obj_id)
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
@@ -107,7 +106,7 @@ class UnifiDeviceUpdateEntity(UnifiEntity[_HandlerT, _DataT], UpdateEntity):
         """
         description = self.entity_description
 
-        obj = description.object_fn(self.hub.api, self._obj_id)
-        self._attr_in_progress = description.state_fn(self.hub.api, obj)
+        obj = description.object_fn(self.api, self._obj_id)
+        self._attr_in_progress = description.state_fn(self.api, obj)
         self._attr_installed_version = obj.version
         self._attr_latest_version = obj.upgrade_to_firmware or obj.version

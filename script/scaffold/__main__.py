@@ -8,6 +8,7 @@ import sys
 from script.util import valid_integration
 
 from . import docs, error, gather_info, generate
+from .model import Info
 
 TEMPLATES = [
     p.name for p in (Path(__file__).parent / "templates").glob("*") if p.is_dir()
@@ -25,12 +26,44 @@ def get_arguments() -> argparse.Namespace:
         "--integration", type=valid_integration, help="Integration to target."
     )
 
-    arguments = parser.parse_args()
-
-    return arguments
+    return parser.parse_args()
 
 
-def main():
+def run_process(name: str, cmd: list[str], info: Info) -> None:
+    """Run a sub process and handle the result.
+
+    :param name: The name of the sub process used in reporting.
+    :param cmd: The sub process arguments.
+    :param info: The Info object.
+    :raises subprocess.CalledProcessError: If the subprocess failed.
+
+    If the sub process was successful print a success message, otherwise
+    print an error message and raise a subprocess.CalledProcessError.
+    """
+    print(f"Command: {' '.join(cmd)}")
+    print()
+    result: subprocess.CompletedProcess = subprocess.run(cmd, check=False)
+    if result.returncode == 0:
+        print()
+        print(f"Completed {name} successfully.")
+        print()
+        return
+
+    print()
+    print(f"Fatal Error: {name} failed with exit code {result.returncode}")
+    print()
+    if info.is_new:
+        print("This is a bug, please report an issue!")
+    else:
+        print(
+            "This may be an existing issue with your integration,",
+            "if so fix and run `script.scaffold` again,",
+            "otherwise please report an issue.",
+        )
+    result.check_returncode()
+
+
+def main() -> int:
     """Scaffold an integration."""
     if not Path("requirements_all.txt").is_file():
         print("Run from project root")
@@ -66,20 +99,32 @@ def main():
     if args.template != "integration":
         generate.generate(args.template, info)
 
-    pipe_null = {} if args.develop else {"stdout": subprocess.DEVNULL}
-
+    # Always output sub commands as the output will contain useful information if a command fails.
     print("Running hassfest to pick up new information.")
-    subprocess.run(["python", "-m", "script.hassfest"], **pipe_null, check=True)
-    print()
+    run_process(
+        "hassfest",
+        [
+            "python",
+            "-m",
+            "script.hassfest",
+            "--integration-path",
+            str(info.integration_dir),
+            "--skip-plugins",
+            "quality_scale",  # Skip quality scale as it will fail for newly generated integrations.
+        ],
+        info,
+    )
 
     print("Running gen_requirements_all to pick up new information.")
-    subprocess.run(
-        ["python", "-m", "script.gen_requirements_all"], **pipe_null, check=True
+    run_process(
+        "gen_requirements_all",
+        ["python", "-m", "script.gen_requirements_all"],
+        info,
     )
-    print()
 
-    print("Running script/translations_develop to pick up new translation strings.")
-    subprocess.run(
+    print("Running translations to pick up new translation strings.")
+    run_process(
+        "translations",
         [
             "python",
             "-m",
@@ -88,15 +133,13 @@ def main():
             "--integration",
             info.domain,
         ],
-        **pipe_null,
-        check=True,
+        info,
     )
-    print()
 
     if args.develop:
         print("Running tests")
-        print(f"$ python3 -b -m pytest -vvv tests/components/{info.domain}")
-        subprocess.run(
+        run_process(
+            "pytest",
             [
                 "python3",
                 "-b",
@@ -105,9 +148,8 @@ def main():
                 "-vvv",
                 f"tests/components/{info.domain}",
             ],
-            check=True,
+            info,
         )
-        print()
 
     docs.print_relevant_docs(args.template, info)
 
@@ -117,6 +159,8 @@ def main():
 if __name__ == "__main__":
     try:
         sys.exit(main())
+    except subprocess.CalledProcessError as err:
+        sys.exit(err.returncode)
     except error.ExitApp as err:
         print()
         print(f"Fatal Error: {err.reason}")

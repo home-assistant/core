@@ -15,11 +15,11 @@ from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .home_base import FreeboxHomeEntity
+from .entity import FreeboxHomeEntity
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,7 +60,9 @@ DISK_PARTITION_SENSORS: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]

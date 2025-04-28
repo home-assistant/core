@@ -6,11 +6,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components import dhcp
 from homeassistant.components.dlink.const import CONF_USE_LEGACY_PROTOCOL, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -29,19 +29,19 @@ CONF_DHCP_DATA = {
 
 CONF_DATA = CONF_DHCP_DATA | {CONF_HOST: HOST}
 
-CONF_DHCP_FLOW = dhcp.DhcpServiceInfo(
+CONF_DHCP_FLOW = DhcpServiceInfo(
     ip=HOST,
     macaddress=DHCP_FORMATTED_MAC,
     hostname="dsp-w215",
 )
 
-CONF_DHCP_FLOW_NEW_IP = dhcp.DhcpServiceInfo(
+CONF_DHCP_FLOW_NEW_IP = DhcpServiceInfo(
     ip="5.6.7.8",
     macaddress=DHCP_FORMATTED_MAC,
     hostname="dsp-w215",
 )
 
-ComponentSetup = Callable[[], Awaitable[None]]
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 def create_entry(hass: HomeAssistant, unique_id: str | None = None) -> MockConfigEntry:
@@ -130,7 +130,7 @@ async def setup_integration(
     hass: HomeAssistant,
     config_entry_with_uid: MockConfigEntry,
     mocked_plug: MagicMock,
-) -> Generator[ComponentSetup, None, None]:
+) -> Generator[ComponentSetup]:
     """Set up the D-Link integration in Home Assistant."""
 
     async def func() -> None:
@@ -144,7 +144,7 @@ async def setup_integration_legacy(
     hass: HomeAssistant,
     config_entry_with_uid: MockConfigEntry,
     mocked_plug_legacy: MagicMock,
-) -> Generator[ComponentSetup, None, None]:
+) -> Generator[ComponentSetup]:
     """Set up the D-Link integration in Home Assistant with different data."""
 
     async def func() -> None:

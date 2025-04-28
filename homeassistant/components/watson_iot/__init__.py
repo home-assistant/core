@@ -23,8 +23,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import state as state_helper
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,12 +99,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             or state.entity_id in exclude_e
             or state.domain in exclude_d
         ):
-            return
+            return None
 
         if (include_e and state.entity_id not in include_e) or (
             include_d and state.domain not in include_d
         ):
-            return
+            return None
 
         try:
             _state_as_value = float(state.state)

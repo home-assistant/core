@@ -7,30 +7,19 @@ from typing import Final
 
 from mozart_api.models import Source, SourceArray, SourceTypeEnum
 
-from homeassistant.components.media_player import MediaPlayerState, MediaType
+from homeassistant.components.media_player import (
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
+)
 
 
-class BangOlufsenSource(StrEnum):
-    """Enum used for associating device source ids with friendly names. May not include all sources."""
+class BangOlufsenSource:
+    """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    URI_STREAMER = "Audio Streamer"
-    BLUETOOTH = "Bluetooth"
-    AIR_PLAY = "AirPlay"
-    CHROMECAST = "Chromecast built-in"
-    SPOTIFY = "Spotify Connect"
-    GENERATOR = "Tone Generator"
-    LINE_IN = "Line-In"
-    SPDIF = "Optical"
-    NET_RADIO = "B&O Radio"
-    LOCAL = "Local"
-    DLNA = "DLNA"
-    QPLAY = "QPlay"
-    WPL = "Wireless Powerlink"
-    PL = "Powerlink"
-    TV = "TV"
-    DEEZER = "Deezer"
-    BEOLINK = "Networklink"
-    TIDAL_CONNECT = "Tidal Connect"
+    LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
+    SPDIF: Final[Source] = Source(name="Optical", id="spdif")
+    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
@@ -46,6 +35,17 @@ BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
     "unknown": MediaPlayerState.IDLE,
 }
 
+# Dict used for translating Home Assistant settings to device repeat settings.
+BANG_OLUFSEN_REPEAT_FROM_HA: dict[RepeatMode, str] = {
+    RepeatMode.ALL: "all",
+    RepeatMode.ONE: "track",
+    RepeatMode.OFF: "none",
+}
+# Dict used for translating device repeat settings to Home Assistant settings.
+BANG_OLUFSEN_REPEAT_TO_HA: dict[str, RepeatMode] = {
+    value: key for key, value in BANG_OLUFSEN_REPEAT_FROM_HA.items()
+}
+
 
 # Media types for play_media
 class BangOlufsenMediaType(StrEnum):
@@ -54,12 +54,15 @@ class BangOlufsenMediaType(StrEnum):
     FAVOURITE = "favourite"
     DEEZER = "deezer"
     RADIO = "radio"
+    TIDAL = "tidal"
     TTS = "provider"
+    OVERLAY_TTS = "overlay_tts"
 
 
 class BangOlufsenModel(StrEnum):
     """Enum for compatible model names."""
 
+    BEOCONNECT_CORE = "Beoconnect Core"
     BEOLAB_8 = "BeoLab 8"
     BEOLAB_28 = "BeoLab 28"
     BEOSOUND_2 = "Beosound 2 3rd Gen"
@@ -75,20 +78,27 @@ class BangOlufsenModel(StrEnum):
 class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
-    PLAYBACK_ERROR: Final[str] = "playback_error"
-    PLAYBACK_METADATA: Final[str] = "playback_metadata"
-    PLAYBACK_PROGRESS: Final[str] = "playback_progress"
-    PLAYBACK_SOURCE: Final[str] = "playback_source"
-    PLAYBACK_STATE: Final[str] = "playback_state"
-    SOFTWARE_UPDATE_STATE: Final[str] = "software_update_state"
-    SOURCE_CHANGE: Final[str] = "source_change"
-    VOLUME: Final[str] = "volume"
+    ACTIVE_LISTENING_MODE = "active_listening_mode"
+    BUTTON = "button"
+    PLAYBACK_ERROR = "playback_error"
+    PLAYBACK_METADATA = "playback_metadata"
+    PLAYBACK_PROGRESS = "playback_progress"
+    PLAYBACK_SOURCE = "playback_source"
+    PLAYBACK_STATE = "playback_state"
+    SOFTWARE_UPDATE_STATE = "software_update_state"
+    SOURCE_CHANGE = "source_change"
+    VOLUME = "volume"
 
     # Sub-notifications
-    NOTIFICATION: Final[str] = "notification"
-    REMOTE_MENU_CHANGED: Final[str] = "remoteMenuChanged"
+    BEOLINK = "beolink"
+    BEOLINK_PEERS = "beolinkPeers"
+    BEOLINK_LISTENERS = "beolinkListeners"
+    BEOLINK_AVAILABLE_LISTENERS = "beolinkAvailableListeners"
+    CONFIGURATION = "configuration"
+    NOTIFICATION = "notification"
+    REMOTE_MENU_CHANGED = "remoteMenuChanged"
 
-    ALL: Final[str] = "all"
+    ALL = "all"
 
 
 DOMAIN: Final[str] = "bang_olufsen"
@@ -117,25 +127,13 @@ VALID_MEDIA_TYPES: Final[tuple] = (
     BangOlufsenMediaType.DEEZER,
     BangOlufsenMediaType.RADIO,
     BangOlufsenMediaType.TTS,
+    BangOlufsenMediaType.TIDAL,
+    BangOlufsenMediaType.OVERLAY_TTS,
     MediaType.MUSIC,
     MediaType.URL,
     MediaType.CHANNEL,
 )
 
-# Sources on the device that should not be selectable by the user
-HIDDEN_SOURCE_IDS: Final[tuple] = (
-    "airPlay",
-    "bluetooth",
-    "chromeCast",
-    "generator",
-    "local",
-    "dlna",
-    "qplay",
-    "wpl",
-    "pl",
-    "beolink",
-    "usbIn",
-)
 
 # Fallback sources to use in case of API failure.
 FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
@@ -143,23 +141,26 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         Source(
             id="uriStreamer",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Audio Streamer",
             type=SourceTypeEnum(value="uriStreamer"),
+            is_seekable=False,
         ),
         Source(
             id="bluetooth",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Bluetooth",
             type=SourceTypeEnum(value="bluetooth"),
+            is_seekable=False,
         ),
         Source(
             id="spotify",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Spotify Connect",
             type=SourceTypeEnum(value="spotify"),
+            is_seekable=True,
         ),
         Source(
             id="lineIn",
@@ -167,6 +168,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Line-In",
             type=SourceTypeEnum(value="lineIn"),
+            is_seekable=False,
         ),
         Source(
             id="spdif",
@@ -174,6 +176,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Optical",
             type=SourceTypeEnum(value="spdif"),
+            is_seekable=False,
         ),
         Source(
             id="netRadio",
@@ -181,6 +184,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="B&O Radio",
             type=SourceTypeEnum(value="netRadio"),
+            is_seekable=False,
         ),
         Source(
             id="deezer",
@@ -188,6 +192,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Deezer",
             type=SourceTypeEnum(value="deezer"),
+            is_seekable=True,
         ),
         Source(
             id="tidalConnect",
@@ -195,13 +200,77 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Tidal Connect",
             type=SourceTypeEnum(value="tidalConnect"),
+            is_seekable=True,
         ),
     ]
 )
+# Map for storing compatibility of devices.
 
+MODEL_SUPPORT_DEVICE_BUTTONS: Final[str] = "device_buttons"
+
+MODEL_SUPPORT_MAP = {
+    MODEL_SUPPORT_DEVICE_BUTTONS: (
+        BangOlufsenModel.BEOLAB_8,
+        BangOlufsenModel.BEOLAB_28,
+        BangOlufsenModel.BEOSOUND_2,
+        BangOlufsenModel.BEOSOUND_A5,
+        BangOlufsenModel.BEOSOUND_A9,
+        BangOlufsenModel.BEOSOUND_BALANCE,
+        BangOlufsenModel.BEOSOUND_EMERGE,
+        BangOlufsenModel.BEOSOUND_LEVEL,
+        BangOlufsenModel.BEOSOUND_THEATRE,
+    )
+}
 
 # Device events
 BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
+# Dict used to translate native Bang & Olufsen event names to string.json compatible ones
+EVENT_TRANSLATION_MAP: dict[str, str] = {
+    "shortPress (Release)": "short_press_release",
+    "longPress (Timeout)": "long_press_timeout",
+    "longPress (Release)": "long_press_release",
+    "veryLongPress (Timeout)": "very_long_press_timeout",
+    "veryLongPress (Release)": "very_long_press_release",
+}
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
+
+DEVICE_BUTTONS: Final[list[str]] = [
+    "Bluetooth",
+    "Microphone",
+    "Next",
+    "PlayPause",
+    "Preset1",
+    "Preset2",
+    "Preset3",
+    "Preset4",
+    "Previous",
+    "Volume",
+]
+
+
+DEVICE_BUTTON_EVENTS: Final[list[str]] = [
+    "short_press_release",
+    "long_press_timeout",
+    "long_press_release",
+    "very_long_press_timeout",
+    "very_long_press_release",
+]
+
+# Beolink Converter NL/ML sources need to be transformed to upper case
+BEOLINK_JOIN_SOURCES_TO_UPPER = (
+    "aux_a",
+    "cd",
+    "ph",
+    "radio",
+    "tp1",
+    "tp2",
+)
+BEOLINK_JOIN_SOURCES = (
+    *BEOLINK_JOIN_SOURCES_TO_UPPER,
+    "beoradio",
+    "deezer",
+    "spotify",
+    "tidal",
+)

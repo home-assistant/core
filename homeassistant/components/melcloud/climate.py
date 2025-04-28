@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW, AtaDevice, AtwDevice
 import pymelcloud.ata_device as ata
@@ -28,7 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MelCloudDevice
 from .const import (
@@ -76,7 +76,9 @@ ATW_ZONE_HVAC_ACTION_LOOKUP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MelCloud device climate based on config_entry."""
     mel_devices = hass.data[DOMAIN][entry.entry_id]
@@ -115,7 +117,6 @@ class MelCloudClimate(ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device: MelCloudDevice) -> None:
         """Initialize the climate."""
@@ -150,6 +151,14 @@ class AtaDeviceClimate(MelCloudClimate):
 
         self._attr_unique_id = f"{self.api.device.serial}-{self.api.device.mac}"
         self._attr_device_info = self.api.device_info
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # We can only check for vane_horizontal once we fetch the device data from the cloud
+        if self._device.vane_horizontal:
+            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -227,7 +236,7 @@ class AtaDeviceClimate(MelCloudClimate):
         set_dict: dict[str, Any] = {}
         if ATTR_HVAC_MODE in kwargs:
             self._apply_set_hvac_mode(
-                kwargs.get(ATTR_HVAC_MODE, self.hvac_mode), set_dict
+                cast(HVACMode, kwargs.get(ATTR_HVAC_MODE, self.hvac_mode)), set_dict
             )
 
         if ATTR_TEMPERATURE in kwargs:
@@ -273,14 +282,28 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return vertical vane position or mode."""
         return self._device.vane_vertical
 
+    @property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return horizontal vane position or mode."""
+        return self._device.vane_horizontal
+
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set vertical vane position or mode."""
         await self.async_set_vane_vertical(swing_mode)
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set horizontal vane position or mode."""
+        await self.async_set_vane_horizontal(swing_horizontal_mode)
 
     @property
     def swing_modes(self) -> list[str] | None:
         """Return a list of available vertical vane positions and modes."""
         return self._device.vane_vertical_positions
+
+    @property
+    def swing_horizontal_modes(self) -> list[str] | None:
+        """Return a list of available horizontal vane positions and modes."""
+        return self._device.vane_horizontal_positions
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -330,12 +353,11 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes with device specific additions."""
-        data = {
+        return {
             ATTR_STATUS: ATW_ZONE_HVAC_MODE_LOOKUP.get(
                 self._zone.status, self._zone.status
             )
         }
-        return data
 
     @property
     def hvac_mode(self) -> HVACMode:

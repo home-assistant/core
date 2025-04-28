@@ -42,7 +42,7 @@ async def test_brightness(
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Brightness"
     assert state.attributes.get(ATTR_MAX) == 100
-    assert state.attributes.get(ATTR_MIN) == 0
+    assert state.attributes.get(ATTR_MIN) == 2
     assert state.attributes.get(ATTR_STEP) == 1
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "100"
@@ -62,6 +62,7 @@ async def test_brightness(
     assert device.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device.manufacturer == "LaMetric Inc."
     assert device.name == "Frenck's LaMetric"
+    assert device.serial_number == "SA110405124500W00BS9"
     assert device.sw_version == "2.2.2"
 
     await hass.services.async_call(
@@ -150,7 +151,6 @@ async def test_number_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("number.frenck_s_lametric_volume")
     assert state
@@ -180,8 +180,20 @@ async def test_number_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("number.frenck_s_lametric_volume")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["computer_powered"])
+async def test_computer_powered_devices(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test Brightness is properly limited for computer powered devices."""
+    state = hass.states.get("number.time_brightness")
+    assert state
+    assert state.state == "75"
+    assert state.attributes[ATTR_MIN] == 2
+    assert state.attributes[ATTR_MAX] == 76

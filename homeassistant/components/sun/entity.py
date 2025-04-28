@@ -8,6 +8,7 @@ from typing import Any
 
 from astral.location import Elevation, Location
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     SUN_EVENT_SUNRISE,
@@ -29,6 +30,8 @@ from .const import (
     STATE_ABOVE_HORIZON,
     STATE_BELOW_HORIZON,
 )
+
+type SunConfigEntry = ConfigEntry[Sun]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,9 +100,6 @@ class Sun(Entity):
 
     _attr_name = "Sun"
     entity_id = ENTITY_ID
-    # This entity is legacy and does not have a platform.
-    # We can't fix this easily without breaking changes.
-    _no_platform_reported = True
 
     location: Location
     elevation: Elevation
@@ -119,18 +119,16 @@ class Sun(Entity):
         self.hass = hass
         self.phase: str | None = None
 
-        # This is normally done by async_internal_added_to_hass which is not called
-        # for sun because sun has no platform
-        self._state_info = {
-            "unrecorded_attributes": self._Entity__combined_unrecorded_attributes  # type: ignore[attr-defined]
-        }
-
         self._config_listener: CALLBACK_TYPE | None = None
         self._update_events_listener: CALLBACK_TYPE | None = None
         self._update_sun_position_listener: CALLBACK_TYPE | None = None
         self._config_listener = self.hass.bus.async_listen(
             EVENT_CORE_CONFIG_UPDATE, self.update_location
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Update after entity has been added."""
+        await super().async_added_to_hass()
         self.update_location(initial=True)
 
     @callback

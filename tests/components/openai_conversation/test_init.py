@@ -1,200 +1,25 @@
 """Tests for the OpenAI integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, mock_open, patch
 
-from httpx import Response
+import httpx
 from openai import (
     APIConnectionError,
     AuthenticationError,
     BadRequestError,
     RateLimitError,
 )
-from openai.types.chat.chat_completion import ChatCompletion, Choice
-from openai.types.chat.chat_completion_message import ChatCompletionMessage
-from openai.types.completion_usage import CompletionUsage
 from openai.types.image import Image
 from openai.types.images_response import ImagesResponse
+from openai.types.responses import Response, ResponseOutputMessage, ResponseOutputText
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import conversation
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import area_registry as ar, device_registry as dr, intent
+from homeassistant.components.openai_conversation import CONF_FILENAMES
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-
-
-async def test_default_prompt(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test that the default prompt works."""
-    entry = MockConfigEntry(title=None)
-    entry.add_to_hass(hass)
-    for i in range(3):
-        area_registry.async_create(f"{i}Empty Area")
-
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "1234")},
-        name="Test Device",
-        manufacturer="Test Manufacturer",
-        model="Test Model",
-        suggested_area="Test Area",
-    )
-    for i in range(3):
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            connections={("test", f"{i}abcd")},
-            name="Test Service",
-            manufacturer="Test Manufacturer",
-            model="Test Model",
-            suggested_area="Test Area",
-            entry_type=dr.DeviceEntryType.SERVICE,
-        )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "5678")},
-        name="Test Device 2",
-        manufacturer="Test Manufacturer 2",
-        model="Device 2",
-        suggested_area="Test Area 2",
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "9876")},
-        name="Test Device 3",
-        manufacturer="Test Manufacturer 3",
-        model="Test Model 3A",
-        suggested_area="Test Area 2",
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "qwer")},
-        name="Test Device 4",
-        suggested_area="Test Area 2",
-    )
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "9876-disabled")},
-        name="Test Device 3",
-        manufacturer="Test Manufacturer 3",
-        model="Test Model 3A",
-        suggested_area="Test Area 2",
-    )
-    device_registry.async_update_device(
-        device.id, disabled_by=dr.DeviceEntryDisabler.USER
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "9876-no-name")},
-        manufacturer="Test Manufacturer NoName",
-        model="Test Model NoName",
-        suggested_area="Test Area 2",
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "9876-integer-values")},
-        name=1,
-        manufacturer=2,
-        model=3,
-        suggested_area="Test Area 2",
-    )
-    with patch(
-        "openai.resources.chat.completions.AsyncCompletions.create",
-        new_callable=AsyncMock,
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="stop",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content="Hello, how can I help you?",
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=None,
-                    ),
-                )
-            ],
-            created=1700000000,
-            model="gpt-3.5-turbo-0613",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
-        ),
-    ) as mock_create:
-        result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
-        )
-
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert mock_create.mock_calls[0][2]["messages"] == snapshot
-
-
-async def test_error_handling(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
-) -> None:
-    """Test that the default prompt works."""
-    with patch(
-        "openai.resources.chat.completions.AsyncCompletions.create",
-        new_callable=AsyncMock,
-        side_effect=RateLimitError(
-            response=Response(status_code=None, request=""), body=None, message=None
-        ),
-    ):
-        result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
-        )
-
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
-    assert result.response.error_code == "unknown", result
-
-
-async def test_template_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test that template error handling works."""
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
-        },
-    )
-    with patch(
-        "openai.resources.models.AsyncModels.list",
-    ), patch(
-        "openai.resources.chat.completions.AsyncCompletions.create",
-        new_callable=AsyncMock,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
-        )
-
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
-    assert result.response.error_code == "unknown", result
-
-
-async def test_conversation_agent(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-) -> None:
-    """Test OpenAIAgent."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
-        mock_config_entry.entry_id
-    )
-    assert agent.supported_languages == "*"
 
 
 @pytest.mark.parametrize(
@@ -235,33 +60,6 @@ async def test_conversation_agent(
                 "size": "1792x1024",
                 "quality": "standard",
                 "style": "natural",
-            },
-        ),
-        (
-            {"prompt": "Picture of a dog", "size": "256"},
-            {
-                "prompt": "Picture of a dog",
-                "size": "1024x1024",
-                "quality": "standard",
-                "style": "vivid",
-            },
-        ),
-        (
-            {"prompt": "Picture of a dog", "size": "512"},
-            {
-                "prompt": "Picture of a dog",
-                "size": "1024x1024",
-                "quality": "standard",
-                "style": "vivid",
-            },
-        ),
-        (
-            {"prompt": "Picture of a dog", "size": "1024"},
-            {
-                "prompt": "Picture of a dog",
-                "size": "1024x1024",
-                "quality": "standard",
-                "style": "vivid",
             },
         ),
     ],
@@ -314,12 +112,19 @@ async def test_generate_image_service_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test generate image service handles errors."""
-    with patch(
-        "openai.resources.images.AsyncImages.generate",
-        side_effect=RateLimitError(
-            response=Response(status_code=None, request=""), body=None, message="Reason"
+    with (
+        patch(
+            "openai.resources.images.AsyncImages.generate",
+            side_effect=RateLimitError(
+                response=httpx.Response(
+                    status_code=500, request=httpx.Request(method="GET", url="")
+                ),
+                body=None,
+                message="Reason",
+            ),
         ),
-    ), pytest.raises(HomeAssistantError, match="Error generating image: Reason"):
+        pytest.raises(HomeAssistantError, match="Error generating image: Reason"),
+    ):
         await hass.services.async_call(
             "openai_conversation",
             "generate_image",
@@ -332,26 +137,101 @@ async def test_generate_image_service_error(
         )
 
 
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_content_service_with_image_not_allowed_path(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test generate content service with an image in a not allowed path."""
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch.object(hass.config, "is_allowed_path", return_value=False),
+        pytest.raises(
+            HomeAssistantError,
+            match=(
+                "Cannot read `doorbell_snapshot.jpg`, no access to path; "
+                "`allowlist_external_dirs` may need to be adjusted in "
+                "`configuration.yaml`"
+            ),
+        ),
+    ):
+        await hass.services.async_call(
+            "openai_conversation",
+            "generate_content",
+            {
+                "config_entry": mock_config_entry.entry_id,
+                "prompt": "Describe this image from my doorbell camera",
+                "filenames": "doorbell_snapshot.jpg",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_name", "error"),
+    [
+        ("generate_image", "Invalid config entry provided. Got invalid_entry"),
+        ("generate_content", "Invalid config entry provided. Got invalid_entry"),
+    ],
+)
+async def test_invalid_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    service_name: str,
+    error: str,
+) -> None:
+    """Assert exception when invalid config entry is provided."""
+    service_data = {
+        "prompt": "Picture of a dog",
+        "config_entry": "invalid_entry",
+    }
+    with pytest.raises(ServiceValidationError, match=error):
+        await hass.services.async_call(
+            "openai_conversation",
+            service_name,
+            service_data,
+            blocking=True,
+            return_response=True,
+        )
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (APIConnectionError(request=None), "Connection error"),
+        (
+            APIConnectionError(request=httpx.Request(method="GET", url="test")),
+            "Connection error",
+        ),
         (
             AuthenticationError(
-                response=Response(status_code=None, request=""), body=None, message=None
+                response=httpx.Response(
+                    status_code=500, request=httpx.Request(method="GET", url="test")
+                ),
+                body=None,
+                message="",
             ),
             "Invalid API key",
         ),
         (
             BadRequestError(
-                response=Response(status_code=None, request=""), body=None, message=None
+                response=httpx.Response(
+                    status_code=500, request=httpx.Request(method="GET", url="test")
+                ),
+                body=None,
+                message="",
             ),
-            "openai_conversation integration not ready yet: None",
+            "openai_conversation integration not ready yet",
         ),
     ],
 )
 async def test_init_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, caplog, side_effect, error
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    side_effect,
+    error,
 ) -> None:
     """Test initialization errors."""
     with patch(
@@ -361,3 +241,274 @@ async def test_init_error(
         assert await async_setup_component(hass, "openai_conversation", {})
         await hass.async_block_till_done()
         assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_args", "number_of_files"),
+    [
+        (
+            {"prompt": "Picture of a dog", "filenames": []},
+            {
+                "input": [
+                    {
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": "Picture of a dog",
+                            },
+                        ],
+                    },
+                ],
+            },
+            0,
+        ),
+        (
+            {"prompt": "Picture of a dog", "filenames": ["/a/b/c.pdf"]},
+            {
+                "input": [
+                    {
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": "Picture of a dog",
+                            },
+                            {
+                                "type": "input_file",
+                                "file_data": "data:application/pdf;base64,BASE64IMAGE1",
+                                "filename": "/a/b/c.pdf",
+                            },
+                        ],
+                    },
+                ],
+            },
+            1,
+        ),
+        (
+            {"prompt": "Picture of a dog", "filenames": ["/a/b/c.jpg"]},
+            {
+                "input": [
+                    {
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": "Picture of a dog",
+                            },
+                            {
+                                "type": "input_image",
+                                "image_url": "data:image/jpeg;base64,BASE64IMAGE1",
+                                "detail": "auto",
+                                "file_id": "/a/b/c.jpg",
+                            },
+                        ],
+                    },
+                ],
+            },
+            1,
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "filenames": ["/a/b/c.jpg", "d/e/f.jpg"],
+            },
+            {
+                "input": [
+                    {
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": "Picture of a dog",
+                            },
+                            {
+                                "type": "input_image",
+                                "image_url": "data:image/jpeg;base64,BASE64IMAGE1",
+                                "detail": "auto",
+                                "file_id": "/a/b/c.jpg",
+                            },
+                            {
+                                "type": "input_image",
+                                "image_url": "data:image/jpeg;base64,BASE64IMAGE2",
+                                "detail": "auto",
+                                "file_id": "d/e/f.jpg",
+                            },
+                        ],
+                    },
+                ],
+            },
+            2,
+        ),
+    ],
+)
+async def test_generate_content_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    service_data,
+    expected_args,
+    number_of_files,
+) -> None:
+    """Test generate content service."""
+    service_data["config_entry"] = mock_config_entry.entry_id
+    expected_args["model"] = "gpt-4o-mini"
+    expected_args["max_output_tokens"] = 150
+    expected_args["top_p"] = 1.0
+    expected_args["temperature"] = 1.0
+    expected_args["user"] = None
+    expected_args["store"] = False
+    expected_args["input"][0]["type"] = "message"
+    expected_args["input"][0]["role"] = "user"
+
+    with (
+        patch(
+            "openai.resources.responses.AsyncResponses.create",
+            new_callable=AsyncMock,
+        ) as mock_create,
+        patch(
+            "base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]
+        ) as mock_b64encode,
+        patch("builtins.open", mock_open(read_data="ABC")) as mock_file,
+        patch("pathlib.Path.exists", return_value=True),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+    ):
+        mock_create.return_value = Response(
+            object="response",
+            id="resp_A",
+            created_at=1700000000,
+            model="gpt-4o-mini",
+            parallel_tool_calls=True,
+            tool_choice="auto",
+            tools=[],
+            output=[
+                ResponseOutputMessage(
+                    type="message",
+                    id="msg_A",
+                    content=[
+                        ResponseOutputText(
+                            type="output_text",
+                            text="This is the response",
+                            annotations=[],
+                        )
+                    ],
+                    role="assistant",
+                    status="completed",
+                )
+            ],
+        )
+
+        response = await hass.services.async_call(
+            "openai_conversation",
+            "generate_content",
+            service_data,
+            blocking=True,
+            return_response=True,
+        )
+        assert response == {"text": "This is the response"}
+        assert len(mock_create.mock_calls) == 1
+        assert mock_create.mock_calls[0][2] == expected_args
+        assert mock_b64encode.call_count == number_of_files
+        for idx, file in enumerate(service_data[CONF_FILENAMES]):
+            assert mock_file.call_args_list[idx][0][0] == file
+
+
+@pytest.mark.parametrize(
+    (
+        "service_data",
+        "error",
+        "number_of_files",
+        "exists_side_effect",
+        "is_allowed_side_effect",
+    ),
+    [
+        (
+            {"prompt": "Picture of a dog", "filenames": ["/a/b/c.jpg"]},
+            "`/a/b/c.jpg` does not exist",
+            0,
+            [False],
+            [True],
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "filenames": ["/a/b/c.jpg", "d/e/f.png"],
+            },
+            "Cannot read `d/e/f.png`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`",
+            1,
+            [True, True],
+            [True, False],
+        ),
+        (
+            {"prompt": "Not a picture of a dog", "filenames": ["/a/b/c.mov"]},
+            "Only images and PDF are supported by the OpenAI API,`/a/b/c.mov` is not an image file or PDF",
+            1,
+            [True],
+            [True],
+        ),
+    ],
+)
+async def test_generate_content_service_invalid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    service_data,
+    error,
+    number_of_files,
+    exists_side_effect,
+    is_allowed_side_effect,
+) -> None:
+    """Test generate content service."""
+    service_data["config_entry"] = mock_config_entry.entry_id
+
+    with (
+        patch(
+            "openai.resources.responses.AsyncResponses.create",
+            new_callable=AsyncMock,
+        ) as mock_create,
+        patch(
+            "base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]
+        ) as mock_b64encode,
+        patch("builtins.open", mock_open(read_data="ABC")),
+        patch("pathlib.Path.exists", side_effect=exists_side_effect),
+        patch.object(
+            hass.config, "is_allowed_path", side_effect=is_allowed_side_effect
+        ),
+    ):
+        with pytest.raises(HomeAssistantError, match=error):
+            await hass.services.async_call(
+                "openai_conversation",
+                "generate_content",
+                service_data,
+                blocking=True,
+                return_response=True,
+            )
+        assert len(mock_create.mock_calls) == 0
+        assert mock_b64encode.call_count == number_of_files
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_content_service_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test generate content service handles errors."""
+    with (
+        patch(
+            "openai.resources.responses.AsyncResponses.create",
+            side_effect=RateLimitError(
+                response=httpx.Response(
+                    status_code=417, request=httpx.Request(method="GET", url="")
+                ),
+                body=None,
+                message="Reason",
+            ),
+        ),
+        pytest.raises(HomeAssistantError, match="Error generating content: Reason"),
+    ):
+        await hass.services.async_call(
+            "openai_conversation",
+            "generate_content",
+            {
+                "config_entry": mock_config_entry.entry_id,
+                "prompt": "Image of an epic fail",
+            },
+            blocking=True,
+            return_response=True,
+        )

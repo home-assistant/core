@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Subaru Starlink Configuration",
+        "title": "Subaru Starlink configuration",
         "description": "Please enter your MySubaru credentials\nNOTE: Initial setup may take up to 30 seconds",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -37,19 +37,19 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "incorrect_pin": "Incorrect PIN",
       "bad_pin_format": "PIN should be 4 digits",
-      "two_factor_request_failed": "Request for 2FA code failed, please try again",
       "bad_validation_code_format": "Validation code should be 6 digits",
       "incorrect_validation_code": "Incorrect validation code"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "two_factor_request_failed": "Request for 2FA code failed, please try again"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Subaru Starlink Options",
+        "title": "Subaru Starlink options",
         "description": "When enabled, vehicle polling will send a remote command to your vehicle every 2 hours to obtain new sensor data. Without vehicle polling, new sensor data is only received when the vehicle automatically pushes data (normally after engine shutdown).",
         "data": {
           "update_enabled": "Enable vehicle polling"
@@ -106,7 +106,7 @@
       "fields": {
         "door": {
           "name": "Door",
-          "description": "One of the following: 'all', 'driver', 'tailgate'."
+          "description": "Which door(s) to open."
         }
       }
     }

@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
-import time
 from typing import Any
 from unittest.mock import patch
 
@@ -13,7 +12,7 @@ from homeassistant import config_entries
 from homeassistant.components.fitbit.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import (
     CLIENT_ID,
@@ -32,11 +31,11 @@ from tests.typing import ClientSessionGenerator
 REDIRECT_URL = "https://example.com/auth/external/callback"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     profile: None,
     setup_credentials: None,
 ) -> None:
@@ -51,7 +50,7 @@ async def test_full_flow(
             "redirect_uri": REDIRECT_URL,
         },
     )
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
@@ -97,11 +96,11 @@ async def test_full_flow(
         (HTTPStatus.INTERNAL_SERVER_ERROR, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_token_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     profile: None,
     setup_credentials: None,
     status_code: HTTPStatus,
@@ -118,7 +117,7 @@ async def test_token_error(
             "redirect_uri": REDIRECT_URL,
         },
     )
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
@@ -137,7 +136,7 @@ async def test_token_error(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == error_reason
 
 
@@ -155,11 +154,11 @@ async def test_token_error(
         ),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_api_failure(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     requests_mock: Mocker,
     setup_credentials: None,
     http_status: HTTPStatus,
@@ -177,7 +176,7 @@ async def test_api_failure(
             "redirect_uri": REDIRECT_URL,
         },
     )
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
@@ -203,16 +202,15 @@ async def test_api_failure(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == error_reason
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_config_entry_already_exists(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
-    requests_mock: Mocker,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
@@ -233,7 +231,7 @@ async def test_config_entry_already_exists(
             "redirect_uri": REDIRECT_URL,
         },
     )
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
@@ -252,217 +250,16 @@ async def test_config_entry_already_exists(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
-@pytest.mark.parametrize(
-    "token_expiration_time",
-    [time.time() + 86400, time.time() - 86400],
-    ids=("token_active", "token_expired"),
-)
-async def test_import_fitbit_config(
-    hass: HomeAssistant,
-    fitbit_config_setup: None,
-    sensor_platform_setup: Callable[[], Awaitable[bool]],
-    issue_registry: ir.IssueRegistry,
-    requests_mock: Mocker,
-) -> None:
-    """Test that platform configuration is imported successfully."""
-
-    requests_mock.register_uri(
-        "POST",
-        OAUTH2_TOKEN,
-        status_code=HTTPStatus.OK,
-        json=SERVER_ACCESS_TOKEN,
-    )
-
-    with patch(
-        "homeassistant.components.fitbit.async_setup_entry", return_value=True
-    ) as mock_setup:
-        await sensor_platform_setup()
-
-    assert len(mock_setup.mock_calls) == 1
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-
-    # Verify valid profile can be fetched from the API
-    config_entry = entries[0]
-    assert config_entry.title == DISPLAY_NAME
-    assert config_entry.unique_id == PROFILE_USER_ID
-
-    data = dict(config_entry.data)
-    # Verify imported values from fitbit.conf and configuration.yaml and
-    # that the token is updated.
-    assert "token" in data
-    expires_at = data["token"]["expires_at"]
-    assert expires_at > time.time()
-    del data["token"]["expires_at"]
-    assert dict(config_entry.data) == {
-        "auth_implementation": DOMAIN,
-        "clock_format": "24H",
-        "monitored_resources": ["activities/steps"],
-        "token": {
-            "access_token": "server-access-token",
-            "refresh_token": "server-refresh-token",
-            "scope": "activity heartrate nutrition profile settings sleep weight",
-        },
-        "unit_system": "default",
-    }
-
-    # Verify an issue is raised for deprecated configuration.yaml
-    issue = issue_registry.issues.get((DOMAIN, "deprecated_yaml"))
-    assert issue
-    assert issue.translation_key == "deprecated_yaml_import"
-
-
-async def test_import_fitbit_config_failure_cannot_connect(
-    hass: HomeAssistant,
-    fitbit_config_setup: None,
-    sensor_platform_setup: Callable[[], Awaitable[bool]],
-    issue_registry: ir.IssueRegistry,
-    requests_mock: Mocker,
-) -> None:
-    """Test platform configuration fails to import successfully."""
-
-    requests_mock.register_uri(
-        "POST",
-        OAUTH2_TOKEN,
-        status_code=HTTPStatus.OK,
-        json=SERVER_ACCESS_TOKEN,
-    )
-    requests_mock.register_uri(
-        "GET", PROFILE_API_URL, status_code=HTTPStatus.INTERNAL_SERVER_ERROR
-    )
-
-    with patch(
-        "homeassistant.components.fitbit.async_setup_entry", return_value=True
-    ) as mock_setup:
-        await sensor_platform_setup()
-
-    assert len(mock_setup.mock_calls) == 0
-
-    # Verify an issue is raised that we were unable to import configuration
-    issue = issue_registry.issues.get((DOMAIN, "deprecated_yaml"))
-    assert issue
-    assert issue.translation_key == "deprecated_yaml_import_issue_cannot_connect"
-
-
-@pytest.mark.parametrize(
-    "status_code",
-    [
-        (HTTPStatus.UNAUTHORIZED),
-        (HTTPStatus.INTERNAL_SERVER_ERROR),
-    ],
-)
-async def test_import_fitbit_config_cannot_refresh(
-    hass: HomeAssistant,
-    fitbit_config_setup: None,
-    sensor_platform_setup: Callable[[], Awaitable[bool]],
-    issue_registry: ir.IssueRegistry,
-    requests_mock: Mocker,
-    status_code: HTTPStatus,
-) -> None:
-    """Test platform configuration import fails when refreshing the token."""
-
-    requests_mock.register_uri(
-        "POST",
-        OAUTH2_TOKEN,
-        status_code=status_code,
-        json="",
-    )
-
-    with patch(
-        "homeassistant.components.fitbit.async_setup_entry", return_value=True
-    ) as mock_setup:
-        await sensor_platform_setup()
-
-    assert len(mock_setup.mock_calls) == 0
-
-    # Verify an issue is raised that we were unable to import configuration
-    issue = issue_registry.issues.get((DOMAIN, "deprecated_yaml"))
-    assert issue
-    assert issue.translation_key == "deprecated_yaml_import_issue_cannot_connect"
-
-
-async def test_import_fitbit_config_already_exists(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    setup_credentials: None,
-    integration_setup: Callable[[], Awaitable[bool]],
-    fitbit_config_setup: None,
-    sensor_platform_setup: Callable[[], Awaitable[bool]],
-    issue_registry: ir.IssueRegistry,
-    requests_mock: Mocker,
-) -> None:
-    """Test that platform configuration is not imported if it already exists."""
-
-    requests_mock.register_uri(
-        "POST",
-        OAUTH2_TOKEN,
-        status_code=HTTPStatus.OK,
-        json=SERVER_ACCESS_TOKEN,
-    )
-
-    # Verify existing config entry
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-
-    with patch(
-        "homeassistant.components.fitbit.async_setup_entry", return_value=True
-    ) as mock_config_entry_setup:
-        await integration_setup()
-
-    assert len(mock_config_entry_setup.mock_calls) == 1
-
-    with patch(
-        "homeassistant.components.fitbit.async_setup_entry", return_value=True
-    ) as mock_import_setup:
-        await sensor_platform_setup()
-
-    assert len(mock_import_setup.mock_calls) == 0
-
-    # Still one config entry
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-
-    # Verify an issue is raised for deprecated configuration.yaml
-    issue = issue_registry.issues.get((DOMAIN, "deprecated_yaml"))
-    assert issue
-    assert issue.translation_key == "deprecated_yaml_import"
-
-
-async def test_platform_setup_without_import(
-    hass: HomeAssistant,
-    sensor_platform_setup: Callable[[], Awaitable[bool]],
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test platform configuration.yaml but no existing fitbit.conf credentials."""
-
-    with patch(
-        "homeassistant.components.fitbit.async_setup_entry", return_value=True
-    ) as mock_setup:
-        await sensor_platform_setup()
-
-    # Verify no configuration entry is imported since the integration is not
-    # fully setup properly
-    assert len(mock_setup.mock_calls) == 0
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 0
-
-    # Verify an issue is raised for deprecated configuration.yaml
-    assert len(issue_registry.issues) == 1
-    issue = issue_registry.issues.get((DOMAIN, "deprecated_yaml"))
-    assert issue
-    assert issue.translation_key == "deprecated_yaml_no_import"
-
-
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     profile: None,
     setup_credentials: None,
 ) -> None:
@@ -473,21 +270,15 @@ async def test_reauth_flow(
     assert len(entries) == 1
 
     # config_entry.req initiates reauth
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-    )
-    assert result["type"] == "form"
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"],
         user_input={},
     )
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -522,7 +313,7 @@ async def test_reauth_flow(
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -532,12 +323,12 @@ async def test_reauth_flow(
 
 
 @pytest.mark.parametrize("profile_id", ["other-user-id"])
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_wrong_user_id(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     profile: None,
     setup_credentials: None,
 ) -> None:
@@ -547,21 +338,15 @@ async def test_reauth_wrong_user_id(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-    )
-    assert result["type"] == FlowResultType.FORM
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"],
         user_input={},
     )
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -596,7 +381,7 @@ async def test_reauth_wrong_user_id(
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "wrong_account"
 
     assert len(mock_setup.mock_calls) == 0
@@ -610,11 +395,11 @@ async def test_reauth_wrong_user_id(
     ],
     ids=("full_profile_data", "display_name_only"),
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_partial_profile_data(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     profile: None,
     setup_credentials: None,
     expected_title: str,
@@ -630,7 +415,7 @@ async def test_partial_profile_data(
             "redirect_uri": REDIRECT_URL,
         },
     )
-    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"

@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_CLOUD_ID, CONF_INSTALL_CODE, DOMAIN
-from .data import EagleDataCoordinator
+from .coordinator import EagleDataCoordinator
 
 TO_REDACT = {CONF_CLOUD_ID, CONF_INSTALL_CODE}
 

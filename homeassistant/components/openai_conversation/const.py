@@ -1,33 +1,52 @@
 """Constants for the OpenAI Conversation integration."""
 
+import logging
+
 DOMAIN = "openai_conversation"
-CONF_PROMPT = "prompt"
-DEFAULT_PROMPT = """This smart home is controlled by Home Assistant.
+LOGGER: logging.Logger = logging.getLogger(__package__)
 
-An overview of the areas and the devices in this smart home:
-{%- for area in areas() %}
-  {%- set area_info = namespace(printed=false) %}
-  {%- for device in area_devices(area) -%}
-    {%- if not device_attr(device, "disabled_by") and not device_attr(device, "entry_type") and device_attr(device, "name") %}
-      {%- if not area_info.printed %}
-
-{{ area_name(area) }}:
-        {%- set area_info.printed = true %}
-      {%- endif %}
-- {{ device_attr(device, "name") }}{% if device_attr(device, "model") and (device_attr(device, "model") | string) not in (device_attr(device, "name") | string) %} ({{ device_attr(device, "model") }}){% endif %}
-    {%- endif %}
-  {%- endfor %}
-{%- endfor %}
-
-Answer the user's questions about the world truthfully.
-
-If the user wants to control a device, reject the request and suggest using the Home Assistant app.
-"""
 CONF_CHAT_MODEL = "chat_model"
-DEFAULT_CHAT_MODEL = "gpt-3.5-turbo"
+CONF_FILENAMES = "filenames"
 CONF_MAX_TOKENS = "max_tokens"
-DEFAULT_MAX_TOKENS = 150
-CONF_TOP_P = "top_p"
-DEFAULT_TOP_P = 1
+CONF_PROMPT = "prompt"
+CONF_PROMPT = "prompt"
+CONF_REASONING_EFFORT = "reasoning_effort"
+CONF_RECOMMENDED = "recommended"
 CONF_TEMPERATURE = "temperature"
-DEFAULT_TEMPERATURE = 0.5
+CONF_TOP_P = "top_p"
+CONF_WEB_SEARCH = "web_search"
+CONF_WEB_SEARCH_USER_LOCATION = "user_location"
+CONF_WEB_SEARCH_CONTEXT_SIZE = "search_context_size"
+CONF_WEB_SEARCH_CITY = "city"
+CONF_WEB_SEARCH_REGION = "region"
+CONF_WEB_SEARCH_COUNTRY = "country"
+CONF_WEB_SEARCH_TIMEZONE = "timezone"
+RECOMMENDED_CHAT_MODEL = "gpt-4o-mini"
+RECOMMENDED_MAX_TOKENS = 150
+RECOMMENDED_REASONING_EFFORT = "low"
+RECOMMENDED_TEMPERATURE = 1.0
+RECOMMENDED_TOP_P = 1.0
+RECOMMENDED_WEB_SEARCH = False
+RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE = "medium"
+RECOMMENDED_WEB_SEARCH_USER_LOCATION = False
+
+UNSUPPORTED_MODELS: list[str] = [
+    "o1-mini",
+    "o1-mini-2024-09-12",
+    "o1-preview",
+    "o1-preview-2024-09-12",
+    "gpt-4o-realtime-preview",
+    "gpt-4o-realtime-preview-2024-12-17",
+    "gpt-4o-realtime-preview-2024-10-01",
+    "gpt-4o-mini-realtime-preview",
+    "gpt-4o-mini-realtime-preview-2024-12-17",
+]
+
+WEB_SEARCH_MODELS: list[str] = [
+    "gpt-4.1",
+    "gpt-4.1-mini",
+    "gpt-4o",
+    "gpt-4o-search-preview",
+    "gpt-4o-mini",
+    "gpt-4o-mini-search-preview",
+]

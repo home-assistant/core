@@ -1,7 +1,13 @@
 {
   "services": {
-    "create": "mdi:message-badge",
-    "dismiss": "mdi:bell-off",
-    "dismiss_all": "mdi:notification-clear-all"
+    "create": {
+      "service": "mdi:message-badge"
+    },
+    "dismiss": {
+      "service": "mdi:bell-off"
+    },
+    "dismiss_all": {
+      "service": "mdi:notification-clear-all"
+    }
   }
 }

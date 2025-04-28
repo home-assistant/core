@@ -7,29 +7,28 @@ import logging
 from pyrainbird.exceptions import RainbirdApiException, RainbirdDeviceBusyException
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import RainbirdUpdateCoordinator
+from .types import RainbirdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RainbirdConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry for a Rain Bird number platform."""
     async_add_entities(
         [
             RainDelayNumber(
-                hass.data[DOMAIN][config_entry.entry_id].coordinator,
+                config_entry.runtime_data.coordinator,
             )
         ]
     )

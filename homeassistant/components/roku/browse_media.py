@@ -40,7 +40,7 @@ EXPANDABLE_MEDIA_TYPES = [
     MediaType.CHANNELS,
 ]
 
-GetBrowseImageUrlType = Callable[[str, str, "str | None"], str | None]
+type GetBrowseImageUrlType = Callable[[str, str, str | None], str | None]
 
 
 def get_thumbnail_url_full(

@@ -1,0 +1,31 @@
+{
+  "host": "pchk",
+  "ip_address": "192.168.2.41",
+  "port": 4114,
+  "username": "lcn",
+  "password": "lcn",
+  "sk_num_tries": 0,
+  "dim_mode": "STEPS200",
+  "devices": [
+    {
+      "address": [0, 7, false],
+      "name": "TestModule",
+      "hardware_serial": -1,
+      "software_serial": -1,
+      "hardware_type": -1
+    }
+  ],
+  "entities": [
+    {
+      "address": [0, 7, false],
+      "name": "Light_Output1",
+      "resource": "output1",
+      "domain": "light",
+      "domain_data": {
+        "output": "OUTPUT1",
+        "dimmable": true,
+        "transition": 5000.0
+      }
+    }
+  ]
+}

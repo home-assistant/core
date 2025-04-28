@@ -12,23 +12,26 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
+type TechnoVEConfigEntry = ConfigEntry[TechnoVEDataUpdateCoordinator]
+
 
 class TechnoVEDataUpdateCoordinator(DataUpdateCoordinator[TechnoVEStation]):
     """Class to manage fetching TechnoVE data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: TechnoVEConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: TechnoVEConfigEntry) -> None:
         """Initialize global TechnoVE data updater."""
+        self.technove = TechnoVE(
+            config_entry.data[CONF_HOST],
+            session=async_get_clientsession(hass),
+        )
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
-        )
-        self.technove = TechnoVE(
-            self.config_entry.data[CONF_HOST],
-            session=async_get_clientsession(hass),
         )
 
     async def _async_update_data(self) -> TechnoVEStation:

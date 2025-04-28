@@ -8,6 +8,7 @@ OAUTH2_TOKEN = "https://dev.microbees.com/oauth/token"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
     Platform.SENSOR,

@@ -6,25 +6,21 @@ from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import NAMDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import NAMConfigEntry
 
 TO_REDACT = {CONF_PASSWORD, CONF_USERNAME}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: NAMConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: NAMDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
-    diagnostics_data = {
+    return {
         "info": async_redact_data(config_entry.data, TO_REDACT),
         "data": asdict(coordinator.data),
     }
-
-    return diagnostics_data

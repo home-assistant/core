@@ -15,16 +15,17 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeController, ZWaveMeEntity
+from . import ZWaveMeController
 from .const import DOMAIN, ZWaveMePlatform
+from .entity import ZWaveMeEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the rgb platform."""
 
@@ -84,9 +85,8 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
                     self.device.id, f"exact?level={round(brightness / 2.55)}"
                 )
             return
-        cmd = "exact?red={}&green={}&blue={}".format(
-            *color if any(color) else 255, 255, 255
-        )
+        red, green, blue = color if any(color) else (255, 255, 255)
+        cmd = f"exact?red={red}&green={green}&blue={blue}"
         self.controller.zwave_api.send_command(self.device.id, cmd)
 
     @property

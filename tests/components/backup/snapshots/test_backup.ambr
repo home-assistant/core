@@ -1,0 +1,263 @@
+# serializer version: 1
+# name: test_delete_backup[found_backups0-abc123-1-unlink_path0]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_backup[found_backups1-def456-1-unlink_path1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_backup[found_backups2-abc123-0-None]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[mock_read_backup]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agents': list([
+        dict({
+          'agent_id': 'backup.local',
+          'name': 'local',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[mock_read_backup].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
+          'failed_agent_ids': list([
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'with_automatic_settings': True,
+        }),
+        dict({
+          'addons': list([
+          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 1,
+            }),
+          }),
+          'backup_id': 'def456',
+          'database_included': False,
+          'date': '1980-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'unknown_uuid',
+            'with_automatic_settings': True,
+          }),
+          'failed_agent_ids': list([
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test 2',
+          'with_automatic_settings': None,
+        }),
+      ]),
+      'last_action_event': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
+      'next_automatic_backup': None,
+      'next_automatic_backup_additional': False,
+      'state': 'idle',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agents': list([
+        dict({
+          'agent_id': 'backup.local',
+          'name': 'local',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect1].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backups': list([
+      ]),
+      'last_action_event': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
+      'next_automatic_backup': None,
+      'next_automatic_backup_additional': False,
+      'state': 'idle',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect2]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agents': list([
+        dict({
+          'agent_id': 'backup.local',
+          'name': 'local',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect2].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backups': list([
+      ]),
+      'last_action_event': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
+      'next_automatic_backup': None,
+      'next_automatic_backup_additional': False,
+      'state': 'idle',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect3]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agents': list([
+        dict({
+          'agent_id': 'backup.local',
+          'name': 'local',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect3].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backups': list([
+      ]),
+      'last_action_event': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
+      'next_automatic_backup': None,
+      'next_automatic_backup_additional': False,
+      'state': 'idle',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect4]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agents': list([
+        dict({
+          'agent_id': 'backup.local',
+          'name': 'local',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_load_backups[side_effect4].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backups': list([
+      ]),
+      'last_action_event': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
+      'next_automatic_backup': None,
+      'next_automatic_backup_additional': False,
+      'state': 'idle',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---

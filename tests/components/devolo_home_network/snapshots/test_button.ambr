@@ -1,47 +1,4 @@
 # serializer version: 1
-# name: test_button[identify_device_with_a_blinking_led-async_identify_device_start]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Identify device with a blinking LED',
-      'icon': 'mdi:led-on',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.mock_title_identify_device_with_a_blinking_led',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button[identify_device_with_a_blinking_led-async_identify_device_start].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.mock_title_identify_device_with_a_blinking_led',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:led-on',
-    'original_name': 'Identify device with a blinking LED',
-    'platform': 'devolo_home_network',
-    'supported_features': 0,
-    'translation_key': 'identify',
-    'unique_id': '1234567890_identify',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_button[identify_device_with_a_blinking_led-plcnet-async_identify_device_start]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -63,6 +20,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -89,49 +47,6 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button[restart_device-async_restart]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Mock Title Restart device',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.mock_title_restart_device',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button[restart_device-async_restart].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.mock_title_restart_device',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
-    'original_icon': None,
-    'original_name': 'Restart device',
-    'platform': 'devolo_home_network',
-    'supported_features': 0,
-    'translation_key': 'restart',
-    'unique_id': '1234567890_restart',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_button[restart_device-device-async_restart]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -153,6 +68,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -176,49 +92,6 @@
     'supported_features': 0,
     'translation_key': 'restart',
     'unique_id': '1234567890_restart',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_button[start_plc_pairing-async_pair_device]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Start PLC pairing',
-      'icon': 'mdi:plus-network-outline',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.mock_title_start_plc_pairing',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button[start_plc_pairing-async_pair_device].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.mock_title_start_plc_pairing',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:plus-network-outline',
-    'original_name': 'Start PLC pairing',
-    'platform': 'devolo_home_network',
-    'supported_features': 0,
-    'translation_key': 'pairing',
-    'unique_id': '1234567890_pairing',
     'unit_of_measurement': None,
   })
 # ---
@@ -242,6 +115,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -268,49 +142,6 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button[start_wps-async_start_wps]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Start WPS',
-      'icon': 'mdi:wifi-plus',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.mock_title_start_wps',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_button[start_wps-async_start_wps].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.mock_title_start_wps',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:wifi-plus',
-    'original_name': 'Start WPS',
-    'platform': 'devolo_home_network',
-    'supported_features': 0,
-    'translation_key': 'start_wps',
-    'unique_id': '1234567890_start_wps',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_button[start_wps-device-async_start_wps]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -331,6 +162,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,

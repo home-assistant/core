@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import web
 import pytest
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
@@ -30,8 +31,9 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util.aiohttp import MockRequest, web
+from homeassistant.util.aiohttp import MockRequest
 
+from .common import mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
@@ -43,17 +45,26 @@ def dsm_with_photos() -> MagicMock:
     dsm = MagicMock()
     dsm.login = AsyncMock(return_value=True)
     dsm.update = AsyncMock(return_value=True)
+    dsm.information = mock_dsm_information()
     dsm.network.update = AsyncMock(return_value=True)
     dsm.surveillance_station.update = AsyncMock(return_value=True)
     dsm.upgrade.update = AsyncMock(return_value=True)
 
-    dsm.photos.get_albums = AsyncMock(return_value=[SynoPhotosAlbum(1, "Album 1", 10)])
+    dsm.photos.get_albums = AsyncMock(
+        return_value=[SynoPhotosAlbum(1, "Album 1", 10, "")]
+    )
     dsm.photos.get_items_from_album = AsyncMock(
-        return_value=[SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm")]
+        return_value=[
+            SynoPhotosItem(
+                10, "", "filename.jpg", 12345, "10_1298753", "sm", False, ""
+            ),
+            SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm", True, ""),
+        ]
     )
     dsm.photos.get_item_thumbnail_url = AsyncMock(
         return_value="http://my.thumbnail.url"
     )
+    dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
     return dsm
 
 
@@ -92,12 +103,22 @@ async def test_resolve_media_bad_identifier(
     [
         (
             "ABC012345/10/27643_876876/filename.jpg",
-            "/synology_dsm/ABC012345/27643_876876/filename.jpg",
+            "/synology_dsm/ABC012345/27643_876876/filename.jpg/",
             "image/jpeg",
         ),
         (
             "ABC012345/12/12631_47189/filename.png",
-            "/synology_dsm/ABC012345/12631_47189/filename.png",
+            "/synology_dsm/ABC012345/12631_47189/filename.png/",
+            "image/png",
+        ),
+        (
+            "ABC012345/12/12631_47189/filename.png_shared",
+            "/synology_dsm/ABC012345/12631_47189/filename.png_shared/",
+            "image/png",
+        ),
+        (
+            "ABC012345/12_dmypass/12631_47189/filename.png",
+            "/synology_dsm/ABC012345/12631_47189/filename.png/dmypass",
             "image/png",
         ),
     ],
@@ -130,10 +151,13 @@ async def test_browse_media_album_error(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media with unknown album."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -169,10 +193,13 @@ async def test_browse_media_get_root(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning root media sources."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -203,10 +230,13 @@ async def test_browse_media_get_albums(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning albums."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -232,7 +262,7 @@ async def test_browse_media_get_albums(
     assert result.children[0].identifier == "mocked_syno_dsm_entry/0"
     assert result.children[0].title == "All images"
     assert isinstance(result.children[1], BrowseMedia)
-    assert result.children[1].identifier == "mocked_syno_dsm_entry/1"
+    assert result.children[1].identifier == "mocked_syno_dsm_entry/1_"
     assert result.children[1].title == "Album 1"
 
 
@@ -241,10 +271,13 @@ async def test_browse_media_get_items_error(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning albums."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -288,10 +321,13 @@ async def test_browse_media_get_items_thumbnail_error(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning albums."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -316,7 +352,7 @@ async def test_browse_media_get_items_thumbnail_error(
     result = await source.async_browse_media(item)
 
     assert result
-    assert len(result.children) == 1
+    assert len(result.children) == 2
     item = result.children[0]
     assert isinstance(item, BrowseMedia)
     assert item.thumbnail is None
@@ -327,10 +363,13 @@ async def test_browse_media_get_items(
     hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning albums."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -352,10 +391,19 @@ async def test_browse_media_get_items(
     result = await source.async_browse_media(item)
 
     assert result
-    assert len(result.children) == 1
+    assert len(result.children) == 2
     item = result.children[0]
     assert isinstance(item, BrowseMedia)
-    assert item.identifier == "mocked_syno_dsm_entry/1/10_1298753/filename.jpg"
+    assert item.identifier == "mocked_syno_dsm_entry/1_/10_1298753/filename.jpg"
+    assert item.title == "filename.jpg"
+    assert item.media_class == MediaClass.IMAGE
+    assert item.media_content_type == "image/jpeg"
+    assert item.can_play
+    assert not item.can_expand
+    assert item.thumbnail == "http://my.thumbnail.url"
+    item = result.children[1]
+    assert isinstance(item, BrowseMedia)
+    assert item.identifier == "mocked_syno_dsm_entry/1_/10_1298753/filename.jpg_shared"
     assert item.title == "filename.jpg"
     assert item.media_class == MediaClass.IMAGE
     assert item.media_content_type == "image/jpeg"
@@ -376,10 +424,13 @@ async def test_media_view(
     with pytest.raises(web.HTTPNotFound):
         await view.get(request, "", "")
 
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM",
-        return_value=dsm_with_photos,
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=dsm_with_photos,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -396,17 +447,24 @@ async def test_media_view(
         assert await hass.config_entries.async_setup(entry.entry_id)
 
     with pytest.raises(web.HTTPNotFound):
-        await view.get(request, "", "10_1298753/filename")
+        await view.get(request, "", "10_1298753/filename/")
 
     # exception in download_item()
     dsm_with_photos.photos.download_item = AsyncMock(
         side_effect=SynologyDSMException("", None)
     )
     with pytest.raises(web.HTTPNotFound):
-        await view.get(request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg")
+        await view.get(request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg/")
 
     # success
     dsm_with_photos.photos.download_item = AsyncMock(return_value=b"xxxx")
-    tempfile.tempdir = tmp_path
-    result = await view.get(request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg")
-    assert isinstance(result, web.Response)
+    with patch.object(tempfile, "tempdir", tmp_path):
+        result = await view.get(
+            request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg/"
+        )
+        assert isinstance(result, web.Response)
+    with patch.object(tempfile, "tempdir", tmp_path):
+        result = await view.get(
+            request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg_shared/"
+        )
+        assert isinstance(result, web.Response)

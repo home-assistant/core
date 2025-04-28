@@ -7,14 +7,14 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from youtubeaio.helper import first
 from youtubeaio.types import AuthScope, ForbiddenError
 from youtubeaio.youtube import YouTube
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import callback
@@ -45,7 +45,6 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
-    reauth_entry: ConfigEntry | None = None
     _youtube: YouTube | None = None
 
     @staticmethod
@@ -54,7 +53,7 @@ class OAuth2FlowHandler(
         config_entry: ConfigEntry,
     ) -> YouTubeOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return YouTubeOptionsFlowHandler(config_entry)
+        return YouTubeOptionsFlowHandler()
 
     @property
     def logger(self) -> logging.Logger:
@@ -75,9 +74,6 @@ class OAuth2FlowHandler(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -99,8 +95,12 @@ class OAuth2FlowHandler(
         """Create an entry for the flow, or update existing entry."""
         try:
             youtube = await self.get_resource(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-            own_channel = await first(youtube.get_user_channels())
-            if own_channel is None or own_channel.snippet is None:
+            own_channels = [
+                channel
+                async for channel in youtube.get_user_channels()
+                if channel.snippet is not None
+            ]
+            if not own_channels:
                 return self.async_abort(
                     reason="no_channel",
                     description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
@@ -111,27 +111,24 @@ class OAuth2FlowHandler(
                 reason="access_not_configured",
                 description_placeholders={"message": error},
             )
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:  # noqa: BLE001
             LOGGER.error("Unknown error occurred: %s", ex.args)
             return self.async_abort(reason="unknown")
-        self._title = own_channel.snippet.title
+        self._title = own_channels[0].snippet.title
         self._data = data
 
-        if not self.reauth_entry:
-            await self.async_set_unique_id(own_channel.channel_id)
+        await self.async_set_unique_id(own_channels[0].channel_id)
+        if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
 
             return await self.async_step_channels()
 
-        if self.reauth_entry.unique_id == own_channel.channel_id:
-            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-
-        return self.async_abort(
+        self._abort_if_unique_id_mismatch(
             reason="wrong_account",
             description_placeholders={"title": self._title},
         )
+
+        return self.async_update_reload_and_abort(self._get_reauth_entry(), data=data)
 
     async def async_step_channels(
         self, user_input: dict[str, Any] | None = None
@@ -144,13 +141,39 @@ class OAuth2FlowHandler(
                 options=user_input,
             )
         youtube = await self.get_resource(self._data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+
+        # Get user's own channels
+        own_channels = [
+            channel
+            async for channel in youtube.get_user_channels()
+            if channel.snippet is not None
+        ]
+        if not own_channels:
+            return self.async_abort(
+                reason="no_channel",
+                description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
+            )
+
+        # Start with user's own channels
         selectable_channels = [
             SelectOptionDict(
-                value=subscription.snippet.channel_id,
-                label=subscription.snippet.title,
+                value=channel.channel_id,
+                label=f"{channel.snippet.title} (Your Channel)",
             )
-            async for subscription in youtube.get_user_subscriptions()
+            for channel in own_channels
         ]
+
+        # Add subscribed channels
+        selectable_channels.extend(
+            [
+                SelectOptionDict(
+                    value=subscription.snippet.channel_id,
+                    label=subscription.snippet.title,
+                )
+                async for subscription in youtube.get_user_subscriptions()
+            ]
+        )
+
         if not selectable_channels:
             return self.async_abort(reason="no_subscriptions")
         return self.async_show_form(
@@ -165,7 +188,7 @@ class OAuth2FlowHandler(
         )
 
 
-class YouTubeOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class YouTubeOptionsFlowHandler(OptionsFlow):
     """YouTube Options flow handler."""
 
     async def async_step_init(
@@ -181,13 +204,39 @@ class YouTubeOptionsFlowHandler(OptionsFlowWithConfigEntry):
         await youtube.set_user_authentication(
             self.config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN], [AuthScope.READ_ONLY]
         )
+
+        # Get user's own channels
+        own_channels = [
+            channel
+            async for channel in youtube.get_user_channels()
+            if channel.snippet is not None
+        ]
+        if not own_channels:
+            return self.async_abort(
+                reason="no_channel",
+                description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
+            )
+
+        # Start with user's own channels
         selectable_channels = [
             SelectOptionDict(
-                value=subscription.snippet.channel_id,
-                label=subscription.snippet.title,
+                value=channel.channel_id,
+                label=f"{channel.snippet.title} (Your Channel)",
             )
-            async for subscription in youtube.get_user_subscriptions()
+            for channel in own_channels
         ]
+
+        # Add subscribed channels
+        selectable_channels.extend(
+            [
+                SelectOptionDict(
+                    value=subscription.snippet.channel_id,
+                    label=subscription.snippet.title,
+                )
+                async for subscription in youtube.get_user_subscriptions()
+            ]
+        )
+
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
@@ -200,6 +249,6 @@ class YouTubeOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         ),
                     }
                 ),
-                self.options,
+                self.config_entry.options,
             ),
         )

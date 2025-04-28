@@ -2,12 +2,13 @@
 
 import datetime
 import json
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import sensor
 from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
-import homeassistant.components.sensor as sensor
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_NAME,
@@ -40,20 +41,22 @@ FAR_MESSAGE = {"id": DEVICE_ID, "name": NAME, "distance": 10}
 REALLY_FAR_MESSAGE = {"id": DEVICE_ID, "name": NAME, "distance": 20}
 
 
-async def send_message(hass, topic, message):
+async def send_message(
+    hass: HomeAssistant, topic: str, message: dict[str, Any]
+) -> None:
     """Test the sending of a message."""
     async_fire_mqtt_message(hass, topic, json.dumps(message))
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
 
-async def assert_state(hass, room):
+async def assert_state(hass: HomeAssistant, room: str) -> None:
     """Test the assertion of a room state."""
     state = hass.states.get(SENSOR_STATE)
     assert state.state == room
 
 
-async def assert_distance(hass, distance):
+async def assert_distance(hass: HomeAssistant, distance: int) -> None:
     """Test the assertion of a distance state."""
     state = hass.states.get(SENSOR_STATE)
     assert state.attributes.get("distance") == distance

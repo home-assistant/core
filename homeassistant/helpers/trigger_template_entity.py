@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import contextlib
+import itertools
 import logging
 from typing import Any
 
+import jinja2
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -30,7 +31,14 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import config_validation as cv
 from .entity import Entity
-from .template import attach as template_attach, render_complex
+from .template import (
+    _SENTINEL,
+    Template,
+    TemplateStateFromEntityId,
+    _render_with_context,
+    render_complex,
+    result_as_boolean,
+)
 from .typing import ConfigType
 
 CONF_AVAILABILITY = "availability"
@@ -65,6 +73,27 @@ def make_template_entity_base_schema(default_name: str) -> vol.Schema:
     )
 
 
+def log_triggered_template_error(
+    entity_id: str,
+    err: TemplateError,
+    key: str | None = None,
+    attribute: str | None = None,
+) -> None:
+    """Log a trigger entity template error."""
+    target = ""
+    if key:
+        target = f" {key}"
+    elif attribute:
+        target = f" {CONF_ATTRIBUTES}.{attribute}"
+
+    logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}").error(
+        "Error rendering%s template for %s: %s",
+        target,
+        entity_id,
+        err,
+    )
+
+
 TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -72,6 +101,44 @@ TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
+
+
+class ValueTemplate(Template):
+    """Class to hold a value_template and manage caching and rendering it with 'value' in variables."""
+
+    @classmethod
+    def from_template(cls, template: Template) -> ValueTemplate:
+        """Create a ValueTemplate object from a Template object."""
+        return cls(template.template, template.hass)
+
+    @callback
+    def async_render_as_value_template(
+        self, entity_id: str, variables: dict[str, Any], error_value: Any
+    ) -> Any:
+        """Render template that requires 'value' and optionally 'value_json'.
+
+        Template errors will be suppressed when an error_value is supplied.
+
+        This method must be run in the event loop.
+        """
+        self._renders += 1
+
+        if self.is_static:
+            return self.template
+
+        compiled = self._compiled or self._ensure_compiled()
+
+        try:
+            render_result = _render_with_context(
+                self.template, compiled, **variables
+            ).strip()
+        except jinja2.TemplateError as ex:
+            message = f"Error parsing value for {entity_id}: {ex} (value: {variables['value']}, template: {self.template})"
+            logger = logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}")
+            logger.debug(message)
+            return error_value
+
+        return render_result
 
 
 class TriggerBaseEntity(Entity):
@@ -122,6 +189,9 @@ class TriggerBaseEntity(Entity):
         self._parse_result = {CONF_AVAILABILITY}
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
+        self._availability_template = config.get(CONF_AVAILABILITY)
+        self._available = True
+
     @property
     def name(self) -> str | None:
         """Name of the entity."""
@@ -145,22 +215,15 @@ class TriggerBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return availability of the entity."""
-        return (
-            self._rendered is not self._static_rendered
-            and
-            # Check against False so `None` is ok
-            self._rendered.get(CONF_AVAILABILITY) is not False
-        )
+        if self._availability_template is None:
+            return True
+
+        return self._available
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra attributes."""
         return self._rendered.get(CONF_ATTRIBUTES)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle being added to Home Assistant."""
-        await super().async_added_to_hass()
-        template_attach(self.hass, self._config)
 
     def _set_unique_id(self, unique_id: str | None) -> None:
         """Set unique id."""
@@ -181,35 +244,93 @@ class TriggerBaseEntity(Entity):
                 extra_state_attributes[attr] = last_state.attributes[attr]
             self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
+    def _template_variables(self, run_variables: dict[str, Any] | None = None) -> dict:
+        """Render template variables."""
+        return {
+            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            **(run_variables or {}),
+        }
+
+    def _render_single_template(
+        self,
+        key: str,
+        variables: dict[str, Any],
+        strict: bool = False,
+    ) -> Any:
+        """Render a single template."""
+        try:
+            if key in self._to_render_complex:
+                return render_complex(self._config[key], variables)
+
+            return self._config[key].async_render(
+                variables, parse_result=key in self._parse_result, strict=strict
+            )
+        except TemplateError as err:
+            log_triggered_template_error(self.entity_id, err, key=key)
+
+        return _SENTINEL
+
+    def _render_availability_template(self, variables: dict[str, Any]) -> bool:
+        """Render availability template."""
+        if not self._availability_template:
+            return True
+
+        try:
+            if (
+                available := self._availability_template.async_render(
+                    variables, parse_result=True, strict=True
+                )
+            ) is False:
+                self._rendered = dict(self._static_rendered)
+
+            self._available = result_as_boolean(available)
+
+        except TemplateError as err:
+            # The entity will be available when an error is rendered. This
+            # ensures functionality is consistent between template and trigger template
+            # entities.
+            self._available = True
+            log_triggered_template_error(self.entity_id, err, key=CONF_AVAILABILITY)
+
+        return self._available
+
+    def _render_attributes(self, rendered: dict, variables: dict[str, Any]) -> None:
+        """Render template attributes."""
+        if CONF_ATTRIBUTES in self._config:
+            attributes = {}
+            for attribute, attribute_template in self._config[CONF_ATTRIBUTES].items():
+                try:
+                    value = render_complex(attribute_template, variables)
+                    attributes[attribute] = value
+                    variables.update({attribute: value})
+                except TemplateError as err:
+                    log_triggered_template_error(
+                        self.entity_id, err, attribute=attribute
+                    )
+            rendered[CONF_ATTRIBUTES] = attributes
+
+    def _render_single_templates(
+        self,
+        rendered: dict,
+        variables: dict[str, Any],
+        filtered: list[str] | None = None,
+    ) -> None:
+        """Render all single templates."""
+        for key in itertools.chain(self._to_render_simple, self._to_render_complex):
+            if filtered and key in filtered:
+                continue
+
+            if (
+                result := self._render_single_template(key, variables)
+            ) is not _SENTINEL:
+                rendered[key] = result
+
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
-        try:
-            rendered = dict(self._static_rendered)
-
-            for key in self._to_render_simple:
-                rendered[key] = self._config[key].async_render(
-                    variables,
-                    parse_result=key in self._parse_result,
-                )
-
-            for key in self._to_render_complex:
-                rendered[key] = render_complex(
-                    self._config[key],
-                    variables,
-                )
-
-            if CONF_ATTRIBUTES in self._config:
-                rendered[CONF_ATTRIBUTES] = render_complex(
-                    self._config[CONF_ATTRIBUTES],
-                    variables,
-                )
-
-            self._rendered = rendered
-        except TemplateError as err:
-            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
-                "Error rendering %s template for %s: %s", key, self.entity_id, err
-            )
-            self._rendered = self._static_rendered
+        rendered = dict(self._static_rendered)
+        self._render_single_templates(rendered, variables)
+        self._render_attributes(rendered, variables)
+        self._rendered = rendered
 
 
 class ManualTriggerEntity(TriggerBaseEntity):
@@ -228,25 +349,31 @@ class ManualTriggerEntity(TriggerBaseEntity):
             parse_result=CONF_NAME in self._parse_result,
         )
 
+    def _template_variables_with_value(
+        self, value: str | None = None
+    ) -> dict[str, Any]:
+        """Render template variables.
+
+        Implementing class should call this first in update method to render variables for templates.
+        Ex: variables = self._render_template_variables_with_value(payload)
+        """
+        run_variables: dict[str, Any] = {"value": value}
+
+        # Silently try if variable is a json and store result in `value_json` if it is.
+        try:  # noqa: SIM105 - suppress is much slower
+            run_variables["value_json"] = json_loads(value)  # type: ignore[arg-type]
+        except JSON_DECODE_EXCEPTIONS:
+            pass
+
+        return self._template_variables(run_variables)
+
     @callback
-    def _process_manual_data(self, value: Any | None = None) -> None:
+    def _process_manual_data(self, variables: dict[str, Any]) -> None:
         """Process new data manually.
 
         Implementing class should call this last in update method to render templates.
-        Ex: self._process_manual_data(payload)
+        Ex: self._process_manual_data(variables)
         """
-
-        self.async_write_ha_state()
-        this = None
-        if state := self.hass.states.get(self.entity_id):
-            this = state.as_dict()
-
-        run_variables: dict[str, Any] = {"value": value}
-        # Silently try if variable is a json and store result in `value_json` if it is.
-        with contextlib.suppress(*JSON_DECODE_EXCEPTIONS):
-            run_variables["value_json"] = json_loads(run_variables["value"])
-        variables = {"this": this, **(run_variables or {})}
-
         self._render_templates(variables)
 
 

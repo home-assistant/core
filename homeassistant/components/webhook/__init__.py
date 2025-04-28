@@ -21,7 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import get_url, is_cloud_connection
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util import network
+from homeassistant.util import network as network_util
 from homeassistant.util.aiohttp import MockRequest, MockStreamReader, serialize_response
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,10 +87,26 @@ def async_generate_id() -> str:
 
 @callback
 @bind_hass
-def async_generate_url(hass: HomeAssistant, webhook_id: str) -> str:
+def async_generate_url(
+    hass: HomeAssistant,
+    webhook_id: str,
+    allow_internal: bool = True,
+    allow_external: bool = True,
+    allow_ip: bool | None = None,
+    prefer_external: bool | None = True,
+) -> str:
     """Generate the full URL for a webhook_id."""
     return (
-        f"{get_url(hass, prefer_external=True, allow_cloud=False)}"
+        f"{
+            get_url(
+                hass,
+                allow_internal=allow_internal,
+                allow_external=allow_external,
+                allow_cloud=False,
+                allow_ip=allow_ip,
+                prefer_external=prefer_external,
+            )
+        }"
         f"{async_generate_path(webhook_id)}"
     )
 
@@ -158,7 +174,7 @@ async def async_handle_webhook(
                 _LOGGER.debug("Unable to parse remote ip %s", request.remote)
                 return Response(status=HTTPStatus.OK)
 
-            is_local = network.is_local(request_remote)
+            is_local = network_util.is_local(request_remote)
 
         if not is_local:
             _LOGGER.warning("Received remote request for local webhook %s", webhook_id)
@@ -178,10 +194,10 @@ async def async_handle_webhook(
         response: Response | None = await webhook["handler"](hass, webhook_id, request)
         if response is None:
             response = Response(status=HTTPStatus.OK)
-        return response
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error processing webhook %s", webhook_id)
         return Response(status=HTTPStatus.OK)
+    return response
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

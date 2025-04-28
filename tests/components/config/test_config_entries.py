@@ -1,54 +1,75 @@
 """Test config entries API."""
 
-from collections import OrderedDict
+from collections.abc import Generator
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 from aiohttp.test_utils import TestClient
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow, loader
 from homeassistant.components.config import config_entries
-from homeassistant.config_entries import HANDLERS, ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_flow, config_validation as cv
+from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from tests.common import (
     MockConfigEntry,
     MockModule,
     MockUser,
+    mock_config_flow,
     mock_integration,
     mock_platform,
 )
-from tests.typing import WebSocketGenerator
-
-
-@pytest.fixture
-def clear_handlers():
-    """Clear config entry handlers."""
-    with patch.dict(HANDLERS, clear=True):
-        yield
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def mock_test_component(hass):
+def mock_test_component(hass: HomeAssistant) -> None:
     """Ensure a component called 'test' exists."""
     mock_integration(hass, MockModule("test"))
 
 
 @pytest.fixture
-async def client(hass, hass_client) -> TestClient:
+async def client(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Fixture that can interact with the config manager API."""
     await async_setup_component(hass, "http", {})
     config_entries.async_setup(hass)
     return await hass_client()
 
 
-async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
+@pytest.fixture
+def mock_flow() -> Generator[None]:
+    """Mock a config flow."""
+
+    class Comp1ConfigFlow(ConfigFlow):
+        """Config flow with options flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Get options flow."""
+
+    with mock_config_flow("comp1", Comp1ConfigFlow):
+        yield
+
+
+@pytest.mark.usefixtures("freezer")
+@pytest.mark.usefixtures("mock_flow")
+async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
     """Test get entries."""
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
@@ -63,21 +84,6 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
     mock_integration(
         hass, MockModule("comp5", partial_manifest={"integration_type": "service"})
     )
-
-    @HANDLERS.register("comp1")
-    class Comp1ConfigFlow:
-        """Config flow with options flow."""
-
-        @staticmethod
-        @callback
-        def async_get_options_flow(config_entry):
-            """Get options flow."""
-
-        @classmethod
-        @callback
-        def async_supports_options_flow(cls, config_entry):
-            """Return options flow support for this handler."""
-            return True
 
     config_entry_flow.register_discovery_flow("comp2", "Comp 2", lambda: None)
 
@@ -117,76 +123,107 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
     data = await resp.json()
     for entry in data:
         entry.pop("entry_id")
+    timestamp = utcnow().timestamp()
     assert data == [
         {
+            "created_at": timestamp,
+            "disabled_by": None,
             "domain": "comp1",
-            "title": "Test 1",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
             "source": "bla",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": True,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": True,
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "disabled_by": None,
-            "reason": None,
+            "title": "Test 1",
         },
         {
+            "created_at": timestamp,
+            "disabled_by": None,
             "domain": "comp2",
-            "title": "Test 2",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": "Unsupported API",
             "source": "bla2",
             "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "disabled_by": None,
-            "reason": "Unsupported API",
+            "title": "Test 2",
         },
         {
+            "created_at": timestamp,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
             "domain": "comp3",
-            "title": "Test 3",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
             "source": "bla3",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "disabled_by": core_ce.ConfigEntryDisabler.USER,
-            "reason": None,
+            "title": "Test 3",
         },
         {
+            "created_at": timestamp,
+            "disabled_by": None,
             "domain": "comp4",
-            "title": "Test 4",
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
             "source": "bla4",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "disabled_by": None,
-            "reason": None,
+            "title": "Test 4",
         },
         {
+            "created_at": timestamp,
+            "disabled_by": None,
             "domain": "comp5",
-            "title": "Test 5",
-            "source": "bla5",
-            "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supports_reconfigure": False,
-            "supports_options": False,
-            "supports_remove_device": False,
-            "supports_unload": False,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
-            "disabled_by": None,
             "reason": None,
+            "source": "bla5",
+            "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supported_subentry_types": {},
+            "supports_options": False,
+            "supports_reconfigure": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 5",
         },
     ]
 
@@ -221,11 +258,9 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
     assert data[0]["domain"] == "comp5"
 
 
-async def test_remove_entry(hass: HomeAssistant, client) -> None:
+async def test_remove_entry(hass: HomeAssistant, client: TestClient) -> None:
     """Test removing an entry via the API."""
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == HTTPStatus.OK
@@ -234,12 +269,11 @@ async def test_remove_entry(hass: HomeAssistant, client) -> None:
     assert len(hass.config_entries.async_entries()) == 0
 
 
-async def test_reload_entry(hass: HomeAssistant, client) -> None:
+async def test_reload_entry(hass: HomeAssistant, client: TestClient) -> None:
     """Test reloading an entry via the API."""
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
+    hass.config.components.add("test")
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
@@ -249,14 +283,14 @@ async def test_reload_entry(hass: HomeAssistant, client) -> None:
     assert len(hass.config_entries.async_entries()) == 1
 
 
-async def test_reload_invalid_entry(hass: HomeAssistant, client) -> None:
+async def test_reload_invalid_entry(hass: HomeAssistant, client: TestClient) -> None:
     """Test reloading an invalid entry via the API."""
     resp = await client.post("/api/config/config_entries/entry/invalid/reload")
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_remove_entry_unauth(
-    hass: HomeAssistant, client, hass_admin_user: MockUser
+    hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
     """Test removing an entry via the API."""
     hass_admin_user.groups = []
@@ -268,7 +302,7 @@ async def test_remove_entry_unauth(
 
 
 async def test_reload_entry_unauth(
-    hass: HomeAssistant, client, hass_admin_user: MockUser
+    hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
     """Test reloading an entry via the API."""
     hass_admin_user.groups = []
@@ -282,11 +316,12 @@ async def test_reload_entry_unauth(
 
 
 async def test_reload_entry_in_failed_state(
-    hass: HomeAssistant, client, hass_admin_user: MockUser
+    hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
     """Test reloading an entry via the API that has already failed to unload."""
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.FAILED_UNLOAD)
     entry.add_to_hass(hass)
+    hass.config.components.add("demo")
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
@@ -295,7 +330,7 @@ async def test_reload_entry_in_failed_state(
 
 
 async def test_reload_entry_in_setup_retry(
-    hass: HomeAssistant, client, hass_admin_user: MockUser
+    hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
     """Test reloading an entry via the API that is in setup retry."""
     mock_setup_entry = AsyncMock(return_value=True)
@@ -315,8 +350,9 @@ async def test_reload_entry_in_setup_retry(
     entry = MockConfigEntry(domain="comp", state=core_ce.ConfigEntryState.SETUP_RETRY)
     entry.supports_unload = True
     entry.add_to_hass(hass)
+    hass.config.components.add("comp")
 
-    with patch.dict(HANDLERS, {"comp": ConfigFlow, "test": ConfigFlow}):
+    with mock_config_flow("comp", ConfigFlow), mock_config_flow("test", ConfigFlow):
         resp = await client.post(
             f"/api/config/config_entries/entry/{entry.entry_id}/reload"
         )
@@ -336,7 +372,7 @@ async def test_reload_entry_in_setup_retry(
     ],
 )
 async def test_available_flows(
-    hass: HomeAssistant, client, type_filter, result
+    hass: HomeAssistant, client: TestClient, type_filter: str | None, result: set[str]
 ) -> None:
     """Test querying the available flows."""
     with patch.object(
@@ -358,19 +394,21 @@ async def test_available_flows(
 ############################
 
 
-async def test_initialize_flow(hass: HomeAssistant, client) -> None:
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can initialize a flow."""
     mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 description_placeholders={
                     "url": "https://example.com",
                     "show_advanced_options": self.show_advanced_options,
@@ -378,7 +416,7 @@ async def test_initialize_flow(hass: HomeAssistant, client) -> None:
                 errors={"username": "Should be unique."},
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
             json={"handler": "test", "show_advanced_options": True},
@@ -407,7 +445,9 @@ async def test_initialize_flow(hass: HomeAssistant, client) -> None:
     }
 
 
-async def test_initialize_flow_unmet_dependency(hass: HomeAssistant, client) -> None:
+async def test_initialize_flow_unmet_dependency(
+    hass: HomeAssistant, client: TestClient
+) -> None:
     """Test unmet dependencies are listed."""
     mock_platform(hass, "test.config_flow", None)
 
@@ -425,7 +465,7 @@ async def test_initialize_flow_unmet_dependency(hass: HomeAssistant, client) -> 
         async def async_step_user(self, user_input=None):
             pass
 
-    with patch.dict(HANDLERS, {"test2": TestFlow}):
+    with mock_config_flow("test2", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
             json={"handler": "test2", "show_advanced_options": True},
@@ -437,25 +477,26 @@ async def test_initialize_flow_unmet_dependency(hass: HomeAssistant, client) -> 
 
 
 async def test_initialize_flow_unauth(
-    hass: HomeAssistant, client, hass_admin_user: MockUser
+    hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
     """Test we can initialize a flow."""
     hass_admin_user.groups = []
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 description_placeholders={"url": "https://example.com"},
                 errors={"username": "Should be unique."},
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -463,7 +504,8 @@ async def test_initialize_flow_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_abort(hass: HomeAssistant, client) -> None:
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+async def test_abort(hass: HomeAssistant, client: TestClient) -> None:
     """Test a flow that aborts."""
     mock_platform(hass, "test.config_flow", None)
 
@@ -471,7 +513,7 @@ async def test_abort(hass: HomeAssistant, client) -> None:
         async def async_step_user(self, user_input=None):
             return self.async_abort(reason="bla")
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -487,9 +529,8 @@ async def test_abort(hass: HomeAssistant, client) -> None:
     }
 
 
-async def test_create_account(
-    hass: HomeAssistant, client, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("freezer")
+async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
     """Test a flow that creates an account."""
     mock_platform(hass, "test.config_flow", None)
 
@@ -505,7 +546,7 @@ async def test_create_account(
                 title="Test Entry", data={"secret": "account_token"}
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -515,6 +556,7 @@ async def test_create_account(
     entries = hass.config_entries.async_entries("test")
     assert len(entries) == 1
 
+    timestamp = utcnow().timestamp()
     data = await resp.json()
     data.pop("flow_id")
     assert data == {
@@ -523,30 +565,36 @@ async def test_create_account(
         "type": "create_entry",
         "version": 1,
         "result": {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "test",
             "entry_id": entries[0].entry_id,
-            "source": core_ce.SOURCE_USER,
-            "state": core_ce.ConfigEntryState.LOADED.value,
-            "supports_reconfigure": False,
-            "supports_options": False,
-            "supports_remove_device": False,
-            "supports_unload": False,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
-            "title": "Test Entry",
             "reason": None,
+            "source": core_ce.SOURCE_USER,
+            "state": core_ce.ConfigEntryState.LOADED.value,
+            "supported_subentry_types": {},
+            "supports_options": False,
+            "supports_reconfigure": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test Entry",
         },
         "description": None,
         "description_placeholders": None,
         "options": {},
         "minor_version": 1,
+        "subentries": [],
     }
 
 
-async def test_two_step_flow(
-    hass: HomeAssistant, client, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("freezer")
+async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can finish a two step flow."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -566,7 +614,7 @@ async def test_two_step_flow(
                 title=user_input["user_title"], data={"secret": "account_token"}
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -584,7 +632,7 @@ async def test_two_step_flow(
             "preview": None,
         }
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             f"/api/config/config_entries/flow/{flow_id}",
             json={"user_title": "user-title"},
@@ -594,6 +642,7 @@ async def test_two_step_flow(
         entries = hass.config_entries.async_entries("test")
         assert len(entries) == 1
 
+        timestamp = utcnow().timestamp()
         data = await resp.json()
         data.pop("flow_id")
         assert data == {
@@ -602,29 +651,36 @@ async def test_two_step_flow(
             "title": "user-title",
             "version": 1,
             "result": {
+                "created_at": timestamp,
                 "disabled_by": None,
                 "domain": "test",
                 "entry_id": entries[0].entry_id,
-                "source": core_ce.SOURCE_USER,
-                "state": core_ce.ConfigEntryState.LOADED.value,
-                "supports_reconfigure": False,
-                "supports_options": False,
-                "supports_remove_device": False,
-                "supports_unload": False,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": timestamp,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
-                "title": "user-title",
                 "reason": None,
+                "source": core_ce.SOURCE_USER,
+                "state": core_ce.ConfigEntryState.LOADED.value,
+                "supported_subentry_types": {},
+                "supports_options": False,
+                "supports_reconfigure": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "user-title",
             },
             "description": None,
             "description_placeholders": None,
             "options": {},
             "minor_version": 1,
+            "subentries": [],
         }
 
 
 async def test_continue_flow_unauth(
-    hass: HomeAssistant, client, hass_admin_user: MockUser
+    hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
     """Test we can't finish a two step flow."""
     mock_integration(
@@ -645,7 +701,7 @@ async def test_continue_flow_unauth(
                 title=user_input["user_title"], data={"secret": "account_token"}
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -680,27 +736,62 @@ async def test_get_progress_index(
     mock_platform(hass, "test.config_flow", None)
     ws_client = await hass_ws_client(hass)
 
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
+    entry.add_to_hass(hass)
+
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 5
 
-        async def async_step_hassio(self, info):
+        async def async_step_hassio(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a Hass.io discovery."""
             return await self.async_step_account()
 
-        async def async_step_account(self, user_input=None):
+        async def async_step_account(self, user_input: dict[str, Any] | None = None):
+            """Show a form to the user."""
             return self.async_show_form(step_id="account")
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
-        form = await hass.config_entries.flow.async_init(
+        async def async_step_user(self, user_input: dict[str, Any] | None = None):
+            """Handle a config flow initialized by the user."""
+            return await self.async_step_account()
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ):
+            """Handle a reconfiguration flow initialized by the user."""
+            nonlocal entry
+            assert self._get_reconfigure_entry() is entry
+            return await self.async_step_account()
+
+    with mock_config_flow("test", TestFlow):
+        form_hassio = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_HASSIO}
         )
+        form_user = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_USER}
+        )
+        form_reconfigure = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"}
+        )
+
+    for form in (form_hassio, form_user, form_reconfigure):
+        assert form["type"] == data_entry_flow.FlowResultType.FORM
+        assert form["step_id"] == "account"
 
     await ws_client.send_json({"id": 5, "type": "config_entries/flow/progress"})
     response = await ws_client.receive_json()
 
     assert response["success"]
+
+    # Active flows with SOURCE_USER and SOURCE_RECONFIGURE should be filtered out
     assert response["result"] == [
         {
-            "flow_id": form["flow_id"],
+            "flow_id": form_hassio["flow_id"],
             "handler": "test",
             "step_id": "account",
             "context": {"source": core_ce.SOURCE_HASSIO},
@@ -723,23 +814,25 @@ async def test_get_progress_index_unauth(
     assert response["error"]["code"] == "unauthorized"
 
 
-async def test_get_progress_flow(hass: HomeAssistant, client) -> None:
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can query the API for same result as we get from init a flow."""
     mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -747,9 +840,7 @@ async def test_get_progress_flow(hass: HomeAssistant, client) -> None:
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    resp2 = await client.get(
-        "/api/config/config_entries/flow/{}".format(data["flow_id"])
-    )
+    resp2 = await client.get(f"/api/config/config_entries/flow/{data['flow_id']}")
 
     assert resp2.status == HTTPStatus.OK
     data2 = await resp2.json()
@@ -757,25 +848,27 @@ async def test_get_progress_flow(hass: HomeAssistant, client) -> None:
     assert data == data2
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_get_progress_flow_unauth(
-    hass: HomeAssistant, client, hass_admin_user: MockUser
+    hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
     """Test we can can't query the API for result of flow."""
     mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -785,14 +878,262 @@ async def test_get_progress_flow_unauth(
 
     hass_admin_user.groups = []
 
-    resp2 = await client.get(
-        "/api/config/config_entries/flow/{}".format(data["flow_id"])
-    )
+    resp2 = await client.get(f"/api/config/config_entries/flow/{data['flow_id']}")
 
     assert resp2.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_options_flow(hass: HomeAssistant, client) -> None:
+async def test_get_progress_subscribe(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test querying for the flows that are in progress."""
+    assert await async_setup_component(hass, "config", {})
+    mock_platform(hass, "test.config_flow", None)
+    ws_client = await hass_ws_client(hass)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
+    entry.add_to_hass(hass)
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 5
+
+        async def async_step_bluetooth(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a bluetooth discovery."""
+            return self.async_abort(reason="already_configured")
+
+        async def async_step_hassio(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a Hass.io discovery."""
+            return await self.async_step_account()
+
+        async def async_step_account(self, user_input: dict[str, Any] | None = None):
+            """Show a form to the user."""
+            return self.async_show_form(step_id="account")
+
+        async def async_step_user(self, user_input: dict[str, Any] | None = None):
+            """Handle a config flow initialized by the user."""
+            return await self.async_step_account()
+
+        async def async_step_reauth(self, user_input: dict[str, Any] | None = None):
+            """Handle a reauthentication flow."""
+            nonlocal entry
+            assert self._get_reauth_entry() is entry
+            return await self.async_step_account()
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ):
+            """Handle a reconfiguration flow initialized by the user."""
+            nonlocal entry
+            assert self._get_reconfigure_entry() is entry
+            return await self.async_step_account()
+
+    await ws_client.send_json({"id": 1, "type": "config_entries/flow/subscribe"})
+    response = await ws_client.receive_json()
+    assert response == {"id": 1, "event": [], "type": "event"}
+    response = await ws_client.receive_json()
+    assert response == {"id": 1, "result": None, "success": True, "type": "result"}
+
+    flow_context = {
+        "bluetooth": {"source": core_ce.SOURCE_BLUETOOTH},
+        "hassio": {"source": core_ce.SOURCE_HASSIO},
+        "user": {"source": core_ce.SOURCE_USER},
+        "reauth": {"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"},
+        "reconfigure": {"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"},
+    }
+    forms = {}
+
+    with mock_config_flow("test", TestFlow):
+        for key, context in flow_context.items():
+            forms[key] = await hass.config_entries.flow.async_init(
+                "test", context=context
+            )
+
+    assert forms["bluetooth"]["type"] == data_entry_flow.FlowResultType.ABORT
+    for key in ("hassio", "user", "reauth", "reconfigure"):
+        assert forms[key]["type"] == data_entry_flow.FlowResultType.FORM
+        assert forms[key]["step_id"] == "account"
+
+    for key in ("hassio", "user", "reauth", "reconfigure"):
+        hass.config_entries.flow.async_abort(forms[key]["flow_id"])
+
+    # Uninitialized flows and flows with SOURCE_USER and SOURCE_RECONFIGURE
+    # should be filtered out
+    for key in ("hassio", "reauth"):
+        response = await ws_client.receive_json()
+        assert response == {
+            "event": [
+                {
+                    "flow": {
+                        "flow_id": forms[key]["flow_id"],
+                        "handler": "test",
+                        "step_id": "account",
+                        "context": flow_context[key],
+                    },
+                    "flow_id": forms[key]["flow_id"],
+                    "type": "added",
+                }
+            ],
+            "id": 1,
+            "type": "event",
+        }
+    for key in ("hassio", "reauth"):
+        response = await ws_client.receive_json()
+        assert response == {
+            "event": [
+                {
+                    "flow_id": forms[key]["flow_id"],
+                    "type": "removed",
+                }
+            ],
+            "id": 1,
+            "type": "event",
+        }
+
+
+async def test_get_progress_subscribe_in_progress(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test querying for the flows that are in progress."""
+    assert await async_setup_component(hass, "config", {})
+    mock_platform(hass, "test.config_flow", None)
+    ws_client = await hass_ws_client(hass)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
+    entry.add_to_hass(hass)
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 5
+
+        async def async_step_bluetooth(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a bluetooth discovery."""
+            return self.async_abort(reason="already_configured")
+
+        async def async_step_hassio(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a Hass.io discovery."""
+            return await self.async_step_account()
+
+        async def async_step_account(self, user_input: dict[str, Any] | None = None):
+            """Show a form to the user."""
+            return self.async_show_form(step_id="account")
+
+        async def async_step_user(self, user_input: dict[str, Any] | None = None):
+            """Handle a config flow initialized by the user."""
+            return await self.async_step_account()
+
+        async def async_step_reauth(self, user_input: dict[str, Any] | None = None):
+            """Handle a reauthentication flow."""
+            nonlocal entry
+            assert self._get_reauth_entry() is entry
+            return await self.async_step_account()
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ):
+            """Handle a reconfiguration flow initialized by the user."""
+            nonlocal entry
+            assert self._get_reconfigure_entry() is entry
+            return await self.async_step_account()
+
+    flow_context = {
+        "bluetooth": {"source": core_ce.SOURCE_BLUETOOTH},
+        "hassio": {"source": core_ce.SOURCE_HASSIO},
+        "user": {"source": core_ce.SOURCE_USER},
+        "reauth": {"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"},
+        "reconfigure": {"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"},
+    }
+    forms = {}
+
+    with mock_config_flow("test", TestFlow):
+        for key, context in flow_context.items():
+            forms[key] = await hass.config_entries.flow.async_init(
+                "test", context=context
+            )
+
+    assert forms["bluetooth"]["type"] == data_entry_flow.FlowResultType.ABORT
+    for key in ("hassio", "user", "reauth", "reconfigure"):
+        assert forms[key]["type"] == data_entry_flow.FlowResultType.FORM
+        assert forms[key]["step_id"] == "account"
+
+    await ws_client.send_json({"id": 1, "type": "config_entries/flow/subscribe"})
+
+    # Uninitialized flows and flows with SOURCE_USER and SOURCE_RECONFIGURE
+    # should be filtered out
+    responses = []
+    responses.append(await ws_client.receive_json())
+    assert responses == [
+        {
+            "event": unordered(
+                [
+                    {
+                        "flow": {
+                            "flow_id": forms[key]["flow_id"],
+                            "handler": "test",
+                            "step_id": "account",
+                            "context": flow_context[key],
+                        },
+                        "flow_id": forms[key]["flow_id"],
+                        "type": None,
+                    }
+                    for key in ("hassio", "reauth")
+                ]
+            ),
+            "id": 1,
+            "type": "event",
+        }
+    ]
+
+    response = await ws_client.receive_json()
+    assert response == {"id": ANY, "result": None, "success": True, "type": "result"}
+
+    for key in ("hassio", "user", "reauth", "reconfigure"):
+        hass.config_entries.flow.async_abort(forms[key]["flow_id"])
+
+    for key in ("hassio", "reauth"):
+        response = await ws_client.receive_json()
+        assert response == {
+            "event": [
+                {
+                    "flow_id": forms[key]["flow_id"],
+                    "type": "removed",
+                }
+            ],
+            "id": 1,
+            "type": "event",
+        }
+
+
+async def test_get_progress_subscribe_unauth(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test we can't subscribe to flows."""
+    assert await async_setup_component(hass, "config", {})
+    hass_admin_user.groups = []
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 5, "type": "config_entries/flow/subscribe"})
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
+
+
+async def test_options_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can change options."""
 
     class TestFlow(core_ce.ConfigFlow):
@@ -801,11 +1142,9 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
         def async_get_options_flow(config_entry):
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
                 async def async_step_init(self, user_input=None):
-                    schema = OrderedDict()
-                    schema[vol.Required("enabled")] = bool
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=schema,
+                        data_schema=vol.Schema({vol.Required("enabled"): bool}),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -823,7 +1162,7 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
@@ -852,7 +1191,11 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
     ],
 )
 async def test_options_flow_unauth(
-    hass: HomeAssistant, client, hass_admin_user: MockUser, endpoint: str, method: str
+    hass: HomeAssistant,
+    client: TestClient,
+    hass_admin_user: MockUser,
+    endpoint: str,
+    method: str,
 ) -> None:
     """Test unauthorized on options flow."""
 
@@ -862,11 +1205,9 @@ async def test_options_flow_unauth(
         def async_get_options_flow(config_entry):
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
                 async def async_step_init(self, user_input=None):
-                    schema = OrderedDict()
-                    schema[vol.Required("enabled")] = bool
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=schema,
+                        data_schema=vol.Schema({vol.Required("enabled"): bool}),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -883,13 +1224,13 @@ async def test_options_flow_unauth(
 
     hass_admin_user.groups = []
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await getattr(client, method)(endpoint, json={"handler": entry.entry_id})
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
+async def test_two_step_options_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can finish a two step options flow."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -920,7 +1261,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
@@ -938,7 +1279,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
             "preview": None,
         }
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             f"/api/config/config_entries/options/flow/{flow_id}",
             json={"enabled": True},
@@ -955,7 +1296,9 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
         }
 
 
-async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> None:
+async def test_options_flow_with_invalid_data(
+    hass: HomeAssistant, client: TestClient
+) -> None:
     """Test an options flow with invalid_data."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -993,7 +1336,7 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
@@ -1019,7 +1362,7 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
             "preview": None,
         }
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             f"/api/config/config_entries/options/flow/{flow_id}",
             json={"choices": ["valid", "invalid"]},
@@ -1029,6 +1372,410 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
         assert data == {"errors": {"choices": "invalid is not a valid option"}}
 
 
+async def test_subentry_flow(hass: HomeAssistant, client) -> None:
+    """Test we can start a subentry flow."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_init(self, user_input=None):
+                raise NotImplementedError
+
+            async def async_step_user(self, user_input=None):
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                    description_placeholders={"enabled": "Set to true to be true"},
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with mock_config_flow("test", TestFlow):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    data.pop("flow_id")
+    assert data == {
+        "type": "form",
+        "handler": ["test1", "test"],
+        "step_id": "user",
+        "data_schema": [{"name": "enabled", "required": True, "type": "boolean"}],
+        "description_placeholders": {"enabled": "Set to true to be true"},
+        "errors": None,
+        "last_step": None,
+        "preview": None,
+    }
+
+
+async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
+    """Test we can start and finish a subentry reconfigure flow."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_init(self, user_input=None):
+                raise NotImplementedError
+
+            async def async_step_user(self, user_input=None):
+                raise NotImplementedError
+
+            async def async_step_reconfigure(self, user_input=None):
+                if user_input is not None:
+                    return self.async_update_and_abort(
+                        self._get_entry(),
+                        self._get_reconfigure_subentry(),
+                        title="Test Entry",
+                        data={"test": "blah"},
+                    )
+
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                    description_placeholders={"enabled": "Set to true to be true"},
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Title",
+                unique_id=None,
+            )
+        ],
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with mock_config_flow("test", TestFlow):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(
+            url, json={"handler": [entry.entry_id, "test"], "subentry_id": "mock_id"}
+        )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data.pop("flow_id")
+    assert data == {
+        "type": "form",
+        "handler": ["test1", "test"],
+        "step_id": "reconfigure",
+        "data_schema": [{"name": "enabled", "required": True, "type": "boolean"}],
+        "description_placeholders": {"enabled": "Set to true to be true"},
+        "errors": None,
+        "last_step": None,
+        "preview": None,
+    }
+
+    with mock_config_flow("test", TestFlow):
+        resp = await client.post(
+            f"/api/config/config_entries/subentries/flow/{flow_id}",
+            json={"enabled": True},
+        )
+    assert resp.status == HTTPStatus.OK
+
+    entries = hass.config_entries.async_entries("test")
+    assert len(entries) == 1
+
+    data = await resp.json()
+    data.pop("flow_id")
+    assert data == {
+        "handler": ["test1", "test"],
+        "reason": "reconfigure_successful",
+        "type": "abort",
+        "description_placeholders": None,
+    }
+
+    entry = hass.config_entries.async_entries()[0]
+    assert entry.subentries == {
+        "mock_id": core_ce.ConfigSubentry(
+            data={"test": "blah"},
+            subentry_id="mock_id",
+            subentry_type="test",
+            title="Test Entry",
+            unique_id=None,
+        ),
+    }
+
+
+async def test_subentry_does_not_support_reconfigure(
+    hass: HomeAssistant, client: TestClient
+) -> None:
+    """Test a subentry flow that does not support reconfigure step."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_init(self, user_input=None):
+                raise NotImplementedError
+
+            async def async_step_user(self, user_input=None):
+                raise NotImplementedError
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Title",
+                unique_id=None,
+            )
+        ],
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with mock_config_flow("test", TestFlow):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(
+            url, json={"handler": [entry.entry_id, "test"], "subentry_id": "mock_id"}
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    response = await resp.json()
+    assert response == {
+        "message": "Handler SubentryFlowHandler doesn't support step reconfigure"
+    }
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "method"),
+    [
+        ("/api/config/config_entries/subentries/flow", "post"),
+        ("/api/config/config_entries/subentries/flow/1", "get"),
+        ("/api/config/config_entries/subentries/flow/1", "post"),
+    ],
+)
+async def test_subentry_flow_unauth(
+    hass: HomeAssistant, client, hass_admin_user: MockUser, endpoint: str, method: str
+) -> None:
+    """Test unauthorized on subentry flow."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_init(self, user_input=None):
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                    description_placeholders={"enabled": "Set to true to be true"},
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    hass_admin_user.groups = []
+
+    with mock_config_flow("test", TestFlow):
+        resp = await getattr(client, method)(endpoint, json={"handler": entry.entry_id})
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
+    """Test we can finish a two step subentry flow."""
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(core_ce.ConfigFlow):
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_user(self, user_input=None):
+                return await self.async_step_finish()
+
+            async def async_step_finish(self, user_input=None):
+                if user_input:
+                    return self.async_create_entry(
+                        title="Mock title", data=user_input, unique_id="test"
+                    )
+
+                return self.async_show_form(
+                    step_id="finish", data_schema=vol.Schema({"enabled": bool})
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with mock_config_flow("test", TestFlow):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
+
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        flow_id = data["flow_id"]
+        expected_data = {
+            "data_schema": [{"name": "enabled", "type": "boolean"}],
+            "description_placeholders": None,
+            "errors": None,
+            "flow_id": flow_id,
+            "handler": ["test1", "test"],
+            "last_step": None,
+            "preview": None,
+            "step_id": "finish",
+            "type": "form",
+        }
+        assert data == expected_data
+
+        resp = await client.get(f"/api/config/config_entries/subentries/flow/{flow_id}")
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        assert data == expected_data
+
+        resp = await client.post(
+            f"/api/config/config_entries/subentries/flow/{flow_id}",
+            json={"enabled": True},
+        )
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        assert data == {
+            "description_placeholders": None,
+            "description": None,
+            "flow_id": flow_id,
+            "handler": ["test1", "test"],
+            "title": "Mock title",
+            "type": "create_entry",
+            "unique_id": "test",
+        }
+
+
+async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> None:
+    """Test a subentry flow with invalid_data."""
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(core_ce.ConfigFlow):
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_user(self, user_input=None):
+                return self.async_show_form(
+                    step_id="finish",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(
+                                "choices", default=["invalid", "valid"]
+                            ): cv.multi_select({"valid": "Valid"})
+                        }
+                    ),
+                )
+
+            async def async_step_finish(self, user_input=None):
+                return self.async_create_entry(title="Enable disable", data=user_input)
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with mock_config_flow("test", TestFlow):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
+
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        flow_id = data.pop("flow_id")
+        assert data == {
+            "type": "form",
+            "handler": ["test1", "test"],
+            "step_id": "finish",
+            "data_schema": [
+                {
+                    "default": ["invalid", "valid"],
+                    "name": "choices",
+                    "options": {"valid": "Valid"},
+                    "required": True,
+                    "type": "multi_select",
+                }
+            ],
+            "description_placeholders": None,
+            "errors": None,
+            "last_step": None,
+            "preview": None,
+        }
+
+    with mock_config_flow("test", TestFlow):
+        resp = await client.post(
+            f"/api/config/config_entries/subentries/flow/{flow_id}",
+            json={"choices": ["valid", "invalid"]},
+        )
+        assert resp.status == HTTPStatus.BAD_REQUEST
+        data = await resp.json()
+        assert data == {"errors": {"choices": "invalid is not a valid option"}}
+
+
+@pytest.mark.usefixtures("freezer")
 async def test_get_single(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -1050,18 +1797,25 @@ async def test_get_single(
     )
     response = await ws_client.receive_json()
 
+    timestamp = utcnow().timestamp()
     assert response["success"]
     assert response["result"]["config_entry"] == {
+        "created_at": timestamp,
         "disabled_by": None,
         "domain": "test",
         "entry_id": entry.entry_id,
+        "error_reason_translation_key": None,
+        "error_reason_translation_placeholders": None,
+        "modified_at": timestamp,
+        "num_subentries": 0,
         "pref_disable_new_entities": False,
         "pref_disable_polling": False,
         "reason": None,
         "source": "user",
         "state": "loaded",
-        "supports_reconfigure": False,
+        "supported_subentry_types": {},
         "supports_options": False,
+        "supports_reconfigure": False,
         "supports_remove_device": False,
         "supports_unload": False,
         "title": "Mock Title",
@@ -1088,10 +1842,9 @@ async def test_update_prefrences(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
+    hass.config.components.add("test")
 
     assert entry.pref_disable_new_entities is False
     assert entry.pref_disable_polling is False
@@ -1187,11 +1940,10 @@ async def test_disable_entry(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     assert entry.disabled_by is None
+    hass.config.components.add("test")
 
     # Disable
     await ws_client.send_json(
@@ -1263,8 +2015,27 @@ async def test_disable_entry_nonexisting(
     assert response["error"]["code"] == "not_found"
 
 
+@pytest.mark.parametrize(
+    (
+        "flow_context",
+        "entry_discovery_keys",
+    ),
+    [
+        (
+            {},
+            {},
+        ),
+        (
+            {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
+            {"test": (DiscoveryKey(domain="test", key="blah", version=1),)},
+        ),
+    ],
+)
 async def test_ignore_flow(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    flow_context: dict,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
 ) -> None:
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
@@ -1285,11 +2056,11 @@ async def test_ignore_flow(
 
     ws_client = await hass_ws_client(hass)
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         result = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_USER}
+            "test", context={"source": core_ce.SOURCE_USER} | flow_context
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         await ws_client.send_json(
             {
@@ -1309,6 +2080,8 @@ async def test_ignore_flow(
     assert entry.source == "ignore"
     assert entry.unique_id == "mock-unique-id"
     assert entry.title == "Test Integration"
+    assert entry.data == {}
+    assert entry.discovery_keys == entry_discovery_keys
 
 
 async def test_ignore_flow_nonexisting(
@@ -1332,8 +2105,9 @@ async def test_ignore_flow_nonexisting(
     assert response["error"]["code"] == "not_found"
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_get_matching_entries_ws(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, clear_handlers
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get entries with the websocket api."""
     assert await async_setup_component(hass, "config", {})
@@ -1385,78 +2159,109 @@ async def test_get_matching_entries_ws(
 
     await ws_client.send_json_auto_id({"type": "config_entries/get"})
     response = await ws_client.receive_json()
+    timestamp = utcnow().timestamp()
     assert response["result"] == [
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 1",
         },
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp2",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 2",
         },
         {
+            "created_at": timestamp,
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 3",
         },
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 4",
         },
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 5",
@@ -1473,16 +2278,22 @@ async def test_get_matching_entries_ws(
     response = await ws_client.receive_json()
     assert response["result"] == [
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 1",
@@ -1498,31 +2309,43 @@ async def test_get_matching_entries_ws(
     response = await ws_client.receive_json()
     assert response["result"] == [
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 4",
         },
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 5",
@@ -1538,31 +2361,43 @@ async def test_get_matching_entries_ws(
     response = await ws_client.receive_json()
     assert response["result"] == [
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 1",
         },
         {
+            "created_at": timestamp,
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 3",
@@ -1584,76 +2419,106 @@ async def test_get_matching_entries_ws(
 
     assert response["result"] == [
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 1",
         },
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp2",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 2",
         },
         {
+            "created_at": timestamp,
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 3",
         },
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 4",
         },
         {
+            "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_key": None,
+            "error_reason_translation_placeholders": None,
+            "modified_at": timestamp,
+            "num_subentries": 0,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supports_reconfigure": False,
+            "supported_subentry_types": {},
             "supports_options": False,
+            "supports_reconfigure": False,
             "supports_remove_device": False,
             "supports_unload": False,
             "title": "Test 5",
@@ -1693,7 +2558,9 @@ async def test_get_matching_entries_ws(
 
 
 async def test_subscribe_entries_ws(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, clear_handlers
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test subscribe entries with the websocket api."""
     assert await async_setup_component(hass, "config", {})
@@ -1739,20 +2606,27 @@ async def test_subscribe_entries_ws(
     assert response["type"] == "result"
     response = await ws_client.receive_json()
     assert response["id"] == 5
+    created = utcnow().timestamp()
     assert response["event"] == [
         {
             "type": None,
             "entry": {
+                "created_at": created,
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": created,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "Test 1",
@@ -1761,16 +2635,22 @@ async def test_subscribe_entries_ws(
         {
             "type": None,
             "entry": {
+                "created_at": created,
                 "disabled_by": None,
                 "domain": "comp2",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": created,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": "Unsupported API",
                 "source": "bla2",
                 "state": "setup_error",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "Test 2",
@@ -1779,38 +2659,52 @@ async def test_subscribe_entries_ws(
         {
             "type": None,
             "entry": {
+                "created_at": created,
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": created,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "Test 3",
             },
         },
     ]
+    freezer.tick()
+    modified = utcnow().timestamp()
     assert hass.config_entries.async_update_entry(entry, title="changed")
     response = await ws_client.receive_json()
     assert response["id"] == 5
     assert response["event"] == [
         {
             "entry": {
+                "created_at": created,
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": modified,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -1818,22 +2712,30 @@ async def test_subscribe_entries_ws(
             "type": "updated",
         }
     ]
+    freezer.tick()
+    modified = utcnow().timestamp()
     await hass.config_entries.async_remove(entry.entry_id)
     response = await ws_client.receive_json()
     assert response["id"] == 5
     assert response["event"] == [
         {
             "entry": {
+                "created_at": created,
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": modified,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -1841,22 +2743,29 @@ async def test_subscribe_entries_ws(
             "type": "removed",
         }
     ]
+    freezer.tick()
     await hass.config_entries.async_add(entry)
     response = await ws_client.receive_json()
     assert response["id"] == 5
     assert response["event"] == [
         {
             "entry": {
+                "created_at": entry.created_at.timestamp(),
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": entry.modified_at.timestamp(),
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -1867,9 +2776,12 @@ async def test_subscribe_entries_ws(
 
 
 async def test_subscribe_entries_ws_filtered(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, clear_handlers
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test subscribe entries with the websocket api with a type filter."""
+    created = utcnow().timestamp()
     assert await async_setup_component(hass, "config", {})
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
@@ -1929,16 +2841,22 @@ async def test_subscribe_entries_ws_filtered(
         {
             "type": None,
             "entry": {
+                "created_at": created,
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": created,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "Test 1",
@@ -1947,22 +2865,30 @@ async def test_subscribe_entries_ws_filtered(
         {
             "type": None,
             "entry": {
+                "created_at": created,
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": created,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "Test 3",
             },
         },
     ]
+    freezer.tick()
+    modified = utcnow().timestamp()
     assert hass.config_entries.async_update_entry(entry, title="changed")
     assert hass.config_entries.async_update_entry(entry3, title="changed too")
     assert hass.config_entries.async_update_entry(entry4, title="changed but ignored")
@@ -1971,16 +2897,22 @@ async def test_subscribe_entries_ws_filtered(
     assert response["event"] == [
         {
             "entry": {
+                "created_at": created,
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": modified,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -1993,16 +2925,22 @@ async def test_subscribe_entries_ws_filtered(
     assert response["event"] == [
         {
             "entry": {
+                "created_at": created,
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": modified,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed too",
@@ -2010,6 +2948,8 @@ async def test_subscribe_entries_ws_filtered(
             "type": "updated",
         }
     ]
+    freezer.tick()
+    modified = utcnow().timestamp()
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.config_entries.async_remove(entry2.entry_id)
     response = await ws_client.receive_json()
@@ -2017,16 +2957,22 @@ async def test_subscribe_entries_ws_filtered(
     assert response["event"] == [
         {
             "entry": {
+                "created_at": created,
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": modified,
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -2034,22 +2980,29 @@ async def test_subscribe_entries_ws_filtered(
             "type": "removed",
         }
     ]
+    freezer.tick()
     await hass.config_entries.async_add(entry)
     response = await ws_client.receive_json()
     assert response["id"] == 5
     assert response["event"] == [
         {
             "entry": {
+                "created_at": entry.created_at.timestamp(),
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_key": None,
+                "error_reason_translation_placeholders": None,
+                "modified_at": entry.modified_at.timestamp(),
+                "num_subentries": 0,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supports_reconfigure": False,
+                "supported_subentry_types": {},
                 "supports_options": False,
+                "supports_reconfigure": False,
                 "supports_remove_device": False,
                 "supports_unload": False,
                 "title": "changed",
@@ -2059,7 +3012,9 @@ async def test_subscribe_entries_ws_filtered(
     ]
 
 
-async def test_flow_with_multiple_schema_errors(hass: HomeAssistant, client) -> None:
+async def test_flow_with_multiple_schema_errors(
+    hass: HomeAssistant, client: TestClient
+) -> None:
     """Test an config flow with multiple schema errors."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -2079,7 +3034,7 @@ async def test_flow_with_multiple_schema_errors(hass: HomeAssistant, client) -> 
                 ),
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -2102,7 +3057,7 @@ async def test_flow_with_multiple_schema_errors(hass: HomeAssistant, client) -> 
 
 
 async def test_flow_with_multiple_schema_errors_base(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: TestClient
 ) -> None:
     """Test an config flow with multiple schema errors where fields are not in the schema."""
     mock_integration(
@@ -2121,7 +3076,7 @@ async def test_flow_with_multiple_schema_errors_base(
                 ),
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -2145,8 +3100,11 @@ async def test_flow_with_multiple_schema_errors_base(
         }
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+@pytest.mark.usefixtures("freezer")
 async def test_supports_reconfigure(
-    hass: HomeAssistant, client, enable_custom_integrations: None
+    hass: HomeAssistant,
+    client: TestClient,
 ) -> None:
     """Test a flow that support reconfigure step."""
     mock_platform(hass, "test.config_flow", None)
@@ -2154,6 +3112,9 @@ async def test_supports_reconfigure(
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
+
+    entry = MockConfigEntry(domain="test", title="Test", entry_id="1")
+    entry.add_to_hass(hass)
 
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
@@ -2168,11 +3129,13 @@ async def test_supports_reconfigure(
                 return self.async_show_form(
                     step_id="reconfigure", data_schema=vol.Schema({})
                 )
-            return self.async_create_entry(
-                title="Test Entry", data={"secret": "account_token"}
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                title="Test Entry",
+                data={"secret": "account_token"},
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
             json={"handler": "test", "entry_id": "1"},
@@ -2194,7 +3157,7 @@ async def test_supports_reconfigure(
         "errors": None,
     }
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             f"/api/config/config_entries/flow/{flow_id}",
             json={},
@@ -2208,33 +3171,14 @@ async def test_supports_reconfigure(
     data.pop("flow_id")
     assert data == {
         "handler": "test",
-        "title": "Test Entry",
-        "type": "create_entry",
-        "version": 1,
-        "result": {
-            "disabled_by": None,
-            "domain": "test",
-            "entry_id": entries[0].entry_id,
-            "source": core_ce.SOURCE_RECONFIGURE,
-            "state": core_ce.ConfigEntryState.LOADED.value,
-            "supports_reconfigure": True,
-            "supports_options": False,
-            "supports_remove_device": False,
-            "supports_unload": False,
-            "pref_disable_new_entities": False,
-            "pref_disable_polling": False,
-            "title": "Test Entry",
-            "reason": None,
-        },
-        "description": None,
+        "reason": "reconfigure_successful",
+        "type": "abort",
         "description_placeholders": None,
-        "options": {},
-        "minor_version": 1,
     }
 
 
 async def test_does_not_support_reconfigure(
-    hass: HomeAssistant, client: TestClient, enable_custom_integrations: None
+    hass: HomeAssistant, client: TestClient
 ) -> None:
     """Test a flow that does not support reconfigure step."""
     mock_platform(hass, "test.config_flow", None)
@@ -2251,15 +3195,151 @@ async def test_does_not_support_reconfigure(
                 title="Test Entry", data={"secret": "account_token"}
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
             json={"handler": "test", "entry_id": "1"},
         )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
-    response = await resp.text()
-    assert (
-        response
-        == '{"message":"Handler ConfigEntriesFlowManager doesn\'t support step reconfigure"}'
+    response = await resp.json()
+    assert response == {"message": "Handler TestFlow doesn't support step reconfigure"}
+
+
+async def test_list_subentries(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that we can list subentries."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(
+        domain="test",
+        state=core_ce.ConfigEntryState.LOADED,
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={"test": "test"},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            )
+        ],
     )
+    entry.add_to_hass(hass)
+
+    assert entry.pref_disable_new_entities is False
+    assert entry.pref_disable_polling is False
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/list",
+            "entry_id": entry.entry_id,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "subentry_id": "mock_id",
+            "subentry_type": "test",
+            "title": "Mock title",
+            "unique_id": "test",
+        },
+    ]
+
+    # Try listing subentries for an unknown entry
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/list",
+            "entry_id": "no_such_entry",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config entry not found",
+    }
+
+
+async def test_delete_subentry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that we can delete a subentry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(
+        domain="test",
+        state=core_ce.ConfigEntryState.LOADED,
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={"test": "test"},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Mock title",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.pref_disable_new_entities is False
+    assert entry.pref_disable_polling is False
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/delete",
+            "entry_id": entry.entry_id,
+            "subentry_id": "mock_id",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] is None
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/list",
+            "entry_id": entry.entry_id,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == []
+
+    # Try deleting the subentry again
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/delete",
+            "entry_id": entry.entry_id,
+            "subentry_id": "mock_id",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config subentry not found",
+    }
+
+    # Try deleting subentry from an unknown entry
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/delete",
+            "entry_id": "no_such_entry",
+            "subentry_id": "mock_id",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config entry not found",
+    }

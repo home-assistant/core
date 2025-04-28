@@ -8,15 +8,11 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ADVANTAGE_AIR_STATE_CLOSE,
-    ADVANTAGE_AIR_STATE_OPEN,
-    DOMAIN as ADVANTAGE_AIR_DOMAIN,
-)
+from . import AdvantageAirDataConfigEntry
+from .const import ADVANTAGE_AIR_STATE_CLOSE, ADVANTAGE_AIR_STATE_OPEN
 from .entity import AdvantageAirThingEntity, AdvantageAirZoneEntity
 from .models import AdvantageAirData
 
@@ -25,12 +21,12 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AdvantageAirDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir cover platform."""
 
-    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance = config_entry.runtime_data
 
     entities: list[CoverEntity] = []
     if aircons := instance.coordinator.data.get("aircons"):
@@ -45,7 +41,7 @@ async def async_setup_entry(
                 entities.append(
                     AdvantageAirThingCover(instance, thing, CoverDeviceClass.BLIND)
                 )
-            elif thing["channelDipState"] == 3:  # 3 = "Garage door"
+            elif thing["channelDipState"] in [3, 10]:  # 3 & 10 = "Garage door"
                 entities.append(
                     AdvantageAirThingCover(instance, thing, CoverDeviceClass.GARAGE)
                 )

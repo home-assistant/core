@@ -6,5 +6,6 @@
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/myuplink",
   "iot_class": "cloud_polling",
-  "requirements": ["myuplink==0.5.0"]
+  "quality_scale": "silver",
+  "requirements": ["myuplink==0.7.0"]
 }

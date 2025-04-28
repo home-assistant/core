@@ -6,8 +6,6 @@ import asyncio
 from collections.abc import Iterable
 from typing import Any
 
-from androidtvremote2 import AndroidTVRemote
-
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_DELAY_SECS,
@@ -19,11 +17,11 @@ from homeassistant.components.remote import (
     RemoteEntity,
     RemoteEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import AndroidTVRemoteConfigEntry
+from .const import CONF_APP_NAME
 from .entity import AndroidTVRemoteBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -31,11 +29,11 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AndroidTVRemoteConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Android TV remote entity based on a config entry."""
-    api: AndroidTVRemote = hass.data[DOMAIN][config_entry.entry_id]
+    api = config_entry.runtime_data
     async_add_entities([AndroidTVRemoteEntity(api, config_entry)])
 
 
@@ -44,17 +42,28 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
 
     _attr_supported_features = RemoteEntityFeature.ACTIVITY
 
+    def _update_current_app(self, current_app: str) -> None:
+        """Update current app info."""
+        self._attr_current_activity = (
+            self._apps[current_app].get(CONF_APP_NAME, current_app)
+            if current_app in self._apps
+            else current_app
+        )
+
     @callback
     def _current_app_updated(self, current_app: str) -> None:
         """Update the state when the current app changes."""
-        self._attr_current_activity = current_app
+        self._update_current_app(current_app)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        self._attr_current_activity = self._api.current_app
+        self._attr_activity_list = [
+            app.get(CONF_APP_NAME, "") for app in self._apps.values()
+        ]
+        self._update_current_app(self._api.current_app)
         self._api.add_current_app_updated_callback(self._current_app_updated)
 
     async def async_will_remove_from_hass(self) -> None:
@@ -69,6 +78,14 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
             self._send_key_command("POWER")
         activity = kwargs.get(ATTR_ACTIVITY, "")
         if activity:
+            activity = next(
+                (
+                    app_id
+                    for app_id, app in self._apps.items()
+                    if app.get(CONF_APP_NAME, "") == activity
+                ),
+                activity,
+            )
             self._send_launch_app_command(activity)
 
     async def async_turn_off(self, **kwargs: Any) -> None:

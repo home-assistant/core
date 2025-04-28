@@ -16,8 +16,11 @@ from dateutil.rrule import rrulestr
 import voluptuous as vol
 
 from homeassistant.components import frontend, http, websocket_api
-from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import (
+    ERR_NOT_FOUND,
+    ERR_NOT_SUPPORTED,
+    ActiveConnection,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import (
@@ -29,16 +32,10 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-    time_period_str,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -46,6 +43,8 @@ from homeassistant.util.json import JsonValueType
 
 from .const import (
     CONF_EVENT,
+    DATA_COMPONENT,
+    DOMAIN,
     EVENT_DESCRIPTION,
     EVENT_DURATION,
     EVENT_END,
@@ -73,8 +72,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "calendar"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 # Don't support rrules more often than daily
@@ -147,6 +147,27 @@ def _has_min_duration(
             if duration < min_duration:
                 raise vol.Invalid(
                     f"Expected minimum event duration of {min_duration} ({start}, {end})"
+                )
+        return obj
+
+    return validate
+
+
+def _has_positive_interval(
+    start_key: str, end_key: str, duration_key: str
+) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that the time span between start and end is greater than zero."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        if (duration := obj.get(duration_key)) is not None:
+            if duration <= datetime.timedelta(seconds=0):
+                raise vol.Invalid(f"Expected positive duration ({duration})")
+            return obj
+
+        if (start := obj.get(start_key)) and (end := obj.get(end_key)):
+            if start >= end:
+                raise vol.Invalid(
+                    f"Expected end time to be after start time ({start}, {end})"
                 )
         return obj
 
@@ -268,8 +289,6 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LEGACY_SERVICE_LIST_EVENTS: Final = "list_events"
-"""Deprecated: please use SERVICE_LIST_EVENTS."""
 SERVICE_GET_EVENTS: Final = "get_events"
 SERVICE_GET_EVENTS_SCHEMA: Final = vol.All(
     cv.has_at_least_one_key(EVENT_END_DATETIME, EVENT_DURATION),
@@ -283,12 +302,13 @@ SERVICE_GET_EVENTS_SCHEMA: Final = vol.All(
             ),
         }
     ),
+    _has_positive_interval(EVENT_START_DATETIME, EVENT_END_DATETIME, EVENT_DURATION),
 )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
-    component = hass.data[DOMAIN] = EntityComponent[CalendarEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[CalendarEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -309,12 +329,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_create_event,
         required_features=[CalendarEntityFeature.CREATE_EVENT],
     )
-    component.async_register_legacy_entity_service(
-        LEGACY_SERVICE_LIST_EVENTS,
-        SERVICE_GET_EVENTS_SCHEMA,
-        async_list_events_service,
-        supports_response=SupportsResponse.ONLY,
-    )
     component.async_register_entity_service(
         SERVICE_GET_EVENTS,
         SERVICE_GET_EVENTS_SCHEMA,
@@ -327,14 +341,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 def get_date(date: dict[str, Any]) -> datetime.datetime:
@@ -478,7 +490,7 @@ def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.time
             else:
                 time = f"0:{time}"
 
-        offset_time = time_period_str(time)
+        offset_time = cv.time_period_str(time)
         summary = (summary[: search.start()] + summary[search.end() :]).strip()
         return (summary, offset_time)
     return (summary, datetime.timedelta())
@@ -493,8 +505,14 @@ def is_offset_reached(
     return start + offset_time <= dt_util.now(start.tzinfo)
 
 
+class CalendarEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes calendar entities."""
+
+
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
+
+    entity_description: CalendarEntityDescription
 
     _entity_component_unrecorded_attributes = frozenset({"description"})
 
@@ -711,8 +729,7 @@ async def handle_calendar_event_create(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle creation of a calendar event."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 
@@ -752,8 +769,7 @@ async def handle_calendar_event_delete(
 ) -> None:
     """Handle delete of a calendar event."""
 
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 
@@ -798,8 +814,7 @@ async def handle_calendar_event_update(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle creation of a calendar event."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 
@@ -868,32 +883,6 @@ async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
     await entity.async_create_event(**params)
 
 
-async def async_list_events_service(
-    calendar: CalendarEntity, service_call: ServiceCall
-) -> ServiceResponse:
-    """List events on a calendar during a time range.
-
-    Deprecated: please use async_get_events_service.
-    """
-    _LOGGER.warning(
-        "Detected use of service 'calendar.list_events'. "
-        "This is deprecated and will stop working in Home Assistant 2024.6. "
-        "Use 'calendar.get_events' instead which supports multiple entities",
-    )
-    async_create_issue(
-        calendar.hass,
-        DOMAIN,
-        "deprecated_service_calendar_list_events",
-        breaks_in_ha_version="2024.6.0",
-        is_fixable=True,
-        is_persistent=False,
-        issue_domain=calendar.platform.platform_name,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_service_calendar_list_events",
-    )
-    return await async_get_events_service(calendar, service_call)
-
-
 async def async_get_events_service(
     calendar: CalendarEntity, service_call: ServiceCall
 ) -> ServiceResponse:
@@ -903,6 +892,7 @@ async def async_get_events_service(
         end = start + service_call.data[EVENT_DURATION]
     else:
         end = service_call.data[EVENT_END_DATETIME]
+
     calendar_event_list = await calendar.async_get_events(
         calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
     )

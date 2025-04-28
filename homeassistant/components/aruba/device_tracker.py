@@ -10,13 +10,13 @@ import pexpect
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ _DEVICES_REGEX = re.compile(
     r"(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))\s+"
 )
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> ArubaDeviceScanner | None:
     """Validate the configuration and return a Aruba scanner."""
-    scanner = ArubaDeviceScanner(config[DOMAIN])
+    scanner = ArubaDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -90,7 +90,7 @@ class ArubaDeviceScanner(DeviceScanner):
         """Retrieve data from Aruba Access Point and return parsed result."""
 
         connect = f"ssh {self.username}@{self.host} -o HostKeyAlgorithms=ssh-rsa"
-        ssh = pexpect.spawn(connect)
+        ssh: pexpect.spawn[str] = pexpect.spawn(connect, encoding="utf-8")
         query = ssh.expect(
             [
                 "password:",
@@ -125,12 +125,12 @@ class ArubaDeviceScanner(DeviceScanner):
         ssh.expect("#")
         ssh.sendline("show clients")
         ssh.expect("#")
-        devices_result = ssh.before.split(b"\r\n")
+        devices_result = (ssh.before or "").splitlines()
         ssh.sendline("exit")
 
         devices: dict[str, dict[str, str]] = {}
         for device in devices_result:
-            if match := _DEVICES_REGEX.search(device.decode("utf-8")):
+            if match := _DEVICES_REGEX.search(device):
                 devices[match.group("ip")] = {
                     "ip": match.group("ip"),
                     "mac": match.group("mac").upper(),

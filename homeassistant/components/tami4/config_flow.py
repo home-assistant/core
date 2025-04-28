@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_PHONE, CONF_REFRESH_TOKEN, DOMAIN
 
@@ -42,7 +42,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if m := _PHONE_MATCHER.match(phone):
                     self.phone = f"+972{m.group('number')}"
                 else:
-                    raise InvalidPhoneNumber
+                    raise InvalidPhoneNumber  # noqa: TRY301
                 await self.hass.async_add_executor_job(
                     Tami4EdgeAPI.request_otp, self.phone
                 )
@@ -50,7 +50,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_phone"
             except exceptions.Tami4EdgeAPIException:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -78,12 +78,16 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except exceptions.Tami4EdgeAPIException:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                device_name = api.device_metadata.name
+                if device_name is None:
+                    device_name = "Tami4"
                 return self.async_create_entry(
-                    title=api.device.name, data={CONF_REFRESH_TOKEN: refresh_token}
+                    title=device_name,
+                    data={CONF_REFRESH_TOKEN: refresh_token},
                 )
 
         return self.async_show_form(

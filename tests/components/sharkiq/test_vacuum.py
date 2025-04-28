@@ -11,7 +11,9 @@ from unittest.mock import patch
 
 import pytest
 from sharkiq import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVacuum
+from voluptuous.error import MultipleInvalid
 
+from homeassistant import exceptions
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.sharkiq import DOMAIN
 from homeassistant.components.sharkiq.vacuum import (
@@ -19,7 +21,9 @@ from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_MSG,
     ATTR_LOW_LIGHT,
     ATTR_RECHARGE_RESUME,
+    ATTR_ROOMS,
     FAN_SPEEDS_MAP,
+    SERVICE_CLEAN_ROOM,
 )
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
@@ -31,10 +35,7 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_CLEANING,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.const import (
@@ -58,6 +59,7 @@ from .const import (
 from tests.common import MockConfigEntry
 
 VAC_ENTITY_ID = f"vacuum.{SHARK_DEVICE_DICT['product_name'].lower()}"
+ROOM_LIST = ["Kitchen", "Living Room"]
 EXPECTED_FEATURES = (
     VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.FAN_SPEED
@@ -129,10 +131,14 @@ class MockShark(SharkIqVacuum):
         """Set a property locally without hitting the API."""
         self.set_property_value(property_name, value)
 
+    def get_room_list(self):
+        """Return the list of available rooms without hitting the API."""
+        return ROOM_LIST
+
 
 @pytest.fixture(autouse=True)
 @patch("sharkiq.ayla_api.AylaApi", MockAyla)
-async def setup_integration(hass):
+async def setup_integration(hass: HomeAssistant) -> None:
     """Build the mock integration."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=TEST_USERNAME, data=CONFIG, entry_id=ENTRY_ID
@@ -142,15 +148,16 @@ async def setup_integration(hass):
     await hass.async_block_till_done()
 
 
-async def test_simple_properties(hass: HomeAssistant) -> None:
+async def test_simple_properties(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that simple properties work as intended."""
     state = hass.states.get(VAC_ENTITY_ID)
-    registry = er.async_get(hass)
-    entity = registry.async_get(VAC_ENTITY_ID)
+    entity = entity_registry.async_get(VAC_ENTITY_ID)
 
     assert entity
     assert state
-    assert state.state == STATE_CLEANING
+    assert state.state == VacuumActivity.CLEANING
     assert entity.unique_id == "AC000Wxxxxxxxxx"
 
 
@@ -165,6 +172,7 @@ async def test_simple_properties(hass: HomeAssistant) -> None:
         (ATTR_ERROR_MSG, "Cliff sensor is blocked"),
         (ATTR_LOW_LIGHT, False),
         (ATTR_RECHARGE_RESUME, True),
+        (ATTR_ROOMS, ROOM_LIST),
     ],
 )
 async def test_initial_attributes(
@@ -178,10 +186,10 @@ async def test_initial_attributes(
 @pytest.mark.parametrize(
     ("service", "target_state"),
     [
-        (SERVICE_STOP, STATE_IDLE),
-        (SERVICE_PAUSE, STATE_PAUSED),
-        (SERVICE_RETURN_TO_BASE, STATE_RETURNING),
-        (SERVICE_START, STATE_CLEANING),
+        (SERVICE_STOP, VacuumActivity.IDLE),
+        (SERVICE_PAUSE, VacuumActivity.PAUSED),
+        (SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (SERVICE_START, VacuumActivity.CLEANING),
     ],
 )
 async def test_cleaning_states(
@@ -215,12 +223,32 @@ async def test_fan_speed(hass: HomeAssistant, fan_speed: str) -> None:
     ],
 )
 async def test_device_properties(
-    hass: HomeAssistant, device_property: str, target_value: str
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    device_property: str,
+    target_value: str,
 ) -> None:
     """Test device properties."""
-    registry = dr.async_get(hass)
-    device = registry.async_get_device(identifiers={(DOMAIN, "AC000Wxxxxxxxxx")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "AC000Wxxxxxxxxx")})
     assert getattr(device, device_property) == target_value
+
+
+@pytest.mark.parametrize(
+    ("room_list", "exception"),
+    [
+        (["KITCHEN", "MUD_ROOM", "DOG HOUSE"], exceptions.ServiceValidationError),
+        (["Office"], exceptions.ServiceValidationError),
+        ([], MultipleInvalid),
+    ],
+)
+async def test_clean_room_error(
+    hass: HomeAssistant, room_list: list, exception: Exception
+) -> None:
+    """Test clean_room errors."""
+    data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
+
+    with pytest.raises(exception):
+        await hass.services.async_call(DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True)
 
 
 async def test_locate(hass: HomeAssistant) -> None:
@@ -229,6 +257,18 @@ async def test_locate(hass: HomeAssistant) -> None:
         data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
         await hass.services.async_call("vacuum", SERVICE_LOCATE, data, blocking=True)
         mock_locate.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("room_list"),
+    [(ROOM_LIST), (["Kitchen"])],
+)
+async def test_clean_room(hass: HomeAssistant, room_list: list) -> None:
+    """Test that the clean_room command works."""
+    with patch.object(SharkIqVacuum, "async_clean_rooms") as mock_clean_room:
+        data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
+        await hass.services.async_call(DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True)
+        mock_clean_room.assert_called_once_with(room_list)
 
 
 @pytest.mark.parametrize(

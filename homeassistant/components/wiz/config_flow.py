@@ -10,10 +10,11 @@ from pywizlight.discovery import DiscoveredBulb
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 import voluptuous as vol
 
-from homeassistant.components import dhcp, onboarding
+from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util.network import is_ip_address
 
 from .const import DEFAULT_NAME, DISCOVER_SCAN_TIMEOUT, DOMAIN, WIZ_CONNECT_EXCEPTIONS
@@ -38,7 +39,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, DiscoveredBulb] = {}
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = DiscoveredBulb(
@@ -168,7 +169,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 except WizLightConnectionError:
                     errors["base"] = "no_wiz_light"
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:

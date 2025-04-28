@@ -1,25 +1,22 @@
 """Test the Z-Wave JS repairs module."""
 
 from copy import deepcopy
-from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.repairs.issue_handler import (
-    async_process_repairs_platforms,
-)
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
-)
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
-import homeassistant.helpers.issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
+from tests.components.repairs import (
+    async_process_repairs_platforms,
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -55,17 +52,19 @@ async def test_device_config_file_changed_confirm_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
     client,
     multisensor_6_state,
     integration,
 ) -> None:
     """Test the device_config_file_changed issue confirm step."""
-    dev_reg = dr.async_get(hass)
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
     client.async_send_command_no_wait.reset_mock()
 
-    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node)}
+    )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
@@ -82,30 +81,21 @@ async def test_device_config_file_changed_confirm_step(
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"device_name": device.name}
 
-    url = RepairsFlowIndexView.url
-    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "init"
     assert data["description_placeholders"] == {"device_name": device.name}
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-
     # Show menu
-    resp = await http_client.post(url)
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(http_client, flow_id)
 
     assert data["type"] == "menu"
 
     # Apply fix
-    resp = await http_client.post(url, json={"next_step_id": "confirm"})
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(
+        http_client, flow_id, json={"next_step_id": "confirm"}
+    )
 
     assert data["type"] == "create_entry"
 
@@ -128,17 +118,19 @@ async def test_device_config_file_changed_ignore_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
     client,
     multisensor_6_state,
     integration,
 ) -> None:
     """Test the device_config_file_changed issue ignore step."""
-    dev_reg = dr.async_get(hass)
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
     client.async_send_command_no_wait.reset_mock()
 
-    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node)}
+    )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
@@ -155,30 +147,21 @@ async def test_device_config_file_changed_ignore_step(
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"device_name": device.name}
 
-    url = RepairsFlowIndexView.url
-    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "init"
     assert data["description_placeholders"] == {"device_name": device.name}
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-
     # Show menu
-    resp = await http_client.post(url)
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(http_client, flow_id)
 
     assert data["type"] == "menu"
 
     # Ignore the issue
-    resp = await http_client.post(url, json={"next_step_id": "ignore"})
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(
+        http_client, flow_id, json={"next_step_id": "ignore"}
+    )
 
     assert data["type"] == "abort"
     assert data["reason"] == "issue_ignored"
@@ -196,6 +179,10 @@ async def test_device_config_file_changed_ignore_step(
     assert msg["result"]["issues"][0].get("dismissed_version") is not None
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    ["component.zwave_js.issues.invalid_issue.title"],
+)
 async def test_invalid_issue(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -224,22 +211,13 @@ async def test_invalid_issue(
     issue = msg["result"]["issues"][0]
     assert issue["issue_id"] == "invalid_issue_id"
 
-    url = RepairsFlowIndexView.url
-    resp = await http_client.post(
-        url, json={"handler": DOMAIN, "issue_id": "invalid_issue_id"}
-    )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(http_client, DOMAIN, "invalid_issue_id")
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
 
     # Apply fix
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await http_client.post(url)
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(http_client, flow_id)
 
     assert data["type"] == "create_entry"
 
@@ -256,15 +234,17 @@ async def test_abort_confirm(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
     client,
     multisensor_6_state,
     integration,
 ) -> None:
     """Test aborting device_config_file_changed issue in confirm step."""
-    dev_reg = dr.async_get(hass)
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
-    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node)}
+    )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
@@ -272,10 +252,7 @@ async def test_abort_confirm(
     await hass_ws_client(hass)
     http_client = await hass_client()
 
-    url = RepairsFlowIndexView.url
-    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "init"
@@ -284,11 +261,9 @@ async def test_abort_confirm(
     await hass.config_entries.async_unload(integration.entry_id)
 
     # Apply fix
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await http_client.post(url, json={"next_step_id": "confirm"})
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(
+        http_client, flow_id, json={"next_step_id": "confirm"}
+    )
 
     assert data["type"] == "abort"
     assert data["reason"] == "cannot_connect"

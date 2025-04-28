@@ -7,8 +7,9 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_EVENT_DATA, CONF_PLATFORM
+from homeassistant.const import CONF_EVENT_DATA, CONF_PLATFORM, EVENT_STATE_REPORTED
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -16,10 +17,24 @@ from homeassistant.helpers.typing import ConfigType
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_CONTEXT = "context"
 
+
+def _validate_event_types(value: Any) -> Any:
+    """Validate the event types.
+
+    If the event types are templated, we check when attaching the trigger.
+    """
+    templates: list[template.Template] = value
+    if any(tpl.is_static and tpl.template == EVENT_STATE_REPORTED for tpl in templates):
+        raise vol.Invalid(f"Can't listen to {EVENT_STATE_REPORTED} in event trigger")
+    return value
+
+
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "event",
-        vol.Required(CONF_EVENT_TYPE): vol.All(cv.ensure_list, [cv.template]),
+        vol.Required(CONF_EVENT_TYPE): vol.All(
+            cv.ensure_list, [cv.template], _validate_event_types
+        ),
         vol.Optional(CONF_EVENT_DATA): vol.All(dict, cv.template_complex),
         vol.Optional(CONF_EVENT_CONTEXT): vol.All(dict, cv.template_complex),
     }
@@ -45,15 +60,17 @@ async def async_attach_trigger(
     trigger_data = trigger_info["trigger_data"]
     variables = trigger_info["variables"]
 
-    template.attach(hass, config[CONF_EVENT_TYPE])
     event_types = template.render_complex(
         config[CONF_EVENT_TYPE], variables, limited=True
     )
+    if EVENT_STATE_REPORTED in event_types:
+        raise HomeAssistantError(
+            f"Can't listen to {EVENT_STATE_REPORTED} in event trigger"
+        )
     event_data_schema: vol.Schema | None = None
     event_data_items: ItemsView | None = None
     if CONF_EVENT_DATA in config:
         # Render the schema input
-        template.attach(hass, config[CONF_EVENT_DATA])
         event_data = {}
         event_data.update(
             template.render_complex(config[CONF_EVENT_DATA], variables, limited=True)
@@ -75,7 +92,6 @@ async def async_attach_trigger(
     event_context_items: ItemsView | None = None
     if CONF_EVENT_CONTEXT in config:
         # Render the schema input
-        template.attach(hass, config[CONF_EVENT_CONTEXT])
         event_context = {}
         event_context.update(
             template.render_complex(config[CONF_EVENT_CONTEXT], variables, limited=True)
@@ -124,20 +140,19 @@ async def async_attach_trigger(
         if event_context_items:
             # Fast path for simple items comparison
             # This is safe because we do not mutate the event context
-            # pylint: disable-next=protected-access
-            if not (event.context._as_dict.items() >= event_context_items):
+            if not (event.context._as_dict.items() >= event_context_items):  # noqa: SLF001
                 return
         elif event_context_schema:
             try:
                 # Slow path for schema validation
                 # This is safe because we make a copy of the event context
-                # pylint: disable-next=protected-access
-                event_context_schema(dict(event.context._as_dict))
+                event_context_schema(dict(event.context._as_dict))  # noqa: SLF001
             except vol.Invalid:
                 # If event doesn't match, skip event
                 return
 
-        hass.async_run_hass_job(
+        hass.loop.call_soon(
+            hass.async_run_hass_job,
             job,
             {
                 "trigger": {
@@ -152,9 +167,7 @@ async def async_attach_trigger(
 
     event_filter = filter_event if event_data_items or event_data_schema else None
     removes = [
-        hass.bus.async_listen(
-            event_type, handle_event, event_filter=event_filter, run_immediately=True
-        )
+        hass.bus.async_listen(event_type, handle_event, event_filter=event_filter)
         for event_type in event_types
     ]
 

@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "language": "[%key:common::config_flow::data::language%]",
+          "country": "[%key:common::config_flow::data::country%]"
+        }
+      }
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "entity": {
+    "calendar": {
+      "free_games": {
+        "name": "Free games",
+        "state_attributes": {
+          "games": {
+            "name": "Games"
+          }
+        }
+      },
+      "discount_games": {
+        "name": "Discount games",
+        "state_attributes": {
+          "games": {
+            "name": "[%key:component::epic_games_store::entity::calendar::free_games::state_attributes::games::name%]"
+          }
+        }
+      }
+    }
+  }
+}

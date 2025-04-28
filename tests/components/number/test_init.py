@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -36,11 +36,14 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
+
+from . import common
 
 from tests.common import (
     MockConfigEntry,
@@ -51,6 +54,7 @@ from tests.common import (
     mock_integration,
     mock_platform,
     mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
 )
 
 TEST_DOMAIN = "test"
@@ -117,7 +121,7 @@ class MockNumberEntityDescr(NumberEntity):
     Step is calculated based on the smaller max_value and min_value.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the clas instance."""
         self.entity_description = NumberEntityDescription(
             "test",
@@ -141,7 +145,7 @@ class MockNumberEntityAttrWithDescription(NumberEntity):
     members take precedence over the entity description.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the clas instance."""
         self.entity_description = NumberEntityDescription(
             "test",
@@ -219,7 +223,7 @@ class MockNumberEntityDescrDeprecated(NumberEntity):
     Step is calculated based on the smaller max_value and min_value.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the clas instance."""
         self.entity_description = NumberEntityDescription(
             "test",
@@ -332,10 +336,12 @@ async def test_sync_set_value(hass: HomeAssistant) -> None:
     assert number.set_value.call_args[0][0] == 42
 
 
-async def test_set_value(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+async def test_set_value(
+    hass: HomeAssistant,
+    mock_number_entities: list[MockNumberEntity],
+) -> None:
     """Test we can only set valid values."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_number_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -355,14 +361,20 @@ async def test_set_value(hass: HomeAssistant, enable_custom_integrations: None) 
     state = hass.states.get("number.test")
     assert state.state == "60.0"
 
-    # test ValueError trigger
-    with pytest.raises(ValueError):
+    # test range validation
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_VALUE: 110.0, ATTR_ENTITY_ID: "number.test"},
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "out_of_range"
+    assert (
+        str(exc.value)
+        == "Value 110.0 for number.test is outside valid range 0.0 - 100.0"
+    )
 
     await hass.async_block_till_done()
     state = hass.states.get("number.test")
@@ -450,7 +462,6 @@ async def test_set_value(hass: HomeAssistant, enable_custom_integrations: None) 
 )
 async def test_temperature_conversion(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
     unit_system,
     native_unit,
     state_unit,
@@ -467,21 +478,17 @@ async def test_temperature_conversion(
 ) -> None:
     """Test temperature conversion."""
     hass.config.units = unit_system
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockNumberEntity(
-            name="Test",
-            native_max_value=native_max_value,
-            native_min_value=native_min_value,
-            native_step=native_step,
-            native_unit_of_measurement=native_unit,
-            native_value=initial_native_value,
-            device_class=NumberDeviceClass.TEMPERATURE,
-        )
+    entity0 = common.MockNumberEntity(
+        name="Test",
+        native_max_value=native_max_value,
+        native_min_value=native_min_value,
+        native_step=native_step,
+        native_unit_of_measurement=native_unit,
+        native_value=initial_native_value,
+        device_class=NumberDeviceClass.TEMPERATURE,
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -544,24 +551,19 @@ RESTORE_DATA = {
 async def test_restore_number_save_state(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    enable_custom_integrations: None,
 ) -> None:
     """Test RestoreNumber."""
-    platform = getattr(hass.components, "test.number")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockRestoreNumber(
-            name="Test",
-            native_max_value=200.0,
-            native_min_value=-10.0,
-            native_step=2.0,
-            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
-            native_value=123.0,
-            device_class=NumberDeviceClass.TEMPERATURE,
-        )
+    entity0 = common.MockRestoreNumber(
+        name="Test",
+        native_max_value=200.0,
+        native_min_value=-10.0,
+        native_step=2.0,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        native_value=123.0,
+        device_class=NumberDeviceClass.TEMPERATURE,
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -615,7 +617,6 @@ async def test_restore_number_save_state(
 )
 async def test_restore_number_restore_state(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
     hass_storage: dict[str, Any],
     native_max_value,
     native_min_value,
@@ -629,17 +630,13 @@ async def test_restore_number_restore_state(
     """Test RestoreNumber."""
     mock_restore_cache_with_extra_data(hass, ((State("number.test", ""), extra_data),))
 
-    platform = getattr(hass.components, "test.number")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockRestoreNumber(
-            device_class=device_class,
-            name="Test",
-            native_value=None,
-        )
+    entity0 = common.MockRestoreNumber(
+        device_class=device_class,
+        name="Test",
+        native_value=None,
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -649,7 +646,7 @@ async def test_restore_number_restore_state(
     assert entity0.native_min_value == native_min_value
     assert entity0.native_step == native_step
     assert entity0.native_value == native_value
-    assert type(entity0.native_value) == native_value_type
+    assert type(entity0.native_value) is native_value_type
     assert entity0.native_unit_of_measurement == uom
 
 
@@ -708,7 +705,7 @@ async def test_restore_number_restore_state(
 )
 async def test_custom_unit(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     device_class,
     native_unit,
     custom_unit,
@@ -717,27 +714,21 @@ async def test_custom_unit(
     custom_value,
 ) -> None:
     """Test custom unit."""
-    entity_registry = er.async_get(hass)
-
     entry = entity_registry.async_get_or_create("number", "test", "very_unique")
     entity_registry.async_update_entity_options(
         entry.entity_id, "number", {"unit_of_measurement": custom_unit}
     )
     await hass.async_block_till_done()
 
-    platform = getattr(hass.components, "test.number")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockNumberEntity(
-            name="Test",
-            native_value=native_value,
-            native_unit_of_measurement=native_unit,
-            device_class=device_class,
-            unique_id="very_unique",
-        )
+    entity0 = common.MockNumberEntity(
+        name="Test",
+        native_value=native_value,
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+        unique_id="very_unique",
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -789,7 +780,7 @@ async def test_custom_unit(
 )
 async def test_custom_unit_change(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    entity_registry: er.EntityRegistry,
     native_unit,
     custom_unit,
     used_custom_unit,
@@ -799,20 +790,15 @@ async def test_custom_unit_change(
     default_value,
 ) -> None:
     """Test custom unit changes are picked up."""
-    entity_registry = er.async_get(hass)
-    platform = getattr(hass.components, "test.number")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockNumberEntity(
-            name="Test",
-            native_value=native_value,
-            native_unit_of_measurement=native_unit,
-            device_class=NumberDeviceClass.TEMPERATURE,
-            unique_id="very_unique",
-        )
+    entity0 = common.MockNumberEntity(
+        name="Test",
+        native_value=native_value,
+        native_unit_of_measurement=native_unit,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        unique_id="very_unique",
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -850,6 +836,69 @@ async def test_custom_unit_change(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == default_unit
 
 
+async def test_translated_unit(
+    hass: HomeAssistant,
+) -> None:
+    """Test translated unit."""
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={
+            "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
+        },
+    ):
+        entity0 = common.MockNumberEntity(
+            name="Test",
+            native_value=123,
+            unique_id="very_unique",
+        )
+        entity0.entity_description = NumberEntityDescription(
+            "test",
+            translation_key="test_translation_key",
+        )
+        setup_test_component_platform(hass, DOMAIN, [entity0])
+
+        assert await async_setup_component(
+            hass, "number", {"number": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+
+        entity_id = entity0.entity_id
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "Tests"
+
+
+async def test_translated_unit_with_native_unit_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test that translated unit."""
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={
+            "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
+        },
+    ):
+        entity0 = common.MockNumberEntity(
+            name="Test",
+            native_value=123,
+            unique_id="very_unique",
+        )
+        entity0.entity_description = NumberEntityDescription(
+            "test",
+            translation_key="test_translation_key",
+            native_unit_of_measurement="bad_unit",
+        )
+        setup_test_component_platform(hass, DOMAIN, [entity0])
+
+        assert await async_setup_component(
+            hass, "number", {"number": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+        # Setup fails so entity_id is None
+        assert entity0.entity_id is None
+
+
 def test_device_classes_aligned() -> None:
     """Make sure all sensor device classes are also available in NumberDeviceClass."""
 
@@ -860,13 +909,10 @@ def test_device_classes_aligned() -> None:
         assert hasattr(NumberDeviceClass, device_class.name)
         assert getattr(NumberDeviceClass, device_class.name).value == device_class.value
 
-    for device_class in SENSOR_DEVICE_CLASS_UNITS:
+    for device_class, unit in SENSOR_DEVICE_CLASS_UNITS.items():
         if device_class in NON_NUMERIC_DEVICE_CLASSES:
             continue
-        assert (
-            SENSOR_DEVICE_CLASS_UNITS[device_class]
-            == NUMBER_DEVICE_CLASS_UNITS[device_class]
-        )
+        assert unit == NUMBER_DEVICE_CLASS_UNITS[device_class]
 
 
 class MockFlow(ConfigFlow):
@@ -874,7 +920,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -889,7 +935,7 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -928,7 +974,7 @@ async def test_name(hass: HomeAssistant) -> None:
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test number platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])

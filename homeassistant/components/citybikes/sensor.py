@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -28,13 +28,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import location
+from homeassistant.util import location as location_util
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -73,7 +73,7 @@ CITYBIKES_NETWORKS = "citybikes_networks"
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
-    PLATFORM_SCHEMA.extend(
+    SENSOR_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_NAME, default=""): cv.string,
             vol.Optional(CONF_NETWORK): cv.string,
@@ -193,7 +193,7 @@ async def async_setup_platform(
 
     devices = []
     for station in network.stations:
-        dist = location.distance(
+        dist = location_util.distance(
             latitude, longitude, station[ATTR_LATITUDE], station[ATTR_LONGITUDE]
         )
         station_id = station[ATTR_ID]
@@ -201,9 +201,9 @@ async def async_setup_platform(
 
         if radius > dist or stations_list.intersection((station_id, station_uid)):
             if name:
-                uid = "_".join([network.network_id, name, station_id])
+                uid = f"{network.network_id}_{name}_{station_id}"
             else:
-                uid = "_".join([network.network_id, station_id])
+                uid = f"{network.network_id}_{station_id}"
             entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, uid, hass=hass)
             devices.append(CityBikesStation(network, station_id, entity_id))
 
@@ -228,12 +228,15 @@ class CityBikesNetworks:
                     self.hass, NETWORKS_URI, NETWORKS_RESPONSE_SCHEMA
                 )
                 self.networks = networks[ATTR_NETWORKS_LIST]
+        except CityBikesRequestError as err:
+            raise PlatformNotReady from err
+        else:
             result = None
             minimum_dist = None
             for network in self.networks:
                 network_latitude = network[ATTR_LOCATION][ATTR_LATITUDE]
                 network_longitude = network[ATTR_LOCATION][ATTR_LONGITUDE]
-                dist = location.distance(
+                dist = location_util.distance(
                     latitude, longitude, network_latitude, network_longitude
                 )
                 if minimum_dist is None or dist < minimum_dist:
@@ -241,8 +244,6 @@ class CityBikesNetworks:
                     result = network[ATTR_ID]
 
             return result
-        except CityBikesRequestError as err:
-            raise PlatformNotReady from err
         finally:
             self.networks_loading.release()
 

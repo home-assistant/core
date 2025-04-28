@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import Any, cast
+
+from sqlalchemy.engine.row import Row
+from sqlalchemy.orm.session import Session
+
 from ..db_schema import States
+from ..queries import find_oldest_state
+from ..util import execute_stmt_lambda_element
 
 
 class StatesManager:
@@ -12,6 +20,13 @@ class StatesManager:
         """Initialize the states manager for linking old_state_id."""
         self._pending: dict[str, States] = {}
         self._last_committed_id: dict[str, int] = {}
+        self._last_reported: dict[int, float] = {}
+        self._oldest_ts: float | None = None
+
+    @property
+    def oldest_ts(self) -> float | None:
+        """Return the oldest timestamp."""
+        return self._oldest_ts
 
     def pop_pending(self, entity_id: str) -> States | None:
         """Pop a pending state.
@@ -43,6 +58,18 @@ class StatesManager:
         recorder thread.
         """
         self._pending[entity_id] = state
+        if self._oldest_ts is None:
+            self._oldest_ts = state.last_updated_ts
+
+    def update_pending_last_reported(
+        self, state_id: int, last_reported_timestamp: float
+    ) -> None:
+        """Update the last reported timestamp for a state."""
+        self._last_reported[state_id] = last_reported_timestamp
+
+    def get_pending_last_reported_timestamp(self) -> dict[int, float]:
+        """Return the last reported timestamp for all pending states."""
+        return self._last_reported
 
     def post_commit_pending(self) -> None:
         """Call after commit to load the state_id of the new States into committed.
@@ -53,6 +80,7 @@ class StatesManager:
         for entity_id, db_states in self._pending.items():
             self._last_committed_id[entity_id] = db_states.state_id
         self._pending.clear()
+        self._last_reported.clear()
 
     def reset(self) -> None:
         """Reset after the database has been reset or changed.
@@ -62,6 +90,22 @@ class StatesManager:
         """
         self._last_committed_id.clear()
         self._pending.clear()
+        self._oldest_ts = None
+
+    def load_from_db(self, session: Session) -> None:
+        """Update the cache.
+
+        Must run in the recorder thread.
+        """
+        result = cast(
+            Sequence[Row[Any]],
+            execute_stmt_lambda_element(session, find_oldest_state()),
+        )
+        if not result:
+            ts = None
+        else:
+            ts = result[0].last_updated_ts
+        self._oldest_ts = ts
 
     def evict_purged_state_ids(self, purged_state_ids: set[int]) -> None:
         """Evict purged states from the committed states.

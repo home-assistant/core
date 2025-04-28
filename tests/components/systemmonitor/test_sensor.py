@@ -5,7 +5,7 @@ import socket
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from psutil._common import sdiskusage, shwtemp, snetio, snicaddr
+from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,19 +14,16 @@ from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.components.systemmonitor.coordinator import VirtualMemory
 from homeassistant.components.systemmonitor.sensor import get_cpu_icon
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-
-from .conftest import MockProcess
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     entity_registry: er.EntityRegistry,
@@ -39,7 +36,6 @@ async def test_sensor(
         data={},
         options={
             "binary_sensor": {"process": ["python3", "pip"]},
-            "sensor": {"process": ["python3", "pip"]},
             "resources": [
                 "disk_use_percent_/",
                 "disk_use_percent_/home/notexist/",
@@ -63,10 +59,6 @@ async def test_sensor(
         "friendly_name": "System Monitor Memory free",
     }
 
-    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_ON
-
     for entity in er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     ):
@@ -76,9 +68,9 @@ async def test_sensor(
             assert state.attributes == snapshot(name=f"{state.name} - attributes")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_process_sensor_not_loaded(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     entity_registry: er.EntityRegistry,
@@ -108,9 +100,9 @@ async def test_process_sensor_not_loaded(
     assert process_sensor is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_not_loading_veth_networks(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_added_config_entry: ConfigEntry,
 ) -> None:
     """Test the sensor."""
@@ -123,9 +115,9 @@ async def test_sensor_not_loading_veth_networks(
     assert network_sensor_2 is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_icon(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -142,58 +134,6 @@ async def test_sensor_icon(
         assert get_cpu_icon() == "mdi:cpu-64-bit"
 
 
-async def test_sensor_yaml(
-    hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
-    mock_psutil: Mock,
-    mock_os: Mock,
-) -> None:
-    """Test the sensor imported from YAML."""
-    config = {
-        "sensor": {
-            "platform": "systemmonitor",
-            "resources": [
-                {"type": "disk_use_percent"},
-                {"type": "disk_use_percent", "arg": "/media/share"},
-                {"type": "memory_free", "arg": "/"},
-                {"type": "network_out", "arg": "eth0"},
-                {"type": "process", "arg": "python3"},
-            ],
-        }
-    }
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-    memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
-    assert memory_sensor is not None
-    assert memory_sensor.state == "40.0"
-
-    process_sensor = hass.states.get("binary_sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_ON
-
-
-async def test_sensor_yaml_fails_missing_argument(
-    caplog: pytest.LogCaptureFixture,
-    hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
-    mock_psutil: Mock,
-    mock_os: Mock,
-) -> None:
-    """Test the sensor imported from YAML fails on missing mandatory argument."""
-    config = {
-        "sensor": {
-            "platform": "systemmonitor",
-            "resources": [
-                {"type": "network_in"},
-            ],
-        }
-    }
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    assert "Mandatory 'arg' is missing for sensor type 'network_in'" in caplog.text
-
-
 async def test_sensor_updating(
     hass: HomeAssistant,
     mock_psutil: Mock,
@@ -207,7 +147,6 @@ async def test_sensor_updating(
         data={},
         options={
             "binary_sensor": {"process": ["python3", "pip"]},
-            "sensor": {"process": ["python3", "pip"]},
             "resources": [
                 "disk_use_percent_/",
                 "disk_use_percent_/home/notexist/",
@@ -225,14 +164,10 @@ async def test_sensor_updating(
     assert memory_sensor is not None
     assert memory_sensor.state == "40.0"
 
-    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_ON
-
     mock_psutil.virtual_memory.side_effect = Exception("Failed to update")
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
     assert memory_sensor is not None
@@ -248,64 +183,17 @@ async def test_sensor_updating(
     )
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
     assert memory_sensor is not None
     assert memory_sensor.state == "25.0"
 
 
-async def test_sensor_process_fails(
-    hass: HomeAssistant,
-    mock_psutil: Mock,
-    mock_os: Mock,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test process not exist failure."""
-    mock_config_entry = MockConfigEntry(
-        title="System Monitor",
-        domain=DOMAIN,
-        data={},
-        options={
-            "binary_sensor": {"process": ["python3", "pip"]},
-            "sensor": {"process": ["python3", "pip"]},
-            "resources": [
-                "disk_use_percent_/",
-                "disk_use_percent_/home/notexist/",
-                "memory_free_",
-                "network_out_eth0",
-                "process_python3",
-            ],
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_ON
-
-    _process = MockProcess("python3", True)
-
-    mock_psutil.process_iter.return_value = [_process]
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_OFF
-
-    assert "Failed to load process with ID: 1, old name: python3" in caplog.text
-
-
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_network_sensors(
     freezer: FrozenDateTimeFactory,
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_added_config_entry: ConfigEntry,
     mock_psutil: Mock,
 ) -> None:
@@ -330,7 +218,7 @@ async def test_sensor_network_sensors(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     network_out_sensor = hass.states.get("sensor.system_monitor_network_out_eth1")
     packets_out_sensor = hass.states.get("sensor.system_monitor_packets_out_eth1")
@@ -362,7 +250,7 @@ async def test_sensor_network_sensors(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     network_out_sensor = hass.states.get("sensor.system_monitor_network_out_eth1")
     packets_out_sensor = hass.states.get("sensor.system_monitor_packets_out_eth1")
@@ -378,9 +266,9 @@ async def test_sensor_network_sensors(
     assert throughput_network_out_sensor.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_missing_cpu_temperature(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -402,9 +290,9 @@ async def test_missing_cpu_temperature(
     assert temp_sensor is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_processor_temperature(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -452,9 +340,9 @@ async def test_processor_temperature(
         await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_exception_handling_disk_sensor(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_added_config_entry: ConfigEntry,
     caplog: pytest.LogCaptureFixture,
@@ -470,7 +358,7 @@ async def test_exception_handling_disk_sensor(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "OS error for /" in caplog.text
 
@@ -483,7 +371,7 @@ async def test_exception_handling_disk_sensor(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "OS error for /" in caplog.text
 
@@ -498,7 +386,7 @@ async def test_exception_handling_disk_sensor(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
     assert disk_sensor is not None
@@ -511,9 +399,9 @@ async def test_exception_handling_disk_sensor(
     assert disk_sensor.attributes["unit_of_measurement"] == "%"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cpu_percentage_is_zero_returns_unknown(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_added_config_entry: ConfigEntry,
     caplog: pytest.LogCaptureFixture,
@@ -528,7 +416,7 @@ async def test_cpu_percentage_is_zero_returns_unknown(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
     assert cpu_sensor is not None
@@ -538,7 +426,7 @@ async def test_cpu_percentage_is_zero_returns_unknown(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
     assert cpu_sensor is not None
@@ -573,7 +461,7 @@ async def test_remove_obsolete_entities(
     )
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Fake an entity which should be removed as not supported and disabled
     entity_registry.async_get_or_create(
@@ -616,3 +504,43 @@ async def test_remove_obsolete_entities(
         entity_registry.async_get("sensor.systemmonitor_network_out_veth54321")
         is not None
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_no_duplicate_disk_entities(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the sensor."""
+    mock_psutil.disk_usage.return_value = sdiskusage(
+        500 * 1024**3, 300 * 1024**3, 200 * 1024**3, 60.0
+    )
+    mock_psutil.disk_partitions.return_value = [
+        sdiskpart("test", "/", "ext4", ""),
+        sdiskpart("test2", "/media/share", "ext4", ""),
+        sdiskpart("test3", "/incorrect", "", ""),
+        sdiskpart("test4", "/media/frigate", "ext4", ""),
+        sdiskpart("test4", "/media/FRIGATE", "ext4", ""),
+        sdiskpart("hosts", "/etc/hosts", "bind", ""),
+        sdiskpart("proc", "/proc/run", "proc", ""),
+    ]
+
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={
+            "binary_sensor": {"process": ["python3", "pip"]},
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_usage_media_frigate")
+    assert disk_sensor is not None
+    assert disk_sensor.state == "60.0"
+
+    assert "Platform systemmonitor does not generate unique IDs." not in caplog.text

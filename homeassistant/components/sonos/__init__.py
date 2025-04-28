@@ -7,9 +7,10 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 import datetime
 from functools import partial
+from ipaddress import AddressValueError, IPv4Address
 import logging
 import socket
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
@@ -34,6 +35,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
@@ -203,6 +209,14 @@ class SonosDiscoveryManager:
 
     async def async_subscribe_to_zone_updates(self, ip_address: str) -> None:
         """Test subscriptions and create SonosSpeakers based on results."""
+        try:
+            _ = IPv4Address(ip_address)
+        except AddressValueError:
+            _LOGGER.debug(
+                "Sonos integration only supports IPv4 addresses, invalid ip_address received: %s",
+                ip_address,
+            )
+            return
         soco = SoCo(ip_address)
         # Cache now to avoid household ID lookup during first ZoneGroupState processing
         await self.hass.async_add_executor_job(
@@ -230,7 +244,8 @@ class SonosDiscoveryManager:
                 return
 
             self.hass.async_create_task(
-                self.async_add_speakers(zones_to_add, subscription, soco.uid)
+                self.async_add_speakers(zones_to_add, subscription, soco.uid),
+                eager_start=True,
             )
 
         async def async_subscription_failed(now: datetime.datetime) -> None:
@@ -371,12 +386,11 @@ class SonosDiscoveryManager:
                 (SonosAlarms, self.data.alarms),
                 (SonosFavorites, self.data.favorites),
             ):
-                if TYPE_CHECKING:
-                    coord_dict = cast(dict[str, Any], coord_dict)
-                if soco.household_id not in coord_dict:
+                c_dict: dict[str, Any] = coord_dict
+                if soco.household_id not in c_dict:
                     new_coordinator = coordinator(self.hass, soco.household_id)
                     new_coordinator.setup(soco)
-                    coord_dict[soco.household_id] = new_coordinator
+                    c_dict[soco.household_id] = new_coordinator
             speaker.setup(self.entry)
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
@@ -413,7 +427,7 @@ class SonosDiscoveryManager:
                 continue
 
             if self.hosts_in_error.pop(ip_addr, None):
-                _LOGGER.info("Connection reestablished to Sonos device %s", ip_addr)
+                _LOGGER.warning("Connection reestablished to Sonos device %s", ip_addr)
             # Each speaker has the topology for other online speakers, so add them in here if they were not
             # configured. The metadata is already in Soco for these.
             if new_hosts := {
@@ -500,9 +514,9 @@ class SonosDiscoveryManager:
 
     @callback
     def _async_ssdp_discovered_player(
-        self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
+        self, info: SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
-        uid = info.upnp[ssdp.ATTR_UPNP_UDN]
+        uid = info.upnp[ATTR_UPNP_UDN]
         if not uid.startswith("uuid:RINCON_"):
             return
         uid = uid[5:]
@@ -521,7 +535,7 @@ class SonosDiscoveryManager:
             cast(str, urlparse(info.ssdp_location).hostname),
             uid,
             info.ssdp_headers.get("X-RINCON-BOOTSEQ"),
-            cast(str, info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME)),
+            cast(str, info.upnp.get(ATTR_UPNP_MODEL_NAME)),
             None,
         )
 
@@ -529,7 +543,7 @@ class SonosDiscoveryManager:
     def async_discovered_player(
         self,
         source: str,
-        info: ssdp.SsdpServiceInfo,
+        info: SsdpServiceInfo,
         discovered_ip: str,
         uid: str,
         boot_seqnum: str | int | None,
@@ -576,7 +590,6 @@ class SonosDiscoveryManager:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP,
                 self._async_stop_event_listener,
-                run_immediately=True,
             )
         )
         _LOGGER.debug("Adding discovery job")
@@ -585,7 +598,6 @@ class SonosDiscoveryManager:
                 self.hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STOP,
                     self._stop_manual_heartbeat,
-                    run_immediately=True,
                 )
             )
             await self.async_poll_manual_hosts()

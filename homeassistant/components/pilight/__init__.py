@@ -7,7 +7,7 @@ from datetime import timedelta
 import functools
 import logging
 import threading
-from typing import Any, ParamSpec
+from typing import Any
 
 from pilight import pilight
 import voluptuous as vol
@@ -21,12 +21,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,7 +145,7 @@ class CallRateDelayThrottle:
         self._next_ts = dt_util.utcnow()
         self._schedule = functools.partial(track_point_in_utc_time, hass)
 
-    def limited(self, method: Callable[_P, Any]) -> Callable[_P, None]:
+    def limited[**_P](self, method: Callable[_P, Any]) -> Callable[_P, None]:
         """Decorate to delay calls on a certain method."""
 
         @functools.wraps(method)

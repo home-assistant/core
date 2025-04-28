@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Hashable
+from collections.abc import Callable, Hashable, Mapping
 import contextlib
+from contextvars import ContextVar
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -11,6 +12,7 @@ from datetime import (
     timedelta,
 )
 from enum import Enum, StrEnum
+import functools
 import logging
 from numbers import Number
 import os
@@ -18,7 +20,8 @@ import re
 from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
-from typing import Any, TypeVar, cast, overload
+import threading
+from typing import TYPE_CHECKING, Any, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -32,6 +35,7 @@ from homeassistant.const import (
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     CONF_ABOVE,
+    CONF_ACTION,
     CONF_ALIAS,
     CONF_ATTRIBUTE,
     CONF_BELOW,
@@ -75,6 +79,8 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
+    CONF_TRIGGER,
+    CONF_TRIGGERS,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
     CONF_VARIABLES,
@@ -93,6 +99,7 @@ from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
     async_get_hass,
+    async_get_hass_or_none,
     split_entity_id,
     valid_entity_id,
 )
@@ -100,14 +107,63 @@ from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.generated import currencies
 from homeassistant.generated.countries import COUNTRIES
 from homeassistant.generated.languages import LANGUAGES
-from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import (
+    dt as dt_util,
+    raise_if_invalid_path,
+    slugify as util_slugify,
+)
 from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
 from .frame import get_integration_logger
+from .typing import VolDictType, VolSchemaType
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+
+
+class MustValidateInExecutor(HomeAssistantError):
+    """Raised when validation must happen in an executor thread."""
+
+
+class _Hass(threading.local):
+    """Container which makes a HomeAssistant instance available to validators."""
+
+    hass: HomeAssistant | None = None
+
+
+_hass = _Hass()
+"""Set when doing async friendly schema validation."""
+
+
+def _async_get_hass_or_none() -> HomeAssistant | None:
+    """Return the HomeAssistant instance or None.
+
+    First tries core.async_get_hass_or_none, then _hass which is
+    set when doing async friendly schema validation.
+    """
+    return async_get_hass_or_none() or _hass.hass
+
+
+_validating_async: ContextVar[bool] = ContextVar("_validating_async", default=False)
+"""Set to True when doing async friendly schema validation."""
+
+
+def not_async_friendly[**_P, _R](validator: Callable[_P, _R]) -> Callable[_P, _R]:
+    """Mark a validator as not async friendly.
+
+    This makes validation happen in an executor thread if validation is done by
+    async_validate, otherwise does nothing.
+    """
+
+    @functools.wraps(validator)
+    def _not_async_friendly(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        if _validating_async.get() and async_get_hass_or_none():
+            # Raise if doing async friendly validation and validation
+            # is happening in the event loop
+            raise MustValidateInExecutor
+        return validator(*args, **kwargs)
+
+    return _not_async_friendly
 
 
 class UrlProtocolSchema(StrEnum):
@@ -139,9 +195,6 @@ longitude = vol.All(
 gps = vol.ExactSequence([latitude, longitude])
 sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
-
-# typing typevar
-_T = TypeVar("_T")
 
 
 def path(value: Any) -> str:
@@ -216,6 +269,7 @@ def whitespace(value: Any) -> str:
     raise vol.Invalid(f"contains non-whitespace: {value}")
 
 
+@not_async_friendly
 def isdevice(value: Any) -> str:
     """Validate that value is a real device."""
     try:
@@ -248,15 +302,16 @@ def is_regex(value: Any) -> re.Pattern[Any]:
     """Validate that a string is a valid regular expression."""
     try:
         r = re.compile(value)
-        return r
     except TypeError as err:
         raise vol.Invalid(
             f"value {value} is of the wrong type for a regular expression"
         ) from err
     except re.error as err:
         raise vol.Invalid(f"value {value} is not a valid regular expression") from err
+    return r
 
 
+@not_async_friendly
 def isfile(value: Any) -> str:
     """Validate that the value is an existing file."""
     if value is None:
@@ -270,6 +325,7 @@ def isfile(value: Any) -> str:
     return file_in
 
 
+@not_async_friendly
 def isdir(value: Any) -> str:
     """Validate that the value is an existing dir."""
     if value is None:
@@ -284,25 +340,28 @@ def isdir(value: Any) -> str:
 
 
 @overload
-def ensure_list(value: None) -> list[Any]:
-    ...
+def ensure_list(value: None) -> list[Any]: ...
 
 
 @overload
-def ensure_list(value: list[_T]) -> list[_T]:
-    ...
+def ensure_list[_T](value: list[_T]) -> list[_T]: ...
 
 
 @overload
-def ensure_list(value: list[_T] | _T) -> list[_T]:
-    ...
+def ensure_list[_T](value: list[_T] | _T) -> list[_T]: ...
 
 
-def ensure_list(value: _T | None) -> list[_T] | list[Any]:
+def ensure_list[_T](value: _T | None) -> list[_T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
-    return cast("list[_T]", value) if isinstance(value, list) else [value]
+    if isinstance(value, list):
+        if TYPE_CHECKING:
+            # https://github.com/home-assistant/core/pull/71960
+            # cast with a type variable is still slow.
+            return cast(list[_T], value)
+        return value  # type: ignore[unreachable]
+    return [value]
 
 
 def entity_id(value: Any) -> str:
@@ -543,7 +602,7 @@ def time_period_seconds(value: float | str) -> timedelta:
 time_period = vol.Any(time_period_str, time_period_seconds, timedelta, time_period_dict)
 
 
-def match_all(value: _T) -> _T:
+def match_all[_T](value: _T) -> _T:
     """Validate that matches all values."""
     return value
 
@@ -559,7 +618,7 @@ positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
 positive_time_period = vol.All(time_period, positive_timedelta)
 
 
-def remove_falsy(value: list[_T]) -> list[_T]:
+def remove_falsy[_T](value: list[_T]) -> list[_T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
 
@@ -586,7 +645,7 @@ def slug(value: Any) -> str:
 
 
 def schema_with_slug_keys(
-    value_schema: _T | Callable, *, slug_validator: Callable[[Any], str] = slug
+    value_schema: dict | Callable, *, slug_validator: Callable[[Any], str] = slug
 ) -> Callable:
     """Ensure dicts have slugs as keys.
 
@@ -624,11 +683,7 @@ def string(value: Any) -> str:
         raise vol.Invalid("string value is None")
 
     # This is expected to be the most common case, so check it first.
-    if (
-        type(value) is str  # noqa: E721
-        or type(value) is NodeStrClass
-        or isinstance(value, str)
-    ):
+    if type(value) is str or type(value) is NodeStrClass or isinstance(value, str):
         return value
 
     if isinstance(value, template_helper.ResultWrapper):
@@ -665,18 +720,25 @@ def template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value is None")
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
+    if not (hass := _async_get_hass_or_none()):
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import ReportBehavior, report_usage
 
-    hass: HomeAssistant | None = None
-    with contextlib.suppress(HomeAssistantError):
-        hass = async_get_hass()
+        report_usage(
+            (
+                "validates schema outside the event loop, "
+                "which will stop working in HA Core 2025.10"
+            ),
+            core_behavior=ReportBehavior.LOG,
+        )
 
     template_value = template_helper.Template(str(value), hass)
 
     try:
         template_value.ensure_valid()
-        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
+    return template_value
 
 
 def dynamic_template(value: Any | None) -> template_helper.Template:
@@ -687,18 +749,25 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value should be a string")
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
+    if not (hass := _async_get_hass_or_none()):
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import ReportBehavior, report_usage
 
-    hass: HomeAssistant | None = None
-    with contextlib.suppress(HomeAssistantError):
-        hass = async_get_hass()
+        report_usage(
+            (
+                "validates schema outside the event loop, "
+                "which will stop working in HA Core 2025.10"
+            ),
+            core_behavior=ReportBehavior.LOG,
+        )
 
     template_value = template_helper.Template(str(value), hass)
 
     try:
         template_value.ensure_valid()
-        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
+    return template_value
 
 
 def template_complex(value: Any) -> Any:
@@ -780,9 +849,9 @@ def socket_timeout(value: Any | None) -> object:
         float_value = float(value)
         if float_value > 0.0:
             return float_value
-        raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
     except Exception as err:
         raise vol.Invalid(f"Invalid socket timeout: {err}") from err
+    raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
 
 
 def url(
@@ -808,7 +877,7 @@ def url_no_path(value: Any) -> str:
     url_in = url(value)
 
     if urlparse(url_in).path not in ("", "/"):
-        raise vol.Invalid("url it not allowed to have a path component")
+        raise vol.Invalid("url is not allowed to have a path component")
 
     return url_in
 
@@ -992,8 +1061,8 @@ def removed(
 
 def key_value_schemas(
     key: str,
-    value_schemas: dict[Hashable, vol.Schema],
-    default_schema: vol.Schema | None = None,
+    value_schemas: dict[Hashable, VolSchemaType | Callable[[Any], dict[str, Any]]],
+    default_schema: VolSchemaType | None = None,
     default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
@@ -1027,12 +1096,12 @@ def key_value_schemas(
 # Validator helpers
 
 
-def key_dependency(
+def key_dependency[_KT: Hashable, _VT](
     key: Hashable, dependency: Hashable
-) -> Callable[[dict[Hashable, Any]], dict[Hashable, Any]]:
+) -> Callable[[dict[_KT, _VT]], dict[_KT, _VT]]:
     """Validate that all dependencies exist for key."""
 
-    def validator(value: dict[Hashable, Any]) -> dict[Hashable, Any]:
+    def validator(value: dict[_KT, _VT]) -> dict[_KT, _VT]:
         """Test dependencies."""
         if not isinstance(value, dict):
             raise vol.Invalid("key dependencies require a dict")
@@ -1049,6 +1118,13 @@ def key_dependency(
 
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
+    return _custom_serializer(schema, allow_section=True)
+
+
+def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
+    """Serialize additional types for voluptuous_serialize."""
+    from homeassistant import data_entry_flow  # pylint: disable=import-outside-toplevel
+
     from . import selector  # pylint: disable=import-outside-toplevel
 
     if schema is positive_time_period_dict:
@@ -1060,6 +1136,20 @@ def custom_serializer(schema: Any) -> Any:
     if schema is boolean:
         return {"type": "boolean"}
 
+    if isinstance(schema, data_entry_flow.section):
+        if not allow_section:
+            raise ValueError("Nesting expandable sections is not supported")
+        return {
+            "type": "expandable",
+            "schema": voluptuous_serialize.convert(
+                schema.schema,
+                custom_serializer=functools.partial(
+                    _custom_serializer, allow_section=False
+                ),
+            ),
+            "expanded": not schema.options["collapsed"],
+        }
+
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
 
@@ -1069,47 +1159,12 @@ def custom_serializer(schema: Any) -> Any:
     return voluptuous_serialize.UNSUPPORTED
 
 
-def expand_condition_shorthand(value: Any | None) -> Any:
-    """Expand boolean condition shorthand notations."""
-
-    if not isinstance(value, dict) or CONF_CONDITIONS in value:
-        return value
-
-    for key, schema in (
-        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
-        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
-        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
-    ):
-        try:
-            schema(value)
-            return {
-                CONF_CONDITION: key,
-                CONF_CONDITIONS: value[key],
-                **{k: value[k] for k in value if k != key},
-            }
-        except vol.MultipleInvalid:
-            pass
-
-    if isinstance(value.get(CONF_CONDITION), list):
-        try:
-            CONDITION_SHORTHAND_SCHEMA(value)
-            return {
-                CONF_CONDITION: "and",
-                CONF_CONDITIONS: value[CONF_CONDITION],
-                **{k: value[k] for k in value if k != CONF_CONDITION},
-            }
-        except vol.MultipleInvalid:
-            pass
-
-    return value
-
-
 # Schemas
 def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     """Return a config schema which logs if there are configuration parameters."""
 
     def validator(config: dict) -> dict:
-        if domain in config and config[domain]:
+        if config_domain := config.get(domain):
             get_integration_logger(__name__).error(
                 (
                     "The %s integration does not support any configuration parameters, "
@@ -1117,7 +1172,7 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
                     "configuration."
                 ),
                 domain,
-                config[domain],
+                config_domain,
             )
         return config
 
@@ -1205,7 +1260,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-ENTITY_SERVICE_FIELDS = {
+ENTITY_SERVICE_FIELDS: VolDictType = {
     # Either accept static entity IDs, a single dynamic template or a mixed list
     # of static and dynamic templates. While this could be solved with a single
     # complex template, handling it like this, keeps config validation useful.
@@ -1253,37 +1308,56 @@ TARGET_SERVICE_FIELDS = {
 _HAS_ENTITY_SERVICE_FIELD = has_at_least_one_key(*ENTITY_SERVICE_FIELDS)
 
 
-def _make_entity_service_schema(schema: dict, extra: int) -> vol.Schema:
+def is_entity_service_schema(validator: VolSchemaType) -> bool:
+    """Check if the passed validator is an entity schema validator.
+
+    The validator must be either of:
+    - A validator returned by cv._make_entity_service_schema
+    - A validator returned by cv._make_entity_service_schema, wrapped in a vol.Schema
+    - A validator returned by cv._make_entity_service_schema, wrapped in a vol.All
+    Nesting is allowed.
+    """
+    if hasattr(validator, "_entity_service_schema"):
+        return True
+    if isinstance(validator, (vol.All)):
+        return any(is_entity_service_schema(val) for val in validator.validators)
+    if isinstance(validator, (vol.Schema)):
+        return is_entity_service_schema(validator.schema)
+
+    return False
+
+
+def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
     """Create an entity service schema."""
-    return vol.Schema(
-        vol.All(
-            vol.Schema(
-                {
-                    # The frontend stores data here. Don't use in core.
-                    vol.Remove("metadata"): dict,
-                    **schema,
-                    **ENTITY_SERVICE_FIELDS,
-                },
-                extra=extra,
-            ),
-            _HAS_ENTITY_SERVICE_FIELD,
-        )
+    validator = vol.All(
+        vol.Schema(
+            {
+                # The frontend stores data here. Don't use in core.
+                vol.Remove("metadata"): dict,
+                **schema,
+                **ENTITY_SERVICE_FIELDS,
+            },
+            extra=extra,
+        ),
+        _HAS_ENTITY_SERVICE_FIELD,
     )
+    setattr(validator, "_entity_service_schema", True)
+    return validator
 
 
 BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)
 
 
 def make_entity_service_schema(
-    schema: dict, *, extra: int = vol.PREVENT_EXTRA
-) -> vol.Schema:
+    schema: dict | None, *, extra: int = vol.PREVENT_EXTRA
+) -> VolSchemaType:
     """Create an entity service schema."""
     if not schema and extra == vol.PREVENT_EXTRA:
         # If the schema is empty and we don't allow extra keys, we can return
         # the base schema and avoid compiling a new schema which is the case
         # for ~50% of services.
         return BASE_ENTITY_SCHEMA
-    return _make_entity_service_schema(schema, extra)
+    return _make_entity_service_schema(schema or {}, extra)
 
 
 SCRIPT_CONVERSATION_RESPONSE_SCHEMA = vol.Any(template, None)
@@ -1311,10 +1385,10 @@ def script_action(value: Any) -> dict:
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
-SCRIPT_ACTION_BASE_SCHEMA = {
+SCRIPT_ACTION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
-    vol.Optional(CONF_ENABLED): boolean,
+    vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
 EVENT_SCHEMA = vol.Schema(
@@ -1326,11 +1400,30 @@ EVENT_SCHEMA = vol.Schema(
     }
 )
 
+
+def _backward_compat_service_schema(value: Any | None) -> Any:
+    """Backward compatibility for service schemas."""
+
+    if not isinstance(value, dict):
+        return value
+
+    # `service` has been renamed to `action`
+    if CONF_SERVICE in value:
+        if CONF_ACTION in value:
+            raise vol.Invalid(
+                "Cannot specify both 'service' and 'action'. Please use 'action' only."
+            )
+        value[CONF_ACTION] = value.pop(CONF_SERVICE)
+
+    return value
+
+
 SERVICE_SCHEMA = vol.All(
+    _backward_compat_service_schema,
     vol.Schema(
         {
             **SCRIPT_ACTION_BASE_SCHEMA,
-            vol.Exclusive(CONF_SERVICE, "service name"): vol.Any(
+            vol.Exclusive(CONF_ACTION, "service name"): vol.Any(
                 service, dynamic_template
             ),
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
@@ -1349,16 +1442,17 @@ SERVICE_SCHEMA = vol.All(
             vol.Remove("metadata"): dict,
         }
     ),
-    has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
+    has_at_least_one_key(CONF_ACTION, CONF_SERVICE_TEMPLATE),
 )
 
 NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
-    vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
+    vol.Coerce(float),
+    vol.All(str, entity_domain(["input_number", "number", "sensor", "zone"])),
 )
 
-CONDITION_BASE_SCHEMA = {
+CONDITION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
-    vol.Optional(CONF_ENABLED): boolean,
+    vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
@@ -1405,13 +1499,13 @@ STATE_CONDITION_ATTRIBUTE_SCHEMA = vol.Schema(
 )
 
 
-def STATE_CONDITION_SCHEMA(value: Any) -> dict:
+def STATE_CONDITION_SCHEMA(value: Any) -> dict[str, Any]:
     """Validate a state condition."""
     if not isinstance(value, dict):
         raise vol.Invalid("Expected a dictionary")
 
     if CONF_ATTRIBUTE in value:
-        validated: dict = STATE_CONDITION_ATTRIBUTE_SCHEMA(value)
+        validated: dict[str, Any] = STATE_CONDITION_ATTRIBUTE_SCHEMA(value)
     else:
         validated = STATE_CONDITION_STATE_SCHEMA(value)
 
@@ -1448,10 +1542,10 @@ TIME_CONDITION_SCHEMA = vol.All(
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "time",
             vol.Optional("before"): vol.Any(
-                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+                time, vol.All(str, entity_domain(["input_datetime", "time", "sensor"]))
             ),
             vol.Optional("after"): vol.Any(
-                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+                time, vol.All(str, entity_domain(["input_datetime", "time", "sensor"]))
             ),
             vol.Optional("weekday"): weekdays,
         }
@@ -1560,7 +1654,43 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-dynamic_template_condition_action = vol.All(
+
+def expand_condition_shorthand(value: Any | None) -> Any:
+    """Expand boolean condition shorthand notations."""
+
+    if not isinstance(value, dict) or CONF_CONDITIONS in value:
+        return value
+
+    for key, schema in (
+        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
+        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
+        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
+    ):
+        try:
+            schema(value)
+            return {
+                CONF_CONDITION: key,
+                CONF_CONDITIONS: value[key],
+                **{k: value[k] for k in value if k != key},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+    if isinstance(value.get(CONF_CONDITION), list):
+        try:
+            CONDITION_SHORTHAND_SCHEMA(value)
+            return {
+                CONF_CONDITION: "and",
+                CONF_CONDITIONS: value[CONF_CONDITION],
+                **{k: value[k] for k in value if k != CONF_CONDITION},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+    return value
+
+
+dynamic_template_condition = vol.All(
     # Wrap a shorthand template condition in a template condition
     dynamic_template,
     lambda config: {
@@ -1601,7 +1731,7 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
                 },
             ),
         ),
-        dynamic_template_condition_action,
+        dynamic_template_condition,
     )
 )
 
@@ -1644,18 +1774,57 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
+
+def _trigger_pre_validator(value: Any | None) -> Any:
+    """Rewrite trigger `trigger` to `platform`.
+
+    `platform` has been renamed to `trigger` in user documentation and in the automation
+    editor. The Python trigger implementation still uses `platform`, so we need to
+    rename `trigger` to `platform.
+    """
+
+    if not isinstance(value, Mapping):
+        # If the value is not a mapping, we let that be handled by the TRIGGER_SCHEMA
+        return value
+
+    if CONF_TRIGGER in value:
+        if CONF_PLATFORM in value:
+            raise vol.Invalid(
+                "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
+            )
+        value = dict(value)
+        value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
+    elif CONF_PLATFORM not in value:
+        raise vol.Invalid("required key not provided", [CONF_TRIGGER])
+
+    return value
+
+
 TRIGGER_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): str,
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
-        vol.Optional(CONF_ENABLED): boolean,
+        vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
     }
 )
 
 
 _base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+
+
+def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
+    """Flatten trigger arrays containing 'triggers:' sublists into a single list of triggers."""
+    flatlist = []
+    for t in triggers:
+        if CONF_TRIGGERS in t and len(t) == 1:
+            triggerlist = ensure_list(t[CONF_TRIGGERS])
+            flatlist.extend(triggerlist)
+        else:
+            flatlist.append(t)
+
+    return flatlist
 
 
 # This is first round of validation, we don't want to process the config here already,
@@ -1665,7 +1834,11 @@ def _base_trigger_validator(value: Any) -> Any:
     return value
 
 
-TRIGGER_SCHEMA = vol.All(ensure_list, [_base_trigger_validator])
+TRIGGER_SCHEMA = vol.All(
+    ensure_list,
+    _base_trigger_list_flatten,
+    [vol.All(_trigger_pre_validator, _base_trigger_validator)],
+)
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
@@ -1707,12 +1880,8 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
                 vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(
                     dynamic_template, vol.All(list, template_complex)
                 ),
-                vol.Exclusive(CONF_WHILE, "repeat"): vol.All(
-                    ensure_list, [CONDITION_SCHEMA]
-                ),
-                vol.Exclusive(CONF_UNTIL, "repeat"): vol.All(
-                    ensure_list, [CONDITION_SCHEMA]
-                ),
+                vol.Exclusive(CONF_WHILE, "repeat"): CONDITIONS_SCHEMA,
+                vol.Exclusive(CONF_UNTIL, "repeat"): CONDITIONS_SCHEMA,
                 vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
             },
             has_at_least_one_key(CONF_COUNT, CONF_FOR_EACH, CONF_WHILE, CONF_UNTIL),
@@ -1728,9 +1897,7 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
             [
                 {
                     vol.Optional(CONF_ALIAS): string,
-                    vol.Required(CONF_CONDITIONS): vol.All(
-                        ensure_list, [CONDITION_SCHEMA]
-                    ),
+                    vol.Required(CONF_CONDITIONS): CONDITIONS_SCHEMA,
                     vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
                 }
             ],
@@ -1751,7 +1918,7 @@ _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
 _SCRIPT_IF_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_IF): vol.All(ensure_list, [CONDITION_SCHEMA]),
+        vol.Required(CONF_IF): CONDITIONS_SCHEMA,
         vol.Required(CONF_THEN): SCRIPT_SCHEMA,
         vol.Optional(CONF_ELSE): SCRIPT_SCHEMA,
     }
@@ -1786,7 +1953,7 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
     }
 )
 
-_SCRIPT_PARALLEL_SEQUENCE = vol.Schema(
+_SCRIPT_SEQUENCE_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
@@ -1805,7 +1972,7 @@ _SCRIPT_PARALLEL_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_PARALLEL): vol.All(
-            ensure_list, [vol.Any(_SCRIPT_PARALLEL_SEQUENCE, _parallel_sequence_action)]
+            ensure_list, [vol.Any(_SCRIPT_SEQUENCE_SCHEMA, _parallel_sequence_action)]
         ),
     }
 )
@@ -1821,6 +1988,7 @@ SCRIPT_ACTION_FIRE_EVENT = "event"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
 SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_SEQUENCE = "sequence"
 SCRIPT_ACTION_SET_CONVERSATION_RESPONSE = "set_conversation_response"
 SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_VARIABLES = "variables"
@@ -1843,10 +2011,12 @@ ACTIONS_MAP = {
     CONF_WAIT_FOR_TRIGGER: SCRIPT_ACTION_WAIT_FOR_TRIGGER,
     CONF_VARIABLES: SCRIPT_ACTION_VARIABLES,
     CONF_IF: SCRIPT_ACTION_IF,
+    CONF_ACTION: SCRIPT_ACTION_CALL_SERVICE,
     CONF_SERVICE: SCRIPT_ACTION_CALL_SERVICE,
     CONF_SERVICE_TEMPLATE: SCRIPT_ACTION_CALL_SERVICE,
     CONF_STOP: SCRIPT_ACTION_STOP,
     CONF_PARALLEL: SCRIPT_ACTION_PARALLEL,
+    CONF_SEQUENCE: SCRIPT_ACTION_SEQUENCE,
     CONF_SET_CONVERSATION_RESPONSE: SCRIPT_ACTION_SET_CONVERSATION_RESPONSE,
 }
 
@@ -1857,6 +2027,12 @@ def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
     if not (actions := ACTIONS_SET.intersection(action)):
         raise ValueError("Unable to determine action")
+    if len(actions) > 1:
+        # Ambiguous action, select the first one in the
+        # order of the ACTIONS_MAP
+        for action_key, _script_action in ACTIONS_MAP.items():
+            if action_key in actions:
+                return _script_action
     return ACTIONS_MAP[actions.pop()]
 
 
@@ -1871,6 +2047,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_SEQUENCE: _SCRIPT_SEQUENCE_SCHEMA,
     SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: _SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA,
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
@@ -1890,3 +2067,32 @@ historic_currency = vol.In(
 country = vol.In(COUNTRIES, msg="invalid ISO 3166 formatted country")
 
 language = vol.In(LANGUAGES, msg="invalid RFC 5646 formatted language")
+
+
+async def async_validate(
+    hass: HomeAssistant, validator: Callable[[Any], Any], value: Any
+) -> Any:
+    """Async friendly schema validation.
+
+    If a validator decorated with @not_async_friendly is called, validation will be
+    deferred to an executor. If not, validation will happen in the event loop.
+    """
+    _validating_async.set(True)
+    try:
+        return validator(value)
+    except MustValidateInExecutor:
+        return await hass.async_add_executor_job(
+            _validate_in_executor, hass, validator, value
+        )
+    finally:
+        _validating_async.set(False)
+
+
+def _validate_in_executor(
+    hass: HomeAssistant, validator: Callable[[Any], Any], value: Any
+) -> Any:
+    _hass.hass = hass
+    try:
+        return validator(value)
+    finally:
+        _hass.hass = None

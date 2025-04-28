@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
 from homeassistant.const import (
@@ -38,6 +38,7 @@ from homeassistant.helpers.trigger_template_entity import (
     CONF_PICTURE,
     TEMPLATE_ENTITY_BASE_SCHEMA,
     ManualTriggerEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -64,7 +65,7 @@ DEFAULT_VERIFY_SSL = True
 
 SUPPORT_REST_METHODS = ["post", "put", "patch"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
         vol.Required(CONF_RESOURCE): cv.url,
@@ -73,7 +74,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PARAMS): {cv.string: cv.template},
         vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
         vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
-        vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
+        vol.Optional(CONF_IS_ON_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
             vol.Lower, vol.In(SUPPORT_REST_METHODS)
         ),
@@ -107,7 +110,7 @@ async def async_setup_platform(
     try:
         switch = RestSwitch(hass, config, trigger_entity_config)
 
-        req = await switch.get_device_state(hass)
+        req = await switch.get_response(hass)
         if req.status_code >= HTTPStatus.BAD_REQUEST:
             _LOGGER.error("Got non-ok response from resource: %s", req.status_code)
         else:
@@ -147,17 +150,9 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         self._auth = auth
         self._body_on: template.Template = config[CONF_BODY_ON]
         self._body_off: template.Template = config[CONF_BODY_OFF]
-        self._is_on_template: template.Template | None = config.get(CONF_IS_ON_TEMPLATE)
+        self._is_on_template: ValueTemplate | None = config.get(CONF_IS_ON_TEMPLATE)
         self._timeout: int = config[CONF_TIMEOUT]
         self._verify_ssl: bool = config[CONF_VERIFY_SSL]
-
-        self._body_on.hass = hass
-        self._body_off.hass = hass
-        if (is_on_template := self._is_on_template) is not None:
-            is_on_template.hass = hass
-
-        template.attach(hass, self._headers)
-        template.attach(hass, self._params)
 
     async def async_added_to_hass(self) -> None:
         """Handle adding to Home Assistant."""
@@ -216,35 +211,41 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         """Get the current state, catching errors."""
         req = None
         try:
-            req = await self.get_device_state(self.hass)
+            req = await self.get_response(self.hass)
         except (TimeoutError, httpx.TimeoutException):
             _LOGGER.exception("Timed out while fetching data")
-        except httpx.RequestError as err:
-            _LOGGER.exception("Error while fetching data: %s", err)
+        except httpx.RequestError:
+            _LOGGER.exception("Error while fetching data")
 
         if req:
-            self._process_manual_data(req.text)
-            self.async_write_ha_state()
+            self._async_update(req.text)
 
-    async def get_device_state(self, hass: HomeAssistant) -> httpx.Response:
+    async def get_response(self, hass: HomeAssistant) -> httpx.Response:
         """Get the latest data from REST API and update the state."""
         websession = get_async_client(hass, self._verify_ssl)
 
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        req = await websession.get(
+        return await websession.get(
             self._state_resource,
             auth=self._auth,
             headers=rendered_headers,
             params=rendered_params,
             timeout=self._timeout,
         )
-        text = req.text
+
+    def _async_update(self, text: str) -> None:
+        """Get the latest data from REST API and update the state."""
+
+        variables = self._template_variables_with_value(text)
+        if not self._render_availability_template(variables):
+            self.async_write_ha_state()
+            return
 
         if self._is_on_template is not None:
-            text = self._is_on_template.async_render_with_possible_json_value(
-                text, "None"
+            text = self._is_on_template.async_render_as_value_template(
+                self.entity_id, variables, "None"
             )
             text = text.lower()
             if text == "true":
@@ -260,4 +261,5 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         else:
             self._attr_is_on = None
 
-        return req
+        self._process_manual_data(variables)
+        self.async_write_ha_state()

@@ -1,0 +1,534 @@
+# serializer version: 1
+# name: test_sensor[sensor.test_pet_activity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'low',
+        'ok',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_activity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Activity',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'activity',
+    'unique_id': 'pet_id_123_activity_label',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_activity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Pet Activity',
+      'options': list([
+        'good',
+        'low',
+        'ok',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_activity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ok',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_activity_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_activity_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Activity time',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'activity_time',
+    'unique_id': 'pet_id_123_minutes_active',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_activity_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Pet Activity time',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_activity_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '150',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_calories_burned-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_calories_burned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calories burned',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'calories',
+    'unique_id': 'pet_id_123_calories',
+    'unit_of_measurement': <UnitOfEnergy.KILO_CALORIE: 'kcal'>,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_calories_burned-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Pet Calories burned',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_CALORIE: 'kcal'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_calories_burned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '999',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_daily_goal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_daily_goal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Daily goal',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_goal',
+    'unique_id': 'pet_id_123_daily_goal',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_daily_goal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Pet Daily goal',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_daily_goal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '200',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_day_sleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_day_sleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Day sleep',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_day_sleep',
+    'unique_id': 'pet_id_123_minutes_day_sleep',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_day_sleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Pet Day sleep',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_day_sleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_night_sleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_night_sleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Night sleep',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_night_sleep',
+    'unique_id': 'pet_id_123_minutes_night_sleep',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_night_sleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Pet Night sleep',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_night_sleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '300',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_rest_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_rest_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rest time',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rest_time',
+    'unique_id': 'pet_id_123_minutes_rest',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_rest_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Pet Rest time',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_rest_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '122',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_sleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'low',
+        'ok',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_sleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Sleep',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep',
+    'unique_id': 'pet_id_123_sleep_label',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_sleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Pet Sleep',
+      'options': list([
+        'good',
+        'low',
+        'ok',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_sleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_tracker_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_pet_tracker_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Tracker battery',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tracker_battery_level',
+    'unique_id': 'pet_id_123_battery_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_tracker_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Test Pet Tracker battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_tracker_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '88',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_tracker_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'inaccurate_position',
+        'not_reporting',
+        'operational',
+        'system_shutdown_user',
+        'system_startup',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_pet_tracker_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tracker state',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tracker_state',
+    'unique_id': 'pet_id_123_tracker_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_tracker_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Pet Tracker state',
+      'options': list([
+        'inaccurate_position',
+        'not_reporting',
+        'operational',
+        'system_shutdown_user',
+        'system_startup',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_tracker_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'operational',
+  })
+# ---

@@ -38,7 +38,9 @@ def _item_preset_payload(preset: Preset, player_mode: str) -> BrowseMedia:
         media_content_type=MediaType.CHANNEL,
         # We add 1 to the preset key to keep it in sync with the numbering shown
         # on the interface of the device
-        media_content_id=f"{player_mode}/{MEDIA_CONTENT_ID_PRESET}/{int(preset.key)+1}",
+        media_content_id=(
+            f"{player_mode}/{MEDIA_CONTENT_ID_PRESET}/{int(preset.key) + 1}"
+        ),
         can_play=True,
         can_expand=False,
     )
@@ -94,7 +96,7 @@ async def browse_top_level(current_mode, afsapi: AFSAPI):
         for top_level_media_content_id, name in TOP_LEVEL_DIRECTORIES.items()
     ]
 
-    library_info = BrowseMedia(
+    return BrowseMedia(
         media_class=MediaClass.DIRECTORY,
         media_content_id="library",
         media_content_type=MediaType.CHANNELS,
@@ -104,8 +106,6 @@ async def browse_top_level(current_mode, afsapi: AFSAPI):
         children=children,
         children_media_class=MediaClass.DIRECTORY,
     )
-
-    return library_info
 
 
 async def browse_node(

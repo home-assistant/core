@@ -7,14 +7,14 @@
         "data": {
           "interface": "The network interface to use",
           "host": "IP address (optional)",
-          "mac": "Mac Address (optional)"
+          "mac": "MAC address (optional)"
         }
       },
       "settings": {
         "title": "Optional settings",
         "description": "The key (password) can be retrieved using this tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. If the key is not provided only sensors will be accessible",
         "data": {
-          "key": "The key of your gateway",
+          "key": "The key of your Gateway",
           "name": "Name of the Gateway"
         }
       },
@@ -26,11 +26,11 @@
       }
     },
     "error": {
-      "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running HomeAssistant as interface",
+      "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running Home Assistant as interface",
       "invalid_interface": "Invalid network interface",
-      "invalid_key": "Invalid gateway key",
+      "invalid_key": "Invalid Gateway key",
       "invalid_host": "Invalid hostname or IP address, see https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
-      "invalid_mac": "Invalid Mac Address"
+      "invalid_mac": "Invalid MAC address"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -59,7 +59,7 @@
         },
         "ringtone_id": {
           "name": "Ringtone ID",
-          "description": "One of the allowed ringtone ids."
+          "description": "One of the allowed ringtone IDs."
         },
         "ringtone_vol": {
           "name": "Ringtone volume",

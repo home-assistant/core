@@ -1,13 +1,17 @@
 """Tests for Ecovacs sensors."""
 
-from deebot_client.capabilities import Capabilities
 from deebot_client.command import Command
-from deebot_client.commands.json import ResetLifeSpan, SetRelocationState
+from deebot_client.commands import StationAction
+from deebot_client.commands.json import (
+    ResetLifeSpan,
+    SetRelocationState,
+    station_action,
+)
 from deebot_client.events import LifeSpan
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
@@ -43,13 +47,56 @@ def platforms() -> Platform | list[Platform]:
                     ResetLifeSpan(LifeSpan.FILTER),
                 ),
                 (
-                    "button.ozmo_950_reset_side_brushes_lifespan",
+                    "button.ozmo_950_reset_side_brush_lifespan",
                     ResetLifeSpan(LifeSpan.SIDE_BRUSH),
                 ),
             ],
         ),
+        (
+            "5xu9h3",
+            [
+                (
+                    "button.goat_g1_reset_blade_lifespan",
+                    ResetLifeSpan(LifeSpan.BLADE),
+                ),
+                (
+                    "button.goat_g1_reset_lens_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.LENS_BRUSH),
+                ),
+            ],
+        ),
+        (
+            "qhe2o2",
+            [
+                ("button.dusty_relocate", SetRelocationState()),
+                (
+                    "button.dusty_reset_main_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.BRUSH),
+                ),
+                (
+                    "button.dusty_reset_filter_lifespan",
+                    ResetLifeSpan(LifeSpan.FILTER),
+                ),
+                (
+                    "button.dusty_reset_side_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.SIDE_BRUSH),
+                ),
+                (
+                    "button.dusty_reset_unit_care_lifespan",
+                    ResetLifeSpan(LifeSpan.UNIT_CARE),
+                ),
+                (
+                    "button.dusty_reset_round_mop_lifespan",
+                    ResetLifeSpan(LifeSpan.ROUND_MOP),
+                ),
+                (
+                    "button.dusty_empty_dustbin",
+                    station_action.StationAction(StationAction.EMPTY_DUSTBIN),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "5xu9h3", "qhe2o2"],
 )
 async def test_buttons(
     hass: HomeAssistant,
@@ -61,7 +108,7 @@ async def test_buttons(
 ) -> None:
     """Test that sensor entity snapshots match."""
     assert hass.states.async_entity_ids() == [e[0] for e in entities]
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     for entity_id, command in entities:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
@@ -95,7 +142,14 @@ async def test_buttons(
             [
                 "button.ozmo_950_reset_main_brush_lifespan",
                 "button.ozmo_950_reset_filter_lifespan",
-                "button.ozmo_950_reset_side_brushes_lifespan",
+                "button.ozmo_950_reset_side_brush_lifespan",
+            ],
+        ),
+        (
+            "5xu9h3",
+            [
+                "button.goat_g1_reset_blade_lifespan",
+                "button.goat_g1_reset_lens_brush_lifespan",
             ],
         ),
     ],
@@ -107,8 +161,8 @@ async def test_disabled_by_default_buttons(
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
 
-        assert (
-            entry := entity_registry.async_get(entity_id)
-        ), f"Entity registry entry for {entity_id} is missing"
+        assert (entry := entity_registry.async_get(entity_id)), (
+            f"Entity registry entry for {entity_id} is missing"
+        )
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

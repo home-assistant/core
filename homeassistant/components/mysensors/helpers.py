@@ -6,6 +6,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from enum import IntEnum
 import logging
+from typing import cast
 
 from mysensors import BaseAsyncGateway, Message
 from mysensors.sensor import ChildSensor
@@ -13,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.decorator import Registry
 
@@ -26,7 +27,6 @@ from .const import (
     MYSENSORS_DISCOVERED_NODES,
     MYSENSORS_DISCOVERY,
     MYSENSORS_NODE_DISCOVERY,
-    MYSENSORS_ON_UNLOAD,
     TYPE_TO_PLATFORMS,
     DevId,
     GatewayId,
@@ -38,18 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 SCHEMAS: Registry[
     tuple[str, str], Callable[[BaseAsyncGateway, ChildSensor, ValueType], vol.Schema]
 ] = Registry()
-
-
-@callback
-def on_unload(hass: HomeAssistant, gateway_id: GatewayId, fnct: Callable) -> None:
-    """Register a callback to be called when entry is unloaded.
-
-    This function is used by platforms to cleanup after themselves.
-    """
-    key = MYSENSORS_ON_UNLOAD.format(gateway_id)
-    if key not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][key] = []
-    hass.data[DOMAIN][key].append(fnct)
 
 
 @callback
@@ -151,8 +139,8 @@ def get_child_schema(
 ) -> vol.Schema:
     """Return a child schema."""
     set_req = gateway.const.SetReq
-    child_schema = child.get_schema(gateway.protocol_version)
-    schema = child_schema.extend(
+    child_schema = cast(vol.Schema, child.get_schema(gateway.protocol_version))
+    return child_schema.extend(
         {
             vol.Required(
                 set_req[name].value, msg=invalid_msg(gateway, child, name)
@@ -161,18 +149,15 @@ def get_child_schema(
         },
         extra=vol.ALLOW_EXTRA,
     )
-    return schema
 
 
 def invalid_msg(
     gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
 ) -> str:
     """Return a message for an invalid child during schema validation."""
-    pres = gateway.const.Presentation
+    presentation = gateway.const.Presentation
     set_req = gateway.const.SetReq
-    return (
-        f"{pres(child.type).name} requires value_type {set_req[value_type_name].name}"
-    )
+    return f"{presentation(child.type).name} requires value_type {set_req[value_type_name].name}"
 
 
 def validate_set_msg(
@@ -202,10 +187,10 @@ def validate_child(
 ) -> defaultdict[Platform, list[DevId]]:
     """Validate a child. Returns a dict mapping hass platform names to list of DevId."""
     validated: defaultdict[Platform, list[DevId]] = defaultdict(list)
-    pres: type[IntEnum] = gateway.const.Presentation
+    presentation: type[IntEnum] = gateway.const.Presentation
     set_req: type[IntEnum] = gateway.const.SetReq
     child_type_name: SensorType | None = next(
-        (member.name for member in pres if member.value == child.type), None
+        (member.name for member in presentation if member.value == child.type), None
     )
     if not child_type_name:
         _LOGGER.warning("Child type %s is not supported", child.type)

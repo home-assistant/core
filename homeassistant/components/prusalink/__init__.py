@@ -2,15 +2,8 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-import asyncio
-from datetime import timedelta
-import logging
-from time import monotonic
-from typing import TypeVar
-
-from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
-from pyprusalink.types import InvalidAuth, PrusaLinkError
+from pyprusalink import PrusaLink
+from pyprusalink.types import InvalidAuth
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,22 +13,27 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .config_flow import ConfigFlow
 from .const import DOMAIN
+from .coordinator import (
+    InfoUpdateCoordinator,
+    JobUpdateCoordinator,
+    LegacyStatusCoordinator,
+    PrusaLinkUpdateCoordinator,
+    StatusCoordinator,
+)
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.CAMERA, Platform.SENSOR]
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -44,16 +42,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryError("Please upgrade your printer's firmware.")
 
     api = PrusaLink(
-        async_get_clientsession(hass),
+        get_async_client(hass),
         entry.data[CONF_HOST],
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
     )
 
-    coordinators = {
-        "legacy_status": LegacyStatusCoordinator(hass, api),
-        "status": StatusCoordinator(hass, api),
-        "job": JobUpdateCoordinator(hass, api),
+    coordinators: dict[str, PrusaLinkUpdateCoordinator] = {
+        "legacy_status": LegacyStatusCoordinator(hass, entry, api),
+        "status": StatusCoordinator(hass, entry, api),
+        "job": JobUpdateCoordinator(hass, entry, api),
+        "info": InfoUpdateCoordinator(hass, entry, api),
     }
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
@@ -81,7 +80,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             password = config_entry.data[CONF_API_KEY]
 
             api = PrusaLink(
-                async_get_clientsession(hass),
+                get_async_client(hass),
                 config_entry.data[CONF_HOST],
                 username,
                 password,
@@ -127,91 +126,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
-
-
-class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):  # pylint: disable=hass-enforce-coordinator-module
-    """Update coordinator for the printer."""
-
-    config_entry: ConfigEntry
-    expect_change_until = 0.0
-
-    def __init__(self, hass: HomeAssistant, api: PrusaLink) -> None:
-        """Initialize the update coordinator."""
-        self.api = api
-
-        super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=self._get_update_interval(None)
-        )
-
-    async def _async_update_data(self) -> T:
-        """Update the data."""
-        try:
-            async with asyncio.timeout(5):
-                data = await self._fetch_data()
-        except InvalidAuth:
-            raise UpdateFailed("Invalid authentication") from None
-        except PrusaLinkError as err:
-            raise UpdateFailed(str(err)) from err
-
-        self.update_interval = self._get_update_interval(data)
-        return data
-
-    @abstractmethod
-    async def _fetch_data(self) -> T:
-        """Fetch the actual data."""
-        raise NotImplementedError
-
-    @callback
-    def expect_change(self) -> None:
-        """Expect a change."""
-        self.expect_change_until = monotonic() + 30
-
-    def _get_update_interval(self, data: T) -> timedelta:
-        """Get new update interval."""
-        if self.expect_change_until > monotonic():
-            return timedelta(seconds=5)
-
-        return timedelta(seconds=30)
-
-
-class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):  # pylint: disable=hass-enforce-coordinator-module
-    """Printer update coordinator."""
-
-    async def _fetch_data(self) -> PrinterStatus:
-        """Fetch the printer data."""
-        return await self.api.get_status()
-
-
-class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):  # pylint: disable=hass-enforce-coordinator-module
-    """Printer legacy update coordinator."""
-
-    async def _fetch_data(self) -> LegacyPrinterStatus:
-        """Fetch the printer data."""
-        return await self.api.get_legacy_printer()
-
-
-class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):  # pylint: disable=hass-enforce-coordinator-module
-    """Job update coordinator."""
-
-    async def _fetch_data(self) -> JobInfo:
-        """Fetch the printer data."""
-        return await self.api.get_job()
-
-
-class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):  # pylint: disable=hass-enforce-coordinator-module
-    """Defines a base PrusaLink entity."""
-
-    _attr_has_entity_name = True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this PrusaLink device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
-            name=self.coordinator.config_entry.title,
-            manufacturer="Prusa",
-            configuration_url=self.coordinator.api.client.host,
-        )

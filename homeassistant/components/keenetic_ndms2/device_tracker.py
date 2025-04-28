@@ -9,14 +9,13 @@ from ndms2_client import Device
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
-    SourceType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, ROUTER
 from .router import KeeneticRouter
@@ -27,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Keenetic NDMS2 component."""
     router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
@@ -104,11 +103,6 @@ class KeeneticTracker(ScannerEntity):
         )
 
     @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the client."""
-        return SourceType.ROUTER
-
-    @property
     def name(self) -> str:
         """Return the name of the device."""
         return self._device.name or self._device.mac
@@ -119,7 +113,7 @@ class KeeneticTracker(ScannerEntity):
         return f"{self._device.mac}_{self._router.config_entry.entry_id}"
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._device.ip if self.is_connected else None
 

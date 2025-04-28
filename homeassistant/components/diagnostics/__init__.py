@@ -15,15 +15,25 @@ import voluptuous as vol
 from homeassistant.components import http, websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, integration_platform
-from homeassistant.helpers.device_registry import DeviceEntry, async_get
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    integration_platform,
+)
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
 )
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_custom_components, async_get_integration
+from homeassistant.loader import (
+    Manifest,
+    async_get_custom_components,
+    async_get_integration,
+)
+from homeassistant.setup import async_get_domain_setup_times
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 
 from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
@@ -35,19 +45,24 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+_DIAGNOSTICS_DATA: HassKey[DiagnosticsData] = HassKey(DOMAIN)
 
 
 @dataclass(slots=True)
 class DiagnosticsPlatformData:
     """Diagnostic platform data."""
 
-    config_entry_diagnostics: Callable[
-        [HomeAssistant, ConfigEntry], Coroutine[Any, Any, Mapping[str, Any]]
-    ] | None
-    device_diagnostics: Callable[
-        [HomeAssistant, ConfigEntry, DeviceEntry],
-        Coroutine[Any, Any, Mapping[str, Any]],
-    ] | None
+    config_entry_diagnostics: (
+        Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, Mapping[str, Any]]]
+        | None
+    )
+    device_diagnostics: (
+        Callable[
+            [HomeAssistant, ConfigEntry, DeviceEntry],
+            Coroutine[Any, Any, Mapping[str, Any]],
+        ]
+        | None
+    )
 
 
 @dataclass(slots=True)
@@ -59,7 +74,7 @@ class DiagnosticsData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Diagnostics from a config entry."""
-    hass.data[DOMAIN] = DiagnosticsData()
+    hass.data[_DIAGNOSTICS_DATA] = DiagnosticsData()
 
     await integration_platform.async_process_integration_platforms(
         hass, DOMAIN, _register_diagnostics_platform
@@ -91,7 +106,7 @@ def _register_diagnostics_platform(
     hass: HomeAssistant, integration_domain: str, platform: DiagnosticsProtocol
 ) -> None:
     """Register a diagnostics platform."""
-    diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
     diagnostics_data.platforms[integration_domain] = DiagnosticsPlatformData(
         getattr(platform, "async_get_config_entry_diagnostics", None),
         getattr(platform, "async_get_device_diagnostics", None),
@@ -105,7 +120,7 @@ def handle_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List all possible diagnostic handlers."""
-    diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
     result = [
         {
             "domain": domain,
@@ -132,7 +147,7 @@ def handle_get(
 ) -> None:
     """List all diagnostic handlers for a domain."""
     domain = msg["domain"]
-    diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
 
     if (info := diagnostics_data.platforms.get(domain)) is None:
         connection.send_error(
@@ -150,6 +165,23 @@ def handle_get(
             },
         },
     )
+
+
+@callback
+def async_format_manifest(manifest: Manifest) -> Manifest:
+    """Format manifest for diagnostics.
+
+    Remove the @ from codeowners so that
+    when users download the diagnostics and paste
+    the codeowners into the repository, it will
+    not notify the users in the codeowners file.
+    """
+    manifest_copy = manifest.copy()
+    if "codeowners" in manifest_copy:
+        manifest_copy["codeowners"] = [
+            codeowner.lstrip("@") for codeowner in manifest_copy["codeowners"]
+        ]
+    return manifest_copy
 
 
 async def _async_get_json_file_response(
@@ -170,20 +202,19 @@ async def _async_get_json_file_response(
     all_custom_components = await async_get_custom_components(hass)
     for cc_domain, cc_obj in all_custom_components.items():
         custom_components[cc_domain] = {
+            "documentation": cc_obj.documentation,
             "version": cc_obj.version,
             "requirements": cc_obj.requirements,
         }
+    payload = {
+        "home_assistant": hass_sys_info,
+        "custom_components": custom_components,
+        "integration_manifest": async_format_manifest(integration.manifest),
+        "setup_times": async_get_domain_setup_times(hass, domain),
+        "data": data,
+    }
     try:
-        json_data = json.dumps(
-            {
-                "home_assistant": hass_sys_info,
-                "custom_components": custom_components,
-                "integration_manifest": integration.manifest,
-                "data": data,
-            },
-            indent=2,
-            cls=ExtendedJSONEncoder,
-        )
+        json_data = json.dumps(payload, indent=2, cls=ExtendedJSONEncoder)
     except TypeError:
         _LOGGER.error(
             "Failed to serialize to JSON: %s/%s%s. Bad data at %s",
@@ -192,7 +223,7 @@ async def _async_get_json_file_response(
             f"/{DiagnosticsSubType.DEVICE.value}/{sub_id}"
             if sub_id is not None
             else "",
-            format_unserializable_data(find_paths_unserializable_data(data)),
+            format_unserializable_data(find_paths_unserializable_data(payload)),
         )
         return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
@@ -238,7 +269,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if (config_entry := hass.config_entries.async_get_entry(d_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+        diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
         if (info := diagnostics_data.platforms.get(config_entry.domain)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
@@ -255,7 +286,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             )
 
         # Device diagnostics
-        dev_reg = async_get(hass)
+        dev_reg = dr.async_get(hass)
         if sub_id is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 

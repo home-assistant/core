@@ -4,7 +4,7 @@
       "id": 1234,
       "user_id": 1234,
       "vehicle_id": 1234,
-      "vin": "VINVINVIN",
+      "vin": "LRW3F7EK4NC700000",
       "color": null,
       "access_type": "OWNER",
       "display_name": "Test",
@@ -67,7 +67,7 @@
         "webcam_supported": true,
         "wheel_type": "Pinwheel18CapKit"
       },
-      "command_signing": "allowed",
+      "command_signing": "off",
       "release_notes_supported": true
     },
     {
@@ -115,7 +115,17 @@
       "features": {
         "rate_plan_manager_no_pricing_constraint": true
       }
+    },
+    {
+      "energy_site_id": 98765,
+      "components": {
+        "battery": false,
+        "solar": false,
+        "grid": false,
+        "load_meter": false,
+        "market_type": "residential"
+      }
     }
   ],
-  "count": 2
+  "count": 3
 }

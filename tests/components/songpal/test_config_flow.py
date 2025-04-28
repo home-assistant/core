@@ -4,12 +4,21 @@ import copy
 import dataclasses
 from unittest.mock import patch
 
-from homeassistant.components import ssdp
 from homeassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_SSDP,
+    SOURCE_USER,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from . import (
     CONF_DATA,
@@ -25,13 +34,13 @@ from tests.common import MockConfigEntry
 
 UDN = "uuid:1234"
 
-SSDP_DATA = ssdp.SsdpServiceInfo(
+SSDP_DATA = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location=f"http://{HOST}:52323/dmr.xml",
     upnp={
-        ssdp.ATTR_UPNP_UDN: UDN,
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: FRIENDLY_NAME,
+        ATTR_UPNP_UDN: UDN,
+        ATTR_UPNP_FRIENDLY_NAME: FRIENDLY_NAME,
         "X_ScalarWebAPI_DeviceInfo": {
             "X_ScalarWebAPI_BaseURL": ENDPOINT,
             "X_ScalarWebAPI_ServiceList": {
@@ -42,7 +51,7 @@ SSDP_DATA = ssdp.SsdpServiceInfo(
 )
 
 
-def _flow_next(hass, flow_id):
+def _flow_next(hass: HomeAssistant, flow_id: str) -> ConfigFlowResult:
     return next(
         flow
         for flow in hass.config_entries.flow.async_progress()
@@ -64,7 +73,7 @@ async def test_flow_ssdp(hass: HomeAssistant) -> None:
         context={"source": SOURCE_SSDP},
         data=SSDP_DATA,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["description_placeholders"] == {
         CONF_NAME: FRIENDLY_NAME,
@@ -77,7 +86,7 @@ async def test_flow_ssdp(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == FRIENDLY_NAME
         assert result["data"] == CONF_DATA
 
@@ -91,7 +100,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_USER},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] is None
         _flow_next(hass, result["flow_id"])
@@ -100,7 +109,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_ENDPOINT: ENDPOINT},
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == MODEL
         assert result["data"] == {
             CONF_NAME: MODEL,
@@ -119,7 +128,7 @@ async def test_flow_import(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == FRIENDLY_NAME
         assert result["data"] == CONF_DATA
 
@@ -135,7 +144,7 @@ async def test_flow_import_without_name(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_ENDPOINT: ENDPOINT}
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == MODEL
         assert result["data"] == {CONF_NAME: MODEL, CONF_ENDPOINT: ENDPOINT}
 
@@ -143,7 +152,7 @@ async def test_flow_import_without_name(hass: HomeAssistant) -> None:
     mocked_device.get_interface_information.assert_called_once()
 
 
-def _create_mock_config_entry(hass):
+def _create_mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="uuid:0000",
@@ -163,7 +172,7 @@ async def test_ssdp_bravia(hass: HomeAssistant) -> None:
         context={"source": SOURCE_SSDP},
         data=ssdp_data,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_songpal_device"
 
 
@@ -175,7 +184,7 @@ async def test_sddp_exist(hass: HomeAssistant) -> None:
         context={"source": SOURCE_SSDP},
         data=SSDP_DATA,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -188,7 +197,7 @@ async def test_user_exist(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
     mocked_device.get_supported_methods.assert_called_once()
@@ -204,7 +213,7 @@ async def test_import_exist(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
     mocked_device.get_supported_methods.assert_called_once()
@@ -220,7 +229,7 @@ async def test_user_invalid(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -237,7 +246,7 @@ async def test_import_invalid(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
     mocked_device.get_supported_methods.assert_called_once()

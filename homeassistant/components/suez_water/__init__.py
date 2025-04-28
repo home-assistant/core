@@ -2,48 +2,65 @@
 
 from __future__ import annotations
 
-from pysuez import SuezClient
-from pysuez.client import PySuezError
+import logging
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .const import CONF_COUNTER_ID, DOMAIN
+from .const import CONF_COUNTER_ID
+from .coordinator import SuezWaterConfigEntry, SuezWaterCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
+_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: SuezWaterConfigEntry) -> bool:
     """Set up Suez Water from a config entry."""
 
-    def get_client() -> SuezClient:
-        try:
-            client = SuezClient(
-                entry.data[CONF_USERNAME],
-                entry.data[CONF_PASSWORD],
-                entry.data[CONF_COUNTER_ID],
-                provider=None,
-            )
-            if not client.check_credentials():
-                raise ConfigEntryError
-            return client
-        except PySuezError as ex:
-            raise ConfigEntryNotReady from ex
+    coordinator = SuezWaterCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[
-        entry.entry_id
-    ] = await hass.async_add_executor_job(get_client)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SuezWaterConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    return unload_ok
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: SuezWaterConfigEntry
+) -> bool:
+    """Migrate old suez water config entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version > 2:
+        return False
+
+    if config_entry.version == 1:
+        # Migrate to version 2
+        counter_id = config_entry.data.get(CONF_COUNTER_ID)
+        unique_id = str(counter_id)
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            unique_id=unique_id,
+            version=2,
+        )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    return True

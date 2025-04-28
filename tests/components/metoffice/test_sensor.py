@@ -8,7 +8,7 @@ import requests_mock
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get as get_dev_reg
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     DEVICE_KEY_KINGSLYNN,
@@ -27,7 +27,9 @@ from tests.common import MockConfigEntry, load_fixture
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_one_sensor_site_running(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test the Met Office sensor platform."""
     # all metoffice test data encapsulated in here
@@ -54,9 +56,10 @@ async def test_one_sensor_site_running(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    dev_reg = get_dev_reg(hass)
-    assert len(dev_reg.devices) == 1
-    device_wavertree = dev_reg.async_get_device(identifiers=DEVICE_KEY_WAVERTREE)
+    assert len(device_registry.devices) == 1
+    device_wavertree = device_registry.async_get_device(
+        identifiers=DEVICE_KEY_WAVERTREE
+    )
     assert device_wavertree.name == "Met Office Wavertree"
 
     running_sensor_ids = hass.states.async_entity_ids("sensor")
@@ -75,7 +78,9 @@ async def test_one_sensor_site_running(
 
 @pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
 async def test_two_sensor_sites_running(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    requests_mock: requests_mock.Mocker,
 ) -> None:
     """Test we handle two sets of sensors running for two different sites."""
 
@@ -115,11 +120,14 @@ async def test_two_sensor_sites_running(
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
 
-    dev_reg = get_dev_reg(hass)
-    assert len(dev_reg.devices) == 2
-    device_kingslynn = dev_reg.async_get_device(identifiers=DEVICE_KEY_KINGSLYNN)
+    assert len(device_registry.devices) == 2
+    device_kingslynn = device_registry.async_get_device(
+        identifiers=DEVICE_KEY_KINGSLYNN
+    )
     assert device_kingslynn.name == "Met Office King's Lynn"
-    device_wavertree = dev_reg.async_get_device(identifiers=DEVICE_KEY_WAVERTREE)
+    device_wavertree = device_registry.async_get_device(
+        identifiers=DEVICE_KEY_WAVERTREE
+    )
     assert device_wavertree.name == "Met Office Wavertree"
 
     running_sensor_ids = hass.states.async_entity_ids("sensor")

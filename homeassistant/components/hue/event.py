@@ -16,7 +16,7 @@ from homeassistant.components.event import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bridge import HueBridge
 from .const import DEFAULT_BUTTON_EVENT_TYPES, DEVICE_SPECIFIC_EVENT_TYPES, DOMAIN
@@ -26,7 +26,7 @@ from .v2.entity import HueBaseEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up event platform from Hue button resources."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
@@ -95,7 +95,9 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
     def _handle_event(self, event_type: EventType, resource: Button) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_UPDATED and resource.id == self.resource.id:
-            self._trigger_event(resource.button.last_event.value)
+            if resource.button is None or resource.button.button_report is None:
+                return
+            self._trigger_event(resource.button.button_report.event.value)
             self.async_write_ha_state()
             return
         super()._handle_event(event_type, resource)
@@ -119,11 +121,16 @@ class HueRotaryEventEntity(HueBaseEntity, EventEntity):
     def _handle_event(self, event_type: EventType, resource: RelativeRotary) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_UPDATED and resource.id == self.resource.id:
-            event_key = resource.relative_rotary.last_event.rotation.direction.value
+            if (
+                resource.relative_rotary is None
+                or resource.relative_rotary.rotary_report is None
+            ):
+                return
+            event_key = resource.relative_rotary.rotary_report.rotation.direction.value
             event_data = {
-                "duration": resource.relative_rotary.last_event.rotation.duration,
-                "steps": resource.relative_rotary.last_event.rotation.steps,
-                "action": resource.relative_rotary.last_event.action.value,
+                "duration": resource.relative_rotary.rotary_report.rotation.duration,
+                "steps": resource.relative_rotary.rotary_report.rotation.steps,
+                "action": resource.relative_rotary.rotary_report.action.value,
             }
             self._trigger_event(event_key, event_data)
             self.async_write_ha_state()

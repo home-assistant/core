@@ -22,6 +22,7 @@ from homeassistant.components import (
     sensor,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -38,9 +39,15 @@ from homeassistant.const import (
     CONF_TYPE,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import EventStateChangedData
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -55,9 +62,13 @@ from .const import (
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
+    CONF_LINKED_FILTER_CHANGE_INDICATION,
+    CONF_LINKED_FILTER_LIFE_LEVEL,
     CONF_LINKED_HUMIDITY_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
     CONF_LINKED_OBSTRUCTION_SENSOR,
+    CONF_LINKED_PM25_SENSOR,
+    CONF_LINKED_TEMPERATURE_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
@@ -66,9 +77,12 @@ from .const import (
     CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
+    CONF_VIDEO_PROFILE_NAMES,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -81,12 +95,15 @@ from .const import (
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
+    DEFAULT_VIDEO_PROFILE_NAMES,
     DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     MAX_NAME_LENGTH,
+    TYPE_AIR_PURIFIER,
+    TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -98,13 +115,14 @@ from .const import (
     VIDEO_CODEC_H264_V4L2M2M,
     VIDEO_CODEC_LIBX264,
 )
-from .models import HomeKitEntryData
+from .models import HomeKitConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
 VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
+INVALID_END_CHARS = "-_ "
 MAX_VERSION_PART = 2**32 - 1
 
 
@@ -153,15 +171,20 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): vol.In(
             VALID_VIDEO_CODECS
         ),
+        vol.Optional(CONF_VIDEO_PROFILE_NAMES, default=DEFAULT_VIDEO_PROFILE_NAMES): [
+            cv.string
+        ],
         vol.Optional(
             CONF_AUDIO_PACKET_SIZE, default=DEFAULT_AUDIO_PACKET_SIZE
         ): cv.positive_int,
         vol.Optional(
             CONF_VIDEO_PACKET_SIZE, default=DEFAULT_VIDEO_PACKET_SIZE
         ): cv.positive_int,
-        vol.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(binary_sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(
+            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+        ),
         vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
-            binary_sensor.DOMAIN
+            [binary_sensor.DOMAIN, EVENT_DOMAIN]
         ),
     }
 )
@@ -170,6 +193,26 @@ HUMIDIFIER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN)}
 )
 
+FAN_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_TYPE, default=TYPE_FAN): vol.All(
+            cv.string,
+            vol.In(
+                (
+                    TYPE_FAN,
+                    TYPE_AIR_PURIFIER,
+                )
+            ),
+        ),
+        vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_PM25_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_TEMPERATURE_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_FILTER_CHANGE_INDICATION): cv.entity_domain(
+            binary_sensor.DOMAIN
+        ),
+        vol.Optional(CONF_LINKED_FILTER_LIFE_LEVEL): cv.entity_domain(sensor.DOMAIN),
+    }
+)
 
 COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
@@ -181,6 +224,14 @@ COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
 
 CODE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {vol.Optional(ATTR_CODE, default=None): vol.Any(None, cv.string)}
+)
+
+LOCK_SCHEMA = CODE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
+            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+        ),
+    }
 )
 
 MEDIA_PLAYER_SCHEMA = vol.Schema(
@@ -214,6 +265,13 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
                 )
             ),
         )
+    }
+)
+
+SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_THRESHOLD_CO): vol.Any(None, cv.positive_int),
+        vol.Optional(CONF_THRESHOLD_CO2): vol.Any(None, cv.positive_int),
     }
 )
 
@@ -265,7 +323,7 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
         if not isinstance(config, dict):
             raise vol.Invalid(f"The configuration for {entity} must be a dictionary.")
 
-        if domain in ("alarm_control_panel", "lock"):
+        if domain == "alarm_control_panel":
             config = CODE_SCHEMA(config)
 
         elif domain == media_player.const.DOMAIN:
@@ -282,6 +340,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
         elif domain == "camera":
             config = CAMERA_SCHEMA(config)
 
+        elif domain == "lock":
+            config = LOCK_SCHEMA(config)
+
         elif domain == "switch":
             config = SWITCH_TYPE_SCHEMA(config)
 
@@ -290,6 +351,12 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
         elif domain == "cover":
             config = COVER_SCHEMA(config)
+
+        elif domain == "fan":
+            config = FAN_SCHEMA(config)
+
+        elif domain == "sensor":
+            config = SENSOR_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)
@@ -348,7 +415,8 @@ def async_show_setup_message(
     url.svg(buffer, scale=5, module_color="#000", background="#FFF")
     pairing_secret = secrets.token_hex(32)
 
-    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry_id]
+    entry = cast(HomeKitConfigEntry, hass.config_entries.async_get_entry(entry_id))
+    entry_data = entry.runtime_data
 
     entry_data.pairing_qr = buffer.getvalue()
     entry_data.pairing_qr_secret = pairing_secret
@@ -392,36 +460,32 @@ def cleanup_name_for_homekit(name: str | None) -> str:
     # likely isn't a problem
     if name is None:
         return "None"  # None crashes apple watches
-    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
-
-
-def temperature_to_homekit(temperature: float | int, unit: str) -> float:
-    """Convert temperature to Celsius for HomeKit."""
-    return round(
-        TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS), 1
-    )
-
-
-def temperature_to_states(temperature: float | int, unit: str) -> float:
-    """Convert temperature back from Celsius to Home Assistant unit."""
     return (
-        round(
-            TemperatureConverter.convert(temperature, UnitOfTemperature.CELSIUS, unit)
-            * 2
-        )
-        / 2
+        name.translate(HOMEKIT_CHAR_TRANSLATIONS)
+        .lstrip(INVALID_END_CHARS)[:MAX_NAME_LENGTH]
+        .rstrip(INVALID_END_CHARS)
     )
+
+
+def temperature_to_homekit(temperature: float, unit: str) -> float:
+    """Convert temperature to Celsius for HomeKit."""
+    return TemperatureConverter.convert(temperature, unit, UnitOfTemperature.CELSIUS)
+
+
+def temperature_to_states(temperature: float, unit: str) -> float:
+    """Convert temperature back from Celsius to Home Assistant unit."""
+    return TemperatureConverter.convert(temperature, UnitOfTemperature.CELSIUS, unit)
 
 
 def density_to_air_quality(density: float) -> int:
     """Map PM2.5 µg/m3 density to HomeKit AirQuality level."""
-    if density <= 12:  # US AQI 0-50 (HomeKit: Excellent)
+    if density <= 9:  # US AQI 0-50 (HomeKit: Excellent)
         return 1
     if density <= 35.4:  # US AQI 51-100 (HomeKit: Good)
         return 2
     if density <= 55.4:  # US AQI 101-150 (HomeKit: Fair)
         return 3
-    if density <= 150.4:  # US AQI 151-200 (HomeKit: Inferior)
+    if density <= 125.4:  # US AQI 151-200 (HomeKit: Inferior)
         return 4
     return 5  # US AQI 201+ (HomeKit: Poor)
 
@@ -572,11 +636,12 @@ def _async_find_next_available_port(start_port: int, exclude_ports: set) -> int:
             continue
         try:
             test_socket.bind(("", port))
-            return port
         except OSError:
             if port == MAX_PORT:
                 raise
             continue
+        else:
+            return port
     raise RuntimeError("unreachable")
 
 
@@ -584,10 +649,9 @@ def pid_is_alive(pid: int) -> bool:
     """Check to see if a process is alive."""
     try:
         os.kill(pid, 0)
-        return True
     except OSError:
-        pass
-    return False
+        return False
+    return True
 
 
 def accessory_friendly_name(hass_name: str, accessory: Accessory) -> str:
@@ -614,7 +678,8 @@ def state_needs_accessory_mode(state: State) -> bool:
         state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS)
         in (MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.RECEIVER)
-        or state.domain == REMOTE_DOMAIN
+    ) or (
+        state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         & RemoteEntityFeature.ACTIVITY
     )
@@ -626,3 +691,14 @@ def state_changed_event_is_same_state(event: Event[EventStateChangedData]) -> bo
     old_state = event_data["old_state"]
     new_state = event_data["new_state"]
     return bool(new_state and old_state and new_state.state == old_state.state)
+
+
+def get_min_max(value1: float, value2: float) -> tuple[float, float]:
+    """Return the minimum and maximum of two values.
+
+    HomeKit will go unavailable if the min and max are reversed
+    so we make sure the min is always the min and the max is always the max
+    as any mistakes made in integrations will cause the entire
+    bridge to go unavailable.
+    """
+    return min(value1, value2), max(value1, value2)

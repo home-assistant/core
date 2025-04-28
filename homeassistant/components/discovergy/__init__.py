@@ -6,26 +6,22 @@ from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 
-from .const import DOMAIN
-from .coordinator import DiscovergyUpdateCoordinator
+from .coordinator import DiscovergyConfigEntry, DiscovergyUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> bool:
     """Set up Discovergy from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     client = Discovergy(
         email=entry.data[CONF_EMAIL],
         password=entry.data[CONF_PASSWORD],
-        httpx_client=get_async_client(hass),
+        httpx_client=create_async_httpx_client(hass),
         authentication=BasicAuth(),
     )
 
@@ -47,13 +43,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # so we have data when entities are added
         coordinator = DiscovergyUpdateCoordinator(
             hass=hass,
+            config_entry=entry,
             meter=meter,
             discovergy_client=client,
         )
         await coordinator.async_config_entry_first_refresh()
         coordinators.append(coordinator)
 
-    hass.data[DOMAIN][entry.entry_id] = coordinators
+    entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -61,15 +58,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)

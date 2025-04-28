@@ -5,15 +5,12 @@ To update, run python3 -m script.hassfest
 
 from __future__ import annotations
 
-DHCP: list[dict[str, str | bool]] = [
+from typing import Final
+
+DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "airzone",
         "macaddress": "E84F25*",
-    },
-    {
-        "domain": "august",
-        "hostname": "yale-connect-plus",
-        "macaddress": "00177A*",
     },
     {
         "domain": "august",
@@ -32,12 +29,13 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "august",
-        "hostname": "august*",
-        "macaddress": "E076D0*",
+        "hostname": "connect",
+        "macaddress": "789C85*",
     },
     {
-        "domain": "awair",
-        "macaddress": "70886B1*",
+        "domain": "august",
+        "hostname": "august*",
+        "macaddress": "E076D0*",
     },
     {
         "domain": "axis",
@@ -59,6 +57,19 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "B8A44F*",
     },
     {
+        "domain": "axis",
+        "hostname": "axis-e82725*",
+        "macaddress": "E82725*",
+    },
+    {
+        "domain": "balboa",
+        "registered_devices": True,
+    },
+    {
+        "domain": "balboa",
+        "macaddress": "001527*",
+    },
+    {
         "domain": "blink",
         "hostname": "blink*",
         "macaddress": "B85F98*",
@@ -72,6 +83,16 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "blink",
         "hostname": "blink*",
         "macaddress": "20A171*",
+    },
+    {
+        "domain": "bond",
+        "hostname": "bond-*",
+        "macaddress": "3C6A2C1*",
+    },
+    {
+        "domain": "bond",
+        "hostname": "bond-*",
+        "macaddress": "F44E38*",
     },
     {
         "domain": "broadlink",
@@ -207,6 +228,10 @@ DHCP: list[dict[str, str | bool]] = [
         "registered_devices": True,
     },
     {
+        "domain": "fyta",
+        "hostname": "fyta*",
+    },
+    {
         "domain": "goalzero",
         "registered_devices": True,
     },
@@ -234,6 +259,10 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "30AEA4*",
     },
     {
+        "domain": "homewizard",
+        "registered_devices": True,
+    },
+    {
         "domain": "hunterdouglas_powerview",
         "registered_devices": True,
     },
@@ -241,6 +270,15 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",
         "macaddress": "002674*",
+    },
+    {
+        "domain": "incomfort",
+        "hostname": "rfgateway",
+        "macaddress": "0004A3*",
+    },
+    {
+        "domain": "incomfort",
+        "registered_devices": True,
     },
     {
         "domain": "insteon",
@@ -272,6 +310,22 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "isy994",
         "hostname": "polisy*",
         "macaddress": "000DB9*",
+    },
+    {
+        "domain": "lamarzocco",
+        "registered_devices": True,
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "gs[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "lm[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "mr[0-9][0-9][0-9][0-9][0-9][0-9]",
     },
     {
         "domain": "lametric",
@@ -365,6 +419,15 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "F8811A*",
     },
     {
+        "domain": "palazzetti",
+        "hostname": "connbox*",
+        "macaddress": "40F3857*",
+    },
+    {
+        "domain": "palazzetti",
+        "registered_devices": True,
+    },
+    {
         "domain": "powerwall",
         "hostname": "1118431-*",
     },
@@ -424,6 +487,38 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "ring",
         "hostname": "ring*",
         "macaddress": "0CAE7D*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "2CAB33*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "94E36D*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "9C7613*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "341513*",
+    },
+    {
+        "domain": "roborock",
+        "macaddress": "249E7D*",
+    },
+    {
+        "domain": "roborock",
+        "macaddress": "B04A39*",
+    },
+    {
+        "domain": "roborock",
+        "hostname": "roborock-*",
     },
     {
         "domain": "roomba",
@@ -519,6 +614,15 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "64DBA0*",
     },
     {
+        "domain": "sma",
+        "hostname": "sma*",
+        "macaddress": "0015BB*",
+    },
+    {
+        "domain": "sma",
+        "registered_devices": True,
+    },
+    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*",
@@ -542,6 +646,10 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "smartthings",
         "hostname": "hub*",
         "macaddress": "286D97*",
+    },
+    {
+        "domain": "smlight",
+        "registered_devices": True,
     },
     {
         "domain": "solaredge",
@@ -641,6 +749,11 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "tplink",
         "hostname": "k[lps]*",
+        "macaddress": "5091E3*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
         "macaddress": "5091E3*",
     },
     {
@@ -815,7 +928,7 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "tplink",
-        "hostname": "l5*",
+        "hostname": "l[59]*",
         "macaddress": "5CE931*",
     },
     {
@@ -825,8 +938,13 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "tplink",
-        "hostname": "l5*",
+        "hostname": "l[59]*",
         "macaddress": "5C628B*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l[59]*",
+        "macaddress": "14EBB6*",
     },
     {
         "domain": "tplink",
@@ -865,12 +983,27 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "tplink",
+        "hostname": "h1*",
+        "macaddress": "3C52A1*",
+    },
+    {
+        "domain": "tplink",
         "hostname": "l9*",
         "macaddress": "A842A1*",
     },
     {
         "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "A842A1*",
+    },
+    {
+        "domain": "tplink",
         "hostname": "l9*",
+        "macaddress": "3460F9*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
         "macaddress": "3460F9*",
     },
     {
@@ -881,6 +1014,11 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "tplink",
         "hostname": "k[lps]*",
+        "macaddress": "74DA88*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
         "macaddress": "74DA88*",
     },
     {
@@ -921,6 +1059,16 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "tplink",
         "hostname": "l9*",
+        "macaddress": "F0A731*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "ks2*",
+        "macaddress": "F0A731*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "kh1*",
         "macaddress": "F0A731*",
     },
     {
@@ -1016,12 +1164,21 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "74ACB9*",
     },
     {
+        "domain": "velux",
+        "hostname": "velux_klf*",
+        "macaddress": "646184*",
+    },
+    {
         "domain": "verisure",
         "macaddress": "0023C1*",
     },
     {
         "domain": "vicare",
         "macaddress": "B87424*",
+    },
+    {
+        "domain": "withings",
+        "macaddress": "0024E4*",
     },
     {
         "domain": "wiz",
@@ -1046,6 +1203,19 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "wiz",
         "hostname": "wiz_*",
+    },
+    {
+        "domain": "wmspro",
+        "macaddress": "0023D5*",
+    },
+    {
+        "domain": "wmspro",
+        "registered_devices": True,
+    },
+    {
+        "domain": "yale",
+        "hostname": "yale-connect-plus",
+        "macaddress": "00177A*",
     },
     {
         "domain": "yeelight",

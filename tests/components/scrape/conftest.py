@@ -35,7 +35,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Automatically path uuid generator."""
     with patch(
         "homeassistant.components.scrape.async_setup_entry",

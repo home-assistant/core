@@ -46,7 +46,7 @@ async def test_sucessful_config_flow(hass: HomeAssistant, my_permobil: Mock) -> 
             data={CONF_EMAIL: MOCK_EMAIL},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "region"
     assert result["errors"] == {}
 
@@ -56,7 +56,7 @@ async def test_sucessful_config_flow(hass: HomeAssistant, my_permobil: Mock) -> 
         user_input={CONF_REGION: MOCK_REGION_NAME},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email_code"
     assert result["errors"] == {}
     # request region code
@@ -65,7 +65,7 @@ async def test_sucessful_config_flow(hass: HomeAssistant, my_permobil: Mock) -> 
         user_input={CONF_CODE: MOCK_CODE},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == VALID_DATA
 
 
@@ -89,7 +89,7 @@ async def test_config_flow_incorrect_code(
             data={CONF_EMAIL: MOCK_EMAIL},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "region"
     assert result["errors"] == {}
 
@@ -99,7 +99,7 @@ async def test_config_flow_incorrect_code(
         user_input={CONF_REGION: MOCK_REGION_NAME},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email_code"
     assert result["errors"] == {}
 
@@ -109,7 +109,7 @@ async def test_config_flow_incorrect_code(
         result["flow_id"],
         user_input={CONF_CODE: MOCK_CODE},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email_code"
     assert result["errors"]["base"] == "invalid_code"
 
@@ -134,7 +134,7 @@ async def test_config_flow_unsigned_eula(
             data={CONF_EMAIL: MOCK_EMAIL},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "region"
     assert result["errors"] == {}
 
@@ -144,7 +144,7 @@ async def test_config_flow_unsigned_eula(
         user_input={CONF_REGION: MOCK_REGION_NAME},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email_code"
     assert result["errors"] == {}
 
@@ -154,7 +154,7 @@ async def test_config_flow_unsigned_eula(
         result["flow_id"],
         user_input={CONF_CODE: MOCK_CODE},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email_code"
     assert result["errors"]["base"] == "unsigned_eula"
 
@@ -170,7 +170,7 @@ async def test_config_flow_unsigned_eula(
         )
 
     # Now the method should not raise an exception, and you can proceed with your assertions
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == VALID_DATA
 
 
@@ -195,7 +195,7 @@ async def test_config_flow_incorrect_region(
             data={CONF_EMAIL: MOCK_EMAIL},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "region"
     assert result["errors"] == {}
 
@@ -206,7 +206,7 @@ async def test_config_flow_incorrect_region(
         user_input={CONF_REGION: MOCK_REGION_NAME},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "region"
     assert result["errors"]["base"] == "code_request_error"
 
@@ -232,7 +232,7 @@ async def test_config_flow_region_request_error(
             data={CONF_EMAIL: MOCK_EMAIL},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "region"
     assert result["errors"]["base"] == "region_fetch_error"
 
@@ -260,7 +260,7 @@ async def test_config_flow_invalid_email(
             data={CONF_EMAIL: INVALID_EMAIL},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
     assert result["errors"]["base"] == "invalid_email"
 
@@ -284,23 +284,21 @@ async def test_config_flow_reauth_success(
         "homeassistant.components.permobil.config_flow.MyPermobil",
         return_value=my_permobil,
     ):
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": "reauth", "entry_id": mock_entry.entry_id},
-        )
+        result = await mock_entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email_code"
     assert result["errors"] == {}
 
-    # request request new token
+    # request new token
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_CODE: reauth_code},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_entry.data == {
         CONF_EMAIL: MOCK_EMAIL,
         CONF_REGION: MOCK_URL,
         CONF_CODE: reauth_code,
@@ -326,12 +324,9 @@ async def test_config_flow_reauth_fail_invalid_code(
         "homeassistant.components.permobil.config_flow.MyPermobil",
         return_value=my_permobil,
     ):
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": "reauth", "entry_id": mock_entry.entry_id},
-        )
+        result = await mock_entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email_code"
     assert result["errors"] == {}
 
@@ -341,7 +336,7 @@ async def test_config_flow_reauth_fail_invalid_code(
         user_input={CONF_CODE: reauth_invalid_code},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email_code"
     assert result["errors"]["base"] == "invalid_code"
 
@@ -357,16 +352,11 @@ async def test_config_flow_reauth_fail_code_request(
     )
     mock_entry.add_to_hass(hass)
     # test the reauth and have request_application_code fail leading to an abort
-    my_permobil.request_application_code.side_effect = MyPermobilAPIException
-    reauth_entry = hass.config_entries.async_entries(config_flow.DOMAIN)[0]
     with patch(
         "homeassistant.components.permobil.config_flow.MyPermobil",
         return_value=my_permobil,
     ):
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": "reauth", "entry_id": reauth_entry.entry_id},
-        )
+        result = await mock_entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"

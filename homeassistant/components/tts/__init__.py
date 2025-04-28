@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 import asyncio
-from collections.abc import Mapping
+from collections.abc import AsyncGenerator
+from dataclasses import dataclass
 from datetime import datetime
-from functools import partial
 import hashlib
 from http import HTTPStatus
 import io
@@ -14,41 +13,36 @@ import logging
 import mimetypes
 import os
 import re
-import subprocess
-import tempfile
-from typing import Any, TypedDict, final
+import secrets
+from time import monotonic
+from typing import Any, Final
 
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import (
-    ATTR_MEDIA_ANNOUNCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as DOMAIN_MP,
-    SERVICE_PLAY_MEDIA,
-    MediaType,
-)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    PLATFORM_FORMAT,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, PLATFORM_FORMAT
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    ServiceCall,
+    callback,
 )
-from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
-from homeassistant.util import dt as dt_util, language as language_util
+from homeassistant.util import language as language_util
 
 from .const import (
     ATTR_CACHE,
@@ -58,6 +52,7 @@ from .const import (
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_TIME_MEMORY,
+    DATA_COMPONENT,
     DATA_TTS_MANAGER,
     DEFAULT_CACHE,
     DEFAULT_CACHE_DIR,
@@ -65,28 +60,31 @@ from .const import (
     DOMAIN,
     TtsAudioType,
 )
+from .entity import TextToSpeechEntity, TTSAudioRequest
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, media_source_id_to_kwargs
 from .models import Voice
 
 __all__ = [
-    "async_default_engine",
-    "async_get_media_source_audio",
-    "async_support_options",
     "ATTR_AUDIO_OUTPUT",
     "ATTR_PREFERRED_FORMAT",
-    "ATTR_PREFERRED_SAMPLE_RATE",
+    "ATTR_PREFERRED_SAMPLE_BYTES",
     "ATTR_PREFERRED_SAMPLE_CHANNELS",
+    "ATTR_PREFERRED_SAMPLE_RATE",
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
-    "generate_media_source_id",
-    "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
-    "SampleFormat",
+    "PLATFORM_SCHEMA_BASE",
     "Provider",
+    "ResultStream",
+    "SampleFormat",
+    "TextToSpeechEntity",
     "TtsAudioType",
     "Voice",
+    "async_default_engine",
+    "async_get_media_source_audio",
+    "generate_media_source_id",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,8 +94,17 @@ ATTR_AUDIO_OUTPUT = "audio_output"
 ATTR_PREFERRED_FORMAT = "preferred_format"
 ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
 ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
+ATTR_PREFERRED_SAMPLE_BYTES = "preferred_sample_bytes"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
+
+_DEFAULT_FORMAT = "mp3"
+_PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
+    ATTR_PREFERRED_FORMAT,
+    ATTR_PREFERRED_SAMPLE_RATE,
+    ATTR_PREFERRED_SAMPLE_CHANNELS,
+    ATTR_PREFERRED_SAMPLE_BYTES,
+}
 
 CONF_LANG = "language"
 
@@ -114,12 +121,94 @@ KEY_PATTERN = "{0}_{1}_{2}_{3}"
 SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
 
 
-class TTSCache(TypedDict):
-    """Cached TTS file."""
+class TTSCache:
+    """Cached bytes of a TTS result."""
 
-    filename: str
-    voice: bytes
-    pending: asyncio.Task | None
+    _result_data: bytes | None = None
+    """When fully loaded, contains the result data."""
+
+    _partial_data: list[bytes] | None = None
+    """While loading, contains the data already received from the generator."""
+
+    _loading_error: Exception | None = None
+    """If an error occurred while loading, contains the error."""
+
+    _consumers: list[asyncio.Queue[bytes | None]] | None = None
+    """A queue for each current consumer to notify of new data while the generator is loading."""
+
+    def __init__(
+        self,
+        cache_key: str,
+        extension: str,
+        data_gen: AsyncGenerator[bytes],
+    ) -> None:
+        """Initialize the TTS cache."""
+        self.cache_key = cache_key
+        self.extension = extension
+        self.last_used = monotonic()
+        self._data_gen = data_gen
+
+    async def async_load_data(self) -> bytes:
+        """Load the data from the generator."""
+        if self._result_data is not None or self._partial_data is not None:
+            raise RuntimeError("Data already being loaded")
+
+        self._partial_data = []
+        self._consumers = []
+
+        try:
+            async for chunk in self._data_gen:
+                self._partial_data.append(chunk)
+                for queue in self._consumers:
+                    queue.put_nowait(chunk)
+        except Exception as err:
+            self._loading_error = err
+            raise
+        finally:
+            for queue in self._consumers:
+                queue.put_nowait(None)
+            self._consumers = None
+
+        self._result_data = b"".join(self._partial_data)
+        self._partial_data = None
+        return self._result_data
+
+    async def async_stream_data(self) -> AsyncGenerator[bytes]:
+        """Stream the data.
+
+        Will return all data already returned from the generator.
+        Will listen for future data returned from the generator.
+        Raises error if one occurred.
+        """
+        if self._result_data is not None:
+            yield self._result_data
+            return
+        if self._loading_error:
+            raise self._loading_error
+
+        if self._partial_data is None:
+            raise RuntimeError("Data not being loaded")
+
+        queue: asyncio.Queue[bytes | None] | None = None
+        # Check if generator is still feeding data
+        if self._consumers is not None:
+            queue = asyncio.Queue()
+            self._consumers.append(queue)
+
+        for chunk in list(self._partial_data):
+            yield chunk
+
+        if self._loading_error:
+            raise self._loading_error
+
+        if queue is not None:
+            while (chunk2 := await queue.get()) is not None:
+                yield chunk2
+
+        if self._loading_error:
+            raise self._loading_error
+
+        self.last_used = monotonic()
 
 
 @callback
@@ -128,18 +217,16 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
 
     Returns None if no engines found.
     """
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
+    default_entity_id: str | None = None
 
-    if "cloud" in manager.providers:
-        return "cloud"
+    for entity in hass.data[DATA_COMPONENT].entities:
+        if entity.platform and entity.platform.platform_name == "cloud":
+            return entity.entity_id
 
-    entity = next(iter(component.entities), None)
+        if default_entity_id is None:
+            default_entity_id = entity.entity_id
 
-    if entity is not None:
-        return entity.entity_id
-
-    return next(iter(manager.providers), None)
+    return default_entity_id or next(iter(hass.data[DATA_TTS_MANAGER].providers), None)
 
 
 @callback
@@ -148,35 +235,36 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
 
     Returns None if no engines found or invalid engine passed in.
     """
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     if engine is not None:
-        if not component.get_entity(engine) and engine not in manager.providers:
+        if (
+            not hass.data[DATA_COMPONENT].get_entity(engine)
+            and engine not in hass.data[DATA_TTS_MANAGER].providers
+        ):
             return None
         return engine
 
     return async_default_engine(hass)
 
 
-async def async_support_options(
+@callback
+def async_create_stream(
     hass: HomeAssistant,
     engine: str,
     language: str | None = None,
     options: dict | None = None,
-) -> bool:
-    """Return if an engine supports options."""
-    if (engine_instance := get_engine_instance(hass, engine)) is None:
-        raise HomeAssistantError(f"Provider {engine} not found")
+) -> ResultStream:
+    """Create a streaming URL where the rendered TTS can be retrieved."""
+    return hass.data[DATA_TTS_MANAGER].async_create_result_stream(
+        engine=engine,
+        language=language,
+        options=options,
+    )
 
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
-    try:
-        manager.process_options(engine_instance, language, options)
-    except HomeAssistantError:
-        return False
-
-    return True
+@callback
+def async_get_stream(hass: HomeAssistant, token: str) -> ResultStream | None:
+    """Return a result stream given a token."""
+    return hass.data[DATA_TTS_MANAGER].token_to_stream.get(token)
 
 
 async def async_get_media_source_audio(
@@ -184,10 +272,12 @@ async def async_get_media_source_audio(
     media_source_id: str,
 ) -> tuple[str, bytes]:
     """Get TTS audio as extension, data."""
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-    return await manager.async_get_tts_audio(
-        **media_source_id_to_kwargs(media_source_id),
+    manager = hass.data[DATA_TTS_MANAGER]
+    cache = manager.async_cache_message_in_memory(
+        **media_source_id_to_kwargs(media_source_id)
     )
+    data = b"".join([chunk async for chunk in cache.async_stream_data()])
+    return cache.extension, data
 
 
 @callback
@@ -195,96 +285,95 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
     """Return a set with the union of languages supported by tts engines."""
     languages = set()
 
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
-    for entity in component.entities:
+    for entity in hass.data[DATA_COMPONENT].entities:
         for language_tag in entity.supported_languages:
             languages.add(language_tag)
 
-    for tts_engine in manager.providers.values():
+    for tts_engine in hass.data[DATA_TTS_MANAGER].providers.values():
         for language_tag in tts_engine.supported_languages:
             languages.add(language_tag)
 
     return languages
 
 
-async def async_convert_audio(
+async def _async_convert_audio(
     hass: HomeAssistant,
     from_extension: str,
-    audio_bytes: bytes,
+    audio_bytes_gen: AsyncGenerator[bytes],
     to_extension: str,
     to_sample_rate: int | None = None,
     to_sample_channels: int | None = None,
-) -> bytes:
+    to_sample_bytes: int | None = None,
+) -> AsyncGenerator[bytes]:
     """Convert audio to a preferred format using ffmpeg."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
-    return await hass.async_add_executor_job(
-        lambda: _convert_audio(
-            ffmpeg_manager.binary,
-            from_extension,
-            audio_bytes,
-            to_extension,
-            to_sample_rate=to_sample_rate,
-            to_sample_channels=to_sample_channels,
-        )
+
+    command = [
+        ffmpeg_manager.binary,
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-f",
+        from_extension,
+        "-i",
+        "pipe:",
+        "-f",
+        to_extension,
+    ]
+    if to_sample_rate is not None:
+        command.extend(["-ar", str(to_sample_rate)])
+    if to_sample_channels is not None:
+        command.extend(["-ac", str(to_sample_channels)])
+    if to_extension == "mp3":
+        # Max quality for MP3.
+        command.extend(["-q:a", "0"])
+    if to_sample_bytes == 2:
+        # 16-bit samples.
+        command.extend(["-sample_fmt", "s16"])
+    command.append("pipe:1")  # Send output to stdout.
+
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
     )
 
+    async def write_input() -> None:
+        assert process.stdin
+        try:
+            async for chunk in audio_bytes_gen:
+                process.stdin.write(chunk)
+                await process.stdin.drain()
+        finally:
+            if process.stdin:
+                process.stdin.close()
 
-def _convert_audio(
-    ffmpeg_binary: str,
-    from_extension: str,
-    audio_bytes: bytes,
-    to_extension: str,
-    to_sample_rate: int | None = None,
-    to_sample_channels: int | None = None,
-) -> bytes:
-    """Convert audio to a preferred format using ffmpeg."""
+    writer_task = hass.async_create_background_task(
+        write_input(), "tts_ffmpeg_conversion"
+    )
 
-    # We have to use a temporary file here because some formats like WAV store
-    # the length of the file in the header, and therefore cannot be written in a
-    # streaming fashion.
-    with tempfile.NamedTemporaryFile(
-        mode="wb+", suffix=f".{to_extension}"
-    ) as output_file:
-        # input
-        command = [
-            ffmpeg_binary,
-            "-y",  # overwrite temp file
-            "-f",
-            from_extension,
-            "-i",
-            "pipe:",  # input from stdin
-        ]
-
-        # output
-        command.extend(["-f", to_extension])
-
-        if to_sample_rate is not None:
-            command.extend(["-ar", str(to_sample_rate)])
-
-        if to_sample_channels is not None:
-            command.extend(["-ac", str(to_sample_channels)])
-
-        if to_extension == "mp3":
-            # Max quality for MP3
-            command.extend(["-q:a", "0"])
-
-        command.append(output_file.name)
-
-        with subprocess.Popen(
-            command, stdin=subprocess.PIPE, stderr=subprocess.PIPE
-        ) as proc:
-            _stdout, stderr = proc.communicate(input=audio_bytes)
-            if proc.returncode != 0:
-                _LOGGER.error(stderr.decode())
-                raise RuntimeError(
-                    f"Unexpected error while running ffmpeg with arguments: {command}."
-                    "See log for details."
-                )
-
-        output_file.seek(0)
-        return output_file.read()
+    assert process.stdout
+    chunk_size = 4096
+    try:
+        while True:
+            chunk = await process.stdout.read(chunk_size)
+            if not chunk:
+                break
+            yield chunk
+    finally:
+        # Ensure we wait for the input writer to complete.
+        await writer_task
+        # Wait for process termination and check for errors.
+        retcode = await process.wait()
+        if retcode != 0:
+            assert process.stderr
+            stderr_data = await process.stderr.read()
+            _LOGGER.error(stderr_data.decode())
+            raise RuntimeError(
+                f"Unexpected error while running ffmpeg with arguments: {command}. "
+                "See log for details."
+            )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -295,11 +384,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Legacy config options
     conf = config[DOMAIN][0] if config.get(DOMAIN) else {}
-    use_cache: bool = conf.get(CONF_CACHE, DEFAULT_CACHE)
+    use_file_cache: bool = conf.get(CONF_CACHE, DEFAULT_CACHE)
     cache_dir: str = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
-    time_memory: int = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
+    memory_cache_maxage: int = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
 
-    tts = SpeechManager(hass, use_cache, cache_dir, time_memory)
+    tts = SpeechManager(hass, use_file_cache, cache_dir, memory_cache_maxage)
 
     try:
         await tts.async_init_cache()
@@ -308,7 +397,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.data[DATA_TTS_MANAGER] = tts
-    component = hass.data[DOMAIN] = EntityComponent[TextToSpeechEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[TextToSpeechEntity](
         _LOGGER, DOMAIN, hass
     )
 
@@ -356,125 +445,64 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-class TextToSpeechEntity(RestoreEntity):
-    """Represent a single TTS engine."""
+@dataclass
+class ResultStream:
+    """Class that will stream the result when available."""
 
-    _attr_should_poll = False
-    __last_tts_loaded: str | None = None
+    # Streaming/conversion properties
+    token: str
+    extension: str
+    content_type: str
 
-    @property
-    @final
-    def state(self) -> str | None:
-        """Return the state of the entity."""
-        if self.__last_tts_loaded is None:
-            return None
-        return self.__last_tts_loaded
+    # TTS properties
+    engine: str
+    use_file_cache: bool
+    language: str
+    options: dict
 
-    @property
-    @abstractmethod
-    def supported_languages(self) -> list[str]:
-        """Return a list of supported languages."""
+    _manager: SpeechManager
 
-    @property
-    @abstractmethod
-    def default_language(self) -> str:
-        """Return the default language."""
+    @cached_property
+    def url(self) -> str:
+        """Get the URL to stream the result."""
+        return f"/api/tts_proxy/{self.token}"
 
-    @property
-    def supported_options(self) -> list[str] | None:
-        """Return a list of supported options like voice, emotions."""
-        return None
-
-    @property
-    def default_options(self) -> Mapping[str, Any] | None:
-        """Return a mapping with the default options."""
-        return None
+    @cached_property
+    def _result_cache(self) -> asyncio.Future[TTSCache]:
+        """Get the future that returns the cache."""
+        return asyncio.Future()
 
     @callback
-    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
-        """Return a list of supported voices for a language."""
-        return None
+    def async_set_message_cache(self, cache: TTSCache) -> None:
+        """Set cache containing message audio to be streamed."""
+        self._result_cache.set_result(cache)
 
-    async def async_internal_added_to_hass(self) -> None:
-        """Call when the entity is added to hass."""
-        await super().async_internal_added_to_hass()
-        state = await self.async_get_last_state()
-        if (
-            state is not None
-            and state.state is not None
-            and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-        ):
-            self.__last_tts_loaded = state.state
-
-    async def async_speak(
-        self,
-        media_player_entity_id: list[str],
-        message: str,
-        cache: bool,
-        language: str | None = None,
-        options: dict | None = None,
-    ) -> None:
-        """Speak via a Media Player."""
-        await self.hass.services.async_call(
-            DOMAIN_MP,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: media_player_entity_id,
-                ATTR_MEDIA_CONTENT_ID: generate_media_source_id(
-                    self.hass,
-                    message=message,
-                    engine=self.entity_id,
-                    language=language,
-                    options=options,
-                    cache=cache,
-                ),
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_ANNOUNCE: True,
-            },
-            blocking=True,
-            context=self._context,
+    @callback
+    def async_set_message(self, message: str) -> None:
+        """Set message to be generated."""
+        self._result_cache.set_result(
+            self._manager.async_cache_message_in_memory(
+                engine=self.engine,
+                message=message,
+                use_file_cache=self.use_file_cache,
+                language=self.language,
+                options=self.options,
+            )
         )
 
-    @final
-    async def internal_async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
-    ) -> TtsAudioType:
-        """Process an audio stream to TTS service.
-
-        Only streaming content is allowed!
-        """
-        self.__last_tts_loaded = dt_util.utcnow().isoformat()
-        self.async_write_ha_state()
-        return await self.async_get_tts_audio(
-            message=message, language=language, options=options
-        )
-
-    def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
-    ) -> TtsAudioType:
-        """Load tts audio file from the engine."""
-        raise NotImplementedError
-
-    async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
-    ) -> TtsAudioType:
-        """Load tts audio file from the engine.
-
-        Return a tuple of file extension and data as bytes.
-        """
-        return await self.hass.async_add_executor_job(
-            partial(self.get_tts_audio, message, language, options=options)
-        )
+    async def async_stream_result(self) -> AsyncGenerator[bytes]:
+        """Get the stream of this result."""
+        cache = await self._result_cache
+        async for chunk in cache.async_stream_data():
+            yield chunk
 
 
 def _hash_options(options: dict) -> str:
@@ -487,59 +515,116 @@ def _hash_options(options: dict) -> str:
     return opts_hash.hexdigest()
 
 
+class MemcacheCleanup:
+    """Helper to clean up the stale sessions."""
+
+    unsub: CALLBACK_TYPE | None = None
+
+    def __init__(
+        self, hass: HomeAssistant, maxage: float, memcache: dict[str, TTSCache]
+    ) -> None:
+        """Initialize the cleanup."""
+        self.hass = hass
+        self.maxage = maxage
+        self.memcache = memcache
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._on_hass_stop)
+        self.cleanup_job = HassJob(
+            self._cleanup, "chat_session_cleanup", job_type=HassJobType.Callback
+        )
+
+    @callback
+    def schedule(self) -> None:
+        """Schedule the cleanup."""
+        if self.unsub:
+            return
+        self.unsub = async_call_later(
+            self.hass,
+            self.maxage + 1,
+            self.cleanup_job,
+        )
+
+    @callback
+    def _on_hass_stop(self, event: Event) -> None:
+        """Cancel the cleanup on shutdown."""
+        if self.unsub:
+            self.unsub()
+        self.unsub = None
+
+    @callback
+    def _cleanup(self, _now: datetime) -> None:
+        """Clean up and schedule follow-up if necessary."""
+        self.unsub = None
+        memcache = self.memcache
+        maxage = self.maxage
+        now = monotonic()
+
+        for cache_key, info in list(memcache.items()):
+            if info.last_used + maxage < now:
+                _LOGGER.debug("Cleaning up %s", cache_key)
+                del memcache[cache_key]
+
+        # Still items left, check again in timeout time.
+        if memcache:
+            self.schedule()
+
+
 class SpeechManager:
     """Representation of a speech store."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        use_cache: bool,
+        use_file_cache: bool,
         cache_dir: str,
-        time_memory: int,
+        memory_cache_maxage: int,
     ) -> None:
         """Initialize a speech store."""
         self.hass = hass
         self.providers: dict[str, Provider] = {}
 
-        self.use_cache = use_cache
+        self.use_file_cache = use_file_cache
         self.cache_dir = cache_dir
-        self.time_memory = time_memory
+        self.memory_cache_maxage = memory_cache_maxage
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
+        self.token_to_stream: dict[str, ResultStream] = {}
+        self.memcache_cleanup = MemcacheCleanup(
+            hass, memory_cache_maxage, self.mem_cache
+        )
 
-    async def async_init_cache(self) -> None:
-        """Init config folder and load file cache."""
+    def _init_cache(self) -> dict[str, str]:
+        """Init cache folder and fetch files."""
         try:
-            self.cache_dir = await self.hass.async_add_executor_job(
-                _init_tts_cache_dir, self.hass, self.cache_dir
-            )
+            self.cache_dir = _init_tts_cache_dir(self.hass, self.cache_dir)
         except OSError as err:
             raise HomeAssistantError(f"Can't init cache dir {err}") from err
 
         try:
-            cache_files = await self.hass.async_add_executor_job(
-                _get_cache_files, self.cache_dir
-            )
+            return _get_cache_files(self.cache_dir)
         except OSError as err:
             raise HomeAssistantError(f"Can't read cache dir {err}") from err
 
-        if cache_files:
-            self.file_cache.update(cache_files)
+    async def async_init_cache(self) -> None:
+        """Init config folder and load file cache."""
+        self.file_cache.update(await self.hass.async_add_executor_job(self._init_cache))
 
     async def async_clear_cache(self) -> None:
         """Read file cache and delete files."""
-        self.mem_cache = {}
+        self.mem_cache.clear()
 
-        def remove_files() -> None:
+        def remove_files(files: list[str]) -> None:
             """Remove files from filesystem."""
-            for filename in self.file_cache.values():
+            for filename in files:
                 try:
                     os.remove(os.path.join(self.cache_dir, filename))
                 except OSError as err:
                     _LOGGER.warning("Can't remove cache file '%s': %s", filename, err)
 
-        await self.hass.async_add_executor_job(remove_files)
-        self.file_cache = {}
+        task = self.hass.async_add_executor_job(
+            remove_files, list(self.file_cache.values())
+        )
+        self.file_cache.clear()
+        await task
 
     @callback
     def async_register_legacy_engine(
@@ -572,217 +657,198 @@ class SpeechManager:
         ):
             raise HomeAssistantError(f"Language '{language}' not supported")
 
+        options = options or {}
+        supported_options = engine_instance.supported_options or []
+
         # Update default options with provided options
+        invalid_opts: list[str] = []
         merged_options = dict(engine_instance.default_options or {})
-        merged_options.update(options or {})
+        for option_name, option_value in options.items():
+            # Only count an option as invalid if it's not a "preferred format"
+            # option. These are used as hints to the TTS system if supported,
+            # and otherwise as parameters to ffmpeg conversion.
+            if (option_name in supported_options) or (
+                option_name in _PREFFERED_FORMAT_OPTIONS
+            ):
+                merged_options[option_name] = option_value
+            else:
+                invalid_opts.append(option_name)
 
-        supported_options = list(engine_instance.supported_options or [])
-
-        # ATTR_PREFERRED_* options are always "supported" since they're used to
-        # convert audio after the TTS has run (if necessary).
-        supported_options.extend(
-            (
-                ATTR_PREFERRED_FORMAT,
-                ATTR_PREFERRED_SAMPLE_RATE,
-                ATTR_PREFERRED_SAMPLE_CHANNELS,
-            )
-        )
-
-        invalid_opts = [
-            opt_name for opt_name in merged_options if opt_name not in supported_options
-        ]
         if invalid_opts:
             raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
 
         return language, merged_options
 
-    async def async_get_url_path(
+    @callback
+    def async_create_result_stream(
         self,
         engine: str,
-        message: str,
-        cache: bool | None = None,
+        message: str | None = None,
+        use_file_cache: bool | None = None,
         language: str | None = None,
         options: dict | None = None,
-    ) -> str:
-        """Get URL for play message.
-
-        This method is a coroutine.
-        """
+    ) -> ResultStream:
+        """Create a streaming URL where the rendered TTS can be retrieved."""
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
             raise HomeAssistantError(f"Provider {engine} not found")
 
         language, options = self.process_options(engine_instance, language, options)
-        cache_key = self._generate_cache_key(message, language, options, engine)
-        use_cache = cache if cache is not None else self.use_cache
+        if use_file_cache is None:
+            use_file_cache = self.use_file_cache
 
-        # Is speech already in memory
-        if cache_key in self.mem_cache:
-            filename = self.mem_cache[cache_key]["filename"]
-        # Is file store in file cache
-        elif use_cache and cache_key in self.file_cache:
-            filename = self.file_cache[cache_key]
-            self.hass.async_create_task(self._async_file_to_mem(cache_key))
-        # Load speech from engine into memory
-        else:
-            filename = await self._async_get_tts_audio(
-                engine_instance, cache_key, message, use_cache, language, options
+        extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        token = f"{secrets.token_urlsafe(16)}.{extension}"
+        content, _ = mimetypes.guess_type(token)
+        result_stream = ResultStream(
+            token=token,
+            extension=extension,
+            content_type=content or "audio/mpeg",
+            use_file_cache=use_file_cache,
+            engine=engine,
+            language=language,
+            options=options,
+            _manager=self,
+        )
+        self.token_to_stream[token] = result_stream
+
+        if message is None:
+            return result_stream
+
+        # We added this method as an alternative to stream.async_set_message
+        # to avoid the options being processed twice
+        result_stream.async_set_message_cache(
+            self._async_ensure_cached_in_memory(
+                engine=engine,
+                engine_instance=engine_instance,
+                message=message,
+                use_file_cache=use_file_cache,
+                language=language,
+                options=options,
             )
+        )
 
-        return f"/api/tts_proxy/{filename}"
-
-    async def async_get_tts_audio(
-        self,
-        engine: str,
-        message: str,
-        cache: bool | None = None,
-        language: str | None = None,
-        options: dict | None = None,
-    ) -> tuple[str, bytes]:
-        """Fetch TTS audio."""
-        if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
-
-        language, options = self.process_options(engine_instance, language, options)
-        cache_key = self._generate_cache_key(message, language, options, engine)
-        use_cache = cache if cache is not None else self.use_cache
-
-        # If we have the file, load it into memory if necessary
-        if cache_key not in self.mem_cache:
-            if use_cache and cache_key in self.file_cache:
-                await self._async_file_to_mem(cache_key)
-            else:
-                await self._async_get_tts_audio(
-                    engine_instance, cache_key, message, use_cache, language, options
-                )
-
-        extension = os.path.splitext(self.mem_cache[cache_key]["filename"])[1][1:]
-        cached = self.mem_cache[cache_key]
-        if pending := cached.get("pending"):
-            await pending
-            cached = self.mem_cache[cache_key]
-        return extension, cached["voice"]
+        return result_stream
 
     @callback
-    def _generate_cache_key(
+    def async_cache_message_in_memory(
         self,
-        message: str,
-        language: str,
-        options: dict | None,
         engine: str,
-    ) -> str:
-        """Generate a cache key for a message."""
+        message: str,
+        use_file_cache: bool | None = None,
+        language: str | None = None,
+        options: dict | None = None,
+    ) -> TTSCache:
+        """Make sure a message is cached in memory and returns cache key."""
+        if (engine_instance := get_engine_instance(self.hass, engine)) is None:
+            raise HomeAssistantError(f"Provider {engine} not found")
+
+        language, options = self.process_options(engine_instance, language, options)
+        if use_file_cache is None:
+            use_file_cache = self.use_file_cache
+
+        return self._async_ensure_cached_in_memory(
+            engine=engine,
+            engine_instance=engine_instance,
+            message=message,
+            use_file_cache=use_file_cache,
+            language=language,
+            options=options,
+        )
+
+    @callback
+    def _async_ensure_cached_in_memory(
+        self,
+        engine: str,
+        engine_instance: TextToSpeechEntity | Provider,
+        message: str,
+        use_file_cache: bool,
+        language: str,
+        options: dict,
+    ) -> TTSCache:
+        """Ensure a message is cached.
+
+        Requires options, language to be processed.
+        """
         options_key = _hash_options(options) if options else "-"
         msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
-        return KEY_PATTERN.format(
+        cache_key = KEY_PATTERN.format(
             msg_hash, language.replace("_", "-"), options_key, engine
         ).lower()
 
-    async def _async_get_tts_audio(
-        self,
-        engine_instance: TextToSpeechEntity | Provider,
-        cache_key: str,
-        message: str,
-        cache: bool,
-        language: str,
-        options: dict[str, Any],
-    ) -> str:
-        """Receive TTS, store for view in cache and return filename.
+        # Is speech already in memory
+        if cache := self.mem_cache.get(cache_key):
+            _LOGGER.debug("Found audio in cache for %s", message[0:32])
+            return cache
 
-        This method is a coroutine.
-        """
-        options = options or {}
+        store_to_disk = use_file_cache
 
-        # Default to MP3 unless a different format is preferred
-        final_extension = options.get(ATTR_PREFERRED_FORMAT, "mp3")
-
-        async def get_tts_data() -> str:
-            """Handle data available."""
-            if engine_instance.name is None or engine_instance.name is UNDEFINED:
-                raise HomeAssistantError("TTS engine name is not set.")
-
-            if isinstance(engine_instance, Provider):
-                extension, data = await engine_instance.async_get_tts_audio(
-                    message, language, options
-                )
-            else:
-                extension, data = await engine_instance.internal_async_get_tts_audio(
-                    message, language, options
-                )
-
-            if data is None or extension is None:
-                raise HomeAssistantError(
-                    f"No TTS from {engine_instance.name} for '{message}'"
-                )
-
-            # Only convert if we have a preferred format different than the
-            # expected format from the TTS system, or if a specific sample
-            # rate/format/channel count is requested.
-            needs_conversion = (
-                (final_extension != extension)
-                or (ATTR_PREFERRED_SAMPLE_RATE in options)
-                or (ATTR_PREFERRED_SAMPLE_CHANNELS in options)
+        if use_file_cache and (filename := self.file_cache.get(cache_key)):
+            _LOGGER.debug("Loading audio from disk for %s", message[0:32])
+            extension = os.path.splitext(filename)[1][1:]
+            data_gen = self._async_load_file(cache_key)
+            store_to_disk = False
+        else:
+            _LOGGER.debug("Generating audio for %s", message[0:32])
+            extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+            data_gen = self._async_generate_tts_audio(
+                engine_instance, message, language, options
             )
 
-            if needs_conversion:
-                data = await async_convert_audio(
-                    self.hass,
-                    extension,
-                    data,
-                    to_extension=final_extension,
-                    to_sample_rate=options.get(ATTR_PREFERRED_SAMPLE_RATE),
-                    to_sample_channels=options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
-                )
+        cache = TTSCache(
+            cache_key=cache_key,
+            extension=extension,
+            data_gen=data_gen,
+        )
 
-            # Create file infos
-            filename = f"{cache_key}.{final_extension}".lower()
+        self.mem_cache[cache_key] = cache
+        self.hass.async_create_background_task(
+            self._load_data_into_cache(
+                cache, engine_instance, message, store_to_disk, language, options
+            ),
+            f"tts_load_data_into_cache_{engine_instance.name}",
+        )
+        self.memcache_cleanup.schedule()
+        return cache
 
-            # Validate filename
-            if not _RE_VOICE_FILE.match(filename) and not _RE_LEGACY_VOICE_FILE.match(
-                filename
-            ):
-                raise HomeAssistantError(
-                    f"TTS filename '{filename}' from {engine_instance.name} is invalid!"
-                )
-
-            # Save to memory
-            if final_extension == "mp3":
-                data = self.write_tags(
-                    filename, data, engine_instance.name, message, language, options
-                )
-
-            self._async_store_to_memcache(cache_key, filename, data)
-
-            if cache:
-                self.hass.async_create_task(
-                    self._async_save_tts_audio(cache_key, filename, data)
-                )
-
-            return filename
-
-        audio_task = self.hass.async_create_task(get_tts_data())
-
-        def handle_error(_future: asyncio.Future) -> None:
-            """Handle error."""
-            if audio_task.exception():
-                self.mem_cache.pop(cache_key, None)
-
-        audio_task.add_done_callback(handle_error)
-
-        filename = f"{cache_key}.{final_extension}".lower()
-        self.mem_cache[cache_key] = {
-            "filename": filename,
-            "voice": b"",
-            "pending": audio_task,
-        }
-        return filename
-
-    async def _async_save_tts_audio(
-        self, cache_key: str, filename: str, data: bytes
+    async def _load_data_into_cache(
+        self,
+        cache: TTSCache,
+        engine_instance: TextToSpeechEntity | Provider,
+        message: str,
+        store_to_disk: bool,
+        language: str,
+        options: dict,
     ) -> None:
-        """Store voice data to file and file_cache.
+        """Load and process a finished loading TTS Cache."""
+        try:
+            data = await cache.async_load_data()
+        except Exception as err:  # pylint: disable=broad-except  # noqa: BLE001
+            # Truncate message so we don't flood the logs. Cutting off at 32 chars
+            # but since we add 3 dots to truncated message, we cut off at 35.
+            trunc_msg = message if len(message) < 35 else f"{message[0:32]}…"
+            _LOGGER.error("Error getting audio for %s: %s", trunc_msg, err)
+            self.mem_cache.pop(cache.cache_key, None)
+            return
 
-        This method is a coroutine.
-        """
+        if not store_to_disk:
+            return
+
+        filename = f"{cache.cache_key}.{cache.extension}".lower()
+
+        # Validate filename
+        if not _RE_VOICE_FILE.match(filename) and not _RE_LEGACY_VOICE_FILE.match(
+            filename
+        ):
+            raise HomeAssistantError(
+                f"TTS filename '{filename}' from {engine_instance.name} is invalid!"
+            )
+
+        if cache.extension == "mp3":
+            name = (
+                engine_instance.name if isinstance(engine_instance.name, str) else "-"
+            )
+            data = self.write_tags(filename, data, name, message, language, options)
+
         voice_file = os.path.join(self.cache_dir, filename)
 
         def save_speech() -> None:
@@ -792,15 +858,114 @@ class SpeechManager:
 
         try:
             await self.hass.async_add_executor_job(save_speech)
-            self.file_cache[cache_key] = filename
         except OSError as err:
             _LOGGER.error("Can't write %s: %s", filename, err)
+        else:
+            self.file_cache[cache.cache_key] = filename
 
-    async def _async_file_to_mem(self, cache_key: str) -> None:
-        """Load voice from file cache into memory.
+    async def _async_generate_tts_audio(
+        self,
+        engine_instance: TextToSpeechEntity | Provider,
+        message: str,
+        language: str,
+        options: dict[str, Any],
+    ) -> AsyncGenerator[bytes]:
+        """Generate TTS audio from an engine."""
+        options = dict(options or {})
+        supported_options = engine_instance.supported_options or []
 
-        This method is a coroutine.
-        """
+        # Extract preferred format options.
+        #
+        # These options are used by Assist pipelines, etc. to get a format that
+        # the voice satellite will support.
+        #
+        # The TTS system ideally supports options directly so we won't have
+        # to convert with ffmpeg later. If not, we pop the options here and
+        # perform the conversation after receiving the audio.
+        if ATTR_PREFERRED_FORMAT in supported_options:
+            final_extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        else:
+            final_extension = options.pop(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+
+        if ATTR_PREFERRED_SAMPLE_RATE in supported_options:
+            sample_rate = options.get(ATTR_PREFERRED_SAMPLE_RATE)
+        else:
+            sample_rate = options.pop(ATTR_PREFERRED_SAMPLE_RATE, None)
+
+        if sample_rate is not None:
+            sample_rate = int(sample_rate)
+
+        if ATTR_PREFERRED_SAMPLE_CHANNELS in supported_options:
+            sample_channels = options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+        else:
+            sample_channels = options.pop(ATTR_PREFERRED_SAMPLE_CHANNELS, None)
+
+        if sample_channels is not None:
+            sample_channels = int(sample_channels)
+
+        if ATTR_PREFERRED_SAMPLE_BYTES in supported_options:
+            sample_bytes = options.get(ATTR_PREFERRED_SAMPLE_BYTES)
+        else:
+            sample_bytes = options.pop(ATTR_PREFERRED_SAMPLE_BYTES, None)
+
+        if sample_bytes is not None:
+            sample_bytes = int(sample_bytes)
+
+        if engine_instance.name is None or engine_instance.name is UNDEFINED:
+            raise HomeAssistantError("TTS engine name is not set.")
+
+        if isinstance(engine_instance, Provider):
+            extension, data = await engine_instance.async_get_tts_audio(
+                message, language, options
+            )
+
+            if data is None or extension is None:
+                raise HomeAssistantError(
+                    f"No TTS from {engine_instance.name} for '{message}'"
+                )
+
+            async def make_data_generator(data: bytes) -> AsyncGenerator[bytes]:
+                yield data
+
+            data_gen = make_data_generator(data)
+
+        else:
+
+            async def message_gen() -> AsyncGenerator[str]:
+                yield message
+
+            tts_result = await engine_instance.internal_async_stream_tts_audio(
+                TTSAudioRequest(language, options, message_gen())
+            )
+            extension = tts_result.extension
+            data_gen = tts_result.data_gen
+
+        # Only convert if we have a preferred format different than the
+        # expected format from the TTS system, or if a specific sample
+        # rate/format/channel count is requested.
+        needs_conversion = (
+            (final_extension != extension)
+            or (sample_rate is not None)
+            or (sample_channels is not None)
+            or (sample_bytes is not None)
+        )
+
+        if needs_conversion:
+            data_gen = _async_convert_audio(
+                self.hass,
+                extension,
+                data_gen,
+                to_extension=final_extension,
+                to_sample_rate=sample_rate,
+                to_sample_channels=sample_channels,
+                to_sample_bytes=sample_bytes,
+            )
+
+        async for chunk in data_gen:
+            yield chunk
+
+    async def _async_load_file(self, cache_key: str) -> AsyncGenerator[bytes]:
+        """Load TTS audio from disk."""
         if not (filename := self.file_cache.get(cache_key)):
             raise HomeAssistantError(f"Key {cache_key} not in file cache!")
 
@@ -817,60 +982,7 @@ class SpeechManager:
             del self.file_cache[cache_key]
             raise HomeAssistantError(f"Can't read {voice_file}") from err
 
-        self._async_store_to_memcache(cache_key, filename, data)
-
-    @callback
-    def _async_store_to_memcache(
-        self, cache_key: str, filename: str, data: bytes
-    ) -> None:
-        """Store data to memcache and set timer to remove it."""
-        self.mem_cache[cache_key] = {
-            "filename": filename,
-            "voice": data,
-            "pending": None,
-        }
-
-        @callback
-        def async_remove_from_mem(_: datetime) -> None:
-            """Cleanup memcache."""
-            self.mem_cache.pop(cache_key, None)
-
-        async_call_later(
-            self.hass,
-            self.time_memory,
-            HassJob(
-                async_remove_from_mem,
-                name="tts remove_from_mem",
-                cancel_on_shutdown=True,
-            ),
-        )
-
-    async def async_read_tts(self, filename: str) -> tuple[str | None, bytes]:
-        """Read a voice file and return binary.
-
-        This method is a coroutine.
-        """
-        if not (record := _RE_VOICE_FILE.match(filename.lower())) and not (
-            record := _RE_LEGACY_VOICE_FILE.match(filename.lower())
-        ):
-            raise HomeAssistantError("Wrong tts file format!")
-
-        cache_key = KEY_PATTERN.format(
-            record.group(1), record.group(2), record.group(3), record.group(4)
-        )
-
-        if cache_key not in self.mem_cache:
-            if cache_key not in self.file_cache:
-                raise HomeAssistantError(f"{cache_key} not in cache!")
-            await self._async_file_to_mem(cache_key)
-
-        cached = self.mem_cache[cache_key]
-        if pending := cached.get("pending"):
-            await pending
-            cached = self.mem_cache[cache_key]
-
-        content, _ = mimetypes.guess_type(filename)
-        return content, cached["voice"]
+        yield data
 
     @staticmethod
     def write_tags(
@@ -958,9 +1070,9 @@ class TextToSpeechUrlView(HomeAssistantView):
     url = "/api/tts_get_url"
     name = "api:tts:geturl"
 
-    def __init__(self, tts: SpeechManager) -> None:
+    def __init__(self, manager: SpeechManager) -> None:
         """Initialize a tts view."""
-        self.tts = tts
+        self.manager = manager
 
     async def post(self, request: web.Request) -> web.Response:
         """Generate speech and provide url."""
@@ -968,10 +1080,8 @@ class TextToSpeechUrlView(HomeAssistantView):
             data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON specified", HTTPStatus.BAD_REQUEST)
-        if (
-            not data.get("engine_id")
-            and not data.get(ATTR_PLATFORM)
-            or not data.get(ATTR_MESSAGE)
+        if (not data.get("engine_id") and not data.get(ATTR_PLATFORM)) or not data.get(
+            ATTR_MESSAGE
         ):
             return self.json_message(
                 "Must specify platform and message", HTTPStatus.BAD_REQUEST
@@ -979,44 +1089,65 @@ class TextToSpeechUrlView(HomeAssistantView):
 
         engine = data.get("engine_id") or data[ATTR_PLATFORM]
         message = data[ATTR_MESSAGE]
-        cache = data.get(ATTR_CACHE)
+        use_file_cache = data.get(ATTR_CACHE)
         language = data.get(ATTR_LANGUAGE)
         options = data.get(ATTR_OPTIONS)
 
         try:
-            path = await self.tts.async_get_url_path(
-                engine, message, cache=cache, language=language, options=options
+            stream = self.manager.async_create_result_stream(
+                engine,
+                message,
+                use_file_cache=use_file_cache,
+                language=language,
+                options=options,
             )
         except HomeAssistantError as err:
             _LOGGER.error("Error on init tts: %s", err)
             return self.json({"error": err}, HTTPStatus.BAD_REQUEST)
 
-        base = get_url(self.tts.hass)
-        url = base + path
+        base = get_url(self.manager.hass)
+        url = base + stream.url
 
-        return self.json({"url": url, "path": path})
+        return self.json({"url": url, "path": stream.url})
 
 
 class TextToSpeechView(HomeAssistantView):
     """TTS view to serve a speech audio."""
 
     requires_auth = False
-    url = "/api/tts_proxy/{filename}"
+    url = "/api/tts_proxy/{token}"
     name = "api:tts_speech"
 
-    def __init__(self, tts: SpeechManager) -> None:
+    def __init__(self, manager: SpeechManager) -> None:
         """Initialize a tts view."""
-        self.tts = tts
+        self.manager = manager
 
-    async def get(self, request: web.Request, filename: str) -> web.Response:
+    async def get(self, request: web.Request, token: str) -> web.StreamResponse:
         """Start a get request."""
-        try:
-            content, data = await self.tts.async_read_tts(filename)
-        except HomeAssistantError as err:
-            _LOGGER.error("Error on load tts: %s", err)
+        stream = self.manager.token_to_stream.get(token)
+
+        if stream is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        return web.Response(body=data, content_type=content)
+        response: web.StreamResponse | None = None
+        try:
+            async for data in stream.async_stream_result():
+                if response is None:
+                    response = web.StreamResponse()
+                    response.content_type = stream.content_type
+                    await response.prepare(request)
+
+                await response.write(data)
+        # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Error streaming tts: %s", err)
+
+        # Empty result or exception happened
+        if response is None:
+            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        await response.write_eof()
+        return response
 
 
 @websocket_api.websocket_command(
@@ -1031,15 +1162,13 @@ def websocket_list_engines(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List text to speech engines and, optionally, if they support a given language."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     country = msg.get("country")
     language = msg.get("language")
     providers = []
     provider_info: dict[str, Any]
+    entity_domains: set[str] = set()
 
-    for entity in component.entities:
+    for entity in hass.data[DATA_COMPONENT].entities:
         provider_info = {
             "engine_id": entity.entity_id,
             "supported_languages": entity.supported_languages,
@@ -1049,15 +1178,20 @@ def websocket_list_engines(
                 language, entity.supported_languages, country
             )
         providers.append(provider_info)
-    for engine_id, provider in manager.providers.items():
+        if entity.platform:
+            entity_domains.add(entity.platform.platform_name)
+    for engine_id, provider in hass.data[DATA_TTS_MANAGER].providers.items():
         provider_info = {
             "engine_id": engine_id,
+            "name": provider.name,
             "supported_languages": provider.supported_languages,
         }
         if language:
             provider_info["supported_languages"] = language_util.matches(
                 language, provider.supported_languages, country
             )
+        if engine_id in entity_domains:
+            provider_info["deprecated"] = True
         providers.append(provider_info)
 
     connection.send_message(
@@ -1076,22 +1210,24 @@ def websocket_get_engine(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get text to speech engine info."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     engine_id = msg["engine_id"]
     provider_info: dict[str, Any]
 
     provider: TextToSpeechEntity | Provider | None = next(
-        (entity for entity in component.entities if entity.entity_id == engine_id), None
+        (
+            entity
+            for entity in hass.data[DATA_COMPONENT].entities
+            if entity.entity_id == engine_id
+        ),
+        None,
     )
     if not provider:
-        provider = manager.providers.get(engine_id)
+        provider = hass.data[DATA_TTS_MANAGER].providers.get(engine_id)
 
     if not provider:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"tts engine {engine_id} not found",
         )
         return
@@ -1100,6 +1236,8 @@ def websocket_get_engine(
         "engine_id": engine_id,
         "supported_languages": provider.supported_languages,
     }
+    if isinstance(provider, Provider):
+        provider_info["name"] = provider.name
 
     connection.send_message(
         websocket_api.result_message(msg["id"], {"provider": provider_info})
@@ -1126,7 +1264,7 @@ def websocket_list_engine_voices(
     if not engine_instance:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"tts engine {engine_id} not found",
         )
         return

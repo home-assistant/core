@@ -1,0 +1,38 @@
+{
+  "entity": {
+    "sensor": {
+      "not_found": {
+        "default": "mdi:package"
+      },
+      "in_transit": {
+        "default": "mdi:package"
+      },
+      "expired": {
+        "default": "mdi:package"
+      },
+      "ready_to_be_picked_up": {
+        "default": "mdi:package"
+      },
+      "undelivered": {
+        "default": "mdi:package"
+      },
+      "delivered": {
+        "default": "mdi:package"
+      },
+      "alert": {
+        "default": "mdi:package"
+      },
+      "package": {
+        "default": "mdi:package"
+      }
+    }
+  },
+  "services": {
+    "get_packages": {
+      "service": "mdi:package"
+    },
+    "archive_package": {
+      "service": "mdi:archive"
+    }
+  }
+}

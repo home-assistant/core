@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.area_registry import AreaEntry, async_get
+from homeassistant.helpers import area_registry as ar
 
 
 @callback
@@ -29,10 +29,10 @@ def websocket_list_areas(
     msg: dict[str, Any],
 ) -> None:
     """Handle list areas command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
     connection.send_result(
         msg["id"],
-        [_entry_dict(entry) for entry in registry.async_list_areas()],
+        [entry.json_fragment for entry in registry.async_list_areas()],
     )
 
 
@@ -41,10 +41,12 @@ def websocket_list_areas(
         vol.Required("type"): "config/area_registry/create",
         vol.Optional("aliases"): list,
         vol.Optional("floor_id"): str,
+        vol.Optional("humidity_entity_id"): vol.Any(str, None),
         vol.Optional("icon"): str,
         vol.Optional("labels"): [str],
         vol.Required("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
+        vol.Optional("temperature_entity_id"): vol.Any(str, None),
     }
 )
 @websocket_api.require_admin
@@ -55,7 +57,7 @@ def websocket_create_area(
     msg: dict[str, Any],
 ) -> None:
     """Create area command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
 
     data = dict(msg)
     data.pop("type")
@@ -74,7 +76,7 @@ def websocket_create_area(
     except ValueError as err:
         connection.send_error(msg["id"], "invalid_info", str(err))
     else:
-        connection.send_result(msg["id"], _entry_dict(entry))
+        connection.send_result(msg["id"], entry.json_fragment)
 
 
 @websocket_api.websocket_command(
@@ -91,7 +93,7 @@ def websocket_delete_area(
     msg: dict[str, Any],
 ) -> None:
     """Delete area command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
 
     try:
         registry.async_delete(msg["area_id"])
@@ -107,10 +109,12 @@ def websocket_delete_area(
         vol.Optional("aliases"): list,
         vol.Required("area_id"): str,
         vol.Optional("floor_id"): vol.Any(str, None),
+        vol.Optional("humidity_entity_id"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
         vol.Optional("labels"): [str],
         vol.Optional("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
+        vol.Optional("temperature_entity_id"): vol.Any(str, None),
     }
 )
 @websocket_api.require_admin
@@ -121,7 +125,7 @@ def websocket_update_area(
     msg: dict[str, Any],
 ) -> None:
     """Handle update area websocket command."""
-    registry = async_get(hass)
+    registry = ar.async_get(hass)
 
     data = dict(msg)
     data.pop("type")
@@ -140,18 +144,4 @@ def websocket_update_area(
     except ValueError as err:
         connection.send_error(msg["id"], "invalid_info", str(err))
     else:
-        connection.send_result(msg["id"], _entry_dict(entry))
-
-
-@callback
-def _entry_dict(entry: AreaEntry) -> dict[str, Any]:
-    """Convert entry to API format."""
-    return {
-        "aliases": list(entry.aliases),
-        "area_id": entry.id,
-        "floor_id": entry.floor_id,
-        "icon": entry.icon,
-        "labels": list(entry.labels),
-        "name": entry.name,
-        "picture": entry.picture,
-    }
+        connection.send_result(msg["id"], entry.json_fragment)

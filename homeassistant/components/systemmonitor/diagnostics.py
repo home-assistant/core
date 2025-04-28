@@ -4,18 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN_COORDINATOR
-from .coordinator import SystemMonitorCoordinator
+from . import SystemMonitorConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: SystemMonitorConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for Sensibo config entry."""
-    coordinator: SystemMonitorCoordinator = hass.data[DOMAIN_COORDINATOR]
+    coordinator = entry.runtime_data.coordinator
 
     diag_data = {
         "last_update_success": coordinator.last_update_success,

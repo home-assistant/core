@@ -84,14 +84,18 @@ async def _test_create_cloud_hook(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.cloud.async_active_subscription",
-        return_value=async_active_subscription_return_value,
-    ), patch(
-        "homeassistant.components.cloud.async_is_connected", return_value=True
-    ), patch(
-        "homeassistant.components.cloud.async_get_or_create_cloudhook", autospec=True
-    ) as mock_async_get_or_create_cloudhook:
+    with (
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=async_active_subscription_return_value,
+        ),
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
+            autospec=True,
+        ) as mock_async_get_or_create_cloudhook,
+    ):
         cloud_hook = "https://hook-url"
         mock_async_get_or_create_cloudhook.return_value = cloud_hook
 
@@ -184,3 +188,75 @@ async def test_create_cloud_hook_after_connection(
         )
 
     await _test_create_cloud_hook(hass, hass_admin_user, {}, False, additional_steps)
+
+
+@pytest.mark.parametrize(
+    ("cloud_logged_in", "should_cloudhook_exist"),
+    [(True, True), (False, False)],
+)
+async def test_delete_cloud_hook(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    cloud_logged_in: bool,
+    should_cloudhook_exist: bool,
+) -> None:
+    """Test deleting the cloud hook only when logged out of the cloud."""
+
+    config_entry = MockConfigEntry(
+        data={
+            **REGISTER_CLEARTEXT,
+            CONF_WEBHOOK_ID: "test-webhook-id",
+            ATTR_DEVICE_NAME: "Test",
+            ATTR_DEVICE_ID: "Test",
+            CONF_USER_ID: hass_admin_user.id,
+            CONF_CLOUDHOOK_URL: "https://hook-url-already-exists",
+        },
+        domain=DOMAIN,
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.cloud.async_is_logged_in",
+            return_value=cloud_logged_in,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+        assert (CONF_CLOUDHOOK_URL in config_entry.data) == should_cloudhook_exist
+
+
+async def test_remove_entry_on_user_remove(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test removing related config entry, when a user gets removed from HA."""
+
+    config_entry = MockConfigEntry(
+        data={
+            **REGISTER_CLEARTEXT,
+            CONF_WEBHOOK_ID: "test-webhook-id",
+            ATTR_DEVICE_NAME: "Test",
+            ATTR_DEVICE_ID: "Test",
+            CONF_USER_ID: hass_admin_user.id,
+            CONF_CLOUDHOOK_URL: "https://hook-url-already-exists",
+        },
+        domain=DOMAIN,
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    await hass.auth.async_remove_user(hass_admin_user)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 0

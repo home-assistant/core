@@ -9,15 +9,12 @@ from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from yarl import URL
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SynologyDSMCentralUpdateCoordinator
+from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigEntry
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
-from .models import SynologyDSMData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -38,10 +35,12 @@ UPDATE_ENTITIES: Final = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SynologyDSMConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Synology DSM update entities."""
-    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    data = entry.runtime_data
     async_add_entities(
         SynoDSMUpdateEntity(data.api, data.coordinator_central, description)
         for description in UPDATE_ENTITIES
@@ -59,29 +58,34 @@ class SynoDSMUpdateEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.upgrade)
+        return bool(self._api.upgrade) and super().available
 
     @property
     def installed_version(self) -> str | None:
         """Version installed and in use."""
-        return self._api.information.version_string  # type: ignore[no-any-return]
+        assert self._api.information is not None
+        return self._api.information.version_string
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
+        assert self._api.upgrade is not None
         if not self._api.upgrade.update_available:
             return self.installed_version
-        return self._api.upgrade.available_version  # type: ignore[no-any-return]
+        return self._api.upgrade.available_version
 
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
+        assert self._api.information is not None
+        assert self._api.upgrade is not None
+
         if (details := self._api.upgrade.available_version_details) is None:
             return None
 
         url = URL("http://update.synology.com/autoupdate/whatsnew.php")
         query = {"model": self._api.information.model}
-        if details.get("nano") > 0:
+        if details["nano"] > 0:
             query["update_version"] = f"{details['buildnumber']}-{details['nano']}"
         else:
             query["update_version"] = details["buildnumber"]

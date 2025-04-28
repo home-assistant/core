@@ -2,40 +2,39 @@
 
 from __future__ import annotations
 
-from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
+from homeassistant.components.notify import NotifyEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import EcobeeConfigEntry, EcobeeData
+from .entity import EcobeeBaseEntity
 
 
-def get_service(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> EcobeeNotificationService | None:
-    """Get the Ecobee notification service."""
-    if discovery_info is None:
-        return None
+    config_entry: EcobeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the ecobee thermostat."""
+    data = config_entry.runtime_data
+    async_add_entities(
+        EcobeeNotifyEntity(data, index) for index in range(len(data.ecobee.thermostats))
+    )
 
-    data = hass.data[DOMAIN]
-    return EcobeeNotificationService(data.ecobee)
 
+class EcobeeNotifyEntity(EcobeeBaseEntity, NotifyEntity):
+    """Implement the notification entity for the Ecobee thermostat."""
 
-class EcobeeNotificationService(BaseNotificationService):
-    """Implement the notification service for the Ecobee thermostat."""
+    _attr_name = None
+    _attr_has_entity_name = True
 
-    def __init__(self, ecobee):
-        """Initialize the service."""
-        self.ecobee = ecobee
+    def __init__(self, data: EcobeeData, thermostat_index: int) -> None:
+        """Initialize the thermostat."""
+        super().__init__(data, thermostat_index)
+        self._attr_unique_id = (
+            f"{self.thermostat['identifier']}_notify_{thermostat_index}"
+        )
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not targets:
-            raise ValueError("Missing required argument: target")
-
-        for target in targets:
-            thermostat_index = int(target)
-            self.ecobee.send_message(thermostat_index, message)
+        self.data.ecobee.send_message(self.thermostat_index, message)

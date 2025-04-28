@@ -1,0 +1,121 @@
+{
+  "homeappliances": [
+    {
+      "name": "FridgeFreezer",
+      "brand": "SIEMENS",
+      "vib": "HCS05FRF1",
+      "connected": true,
+      "type": "FridgeFreezer",
+      "enumber": "HCS05FRF1/03",
+      "haId": "SIEMENS-HCS05FRF1-304F4F9E541D"
+    },
+    {
+      "name": "Dishwasher",
+      "brand": "SIEMENS",
+      "vib": "HCS02DWH1",
+      "connected": true,
+      "type": "Dishwasher",
+      "enumber": "HCS02DWH1/03",
+      "haId": "SIEMENS-HCS02DWH1-6BE58C26DCC1"
+    },
+    {
+      "name": "Oven",
+      "brand": "BOSCH",
+      "vib": "HCS01OVN1",
+      "connected": true,
+      "type": "Oven",
+      "enumber": "HCS01OVN1/03",
+      "haId": "BOSCH-HCS01OVN1-43E0065FE245"
+    },
+    {
+      "name": "Washer",
+      "brand": "SIEMENS",
+      "vib": "HCS03WCH1",
+      "connected": true,
+      "type": "Washer",
+      "enumber": "HCS03WCH1/03",
+      "haId": "SIEMENS-HCS03WCH1-7BC6383CF794"
+    },
+    {
+      "name": "Dryer",
+      "brand": "BOSCH",
+      "vib": "HCS04DYR1",
+      "connected": true,
+      "type": "Dryer",
+      "enumber": "HCS04DYR1/03",
+      "haId": "BOSCH-HCS04DYR1-831694AE3C5A"
+    },
+    {
+      "name": "CoffeeMaker",
+      "brand": "BOSCH",
+      "vib": "HCS06COM1",
+      "connected": true,
+      "type": "CoffeeMaker",
+      "enumber": "HCS06COM1/03",
+      "haId": "BOSCH-HCS06COM1-D70390681C2C"
+    },
+    {
+      "name": "WasherDryer",
+      "brand": "BOSCH",
+      "vib": "HCS000001",
+      "connected": true,
+      "type": "WasherDryer",
+      "enumber": "HCS000000/01",
+      "haId": "BOSCH-HCS000000-D00000000001"
+    },
+    {
+      "name": "Refrigerator",
+      "brand": "BOSCH",
+      "vib": "HCS000002",
+      "connected": true,
+      "type": "Refrigerator",
+      "enumber": "HCS000000/02",
+      "haId": "BOSCH-HCS000000-D00000000002"
+    },
+    {
+      "name": "Freezer",
+      "brand": "BOSCH",
+      "vib": "HCS000003",
+      "connected": true,
+      "type": "Freezer",
+      "enumber": "HCS000000/03",
+      "haId": "BOSCH-HCS000000-D00000000003"
+    },
+    {
+      "name": "Hood",
+      "brand": "BOSCH",
+      "vib": "HCS000004",
+      "connected": true,
+      "type": "Hood",
+      "enumber": "HCS000000/04",
+      "haId": "BOSCH-HCS000000-D00000000004"
+    },
+    {
+      "name": "Hob",
+      "brand": "BOSCH",
+      "vib": "HCS000005",
+      "connected": true,
+      "type": "Hob",
+      "enumber": "HCS000000/05",
+      "haId": "BOSCH-HCS000000-D00000000005"
+    },
+    {
+      "name": "CookProcessor",
+      "brand": "BOSCH",
+      "vib": "HCS000006",
+      "connected": true,
+      "type": "CookProcessor",
+      "enumber": "HCS000000/06",
+      "haId": "BOSCH-HCS000000-D00000000006"
+    },
+    {
+      "name": "DNE",
+      "brand": "BOSCH",
+      "vib": "HCS000000",
+      "connected": true,
+      "type": "DNE",
+      "enumber": "HCS000000/00",
+      "haId": "BOSCH-000000000-000000000000"
+    }
+  ]
+}

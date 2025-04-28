@@ -4,5 +4,6 @@
   "codeowners": [],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/arwn",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "quality_scale": "legacy"
 }

@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_device_registry_entry
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://1.2.3.4:80',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'deconz',
+        '01234E56789A',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Dresden Elektronik',
+    'model': 'deCONZ',
+    'model_id': None,
+    'name': 'deCONZ mock gateway',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---

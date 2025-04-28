@@ -4,16 +4,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import datetime
+import logging
+import math
 
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.helpers.event import EventStateChangedData
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
 from homeassistant.helpers.template import Template
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .helpers import async_calculate_period, floored_timestamp
 
 MIN_TIME_UTC = datetime.datetime.min.replace(tzinfo=dt_util.UTC)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -51,7 +54,7 @@ class HistoryStats:
         self._period = (MIN_TIME_UTC, MIN_TIME_UTC)
         self._state: HistoryStatsState = HistoryStatsState(None, None, self._period)
         self._history_current_period: list[HistoryState] = []
-        self._previous_run_before_start = False
+        self._has_recorder_data = False
         self._entity_states = set(entity_states)
         self._duration = duration
         self._start = start
@@ -85,20 +88,20 @@ class HistoryStats:
         if current_period_start_timestamp > now_timestamp:
             # History cannot tell the future
             self._history_current_period = []
-            self._previous_run_before_start = True
+            self._has_recorder_data = False
             self._state = HistoryStatsState(None, None, self._period)
             return self._state
         #
         # We avoid querying the database if the below did NOT happen:
         #
-        # - The previous run happened before the start time
-        # - The start time changed
-        # - The period shrank in size
+        # - No previous run occurred (uninitialized)
+        # - The start time moved back in time
+        # - The end time moved back in time
         # - The previous period ended before now
         #
         if (
-            not self._previous_run_before_start
-            and current_period_start_timestamp == previous_period_start_timestamp
+            self._has_recorder_data
+            and current_period_start_timestamp >= previous_period_start_timestamp
             and (
                 current_period_end_timestamp == previous_period_end_timestamp
                 or (
@@ -107,6 +110,12 @@ class HistoryStats:
                 )
             )
         ):
+            start_changed = (
+                current_period_start_timestamp != previous_period_start_timestamp
+            )
+            if start_changed:
+                self._prune_history_cache(current_period_start_timestamp)
+
             new_data = False
             if event and (new_state := event.data["new_state"]) is not None:
                 if (
@@ -115,12 +124,14 @@ class HistoryStats:
                     <= current_period_end_timestamp
                 ):
                     self._history_current_period.append(
-                        HistoryState(
-                            new_state.state, new_state.last_changed.timestamp()
-                        )
+                        HistoryState(new_state.state, new_state.last_changed_timestamp)
                     )
                     new_data = True
-            if not new_data and current_period_end_timestamp < now_timestamp:
+            if (
+                not new_data
+                and current_period_end_timestamp < now_timestamp
+                and not start_changed
+            ):
                 # If period has not changed and current time after the period end...
                 # Don't compute anything as the value cannot have changed
                 return self._state
@@ -128,7 +139,17 @@ class HistoryStats:
             await self._async_history_from_db(
                 current_period_start_timestamp, current_period_end_timestamp
             )
-            self._previous_run_before_start = False
+            if event and (new_state := event.data["new_state"]) is not None:
+                if (
+                    current_period_start_timestamp
+                    <= floored_timestamp(new_state.last_changed)
+                    <= current_period_end_timestamp
+                ):
+                    self._history_current_period.append(
+                        HistoryState(new_state.state, new_state.last_changed_timestamp)
+                    )
+
+            self._has_recorder_data = True
 
         seconds_matched, match_count = self._async_compute_seconds_and_changes(
             now_timestamp,
@@ -177,18 +198,24 @@ class HistoryStats:
         # state_changes_during_period is called with include_start_time_state=True
         # which is the default and always provides the state at the start
         # of the period
-        previous_state_matches = (
-            self._history_current_period
-            and self._history_current_period[0].state in self._entity_states
-        )
-        last_state_change_timestamp = start_timestamp
+        previous_state_matches = False
+        last_state_change_timestamp = 0.0
         elapsed = 0.0
-        match_count = 1 if previous_state_matches else 0
+        match_count = 0
 
         # Make calculations
         for history_state in self._history_current_period:
             current_state_matches = history_state.state in self._entity_states
             state_change_timestamp = history_state.last_changed
+
+            if math.floor(state_change_timestamp) > now_timestamp:
+                # Shouldn't count states that are in the future
+                _LOGGER.debug(
+                    "Skipping future timestamp %s (now %s)",
+                    state_change_timestamp,
+                    now_timestamp,
+                )
+                continue
 
             if previous_state_matches:
                 elapsed += state_change_timestamp - last_state_change_timestamp
@@ -196,7 +223,7 @@ class HistoryStats:
                 match_count += 1
 
             previous_state_matches = current_state_matches
-            last_state_change_timestamp = state_change_timestamp
+            last_state_change_timestamp = max(start_timestamp, state_change_timestamp)
 
         # Count time elapsed between last history state and end of measure
         if previous_state_matches:
@@ -206,3 +233,18 @@ class HistoryStats:
         # Save value in seconds
         seconds_matched = elapsed
         return seconds_matched, match_count
+
+    def _prune_history_cache(self, start_timestamp: float) -> None:
+        """Remove unnecessary old data from the history state cache from previous runs.
+
+        Update the timestamp of the last record from before the start to the current start time.
+        """
+        trim_count = 0
+        for i, history_state in enumerate(self._history_current_period):
+            if history_state.last_changed >= start_timestamp:
+                break
+            history_state.last_changed = start_timestamp
+            if i > 0:
+                trim_count += 1
+        if trim_count:  # Don't slice if no data was removed
+            self._history_current_period = self._history_current_period[trim_count:]

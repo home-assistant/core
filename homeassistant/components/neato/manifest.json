@@ -1,11 +1,11 @@
 {
   "domain": "neato",
   "name": "Neato Botvac",
-  "codeowners": ["@Santobert"],
+  "codeowners": [],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/neato",
   "iot_class": "cloud_polling",
   "loggers": ["pybotvac"],
-  "requirements": ["pybotvac==0.0.24"]
+  "requirements": ["pybotvac==0.0.26"]
 }

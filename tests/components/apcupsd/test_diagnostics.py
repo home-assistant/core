@@ -1,9 +1,11 @@
 """Test APCUPSd diagnostics reporting abilities."""
+
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
-from tests.components.apcupsd import async_init_integration
+from . import async_init_integration
+
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 

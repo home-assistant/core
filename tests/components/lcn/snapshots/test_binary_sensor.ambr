@@ -1,0 +1,142 @@
+# serializer version: 1
+# name: test_setup_lcn_binary_sensor[binary_sensor.binary_sensor1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.binary_sensor1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Binary_Sensor1',
+    'platform': 'lcn',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-binsensor1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_lcn_binary_sensor[binary_sensor.binary_sensor1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Binary_Sensor1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.binary_sensor1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_lcn_binary_sensor[binary_sensor.sensor_keylock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.sensor_keylock',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensor_KeyLock',
+    'platform': 'lcn',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-a5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_lcn_binary_sensor[binary_sensor.sensor_keylock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sensor_KeyLock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sensor_keylock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_lcn_binary_sensor[binary_sensor.sensor_lockregulator1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.sensor_lockregulator1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensor_LockRegulator1',
+    'platform': 'lcn',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-r1varsetpoint',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_lcn_binary_sensor[binary_sensor.sensor_lockregulator1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sensor_LockRegulator1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sensor_lockregulator1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

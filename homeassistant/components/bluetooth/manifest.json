@@ -10,16 +10,17 @@
     "btsocket",
     "bleak_retry_connector",
     "bluetooth_adapters",
-    "bluetooth_auto_recovery"
+    "bluetooth_auto_recovery",
+    "habluetooth"
   ],
   "quality_scale": "internal",
   "requirements": [
-    "bleak==0.21.1",
-    "bleak-retry-connector==3.4.0",
-    "bluetooth-adapters==0.18.0",
-    "bluetooth-auto-recovery==1.4.0",
-    "bluetooth-data-tools==1.19.0",
-    "dbus-fast==2.21.1",
-    "habluetooth==2.4.2"
+    "bleak==0.22.3",
+    "bleak-retry-connector==3.9.0",
+    "bluetooth-adapters==0.21.4",
+    "bluetooth-auto-recovery==1.4.5",
+    "bluetooth-data-tools==1.28.1",
+    "dbus-fast==2.43.0",
+    "habluetooth==3.44.0"
   ]
 }

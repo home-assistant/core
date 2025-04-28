@@ -7,29 +7,28 @@ from typing import Any
 from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.lock import ENTITY_ID_FORMAT, LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FibaroController, FibaroDevice
-from .const import DOMAIN
+from . import FibaroConfigEntry
+from .entity import FibaroEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FibaroConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fibaro locks."""
-    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+    controller = entry.runtime_data
     async_add_entities(
         [FibaroLock(device) for device in controller.fibaro_devices[Platform.LOCK]],
         True,
     )
 
 
-class FibaroLock(FibaroDevice, LockEntity):
+class FibaroLock(FibaroEntity, LockEntity):
     """Representation of a Fibaro Lock."""
 
     def __init__(self, fibaro_device: DeviceModel) -> None:
@@ -44,7 +43,7 @@ class FibaroLock(FibaroDevice, LockEntity):
 
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        self.action("unsecure")
+        self.action("unsecure")  # codespell:ignore unsecure
         self._attr_is_locked = False
 
     def update(self) -> None:

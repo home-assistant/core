@@ -20,9 +20,17 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_sensors",
-        return_value=[TEST_SENSOR],
+    sensor = TEST_SENSOR.model_copy()
+    status = sensor.data
+    sensor.data = None
+
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_devices",
+            return_value=[sensor],
+        ),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -32,11 +40,11 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
-    assert entries[0].state == ConfigEntryState.NOT_LOADED
+    assert entries[0].state is ConfigEntryState.NOT_LOADED
 
 
 async def test_login_error(hass: HomeAssistant) -> None:
@@ -51,7 +59,7 @@ async def test_login_error(hass: HomeAssistant) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.SETUP_ERROR
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows
     assert len(flows) == 1
@@ -63,8 +71,9 @@ async def test_http_error(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
-        "lacrosse_view.LaCrosse.get_sensors", side_effect=HTTPError
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch("lacrosse_view.LaCrosse.get_devices", side_effect=HTTPError),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -72,7 +81,24 @@ async def test_http_error(hass: HomeAssistant) -> None:
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.SETUP_RETRY
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+    config_entry_2 = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
+    config_entry_2.add_to_hass(hass)
+
+    # Start over, let get_devices succeed but get_sensor_status fail
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch("lacrosse_view.LaCrosse.get_devices", return_value=[TEST_SENSOR]),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", side_effect=HTTPError),
+    ):
+        assert not await hass.config_entries.async_setup(config_entry_2.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
+    assert len(entries) == 2
+    assert entries[1].state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_new_token(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
@@ -80,9 +106,17 @@ async def test_new_token(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True) as login, patch(
-        "lacrosse_view.LaCrosse.get_sensors",
-        return_value=[TEST_SENSOR],
+    sensor = TEST_SENSOR.model_copy()
+    status = sensor.data
+    sensor.data = None
+
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True) as login,
+        patch(
+            "lacrosse_view.LaCrosse.get_devices",
+            return_value=[sensor],
+        ),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -91,11 +125,14 @@ async def test_new_token(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True) as login, patch(
-        "lacrosse_view.LaCrosse.get_sensors",
-        return_value=[TEST_SENSOR],
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True) as login,
+        patch(
+            "lacrosse_view.LaCrosse.get_devices",
+            return_value=[TEST_SENSOR],
+        ),
     ):
         freezer.tick(timedelta(hours=1))
         async_fire_time_changed(hass)
@@ -111,9 +148,17 @@ async def test_failed_token(
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True) as login, patch(
-        "lacrosse_view.LaCrosse.get_sensors",
-        return_value=[TEST_SENSOR],
+    sensor = TEST_SENSOR.model_copy()
+    status = sensor.data
+    sensor.data = None
+
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True) as login,
+        patch(
+            "lacrosse_view.LaCrosse.get_devices",
+            return_value=[sensor],
+        ),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -122,7 +167,7 @@ async def test_failed_token(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
 
     with patch("lacrosse_view.LaCrosse.login", side_effect=LoginError("Test")):
         freezer.tick(timedelta(hours=1))
@@ -132,7 +177,7 @@ async def test_failed_token(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows

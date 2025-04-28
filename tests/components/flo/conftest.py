@@ -12,10 +12,11 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONTENT_TYPE_JSON
 from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
 
 from tests.common import MockConfigEntry, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
-def config_entry(hass):
+def config_entry() -> MockConfigEntry:
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=FLO_DOMAIN,
@@ -25,7 +26,7 @@ def config_entry(hass):
 
 
 @pytest.fixture
-def aioclient_mock_fixture(aioclient_mock):
+def aioclient_mock_fixture(aioclient_mock: AiohttpClientMocker) -> None:
     """Fixture to provide a aioclient mocker."""
     now = round(time.time())
     # Mocks the login response for flo.

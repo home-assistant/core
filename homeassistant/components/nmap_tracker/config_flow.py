@@ -22,7 +22,8 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_HOME_INTERVAL,
@@ -62,7 +63,7 @@ def _normalize_ips_and_network(hosts_str: str) -> list[str] | None:
             start, end = host.split("-", 1)
             if "." not in end:
                 ip_1, ip_2, ip_3, _ = start.split(".", 3)
-                end = ".".join([ip_1, ip_2, ip_3, end])
+                end = f"{ip_1}.{ip_2}.{ip_3}.{end}"
             summarize_address_range(ip_address(start), ip_address(end))
         except ValueError:
             pass
@@ -110,7 +111,7 @@ async def _async_build_schema_with_user_input(
     exclude = user_input.get(
         CONF_EXCLUDE, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
     )
-    schema = {
+    schema: VolDictType = {
         vol.Required(CONF_HOSTS, default=hosts): str,
         vol.Required(
             CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
@@ -212,6 +213,6 @@ class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)

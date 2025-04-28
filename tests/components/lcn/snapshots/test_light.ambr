@@ -1,0 +1,170 @@
+# serializer version: 1
+# name: test_setup_lcn_light[light.light_output1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.light_output1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light_Output1',
+    'platform': 'lcn',
+    'previous_unique_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': None,
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-output1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_lcn_light[light.light_output1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'Light_Output1',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 32>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.light_output1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_lcn_light[light.light_output2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.light_output2',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light_Output2',
+    'platform': 'lcn',
+    'previous_unique_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': None,
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-output2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_lcn_light[light.light_output2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color_mode': None,
+      'friendly_name': 'Light_Output2',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      'supported_features': <LightEntityFeature: 32>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.light_output2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_lcn_light[light.light_relay1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.light_relay1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light_Relay1',
+    'platform': 'lcn',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-relay1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_lcn_light[light.light_relay1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color_mode': None,
+      'friendly_name': 'Light_Relay1',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.light_relay1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

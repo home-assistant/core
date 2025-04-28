@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from pybalboa import SpaControl
 from pybalboa.enums import HeatMode, OffLowMediumHighState
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -25,13 +26,15 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import client_update, init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.climate import common
 
 HVAC_SETTINGS = [
@@ -43,25 +46,17 @@ HVAC_SETTINGS = [
 ENTITY_CLIMATE = "climate.fakespa"
 
 
-async def test_spa_defaults(
-    hass: HomeAssistant, client: MagicMock, integration: MockConfigEntry
+async def test_climate(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test supported features flags."""
-    state = hass.states.get(ENTITY_CLIMATE)
+    """Test spa climate."""
+    with patch("homeassistant.components.balboa.PLATFORMS", [Platform.CLIMATE]):
+        entry = await init_integration(hass)
 
-    assert state
-    assert (
-        state.attributes["supported_features"]
-        == ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
-    )
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_MIN_TEMP] == 10.0
-    assert state.attributes[ATTR_MAX_TEMP] == 40.0
-    assert state.attributes[ATTR_PRESET_MODE] == "ready"
-    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_spa_defaults_fake_tscale(
@@ -91,6 +86,8 @@ async def test_spa_temperature(
     hass: HomeAssistant, client: MagicMock, integration: MockConfigEntry
 ) -> None:
     """Test spa temperature settings."""
+    client.temperature_minimum = 110
+    client.temperature_maximum = 250
     # flip the spa into F
     # set temp to a valid number
     state = await _patch_spa_settemp(hass, client, 0, 100)
@@ -101,11 +98,10 @@ async def test_spa_temperature_unit(
     hass: HomeAssistant, client: MagicMock, integration: MockConfigEntry
 ) -> None:
     """Test temperature unit conversions."""
-    with patch.object(
-        hass.config.units, "temperature_unit", UnitOfTemperature.FAHRENHEIT
-    ):
-        state = await _patch_spa_settemp(hass, client, 0, 15.4)
-        assert state.attributes.get(ATTR_TEMPERATURE) == 15.0
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    state = await _patch_spa_settemp(hass, client, 0, 15.4)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 15.0
 
 
 async def test_spa_hvac_modes(

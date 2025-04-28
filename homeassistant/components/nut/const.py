@@ -6,7 +6,11 @@ from homeassistant.const import Platform
 
 DOMAIN = "nut"
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 DEFAULT_NAME = "NUT UPS"
 DEFAULT_HOST = "localhost"
@@ -14,15 +18,6 @@ DEFAULT_PORT = 3493
 
 KEY_STATUS = "ups.status"
 KEY_STATUS_DISPLAY = "ups.status.display"
-
-COORDINATOR = "coordinator"
-DEFAULT_SCAN_INTERVAL = 60
-
-PYNUT_DATA = "data"
-PYNUT_UNIQUE_ID = "unique_id"
-
-
-USER_AVAILABLE_COMMANDS = "user_available_commands"
 
 STATE_TYPES = {
     "OL": "Online",

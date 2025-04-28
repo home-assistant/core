@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from homeassistant.components.lock import LockEntity
+from homeassistant.components.lock import LockEntity, LockState
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
+from .entity import XiaomiDevice
 
 FINGER_KEY = "fing_verified"
 PASSWORD_KEY = "psw_verified"
@@ -25,7 +24,7 @@ UNLOCK_MAINTAIN_TIME = 5
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
@@ -50,7 +49,7 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
     def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
         if self._state is not None:
-            return self._state == STATE_LOCKED
+            return self._state == LockState.LOCKED
         return None
 
     @property
@@ -61,13 +60,12 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
     @property
     def extra_state_attributes(self) -> dict[str, int]:
         """Return the state attributes."""
-        attributes = {ATTR_VERIFIED_WRONG_TIMES: self._verified_wrong_times}
-        return attributes
+        return {ATTR_VERIFIED_WRONG_TIMES: self._verified_wrong_times}
 
     @callback
     def clear_unlock_state(self, _):
         """Clear unlock state automatically."""
-        self._state = STATE_LOCKED
+        self._state = LockState.LOCKED
         self.async_write_ha_state()
 
     def parse_data(self, data, raw_data):
@@ -80,7 +78,7 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
             if (value := data.get(key)) is not None:
                 self._changed_by = int(value)
                 self._verified_wrong_times = 0
-                self._state = STATE_UNLOCKED
+                self._state = LockState.UNLOCKED
                 async_call_later(
                     self.hass, UNLOCK_MAINTAIN_TIME, self.clear_unlock_state
                 )

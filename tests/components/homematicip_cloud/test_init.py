@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from homematicip.base.base_connection import HmipConnectionError
+from homematicip.connection.connection_context import ConnectionContext
 
 from homeassistant.components.homematicip_cloud.const import (
     CONF_ACCESSPOINT,
@@ -100,14 +101,20 @@ async def test_config_already_registered_not_passed_to_config_entry(
 
 
 async def test_load_entry_fails_due_to_connection_error(
-    hass: HomeAssistant, hmip_config_entry, mock_connection_init
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, mock_connection_init
 ) -> None:
     """Test load entry fails due to connection error."""
     hmip_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state",
-        side_effect=HmipConnectionError,
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
+            side_effect=HmipConnectionError,
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+            return_value=ConnectionContext(),
+        ),
     ):
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
@@ -116,16 +123,16 @@ async def test_load_entry_fails_due_to_connection_error(
 
 
 async def test_load_entry_fails_due_to_generic_exception(
-    hass: HomeAssistant, hmip_config_entry
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry
 ) -> None:
     """Test load entry fails due to generic exception."""
     hmip_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state",
-        side_effect=Exception,
-    ), patch(
-        "homematicip.aio.connection.AsyncConnection.init",
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
+            side_effect=Exception,
+        ),
     ):
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
@@ -172,7 +179,7 @@ async def test_hmip_dump_hap_config_services(
             "homematicip_cloud", "dump_hap_config", {"anonymize": True}, blocking=True
         )
         home = mock_hap_with_service.home
-        assert home.mock_calls[-1][0] == "download_configuration"
+        assert home.mock_calls[-1][0] == "download_configuration_async"
         assert home.mock_calls
         assert write_mock.mock_calls
 
@@ -196,7 +203,7 @@ async def test_setup_services_and_unload_services(hass: HomeAssistant) -> None:
 
     # Check services are created
     hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
-    assert len(hmipc_services) == 8
+    assert len(hmipc_services) == 9
 
     config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
     assert len(config_entries) == 1
@@ -229,7 +236,7 @@ async def test_setup_two_haps_unload_one_by_one(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
     hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
-    assert len(hmipc_services) == 8
+    assert len(hmipc_services) == 9
 
     config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
     assert len(config_entries) == 2
@@ -238,7 +245,7 @@ async def test_setup_two_haps_unload_one_by_one(hass: HomeAssistant) -> None:
 
     # services still exists
     hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
-    assert len(hmipc_services) == 8
+    assert len(hmipc_services) == 9
 
     # unload the second AP
     await hass.config_entries.async_unload(config_entries[1].entry_id)

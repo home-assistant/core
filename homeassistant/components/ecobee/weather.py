@@ -17,7 +17,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfLength,
     UnitOfPressure,
@@ -26,9 +25,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import EcobeeConfigEntry
 from .const import (
     DOMAIN,
     ECOBEE_MODEL_TO_NAME,
@@ -39,11 +39,11 @@ from .const import (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcobeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ecobee weather platform."""
-    data = hass.data[DOMAIN]
+    data = config_entry.runtime_data
     dev = []
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
@@ -59,7 +59,7 @@ class EcobeeWeather(WeatherEntity):
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_native_visibility_unit = UnitOfLength.METERS
-    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_native_wind_speed_unit = UnitOfSpeed.MILES_PER_HOUR
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
@@ -183,11 +183,6 @@ class EcobeeWeather(WeatherEntity):
         if forecasts:
             return forecasts
         return None
-
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return self._forecast()
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""

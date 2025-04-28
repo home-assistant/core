@@ -13,6 +13,7 @@ from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_A
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HassJob,
     HomeAssistant,
     State,
@@ -24,7 +25,6 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_same_state,
     async_track_state_change_event,
     process_state_match,
@@ -117,7 +117,6 @@ async def async_attach_trigger(
         match_to_state = process_state_match(MATCH_ALL)
 
     time_delta = config.get(CONF_FOR)
-    template.attach(hass, time_delta)
     # If neither CONF_FROM or CONF_TO are specified,
     # fire on all changes to the state or an attribute
     match_all = all(

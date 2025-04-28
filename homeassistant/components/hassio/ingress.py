@@ -46,6 +46,8 @@ RESPONSE_HEADERS_FILTER = {
 MIN_COMPRESSED_SIZE = 128
 MAX_SIMPLE_RESPONSE_SIZE = 4194000
 
+DISABLED_TIMEOUT = ClientTimeout(total=None)
+
 
 @callback
 def async_setup_ingress_view(hass: HomeAssistant, host: str) -> None:
@@ -67,15 +69,15 @@ class HassIOIngress(HomeAssistantView):
         """Initialize a Hass.io ingress view."""
         self._host = host
         self._websession = websession
+        self._url = URL(f"http://{host}")
 
     @lru_cache
     def _create_url(self, token: str, path: str) -> URL:
         """Create URL to service."""
         base_path = f"/ingress/{token}/"
-        url = f"http://{self._host}{base_path}{quote(path)}"
 
         try:
-            target_url = URL(url)
+            target_url = self._url.join(URL(f"{base_path}{quote(path)}"))
         except ValueError as err:
             raise HTTPBadRequest from err
 
@@ -167,7 +169,7 @@ class HassIOIngress(HomeAssistantView):
             params=request.query,
             allow_redirects=False,
             data=request.content if request.method != "GET" else None,
-            timeout=ClientTimeout(total=None),
+            timeout=DISABLED_TIMEOUT,
             skip_auto_headers={hdrs.CONTENT_TYPE},
         ) as result:
             headers = _response_header(result)
@@ -177,11 +179,13 @@ class HassIOIngress(HomeAssistantView):
             if maybe_content_type := result.headers.get(hdrs.CONTENT_TYPE):
                 content_type: str = (maybe_content_type.partition(";"))[0].strip()
             else:
-                content_type = result.content_type
+                # default value according to RFC 2616
+                content_type = "application/octet-stream"
+
             # Simple request
             if result.status in (204, 304) or (
                 content_length is not UNDEFINED
-                and (content_length_int := int(content_length or 0))
+                and (content_length_int := int(content_length))
                 <= MAX_SIMPLE_RESPONSE_SIZE
             ):
                 # Return Response
@@ -194,18 +198,17 @@ class HassIOIngress(HomeAssistantView):
                     zlib_executor_size=32768,
                 )
                 if content_length_int > MIN_COMPRESSED_SIZE and should_compress(
-                    content_type or simple_response.content_type
+                    content_type
                 ):
                     simple_response.enable_compression()
-                await simple_response.prepare(request)
                 return simple_response
 
             # Stream response
             response = web.StreamResponse(status=result.status, headers=headers)
-            response.content_type = result.content_type
+            response.content_type = content_type
 
             try:
-                if should_compress(response.content_type):
+                if should_compress(content_type):
                     response.enable_compression()
                 await response.prepare(request)
                 # In testing iter_chunked, iter_any, and iter_chunks:

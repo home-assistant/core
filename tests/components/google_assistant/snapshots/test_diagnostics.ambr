@@ -6,6 +6,8 @@
         'project_id': '1234',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'google_assistant',
       'minor_version': 1,
       'options': dict({
@@ -13,6 +15,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'import',
+      'subentries': list([
+      ]),
       'title': '1234',
       'unique_id': '1234',
       'version': 1,
@@ -94,6 +98,7 @@
         'humidifier',
         'input_boolean',
         'input_select',
+        'lawn_mower',
         'light',
         'lock',
         'media_player',

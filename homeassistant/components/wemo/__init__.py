@@ -20,8 +20,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from .const import DOMAIN
-from .models import WemoConfigEntryData, WemoData, async_wemo_data
-from .wemo_device import DeviceCoordinator, async_register_device
+from .coordinator import DeviceCoordinator, async_register_device
+from .models import DATA_WEMO, WemoConfigEntryData, WemoData
 
 # Max number of devices to initialize at once. This limit is in place to
 # avoid tying up too many executor threads with WeMo device setup.
@@ -44,8 +44,8 @@ WEMO_MODEL_DISPATCH = {
 
 _LOGGER = logging.getLogger(__name__)
 
-DispatchCallback = Callable[[DeviceCoordinator], Coroutine[Any, Any, None]]
-HostPortTuple = tuple[str, int | None]
+type DispatchCallback = Callable[[DeviceCoordinator], Coroutine[Any, Any, None]]
+type HostPortTuple = tuple[str, int | None]
 
 
 def coerce_host_port(value: str) -> HostPortTuple:
@@ -96,9 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         discovery_responder.stop()
         registry.stop()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
     yaml_config = config.get(DOMAIN, {})
     hass.data[DOMAIN] = WemoData(
@@ -119,7 +117,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a wemo config entry."""
-    wemo_data = async_wemo_data(hass)
+    wemo_data = hass.data[DATA_WEMO]
     dispatcher = WemoDispatcher(entry)
     discovery = WemoDiscovery(hass, dispatcher, wemo_data.static_config, entry)
     wemo_data.config_entry_data = WemoConfigEntryData(
@@ -140,12 +138,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a wemo config entry."""
     _LOGGER.debug("Unloading WeMo")
-    wemo_data = async_wemo_data(hass)
+    wemo_data = hass.data[DATA_WEMO]
 
     wemo_data.config_entry_data.discovery.async_stop_discovery()
 
     dispatcher = wemo_data.config_entry_data.dispatcher
     if unload_ok := await dispatcher.async_unload_platforms(hass):
+        for coordinator in list(
+            wemo_data.config_entry_data.device_coordinators.values()
+        ):
+            await coordinator.async_shutdown()
         assert not wemo_data.config_entry_data.device_coordinators
         wemo_data.config_entry_data = None  # type: ignore[assignment]
     return unload_ok
@@ -159,7 +161,7 @@ async def async_wemo_dispatcher_connect(
     module = dispatch.__module__  # Example: "homeassistant.components.wemo.switch"
     platform = Platform(module.rsplit(".", 1)[1])
 
-    dispatcher = async_wemo_data(hass).config_entry_data.dispatcher
+    dispatcher = hass.data[DATA_WEMO].config_entry_data.dispatcher
     await dispatcher.async_connect_platform(platform, dispatch)
 
 
@@ -208,15 +210,13 @@ class WemoDispatcher:
                 self._dispatch_backlog[platform] = [coordinator]
                 platforms_to_load.append(platform)
 
-        if platforms_to_load:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setups(
-                    self._config_entry, platforms_to_load
-                )
-            )
-
         self._added_serial_numbers.add(wemo.serial_number)
         self._failed_serial_numbers.discard(wemo.serial_number)
+
+        if platforms_to_load:
+            await hass.config_entries.async_forward_entry_setups(
+                self._config_entry, platforms_to_load
+            )
 
     async def async_connect_platform(
         self, platform: Platform, dispatch: DispatchCallback

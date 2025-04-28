@@ -13,6 +13,14 @@
     "action_type": {
       "set_hvac_mode": "Change HVAC mode on {entity_name}",
       "set_preset_mode": "Change preset on {entity_name}"
+    },
+    "extra_fields": {
+      "above": "[%key:common::device_automation::extra_fields::above%]",
+      "below": "[%key:common::device_automation::extra_fields::below%]",
+      "for": "[%key:common::device_automation::extra_fields::for%]",
+      "to": "[%key:common::device_automation::extra_fields::to%]",
+      "preset_mode": "Preset mode",
+      "hvac_mode": "HVAC mode"
     }
   },
   "entity_component": {
@@ -20,10 +28,10 @@
       "name": "Thermostat",
       "state": {
         "off": "[%key:common::state::off%]",
+        "auto": "[%key:common::state::auto%]",
         "heat": "Heat",
         "cool": "Cool",
         "heat_cool": "Heat/Cool",
-        "auto": "Auto",
         "dry": "Dry",
         "fan_only": "Fan only"
       },
@@ -42,10 +50,10 @@
           "state": {
             "off": "[%key:common::state::off%]",
             "on": "[%key:common::state::on%]",
-            "auto": "Auto",
-            "low": "Low",
-            "medium": "Medium",
-            "high": "High",
+            "auto": "[%key:common::state::auto%]",
+            "low": "[%key:common::state::low%]",
+            "medium": "[%key:common::state::medium%]",
+            "high": "[%key:common::state::high%]",
             "top": "Top",
             "middle": "Middle",
             "focus": "Focus",
@@ -62,12 +70,13 @@
           "name": "Current action",
           "state": {
             "off": "[%key:common::state::off%]",
-            "preheating": "Preheating",
-            "heating": "Heating",
-            "cooling": "Cooling",
-            "drying": "Drying",
             "idle": "[%key:common::state::idle%]",
-            "fan": "Fan"
+            "cooling": "Cooling",
+            "defrosting": "Defrosting",
+            "drying": "Drying",
+            "fan": "Fan",
+            "heating": "Heating",
+            "preheating": "Preheating"
           }
         },
         "hvac_modes": {
@@ -89,13 +98,13 @@
           "name": "Preset",
           "state": {
             "none": "None",
-            "eco": "Eco",
-            "away": "Away",
+            "home": "[%key:common::state::home%]",
+            "away": "[%key:common::state::not_home%]",
+            "activity": "Activity",
             "boost": "Boost",
             "comfort": "Comfort",
-            "home": "[%key:common::state::home%]",
-            "sleep": "Sleep",
-            "activity": "Activity"
+            "eco": "Eco",
+            "sleep": "Sleep"
           }
         },
         "preset_modes": {
@@ -113,6 +122,16 @@
         },
         "swing_modes": {
           "name": "Swing modes"
+        },
+        "swing_horizontal_mode": {
+          "name": "Horizontal swing mode",
+          "state": {
+            "off": "[%key:common::state::off%]",
+            "on": "[%key:common::state::on%]"
+          }
+        },
+        "swing_horizontal_modes": {
+          "name": "Horizontal swing modes"
         },
         "target_temp_high": {
           "name": "Upper target temperature"
@@ -152,19 +171,19 @@
     },
     "set_temperature": {
       "name": "Set target temperature",
-      "description": "Sets target temperature.",
+      "description": "Sets the temperature setpoint.",
       "fields": {
         "temperature": {
-          "name": "Temperature",
-          "description": "Target temperature."
+          "name": "Target temperature",
+          "description": "The temperature setpoint."
         },
         "target_temp_high": {
-          "name": "Target temperature high",
-          "description": "High target temperature."
+          "name": "Upper target temperature",
+          "description": "The max temperature setpoint."
         },
         "target_temp_low": {
-          "name": "Target temperature low",
-          "description": "Low target temperature."
+          "name": "Lower target temperature",
+          "description": "The min temperature setpoint."
         },
         "hvac_mode": {
           "name": "HVAC mode",
@@ -212,6 +231,16 @@
         }
       }
     },
+    "set_swing_horizontal_mode": {
+      "name": "Set horizontal swing mode",
+      "description": "Sets horizontal swing operation mode.",
+      "fields": {
+        "swing_horizontal_mode": {
+          "name": "Horizontal swing mode",
+          "description": "Horizontal swing operation mode."
+        }
+      }
+    },
     "turn_on": {
       "name": "[%key:common::action::turn_on%]",
       "description": "Turns climate device on."
@@ -228,14 +257,24 @@
   "selector": {
     "hvac_mode": {
       "options": {
-        "off": "Off",
-        "auto": "Auto",
+        "off": "[%key:common::state::off%]",
+        "auto": "[%key:common::state::auto%]",
         "cool": "Cool",
         "dry": "Dry",
         "fan_only": "Fan only",
         "heat_cool": "Heat/cool",
         "heat": "Heat"
       }
+    }
+  },
+  "issues": {
+    "deprecated_climate_aux_url_custom": {
+      "title": "The {platform} custom integration is using deprecated climate auxiliary heater",
+      "description": "The custom integration `{platform}` implements the `is_aux_heat` property or uses the auxiliary heater methods in a subclass of ClimateEntity.\n\nPlease create a bug report at {issue_tracker}.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."
+    },
+    "deprecated_climate_aux_no_url": {
+      "title": "[%key:component::climate::issues::deprecated_climate_aux_url_custom::title%]",
+      "description": "The custom integration `{platform}` implements the `is_aux_heat` property or uses the auxiliary heater methods in a subclass of ClimateEntity.\n\nPlease report it to the author of the {platform} integration.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."
     }
   },
   "exceptions": {
@@ -245,8 +284,26 @@
     "not_valid_swing_mode": {
       "message": "Swing mode {mode} is not valid. Valid swing modes are: {modes}."
     },
+    "not_valid_horizontal_swing_mode": {
+      "message": "Horizontal swing mode {mode} is not valid. Valid horizontal swing modes are: {modes}."
+    },
     "not_valid_fan_mode": {
       "message": "Fan mode {mode} is not valid. Valid fan modes are: {modes}."
+    },
+    "temp_out_of_range": {
+      "message": "Provided temperature {check_temp} is not valid. Accepted range is {min_temp} to {max_temp}."
+    },
+    "low_temp_higher_than_high_temp": {
+      "message": "Target temperature low can not be higher than Target temperature high."
+    },
+    "humidity_out_of_range": {
+      "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
+    },
+    "missing_target_temperature_entity_feature": {
+      "message": "Set temperature action was used with the target temperature parameter but the entity does not support it."
+    },
+    "missing_target_temperature_range_entity_feature": {
+      "message": "Set temperature action was used with the target temperature low/high parameter but the entity does not support it."
     }
   }
 }

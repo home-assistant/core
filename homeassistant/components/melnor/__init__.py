@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
-from .models import MelnorDataUpdateCoordinator
+from .coordinator import MelnorDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.NUMBER,
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         bluetooth.BluetoothScanningMode.PASSIVE,
     )
 
-    coordinator = MelnorDataUpdateCoordinator(hass, device)
+    coordinator = MelnorDataUpdateCoordinator(hass, entry, device)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator

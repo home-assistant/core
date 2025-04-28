@@ -36,7 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.json import JSONEncoder
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 # SQLAlchemy Schema
 Base = declarative_base()
@@ -66,7 +66,7 @@ DATETIME_TYPE = DateTime(timezone=True).with_variant(
 )
 
 
-class Events(Base):  # type: ignore
+class Events(Base):  # type: ignore[valid-type,misc]
     """Event history data."""
 
     __table_args__ = {
@@ -84,7 +84,7 @@ class Events(Base):  # type: ignore
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
 
-    __table_args__ = (  # noqa: PIE794
+    __table_args__ = (  # type: ignore[assignment] # noqa: PIE794
         # Used for fetching events at a specific time
         # see logbook
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
@@ -133,7 +133,7 @@ class Events(Base):  # type: ignore
             return None
 
 
-class States(Base):  # type: ignore
+class States(Base):  # type: ignore[valid-type,misc]
     """State change history."""
 
     __table_args__ = {
@@ -156,7 +156,7 @@ class States(Base):  # type: ignore
     event = relationship("Events", uselist=False)
     old_state = relationship("States", remote_side=[state_id])
 
-    __table_args__ = (  # noqa: PIE794
+    __table_args__ = (  # type: ignore[assignment] # noqa: PIE794
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index("ix_states_entity_id_last_updated", "entity_id", "last_updated"),
@@ -217,7 +217,7 @@ class States(Base):  # type: ignore
             return None
 
 
-class Statistics(Base):  # type: ignore
+class Statistics(Base):  # type: ignore[valid-type,misc]
     """Statistics."""
 
     __table_args__ = {
@@ -237,7 +237,7 @@ class Statistics(Base):  # type: ignore
     state = Column(Float())
     sum = Column(Float())
 
-    __table_args__ = (  # noqa: PIE794
+    __table_args__ = (  # type: ignore[assignment] # noqa: PIE794
         # Used for fetching statistics for a certain entity at a specific time
         Index("ix_statistics_statistic_id_start", "statistic_id", "start"),
     )
@@ -253,7 +253,7 @@ class Statistics(Base):  # type: ignore
         )
 
 
-class RecorderRuns(Base):  # type: ignore
+class RecorderRuns(Base):  # type: ignore[valid-type,misc]
     """Representation of recorder run."""
 
     __tablename__ = TABLE_RECORDER_RUNS
@@ -304,7 +304,7 @@ class RecorderRuns(Base):  # type: ignore
         return self
 
 
-class SchemaChanges(Base):  # type: ignore
+class SchemaChanges(Base):  # type: ignore[valid-type,misc]
     """Representation of schema version changes."""
 
     __tablename__ = TABLE_SCHEMA_CHANGES
@@ -347,16 +347,14 @@ class LazyState(State):
     """A lazy version of core State."""
 
     __slots__ = [
-        "_row",
-        "entity_id",
-        "state",
         "_attributes",
+        "_context",
         "_last_changed",
         "_last_updated",
-        "_context",
+        "_row",
     ]
 
-    def __init__(self, row):  # pylint: disable=super-init-not-called
+    def __init__(self, row) -> None:  # pylint: disable=super-init-not-called
         """Init the lazy state."""
         self._row = row
         self.entity_id = self._row.entity_id
@@ -366,7 +364,7 @@ class LazyState(State):
         self._last_updated = None
         self._context = None
 
-    @property  # type: ignore
+    @property
     def attributes(self):
         """State attributes."""
         if not self._attributes:
@@ -383,7 +381,7 @@ class LazyState(State):
         """Set attributes."""
         self._attributes = value
 
-    @property  # type: ignore
+    @property
     def context(self):
         """State context."""
         if not self._context:
@@ -395,7 +393,7 @@ class LazyState(State):
         """Set context."""
         self._context = value
 
-    @property  # type: ignore
+    @property
     def last_changed(self):
         """Last changed datetime."""
         if not self._last_changed:
@@ -407,7 +405,7 @@ class LazyState(State):
         """Set last changed datetime."""
         self._last_changed = value
 
-    @property  # type: ignore
+    @property
     def last_updated(self):
         """Last updated datetime."""
         if not self._last_updated:

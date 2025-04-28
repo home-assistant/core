@@ -13,17 +13,21 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_ZONE,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
     entity_registry as er,
     location,
 )
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -81,11 +85,8 @@ async def async_attach_trigger(
         from_s = zone_event.data["old_state"]
         to_s = zone_event.data["new_state"]
 
-        if (
-            from_s
-            and not location.has_location(from_s)
-            or to_s
-            and not location.has_location(to_s)
+        if (from_s and not location.has_location(from_s)) or (
+            to_s and not location.has_location(to_s)
         ):
             return
 
@@ -103,13 +104,8 @@ async def async_attach_trigger(
         from_match = condition.zone(hass, zone_state, from_s) if from_s else False
         to_match = condition.zone(hass, zone_state, to_s) if to_s else False
 
-        if (
-            event == EVENT_ENTER
-            and not from_match
-            and to_match
-            or event == EVENT_LEAVE
-            and from_match
-            and not to_match
+        if (event == EVENT_ENTER and not from_match and to_match) or (
+            event == EVENT_LEAVE and from_match and not to_match
         ):
             description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[ATTR_FRIENDLY_NAME]}"
             hass.async_run_hass_job(

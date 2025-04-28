@@ -1,0 +1,1679 @@
+# serializer version: 1
+# name: test_all_entities[sensor.gummibaum_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gummibaum_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-battery_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Gummibaum Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.0',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_last_fertilized-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_last_fertilized',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_icon': None,
+    'original_name': 'Last fertilized',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_fertilised',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-fertilise_last',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_last_fertilized-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'date',
+      'friendly_name': 'Gummibaum Last fertilized',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_last_fertilized',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'light',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-light',
+    'unit_of_measurement': 'μmol/s⋅m²',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gummibaum Light',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μmol/s⋅m²',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_light_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_light_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Light state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-light_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_light_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Gummibaum Light state',
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_light_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'perfect',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_moisture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_moisture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Moisture',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-moisture',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_moisture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'Gummibaum Moisture',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_moisture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '61.0',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_moisture_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_moisture_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Moisture state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'moisture_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-moisture_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_moisture_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Gummibaum Moisture state',
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_moisture_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'perfect',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_next_fertilization-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_next_fertilization',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_icon': None,
+    'original_name': 'Next fertilization',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_fertilisation',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-fertilise_next',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_next_fertilization-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'date',
+      'friendly_name': 'Gummibaum Next fertilization',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_next_fertilization',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_nutrients_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_nutrients_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Nutrients state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nutrients_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-nutrients_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_nutrients_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Gummibaum Nutrients state',
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_nutrients_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'perfect',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_ph-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_ph',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PH: 'ph'>,
+    'original_icon': None,
+    'original_name': 'pH',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-ph',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_ph-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'ph',
+      'friendly_name': 'Gummibaum pH',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_ph',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_plant_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'deleted',
+        'doing_great',
+        'need_attention',
+        'no_sensor',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_plant_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Plant state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'plant_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_plant_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Gummibaum Plant state',
+      'options': list([
+        'deleted',
+        'doing_great',
+        'need_attention',
+        'no_sensor',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_plant_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'doing_great',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_salinity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_salinity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.CONDUCTIVITY: 'conductivity'>,
+    'original_icon': None,
+    'original_name': 'Salinity',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'salinity',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-salinity',
+    'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_salinity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'conductivity',
+      'friendly_name': 'Gummibaum Salinity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_salinity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_salinity_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_salinity_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Salinity state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'salinity_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-salinity_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_salinity_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Gummibaum Salinity state',
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_salinity_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_scientific_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_scientific_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scientific name',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'scientific_name',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-scientific_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_scientific_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gummibaum Scientific name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_scientific_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Ficus elastica',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Gummibaum Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25.2',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_temperature_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_temperature_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Temperature state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-temperature_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_temperature_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Gummibaum Temperature state',
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_temperature_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'perfect',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.kakaobaum_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-battery_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Kakaobaum Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.0',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_last_fertilized-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_last_fertilized',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_icon': None,
+    'original_name': 'Last fertilized',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_fertilised',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-fertilise_last',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_last_fertilized-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'date',
+      'friendly_name': 'Kakaobaum Last fertilized',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_last_fertilized',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'light',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-light',
+    'unit_of_measurement': 'μmol/s⋅m²',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kakaobaum Light',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μmol/s⋅m²',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_light_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_light_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Light state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-light_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_light_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Kakaobaum Light state',
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_light_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'perfect',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_moisture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_moisture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Moisture',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-moisture',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_moisture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'Kakaobaum Moisture',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_moisture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '61.0',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_moisture_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_moisture_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Moisture state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'moisture_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-moisture_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_moisture_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Kakaobaum Moisture state',
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_moisture_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'perfect',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_next_fertilization-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_next_fertilization',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_icon': None,
+    'original_name': 'Next fertilization',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_fertilisation',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-fertilise_next',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_next_fertilization-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'date',
+      'friendly_name': 'Kakaobaum Next fertilization',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_next_fertilization',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_nutrients_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_nutrients_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Nutrients state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nutrients_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-nutrients_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_nutrients_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Kakaobaum Nutrients state',
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_nutrients_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'perfect',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_ph-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_ph',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PH: 'ph'>,
+    'original_icon': None,
+    'original_name': 'pH',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-ph',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_ph-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'ph',
+      'friendly_name': 'Kakaobaum pH',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_ph',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.0',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_plant_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'deleted',
+        'doing_great',
+        'need_attention',
+        'no_sensor',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_plant_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Plant state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'plant_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_plant_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Kakaobaum Plant state',
+      'options': list([
+        'deleted',
+        'doing_great',
+        'need_attention',
+        'no_sensor',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_plant_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'doing_great',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_salinity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_salinity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.CONDUCTIVITY: 'conductivity'>,
+    'original_icon': None,
+    'original_name': 'Salinity',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'salinity',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-salinity',
+    'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_salinity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'conductivity',
+      'friendly_name': 'Kakaobaum Salinity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_salinity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_salinity_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_salinity_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Salinity state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'salinity_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-salinity_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_salinity_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Kakaobaum Salinity state',
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_salinity_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_scientific_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_scientific_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scientific name',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'scientific_name',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-scientific_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_scientific_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kakaobaum Scientific name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_scientific_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Theobroma cacao',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Kakaobaum Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25.2',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_temperature_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_temperature_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Temperature state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-temperature_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_temperature_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Kakaobaum Temperature state',
+      'options': list([
+        'no_data',
+        'too_low',
+        'low',
+        'perfect',
+        'high',
+        'too_high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_temperature_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'perfect',
+  })
+# ---

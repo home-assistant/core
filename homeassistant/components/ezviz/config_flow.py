@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyezviz.client import EzvizClient
 from pyezviz.exceptions import (
@@ -17,12 +17,7 @@ from pyezviz.exceptions import (
 from pyezviz.test_cam_rtsp import TestRTSPAuth
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
@@ -48,6 +43,7 @@ from .const import (
     EU_URL,
     RUSSIA_URL,
 )
+from .coordinator import EzvizConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_OPTIONS = {
@@ -70,14 +66,12 @@ def _validate_and_create_auth(data: dict) -> dict[str, Any]:
 
     ezviz_token = ezviz_client.login()
 
-    auth_data = {
+    return {
         CONF_SESSION_ID: ezviz_token[CONF_SESSION_ID],
         CONF_RFSESSION_ID: ezviz_token[CONF_RFSESSION_ID],
         CONF_URL: ezviz_token["api_url"],
         CONF_TYPE: ATTR_TYPE_CLOUD,
     }
-
-    return auth_data
 
 
 def _test_camera_rtsp_creds(data: dict) -> None:
@@ -94,6 +88,11 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EZVIZ."""
 
     VERSION = 1
+
+    ip_address: str
+    username: str | None
+    password: str | None
+    unique_id: str
 
     async def _validate_and_create_camera_rtsp(self, data: dict) -> ConfigFlowResult:
         """Try DESCRIBE on RTSP camera with credentials."""
@@ -145,9 +144,11 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> EzvizOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: EzvizConfigEntry,
+    ) -> EzvizOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return EzvizOptionsFlowHandler(config_entry)
+        return EzvizOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -168,10 +169,8 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             if user_input[CONF_URL] == CONF_CUSTOMIZE:
-                self.context["data"] = {
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                }
+                self.username = user_input[CONF_USERNAME]
+                self.password = user_input[CONF_PASSWORD]
                 return await self.async_step_user_custom_url()
 
             try:
@@ -191,7 +190,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except PyEzvizError:
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
@@ -224,8 +223,8 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         auth_data = {}
 
         if user_input is not None:
-            user_input[CONF_USERNAME] = self.context["data"][CONF_USERNAME]
-            user_input[CONF_PASSWORD] = self.context["data"][CONF_PASSWORD]
+            user_input[CONF_USERNAME] = self.username
+            user_input[CONF_PASSWORD] = self.password
 
             try:
                 auth_data = await self.hass.async_add_executor_job(
@@ -244,7 +243,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except PyEzvizError:
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
@@ -273,8 +272,11 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
         self._abort_if_unique_id_configured()
 
+        if TYPE_CHECKING:
+            # A unique ID is passed in via the discovery info
+            assert self.unique_id is not None
         self.context["title_placeholders"] = {ATTR_SERIAL: self.unique_id}
-        self.context["data"] = {CONF_IP_ADDRESS: discovery_info[CONF_IP_ADDRESS]}
+        self.ip_address = discovery_info[CONF_IP_ADDRESS]
 
         return await self.async_step_confirm()
 
@@ -286,7 +288,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             user_input[ATTR_SERIAL] = self.unique_id
-            user_input[CONF_IP_ADDRESS] = self.context["data"][CONF_IP_ADDRESS]
+            user_input[CONF_IP_ADDRESS] = self.ip_address
             try:
                 return await self._validate_and_create_camera_rtsp(user_input)
 
@@ -299,7 +301,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except (PyEzvizError, AuthTestResultFailed):
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
@@ -316,12 +318,12 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 ATTR_SERIAL: self.unique_id,
-                CONF_IP_ADDRESS: self.context["data"][CONF_IP_ADDRESS],
+                CONF_IP_ADDRESS: self.ip_address,
             },
         )
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a flow for reauthentication with password."""
 
@@ -360,19 +362,15 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except (PyEzvizError, AuthTestResultFailed):
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
             else:
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     entry,
                     data=auth_data,
                 )
-
-                await self.hass.config_entries.async_reload(entry.entry_id)
-
-                return self.async_abort(reason="reauth_successful")
 
         data_schema = vol.Schema(
             {
@@ -390,10 +388,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class EzvizOptionsFlowHandler(OptionsFlow):
     """Handle EZVIZ client options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

@@ -10,37 +10,32 @@ from pylitterbot.enums import LitterBoxStatus
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_PAUSED,
     StateVacuumEntity,
     StateVacuumEntityDescription,
+    VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity
-from .hub import LitterRobotHub
 
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
 
 LITTER_BOX_STATUS_STATE_MAP = {
-    LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
-    LitterBoxStatus.EMPTY_CYCLE: STATE_CLEANING,
-    LitterBoxStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
-    LitterBoxStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
-    LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
-    LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
-    LitterBoxStatus.READY: STATE_DOCKED,
-    LitterBoxStatus.CAT_SENSOR_INTERRUPTED: STATE_PAUSED,
-    LitterBoxStatus.OFF: STATE_OFF,
+    LitterBoxStatus.CLEAN_CYCLE: VacuumActivity.CLEANING,
+    LitterBoxStatus.EMPTY_CYCLE: VacuumActivity.CLEANING,
+    LitterBoxStatus.CLEAN_CYCLE_COMPLETE: VacuumActivity.DOCKED,
+    LitterBoxStatus.CAT_DETECTED: VacuumActivity.DOCKED,
+    LitterBoxStatus.CAT_SENSOR_TIMING: VacuumActivity.DOCKED,
+    LitterBoxStatus.DRAWER_FULL_1: VacuumActivity.DOCKED,
+    LitterBoxStatus.DRAWER_FULL_2: VacuumActivity.DOCKED,
+    LitterBoxStatus.READY: VacuumActivity.DOCKED,
+    LitterBoxStatus.CAT_SENSOR_INTERRUPTED: VacuumActivity.PAUSED,
+    LitterBoxStatus.OFF: VacuumActivity.DOCKED,
 }
 
 LITTER_BOX_ENTITY = StateVacuumEntityDescription(
@@ -50,16 +45,17 @@ LITTER_BOX_ENTITY = StateVacuumEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LitterRobotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-    entities = [
-        LitterRobotCleaner(robot=robot, hub=hub, description=LITTER_BOX_ENTITY)
-        for robot in hub.litter_robots()
-    ]
-    async_add_entities(entities)
+    coordinator = entry.runtime_data
+    async_add_entities(
+        LitterRobotCleaner(
+            robot=robot, coordinator=coordinator, description=LITTER_BOX_ENTITY
+        )
+        for robot in coordinator.litter_robots()
+    )
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -80,16 +76,9 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     )
 
     @property
-    def state(self) -> str:
+    def activity(self) -> VacuumActivity:
         """Return the state of the cleaner."""
-        return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, STATE_ERROR)
-
-    @property
-    def status(self) -> str:
-        """Return the status of the cleaner."""
-        return (
-            f"{self.robot.status.text}{' (Sleeping)' if self.robot.is_sleeping else ''}"
-        )
+        return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, VacuumActivity.ERROR)
 
     async def async_start(self) -> None:
         """Start a clean cycle."""
@@ -126,13 +115,3 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
             )
             .timetz()
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return device specific state attributes."""
-        return {
-            "is_sleeping": self.robot.is_sleeping,
-            "sleep_mode_enabled": self.robot.sleep_mode_enabled,
-            "power_status": self.robot.power_status,
-            "status": self.status,
-        }

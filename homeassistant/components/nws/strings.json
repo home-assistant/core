@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "If a METAR station code is not specified, the latitude and longitude will be used to find the closest station. For now, an API Key can be anything. It is recommended to use a valid email address.",
+        "description": "If a METAR station code is not specified, the latitude and longitude will be used to find the closest station. For now, the API key can be anything. It is recommended to use a valid email address.",
         "title": "Connect to the National Weather Service",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -18,6 +18,26 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "selector": {
+    "nws_forecast_type": {
+      "options": {
+        "hourly": "Hourly",
+        "twice_daily": "Twice daily"
+      }
+    }
+  },
+  "services": {
+    "get_forecasts_extra": {
+      "name": "Get extra forecasts data",
+      "description": "Retrieves extra data for weather forecasts.",
+      "fields": {
+        "type": {
+          "name": "Forecast type",
+          "description": "The scope of the weather forecast."
+        }
+      }
     }
   }
 }

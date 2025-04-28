@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorDeviceClass
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
@@ -22,18 +21,23 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.template import _SENTINEL, Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     TEMPLATE_SENSOR_BASE_SCHEMA,
     ManualTriggerEntity,
     ManualTriggerSensorEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import ScrapeConfigEntry
 from .const import CONF_INDEX, CONF_SELECT, DOMAIN
 from .coordinator import ScrapeCoordinator
 
@@ -67,10 +71,6 @@ async def async_setup_platform(
 
     entities: list[ScrapeSensor] = []
     for sensor_config in sensors_config:
-        value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = hass
-
         trigger_entity_config = {CONF_NAME: sensor_config[CONF_NAME]}
         for key in TRIGGER_ENTITY_OPTIONS:
             if key not in sensor_config:
@@ -85,7 +85,7 @@ async def async_setup_platform(
                 sensor_config[CONF_SELECT],
                 sensor_config.get(CONF_ATTRIBUTE),
                 sensor_config[CONF_INDEX],
-                value_template,
+                sensor_config.get(CONF_VALUE_TEMPLATE),
                 True,
             )
         )
@@ -94,12 +94,14 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ScrapeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Scrape sensor entry."""
     entities: list = []
 
-    coordinator: ScrapeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     config = dict(entry.options)
     for sensor in config["sensor"]:
         sensor_config: ConfigType = vol.Schema(
@@ -109,8 +111,8 @@ async def async_setup_entry(
         name: str = sensor_config[CONF_NAME]
         value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
 
-        value_template: Template | None = (
-            Template(value_string, hass) if value_string is not None else None
+        value_template: ValueTemplate | None = (
+            ValueTemplate(value_string, hass) if value_string is not None else None
         )
 
         trigger_entity_config: dict[str, str | Template | None] = {CONF_NAME: name}
@@ -149,7 +151,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         select: str,
         attr: str | None,
         index: int,
-        value_template: Template | None,
+        value_template: ValueTemplate | None,
         yaml: bool,
     ) -> None:
         """Initialize a web scrape sensor."""
@@ -185,12 +187,12 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
                     value = tag.text
         except IndexError:
             _LOGGER.warning("Index '%s' not found in %s", self._index, self.entity_id)
-            value = None
+            return _SENTINEL
         except KeyError:
             _LOGGER.warning(
                 "Attribute '%s' not found in %s", self._attr, self.entity_id
             )
-            value = None
+            return _SENTINEL
         _LOGGER.debug("Parsed value: %s", value)
         return value
 
@@ -198,35 +200,43 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         """Ensure the data from the initial update is reflected in the state."""
         await super().async_added_to_hass()
         self._async_update_from_rest_data()
+        self.async_write_ha_state()
 
     def _async_update_from_rest_data(self) -> None:
         """Update state from the rest data."""
-        value = self._extract_value()
-        raw_value = value
+        self._attr_available = True
+        if (value := self._extract_value()) is _SENTINEL:
+            self._attr_available = False
+            return
+
+        variables = self._template_variables_with_value(value)
+        if not self._render_availability_template(variables):
+            return
 
         if (template := self._value_template) is not None:
-            value = template.async_render_with_possible_json_value(value, None)
+            value = template.async_render_as_value_template(
+                self.entity_id, variables, None
+            )
 
         if self.device_class not in {
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
         }:
             self._attr_native_value = value
-            self._process_manual_data(raw_value)
+            self._process_manual_data(variables)
             return
 
         self._attr_native_value = async_parse_date_datetime(
             value, self.entity_id, self.device_class
         )
-        self._process_manual_data(raw_value)
-        self.async_write_ha_state()
+        self._process_manual_data(variables)
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         available1 = CoordinatorEntity.available.fget(self)  # type: ignore[attr-defined]
         available2 = ManualTriggerEntity.available.fget(self)  # type: ignore[attr-defined]
-        return bool(available1 and available2)
+        return bool(available1 and available2 and self._attr_available)
 
     @callback
     def _handle_coordinator_update(self) -> None:

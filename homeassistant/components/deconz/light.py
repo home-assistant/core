@@ -2,24 +2,25 @@
 
 from __future__ import annotations
 
-from typing import Any, TypedDict, TypeVar
+from typing import Any, TypedDict, cast
 
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.interfaces.lights import LightHandler
-from pydeconz.models import ResourceType
 from pydeconz.models.event import EventType
-from pydeconz.models.group import Group
+from pydeconz.models.group import Group, TypedGroupAction
 from pydeconz.models.light.light import Light, LightAlert, LightColorMode, LightEffect
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    DOMAIN,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
+    DOMAIN as LIGHT_DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
@@ -27,21 +28,39 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import color_hs_to_xy
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.color import (
+    color_hs_to_xy,
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+)
 
+from . import DeconzConfigEntry
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 DECONZ_GROUP = "is_deconz_group"
 EFFECT_TO_DECONZ = {
     EFFECT_COLORLOOP: LightEffect.COLOR_LOOP,
-    "None": LightEffect.NONE,
+    "none": LightEffect.NONE,
+    # Specific to Philips Hue
+    "candle": LightEffect.CANDLE,
+    "cosmos": LightEffect.COSMOS,
+    "enchant": LightEffect.ENCHANT,
+    "fire": LightEffect.FIRE,
+    "fireplace": LightEffect.FIREPLACE,
+    "glisten": LightEffect.GLISTEN,
+    "loop": LightEffect.LOOP,
+    "opal": LightEffect.OPAL,
+    "prism": LightEffect.PRISM,
+    "sparkle": LightEffect.SPARKLE,
+    "sunbeam": LightEffect.SUNBEAM,
+    "sunrise": LightEffect.SUNRISE,
+    "sunset": LightEffect.SUNSET,
+    "underwater": LightEffect.UNDERWATER,
     # Specific to Lidl christmas light
     "carnival": LightEffect.CARNIVAL,
     "collide": LightEffect.COLLIDE,
@@ -88,8 +107,6 @@ XMAS_LIGHT_EFFECTS = [
     "waves",
 ]
 
-_LightDeviceT = TypeVar("_LightDeviceT", bound=Group | Light)
-
 
 class SetStateAttributes(TypedDict, total=False):
     """Attributes available with set state call."""
@@ -105,25 +122,31 @@ class SetStateAttributes(TypedDict, total=False):
     xy: tuple[float, float]
 
 
+def update_color_state(
+    group: Group, lights: list[Light], override: bool = False
+) -> None:
+    """Sync group color state with light."""
+    data = {
+        attribute: light_attribute
+        for light in lights
+        for attribute in ("bri", "ct", "hue", "sat", "xy", "colormode", "effect")
+        if (light_attribute := light.raw["state"].get(attribute)) is not None
+    }
+
+    if override:
+        group.raw["action"] = cast(TypedGroupAction, data)
+    else:
+        group.update(cast(dict[str, dict[str, Any]], {"action": data}))
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DeconzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ lights and groups from a config entry."""
-    hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
-
-    entity_registry = er.async_get(hass)
-
-    # On/Off Output should be switch not light 2022.5
-    for light in hub.api.lights.lights.values():
-        if light.type == ResourceType.ON_OFF_OUTPUT.value and (
-            entity_id := entity_registry.async_get_entity_id(
-                DOMAIN, DECONZ_DOMAIN, light.unique_id
-            )
-        ):
-            entity_registry.async_remove(entity_id)
+    hub = config_entry.runtime_data
+    hub.entities[LIGHT_DOMAIN] = set()
 
     @callback
     def async_add_light(_: EventType, light_id: str) -> None:
@@ -148,11 +171,12 @@ async def async_setup_entry(
         if (group := hub.api.groups[group_id]) and not group.lights:
             return
 
-        first = True
-        for light_id in group.lights:
-            if (light := hub.api.lights.lights.get(light_id)) and light.reachable:
-                group.update_color_state(light, update_all_attributes=first)
-                first = False
+        lights = [
+            light
+            for light_id in group.lights
+            if (light := hub.api.lights.lights.get(light_id)) and light.reachable
+        ]
+        update_color_state(group, lights, True)
 
         async_add_entities([DeconzGroup(group, hub)])
 
@@ -162,11 +186,15 @@ async def async_setup_entry(
     )
 
 
-class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
+class DeconzBaseLight[_LightDeviceT: Group | Light](
+    DeconzDevice[_LightDeviceT], LightEntity
+):
     """Representation of a deCONZ light."""
 
-    TYPE = DOMAIN
+    TYPE = LIGHT_DOMAIN
     _attr_color_mode = ColorMode.UNKNOWN
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
 
     def __init__(self, device: _LightDeviceT, hub: DeconzHub) -> None:
         """Set up light."""
@@ -203,8 +231,17 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
         if device.effect is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT
             self._attr_effect_list = [EFFECT_COLORLOOP]
-            if device.model_id in ("HG06467", "TS0601"):
-                self._attr_effect_list = XMAS_LIGHT_EFFECTS
+
+            # For lights that report supported effects.
+            if isinstance(device, Light):
+                if device.supported_effects is not None:
+                    self._attr_effect_list = [
+                        EFFECT_TO_DECONZ[el]
+                        for el in device.supported_effects
+                        if el in EFFECT_TO_DECONZ
+                    ]
+                if device.model_id in ("HG06467", "TS0601"):
+                    self._attr_effect_list = XMAS_LIGHT_EFFECTS
 
     @property
     def color_mode(self) -> str | None:
@@ -227,9 +264,11 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
         return self._device.brightness
 
     @property
-    def color_temp(self) -> int | None:
+    def color_temp_kelvin(self) -> int | None:
         """Return the CT color value."""
-        return self._device.color_temp
+        if self._device.color_temp is None or self._device.color_temp == 0:
+            return None
+        return color_temperature_mired_to_kelvin(self._device.color_temp)
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -255,8 +294,10 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             data["brightness"] = kwargs[ATTR_BRIGHTNESS]
 
-        if ATTR_COLOR_TEMP in kwargs:
-            data["color_temperature"] = kwargs[ATTR_COLOR_TEMP]
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            data["color_temperature"] = color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
 
         if ATTR_HS_COLOR in kwargs:
             if ColorMode.XY in self._attr_supported_color_modes:
@@ -309,14 +350,18 @@ class DeconzLight(DeconzBaseLight[Light]):
     """Representation of a deCONZ light."""
 
     @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return self._device.max_color_temp or super().max_mireds
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
+        if max_color_temp_mireds := self._device.max_color_temp:
+            return color_temperature_mired_to_kelvin(max_color_temp_mireds)
+        return super().min_color_temp_kelvin
 
     @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return self._device.min_color_temp or super().min_mireds
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
+        if min_color_temp_mireds := self._device.min_color_temp:
+            return color_temperature_mired_to_kelvin(min_color_temp_mireds)
+        return super().max_color_temp_kelvin
 
     @callback
     def async_update_callback(self) -> None:
@@ -326,7 +371,7 @@ class DeconzLight(DeconzBaseLight[Light]):
         if self._device.reachable and "attr" not in self._device.changed_keys:
             for group in self.hub.api.groups.values():
                 if self._device.resource_id in group.lights:
-                    group.update_color_state(self._device)
+                    update_color_state(group, [self._device])
 
 
 class DeconzGroup(DeconzBaseLight[Group]):

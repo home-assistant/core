@@ -22,10 +22,16 @@ async def setup_homeassistant(hass: HomeAssistant):
 
 
 @pytest.fixture
-async def disable_platforms(hass: HomeAssistant) -> None:
+def disable_platforms(hass: HomeAssistant) -> None:
     """Disable platforms to speed up tests."""
-    with patch(
-        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
-        [],
+    with (
+        patch(
+            "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+            [],
+        ),
+        patch(
+            "homeassistant.components.demo.COMPONENTS_WITH_DEMO_PLATFORM",
+            [],
+        ),
     ):
         yield

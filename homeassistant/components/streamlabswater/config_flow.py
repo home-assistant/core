@@ -41,7 +41,7 @@ class StreamlabsConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input[CONF_API_KEY])
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -56,19 +56,6 @@ class StreamlabsConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Import the yaml config."""
-        self._async_abort_entries_match(user_input)
-        try:
-            await validate_input(self.hass, user_input[CONF_API_KEY])
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-
-        return self.async_create_entry(title="Streamlabs", data=user_input)
 
 
 class CannotConnect(HomeAssistantError):

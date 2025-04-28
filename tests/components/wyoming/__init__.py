@@ -8,7 +8,11 @@ from wyoming.info import (
     AsrModel,
     AsrProgram,
     Attribution,
+    HandleModel,
+    HandleProgram,
     Info,
+    IntentModel,
+    IntentProgram,
     Satellite,
     TtsProgram,
     TtsVoice,
@@ -87,6 +91,48 @@ WAKE_WORD_INFO = Info(
         )
     ]
 )
+INTENT_INFO = Info(
+    intent=[
+        IntentProgram(
+            name="Test Intent",
+            description="Test Intent",
+            installed=True,
+            attribution=TEST_ATTR,
+            models=[
+                IntentModel(
+                    name="Test Model",
+                    description="Test Model",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US"],
+                    version=None,
+                )
+            ],
+            version=None,
+        )
+    ]
+)
+HANDLE_INFO = Info(
+    handle=[
+        HandleProgram(
+            name="Test Handle",
+            description="Test Handle",
+            installed=True,
+            attribution=TEST_ATTR,
+            models=[
+                HandleModel(
+                    name="Test Model",
+                    description="Test Model",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US"],
+                    version=None,
+                )
+            ],
+            version=None,
+        )
+    ]
+)
 SATELLITE_INFO = Info(
     satellite=Satellite(
         name="Test Satellite",
@@ -144,13 +190,16 @@ async def reload_satellite(
     hass: HomeAssistant, config_entry_id: str
 ) -> SatelliteDevice:
     """Reload config entry with satellite info and returns new device."""
-    with patch(
-        "homeassistant.components.wyoming.data.load_wyoming_info",
-        return_value=SATELLITE_INFO,
-    ), patch(
-        "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
-    ) as _run_mock:
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.WyomingAssistSatellite.run"
+        ) as _run_mock,
+    ):
         # _run_mock: satellite task does not actually run
         await hass.config_entries.async_reload(config_entry_id)
 
-    return hass.data[DOMAIN][config_entry_id].satellite.device
+    return hass.data[DOMAIN][config_entry_id].device

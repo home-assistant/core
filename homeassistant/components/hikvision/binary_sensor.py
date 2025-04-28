@@ -9,7 +9,7 @@ from pyhik.hikvision import HikCamera
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -27,7 +27,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -74,7 +74,7 @@ CUSTOMIZE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,

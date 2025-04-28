@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 import voluptuous as vol
 
@@ -46,9 +45,13 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.reload import async_integration_yaml_config
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -76,6 +79,16 @@ from .const import (
     CONF_FAN_MODE_TOP,
     CONF_FAN_MODE_VALUES,
     CONF_FANS,
+    CONF_HVAC_ACTION_COOLING,
+    CONF_HVAC_ACTION_DEFROSTING,
+    CONF_HVAC_ACTION_DRYING,
+    CONF_HVAC_ACTION_FAN,
+    CONF_HVAC_ACTION_HEATING,
+    CONF_HVAC_ACTION_IDLE,
+    CONF_HVAC_ACTION_OFF,
+    CONF_HVAC_ACTION_PREHEATING,
+    CONF_HVAC_ACTION_REGISTER,
+    CONF_HVAC_ACTION_VALUES,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -85,9 +98,11 @@ from .const import (
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_OFF_VALUE,
+    CONF_HVAC_ON_VALUE,
+    CONF_HVAC_ONOFF_COIL,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
     CONF_MAX_VALUE,
     CONF_MIN_TEMP,
@@ -96,7 +111,6 @@ from .const import (
     CONF_NAN_VALUE,
     CONF_PARITY,
     CONF_PRECISION,
-    CONF_RETRIES,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_CLOSED,
@@ -113,6 +127,13 @@ from .const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_SWING_MODE_REGISTER,
+    CONF_SWING_MODE_SWING_BOTH,
+    CONF_SWING_MODE_SWING_HORIZ,
+    CONF_SWING_MODE_SWING_OFF,
+    CONF_SWING_MODE_SWING_ON,
+    CONF_SWING_MODE_SWING_VERT,
+    CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
@@ -121,6 +142,8 @@ from .const import (
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
     DEFAULT_HUB,
+    DEFAULT_HVAC_OFF_VALUE,
+    DEFAULT_HVAC_ON_VALUE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
@@ -130,10 +153,10 @@ from .const import (
     UDP,
     DataType,
 )
-from .modbus import ModbusHub, async_modbus_setup
+from .modbus import DATA_MODBUS_HUBS, ModbusHub, async_modbus_setup
 from .validators import (
-    check_hvac_target_temp_registers,
     duplicate_fan_mode_validator,
+    duplicate_swing_mode_validator,
     hvac_fixedsize_reglist_validator,
     nan_validator,
     register_int_list_validator,
@@ -155,7 +178,6 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
-        vol.Optional(CONF_LAZY_ERROR): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -227,8 +249,10 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                         CALL_TYPE_X_REGISTER_HOLDINGS,
                     ]
                 ),
-                vol.Optional(CONF_STATE_OFF): cv.positive_int,
-                vol.Optional(CONF_STATE_ON): cv.positive_int,
+                vol.Optional(CONF_STATE_OFF): vol.All(
+                    cv.ensure_list, [cv.positive_int]
+                ),
+                vol.Optional(CONF_STATE_ON): vol.All(cv.ensure_list, [cv.positive_int]),
                 vol.Optional(CONF_DELAY, default=0): cv.positive_int,
             }
         ),
@@ -245,7 +269,14 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(float),
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
-            vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
+            vol.Exclusive(CONF_HVAC_ONOFF_COIL, "hvac_onoff_type"): cv.positive_int,
+            vol.Exclusive(CONF_HVAC_ONOFF_REGISTER, "hvac_onoff_type"): cv.positive_int,
+            vol.Optional(
+                CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE
+            ): cv.positive_int,
+            vol.Optional(
+                CONF_HVAC_OFF_VALUE, default=DEFAULT_HVAC_OFF_VALUE
+            ): cv.positive_int,
             vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
                 {
@@ -276,6 +307,45 @@ CLIMATE_SCHEMA = vol.All(
                     vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                 }
             ),
+            vol.Optional(CONF_HVAC_ACTION_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_ACTION_VALUES: {
+                        vol.Optional(CONF_HVAC_ACTION_COOLING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_DEFROSTING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_DRYING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_FAN): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_HEATING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_IDLE): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_PREHEATING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                    },
+                    vol.Optional(
+                        CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING
+                    ): vol.In(
+                        [
+                            CALL_TYPE_REGISTER_HOLDING,
+                            CALL_TYPE_REGISTER_INPUT,
+                        ]
+                    ),
+                }
+            ),
             vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
                 vol.All(
                     {
@@ -296,9 +366,23 @@ CLIMATE_SCHEMA = vol.All(
                     duplicate_fan_mode_validator,
                 ),
             ),
+            vol.Optional(CONF_SWING_MODE_REGISTER): vol.Maybe(
+                vol.All(
+                    {
+                        vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        CONF_SWING_MODE_VALUES: {
+                            vol.Optional(CONF_SWING_MODE_SWING_ON): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_OFF): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_HORIZ): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_VERT): cv.positive_int,
+                            vol.Optional(CONF_SWING_MODE_SWING_BOTH): cv.positive_int,
+                        },
+                    },
+                    duplicate_swing_mode_validator,
+                )
+            ),
         },
     ),
-    check_hvac_target_temp_registers,
 )
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
@@ -372,7 +456,6 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
-        vol.Optional(CONF_RETRIES): cv.positive_int,
         vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
@@ -425,22 +508,33 @@ CONFIG_SCHEMA = vol.Schema(
 
 def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
     """Return modbus hub with name."""
-    return cast(ModbusHub, hass.data[DOMAIN][name])
+    return hass.data[DATA_MODBUS_HUBS][name]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
     if DOMAIN not in config:
         return True
-    return await async_modbus_setup(
-        hass,
-        config,
-    )
 
+    async def _reload_config(call: Event | ServiceCall) -> None:
+        """Reload Modbus."""
+        if DATA_MODBUS_HUBS not in hass.data:
+            _LOGGER.error("Modbus cannot reload, because it was never loaded")
+            return
+        hubs = hass.data[DATA_MODBUS_HUBS]
+        for hub in hubs.values():
+            await hub.async_close()
+        reset_platforms = async_get_platforms(hass, DOMAIN)
+        for reset_platform in reset_platforms:
+            _LOGGER.debug("Reload modbus resetting platform: %s", reset_platform.domain)
+            await reset_platform.async_reset()
+        reload_config = await async_integration_yaml_config(hass, DOMAIN)
+        if not reload_config:
+            _LOGGER.debug("Modbus not present anymore")
+            return
+        _LOGGER.debug("Modbus reloading")
+        await async_modbus_setup(hass, reload_config)
 
-async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
-    """Release modbus resources."""
-    _LOGGER.info("Modbus reloading")
-    hubs = hass.data[DOMAIN]
-    for name in hubs:
-        await hubs[name].async_close()
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
+    return await async_modbus_setup(hass, config)

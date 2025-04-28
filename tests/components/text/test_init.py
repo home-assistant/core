@@ -12,7 +12,6 @@ from homeassistant.components.text import (
     ATTR_VALUE,
     DOMAIN,
     SERVICE_SET_VALUE,
-    TextEntity,
     TextMode,
     _async_set_value,
 )
@@ -21,30 +20,13 @@ from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 
+from .common import MockRestoreText, MockTextEntity
+
 from tests.common import (
     async_mock_restore_state_shutdown_restart,
     mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
 )
-
-
-class MockTextEntity(TextEntity):
-    """Mock text device to use in tests."""
-
-    def __init__(
-        self, native_value="test", native_min=None, native_max=None, pattern=None
-    ):
-        """Initialize mock text entity."""
-        self._attr_native_value = native_value
-        if native_min is not None:
-            self._attr_native_min = native_min
-        if native_max is not None:
-            self._attr_native_max = native_max
-        if pattern is not None:
-            self._attr_pattern = pattern
-
-    async def async_set_value(self, value: str) -> None:
-        """Set the value of the text."""
-        self._attr_native_value = value
 
 
 async def test_text_default(hass: HomeAssistant) -> None:
@@ -82,21 +64,22 @@ async def test_text_set_value(hass: HomeAssistant) -> None:
 
     with pytest.raises(ValueError):
         await _async_set_value(
-            text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: ""})
+            text, ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: ""})
         )
 
     with pytest.raises(ValueError):
         await _async_set_value(
-            text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "hello world!"})
+            text,
+            ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "hello world!"}),
         )
 
     with pytest.raises(ValueError):
         await _async_set_value(
-            text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "HELLO"})
+            text, ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "HELLO"})
         )
 
     await _async_set_value(
-        text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "test2"})
+        text, ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "test2"})
     )
 
     assert text.state == "test2"
@@ -126,21 +109,16 @@ RESTORE_DATA = {
 async def test_restore_number_save_state(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    enable_custom_integrations: None,
 ) -> None:
     """Test RestoreNumber."""
-    platform = getattr(hass.components, "test.text")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockRestoreText(
-            name="Test",
-            native_max=5,
-            native_min=1,
-            native_value="Hello",
-        )
+    entity0 = MockRestoreText(
+        name="Test",
+        native_max=5,
+        native_min=1,
+        native_value="Hello",
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, "text", {"text": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -167,7 +145,6 @@ async def test_restore_number_save_state(
 )
 async def test_restore_number_restore_state(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
     hass_storage: dict[str, Any],
     native_max,
     native_min,
@@ -178,18 +155,14 @@ async def test_restore_number_restore_state(
     """Test RestoreNumber."""
     mock_restore_cache_with_extra_data(hass, ((State("text.test", ""), extra_data),))
 
-    platform = getattr(hass.components, "test.text")
-    platform.init(empty=True)
-    platform.ENTITIES.append(
-        platform.MockRestoreText(
-            native_max=native_max,
-            native_min=native_min,
-            name="Test",
-            native_value=None,
-        )
+    entity0 = MockRestoreText(
+        native_max=native_max,
+        native_min=native_min,
+        name="Test",
+        native_value=None,
     )
+    setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    entity0 = platform.ENTITIES[0]
     assert await async_setup_component(hass, "text", {"text": {"platform": "test"}})
     await hass.async_block_till_done()
 

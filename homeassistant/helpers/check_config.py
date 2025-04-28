@@ -8,12 +8,12 @@ import os
 from pathlib import Path
 from typing import NamedTuple, Self
 
+from annotatedyaml import loader as yaml_loader
 import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_PACKAGES,
-    CORE_CONFIG_SCHEMA,
     YAML_CONFIG_FILE,
     config_per_platform,
     extract_domain_configs,
@@ -22,14 +22,14 @@ from homeassistant.config import (  # type: ignore[attr-defined]
     load_yaml_config_file,
     merge_packages_config,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core_config import CORE_CONFIG_SCHEMA
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.requirements import (
     RequirementsNotFound,
     async_clear_install_history,
     async_get_integration_with_requirements,
 )
-import homeassistant.util.yaml.loader as yaml_loader
 
 from . import config_validation as cv
 from .typing import ConfigType
@@ -157,10 +157,10 @@ async def async_check_ha_config_file(  # noqa: C901
         return result.add_error(f"Error loading {config_path}: {err}")
 
     # Extract and validate core [homeassistant] config
-    core_config = config.pop(HA_DOMAIN, {})
+    core_config = config.pop(HOMEASSISTANT_DOMAIN, {})
     try:
         core_config = CORE_CONFIG_SCHEMA(core_config)
-        result[HA_DOMAIN] = core_config
+        result[HOMEASSISTANT_DOMAIN] = core_config
 
         # Merge packages
         await merge_packages_config(
@@ -168,8 +168,8 @@ async def async_check_ha_config_file(  # noqa: C901
         )
     except vol.Invalid as err:
         result.add_error(
-            format_schema_error(hass, err, HA_DOMAIN, core_config),
-            HA_DOMAIN,
+            format_schema_error(hass, err, HOMEASSISTANT_DOMAIN, core_config),
+            HOMEASSISTANT_DOMAIN,
             core_config,
         )
         core_config = {}
@@ -198,15 +198,16 @@ async def async_check_ha_config_file(  # noqa: C901
 
         # Check if the integration has a custom config validator
         config_validator = None
-        try:
-            config_validator = await integration.async_get_platform("config")
-        except ImportError as err:
-            # Filter out import error of the config platform.
-            # If the config platform contains bad imports, make sure
-            # that still fails.
-            if err.name != f"{integration.pkg_path}.config":
-                result.add_error(f"Error importing config platform {domain}: {err}")
-                continue
+        if integration.platforms_exists(("config",)):
+            try:
+                config_validator = await integration.async_get_platform("config")
+            except ImportError as err:
+                # Filter out import error of the config platform.
+                # If the config platform contains bad imports, make sure
+                # that still fails.
+                if err.name != f"{integration.pkg_path}.config":
+                    result.add_error(f"Error importing config platform {domain}: {err}")
+                    continue
 
         if config_validator is not None and hasattr(
             config_validator, "async_validate_config"
@@ -219,7 +220,7 @@ async def async_check_ha_config_file(  # noqa: C901
             except (vol.Invalid, HomeAssistantError) as ex:
                 _comp_error(ex, domain, config, config[domain])
                 continue
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:
                 logging.getLogger(__name__).exception(
                     "Unexpected error validating config"
                 )
@@ -233,7 +234,7 @@ async def async_check_ha_config_file(  # noqa: C901
         config_schema = getattr(component, "CONFIG_SCHEMA", None)
         if config_schema is not None:
             try:
-                validated_config = config_schema(config)
+                validated_config = await cv.async_validate(hass, config_schema, config)
                 # Don't fail if the validator removed the domain from the config
                 if domain in validated_config:
                     result[domain] = validated_config[domain]
@@ -254,7 +255,9 @@ async def async_check_ha_config_file(  # noqa: C901
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
-                p_validated = component_platform_schema(p_config)
+                p_validated = await cv.async_validate(
+                    hass, component_platform_schema, p_config
+                )
             except vol.Invalid as ex:
                 _comp_error(ex, domain, p_config, p_config)
                 continue

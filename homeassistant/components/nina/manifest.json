@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/nina",
   "iot_class": "cloud_polling",
   "loggers": ["pynina"],
-  "requirements": ["PyNINA==0.3.3"]
+  "requirements": ["PyNINA==0.3.5"],
+  "single_config_entry": true
 }

@@ -20,7 +20,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import PLATFORMS_TO_TEST, STATE_MAP
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -33,7 +33,7 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -46,7 +46,7 @@ async def test_config_flow(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ceiling"
     assert result["data"] == {}
     assert result["options"] == {
@@ -75,23 +75,23 @@ async def test_config_flow(
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_config_flow_registered_entity(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     target_domain: Platform,
     mock_setup_entry: AsyncMock,
     hidden_by_before: er.RegistryEntryHider | None,
     hidden_by_after: er.RegistryEntryHider,
 ) -> None:
     """Test the config flow hides a registered entity."""
-    registry = er.async_get(hass)
-    switch_entity_entry = registry.async_get_or_create(
+    switch_entity_entry = entity_registry.async_get_or_create(
         "switch", "test", "unique", suggested_object_id="ceiling"
     )
     assert switch_entity_entry.entity_id == "switch.ceiling"
-    registry.async_update_entity("switch.ceiling", hidden_by=hidden_by_before)
+    entity_registry.async_update_entity("switch.ceiling", hidden_by=hidden_by_before)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -104,7 +104,7 @@ async def test_config_flow_registered_entity(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ceiling"
     assert result["data"] == {}
     assert result["options"] == {
@@ -122,7 +122,7 @@ async def test_config_flow_registered_entity(
         CONF_TARGET_DOMAIN: target_domain,
     }
 
-    switch_entity_entry = registry.async_get("switch.ceiling")
+    switch_entity_entry = entity_registry.async_get("switch.ceiling")
     assert switch_entity_entry.hidden_by == hidden_by_after
 
 
@@ -158,11 +158,9 @@ async def test_options(
     assert config_entry
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    schema = result["data_schema"].schema
-    schema_key = next(k for k in schema if k == CONF_INVERT)
-    assert schema_key.description["suggested_value"] is True
+    assert get_schema_suggested_value(result["data_schema"].schema, CONF_INVERT) is True
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -170,7 +168,7 @@ async def test_options(
             CONF_INVERT: False,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_ENTITY_ID: "switch.ceiling",
         CONF_INVERT: False,

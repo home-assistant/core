@@ -1,0 +1,133 @@
+{
+  "serial_number": "1234",
+  "firmware": "7.6.175",
+  "part_number": "123456789",
+  "envoy_model": "Envoy, phases: 1, phase mode: three, total-consumption CT, production CT",
+  "supported_features": 1217,
+  "phase_mode": "three",
+  "phase_count": 1,
+  "active_phase_count": 0,
+  "ct_meter_count": 2,
+  "consumption_meter_type": "total-consumption",
+  "production_meter_type": "production",
+  "storage_meter_type": null,
+  "data": {
+    "encharge_inventory": null,
+    "encharge_power": null,
+    "encharge_aggregate": null,
+    "enpower": null,
+    "system_consumption": null,
+    "system_net_consumption": {
+      "watt_hours_lifetime": 4321,
+      "watt_hours_last_7_days": -1,
+      "watt_hours_today": -1,
+      "watts_now": 2341
+    },
+    "system_production": {
+      "watt_hours_lifetime": 1234,
+      "watt_hours_last_7_days": 1234,
+      "watt_hours_today": 1234,
+      "watts_now": 1234
+    },
+    "system_consumption_phases": null,
+    "system_net_consumption_phases": null,
+    "system_production_phases": null,
+    "ctmeter_production": {
+      "eid": "100000010",
+      "timestamp": 1708006110,
+      "energy_delivered": 11234,
+      "energy_received": 12345,
+      "active_power": 100,
+      "power_factor": 0.11,
+      "voltage": 111,
+      "current": 0.2,
+      "frequency": 50.1,
+      "state": "enabled",
+      "measurement_type": "production",
+      "metering_status": "normal",
+      "status_flags": ["production-imbalance", "power-on-unused-phase"]
+    },
+    "ctmeter_consumption": {
+      "eid": "100000020",
+      "timestamp": 1708006120,
+      "energy_delivered": 21234,
+      "energy_received": 22345,
+      "active_power": 101,
+      "power_factor": 0.21,
+      "voltage": 112,
+      "current": 0.3,
+      "frequency": 50.2,
+      "state": "enabled",
+      "measurement_type": "total-consumption",
+      "metering_status": "normal",
+      "status_flags": []
+    },
+    "ctmeter_storage": null,
+    "ctmeter_production_phases": null,
+    "ctmeter_consumption_phases": null,
+    "ctmeter_storage_phases": null,
+    "dry_contact_status": {},
+    "dry_contact_settings": {},
+    "inverters": {
+      "1": {
+        "serial_number": "1",
+        "last_report_date": 1,
+        "last_report_watts": 1,
+        "max_report_watts": 1
+      }
+    },
+    "tariff": {
+      "currency": {
+        "code": "EUR"
+      },
+      "logger": "mylogger",
+      "date": "1695744220",
+      "storage_settings": {
+        "mode": "self-consumption",
+        "operation_mode_sub_type": "",
+        "reserved_soc": 15.0,
+        "very_low_soc": 5,
+        "charge_from_grid": true,
+        "date": "1695598084",
+        "opt_schedules": true
+      },
+      "single_rate": {
+        "rate": 0.0,
+        "sell": 0.0
+      },
+      "seasons": [
+        {
+          "id": "season_1",
+          "start": "1/1",
+          "days": [
+            {
+              "id": "all_days",
+              "days": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+              "must_charge_start": 444,
+              "must_charge_duration": 35,
+              "must_charge_mode": "CG",
+              "enable_discharge_to_grid": true,
+              "periods": [
+                {
+                  "id": "period_1",
+                  "start": 480,
+                  "rate": 0.1898
+                },
+                {
+                  "id": "filler",
+                  "start": 1320,
+                  "rate": 0.1034
+                }
+              ]
+            }
+          ],
+          "tiers": []
+        }
+      ],
+      "seasons_sell": []
+    },
+    "raw": {
+      "varies_by": "firmware_version"
+    }
+  }
+}

@@ -93,11 +93,9 @@ class LocalSource(MediaSource):
         else:
             source_dir_id, location = None, ""
 
-        result = await self.hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             self._browse_media, source_dir_id, location
         )
-
-        return result
 
     def _browse_media(
         self, source_dir_id: str | None, location: str
@@ -227,7 +225,7 @@ class LocalMediaView(http.HomeAssistantView):
         media_path = self.source.async_full_path(source_dir_id, location)
 
         # Check that the file exists
-        if not media_path.is_file():
+        if not self.hass.async_add_executor_job(media_path.is_file):
             raise web.HTTPNotFound
 
         # Check that it's a media file
@@ -259,7 +257,7 @@ class UploadMediaView(http.HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         """Handle upload."""
         # Increase max payload
-        request._client_max_size = MAX_UPLOAD_SIZE  # pylint: disable=protected-access
+        request._client_max_size = MAX_UPLOAD_SIZE  # noqa: SLF001
 
         try:
             data = self.schema(dict(await request.post()))

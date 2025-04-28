@@ -5,21 +5,19 @@ from typing import Any
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DOMAIN,
+    DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LutronCasetaDeviceUpdatableEntity
-from .const import DOMAIN as CASETA_DOMAIN
-from .models import LutronCasetaData
+from .entity import LutronCasetaUpdatableEntity
+from .models import LutronCasetaConfigEntry
 
 
-class LutronCasetaShade(LutronCasetaDeviceUpdatableEntity, CoverEntity):
+class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
     """Representation of a Lutron shade with open/close functionality."""
 
     _attr_supported_features = (
@@ -61,7 +59,7 @@ class LutronCasetaShade(LutronCasetaDeviceUpdatableEntity, CoverEntity):
         await self._smartbridge.set_value(self.device_id, kwargs[ATTR_POSITION])
 
 
-class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
+class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
     """Representation of a Lutron tilt only blind."""
 
     _attr_supported_features = (
@@ -96,11 +94,12 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the blind to a specific tilt."""
-        self._smartbridge.set_tilt(self.device_id, kwargs[ATTR_TILT_POSITION])
+        await self._smartbridge.set_tilt(self.device_id, kwargs[ATTR_TILT_POSITION])
 
 
 PYLUTRON_TYPE_TO_CLASSES = {
     "SerenaTiltOnlyWoodBlind": LutronCasetaTiltOnlyBlind,
+    "Tilt": LutronCasetaTiltOnlyBlind,
     "SerenaHoneycombShade": LutronCasetaShade,
     "SerenaRollerShade": LutronCasetaShade,
     "TriathlonHoneycombShade": LutronCasetaShade,
@@ -109,22 +108,23 @@ PYLUTRON_TYPE_TO_CLASSES = {
     "QsWirelessHorizontalSheerBlind": LutronCasetaShade,
     "Shade": LutronCasetaShade,
     "PalladiomWireFreeShade": LutronCasetaShade,
+    "SerenaEssentialsRollerShade": LutronCasetaShade,
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LutronCasetaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta cover platform.
 
     Adds shades from the Caseta bridge associated with the config_entry as
     cover entities.
     """
-    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     bridge = data.bridge
-    cover_devices = bridge.get_devices_by_domain(DOMAIN)
+    cover_devices = bridge.get_devices_by_domain(COVER_DOMAIN)
     async_add_entities(
         # default to standard LutronCasetaCover type if the pylutron type is not yet mapped
         PYLUTRON_TYPE_TO_CLASSES.get(cover_device["type"], LutronCasetaShade)(

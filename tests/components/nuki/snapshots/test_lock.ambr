@@ -1,0 +1,97 @@
+# serializer version: 1
+# name: test_locks[lock.community_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.community_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'nuki',
+    'previous_unique_id': None,
+    'supported_features': <LockEntityFeature: 1>,
+    'translation_key': 'nuki_lock',
+    'unique_id': 2,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_locks[lock.community_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Community door',
+      'supported_features': <LockEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'lock.community_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unlocked',
+  })
+# ---
+# name: test_locks[lock.home-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.home',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'nuki',
+    'previous_unique_id': None,
+    'supported_features': <LockEntityFeature: 1>,
+    'translation_key': 'nuki_lock',
+    'unique_id': 1,
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_locks[lock.home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Home',
+      'supported_features': <LockEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'lock.home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'locked',
+  })
+# ---

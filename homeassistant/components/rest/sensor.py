@@ -5,13 +5,14 @@ from __future__ import annotations
 import logging
 import ssl
 from typing import Any
+from xml.parsers.expat import ExpatError
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
 )
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
@@ -28,13 +29,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     ManualTriggerSensorEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -48,10 +50,9 @@ from .util import parse_json_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **SENSOR_SCHEMA})
-
 PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE), PLATFORM_SCHEMA
+    SENSOR_PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **SENSOR_SCHEMA}),
+    cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
 )
 
 TRIGGER_ENTITY_OPTIONS = (
@@ -138,9 +139,7 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
             config.get(CONF_RESOURCE_TEMPLATE),
             config[CONF_FORCE_UPDATE],
         )
-        self._value_template = config.get(CONF_VALUE_TEMPLATE)
-        if (value_template := self._value_template) is not None:
-            value_template.hass = hass
+        self._value_template: ValueTemplate | None = config.get(CONF_VALUE_TEMPLATE)
         self._json_attrs = config.get(CONF_JSON_ATTRS)
         self._json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
         self._attr_extra_state_attributes = {}
@@ -159,18 +158,27 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
 
     def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
-        value = self.rest.data_without_xml()
+        try:
+            value = self.rest.data_without_xml()
+        except ExpatError as err:
+            _LOGGER.warning(
+                "REST xml result could not be parsed and converted to JSON: %s", err
+            )
+            value = self.rest.data
+
+        variables = self._template_variables_with_value(value)
+        if not self._render_availability_template(variables):
+            self.async_write_ha_state()
+            return
 
         if self._json_attrs:
             self._attr_extra_state_attributes = parse_json_attributes(
                 value, self._json_attrs, self._json_attrs_path
             )
 
-        raw_value = value
-
         if value is not None and self._value_template is not None:
-            value = self._value_template.async_render_with_possible_json_value(
-                value, None
+            value = self._value_template.async_render_as_value_template(
+                self.entity_id, variables, None
             )
 
         if value is None or self.device_class not in (
@@ -178,7 +186,7 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
             SensorDeviceClass.TIMESTAMP,
         ):
             self._attr_native_value = value
-            self._process_manual_data(raw_value)
+            self._process_manual_data(variables)
             self.async_write_ha_state()
             return
 
@@ -186,5 +194,5 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
             value, self.entity_id, self.device_class
         )
 
-        self._process_manual_data(raw_value)
+        self._process_manual_data(variables)
         self.async_write_ha_state()

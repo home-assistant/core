@@ -14,6 +14,9 @@
       "pick_device": {
         "data": {
           "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "Pick the TP-Link device to add."
         }
       },
       "discovery_confirm": {
@@ -21,10 +24,14 @@
       },
       "user_auth_confirm": {
         "title": "Authenticate",
-        "description": "The device requires authentication, please input your TP-Link credentials below.",
+        "description": "The device requires authentication, please input your TP-Link credentials below. Note, that both e-mail and password are case-sensitive.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Your TP-Link cloud username which is the full email and is case sensitive.",
+          "password": "Your TP-Link cloud password which is case sensitive."
         }
       },
       "discovery_auth_confirm": {
@@ -33,11 +40,11 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::tplink::config::step::user_auth_confirm::data_description::username%]",
+          "password": "[%key:component::tplink::config::step::user_auth_confirm::data_description::password%]"
         }
-      },
-      "reauth": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]"
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
@@ -45,50 +52,329 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::tplink::config::step::user_auth_confirm::data_description::username%]",
+          "password": "[%key:component::tplink::config::step::user_auth_confirm::data_description::password%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure TPLink entry",
+        "description": "Update your configuration for device {mac}",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::tplink::config::step::user::data_description::host%]"
+        }
+      },
+      "camera_auth_confirm": {
+        "title": "Set camera account credentials",
+        "description": "Input device camera account credentials.",
+        "data": {
+          "live_view": "Enable camera live view",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "live_view": "Enabling live view will create the live view camera entity and requires your camera account credentials.",
+          "username": "Your camera account username configured for the device in the Tapo app.",
+          "password": "Your camera account password configured for the device in the Tapo app."
         }
       }
     },
     "error": {
       "cannot_connect": "Connection error: {error}",
-      "invalid_auth": "Invalid authentication: {error}"
+      "invalid_auth": "Unable to authenticate: {error}",
+      "invalid_camera_auth": "Camera stream authentication failed",
+      "cannot_connect_camera": "Unable to access the camera stream, verify that you have set up the camera account: {error}",
+      "camera_creds": "You have to set both username and password"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
+    "binary_sensor": {
+      "humidity_warning": {
+        "name": "Humidity warning"
+      },
+      "temperature_warning": {
+        "name": "Temperature warning"
+      },
+      "overheated": {
+        "name": "Overheated"
+      },
+      "overloaded": {
+        "name": "Overloaded"
+      },
+      "cloud_connection": {
+        "name": "Cloud connection"
+      },
+      "water_alert": {
+        "name": "[%key:component::binary_sensor::entity_component::moisture::name%]",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::moisture::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::moisture::state::on%]"
+        }
+      }
+    },
+    "button": {
+      "test_alarm": {
+        "name": "Test alarm"
+      },
+      "stop_alarm": {
+        "name": "Stop alarm"
+      },
+      "pan_left": {
+        "name": "Pan left"
+      },
+      "pan_right": {
+        "name": "Pan right"
+      },
+      "tilt_up": {
+        "name": "Tilt up"
+      },
+      "tilt_down": {
+        "name": "Tilt down"
+      },
+      "pair": {
+        "name": "Pair new device"
+      },
+      "unpair": {
+        "name": "Unpair device"
+      },
+      "main_brush_reset": {
+        "name": "Reset main brush consumable"
+      },
+      "side_brush_reset": {
+        "name": "Reset side brush consumable"
+      },
+      "sensor_reset": {
+        "name": "Reset sensor consumable"
+      },
+      "filter_reset": {
+        "name": "Reset filter consumable"
+      },
+      "charging_contacts_reset": {
+        "name": "Reset charging contacts consumable"
+      }
+    },
+    "camera": {
+      "live_view": {
+        "name": "Live view"
+      }
+    },
+    "select": {
+      "light_preset": {
+        "name": "Light preset"
+      },
+      "alarm_sound": {
+        "name": "Alarm sound"
+      },
+      "alarm_volume": {
+        "name": "Alarm volume"
+      }
+    },
     "sensor": {
       "current_consumption": {
         "name": "Current consumption"
       },
-      "total_consumption": {
+      "consumption_total": {
         "name": "Total consumption"
       },
-      "today_consumption": {
+      "consumption_today": {
         "name": "Today's consumption"
       },
-      "current_consumption_child": {
-        "name": "{device_name} current consumption"
+      "consumption_this_month": {
+        "name": "This month's consumption"
       },
-      "total_consumption_child": {
-        "name": "{device_name} total consumption"
+      "on_since": {
+        "name": "On since"
       },
-      "today_consumption_child": {
-        "name": "{device_name} today's consumption"
+      "ssid": {
+        "name": "SSID"
       },
-      "current_child": {
-        "name": "{device_name} current"
+      "signal_level": {
+        "name": "Signal level"
       },
-      "voltage_child": {
-        "name": "{device_name} voltage"
+      "device_time": {
+        "name": "Device time"
+      },
+      "water_alert_timestamp": {
+        "name": "Last water leak alert"
+      },
+      "auto_off_at": {
+        "name": "Auto off at"
+      },
+      "report_interval": {
+        "name": "Report interval"
+      },
+      "alarm_source": {
+        "name": "Alarm source"
+      },
+      "clean_area": {
+        "name": "Cleaning area"
+      },
+      "clean_time": {
+        "name": "Cleaning time"
+      },
+      "clean_progress": {
+        "name": "Cleaning progress"
+      },
+      "total_clean_area": {
+        "name": "Total cleaning area"
+      },
+      "total_clean_time": {
+        "name": "Total cleaning time"
+      },
+      "total_clean_count": {
+        "name": "Total cleaning count"
+      },
+      "last_clean_area": {
+        "name": "Last cleaned area"
+      },
+      "last_clean_time": {
+        "name": "Last cleaned time"
+      },
+      "last_clean_timestamp": {
+        "name": "Last clean start"
+      },
+      "main_brush_remaining": {
+        "name": "Main brush remaining"
+      },
+      "main_brush_used": {
+        "name": "Main brush used"
+      },
+      "side_brush_remaining": {
+        "name": "Side brush remaining"
+      },
+      "side_brush_used": {
+        "name": "Side brush used"
+      },
+      "filter_remaining": {
+        "name": "Filter remaining"
+      },
+      "filter_used": {
+        "name": "Filter used"
+      },
+      "sensor_remaining": {
+        "name": "Sensor remaining"
+      },
+      "sensor_used": {
+        "name": "Sensor used"
+      },
+      "charging_contacts_remaining": {
+        "name": "Charging contacts remaining"
+      },
+      "charging_contacts_used": {
+        "name": "Charging contacts used"
+      },
+      "vacuum_error": {
+        "name": "Error",
+        "state": {
+          "ok": "No error",
+          "sidebrushstuck": "Side brush stuck",
+          "mainbrushstuck": "Main brush stuck",
+          "wheelblocked": "Wheel blocked",
+          "trapped": "Unable to move",
+          "trappedcliff": "Unable to move (cliff sensor)",
+          "dustbinremoved": "Missing dust bin",
+          "unabletomove": "Unable to move",
+          "lidarblocked": "Lidar blocked",
+          "unabletofinddock": "Unable to find dock",
+          "batterylow": "Low on battery",
+          "unknowninternal": "Unknown error, report to upstream"
+        }
       }
     },
     "switch": {
       "led": {
         "name": "LED"
+      },
+      "auto_update_enabled": {
+        "name": "Auto update enabled"
+      },
+      "auto_off_enabled": {
+        "name": "Auto off enabled"
+      },
+      "smooth_transitions": {
+        "name": "Smooth transitions"
+      },
+      "fan_sleep_mode": {
+        "name": "Fan sleep mode"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "pir_enabled": {
+        "name": "Motion sensor"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "person_detection": {
+        "name": "Person detection"
+      },
+      "tamper_detection": {
+        "name": "Tamper detection"
+      },
+      "baby_cry_detection": {
+        "name": "Baby cry detection"
+      },
+      "carpet_boost": {
+        "name": "Carpet boost"
       }
+    },
+    "number": {
+      "smooth_transition_on": {
+        "name": "Smooth on"
+      },
+      "smooth_transition_off": {
+        "name": "Smooth off"
+      },
+      "auto_off_minutes": {
+        "name": "Turn off in"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
+      "power_protection_threshold": {
+        "name": "Power protection"
+      },
+      "pan_step": {
+        "name": "Pan degrees"
+      },
+      "tilt_step": {
+        "name": "Tilt degrees"
+      },
+      "clean_count": {
+        "name": "Clean count"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "quiet": "Quiet",
+              "standard": "Standard",
+              "turbo": "Turbo",
+              "max": "Max",
+              "ultra": "Ultra"
+            }
+          }
+        }
+      }
+    }
+  },
+  "device": {
+    "unnamed_device": {
+      "name": "Unnamed {model}"
     }
   },
   "services": {
@@ -183,6 +469,35 @@
           "description": "Random seed."
         }
       }
+    }
+  },
+  "exceptions": {
+    "device_timeout": {
+      "message": "Timeout communicating with the device {func}: {exc}"
+    },
+    "device_error": {
+      "message": "Unable to communicate with the device {func}: {exc}"
+    },
+    "device_authentication": {
+      "message": "Device authentication error {func}: {exc}"
+    },
+    "set_custom_effect": {
+      "message": "Error trying to set custom effect {effect}: {exc}"
+    },
+    "unexpected_device": {
+      "message": "Unexpected device found at {host}; expected {expected}, found {found}"
+    },
+    "unsupported_mode": {
+      "message": "Tried to set unsupported mode: {mode}"
+    },
+    "invalid_alarm_duration": {
+      "message": "Invalid duration {duration} available: 1-{duration_max}s"
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "title": "Detected deprecated {platform} entity usage",
+      "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant."
     }
   }
 }

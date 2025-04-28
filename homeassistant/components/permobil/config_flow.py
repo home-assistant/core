@@ -14,12 +14,11 @@ from mypermobil import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_REGION, CONF_TOKEN, CONF_TTL
 from homeassistant.core import HomeAssistant, async_get_hass
-from homeassistant.helpers import selector
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -158,20 +157,20 @@ class PermobilConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"app_name": "MyPermobil"},
             )
 
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), title=self.data[CONF_EMAIL], data=self.data
+            )
+
         return self.async_create_entry(title=self.data[CONF_EMAIL], data=self.data)
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert reauth_entry
-
         try:
-            email: str = reauth_entry.data[CONF_EMAIL]
-            region: str = reauth_entry.data[CONF_REGION]
+            email: str = entry_data[CONF_EMAIL]
+            region: str = entry_data[CONF_REGION]
             self.p_api.set_email(email)
             self.p_api.set_region(region)
             self.data = {

@@ -13,25 +13,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_timestamp
 
 from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
-    DEFAULT_NAME,
     DOMAIN as DOMAIN_RACHIO,
-    KEY_CONNECTED,
     KEY_CURRENT_STATUS,
     KEY_CUSTOM_CROP,
     KEY_CUSTOM_SHADE,
@@ -67,9 +59,8 @@ from .const import (
     SLOPE_SLIGHT,
     SLOPE_STEEP,
 )
-from .coordinator import RachioUpdateCoordinator
 from .device import RachioPerson
-from .entity import RachioDevice
+from .entity import RachioDevice, RachioHoseTimerEntity
 from .webhooks import (
     SUBTYPE_RAIN_DELAY_OFF,
     SUBTYPE_RAIN_DELAY_ON,
@@ -111,7 +102,7 @@ START_MULTIPLE_ZONES_SCHEMA = vol.Schema(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Rachio switches."""
     zone_entities = []
@@ -204,9 +195,9 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
             for schedule in schedules + flex_schedules
         )
     entities.extend(
-        RachioValve(person, base_station, valve, base_station.coordinator)
+        RachioValve(person, base_station, valve, base_station.status_coordinator)
         for base_station in person.base_stations
-        for valve in base_station.coordinator.data.values()
+        for valve in base_station.status_coordinator.data.values()
     )
     return entities
 
@@ -374,7 +365,7 @@ class RachioZone(RachioSwitch):
 
     def __str__(self):
         """Display the zone as a string."""
-        return f'Rachio Zone "{self.name}" on {str(self._controller)}'
+        return f'Rachio Zone "{self.name}" on {self._controller!s}'
 
     @property
     def zone_id(self) -> str:
@@ -546,39 +537,17 @@ class RachioSchedule(RachioSwitch):
         )
 
 
-class RachioValve(CoordinatorEntity[RachioUpdateCoordinator], SwitchEntity):
+class RachioValve(RachioHoseTimerEntity, SwitchEntity):
     """Representation of one smart hose timer valve."""
 
-    def __init__(
-        self, person, base, data, coordinator: RachioUpdateCoordinator
-    ) -> None:
+    _attr_name = None
+
+    def __init__(self, person, base, data, coordinator) -> None:
         """Initialize a new smart hose valve."""
-        super().__init__(coordinator)
+        super().__init__(data, coordinator)
         self._person = person
         self._base = base
-        self.id = data[KEY_ID]
-        self._attr_name = data[KEY_NAME]
         self._attr_unique_id = f"{self.id}-valve"
-        self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
-        self._attr_is_on = KEY_CURRENT_STATUS in self._static_attrs
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (
-                    DOMAIN_RACHIO,
-                    self.id,
-                )
-            },
-            connections={(dr.CONNECTION_NETWORK_MAC, self._base.mac_address)},
-            manufacturer=DEFAULT_NAME,
-            model="Smart Hose Timer",
-            name=self._attr_name,
-            configuration_url="https://app.rach.io",
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return if the valve is available."""
-        return super().available and self._static_attrs[KEY_CONNECTED]
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on this valve."""
@@ -594,20 +563,19 @@ class RachioValve(CoordinatorEntity[RachioUpdateCoordinator], SwitchEntity):
         self._base.start_watering(self.id, manual_run_time.seconds)
         self._attr_is_on = True
         self.schedule_update_ha_state(force_refresh=True)
-        _LOGGER.debug("Starting valve %s for %s", self.name, str(manual_run_time))
+        _LOGGER.debug("Starting valve %s for %s", self._name, str(manual_run_time))
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off this valve."""
         self._base.stop_watering(self.id)
         self._attr_is_on = False
         self.schedule_update_ha_state(force_refresh=True)
-        _LOGGER.debug("Stopping watering on valve %s", self.name)
+        _LOGGER.debug("Stopping watering on valve %s", self._name)
 
     @callback
-    def _handle_coordinator_update(self) -> None:
+    def _update_attr(self) -> None:
         """Handle updated coordinator data."""
         data = self.coordinator.data[self.id]
 
         self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
         self._attr_is_on = KEY_CURRENT_STATUS in self._static_attrs
-        super()._handle_coordinator_update()

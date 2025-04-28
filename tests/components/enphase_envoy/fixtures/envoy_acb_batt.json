@@ -1,0 +1,275 @@
+{
+  "serial_number": "1234",
+  "firmware": "7.6.358",
+  "part_number": "800-00654-r08",
+  "envoy_model": "Envoy, phases: 3, phase mode: three, net-consumption CT, production CT",
+  "supported_features": 1759,
+  "phase_mode": "three",
+  "phase_count": 3,
+  "active_phase_count": 0,
+  "ct_meter_count": 2,
+  "consumption_meter_type": "net-consumption",
+  "production_meter_type": "production",
+  "storage_meter_type": null,
+  "data": {
+    "encharge_inventory": {
+      "123456": {
+        "admin_state": 6,
+        "admin_state_str": "ENCHG_STATE_READY",
+        "bmu_firmware_version": "2.1.16",
+        "comm_level_2_4_ghz": 4,
+        "comm_level_sub_ghz": 4,
+        "communicating": true,
+        "dc_switch_off": false,
+        "encharge_capacity": 3500,
+        "encharge_revision": 2,
+        "firmware_loaded_date": 1714736645,
+        "firmware_version": "2.6.6618_rel/22.11",
+        "installed_date": 1714736645,
+        "last_report_date": 1714804173,
+        "led_status": 17,
+        "max_cell_temp": 16,
+        "operating": true,
+        "part_number": "830-01760-r46",
+        "percent_full": 54,
+        "serial_number": "122327081322",
+        "temperature": 16,
+        "temperature_unit": "C",
+        "zigbee_dongle_fw_version": "100F"
+      }
+    },
+    "encharge_power": {
+      "123456": {
+        "apparent_power_mva": 105,
+        "real_power_mw": 105,
+        "soc": 54
+      }
+    },
+    "encharge_aggregate": {
+      "available_energy": 1890,
+      "backup_reserve": 0,
+      "state_of_charge": 54,
+      "reserve_state_of_charge": 0,
+      "configured_reserve_state_of_charge": 0,
+      "max_available_capacity": 3500
+    },
+    "enpower": null,
+    "acb_power": {
+      "power": 260,
+      "charge_wh": 930,
+      "state_of_charge": 25,
+      "state": "discharging",
+      "batteries": 3
+    },
+    "battery_aggregate": {
+      "available_energy": 2820,
+      "state_of_charge": 39,
+      "max_available_capacity": 7220
+    },
+    "system_consumption": {
+      "watt_hours_lifetime": 1234,
+      "watt_hours_last_7_days": 1234,
+      "watt_hours_today": 1234,
+      "watts_now": 1234
+    },
+    "system_production": {
+      "watt_hours_lifetime": 1234,
+      "watt_hours_last_7_days": 1234,
+      "watt_hours_today": 1234,
+      "watts_now": 1234
+    },
+    "system_consumption_phases": null,
+    "system_production_phases": null,
+    "system_net_consumption": {
+      "watt_hours_lifetime": 4321,
+      "watt_hours_last_7_days": -1,
+      "watt_hours_today": -1,
+      "watts_now": 2341
+    },
+    "system_net_consumption_phases": null,
+    "ctmeter_production": {
+      "eid": "100000010",
+      "timestamp": 1708006110,
+      "energy_delivered": 11234,
+      "energy_received": 12345,
+      "active_power": 100,
+      "power_factor": 0.11,
+      "voltage": 111,
+      "current": 0.2,
+      "frequency": 50.1,
+      "state": "enabled",
+      "measurement_type": "production",
+      "metering_status": "normal",
+      "status_flags": ["production-imbalance", "power-on-unused-phase"]
+    },
+    "ctmeter_consumption": {
+      "eid": "100000020",
+      "timestamp": 1708006120,
+      "energy_delivered": 21234,
+      "energy_received": 22345,
+      "active_power": 101,
+      "power_factor": 0.21,
+      "voltage": 112,
+      "current": 0.3,
+      "frequency": 50.2,
+      "state": "enabled",
+      "measurement_type": "net-consumption",
+      "metering_status": "normal",
+      "status_flags": []
+    },
+    "ctmeter_storage": null,
+    "ctmeter_production_phases": {
+      "L1": {
+        "eid": "100000011",
+        "timestamp": 1708006111,
+        "energy_delivered": 112341,
+        "energy_received": 123451,
+        "active_power": 20,
+        "power_factor": 0.12,
+        "voltage": 111,
+        "current": 0.2,
+        "frequency": 50.1,
+        "state": "enabled",
+        "measurement_type": "production",
+        "metering_status": "normal",
+        "status_flags": ["production-imbalance"]
+      },
+      "L2": {
+        "eid": "100000012",
+        "timestamp": 1708006112,
+        "energy_delivered": 112342,
+        "energy_received": 123452,
+        "active_power": 30,
+        "power_factor": 0.13,
+        "voltage": 111,
+        "current": 0.2,
+        "frequency": 50.1,
+        "state": "enabled",
+        "measurement_type": "production",
+        "metering_status": "normal",
+        "status_flags": ["power-on-unused-phase"]
+      },
+      "L3": {
+        "eid": "100000013",
+        "timestamp": 1708006113,
+        "energy_delivered": 112343,
+        "energy_received": 123453,
+        "active_power": 50,
+        "power_factor": 0.14,
+        "voltage": 111,
+        "current": 0.2,
+        "frequency": 50.1,
+        "state": "enabled",
+        "measurement_type": "production",
+        "metering_status": "normal",
+        "status_flags": []
+      }
+    },
+    "ctmeter_consumption_phases": {
+      "L1": {
+        "eid": "100000021",
+        "timestamp": 1708006121,
+        "energy_delivered": 212341,
+        "energy_received": 223451,
+        "active_power": 21,
+        "power_factor": 0.22,
+        "voltage": 112,
+        "current": 0.3,
+        "frequency": 50.2,
+        "state": "enabled",
+        "measurement_type": "net-consumption",
+        "metering_status": "normal",
+        "status_flags": []
+      },
+      "L2": {
+        "eid": "100000022",
+        "timestamp": 1708006122,
+        "energy_delivered": 212342,
+        "energy_received": 223452,
+        "active_power": 31,
+        "power_factor": 0.23,
+        "voltage": 112,
+        "current": 0.3,
+        "frequency": 50.2,
+        "state": "enabled",
+        "measurement_type": "net-consumption",
+        "metering_status": "normal",
+        "status_flags": []
+      },
+      "L3": {
+        "eid": "100000023",
+        "timestamp": 1708006123,
+        "energy_delivered": 212343,
+        "energy_received": 223453,
+        "active_power": 51,
+        "power_factor": 0.24,
+        "voltage": 112,
+        "current": 0.3,
+        "frequency": 50.2,
+        "state": "enabled",
+        "measurement_type": "net-consumption",
+        "metering_status": "normal",
+        "status_flags": []
+      }
+    },
+    "ctmeter_storage_phases": null,
+    "dry_contact_status": {},
+    "dry_contact_settings": {},
+    "inverters": {
+      "1": {
+        "serial_number": "1",
+        "last_report_date": 1,
+        "last_report_watts": 1,
+        "max_report_watts": 1
+      }
+    },
+    "tariff": {
+      "currency": {
+        "code": "EUR"
+      },
+      "logger": "mylogger",
+      "date": "1714749724",
+      "storage_settings": {
+        "mode": "self-consumption",
+        "operation_mode_sub_type": "",
+        "reserved_soc": 0.0,
+        "very_low_soc": 5,
+        "charge_from_grid": true,
+        "date": "1714749724",
+        "opt_schedules": true
+      },
+      "single_rate": {
+        "rate": 0.0,
+        "sell": 0.0
+      },
+      "seasons": [
+        {
+          "id": "all_year_long",
+          "start": "1/1",
+          "days": [
+            {
+              "id": "all_days",
+              "days": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+              "must_charge_start": 0,
+              "must_charge_duration": 0,
+              "must_charge_mode": "CP",
+              "enable_discharge_to_grid": false,
+              "periods": [
+                {
+                  "id": "period_1",
+                  "start": 0,
+                  "rate": 0.0
+                }
+              ]
+            }
+          ],
+          "tiers": []
+        }
+      ],
+      "seasons_sell": []
+    },
+    "raw": {
+      "varies_by": "firmware_version"
+    }
+  }
+}

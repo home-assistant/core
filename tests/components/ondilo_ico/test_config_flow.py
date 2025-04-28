@@ -2,53 +2,44 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
+import pytest
+
+from homeassistant import config_entries
 from homeassistant.components.ondilo_ico.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
-    OAUTH2_CLIENTID,
-    OAUTH2_CLIENTSECRET,
+    OAUTH2_CLIENT_ID as CLIENT_ID,
     OAUTH2_TOKEN,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
-CLIENT_ID = OAUTH2_CLIENTID
-CLIENT_SECRET = OAUTH2_CLIENTSECRET
 
-
-async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
+async def test_abort_if_existing_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Check flow abort when an entry already exist."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
-    assert await setup.async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
-        },
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

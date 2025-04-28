@@ -5,14 +5,14 @@ from unittest.mock import Mock, patch
 import pytest
 from tololib import ToloCommunicationError
 
-from homeassistant.components import dhcp
 from homeassistant.components.tolo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
+MOCK_DHCP_DATA = DhcpServiceInfo(
     ip="127.0.0.2", macaddress="001122334455", hostname="mock_hostname"
 )
 
@@ -31,7 +31,7 @@ def coordinator_toloclient() -> Mock:
     Throw exception to abort entry setup and prevent socket IO. Only testing config flow.
     """
     with patch(
-        "homeassistant.components.tolo.ToloClient", side_effect=Exception
+        "homeassistant.components.tolo.coordinator.ToloClient", side_effect=Exception
     ) as toloclient:
         yield toloclient
 
@@ -46,7 +46,7 @@ async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -
         data={CONF_HOST: "127.0.0.1"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -59,7 +59,7 @@ async def test_user_walkthrough(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     toloclient().get_status.side_effect = lambda *args, **kwargs: None
@@ -69,7 +69,7 @@ async def test_user_walkthrough(
         user_input={CONF_HOST: "127.0.0.2"},
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -80,7 +80,7 @@ async def test_user_walkthrough(
         user_input={CONF_HOST: "127.0.0.1"},
     )
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "TOLO Sauna"
     assert result3["data"][CONF_HOST] == "127.0.0.1"
 
@@ -94,7 +94,7 @@ async def test_dhcp(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=MOCK_DHCP_DATA
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -102,7 +102,7 @@ async def test_dhcp(
         user_input={},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "TOLO Sauna"
     assert result["data"][CONF_HOST] == "127.0.0.2"
     assert result["result"].unique_id == "00:11:22:33:44:55"
@@ -115,4 +115,4 @@ async def test_dhcp_invalid_device(hass: HomeAssistant, toloclient: Mock) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=MOCK_DHCP_DATA
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT

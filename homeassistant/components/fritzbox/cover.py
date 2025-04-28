@@ -10,19 +10,20 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FritzBoxDeviceEntity
-from .common import get_coordinator
+from .coordinator import FritzboxConfigEntry
+from .entity import FritzBoxDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome cover from ConfigEntry."""
-    coordinator = get_coordinator(hass, entry.entry_id)
+    coordinator = entry.runtime_data
 
     @callback
     def _add_entities(devices: set[str] | None = None) -> None:
@@ -70,21 +71,21 @@ class FritzboxCover(FritzBoxDeviceEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.hass.async_add_executor_job(self.data.set_blind_open)
+        await self.hass.async_add_executor_job(self.data.set_blind_open, True)
         await self.coordinator.async_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.hass.async_add_executor_job(self.data.set_blind_close)
+        await self.hass.async_add_executor_job(self.data.set_blind_close, True)
         await self.coordinator.async_refresh()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.hass.async_add_executor_job(
-            self.data.set_level_percentage, 100 - kwargs[ATTR_POSITION]
+            self.data.set_level_percentage, 100 - kwargs[ATTR_POSITION], True
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self.hass.async_add_executor_job(self.data.set_blind_stop)
+        await self.hass.async_add_executor_job(self.data.set_blind_stop, True)
         await self.coordinator.async_refresh()

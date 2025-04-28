@@ -19,6 +19,7 @@ from .const import (
     IP,
     NEIGHBOR_ACCESS_POINTS,
     PLCNET,
+    UPTIME,
 )
 
 
@@ -49,7 +50,7 @@ class MockDevice(Device):
         self, session_instance: httpx.AsyncClient | None = None
     ) -> None:
         """Give a mocked device the needed properties."""
-        self.mac = DISCOVERY_INFO.properties["PlcMacAddress"]
+        self.mac = DISCOVERY_INFO.properties["PlcMacAddress"] if self.plcnet else None
         self.mt_number = DISCOVERY_INFO.properties["MT"]
         self.product = DISCOVERY_INFO.properties["Product"]
         self.serial_number = DISCOVERY_INFO.properties["SN"]
@@ -63,12 +64,15 @@ class MockDevice(Device):
             return_value=FIRMWARE_UPDATE_AVAILABLE
         )
         self.device.async_get_led_setting = AsyncMock(return_value=False)
+        self.device.async_set_led_setting = AsyncMock(return_value=True)
         self.device.async_restart = AsyncMock(return_value=True)
+        self.device.async_uptime = AsyncMock(return_value=UPTIME)
         self.device.async_start_wps = AsyncMock(return_value=True)
         self.device.async_get_wifi_connected_station = AsyncMock(
             return_value=CONNECTED_STATIONS
         )
         self.device.async_get_wifi_guest_access = AsyncMock(return_value=GUEST_WIFI)
+        self.device.async_set_wifi_guest_access = AsyncMock(return_value=True)
         self.device.async_get_wifi_neighbor_access_points = AsyncMock(
             return_value=NEIGHBOR_ACCESS_POINTS
         )

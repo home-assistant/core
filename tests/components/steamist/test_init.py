@@ -49,7 +49,7 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
     )
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
@@ -65,11 +65,12 @@ async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
     ):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_config_entry_fills_unique_id_with_directed_discovery(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that the unique id is added if its missing via directed (not broadcast) discovery."""
     config_entry = MockConfigEntry(
@@ -92,19 +93,21 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     mock_aio_discovery.async_scan = _async_scan
     type(mock_aio_discovery).found_devices = found_devices
 
-    with _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE), patch(
-        "homeassistant.components.steamist.discovery.AIODiscovery30303",
-        return_value=mock_aio_discovery,
+    with (
+        _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE),
+        patch(
+            "homeassistant.components.steamist.discovery.AIODiscovery30303",
+            return_value=mock_aio_discovery,
+        ),
     ):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
     assert config_entry.unique_id == FORMATTED_MAC_ADDRESS
     assert config_entry.data[CONF_NAME] == DEVICE_NAME
     assert config_entry.title == DEVICE_NAME
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, FORMATTED_MAC_ADDRESS)}
     )
@@ -124,10 +127,13 @@ async def test_discovery_happens_at_interval(
     config_entry.add_to_hass(hass)
     mock_aio_discovery = MagicMock(auto_spec=AIODiscovery30303)
     mock_aio_discovery.async_scan = AsyncMock()
-    with patch(
-        "homeassistant.components.steamist.discovery.AIODiscovery30303",
-        return_value=mock_aio_discovery,
-    ), _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE):
+    with (
+        patch(
+            "homeassistant.components.steamist.discovery.AIODiscovery30303",
+            return_value=mock_aio_discovery,
+        ),
+        _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE),
+    ):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done(wait_background_tasks=True)
 

@@ -1,0 +1,6 @@
+{
+  "domain": "smart_rollos",
+  "name": "Smart Rollos",
+  "integration_type": "virtual",
+  "supported_by": "motion_blinds"
+}

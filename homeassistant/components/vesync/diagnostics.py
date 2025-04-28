@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .common import VeSyncBaseDevice
 from .const import DOMAIN, VS_MANAGER
+from .entity import VeSyncBaseDevice
 
 KEYS_TO_REDACT = {"manager", "uuid", "mac_id"}
 
@@ -24,7 +24,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
 
-    data = {
+    return {
         DOMAIN: {
             "bulb_count": len(manager.bulbs),
             "fan_count": len(manager.fans),
@@ -39,8 +39,6 @@ async def async_get_config_entry_diagnostics(
             "switches": [_redact_device_values(device) for device in manager.switches],
         },
     }
-
-    return data
 
 
 async def async_get_device_diagnostics(

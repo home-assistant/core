@@ -26,6 +26,23 @@ def exists(value: Any) -> Any:
     return value
 
 
+def unique_field_validator(fields: Any) -> Any:
+    """Validate the inputs don't have duplicate keys under different sections."""
+    all_fields = set()
+    for key, value in fields.items():
+        if value and "fields" in value:
+            for key in value["fields"]:
+                if key in all_fields:
+                    raise vol.Invalid(f"Duplicate use of field {key} in service.")
+                all_fields.add(key)
+        else:
+            if key in all_fields:
+                raise vol.Invalid(f"Duplicate use of field {key} in service.")
+            all_fields.add(key)
+
+    return fields
+
+
 CORE_INTEGRATION_FIELD_SCHEMA = vol.Schema(
     {
         vol.Optional("example"): exists,
@@ -44,6 +61,13 @@ CORE_INTEGRATION_FIELD_SCHEMA = vol.Schema(
     }
 )
 
+CORE_INTEGRATION_SECTION_SCHEMA = vol.Schema(
+    {
+        vol.Optional("collapsed"): bool,
+        vol.Required("fields"): vol.Schema({str: CORE_INTEGRATION_FIELD_SCHEMA}),
+    }
+)
+
 CUSTOM_INTEGRATION_FIELD_SCHEMA = CORE_INTEGRATION_FIELD_SCHEMA.extend(
     {
         vol.Optional("description"): str,
@@ -51,13 +75,33 @@ CUSTOM_INTEGRATION_FIELD_SCHEMA = CORE_INTEGRATION_FIELD_SCHEMA.extend(
     }
 )
 
+CUSTOM_INTEGRATION_SECTION_SCHEMA = vol.Schema(
+    {
+        vol.Optional("description"): str,
+        vol.Optional("name"): str,
+        vol.Optional("collapsed"): bool,
+        vol.Required("fields"): vol.Schema({str: CUSTOM_INTEGRATION_FIELD_SCHEMA}),
+    }
+)
+
+
 CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
     vol.Schema(
         {
             vol.Optional("target"): vol.Any(
                 selector.TargetSelector.CONFIG_SCHEMA, None
             ),
-            vol.Optional("fields"): vol.Schema({str: CORE_INTEGRATION_FIELD_SCHEMA}),
+            vol.Optional("fields"): vol.All(
+                vol.Schema(
+                    {
+                        str: vol.Any(
+                            CORE_INTEGRATION_FIELD_SCHEMA,
+                            CORE_INTEGRATION_SECTION_SCHEMA,
+                        )
+                    }
+                ),
+                unique_field_validator,
+            ),
         }
     ),
     None,
@@ -71,14 +115,27 @@ CUSTOM_INTEGRATION_SERVICE_SCHEMA = vol.Any(
             vol.Optional("target"): vol.Any(
                 selector.TargetSelector.CONFIG_SCHEMA, None
             ),
-            vol.Optional("fields"): vol.Schema({str: CUSTOM_INTEGRATION_FIELD_SCHEMA}),
+            vol.Optional("fields"): vol.All(
+                vol.Schema(
+                    {
+                        str: vol.Any(
+                            CUSTOM_INTEGRATION_FIELD_SCHEMA,
+                            CUSTOM_INTEGRATION_SECTION_SCHEMA,
+                        )
+                    }
+                ),
+                unique_field_validator,
+            ),
         }
     ),
     None,
 )
 
 CORE_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
-    {cv.slug: CORE_INTEGRATION_SERVICE_SCHEMA}
+    {
+        vol.Remove(vol.All(str, service.starts_with_dot)): object,
+        cv.slug: CORE_INTEGRATION_SERVICE_SCHEMA,
+    }
 )
 CUSTOM_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
     {cv.slug: CUSTOM_INTEGRATION_SERVICE_SCHEMA}
@@ -104,7 +161,7 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool
     return False
 
 
-def validate_services(config: Config, integration: Integration) -> None:
+def validate_services(config: Config, integration: Integration) -> None:  # noqa: C901
     """Validate services."""
     try:
         data = load_yaml_dict(str(integration.path / "services.yaml"))
@@ -168,7 +225,8 @@ def validate_services(config: Config, integration: Integration) -> None:
     # 2. Check if the service has an icon set in icons.json.
     #    raise an error if not.,
     for service_name, service_schema in services.items():
-        if service_name not in service_icons:
+        if integration.core and service_name not in service_icons:
+            # This is enforced for Core integrations only
             integration.add_error(
                 "services",
                 f"Service {service_name} has no icon in icons.json.",
@@ -196,6 +254,9 @@ def validate_services(config: Config, integration: Integration) -> None:
         # The same check is done for the description in each of the fields of the
         # service schema.
         for field_name, field_schema in service_schema.get("fields", {}).items():
+            if "fields" in field_schema:
+                # This is a section
+                continue
             if "name" not in field_schema:
                 try:
                     strings["services"][service_name]["fields"][field_name]["name"]
@@ -228,6 +289,20 @@ def validate_services(config: Config, integration: Integration) -> None:
                             "services",
                             f"Service {service_name} has a field {field_name} with a selector with a translation key {translation_key} that is not in the translations file",
                         )
+
+        # The same check is done for the description in each of the sections of the
+        # service schema.
+        for section_name, section_schema in service_schema.get("fields", {}).items():
+            if "fields" not in section_schema:
+                # This is not a section
+                continue
+            try:
+                strings["services"][service_name]["sections"][section_name]["name"]
+            except KeyError:
+                integration.add_error(
+                    "services",
+                    f"Service {service_name} has a section {section_name} with no name {error_msg_suffix}",
+                )
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:

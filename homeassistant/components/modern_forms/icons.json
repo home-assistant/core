@@ -26,9 +26,17 @@
     }
   },
   "services": {
-    "set_light_sleep_timer": "mdi:timer",
-    "clear_light_sleep_timer": "mdi:timer-cancel",
-    "set_fan_sleep_timer": "mdi:timer",
-    "clear_fan_sleep_timer": "mdi:timer-cancel"
+    "set_light_sleep_timer": {
+      "service": "mdi:timer"
+    },
+    "clear_light_sleep_timer": {
+      "service": "mdi:timer-cancel"
+    },
+    "set_fan_sleep_timer": {
+      "service": "mdi:timer"
+    },
+    "clear_fan_sleep_timer": {
+      "service": "mdi:timer-cancel"
+    }
   }
 }

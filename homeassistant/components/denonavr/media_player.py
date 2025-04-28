@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from denonavr import DenonAVR
 from denonavr.const import (
@@ -35,18 +35,16 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
+from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import CONF_RECEIVER
-from .config_flow import (
+from . import DenonavrConfigEntry
+from .const import (
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
-    CONF_TYPE,
     CONF_UPDATE_AUDYSSEY,
     DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
@@ -100,11 +98,6 @@ TELNET_EVENTS = {
     "Z3",
 }
 
-_DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-
 DENON_STATE_MAPPING = {
     STATE_ON: MediaPlayerState.ON,
     STATE_OFF: MediaPlayerState.OFF,
@@ -115,13 +108,12 @@ DENON_STATE_MAPPING = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DenonavrConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    receiver = data[CONF_RECEIVER]
+    receiver = config_entry.runtime_data
     update_audyssey = config_entry.options.get(
         CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
     )
@@ -130,7 +122,6 @@ async def async_setup_entry(
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
         else:
             unique_id = f"{config_entry.entry_id}-{receiver_zone.zone}"
-        await receiver_zone.async_setup()
         entities.append(
             DenonDevice(
                 receiver_zone,
@@ -157,14 +148,14 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_UPDATE_AUDYSSEY,
-        {},
+        None,
         f"async_{SERVICE_UPDATE_AUDYSSEY}",
     )
 
     async_add_entities(entities, update_before_add=True)
 
 
-def async_log_errors(
+def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
     func: Callable[Concatenate[_DenonDeviceT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
     """Log errors occurred when calling a Denon AVR receiver.
@@ -177,7 +168,6 @@ def async_log_errors(
     async def wrapper(
         self: _DenonDeviceT, *args: _P.args, **kwargs: _P.kwargs
     ) -> _R | None:
-        # pylint: disable=protected-access
         available = True
         try:
             return await func(self, *args, **kwargs)
@@ -232,16 +222,14 @@ def async_log_errors(
                 func.__name__,
                 err,
             )
-        except DenonAvrError as err:
+        except DenonAvrError:
             available = False
             _LOGGER.exception(
-                "Error %s occurred in method %s for Denon AVR receiver",
-                err,
-                func.__name__,
+                "Error occurred in method %s for Denon AVR receiver", func.__name__
             )
         finally:
             if available and not self.available:
-                _LOGGER.info(
+                _LOGGER.warning(
                     "Denon AVR receiver at host %s is available again",
                     self._receiver.host,
                 )
@@ -262,7 +250,7 @@ class DenonDevice(MediaPlayerEntity):
         self,
         receiver: DenonAVR,
         unique_id: str,
-        config_entry: ConfigEntry,
+        config_entry: DenonavrConfigEntry,
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
@@ -309,6 +297,8 @@ class DenonDevice(MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up the entity."""
+        if self._receiver.telnet_connected:
+            await self._receiver.async_telnet_disconnect()
         self._receiver.unregister_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     @async_log_errors

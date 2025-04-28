@@ -13,11 +13,11 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import SensiboConfigEntry
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, async_handle_api_call
@@ -76,19 +76,34 @@ DESCRIPTION_BY_MODELS = {"pure": PURE_SWITCH_TYPES}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensibo Switch platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
-    async_add_entities(
-        SensiboDeviceSwitch(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in DESCRIPTION_BY_MODELS.get(
-            device_data.model, DEVICE_SWITCH_TYPES
-        )
-    )
+    added_devices: set[str] = set()
+
+    def _add_remove_devices() -> None:
+        """Handle additions of devices and sensors."""
+        nonlocal added_devices
+        new_devices, _, new_added_devices = coordinator.get_devices(added_devices)
+        added_devices = new_added_devices
+
+        if new_devices:
+            async_add_entities(
+                SensiboDeviceSwitch(coordinator, device_id, description)
+                for device_id, device_data in coordinator.data.parsed.items()
+                if device_id in new_devices
+                for description in DESCRIPTION_BY_MODELS.get(
+                    device_data.model, DEVICE_SWITCH_TYPES
+                )
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
 
 class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):

@@ -5,11 +5,15 @@ from unittest.mock import Mock, PropertyMock, patch
 
 from romy import RomyRobot
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import zeroconf
+from homeassistant import config_entries
 from homeassistant.components.romy.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 
 def _create_mocked_romy(
@@ -56,7 +60,7 @@ async def test_show_user_form_robot_is_offline_and_locked(hass: HomeAssistant) -
 
         assert result1["errors"].get("host") == "cannot_connect"
         assert result1["step_id"] == "user"
-        assert result1["type"] == data_entry_flow.FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
 
     # Robot is locked
     with patch(
@@ -68,7 +72,7 @@ async def test_show_user_form_robot_is_offline_and_locked(hass: HomeAssistant) -
         )
 
         assert result2["step_id"] == "password"
-        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
 
     # Robot is initialized and unlocked
     with patch(
@@ -80,7 +84,7 @@ async def test_show_user_form_robot_is_offline_and_locked(hass: HomeAssistant) -
         )
 
         assert "errors" not in result3
-        assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_show_user_form_robot_unlock_with_password(hass: HomeAssistant) -> None:
@@ -106,7 +110,7 @@ async def test_show_user_form_robot_unlock_with_password(hass: HomeAssistant) ->
 
         assert result2["errors"] == {"password": "invalid_auth"}
         assert result2["step_id"] == "password"
-        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.romy.config_flow.romy.create_romy",
@@ -118,7 +122,7 @@ async def test_show_user_form_robot_unlock_with_password(hass: HomeAssistant) ->
 
         assert result3["errors"] == {"password": "cannot_connect"}
         assert result3["step_id"] == "password"
-        assert result3["type"] == data_entry_flow.FlowResultType.FORM
+        assert result3["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.romy.config_flow.romy.create_romy",
@@ -129,7 +133,7 @@ async def test_show_user_form_robot_unlock_with_password(hass: HomeAssistant) ->
         )
 
         assert "errors" not in result4
-        assert result4["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_show_user_form_robot_reachable_again(hass: HomeAssistant) -> None:
@@ -148,7 +152,7 @@ async def test_show_user_form_robot_reachable_again(hass: HomeAssistant) -> None
 
         assert result1["errors"].get("host") == "cannot_connect"
         assert result1["step_id"] == "user"
-        assert result1["type"] == data_entry_flow.FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
 
     # Robot is locked
     with patch(
@@ -160,17 +164,17 @@ async def test_show_user_form_robot_reachable_again(hass: HomeAssistant) -> None
         )
 
         assert "errors" not in result2
-        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
-DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("1.2.3.4"),
     ip_addresses=[ip_address("1.2.3.4")],
     port=8080,
     hostname="aicu-aicgsbksisfapcjqmqjq.local",
     type="mock_type",
     name="myROMY",
-    properties={zeroconf.ATTR_PROPERTIES_ID: "aicu-aicgsbksisfapcjqmqjqZERO"},
+    properties={ATTR_PROPERTIES_ID: "aicu-aicgsbksisfapcjqmqjqZERO"},
 )
 
 
@@ -188,7 +192,7 @@ async def test_zero_conf_locked_interface_robot(hass: HomeAssistant) -> None:
         )
 
     assert result1["step_id"] == "password"
-    assert result1["type"] == data_entry_flow.FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.romy.config_flow.romy.create_romy",
@@ -199,7 +203,7 @@ async def test_zero_conf_locked_interface_robot(hass: HomeAssistant) -> None:
         )
 
         assert "errors" not in result2
-        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zero_conf_uninitialized_robot(hass: HomeAssistant) -> None:
@@ -216,7 +220,7 @@ async def test_zero_conf_uninitialized_robot(hass: HomeAssistant) -> None:
         )
 
     assert result["reason"] == "cannot_connect"
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_zero_conf_unlocked_interface_robot(hass: HomeAssistant) -> None:
@@ -233,7 +237,7 @@ async def test_zero_conf_unlocked_interface_robot(hass: HomeAssistant) -> None:
         )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -246,4 +250,4 @@ async def test_zero_conf_unlocked_interface_robot(hass: HomeAssistant) -> None:
     assert result["result"]
     assert result["result"].unique_id == "aicu-aicgsbksisfapcjqmqjq"
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY

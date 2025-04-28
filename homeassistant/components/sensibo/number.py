@@ -13,12 +13,11 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import SensiboConfigEntry
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
@@ -64,17 +63,32 @@ DEVICE_NUMBER_TYPES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensibo number platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
-    async_add_entities(
-        SensiboNumber(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in DEVICE_NUMBER_TYPES
-    )
+    added_devices: set[str] = set()
+
+    def _add_remove_devices() -> None:
+        """Handle additions of devices and sensors."""
+        nonlocal added_devices
+        new_devices, _, new_added_devices = coordinator.get_devices(added_devices)
+        added_devices = new_added_devices
+
+        if new_devices:
+            async_add_entities(
+                SensiboNumber(coordinator, device_id, description)
+                for device_id in coordinator.data.parsed
+                for description in DEVICE_NUMBER_TYPES
+                if device_id in new_devices
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
 
 class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):

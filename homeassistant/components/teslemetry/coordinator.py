@@ -1,19 +1,34 @@
 """Teslemetry Data Coordinator."""
 
-from datetime import timedelta
-from typing import Any
+from __future__ import annotations
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
-from tesla_fleet_api.const import VehicleDataEndpoint
-from tesla_fleet_api.exceptions import TeslaFleetError, VehicleOffline
+from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Any
+
+from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
+from tesla_fleet_api.exceptions import (
+    InvalidToken,
+    SubscriptionRequired,
+    TeslaFleetError,
+)
+from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, TeslemetryState
+if TYPE_CHECKING:
+    from . import TeslemetryConfigEntry
 
-SYNC_INTERVAL = 60
+from .const import ENERGY_HISTORY_FIELDS, LOGGER
+from .helpers import flatten
+
+VEHICLE_INTERVAL = timedelta(seconds=60)
+VEHICLE_WAIT = timedelta(minutes=15)
+ENERGY_LIVE_INTERVAL = timedelta(seconds=30)
+ENERGY_INFO_INTERVAL = timedelta(seconds=30)
+ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
+
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
     VehicleDataEndpoint.CLIMATE_STATE,
@@ -24,85 +39,165 @@ ENDPOINTS = [
 ]
 
 
-class TeslemetryDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Base class for Teslemetry Data Coordinators."""
+class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching data from the Teslemetry API."""
 
-    name: str
+    config_entry: TeslemetryConfigEntry
+    last_active: datetime
 
     def __init__(
-        self, hass: HomeAssistant, api: VehicleSpecific | EnergySpecific
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        api: Vehicle,
+        product: dict,
     ) -> None:
         """Initialize Teslemetry Vehicle Update Coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            name=self.name,
-            update_interval=timedelta(seconds=SYNC_INTERVAL),
+            config_entry=config_entry,
+            name="Teslemetry Vehicle",
         )
+        if product["command_signing"] == "off":
+            # Only allow automatic polling if its included
+            self.update_interval = VEHICLE_INTERVAL
+
         self.api = api
-
-
-class TeslemetryVehicleDataCoordinator(TeslemetryDataCoordinator):
-    """Class to manage fetching data from the Teslemetry API."""
-
-    name = "Teslemetry Vehicle"
-
-    async def async_config_entry_first_refresh(self) -> None:
-        """Perform first refresh."""
-        try:
-            response = await self.api.wake_up()
-            if response["response"]["state"] != TeslemetryState.ONLINE:
-                # The first refresh will fail, so retry later
-                raise ConfigEntryNotReady("Vehicle is not online")
-        except TeslaFleetError as e:
-            # The first refresh will also fail, so retry later
-            raise ConfigEntryNotReady from e
-        await super().async_config_entry_first_refresh()
+        self.data = flatten(product)
+        self.last_active = datetime.now()
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
 
         try:
-            data = await self.api.vehicle_data(endpoints=ENDPOINTS)
-        except VehicleOffline:
-            self.data["state"] = TeslemetryState.OFFLINE
-            return self.data
+            data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
+        except (InvalidToken, SubscriptionRequired) as e:
+            raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
-        return self._flatten(data["response"])
-
-    def _flatten(
-        self, data: dict[str, Any], parent: str | None = None
-    ) -> dict[str, Any]:
-        """Flatten the data structure."""
-        result = {}
-        for key, value in data.items():
-            if parent:
-                key = f"{parent}_{key}"
-            if isinstance(value, dict):
-                result.update(self._flatten(value, key))
-            else:
-                result[key] = value
-        return result
+        return flatten(data)
 
 
-class TeslemetryEnergyDataCoordinator(TeslemetryDataCoordinator):
-    """Class to manage fetching data from the Teslemetry API."""
+class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching energy site live status from the Teslemetry API."""
 
-    name = "Teslemetry Energy Site"
+    config_entry: TeslemetryConfigEntry
+    updated_once: bool
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        api: EnergySite,
+        data: dict,
+    ) -> None:
+        """Initialize Teslemetry Energy Site Live coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name="Teslemetry Energy Site Live",
+            update_interval=ENERGY_LIVE_INTERVAL,
+        )
+        self.api = api
+
+        # Convert Wall Connectors from array to dict
+        data["wall_connectors"] = {
+            wc["din"]: wc for wc in (data.get("wall_connectors") or [])
+        }
+        self.data = data
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
 
         try:
-            data = await self.api.live_status()
+            data = (await self.api.live_status())["response"]
+        except (InvalidToken, SubscriptionRequired) as e:
+            raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
         # Convert Wall Connectors from array to dict
-        data["response"]["wall_connectors"] = {
-            wc["din"]: wc for wc in data["response"].get("wall_connectors", [])
+        data["wall_connectors"] = {
+            wc["din"]: wc for wc in (data.get("wall_connectors") or [])
         }
 
-        return data["response"]
+        return data
+
+
+class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching energy site info from the Teslemetry API."""
+
+    config_entry: TeslemetryConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        api: EnergySite,
+        product: dict,
+    ) -> None:
+        """Initialize Teslemetry Energy Info coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name="Teslemetry Energy Site Info",
+            update_interval=ENERGY_INFO_INTERVAL,
+        )
+        self.api = api
+        self.data = product
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update energy site data using Teslemetry API."""
+
+        try:
+            data = (await self.api.site_info())["response"]
+        except (InvalidToken, SubscriptionRequired) as e:
+            raise ConfigEntryAuthFailed from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(e.message) from e
+
+        return flatten(data)
+
+
+class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching energy site info from the Teslemetry API."""
+
+    config_entry: TeslemetryConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        api: EnergySite,
+    ) -> None:
+        """Initialize Teslemetry Energy Info coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"Teslemetry Energy History {api.energy_site_id}",
+            update_interval=ENERGY_HISTORY_INTERVAL,
+        )
+        self.api = api
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update energy site data using Teslemetry API."""
+
+        try:
+            data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
+        except (InvalidToken, SubscriptionRequired) as e:
+            raise ConfigEntryAuthFailed from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(e.message) from e
+
+        # Add all time periods together
+        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
+        for period in data.get("time_series", []):
+            for key in ENERGY_HISTORY_FIELDS:
+                output[key] += period.get(key, 0)
+
+        return output

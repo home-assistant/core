@@ -16,6 +16,8 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
@@ -95,7 +97,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
     assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
-    assert state.attributes[ATTR_TEMPERATURE] == 22.0
+    assert state.attributes.get(ATTR_TEMPERATURE) == 22.0
 
     # Groups
     state = hass.states.get("climate.group")
@@ -492,10 +494,13 @@ async def test_airzone_climate_set_hvac_slave_error(hass: HomeAssistant) -> None
 
     await async_init_integration(hass)
 
-    with patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
-        return_value=None,
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
+            return_value=None,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -573,6 +578,28 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 20.5
 
+    # Aidoo Pro with Double Setpoint
+    with patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
+        return_value=None,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "climate.bron_pro",
+                ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+                ATTR_TARGET_TEMP_HIGH: 25.0,
+                ATTR_TARGET_TEMP_LOW: 20.0,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.bron_pro")
+    assert state.state == HVACMode.HEAT_COOL
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25.0
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20.0
+
 
 async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
     """Test error when setting the target temperature."""
@@ -580,10 +607,13 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
     await async_init_integration(hass)
 
     # Aidoos
-    with patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
-        side_effect=AirzoneCloudError,
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
+            side_effect=AirzoneCloudError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -598,10 +628,13 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
     # Groups
-    with patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_put_group",
-        side_effect=AirzoneCloudError,
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_put_group",
+            side_effect=AirzoneCloudError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -616,10 +649,13 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_TEMPERATURE] == 24.0
 
     # Installations
-    with patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_put_installation",
-        side_effect=AirzoneCloudError,
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_put_installation",
+            side_effect=AirzoneCloudError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -634,10 +670,13 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_TEMPERATURE] == 23.0
 
     # Zones
-    with patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
-        side_effect=AirzoneCloudError,
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
+            side_effect=AirzoneCloudError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,

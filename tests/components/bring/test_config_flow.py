@@ -2,15 +2,11 @@
 
 from unittest.mock import AsyncMock
 
-from bring_api.exceptions import (
-    BringAuthException,
-    BringParseException,
-    BringRequestException,
-)
+from bring_api import BringAuthException, BringParseException, BringRequestException
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.bring.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -30,9 +26,9 @@ async def test_form(
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_init(
@@ -44,8 +40,8 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_DATA_STEP["email"]
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bring"
     assert result["data"] == MOCK_DATA_STEP
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -66,14 +62,14 @@ async def test_flow_user_init_data_unknown_error_and_recover(
     mock_bring_client.login.side_effect = raise_error
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=MOCK_DATA_STEP,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == text_error
 
     # Recover
@@ -86,8 +82,8 @@ async def test_flow_user_init_data_unknown_error_and_recover(
         user_input=MOCK_DATA_STEP,
     )
 
-    assert result["type"] == "create_entry"
-    assert result["result"].title == MOCK_DATA_STEP["email"]
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].title == "Bring"
 
     assert result["data"] == MOCK_DATA_STEP
 
@@ -110,5 +106,208 @@ async def test_flow_user_init_data_already_configured(
         user_input=MOCK_DATA_STEP,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_flow_reauth(
+    hass: HomeAssistant,
+    mock_bring_client: AsyncMock,
+    bring_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow."""
+
+    bring_config_entry.add_to_hass(hass)
+
+    result = await bring_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert bring_config_entry.data == {
+        CONF_EMAIL: "new-email",
+        CONF_PASSWORD: "new-password",
+    }
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "text_error"),
+    [
+        (BringRequestException(), "cannot_connect"),
+        (BringAuthException(), "invalid_auth"),
+        (BringParseException(), "unknown"),
+        (IndexError(), "unknown"),
+    ],
+)
+async def test_flow_reauth_error_and_recover(
+    hass: HomeAssistant,
+    mock_bring_client: AsyncMock,
+    bring_config_entry: MockConfigEntry,
+    raise_error,
+    text_error,
+) -> None:
+    """Test reauth flow."""
+
+    bring_config_entry.add_to_hass(hass)
+
+    result = await bring_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_bring_client.login.side_effect = raise_error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
+
+    mock_bring_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_flow_reauth_unique_id_mismatch(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+    mock_bring_client: AsyncMock,
+) -> None:
+    """Test we abort reauth if unique id mismatch."""
+
+    mock_bring_client.uuid = "11111111-11111111-11111111-11111111"
+
+    bring_config_entry.add_to_hass(hass)
+
+    result = await bring_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("mock_bring_client")
+async def test_flow_reconfigure(
+    hass: HomeAssistant, bring_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow."""
+    bring_config_entry.add_to_hass(hass)
+    result = await bring_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert bring_config_entry.data[CONF_EMAIL] == "new-email"
+    assert bring_config_entry.data[CONF_PASSWORD] == "new-password"
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "text_error"),
+    [
+        (BringRequestException(), "cannot_connect"),
+        (BringAuthException(), "invalid_auth"),
+        (BringParseException(), "unknown"),
+        (IndexError(), "unknown"),
+    ],
+)
+async def test_flow_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_bring_client: AsyncMock,
+    bring_config_entry: MockConfigEntry,
+    raise_error: Exception,
+    text_error: str,
+) -> None:
+    """Test reconfigure flow errors."""
+    bring_config_entry.add_to_hass(hass)
+    result = await bring_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_bring_client.login.side_effect = raise_error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
+
+    mock_bring_client.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert bring_config_entry.data[CONF_EMAIL] == "new-email"
+    assert bring_config_entry.data[CONF_PASSWORD] == "new-password"
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_flow_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+    mock_bring_client: AsyncMock,
+) -> None:
+    """Test we abort reconfigure if unique id mismatch."""
+
+    mock_bring_client.uuid = "11111111-11111111-11111111-11111111"
+
+    bring_config_entry.add_to_hass(hass)
+
+    result = await bring_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"

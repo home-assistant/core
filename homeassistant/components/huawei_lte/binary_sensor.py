@@ -9,20 +9,21 @@ from huawei_lte_api.enums.cradle import ConnectionStatusEnum
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HuaweiLteBaseEntityWithDevice
 from .const import (
     DOMAIN,
     KEY_MONITORING_CHECK_NOTIFICATIONS,
     KEY_MONITORING_STATUS,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
 )
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.entry_id]
@@ -104,6 +105,7 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
 
     _attr_translation_key = "mobile_connection"
     _attr_entity_registry_enabled_default = True
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     key = KEY_MONITORING_STATUS
     item = "ConnectionStatus"
@@ -139,6 +141,8 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
 
 class HuaweiLteBaseWifiStatusBinarySensor(HuaweiLteBaseBinarySensor):
     """Huawei LTE WiFi status binary sensor base class."""
+
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def is_on(self) -> bool:

@@ -43,16 +43,11 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user's reauth credentials."""
         errors = {}
         if user_input:
-            entry_id = self.context["entry_id"]
-            if entry := self.hass.config_entries.async_get_entry(entry_id):
-                user_input = user_input | {CONF_USERNAME: self.username}
-                if not (error := await self._async_validate_input(user_input)):
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data=entry.data | user_input,
-                    )
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+            user_input = user_input | {CONF_USERNAME: self.username}
+            if not (error := await self._async_validate_input(user_input)):
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=user_input
+                )
 
             errors["base"] = error
         return self.async_show_form(
@@ -94,7 +89,7 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
             return "invalid_auth"
         except LitterRobotException:
             return "cannot_connect"
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception: %s", ex)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return "unknown"
         return ""

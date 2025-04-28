@@ -18,6 +18,7 @@ from yalexs.activity import (
     ACTIVITY_ACTIONS_LOCK_OPERATION,
     SOURCE_LOCK_OPERATE,
     SOURCE_LOG,
+    Activity,
     BridgeOperationActivity,
     DoorbellDingActivity,
     DoorbellMotionActivity,
@@ -25,7 +26,7 @@ from yalexs.activity import (
     DoorOperationActivity,
     LockOperationActivity,
 )
-from yalexs.authenticator import AuthenticationState
+from yalexs.authenticator_common import AuthenticationState
 from yalexs.const import Brand
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.lock import Lock, LockDetail
@@ -58,11 +59,15 @@ def _mock_authenticator(auth_state):
     return authenticator
 
 
-@patch("homeassistant.components.august.gateway.ApiAsync")
-@patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
+def _timetoken():
+    return str(time.time_ns())[:-2]
+
+
+@patch("yalexs.manager.gateway.ApiAsync")
+@patch("yalexs.manager.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_august(
-    hass, api_instance, pubnub_mock, authenticate_mock, api_mock, brand
-):
+    hass: HomeAssistant, api_instance, pubnub_mock, authenticate_mock, api_mock, brand
+) -> MockConfigEntry:
     """Set up august integration."""
     authenticate_mock.side_effect = MagicMock(
         return_value=_mock_august_authentication(
@@ -76,8 +81,9 @@ async def _mock_setup_august(
         options={},
     )
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.august.async_create_pubnub"), patch(
-        "homeassistant.components.august.AugustPubNub", return_value=pubnub_mock
+    with (
+        patch.object(pubnub_mock, "run"),
+        patch("yalexs.manager.data.AugustPubNub", return_value=pubnub_mock),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -99,13 +105,13 @@ async def _create_august_with_devices(
 
 
 async def _create_august_api_with_devices(
-    hass,
-    devices,
-    api_call_side_effects=None,
-    activities=None,
-    pubnub=None,
-    brand=Brand.AUGUST,
-):
+    hass: HomeAssistant,
+    devices: Iterable[LockDetail | DoorbellDetail],
+    api_call_side_effects: dict[str, Any] | None = None,
+    activities: list[Any] | None = None,
+    pubnub: AugustPubNub | None = None,
+    brand: Brand = Brand.AUGUST,
+) -> tuple[MockConfigEntry, MagicMock]:
     if api_call_side_effects is None:
         api_call_side_effects = {}
     if pubnub is None:
@@ -190,6 +196,9 @@ async def _create_august_api_with_devices(
     api_call_side_effects.setdefault(
         "unlock_return_activities", unlock_return_activities_side_effect
     )
+    api_call_side_effects.setdefault(
+        "async_unlatch_return_activities", unlock_return_activities_side_effect
+    )
 
     api_instance, entry = await _mock_setup_august_with_api_side_effects(
         hass, api_call_side_effects, pubnub, brand
@@ -204,9 +213,12 @@ async def _create_august_api_with_devices(
 
 
 async def _mock_setup_august_with_api_side_effects(
-    hass, api_call_side_effects, pubnub, brand=Brand.AUGUST
+    hass: HomeAssistant,
+    api_call_side_effects: dict[str, Any],
+    pubnub: AugustPubNub,
+    brand: Brand = Brand.AUGUST,
 ):
-    api_instance = MagicMock(name="Api")
+    api_instance = MagicMock(name="Api", brand=brand)
 
     if api_call_side_effects["get_lock_detail"]:
         type(api_instance).async_get_lock_detail = AsyncMock(
@@ -243,10 +255,17 @@ async def _mock_setup_august_with_api_side_effects(
             side_effect=api_call_side_effects["unlock_return_activities"]
         )
 
+    if api_call_side_effects["async_unlatch_return_activities"]:
+        type(api_instance).async_unlatch_return_activities = AsyncMock(
+            side_effect=api_call_side_effects["async_unlatch_return_activities"]
+        )
+
     api_instance.async_unlock_async = AsyncMock()
     api_instance.async_lock_async = AsyncMock()
     api_instance.async_status_async = AsyncMock()
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
+    api_instance.async_unlatch_async = AsyncMock()
+    api_instance.async_unlatch = AsyncMock()
 
     return api_instance, await _mock_setup_august(
         hass, api_instance, pubnub, brand=brand
@@ -317,19 +336,21 @@ def _mock_august_lock_data(lockid="mocklockid1", houseid="mockhouseid1"):
     }
 
 
-async def _mock_operative_august_lock_detail(hass):
+async def _mock_operative_august_lock_detail(hass: HomeAssistant) -> LockDetail:
     return await _mock_lock_from_fixture(hass, "get_lock.online.json")
 
 
-async def _mock_lock_with_offline_key(hass):
+async def _mock_lock_with_offline_key(hass: HomeAssistant) -> LockDetail:
     return await _mock_lock_from_fixture(hass, "get_lock.online_with_keys.json")
 
 
-async def _mock_inoperative_august_lock_detail(hass):
+async def _mock_inoperative_august_lock_detail(hass: HomeAssistant) -> LockDetail:
     return await _mock_lock_from_fixture(hass, "get_lock.offline.json")
 
 
-async def _mock_activities_from_fixture(hass, path):
+async def _mock_activities_from_fixture(
+    hass: HomeAssistant, path: str
+) -> list[Activity]:
     json_dict = await _load_json_fixture(hass, path)
     activities = []
     for activity_json in json_dict:
@@ -340,29 +361,33 @@ async def _mock_activities_from_fixture(hass, path):
     return activities
 
 
-async def _mock_lock_from_fixture(hass, path):
+async def _mock_lock_from_fixture(hass: HomeAssistant, path: str) -> LockDetail:
     json_dict = await _load_json_fixture(hass, path)
     return LockDetail(json_dict)
 
 
-async def _mock_doorbell_from_fixture(hass, path):
+async def _mock_doorbell_from_fixture(hass: HomeAssistant, path: str) -> DoorbellDetail:
     json_dict = await _load_json_fixture(hass, path)
     return DoorbellDetail(json_dict)
 
 
-async def _load_json_fixture(hass, path):
+async def _load_json_fixture(hass: HomeAssistant, path: str) -> Any:
     fixture = await hass.async_add_executor_job(
         load_fixture, os.path.join("august", path)
     )
     return json.loads(fixture)
 
 
-async def _mock_doorsense_enabled_august_lock_detail(hass):
+async def _mock_doorsense_enabled_august_lock_detail(hass: HomeAssistant) -> LockDetail:
     return await _mock_lock_from_fixture(hass, "get_lock.online_with_doorsense.json")
 
 
-async def _mock_doorsense_missing_august_lock_detail(hass):
+async def _mock_doorsense_missing_august_lock_detail(hass: HomeAssistant) -> LockDetail:
     return await _mock_lock_from_fixture(hass, "get_lock.online_missing_doorsense.json")
+
+
+async def _mock_lock_with_unlatch(hass: HomeAssistant) -> LockDetail:
+    return await _mock_lock_from_fixture(hass, "get_lock.online_with_unlatch.json")
 
 
 def _mock_lock_operation_activity(lock, action, offset):
@@ -389,7 +414,7 @@ def _mock_door_operation_activity(lock, action, offset):
     )
 
 
-def _activity_from_dict(activity_dict):
+def _activity_from_dict(activity_dict: dict[str, Any]) -> Activity | None:
     action = activity_dict.get("action")
 
     activity_dict["dateTime"] = time.time() * 1000

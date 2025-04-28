@@ -60,6 +60,7 @@ def blink_api_fixture(camera) -> MagicMock:
     mock_blink_api.refresh = AsyncMock(return_value=True)
     mock_blink_api.sync = MagicMock(return_value=True)
     mock_blink_api.cameras = {camera.name: camera}
+    mock_blink_api.request_homescreen = AsyncMock(return_value=True)
 
     with patch("homeassistant.components.blink.Blink") as class_mock:
         class_mock.return_value = mock_blink_api

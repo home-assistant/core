@@ -43,7 +43,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_CAT,
@@ -65,6 +65,8 @@ from .const import (
     SIGNAL_PRINT_ALDB,
     SIGNAL_REMOVE_DEVICE_OVERRIDE,
     SIGNAL_REMOVE_ENTITY,
+    SIGNAL_REMOVE_HA_DEVICE,
+    SIGNAL_REMOVE_INSTEON_DEVICE,
     SIGNAL_REMOVE_X10_DEVICE,
     SIGNAL_SAVE_DEVICES,
     SRV_ADD_ALL_LINK,
@@ -96,7 +98,7 @@ from .schemas import (
 )
 
 if TYPE_CHECKING:
-    from .insteon_entity import InsteonEntity
+    from .entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -179,7 +181,7 @@ def register_new_device_callback(hass):
 
 
 @callback
-def async_register_services(hass):
+def async_register_services(hass):  # noqa: C901
     """Register services used by insteon component."""
 
     save_lock = asyncio.Lock()
@@ -270,14 +272,14 @@ def async_register_services(hass):
     async def async_add_device_override(override):
         """Remove an Insten device and associated entities."""
         address = Address(override[CONF_ADDRESS])
-        await async_remove_device(address)
+        await async_remove_ha_device(address)
         devices.set_id(address, override[CONF_CAT], override[CONF_SUBCAT], 0)
         await async_srv_save_devices()
 
     async def async_remove_device_override(address):
         """Remove an Insten device and associated entities."""
         address = Address(address)
-        await async_remove_device(address)
+        await async_remove_ha_device(address)
         devices.set_id(address, None, None, None)
         await devices.async_identify_device(address)
         await async_srv_save_devices()
@@ -304,9 +306,9 @@ def async_register_services(hass):
         """Remove an X10 device and associated entities."""
         address = create_x10_address(housecode, unitcode)
         devices.pop(address)
-        await async_remove_device(address)
+        await async_remove_ha_device(address)
 
-    async def async_remove_device(address):
+    async def async_remove_ha_device(address: Address, remove_all_refs: bool = False):
         """Remove the device and all entities from hass."""
         signal = f"{address.id}_{SIGNAL_REMOVE_ENTITY}"
         async_dispatcher_send(hass, signal)
@@ -314,6 +316,15 @@ def async_register_services(hass):
         device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
         if device:
             dev_registry.async_remove_device(device.id)
+
+    async def async_remove_insteon_device(
+        address: Address, remove_all_refs: bool = False
+    ):
+        """Remove the underlying Insteon device from the network."""
+        await devices.async_remove_device(
+            address=address, force=False, remove_all_refs=remove_all_refs
+        )
+        await async_srv_save_devices()
 
     hass.services.async_register(
         DOMAIN, SRV_ADD_ALL_LINK, async_srv_add_all_link, schema=ADD_ALL_LINK_SCHEMA
@@ -368,6 +379,10 @@ def async_register_services(hass):
     )
     async_dispatcher_connect(hass, SIGNAL_ADD_X10_DEVICE, async_add_x10_device)
     async_dispatcher_connect(hass, SIGNAL_REMOVE_X10_DEVICE, async_remove_x10_device)
+    async_dispatcher_connect(hass, SIGNAL_REMOVE_HA_DEVICE, async_remove_ha_device)
+    async_dispatcher_connect(
+        hass, SIGNAL_REMOVE_INSTEON_DEVICE, async_remove_insteon_device
+    )
     _LOGGER.debug("Insteon Services registered")
 
 
@@ -389,7 +404,7 @@ def print_aldb_to_log(aldb):
         hwm = "Y" if rec.is_high_water_mark else "N"
         log_msg = (
             f" {rec.mem_addr:04x}    {in_use:s}     {mode:s}   {hwm:s}    "
-            f"{rec.group:3d} {str(rec.target):s}   {rec.data1:3d}   "
+            f"{rec.group:3d} {rec.target!s:s}   {rec.data1:3d}   "
             f"{rec.data2:3d}   {rec.data3:3d}"
         )
         logger.info(log_msg)
@@ -400,7 +415,7 @@ def async_add_insteon_entities(
     hass: HomeAssistant,
     platform: Platform,
     entity_type: type[InsteonEntity],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_info: dict[str, Any],
 ) -> None:
     """Add an Insteon group to a platform."""
@@ -417,7 +432,7 @@ def async_add_insteon_devices(
     hass: HomeAssistant,
     platform: Platform,
     entity_type: type[InsteonEntity],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add all entities to a platform."""
     for address in devices:
@@ -456,3 +471,18 @@ def get_usb_ports() -> dict[str, str]:
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     """Return a dict of USB ports and their friendly names."""
     return await hass.async_add_executor_job(get_usb_ports)
+
+
+def compute_device_name(ha_device) -> str:
+    """Return the HA device name."""
+    return ha_device.name_by_user if ha_device.name_by_user else ha_device.name
+
+
+async def async_device_name(dev_registry: dr.DeviceRegistry, address: Address) -> str:
+    """Get the Insteon device name from a device registry id."""
+    ha_device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
+    if not ha_device:
+        if device := devices[address]:
+            return f"{device.description} ({device.model})"
+        return ""
+    return compute_device_name(ha_device)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from asyncio import timeout
+import logging
 from typing import Any
 
 from hko import HKO, LOCATIONS, HKOError
@@ -14,6 +15,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import API_RHRREAD, DEFAULT_LOCATION, DOMAIN, KEY_LOCATION
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_loc_name(item):
@@ -54,7 +57,8 @@ class HKOConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except HKOError:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(

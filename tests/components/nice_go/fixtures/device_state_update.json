@@ -1,0 +1,21 @@
+{
+  "data": {
+    "devicesStatesUpdateFeed": {
+      "receiver": "ORG/0:2372",
+      "item": {
+        "deviceId": "1",
+        "desired": "{\"key\":\"value\"}",
+        "reported": "{\"displayName\":\"Test Garage 1\",\"autoDisabled\":false,\"migrationStatus\":\"DONE\",\"deviceId\":\"1\",\"lightStatus\":\"0,100\",\"vcnMode\":false,\"deviceFwVersion\":\"1.2.3.4.5.6\",\"barrierStatus\":\"0,0,1,0,-1,0,3,0\"}",
+        "timestamp": 123,
+        "version": 123,
+        "connectionState": {
+          "connected": true,
+          "updatedTimestamp": "123",
+          "__typename": "DeviceConnectionState"
+        },
+        "__typename": "DeviceState"
+      },
+      "__typename": "DeviceStateUpdateNotice"
+    }
+  }
+}

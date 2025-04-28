@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
@@ -53,20 +53,20 @@ MEDIA_SET_REPEAT_MAP: Final[dict[RepeatMode, int]] = {
     RepeatMode.ALL: 2,
 }
 
-MEDIA_PLAYER_DESCRIPTION: Final[
-    MediaPlayerEntityDescription
-] = MediaPlayerEntityDescription(
-    key="media",
-    translation_key="media",
-    icon="mdi:volume-high",
-    device_class=MediaPlayerDeviceClass.RECEIVER,
+MEDIA_PLAYER_DESCRIPTION: Final[MediaPlayerEntityDescription] = (
+    MediaPlayerEntityDescription(
+        key="media",
+        translation_key="media",
+        icon="mdi:volume-high",
+        device_class=MediaPlayerDeviceClass.RECEIVER,
+    )
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up System Bridge media players based on a config entry."""
     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

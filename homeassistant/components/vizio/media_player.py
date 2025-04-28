@@ -32,9 +32,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import VizioAppsDataUpdateCoordinator
 from .const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
@@ -53,6 +52,7 @@ from .const import (
     VIZIO_SOUND_MODE,
     VIZIO_VOLUME,
 )
+from .coordinator import VizioAppsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Vizio media player entry."""
     host = config_entry.data[CONF_HOST]
@@ -159,6 +159,7 @@ class VizioDevice(MediaPlayerEntity):
         )
         self._device = device
         self._max_volume = float(device.get_max_volume())
+        self._attr_assumed_state = True
 
         # Entity class attributes that will change with each update (we only include
         # the ones that are initialized differently from the defaults)
@@ -199,7 +200,7 @@ class VizioDevice(MediaPlayerEntity):
             return
 
         if not self._attr_available:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Restored connection to %s", self._config_entry.data[CONF_HOST]
             )
             self._attr_available = True
@@ -483,3 +484,11 @@ class VizioDevice(MediaPlayerEntity):
                 num = int(self._max_volume * (self._attr_volume_level - volume))
                 await self._device.vol_down(num=num, log_api_exception=False)
                 self._attr_volume_level = volume
+
+    async def async_media_play(self) -> None:
+        """Play whatever media is currently active."""
+        await self._device.play(log_api_exception=False)
+
+    async def async_media_pause(self) -> None:
+        """Pause whatever media is currently active."""
+        await self._device.pause(log_api_exception=False)

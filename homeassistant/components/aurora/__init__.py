@@ -1,61 +1,37 @@
 """The aurora component."""
 
-import logging
-
-from auroranoaa import AuroraForecast
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
 
-from .const import AURORA_API, CONF_THRESHOLD, COORDINATOR, DEFAULT_THRESHOLD, DOMAIN
-from .coordinator import AuroraDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_THRESHOLD, DEFAULT_THRESHOLD
+from .coordinator import AuroraConfigEntry, AuroraDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AuroraConfigEntry) -> bool:
     """Set up Aurora from a config entry."""
-
-    conf = entry.data
-    options = entry.options
-
-    session = aiohttp_client.async_get_clientsession(hass)
-    api = AuroraForecast(session)
-
-    longitude = conf[CONF_LONGITUDE]
-    latitude = conf[CONF_LATITUDE]
-    threshold = options.get(CONF_THRESHOLD, DEFAULT_THRESHOLD)
-
-    coordinator = AuroraDataUpdateCoordinator(
-        hass=hass,
-        api=api,
-        latitude=latitude,
-        longitude=longitude,
-        threshold=threshold,
-    )
+    coordinator = AuroraDataUpdateCoordinator(hass=hass, config_entry=entry)
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        COORDINATOR: coordinator,
-        AURORA_API: api,
-    }
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def update_listener(hass: HomeAssistant, entry: AuroraConfigEntry) -> None:
+    """Handle options update."""
+    entry.runtime_data.threshold = int(
+        entry.options.get(CONF_THRESHOLD, DEFAULT_THRESHOLD)
+    )
+    # refresh the state of the visibility alert binary sensor
+    await entry.runtime_data.async_request_refresh()
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: AuroraConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -22,6 +22,15 @@
       "climate_state_auto_steering_wheel_heat": {
         "default": "mdi:steering"
       },
+      "storm_mode_active": {
+        "default": "mdi:weather-sunny",
+        "state": {
+          "on": "mdi:weather-lightning-rainy"
+        }
+      },
+      "grid_services_power": {
+        "default": "mdi:transmission-tower"
+      },
       "vehicle_state_dashcam_state": {
         "default": "mdi:camera-off",
         "state": {
@@ -189,6 +198,42 @@
       },
       "drive_state_active_route_destination": {
         "default": "mdi:map-marker"
+      },
+      "battery_power": {
+        "default": "mdi:home-battery"
+      },
+      "energy_left": {
+        "default": "mdi:battery"
+      },
+      "generator_power": {
+        "default": "mdi:generator-stationary"
+      },
+      "grid_power": {
+        "default": "mdi:transmission-tower"
+      },
+      "grid_services_power": {
+        "default": "mdi:transmission-tower"
+      },
+      "load_power": {
+        "default": "mdi:power-plug"
+      },
+      "solar_power": {
+        "default": "mdi:solar-power"
+      },
+      "total_pack_energy": {
+        "default": "mdi:battery-high"
+      },
+      "vin": {
+        "default": "mdi:car-electric"
+      },
+      "wall_connector_fault_state": {
+        "default": "mdi:ev-station"
+      },
+      "wall_connector_power": {
+        "default": "mdi:ev-station"
+      },
+      "wall_connector_state": {
+        "default": "mdi:ev-station"
       }
     },
     "switch": {
@@ -206,6 +251,12 @@
       },
       "charge_state_charge_enable_request": {
         "default": "mdi:ev-plug-ccs2"
+      },
+      "components_disallow_charge_from_grid_with_solar_installed": {
+        "state": {
+          "false": "mdi:transmission-tower",
+          "true": "mdi:solar-power"
+        }
       }
     }
   }

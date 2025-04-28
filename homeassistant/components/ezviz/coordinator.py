@@ -13,6 +13,7 @@ from pyezviz.exceptions import (
     PyEzvizError,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -21,19 +22,32 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type EzvizConfigEntry = ConfigEntry[EzvizDataUpdateCoordinator]
+
 
 class EzvizDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching EZVIZ data."""
 
     def __init__(
-        self, hass: HomeAssistant, *, api: EzvizClient, api_timeout: int
+        self,
+        hass: HomeAssistant,
+        entry: EzvizConfigEntry,
+        *,
+        api: EzvizClient,
+        api_timeout: int,
     ) -> None:
         """Initialize global EZVIZ data updater."""
         self.ezviz_client = api
         self._api_timeout = api_timeout
         update_interval = timedelta(seconds=30)
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=update_interval,
+        )
 
     async def _async_update_data(self) -> dict:
         """Fetch data from EZVIZ."""

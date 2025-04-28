@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import DOMAIN
@@ -33,7 +33,7 @@ from . import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the demo sensor platform."""
     async_add_entities(
@@ -149,7 +149,7 @@ class DemoSensor(SensorEntity):
         self,
         unique_id: str,
         device_name: str | None,
-        state: float | int | str | None,
+        state: float | str | None,
         device_class: SensorDeviceClass,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,

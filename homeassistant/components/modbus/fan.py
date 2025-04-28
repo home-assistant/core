@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.fan import FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
-from .base_platform import BaseSwitch
 from .const import CONF_FANS
+from .entity import BaseSwitch
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -25,18 +25,24 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Read configuration and create Modbus fans."""
-    if discovery_info is None:
+    if discovery_info is None or not (fans := discovery_info[CONF_FANS]):
         return
-    fans = []
-
-    for entry in discovery_info[CONF_FANS]:
-        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        fans.append(ModbusFan(hass, hub, entry))
-    async_add_entities(fans)
+    hub = get_hub(hass, discovery_info[CONF_NAME])
+    async_add_entities(ModbusFan(hass, hub, config) for config in fans)
 
 
 class ModbusFan(BaseSwitch, FanEntity):
     """Class representing a Modbus fan."""
+
+    def __init__(
+        self, hass: HomeAssistant, hub: ModbusHub, config: dict[str, Any]
+    ) -> None:
+        """Initialize the fan."""
+        super().__init__(hass, hub, config)
+        if self.command_on is not None and self._command_off is not None:
+            self._attr_supported_features |= (
+                FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+            )
 
     async def async_turn_on(
         self,

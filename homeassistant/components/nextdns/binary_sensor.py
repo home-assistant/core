@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
 
 from nextdns import ConnectionStatus
 
@@ -13,42 +12,33 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CoordinatorDataT, NextDnsConnectionUpdateCoordinator
-from .const import ATTR_CONNECTION, DOMAIN
+from . import NextDnsConfigEntry
+from .coordinator import NextDnsUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
-class NextDnsBinarySensorRequiredKeysMixin(Generic[CoordinatorDataT]):
-    """Mixin for required keys."""
-
-    state: Callable[[CoordinatorDataT, str], bool]
-
-
-@dataclass(frozen=True)
-class NextDnsBinarySensorEntityDescription(
-    BinarySensorEntityDescription,
-    NextDnsBinarySensorRequiredKeysMixin[CoordinatorDataT],
-):
+@dataclass(frozen=True, kw_only=True)
+class NextDnsBinarySensorEntityDescription(BinarySensorEntityDescription):
     """NextDNS binary sensor entity description."""
+
+    state: Callable[[ConnectionStatus, str], bool]
 
 
 SENSORS = (
-    NextDnsBinarySensorEntityDescription[ConnectionStatus](
+    NextDnsBinarySensorEntityDescription(
         key="this_device_nextdns_connection_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="device_connection_status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         state=lambda data, _: data.connected,
     ),
-    NextDnsBinarySensorEntityDescription[ConnectionStatus](
+    NextDnsBinarySensorEntityDescription(
         key="this_device_profile_connection_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="device_profile_connection_status",
@@ -60,13 +50,11 @@ SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: NextDnsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add NextDNS entities from a config_entry."""
-    coordinator: NextDnsConnectionUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        ATTR_CONNECTION
-    ]
+    coordinator = entry.runtime_data.connection
 
     async_add_entities(
         NextDnsBinarySensor(coordinator, description) for description in SENSORS
@@ -74,7 +62,7 @@ async def async_setup_entry(
 
 
 class NextDnsBinarySensor(
-    CoordinatorEntity[NextDnsConnectionUpdateCoordinator], BinarySensorEntity
+    CoordinatorEntity[NextDnsUpdateCoordinator[ConnectionStatus]], BinarySensorEntity
 ):
     """Define an NextDNS binary sensor."""
 
@@ -83,7 +71,7 @@ class NextDnsBinarySensor(
 
     def __init__(
         self,
-        coordinator: NextDnsConnectionUpdateCoordinator,
+        coordinator: NextDnsUpdateCoordinator[ConnectionStatus],
         description: NextDnsBinarySensorEntityDescription,
     ) -> None:
         """Initialize."""

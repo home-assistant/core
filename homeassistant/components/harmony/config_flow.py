@@ -11,7 +11,6 @@ from aioharmony.hubconnector_websocket import HubConnector
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_DELAY_SECS,
@@ -26,8 +25,12 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    SsdpServiceInfo,
+)
 
-from .const import DOMAIN, HARMONY_DATA, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
+from .const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
 from .util import (
     find_best_name_for_remote,
     find_unique_id_for_remote,
@@ -76,7 +79,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
                 validated = await validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -93,13 +96,13 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Harmony device."""
         _LOGGER.debug("SSDP discovery_info: %s", discovery_info)
 
         parsed_url = urlparse(discovery_info.ssdp_location)
-        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        friendly_name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
 
         self._async_abort_entries_match({CONF_HOST: parsed_url.hostname})
 
@@ -155,7 +158,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def _async_create_entry_from_valid_input(
         self, validated: dict[str, Any], user_input: dict[str, Any]
@@ -185,10 +188,6 @@ def _options_from_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for Harmony."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -196,8 +195,7 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        remote = self.hass.data[DOMAIN][self.config_entry.entry_id][HARMONY_DATA]
-
+        remote = self.config_entry.runtime_data
         data_schema = vol.Schema(
             {
                 vol.Optional(

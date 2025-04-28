@@ -7,12 +7,31 @@ FROM ${BUILD_FROM}
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
     S6_SERVICES_GRACETIME=240000 \
-    UV_SYSTEM_PYTHON=true
+    UV_SYSTEM_PYTHON=true \
+    UV_NO_CACHE=true
 
 ARG QEMU_CPU
 
+# Home Assistant S6-Overlay
+COPY rootfs /
+
+# Needs to be redefined inside the FROM statement to be set for RUN commands
+ARG BUILD_ARCH
+# Get go2rtc binary
+RUN \
+    case "${BUILD_ARCH}" in \
+        "aarch64") go2rtc_suffix='arm64' ;; \
+        "armhf") go2rtc_suffix='armv6' ;; \
+        "armv7") go2rtc_suffix='arm' ;; \
+        *) go2rtc_suffix=${BUILD_ARCH} ;; \
+    esac \
+    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.9/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
+    && chmod +x /bin/go2rtc \
+    # Verify go2rtc can be executed
+    && go2rtc --version
+
 # Install uv
-RUN pip3 install uv==0.1.24
+RUN pip3 install uv==0.6.10
 
 WORKDIR /usr/src
 
@@ -29,19 +48,9 @@ RUN \
     if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then \
         uv pip install homeassistant/home_assistant_*.whl; \
     fi \
-    && if [ "${BUILD_ARCH}" = "i386" ]; then \
-        LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
-        MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000" \
-        linux32 uv pip install \
-            --no-build \
-            -r homeassistant/requirements_all.txt; \
-    else \
-        LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
-        MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000" \
-        uv pip install \
-            --no-build \
-            -r homeassistant/requirements_all.txt; \
-    fi
+    && uv pip install \
+        --no-build \
+        -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
 COPY . homeassistant/
@@ -50,8 +59,5 @@ RUN \
         -e ./homeassistant \
     && python3 -m compileall \
         homeassistant/homeassistant
-
-# Home Assistant S6-Overlay
-COPY rootfs /
 
 WORKDIR /config

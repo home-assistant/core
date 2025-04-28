@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import logging
 from typing import Any, cast
 
-from prayer_times_calculator import PrayerTimesCalculator, exceptions
-from requests.exceptions import ConnectionError as ConnError
+from prayer_times_calculator_offline import PrayerTimesCalculator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.event import async_call_later, async_track_point_in_time
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_CALC_METHOD,
@@ -30,21 +29,26 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type IslamicPrayerTimesConfigEntry = ConfigEntry[IslamicPrayerDataUpdateCoordinator]
+
 
 class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
     """Islamic Prayer Client Object."""
 
-    config_entry: ConfigEntry
+    config_entry: IslamicPrayerTimesConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: IslamicPrayerTimesConfigEntry
+    ) -> None:
         """Initialize the Islamic Prayer client."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
         )
-        self.latitude = self.config_entry.data[CONF_LATITUDE]
-        self.longitude = self.config_entry.data[CONF_LONGITUDE]
+        self.latitude = config_entry.data[CONF_LATITUDE]
+        self.longitude = config_entry.data[CONF_LONGITUDE]
         self.event_unsub: CALLBACK_TYPE | None = None
 
     @property
@@ -71,8 +75,8 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
         """Return the school."""
         return self.config_entry.options.get(CONF_SCHOOL, DEFAULT_SCHOOL)
 
-    def get_new_prayer_times(self) -> dict[str, Any]:
-        """Fetch prayer times for today."""
+    def get_new_prayer_times(self, for_date: date) -> dict[str, Any]:
+        """Fetch prayer times for the specified date."""
         calc = PrayerTimesCalculator(
             latitude=self.latitude,
             longitude=self.longitude,
@@ -80,7 +84,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
             latitudeAdjustmentMethod=self.lat_adj_method,
             midnightMode=self.midnight_mode,
             school=self.school,
-            date=str(dt_util.now().date()),
+            date=str(for_date),
             iso8601=True,
         )
         return cast(dict[str, Any], calc.fetch_prayer_times())
@@ -89,51 +93,18 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
     def async_schedule_future_update(self, midnight_dt: datetime) -> None:
         """Schedule future update for sensors.
 
-        Midnight is a calculated time.  The specifics of the calculation
-        depends on the method of the prayer time calculation.  This calculated
-        midnight is the time at which the time to pray the Isha prayers have
-        expired.
+        The least surprising behaviour is to load the next day's prayer times only
+        after the current day's prayers are complete. We will take the fiqhi opinion
+        that Isha should be prayed before Islamic midnight (which may be before or after 12:00 midnight),
+        and thus we will switch to the next day's timings at Islamic midnight.
 
-        Calculated Midnight: The Islamic midnight.
-        Traditional Midnight: 12:00AM
-
-        Update logic for prayer times:
-
-        If the Calculated Midnight is before the traditional midnight then wait
-        until the traditional midnight to run the update.  This way the day
-        will have changed over and we don't need to do any fancy calculations.
-
-        If the Calculated Midnight is after the traditional midnight, then wait
-        until after the calculated Midnight.  We don't want to update the prayer
-        times too early or else the timings might be incorrect.
-
-        Example:
-        calculated midnight = 11:23PM (before traditional midnight)
-        Update time: 12:00AM
-
-        calculated midnight = 1:35AM (after traditional midnight)
-        update time: 1:36AM.
+        The +1s is to ensure that any automations predicated on the arrival of Islamic midnight will run.
 
         """
         _LOGGER.debug("Scheduling next update for Islamic prayer times")
 
-        now = dt_util.utcnow()
-
-        if now > midnight_dt:
-            next_update_at = midnight_dt + timedelta(days=1, minutes=1)
-            _LOGGER.debug(
-                "Midnight is after the day changes so schedule update for after Midnight the next day"
-            )
-        else:
-            _LOGGER.debug(
-                "Midnight is before the day changes so schedule update for the next start of day"
-            )
-            next_update_at = dt_util.start_of_local_day(now + timedelta(days=1))
-
-        _LOGGER.debug("Next update scheduled for: %s", next_update_at)
-
         self.event_unsub = async_track_point_in_time(
-            self.hass, self.async_request_update, next_update_at
+            self.hass, self.async_request_update, midnight_dt + timedelta(seconds=1)
         )
 
     async def async_request_update(self, _: datetime) -> None:
@@ -141,14 +112,34 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
         await self.async_request_refresh()
 
     async def _async_update_data(self) -> dict[str, datetime]:
-        """Update sensors with new prayer times."""
-        try:
-            prayer_times = await self.hass.async_add_executor_job(
-                self.get_new_prayer_times
-            )
-        except (exceptions.InvalidResponseError, ConnError) as err:
-            async_call_later(self.hass, 60, self.async_request_update)
-            raise UpdateFailed from err
+        """Update sensors with new prayer times.
+
+        Prayer time calculations "roll over" at 12:00 midnight - but this does not mean that all prayers
+        occur within that Gregorian calendar day. For instance Jasper, Alta. sees Isha occur after 00:00 in the summer.
+        It is similarly possible (albeit less likely) that Fajr occurs before 00:00.
+
+        As such, to ensure that no prayer times are "unreachable" (e.g. we always see the Isha timestamp pass before loading the next day's times),
+        we calculate 3 days' worth of times (-1, 0, +1 days) and select the appropriate set based on Islamic midnight.
+
+        The calculation is inexpensive, so there is no need to cache it.
+        """
+
+        # Zero out the us component to maintain consistent rollover at T+1s
+        now = dt_util.now().replace(microsecond=0)
+        yesterday_times = self.get_new_prayer_times((now - timedelta(days=1)).date())
+        today_times = self.get_new_prayer_times(now.date())
+        tomorrow_times = self.get_new_prayer_times((now + timedelta(days=1)).date())
+
+        if (
+            yesterday_midnight := dt_util.parse_datetime(yesterday_times["Midnight"])
+        ) and now <= yesterday_midnight:
+            prayer_times = yesterday_times
+        elif (
+            tomorrow_midnight := dt_util.parse_datetime(today_times["Midnight"])
+        ) and now > tomorrow_midnight:
+            prayer_times = tomorrow_times
+        else:
+            prayer_times = today_times
 
         # introduced in prayer-times-calculator 0.0.8
         prayer_times.pop("date", None)

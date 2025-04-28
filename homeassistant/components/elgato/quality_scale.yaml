@@ -1,0 +1,82 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: todo
+    comment: |
+      The integration doesn't update the device info based on DHCP discovery
+      of known existing devices.
+  discovery: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: todo
+    comment: |
+      Device are documented, but some are missing. For example, the their pro
+      strip is supported as well.
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This integration connects to a single device.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration does not raise any repairable issues.
+  stale-devices:
+    status: exempt
+    comment: |
+      This integration connects to a single device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

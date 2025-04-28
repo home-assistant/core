@@ -1,0 +1,53 @@
+{
+  "shadeIds": [36492, 65111, 7003, 53627],
+  "shadeData": [
+    {
+      "id": 36492,
+      "name": "S2l0Y2hlbiBOb3J0aA==",
+      "roomId": 4896,
+      "groupId": 35661,
+      "order": 0,
+      "type": 40,
+      "batteryStrength": 116,
+      "batteryStatus": 3,
+      "positions": { "position1": 65535, "posKind1": 1 },
+      "name_unicode": "Kitchen North"
+    },
+    {
+      "id": 65111,
+      "name": "S2l0Y2hlbiBXZXN0",
+      "roomId": 4896,
+      "groupId": 35661,
+      "order": 1,
+      "type": 40,
+      "batteryStrength": 124,
+      "batteryStatus": 3,
+      "positions": { "position1": 65535, "posKind1": 3 },
+      "name_unicode": "Kitchen West"
+    },
+    {
+      "id": 7003,
+      "name": "QmF0aCBFYXN0",
+      "roomId": 4896,
+      "groupId": 35661,
+      "order": 2,
+      "type": 40,
+      "batteryStrength": 94,
+      "batteryStatus": 1,
+      "positions": { "position1": 65535, "posKind1": 1 },
+      "name_unicode": "Bath East"
+    },
+    {
+      "id": 53627,
+      "name": "QmF0aCBTb3V0aA==",
+      "roomId": 4896,
+      "groupId": 35661,
+      "order": 3,
+      "type": 40,
+      "batteryStrength": 127,
+      "batteryStatus": 3,
+      "positions": { "position1": 65535, "posKind1": 3 },
+      "name_unicode": "Bath South"
+    }
+  ]
+}

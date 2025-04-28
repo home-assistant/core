@@ -28,7 +28,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
@@ -36,7 +37,8 @@
       "init": {
         "title": "Configure options",
         "data": {
-          "scan_interval": "How often to poll Risco (in seconds)",
+          "scan_interval": "How often to poll Risco Cloud (in seconds)",
+          "concurrency": "Maximum concurrent requests in Risco local",
           "code_arm_required": "Require PIN to arm",
           "code_disarm_required": "Require PIN to disarm"
         }

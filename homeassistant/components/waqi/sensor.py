@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
 
 from aiowaqi import WAQIAirQuality
 from aiowaqi.models import Pollutant
@@ -17,16 +16,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    ATTR_TIME,
-    PERCENTAGE,
-    UnitOfPressure,
-    UnitOfTemperature,
-)
+from homeassistant.const import PERCENTAGE, UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -49,7 +42,7 @@ ATTR_SULFUR_DIOXIDE = "sulfur_dioxide"
 class WAQISensorEntityDescription(SensorEntityDescription):
     """Describes WAQI sensor entity."""
 
-    available_fn: Callable[[WAQIAirQuality], bool]
+    available_fn: Callable[[WAQIAirQuality], bool] = lambda _: True
     value_fn: Callable[[WAQIAirQuality], StateType]
 
 
@@ -59,7 +52,6 @@ SENSORS: list[WAQISensorEntityDescription] = [
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda aq: aq.air_quality_index,
-        available_fn=lambda _: True,
     ),
     WAQISensorEntityDescription(
         key="humidity",
@@ -141,22 +133,21 @@ SENSORS: list[WAQISensorEntityDescription] = [
         device_class=SensorDeviceClass.ENUM,
         options=[pollutant.value for pollutant in Pollutant],
         value_fn=lambda aq: aq.dominant_pollutant,
-        available_fn=lambda _: True,
     ),
 ]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WAQI sensor."""
     coordinator: WAQIDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            WaqiSensor(coordinator, sensor)
-            for sensor in SENSORS
-            if sensor.available_fn(coordinator.data)
-        ]
+        WaqiSensor(coordinator, sensor)
+        for sensor in SENSORS
+        if sensor.available_fn(coordinator.data)
     )
 
 
@@ -188,28 +179,3 @@ class WaqiSensor(CoordinatorEntity[WAQIDataUpdateCoordinator], SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the device."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return old state attributes if the entity is AQI entity."""
-        # These are deprecated and will be removed in 2024.5
-        if self.entity_description.key != "air_quality":
-            return None
-        attrs: dict[str, Any] = {}
-        attrs[ATTR_TIME] = self.coordinator.data.measured_at
-        attrs[ATTR_DOMINENTPOL] = self.coordinator.data.dominant_pollutant
-
-        iaqi = self.coordinator.data.extended_air_quality
-
-        attribute = {
-            ATTR_PM2_5: iaqi.pm25,
-            ATTR_PM10: iaqi.pm10,
-            ATTR_HUMIDITY: iaqi.humidity,
-            ATTR_PRESSURE: iaqi.pressure,
-            ATTR_TEMPERATURE: iaqi.temperature,
-            ATTR_OZONE: iaqi.ozone,
-            ATTR_NITROGEN_DIOXIDE: iaqi.nitrogen_dioxide,
-            ATTR_SULFUR_DIOXIDE: iaqi.sulfur_dioxide,
-        }
-        res_attributes = {k: v for k, v in attribute.items() if v is not None}
-        return {**attrs, **res_attributes}

@@ -8,7 +8,7 @@ from homeassistant.components.siren import (
     ATTR_AVAILABLE_TONES,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
-    DOMAIN,
+    DOMAIN as SIREN_DOMAIN,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -39,7 +39,9 @@ async def siren_only() -> None:
 @pytest.fixture(autouse=True)
 async def setup_demo_siren(hass: HomeAssistant, siren_only: None):
     """Initialize setup demo siren."""
-    assert await async_setup_component(hass, DOMAIN, {"siren": {"platform": "demo"}})
+    assert await async_setup_component(
+        hass, SIREN_DOMAIN, {"siren": {"platform": "demo"}}
+    )
     await hass.async_block_till_done()
 
 
@@ -59,13 +61,13 @@ def test_all_setup_params(hass: HomeAssistant) -> None:
 async def test_turn_on(hass: HomeAssistant) -> None:
     """Test turn on device."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
+        SIREN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
+        SIREN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
@@ -73,7 +75,7 @@ async def test_turn_on(hass: HomeAssistant) -> None:
     # Test that an invalid tone will raise a ValueError
     with pytest.raises(ValueError):
         await hass.services.async_call(
-            DOMAIN,
+            SIREN_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: ENTITY_SIREN_WITH_ALL_FEATURES, ATTR_TONE: "invalid_tone"},
             blocking=True,
@@ -83,13 +85,13 @@ async def test_turn_on(hass: HomeAssistant) -> None:
 async def test_turn_off(hass: HomeAssistant) -> None:
     """Test turn off device."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
+        SIREN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
+        SIREN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_OFF
@@ -98,19 +100,19 @@ async def test_turn_off(hass: HomeAssistant) -> None:
 async def test_toggle(hass: HomeAssistant) -> None:
     """Test toggle device."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
+        SIREN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
+        SIREN_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
+        SIREN_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
@@ -122,7 +124,7 @@ async def test_turn_on_strip_attributes(hass: HomeAssistant) -> None:
         "homeassistant.components.demo.siren.DemoSiren.async_turn_on"
     ) as svc_call:
         await hass.services.async_call(
-            DOMAIN,
+            SIREN_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: ENTITY_SIREN, ATTR_VOLUME_LEVEL: 1},
             blocking=True,

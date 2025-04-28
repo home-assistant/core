@@ -12,14 +12,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN as PIHOLE_DOMAIN
+from . import PiHoleConfigEntry
+from .entity import PiHoleEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -40,16 +39,18 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PiHoleConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole binary sensor."""
     name = entry.data[CONF_NAME]
-    hole_data = hass.data[PIHOLE_DOMAIN][entry.entry_id]
+    hole_data = entry.runtime_data
 
     binary_sensors = [
         PiHoleBinarySensor(
-            hole_data[DATA_KEY_API],
-            hole_data[DATA_KEY_COORDINATOR],
+            hole_data.api,
+            hole_data.coordinator,
             name,
             entry.entry_id,
             description,
@@ -69,7 +70,7 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[None],
         name: str,
         server_unique_id: str,
         description: PiHoleBinarySensorEntityDescription,

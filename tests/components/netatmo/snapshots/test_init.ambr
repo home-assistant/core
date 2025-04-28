@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -21,8 +22,10 @@
     }),
     'manufacturer': 'Bubbendorf',
     'model': 'Roller Shutter',
+    'model_id': None,
     'name': 'Entrance Blinds',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -33,6 +36,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -51,8 +55,10 @@
     }),
     'manufacturer': 'Bubbendorf',
     'model': 'Orientable Shutter',
+    'model_id': None,
     'name': 'Bubendorff blind',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -63,6 +69,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -81,8 +88,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': '2 wire light switch/dimmer',
+    'model_id': None,
     'name': 'Unknown 00:11:22:33:00:11:45:fe',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -93,6 +102,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'corridor',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -111,8 +121,10 @@
     }),
     'manufacturer': 'Smarther',
     'model': 'Smarther with Netatmo',
-    'name': '',
+    'model_id': None,
+    'name': 'Corridor',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': 'Corridor',
     'sw_version': None,
@@ -123,6 +135,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -141,8 +154,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Connected Energy Meter',
-    'name': '',
+    'model_id': None,
+    'name': 'Consumption meter',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -153,6 +168,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -171,8 +187,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Light switch/dimmer with neutral',
+    'model_id': None,
     'name': 'Bathroom light',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -183,6 +201,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -201,8 +220,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
-    'name': '',
+    'model_id': None,
+    'name': 'Line 1',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -213,6 +234,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -231,8 +253,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
-    'name': '',
+    'model_id': None,
+    'name': 'Line 2',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -243,6 +267,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -261,8 +286,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
-    'name': '',
+    'model_id': None,
+    'name': 'Line 3',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -273,6 +300,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -291,8 +319,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
-    'name': '',
+    'model_id': None,
+    'name': 'Line 4',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -303,6 +333,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -321,8 +352,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
-    'name': '',
+    'model_id': None,
+    'name': 'Line 5',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -333,6 +366,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -351,8 +385,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
-    'name': '',
+    'model_id': None,
+    'name': 'Total',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -363,6 +399,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -381,8 +418,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
-    'name': '',
+    'model_id': None,
+    'name': 'Gas',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -393,6 +432,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -411,8 +451,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
-    'name': '',
+    'model_id': None,
+    'name': 'Hot water',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -423,6 +465,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -441,8 +484,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
-    'name': '',
+    'model_id': None,
+    'name': 'Cold water',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -453,6 +498,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -471,8 +517,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Connected Ecometer',
-    'name': '',
+    'model_id': None,
+    'name': 'Écocompteur',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -483,6 +531,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/security',
     'connections': set({
     }),
@@ -501,8 +550,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Camera',
+    'model_id': None,
     'name': 'Hall',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -513,6 +564,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -531,8 +583,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Anemometer',
+    'model_id': None,
     'name': 'Villa Garden',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -543,6 +597,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/security',
     'connections': set({
     }),
@@ -561,8 +616,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Outdoor Camera',
+    'model_id': None,
     'name': 'Front',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -573,6 +630,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/security',
     'connections': set({
     }),
@@ -591,8 +649,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Video Doorbell',
+    'model_id': None,
     'name': 'Netatmo-Doorbell',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -603,6 +663,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -621,8 +682,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Air Quality Monitor',
+    'model_id': None,
     'name': 'Kitchen',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -633,6 +696,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -651,8 +715,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Air Quality Monitor',
+    'model_id': None,
     'name': 'Livingroom',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -663,6 +729,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -681,8 +748,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Air Quality Monitor',
+    'model_id': None,
     'name': 'Baby Bedroom',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -693,6 +762,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -711,8 +781,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Air Quality Monitor',
+    'model_id': None,
     'name': 'Bedroom',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -723,6 +795,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -741,8 +814,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Air Quality Monitor',
+    'model_id': None,
     'name': 'Parents Bedroom',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -753,6 +828,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -771,8 +847,10 @@
     }),
     'manufacturer': 'Legrand',
     'model': 'Plug',
-    'name': '',
+    'model_id': None,
+    'name': 'Prise',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -783,6 +861,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -801,8 +880,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Outdoor Module',
+    'model_id': None,
     'name': 'Villa Outdoor',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -813,6 +894,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -831,8 +913,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Module',
+    'model_id': None,
     'name': 'Villa Bedroom',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -843,6 +927,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -861,8 +946,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Indoor Module',
+    'model_id': None,
     'name': 'Villa Bathroom',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -873,6 +960,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -891,8 +979,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Home Weather station',
+    'model_id': None,
     'name': 'Villa',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -903,6 +993,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -921,8 +1012,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Rain Gauge',
+    'model_id': None,
     'name': 'Villa Rain',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -933,6 +1026,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'bureau',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -951,8 +1045,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'OpenTherm Modulating Thermostat',
-    'name': '',
+    'model_id': None,
+    'name': 'Bureau Modulate',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': 'Bureau',
     'sw_version': None,
@@ -963,6 +1059,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'livingroom',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -981,8 +1078,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Thermostat',
-    'name': '',
+    'model_id': None,
+    'name': 'Livingroom',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': 'Livingroom',
     'sw_version': None,
@@ -993,6 +1092,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'entrada',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -1011,8 +1111,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Valve',
-    'name': '',
+    'model_id': None,
+    'name': 'Valve1',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': 'Entrada',
     'sw_version': None,
@@ -1023,6 +1125,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'cocina',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -1041,10 +1144,45 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Smart Valve',
-    'name': '',
+    'model_id': None,
+    'name': 'Valve2',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': 'Cocina',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[netatmo-91763b24c43d3e344f424e8b]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://my.netatmo.com/app/energy',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'netatmo',
+        '91763b24c43d3e344f424e8b',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Netatmo',
+    'model': 'Climate',
+    'model_id': None,
+    'name': 'MYHOME',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1053,6 +1191,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://weathermap.netatmo.com/',
     'connections': set({
     }),
@@ -1071,8 +1210,10 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Public Weather station',
+    'model_id': None,
     'name': 'Home avg',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -1083,6 +1224,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://weathermap.netatmo.com/',
     'connections': set({
     }),
@@ -1101,19 +1243,22 @@
     }),
     'manufacturer': 'Netatmo',
     'model': 'Public Weather station',
+    'model_id': None,
     'name': 'Home max',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
-# name: test_devices[netatmo-]
+# name: test_devices[netatmo-Home min]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
-    'configuration_url': 'https://my.netatmo.com/app/energy',
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://weathermap.netatmo.com/',
     'connections': set({
     }),
     'disabled_by': None,
@@ -1123,16 +1268,18 @@
     'identifiers': set({
       tuple(
         'netatmo',
-        '',
+        'Home min',
       ),
     }),
     'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Netatmo',
-    'model': 'Smart Thermostat',
-    'name': 'MYHOME',
+    'model': 'Public Weather station',
+    'model_id': None,
+    'name': 'Home min',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,

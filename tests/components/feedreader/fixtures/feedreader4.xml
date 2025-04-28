@@ -14,6 +14,7 @@
             <link>http://www.example.com/link/1</link>
             <guid isPermaLink="false">GUID 1</guid>
             <pubDate>26.10.2019 - 12:06:24</pubDate>
+            <content>Content 1</content>
         </item>
 
     </channel>

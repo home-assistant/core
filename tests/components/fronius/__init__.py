@@ -10,9 +10,9 @@ from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_HOST = "http://fronius"
@@ -25,6 +25,7 @@ async def setup_fronius_integration(
     """Create the Fronius integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        entry_id="f1e2b9837e8adaed6fa682acaa216fd8",
         unique_id=unique_id,  # has to match mocked logger unique_id
         data={
             CONF_HOST: MOCK_HOST,
@@ -63,7 +64,7 @@ def mock_responses(
     aioclient_mock: AiohttpClientMocker,
     host: str = MOCK_HOST,
     fixture_set: str = "symo",
-    inverter_ids: list[str | int] = [1],
+    inverter_ids: list[str | int] | UndefinedType = UNDEFINED,
     night: bool = False,
     override_data: dict[str, list[tuple[list[str], Any]]]
     | None = None,  # {filename: [([list of nested keys], patch_value)]}
@@ -77,7 +78,7 @@ def mock_responses(
         f"{host}/solar_api/GetAPIVersion.cgi",
         text=_load(f"{fixture_set}/GetAPIVersion.json", "fronius"),
     )
-    for inverter_id in inverter_ids:
+    for inverter_id in [1] if inverter_ids is UNDEFINED else inverter_ids:
         aioclient_mock.get(
             f"{host}/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&"
             f"DeviceId={inverter_id}&DataCollection=CommonInverterData",
@@ -110,33 +111,3 @@ def mock_responses(
         f"{host}/solar_api/v1/GetOhmPilotRealtimeData.cgi?Scope=System",
         text=_load(f"{fixture_set}/GetOhmPilotRealtimeData.json", "fronius"),
     )
-
-
-async def enable_all_entities(hass, freezer, config_entry_id, time_till_next_update):
-    """Enable all entities for a config entry and fast forward time to receive data."""
-    registry = er.async_get(hass)
-    entities = er.async_entries_for_config_entry(registry, config_entry_id)
-    for entry in [
-        entry
-        for entry in entities
-        if entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    ]:
-        registry.async_update_entity(entry.entity_id, disabled_by=None)
-    await hass.async_block_till_done()
-    freezer.tick(time_till_next_update)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-
-async def remove_device(ws_client, device_id, config_entry_id):
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]

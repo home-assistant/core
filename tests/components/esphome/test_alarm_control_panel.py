@@ -4,9 +4,9 @@ from unittest.mock import call
 
 from aioesphomeapi import (
     AlarmControlPanelCommand,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelEntityState as ESPHomeAlarmEntityState,
     AlarmControlPanelInfo,
-    AlarmControlPanelState,
+    AlarmControlPanelState as ESPHomeAlarmState,
     APIClient,
 )
 
@@ -20,16 +20,19 @@ from homeassistant.components.alarm_control_panel import (
     SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
+    AlarmControlPanelState,
 )
 from homeassistant.components.esphome.alarm_control_panel import EspHomeACPFeatures
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ALARM_ARMED_AWAY, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+
+from .conftest import MockGenericDeviceEntryType
 
 
 async def test_generic_alarm_control_panel_requires_code(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic alarm_control_panel entity that requires a code."""
     entity_info = [
@@ -48,9 +51,7 @@ async def test_generic_alarm_control_panel_requires_code(
             requires_code_to_arm=True,
         )
     ]
-    states = [
-        AlarmControlPanelEntityState(key=1, state=AlarmControlPanelState.ARMED_AWAY)
-    ]
+    states = [ESPHomeAlarmEntityState(key=1, state=ESPHomeAlarmState.ARMED_AWAY)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -60,7 +61,7 @@ async def test_generic_alarm_control_panel_requires_code(
     )
     state = hass.states.get("alarm_control_panel.test_myalarm_control_panel")
     assert state is not None
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
@@ -164,7 +165,7 @@ async def test_generic_alarm_control_panel_requires_code(
 async def test_generic_alarm_control_panel_no_code(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic alarm_control_panel entity that does not require a code."""
     entity_info = [
@@ -183,9 +184,7 @@ async def test_generic_alarm_control_panel_no_code(
             requires_code_to_arm=False,
         )
     ]
-    states = [
-        AlarmControlPanelEntityState(key=1, state=AlarmControlPanelState.ARMED_AWAY)
-    ]
+    states = [ESPHomeAlarmEntityState(key=1, state=ESPHomeAlarmState.ARMED_AWAY)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -195,7 +194,7 @@ async def test_generic_alarm_control_panel_no_code(
     )
     state = hass.states.get("alarm_control_panel.test_myalarm_control_panel")
     assert state is not None
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
@@ -212,7 +211,7 @@ async def test_generic_alarm_control_panel_no_code(
 async def test_generic_alarm_control_panel_missing_state(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic alarm_control_panel entity that is missing state."""
     entity_info = [

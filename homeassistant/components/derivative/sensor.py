@@ -5,11 +5,16 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException
 import logging
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, RestoreSensor, SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    RestoreSensor,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -19,17 +24,24 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
+from homeassistant.core import (
+    Event,
     EventStateChangedData,
+    EventStateReportedData,
+    HomeAssistant,
+    State,
+    callback,
+)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.event import (
     async_track_state_change_event,
+    async_track_state_report_event,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -68,7 +80,7 @@ UNIT_TIME = {
 DEFAULT_ROUND = 3
 DEFAULT_TIME_WINDOW = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_SOURCE): cv.entity_id,
@@ -84,7 +96,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Derivative config entry."""
     registry = er.async_get(hass)
@@ -93,27 +105,10 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE]
     )
 
-    source_entity = registry.async_get(source_entity_id)
-    dev_reg = dr.async_get(hass)
-    # Resolve source entity device
-    if (
-        (source_entity is not None)
-        and (source_entity.device_id is not None)
-        and (
-            (
-                device := dev_reg.async_get(
-                    device_id=source_entity.device_id,
-                )
-            )
-            is not None
-        )
-    ):
-        device_info = DeviceInfo(
-            identifiers=device.identifiers,
-            connections=device.connections,
-        )
-    else:
-        device_info = None
+    device_info = async_device_info_to_link_from_entity(
+        hass,
+        source_entity_id,
+    )
 
     if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
         # Before we had support for optional selectors, "none" was used for selecting nothing
@@ -179,7 +174,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self._attr_device_info = device_info
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state: float | int | Decimal = 0
+        self._attr_native_value = round(Decimal(0), round_digits)
         # List of tuples with (timestamp_start, timestamp_end, derivative)
         self._state_list: list[tuple[datetime, datetime, Decimal]] = []
 
@@ -207,18 +202,41 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 restored_data.native_unit_of_measurement
             )
             try:
-                self._state = Decimal(restored_data.native_value)  # type: ignore[arg-type]
+                self._attr_native_value = round(
+                    Decimal(restored_data.native_value),  # type: ignore[arg-type]
+                    self._round_digits,
+                )
             except SyntaxError as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def calc_derivative(event: Event[EventStateChangedData]) -> None:
+        def on_state_reported(event: Event[EventStateReportedData]) -> None:
+            """Handle constant sensor state."""
+            if self._attr_native_value == Decimal(0):
+                # If the derivative is zero, and the source sensor hasn't
+                # changed state, then we know it will still be zero.
+                return
+            new_state = event.data["new_state"]
+            if new_state is not None:
+                calc_derivative(
+                    new_state, new_state.state, event.data["old_last_reported"]
+                )
+
+        @callback
+        def on_state_changed(event: Event[EventStateChangedData]) -> None:
+            """Handle changed sensor state."""
+            new_state = event.data["new_state"]
+            old_state = event.data["old_state"]
+            if new_state is not None and old_state is not None:
+                calc_derivative(new_state, old_state.state, old_state.last_reported)
+
+        def calc_derivative(
+            new_state: State, old_value: str, old_last_reported: datetime
+        ) -> None:
             """Handle the sensor state changes."""
-            if (
-                (old_state := event.data["old_state"]) is None
-                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-                or (new_state := event.data["new_state"]) is None
-                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            if old_value in (STATE_UNKNOWN, STATE_UNAVAILABLE) or new_state.state in (
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
             ):
                 return
 
@@ -232,15 +250,15 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             self._state_list = [
                 (time_start, time_end, state)
                 for time_start, time_end, state in self._state_list
-                if (new_state.last_updated - time_end).total_seconds()
+                if (new_state.last_reported - time_end).total_seconds()
                 < self._time_window
             ]
 
             try:
                 elapsed_time = (
-                    new_state.last_updated - old_state.last_updated
+                    new_state.last_reported - old_last_reported
                 ).total_seconds()
-                delta_value = Decimal(new_state.state) - Decimal(old_state.state)
+                delta_value = Decimal(new_state.state) - Decimal(old_value)
                 new_derivative = (
                     delta_value
                     / Decimal(elapsed_time)
@@ -252,14 +270,24 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 _LOGGER.warning("While calculating derivative: %s", err)
             except DecimalException as err:
                 _LOGGER.warning(
-                    "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
+                    "Invalid state (%s > %s): %s", old_value, new_state.state, err
                 )
             except AssertionError as err:
                 _LOGGER.error("Could not calculate derivative: %s", err)
 
+            # For total inreasing sensors, the value is expected to continuously increase.
+            # A negative derivative for a total increasing sensor likely indicates the
+            # sensor has been reset. To prevent inaccurate data, discard this sample.
+            if (
+                new_state.attributes.get(ATTR_STATE_CLASS)
+                == SensorStateClass.TOTAL_INCREASING
+                and new_derivative < 0
+            ):
+                return
+
             # add latest derivative to the window list
             self._state_list.append(
-                (old_state.last_updated, new_state.last_updated, new_derivative)
+                (old_last_reported, new_state.last_reported, new_derivative)
             )
 
             def calculate_weight(
@@ -277,24 +305,21 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if elapsed_time > self._time_window:
                 derivative = new_derivative
             else:
-                derivative = Decimal(0)
+                derivative = Decimal("0.00")
                 for start, end, value in self._state_list:
-                    weight = calculate_weight(start, end, new_state.last_updated)
+                    weight = calculate_weight(start, end, new_state.last_reported)
                     derivative = derivative + (value * Decimal(weight))
-
-            self._state = derivative
+            self._attr_native_value = round(derivative, self._round_digits)
             self.async_write_ha_state()
 
         self.async_on_remove(
             async_track_state_change_event(
-                self.hass, self._sensor_source_id, calc_derivative
+                self.hass, self._sensor_source_id, on_state_changed
             )
         )
 
-    @property
-    def native_value(self) -> float | int | Decimal:
-        """Return the state of the sensor."""
-        value = round(self._state, self._round_digits)
-        if TYPE_CHECKING:
-            assert isinstance(value, (float, int, Decimal))
-        return value
+        self.async_on_remove(
+            async_track_state_report_event(
+                self.hass, self._sensor_source_id, on_state_reported
+            )
+        )

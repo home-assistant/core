@@ -8,7 +8,7 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import DATE_STR_FORMAT
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     FRIENDLY_NAME,
@@ -785,7 +785,7 @@ async def test_all_day_iter_order(
     setup_integration: None,
     get_events: GetEventsFn,
     event_order: list[str],
-):
+) -> None:
     """Test the sort order of an all day events depending on the time zone."""
     client = await ws_client()
     await client.cmd_result(

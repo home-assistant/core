@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from aioskybell import Skybell, exceptions
@@ -13,6 +14,8 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class SkybellFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -34,16 +37,11 @@ class SkybellFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input:
             password = user_input[CONF_PASSWORD]
-            entry_id = self.context["entry_id"]
-            if entry := self.hass.config_entries.async_get_entry(entry_id):
-                _, error = await self._async_validate_input(self.reauth_email, password)
-                if error is None:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data=entry.data | user_input,
-                    )
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+            _, error = await self._async_validate_input(self.reauth_email, password)
+            if error is None:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=user_input
+                )
 
             errors["base"] = error
         return self.async_show_form(
@@ -100,6 +98,7 @@ class SkybellFlowHandler(ConfigFlow, domain=DOMAIN):
             return None, "invalid_auth"
         except exceptions.SkybellException:
             return None, "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return None, "unknown"
         return skybell.user_id, None

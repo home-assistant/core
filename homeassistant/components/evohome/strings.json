@@ -10,17 +10,17 @@
         },
         "period": {
           "name": "Period",
-          "description": "A period of time in days; used only with Away, DayOff, or Custom. The system will revert to Auto at midnight (up to 99 days, today is day 1)."
+          "description": "A period of time in days; used only with Away, DayOff, or Custom mode. The system will revert to Auto mode at midnight (up to 99 days, today is day 1)."
         },
         "duration": {
           "name": "Duration",
-          "description": "The duration in hours; used only with AutoWithEco (up to 24 hours)."
+          "description": "The duration in hours; used only with AutoWithEco mode (up to 24 hours)."
         }
       }
     },
     "reset_system": {
       "name": "Reset system",
-      "description": "Sets the system to Auto mode and reset all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. AutoWithReset mode)."
+      "description": "Sets the system to Auto mode and resets all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. AutoWithReset mode)."
     },
     "refresh_system": {
       "name": "Refresh system",
@@ -32,7 +32,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "The entity_id of the Evohome zone."
+          "description": "The entity ID of the Evohome zone."
         },
         "setpoint": {
           "name": "Setpoint",
@@ -49,8 +49,8 @@
       "description": "Sets a zone to follow its schedule.",
       "fields": {
         "entity_id": {
-          "name": "Entity",
-          "description": "The entity_id of the zone."
+          "name": "[%key:component::evohome::services::set_zone_override::fields::entity_id::name%]",
+          "description": "[%key:component::evohome::services::set_zone_override::fields::entity_id::description%]"
         }
       }
     }

@@ -10,13 +10,10 @@ import threading
 import requests
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.data_entry_flow import FlowResultType
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import (
@@ -32,48 +29,6 @@ from .const import (
     SERVICE_DOWNLOAD_FILE,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DOWNLOAD_DIR): cv.string})},
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Downloader component, via the YAML file."""
-    if DOMAIN not in config:
-        return True
-
-    import_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_DOWNLOAD_DIR: config[DOMAIN][CONF_DOWNLOAD_DIR],
-        },
-    )
-
-    translation_key = "deprecated_yaml"
-    if (
-        import_result["type"] == FlowResultType.ABORT
-        and import_result["reason"] == "import_failed"
-    ):
-        translation_key = "import_failed"
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.9.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key=translation_key,
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Downloader",
-        },
-    )
-    return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Listen for download events to download files."""
@@ -83,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not os.path.isabs(download_path):
         download_path = hass.config.path(download_path)
 
-    if not os.path.isdir(download_path):
+    if not await hass.async_add_executor_job(os.path.isdir, download_path):
         _LOGGER.error(
             "Download path %s does not exist. File Downloader not active", download_path
         )

@@ -14,6 +14,10 @@ on:
       - "homeassistant/package_constraints.txt"
       - "requirements_all.txt"
       - "requirements.txt"
+      - "script/gen_requirements_all.py"
+
+env:
+  DEFAULT_PYTHON: "3.13"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
@@ -28,7 +32,22 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.6.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+
+      - name: Create Python virtual environment
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          python --version
+          pip install "$(grep '^uv' < requirements.txt)"
+          uv pip install -r requirements.txt
 
       - name: Get information
         id: info
@@ -45,11 +64,8 @@ jobs:
       - name: Write env-file
         run: |
           (
-            echo "GRPC_BUILD_WITH_BORING_SSL_ASM=false"
             echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=true"
             echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
-            echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
-            echo "GRPC_PYTHON_LDFLAGS=-lpthread -Wl,-wrap,memcpy -static-libgcc"
 
             # Fix out of memory issues with rust
             echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
@@ -60,21 +76,52 @@ jobs:
 
             # Use C-Extension for SQLAlchemy
             echo "REQUIRE_SQLALCHEMY_CEXT=1"
+
+            # Add additional pip wheel build constraints
+            echo "PIP_CONSTRAINT=build_constraints.txt"
           ) > .env_file
 
+      - name: Write pip wheel build constraints
+        run: |
+          (
+            # ninja 1.11.1.2 + 1.11.1.3 seem to be broken on at least armhf
+            # this caused the numpy builds to fail
+            # https://github.com/scikit-build/ninja-python-distributions/issues/274
+            echo "ninja==1.11.1.1"
+          ) > build_constraints.txt
+
       - name: Upload env_file
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: env_file
           path: ./.env_file
+          include-hidden-files: true
+          overwrite: true
+
+      - name: Upload build_constraints
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: build_constraints
+          path: ./build_constraints.txt
           overwrite: true
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
           overwrite: true
+
+      - name: Generate requirements
+        run: |
+          . venv/bin/activate
+          python -m script.gen_requirements_all ci
+
+      - name: Upload requirements_all_wheels
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: requirements_all_wheels
+          path: ./requirements_all_wheels_*.txt
 
   core:
     name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
@@ -84,32 +131,43 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp312"]
+        abi: ["cp313"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.2.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: env_file
 
+      - name: Download build_constraints
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: build_constraints
+
       - name: Download requirements_diff
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: requirements_diff
 
+      - name: Adjust build env
+        run: |
+          # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine
+          sed -i "/uv/d" requirements.txt
+          sed -i "/uv/d" requirements_diff.txt
+
       - name: Build wheels
-        uses: home-assistant/wheels@2024.01.0
+        uses: home-assistant/wheels@2025.03.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "libffi-dev;openssl-dev;yaml-dev;nasm"
-          skip-binary: aiohttp
+          apk: "libffi-dev;openssl-dev;yaml-dev;nasm;zlib-ng-dev"
+          skip-binary: aiohttp;multidict;propcache;yarl;SQLAlchemy
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements.txt"
@@ -122,73 +180,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp312"]
+        abi: ["cp313"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.2.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: env_file
 
+      - name: Download build_constraints
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: build_constraints
+
       - name: Download requirements_diff
-        uses: actions/download-artifact@v4.1.4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: requirements_diff
 
-      - name: (Un)comment packages
-        run: |
-          requirement_files="requirements_all.txt requirements_diff.txt"
-          for requirement_file in ${requirement_files}; do
-            sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
-            sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
-            sed -i "s|# evdev|evdev|g" ${requirement_file}
-            sed -i "s|# pycups|pycups|g" ${requirement_file}
-            sed -i "s|# homekit|homekit|g" ${requirement_file}
-            sed -i "s|# decora-wifi|decora-wifi|g" ${requirement_file}
-            sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
-
-            # Some packages are not buildable on armhf anymore
-            if [ "${{ matrix.arch }}" = "armhf" ]; then
-
-              # Pandas has issues building on armhf, it is expected they
-              # will drop the platform in the near future (they consider it
-              # "flimsy" on 386). The following packages depend on pandas,
-              # so we comment them out.
-              sed -i "s|env-canada|# env-canada|g" ${requirement_file}
-              sed -i "s|noaa-coops|# noaa-coops|g" ${requirement_file}
-              sed -i "s|pyezviz|# pyezviz|g" ${requirement_file}
-              sed -i "s|pykrakenapi|# pykrakenapi|g" ${requirement_file}
-            fi
-
-            # Some speedups are only for 64-bit
-            if [ "${{ matrix.arch }}" = "amd64" ] || [ "${{ matrix.arch }}" = "aarch64" ]; then
-              sed -i "s|aiohttp-zlib-ng|aiohttp-zlib-ng\[isal\]|g" ${requirement_file}
-            fi
-
-          done
-
-      - name: Split requirements all
-        run: |
-          # We split requirements all into two different files.
-          # This is to prevent the build from running out of memory when
-          # resolving packages on 32-bits systems (like armhf, armv7).
-
-          split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 3) requirements_all.txt requirements_all.txt
-
-      - name: Create requirements for cython<3
-        run: |
-          # Some dependencies still require 'cython<3'
-          # and don't yet use isolated build environments.
-          # Build these first.
-          # grpcio: https://github.com/grpc/grpc/issues/33918
-          # pydantic: https://github.com/pydantic/pydantic/issues/7689
-
-          touch requirements_old-cython.txt
-          cat homeassistant/package_constraints.txt | grep 'grpcio==' >> requirements_old-cython.txt
-          cat homeassistant/package_constraints.txt | grep 'pydantic==' >> requirements_old-cython.txt
+      - name: Download requirements_all_wheels
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: requirements_all_wheels
 
       - name: Adjust build env
         run: |
@@ -198,60 +214,20 @@ jobs:
 
           # Do not pin numpy in wheels building
           sed -i "/numpy/d" homeassistant/package_constraints.txt
+          # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine
+          sed -i "/uv/d" requirements.txt
+          sed -i "/uv/d" requirements_diff.txt
 
-      - name: Build wheels (old cython)
-        uses: home-assistant/wheels@2024.01.0
+      - name: Build wheels
+        uses: home-assistant/wheels@2025.03.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-ng-dev"
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_old-cython.txt"
-          pip: "'cython<3'"
-
-      - name: Build wheels (part 1)
-        uses: home-assistant/wheels@2024.01.0
-        with:
-          abi: ${{ matrix.abi }}
-          tag: musllinux_1_2
-          arch: ${{ matrix.arch }}
-          wheels-key: ${{ secrets.WHEELS_KEY }}
-          env-file: true
-          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
-          constraints: "homeassistant/package_constraints.txt"
-          requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txtaa"
-
-      - name: Build wheels (part 2)
-        uses: home-assistant/wheels@2024.01.0
-        with:
-          abi: ${{ matrix.abi }}
-          tag: musllinux_1_2
-          arch: ${{ matrix.arch }}
-          wheels-key: ${{ secrets.WHEELS_KEY }}
-          env-file: true
-          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
-          constraints: "homeassistant/package_constraints.txt"
-          requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txtab"
-
-      - name: Build wheels (part 3)
-        uses: home-assistant/wheels@2024.01.0
-        with:
-          abi: ${{ matrix.abi }}
-          tag: musllinux_1_2
-          arch: ${{ matrix.arch }}
-          wheels-key: ${{ secrets.WHEELS_KEY }}
-          env-file: true
-          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf
-          constraints: "homeassistant/package_constraints.txt"
-          requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txtac"
+          requirements: "requirements_all.txt"

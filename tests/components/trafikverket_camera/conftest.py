@@ -6,7 +6,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-from pytrafikverket.trafikverket_camera import CameraInfo
+from pytrafikverket import CameraInfoModel
 
 from homeassistant.components.trafikverket_camera.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -21,7 +21,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 @pytest.fixture(name="load_int")
 async def load_integration_from_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, get_camera: CameraInfo
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_camera: CameraInfoModel,
 ) -> MockConfigEntry:
     """Set up the Trafikverket Camera integration in Home Assistant."""
     aioclient_mock.get(
@@ -51,10 +53,10 @@ async def load_integration_from_entry(
 
 
 @pytest.fixture(name="get_camera")
-def fixture_get_camera() -> CameraInfo:
+def fixture_get_camera() -> CameraInfoModel:
     """Construct Camera Mock."""
 
-    return CameraInfo(
+    return CameraInfoModel(
         camera_name="Test Camera",
         camera_id="1234",
         active=True,
@@ -72,10 +74,10 @@ def fixture_get_camera() -> CameraInfo:
 
 
 @pytest.fixture(name="get_camera2")
-def fixture_get_camera2() -> CameraInfo:
+def fixture_get_camera2() -> CameraInfoModel:
     """Construct Camera Mock 2."""
 
-    return CameraInfo(
+    return CameraInfoModel(
         camera_name="Test Camera2",
         camera_id="5678",
         active=True,
@@ -93,11 +95,11 @@ def fixture_get_camera2() -> CameraInfo:
 
 
 @pytest.fixture(name="get_cameras")
-def fixture_get_cameras() -> CameraInfo:
+def fixture_get_cameras() -> CameraInfoModel:
     """Construct Camera Mock with multiple cameras."""
 
     return [
-        CameraInfo(
+        CameraInfoModel(
             camera_name="Test Camera",
             camera_id="1234",
             active=True,
@@ -112,7 +114,7 @@ def fixture_get_cameras() -> CameraInfo:
             status="Running",
             camera_type="Road",
         ),
-        CameraInfo(
+        CameraInfoModel(
             camera_name="Test Camera2",
             camera_id="5678",
             active=True,
@@ -131,10 +133,10 @@ def fixture_get_cameras() -> CameraInfo:
 
 
 @pytest.fixture(name="get_camera_no_location")
-def fixture_get_camera_no_location() -> CameraInfo:
+def fixture_get_camera_no_location() -> CameraInfoModel:
     """Construct Camera Mock."""
 
-    return CameraInfo(
+    return CameraInfoModel(
         camera_name="Test Camera",
         camera_id="1234",
         active=True,

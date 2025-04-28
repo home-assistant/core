@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import async_init_integration
+from . import WAKE_UP_SLEEP_ENTRY_IDS, async_init_integration
 
 from tests.common import MockConfigEntry
 
@@ -33,34 +33,44 @@ async def test_calendar_events(
 ) -> None:
     """Test the calendar."""
 
-    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.get_default_time_zone())
     freezer.move_to(test_time)
 
     await async_init_integration(hass, mock_config_entry)
 
     serial_number = mock_lamarzocco.serial_number
 
-    state = hass.states.get(f"calendar.{serial_number}_auto_on_off_schedule")
-    assert state
-    assert state == snapshot
+    for identifier in WAKE_UP_SLEEP_ENTRY_IDS:
+        identifier = identifier.lower()
+        state = hass.states.get(
+            f"calendar.{serial_number}_auto_on_off_schedule_{identifier}"
+        )
+        assert state
+        assert state == snapshot(
+            name=f"state.{serial_number}_auto_on_off_schedule_{identifier}"
+        )
 
-    entry = entity_registry.async_get(state.entity_id)
-    assert entry
-    assert entry == snapshot
+        entry = entity_registry.async_get(state.entity_id)
+        assert entry
+        assert entry == snapshot(
+            name=f"entry.{serial_number}_auto_on_off_schedule_{identifier}"
+        )
 
-    events = await hass.services.async_call(
-        CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
-        {
-            ATTR_ENTITY_ID: f"calendar.{serial_number}_auto_on_off_schedule",
-            EVENT_START_DATETIME: test_time,
-            EVENT_END_DATETIME: test_time + timedelta(days=23),
-        },
-        blocking=True,
-        return_response=True,
-    )
+        events = await hass.services.async_call(
+            CALENDAR_DOMAIN,
+            SERVICE_GET_EVENTS,
+            {
+                ATTR_ENTITY_ID: f"calendar.{serial_number}_auto_on_off_schedule_{identifier}",
+                EVENT_START_DATETIME: test_time,
+                EVENT_END_DATETIME: test_time + timedelta(days=23),
+            },
+            blocking=True,
+            return_response=True,
+        )
 
-    assert events == snapshot
+        assert events == snapshot(
+            name=f"events.{serial_number}_auto_on_off_schedule_{identifier}"
+        )
 
 
 @pytest.mark.parametrize(
@@ -86,16 +96,8 @@ async def test_calendar_edge_cases(
     end_date: datetime,
 ) -> None:
     """Test edge cases."""
-    start_date = start_date.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
-    end_date = end_date.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
-
-    # set schedule to be only on Sunday, 07:00 - 07:30
-    mock_lamarzocco.schedule[2]["enable"] = "Disabled"
-    mock_lamarzocco.schedule[4]["enable"] = "Disabled"
-    mock_lamarzocco.schedule[5]["enable"] = "Disabled"
-    mock_lamarzocco.schedule[6]["enable"] = "Enabled"
-    mock_lamarzocco.schedule[6]["on"] = "07:00"
-    mock_lamarzocco.schedule[6]["off"] = "07:30"
+    start_date = start_date.replace(tzinfo=dt_util.get_default_time_zone())
+    end_date = end_date.replace(tzinfo=dt_util.get_default_time_zone())
 
     await async_init_integration(hass, mock_config_entry)
 
@@ -103,7 +105,7 @@ async def test_calendar_edge_cases(
         CALENDAR_DOMAIN,
         SERVICE_GET_EVENTS,
         {
-            ATTR_ENTITY_ID: f"calendar.{mock_lamarzocco.serial_number}_auto_on_off_schedule",
+            ATTR_ENTITY_ID: f"calendar.{mock_lamarzocco.serial_number}_auto_on_off_schedule_{WAKE_UP_SLEEP_ENTRY_IDS[1].lower()}",
             EVENT_START_DATETIME: start_date,
             EVENT_END_DATETIME: end_date,
         },
@@ -123,22 +125,31 @@ async def test_no_calendar_events_global_disable(
 ) -> None:
     """Assert no events when global auto on/off is disabled."""
 
-    mock_lamarzocco.current_status["global_auto"] = "Disabled"
-    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    wake_up_sleep_entry_id = WAKE_UP_SLEEP_ENTRY_IDS[0]
+
+    wake_up_sleep_entry = mock_lamarzocco.schedule.smart_wake_up_sleep.schedules_dict[
+        wake_up_sleep_entry_id
+    ]
+
+    assert wake_up_sleep_entry
+    wake_up_sleep_entry.enabled = False
+    test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.get_default_time_zone())
     freezer.move_to(test_time)
 
     await async_init_integration(hass, mock_config_entry)
 
     serial_number = mock_lamarzocco.serial_number
 
-    state = hass.states.get(f"calendar.{serial_number}_auto_on_off_schedule")
+    state = hass.states.get(
+        f"calendar.{serial_number}_auto_on_off_schedule_{wake_up_sleep_entry_id.lower()}"
+    )
     assert state
 
     events = await hass.services.async_call(
         CALENDAR_DOMAIN,
         SERVICE_GET_EVENTS,
         {
-            ATTR_ENTITY_ID: f"calendar.{serial_number}_auto_on_off_schedule",
+            ATTR_ENTITY_ID: f"calendar.{serial_number}_auto_on_off_schedule_{wake_up_sleep_entry_id.lower()}",
             EVENT_START_DATETIME: test_time,
             EVENT_END_DATETIME: test_time + timedelta(days=23),
         },

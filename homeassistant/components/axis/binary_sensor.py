@@ -6,22 +6,22 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+from axis.interfaces.applications.fence_guard import FenceGuardHandler
+from axis.interfaces.applications.loitering_guard import LoiteringGuardHandler
+from axis.interfaces.applications.motion_guard import MotionGuardHandler
+from axis.interfaces.applications.vmd4 import Vmd4Handler
 from axis.models.event import Event, EventTopic
-from axis.vapix.interfaces.applications.fence_guard import FenceGuardHandler
-from axis.vapix.interfaces.applications.loitering_guard import LoiteringGuardHandler
-from axis.vapix.interfaces.applications.motion_guard import MotionGuardHandler
-from axis.vapix.interfaces.applications.vmd4 import Vmd4Handler
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
+from . import AxisConfigEntry
 from .entity import AxisEventDescription, AxisEventEntity
 from .hub import AxisHub
 
@@ -177,11 +177,11 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AxisConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Axis binary sensor."""
-    AxisHub.get_hub(hass, config_entry).entity_loader.register_platform(
+    config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities, AxisBinarySensor, ENTITY_DESCRIPTIONS
     )
 

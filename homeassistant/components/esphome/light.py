@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import lru_cache, partial
+from operator import methodcaller
 from typing import TYPE_CHECKING, Any, cast
 
 from aioesphomeapi import (
@@ -29,9 +30,7 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import (
     EsphomeEntity,
@@ -40,21 +39,9 @@ from .entity import (
     platform_async_setup_entry,
 )
 
+PARALLEL_UPDATES = 0
+
 FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome lights based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=LightInfo,
-        entity_type=EsphomeLight,
-        state_type=LightState,
-    )
 
 
 _COLOR_MODE_MAPPING = {
@@ -122,7 +109,7 @@ def _mired_to_kelvin(mired_temperature: float) -> int:
 def _color_mode_to_ha(mode: int) -> str:
     """Convert an esphome color mode to a HA color mode constant.
 
-    Choses the color mode that best matches the feature-set.
+    Choose the color mode that best matches the feature-set.
     """
     candidates = []
     for ha_mode, cap_lists in _COLOR_MODE_MAPPING.items():
@@ -138,7 +125,7 @@ def _color_mode_to_ha(mode: int) -> str:
         return ColorMode.UNKNOWN
 
     # choose the color mode with the most bits set
-    candidates.sort(key=lambda key: bin(key[1]).count("1"))
+    candidates.sort(key=lambda key: key[1].bit_count())
     return candidates[-1][0]
 
 
@@ -162,7 +149,7 @@ def _least_complex_color_mode(color_modes: tuple[int, ...]) -> int:
     # popcount with bin() function because it appears
     # to be the best way: https://stackoverflow.com/a/9831671
     color_modes_list = list(color_modes)
-    color_modes_list.sort(key=lambda mode: bin(mode).count("1"))
+    color_modes_list.sort(key=methodcaller("bit_count"))
     return color_modes_list[0]
 
 
@@ -174,7 +161,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
     @property
     @esphome_state_property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._state.state
 
@@ -306,13 +293,13 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
     @property
     @esphome_state_property
-    def brightness(self) -> int | None:
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return round(self._state.brightness * 255)
 
     @property
     @esphome_state_property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> str:
         """Return the color mode of the light."""
         if not self._supports_color_mode:
             supported_color_modes = self.supported_color_modes
@@ -324,7 +311,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
     @property
     @esphome_state_property
-    def rgb_color(self) -> tuple[int, int, int] | None:
+    def rgb_color(self) -> tuple[int, int, int]:
         """Return the rgb color value [int, int, int]."""
         state = self._state
         if not self._supports_color_mode:
@@ -342,7 +329,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
     @property
     @esphome_state_property
-    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+    def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value [int, int, int, int]."""
         white = round(self._state.white * 255)
         rgb = cast("tuple[int, int, int]", self.rgb_color)
@@ -350,7 +337,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
     @property
     @esphome_state_property
-    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
+    def rgbww_color(self) -> tuple[int, int, int, int, int]:
         """Return the rgbww color value [int, int, int, int, int]."""
         state = self._state
         rgb = cast("tuple[int, int, int]", self.rgb_color)
@@ -386,7 +373,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
     @property
     @esphome_state_property
-    def effect(self) -> str | None:
+    def effect(self) -> str:
         """Return the current effect."""
         return self._state.effect
 
@@ -430,8 +417,13 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
         self._attr_supported_color_modes = supported
         self._attr_effect_list = static_info.effects
-        self._attr_min_mireds = round(static_info.min_mireds)
-        self._attr_max_mireds = round(static_info.max_mireds)
-        if ColorMode.COLOR_TEMP in supported:
-            self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
-            self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
+        self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
+        self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=LightInfo,
+    entity_type=EsphomeLight,
+    state_type=LightState,
+)

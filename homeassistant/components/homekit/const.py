@@ -1,6 +1,9 @@
 """Constants used be the HomeKit component."""
 
+from __future__ import annotations
+
 from homeassistant.const import CONF_DEVICES
+from homeassistant.util.signal_type import SignalTypeFormat
 
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
@@ -11,6 +14,9 @@ HOMEKIT_FILE = ".homekit.state"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
 EMPTY_MAC = "00:00:00:00:00:00"
+SIGNAL_RELOAD_ENTITIES: SignalTypeFormat[tuple[str, ...]] = SignalTypeFormat(
+    "homekit_reload_entities_{}"
+)
 
 # ### Codecs ####
 VIDEO_CODEC_COPY = "copy"
@@ -43,9 +49,13 @@ CONF_EXCLUDE_ACCESSORY_MODE = "exclude_accessory_mode"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LINKED_BATTERY_CHARGING_SENSOR = "linked_battery_charging_sensor"
 CONF_LINKED_DOORBELL_SENSOR = "linked_doorbell_sensor"
+CONF_LINKED_FILTER_CHANGE_INDICATION = "linked_filter_change_indication_binary_sensor"
+CONF_LINKED_FILTER_LIFE_LEVEL = "linked_filter_life_level_sensor"
 CONF_LINKED_MOTION_SENSOR = "linked_motion_sensor"
 CONF_LINKED_HUMIDITY_SENSOR = "linked_humidity_sensor"
 CONF_LINKED_OBSTRUCTION_SENSOR = "linked_obstruction_sensor"
+CONF_LINKED_PM25_SENSOR = "linked_pm25_sensor"
+CONF_LINKED_TEMPERATURE_SENSOR = "linked_temperature_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_MAX_FPS = "max_fps"
 CONF_MAX_HEIGHT = "max_height"
@@ -53,6 +63,8 @@ CONF_MAX_WIDTH = "max_width"
 CONF_STREAM_ADDRESS = "stream_address"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_SUPPORT_AUDIO = "support_audio"
+CONF_THRESHOLD_CO = "co_threshold"
+CONF_THRESHOLD_CO2 = "co2_threshold"
 CONF_VIDEO_CODEC = "video_codec"
 CONF_VIDEO_PROFILE_NAMES = "video_profile_names"
 CONF_VIDEO_MAP = "video_map"
@@ -112,12 +124,15 @@ TYPE_SHOWER = "shower"
 TYPE_SPRINKLER = "sprinkler"
 TYPE_SWITCH = "switch"
 TYPE_VALVE = "valve"
+TYPE_FAN = "fan"
+TYPE_AIR_PURIFIER = "air_purifier"
 
 # #### Categories ####
 CATEGORY_RECEIVER = 34
 
 # #### Services ####
 SERV_ACCESSORY_INFO = "AccessoryInformation"
+SERV_AIR_PURIFIER = "AirPurifier"
 SERV_AIR_QUALITY_SENSOR = "AirQualitySensor"
 SERV_BATTERY_SERVICE = "BatteryService"
 SERV_CAMERA_RTP_STREAM_MANAGEMENT = "CameraRTPStreamManagement"
@@ -127,6 +142,7 @@ SERV_CONTACT_SENSOR = "ContactSensor"
 SERV_DOOR = "Door"
 SERV_DOORBELL = "Doorbell"
 SERV_FANV2 = "Fanv2"
+SERV_FILTER_MAINTENANCE = "FilterMaintenance"
 SERV_GARAGE_DOOR_OPENER = "GarageDoorOpener"
 SERV_HUMIDIFIER_DEHUMIDIFIER = "HumidifierDehumidifier"
 SERV_HUMIDITY_SENSOR = "HumiditySensor"
@@ -173,6 +189,7 @@ CHAR_CONFIGURED_NAME = "ConfiguredName"
 CHAR_CONTACT_SENSOR_STATE = "ContactSensorState"
 CHAR_COOLING_THRESHOLD_TEMPERATURE = "CoolingThresholdTemperature"
 CHAR_CURRENT_AMBIENT_LIGHT_LEVEL = "CurrentAmbientLightLevel"
+CHAR_CURRENT_AIR_PURIFIER_STATE = "CurrentAirPurifierState"
 CHAR_CURRENT_DOOR_STATE = "CurrentDoorState"
 CHAR_CURRENT_FAN_STATE = "CurrentFanState"
 CHAR_CURRENT_HEATING_COOLING = "CurrentHeatingCoolingState"
@@ -184,6 +201,8 @@ CHAR_CURRENT_TEMPERATURE = "CurrentTemperature"
 CHAR_CURRENT_TILT_ANGLE = "CurrentHorizontalTiltAngle"
 CHAR_CURRENT_VISIBILITY_STATE = "CurrentVisibilityState"
 CHAR_DEHUMIDIFIER_THRESHOLD_HUMIDITY = "RelativeHumidityDehumidifierThreshold"
+CHAR_FILTER_CHANGE_INDICATION = "FilterChangeIndication"
+CHAR_FILTER_LIFE_LEVEL = "FilterLifeLevel"
 CHAR_FIRMWARE_REVISION = "FirmwareRevision"
 CHAR_HARDWARE_REVISION = "HardwareRevision"
 CHAR_HEATING_THRESHOLD_TEMPERATURE = "HeatingThresholdTemperature"
@@ -221,6 +240,7 @@ CHAR_SMOKE_DETECTED = "SmokeDetected"
 CHAR_STATUS_LOW_BATTERY = "StatusLowBattery"
 CHAR_STREAMING_STRATUS = "StreamingStatus"
 CHAR_SWING_MODE = "SwingMode"
+CHAR_TARGET_AIR_PURIFIER_STATE = "TargetAirPurifierState"
 CHAR_TARGET_DOOR_STATE = "TargetDoorState"
 CHAR_TARGET_HEATING_COOLING = "TargetHeatingCoolingState"
 CHAR_TARGET_POSITION = "TargetPosition"
@@ -248,6 +268,7 @@ PROP_VALID_VALUES = "ValidValues"
 # #### Thresholds ####
 THRESHOLD_CO = 25
 THRESHOLD_CO2 = 1000
+THRESHOLD_FILTER_CHANGE_NEEDED = 10
 
 # #### Default values ####
 DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C

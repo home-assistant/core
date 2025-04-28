@@ -7,13 +7,13 @@ from typing import Any
 
 from verisure import Error as VerisureError
 
-from homeassistant.components.lock import LockEntity
+from homeassistant.components.lock import LockEntity, LockState
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -33,7 +33,7 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -41,12 +41,12 @@ async def async_setup_entry(
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_DISABLE_AUTOLOCK,
-        {},
+        None,
         VerisureDoorlock.disable_autolock.__name__,
     )
     platform.async_register_entity_service(
         SERVICE_ENABLE_AUTOLOCK,
-        {},
+        None,
         VerisureDoorlock.enable_autolock.__name__,
     )
 
@@ -81,7 +81,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             manufacturer="Verisure",
             model="Lockguard Smartlock",
             identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
             configuration_url="https://mypages.verisure.com",
         )
 
@@ -109,10 +109,10 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
     @property
     def code_format(self) -> str:
         """Return the configured code format."""
-        digits = self.coordinator.entry.options.get(
+        digits = self.coordinator.config_entry.options.get(
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )
-        return "^\\d{%s}$" % digits
+        return f"^\\d{{{digits}}}$"
 
     @property
     def is_locked(self) -> bool:
@@ -130,19 +130,19 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         """Send unlock command."""
         code = kwargs.get(ATTR_CODE)
         if code:
-            await self.async_set_lock_state(code, STATE_UNLOCKED)
+            await self.async_set_lock_state(code, LockState.UNLOCKED)
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Send lock command."""
         code = kwargs.get(ATTR_CODE)
         if code:
-            await self.async_set_lock_state(code, STATE_LOCKED)
+            await self.async_set_lock_state(code, LockState.LOCKED)
 
-    async def async_set_lock_state(self, code: str, state: str) -> None:
+    async def async_set_lock_state(self, code: str, state: LockState) -> None:
         """Send set lock state command."""
         command = (
             self.coordinator.verisure.door_lock(self.serial_number, code)
-            if state == STATE_LOCKED
+            if state == LockState.LOCKED
             else self.coordinator.verisure.door_unlock(self.serial_number, code)
         )
         lock_request = await self.hass.async_add_executor_job(
@@ -151,7 +151,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         )
         LOGGER.debug("Verisure doorlock %s", state)
         transaction_id = lock_request.get("data", {}).get(command["operationName"])
-        target_state = "LOCKED" if state == STATE_LOCKED else "UNLOCKED"
+        target_state = "LOCKED" if state == LockState.LOCKED else "UNLOCKED"
         lock_status = None
         attempts = 0
         while lock_status != "OK":

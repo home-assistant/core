@@ -68,26 +68,33 @@ async def test_sensors(hass: HomeAssistant, entity_registry: EntityRegistry) -> 
     """Test data coming back from inverter."""
     mock_entry = _mock_config_entry()
 
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.measure",
-        side_effect=_simulated_returns,
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.serial_number",
-        return_value="9876543",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.version",
-        return_value="9.8.7.6",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.pn",
-        return_value="A.B.C",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.firmware",
-        return_value="1.234",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.cumulated_energy",
-        side_effect=_simulated_returns,
+    with (
+        patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
+        patch(
+            "aurorapy.client.AuroraSerialClient.measure",
+            side_effect=_simulated_returns,
+        ),
+        patch("aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]),
+        patch(
+            "aurorapy.client.AuroraSerialClient.serial_number",
+            return_value="9876543",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.version",
+            return_value="9.8.7.6",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.pn",
+            return_value="A.B.C",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.firmware",
+            return_value="1.234",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.cumulated_energy",
+            side_effect=_simulated_returns,
+        ),
     ):
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -116,9 +123,9 @@ async def test_sensors(hass: HomeAssistant, entity_registry: EntityRegistry) -> 
         ]
         for entity_id, _ in sensors:
             assert not hass.states.get(entity_id)
-            assert (
-                entry := entity_registry.async_get(entity_id)
-            ), f"Entity registry entry for {entity_id} is missing"
+            assert (entry := entity_registry.async_get(entity_id)), (
+                f"Entity registry entry for {entity_id} is missing"
+            )
             assert entry.disabled
             assert entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
@@ -144,25 +151,32 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
     mock_entry = _mock_config_entry()
 
     # sun is up
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.cumulated_energy",
-        side_effect=_simulated_returns,
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.serial_number",
-        return_value="9876543",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.version",
-        return_value="9.8.7.6",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.pn",
-        return_value="A.B.C",
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.firmware",
-        return_value="1.234",
+    with (
+        patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
+        patch(
+            "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
+        ),
+        patch("aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]),
+        patch(
+            "aurorapy.client.AuroraSerialClient.cumulated_energy",
+            side_effect=_simulated_returns,
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.serial_number",
+            return_value="9876543",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.version",
+            return_value="9.8.7.6",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.pn",
+            return_value="A.B.C",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.firmware",
+            return_value="1.234",
+        ),
     ):
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -173,42 +187,57 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
         assert power.state == "45.7"
 
     # sunset
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.measure",
-        side_effect=AuroraTimeoutError("No response after 10 seconds"),
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.cumulated_energy",
-        side_effect=AuroraTimeoutError("No response after 3 tries"),
-    ), patch("aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]):
+    with (
+        patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
+        patch(
+            "aurorapy.client.AuroraSerialClient.measure",
+            side_effect=AuroraTimeoutError("No response after 10 seconds"),
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.cumulated_energy",
+            side_effect=AuroraTimeoutError("No response after 3 tries"),
+        ),
+        patch("aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]),
+    ):
         freezer.tick(SCAN_INTERVAL * 2)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         power = hass.states.get("sensor.mydevicename_total_energy")
         assert power.state == "unknown"
     # sun rose again
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.cumulated_energy",
-        side_effect=_simulated_returns,
-    ), patch("aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]):
+    with (
+        patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
+        patch(
+            "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.cumulated_energy",
+            side_effect=_simulated_returns,
+        ),
+        patch("aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]),
+    ):
         freezer.tick(SCAN_INTERVAL * 4)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         power = hass.states.get("sensor.mydevicename_power_output")
         assert power is not None
         assert power.state == "45.7"
     # sunset
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.measure",
-        side_effect=AuroraTimeoutError("No response after 10 seconds"),
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.cumulated_energy",
-        side_effect=AuroraError("No response after 10 seconds"),
-    ), patch("aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]):
+    with (
+        patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
+        patch(
+            "aurorapy.client.AuroraSerialClient.measure",
+            side_effect=AuroraTimeoutError("No response after 10 seconds"),
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.cumulated_energy",
+            side_effect=AuroraError("No response after 10 seconds"),
+        ),
+        patch("aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]),
+    ):
         freezer.tick(SCAN_INTERVAL * 6)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         power = hass.states.get("sensor.mydevicename_power_output")
         assert power.state == "unknown"  # should this be 'available'?
 
@@ -222,27 +251,33 @@ async def test_sensor_unknown_error(
     mock_entry = _mock_config_entry()
 
     # sun is up
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.cumulated_energy",
-        side_effect=_simulated_returns,
+    with (
+        patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
+        patch(
+            "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
+        ),
+        patch("aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]),
+        patch(
+            "aurorapy.client.AuroraSerialClient.cumulated_energy",
+            side_effect=_simulated_returns,
+        ),
     ):
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.measure",
-        side_effect=AuroraError("another error"),
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]
-    ), patch("serial.Serial.isOpen", return_value=True):
+    with (
+        patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
+        patch(
+            "aurorapy.client.AuroraSerialClient.measure",
+            side_effect=AuroraError("another error"),
+        ),
+        patch("aurorapy.client.AuroraSerialClient.alarms", return_value=["No alarm"]),
+        patch("serial.Serial.isOpen", return_value=True),
+    ):
         freezer.tick(SCAN_INTERVAL * 2)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             "Exception: AuroraError('another error') occurred, 2 retries remaining"
             in caplog.text

@@ -29,14 +29,22 @@ async def test_fan_add_feature_at_runtime(
     fan_state = hass.states.get("fan.living_room_fan")
     assert (
         fan_state.attributes[ATTR_SUPPORTED_FEATURES]
-        is FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
+        is FanEntityFeature.SET_SPEED
+        | FanEntityFeature.DIRECTION
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
     )
 
     fan = entity_registry.async_get("fan.ceiling_fan")
     assert fan.unique_id == "00:00:00:00:00:00_766313939_8"
 
     fan_state = hass.states.get("fan.ceiling_fan")
-    assert fan_state.attributes[ATTR_SUPPORTED_FEATURES] is FanEntityFeature.SET_SPEED
+    assert (
+        fan_state.attributes[ATTR_SUPPORTED_FEATURES]
+        is FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
     # Now change the config to add oscillation
     accessories = await setup_accessories_from_file(
@@ -50,9 +58,16 @@ async def test_fan_add_feature_at_runtime(
         is FanEntityFeature.SET_SPEED
         | FanEntityFeature.DIRECTION
         | FanEntityFeature.OSCILLATE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
     )
     fan_state = hass.states.get("fan.ceiling_fan")
-    assert fan_state.attributes[ATTR_SUPPORTED_FEATURES] is FanEntityFeature.SET_SPEED
+    assert (
+        fan_state.attributes[ATTR_SUPPORTED_FEATURES]
+        is FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
 
 async def test_fan_remove_feature_at_runtime(
@@ -75,13 +90,20 @@ async def test_fan_remove_feature_at_runtime(
         is FanEntityFeature.SET_SPEED
         | FanEntityFeature.DIRECTION
         | FanEntityFeature.OSCILLATE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
     )
 
     fan = entity_registry.async_get("fan.ceiling_fan")
     assert fan.unique_id == "00:00:00:00:00:00_766313939_8"
 
     fan_state = hass.states.get("fan.ceiling_fan")
-    assert fan_state.attributes[ATTR_SUPPORTED_FEATURES] is FanEntityFeature.SET_SPEED
+    assert (
+        fan_state.attributes[ATTR_SUPPORTED_FEATURES]
+        is FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
     # Now change the config to add oscillation
     accessories = await setup_accessories_from_file(
@@ -92,10 +114,18 @@ async def test_fan_remove_feature_at_runtime(
     fan_state = hass.states.get("fan.living_room_fan")
     assert (
         fan_state.attributes[ATTR_SUPPORTED_FEATURES]
-        is FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
+        is FanEntityFeature.SET_SPEED
+        | FanEntityFeature.DIRECTION
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
     )
     fan_state = hass.states.get("fan.ceiling_fan")
-    assert fan_state.attributes[ATTR_SUPPORTED_FEATURES] is FanEntityFeature.SET_SPEED
+    assert (
+        fan_state.attributes[ATTR_SUPPORTED_FEATURES]
+        is FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
 
 async def test_bridge_with_two_fans_one_removed(
@@ -119,13 +149,20 @@ async def test_bridge_with_two_fans_one_removed(
         is FanEntityFeature.SET_SPEED
         | FanEntityFeature.DIRECTION
         | FanEntityFeature.OSCILLATE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
     )
 
     fan = entity_registry.async_get("fan.ceiling_fan")
     assert fan.unique_id == "00:00:00:00:00:00_766313939_8"
 
     fan_state = hass.states.get("fan.ceiling_fan")
-    assert fan_state.attributes[ATTR_SUPPORTED_FEATURES] is FanEntityFeature.SET_SPEED
+    assert (
+        fan_state.attributes[ATTR_SUPPORTED_FEATURES]
+        is FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
     # Now change the config to remove one of the fans
     accessories = await setup_accessories_from_file(
@@ -141,6 +178,8 @@ async def test_bridge_with_two_fans_one_removed(
         is FanEntityFeature.SET_SPEED
         | FanEntityFeature.DIRECTION
         | FanEntityFeature.OSCILLATE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
     )
     # The second fan should have been removed
     assert not hass.states.get("fan.ceiling_fan")

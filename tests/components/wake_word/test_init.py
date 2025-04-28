@@ -13,7 +13,7 @@ from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from .common import mock_wake_word_entity_platform
@@ -88,7 +88,7 @@ class WakeWordFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -117,8 +117,8 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, wake_word.DOMAIN
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [wake_word.DOMAIN]
         )
         return True
 
@@ -143,7 +143,7 @@ async def mock_config_entry_setup(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test stt platform via config entry."""
         async_add_entities([mock_provider_entity])
@@ -165,9 +165,9 @@ async def test_config_entry_unload(
 ) -> None:
     """Test we can unload config entry."""
     config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @freeze_time("2023-06-22 10:30:00+00:00")
@@ -268,7 +268,7 @@ async def test_restore_state(
     config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp

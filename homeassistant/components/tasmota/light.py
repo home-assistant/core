@@ -18,7 +18,7 @@ from hatasmota.models import DiscoveryHashType
 from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
@@ -31,11 +31,12 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate, TasmotaOnOffEntity
+from .entity import TasmotaAvailability, TasmotaDiscoveryUpdate, TasmotaOnOffEntity
 
 DEFAULT_BRIGHTNESS_MAX = 255
 TASMOTA_BRIGHTNESS_MAX = 100
@@ -44,7 +45,7 @@ TASMOTA_BRIGHTNESS_MAX = 100
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tasmota light dynamically through discovery."""
 
@@ -57,12 +58,12 @@ async def async_setup_entry(
             [TasmotaLight(tasmota_entity=tasmota_entity, discovery_hash=discovery_hash)]
         )
 
-    hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format(light.DOMAIN)
-    ] = async_dispatcher_connect(
-        hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(light.DOMAIN),
-        async_discover,
+    hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format(light.DOMAIN)] = (
+        async_dispatcher_connect(
+            hass,
+            TASMOTA_DISCOVERY_ENTITY_NEW.format(light.DOMAIN),
+            async_discover,
+        )
     )
 
 
@@ -199,19 +200,27 @@ class TasmotaLight(
         return self._color_mode
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the color temperature in mired."""
-        return self._color_temp
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        return (
+            color_util.color_temperature_mired_to_kelvin(self._color_temp)
+            if self._color_temp
+            else None
+        )
 
     @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return self._tasmota_entity.min_mireds
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
+        return color_util.color_temperature_mired_to_kelvin(
+            self._tasmota_entity.min_mireds
+        )
 
     @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return self._tasmota_entity.max_mireds
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
+        return color_util.color_temperature_mired_to_kelvin(
+            self._tasmota_entity.max_mireds
+        )
 
     @property
     def effect(self) -> str | None:
@@ -255,8 +264,13 @@ class TasmotaLight(
         if ATTR_BRIGHTNESS in kwargs and brightness_supported(supported_color_modes):
             attributes["brightness"] = scale_brightness(kwargs[ATTR_BRIGHTNESS])
 
-        if ATTR_COLOR_TEMP in kwargs and ColorMode.COLOR_TEMP in supported_color_modes:
-            attributes["color_temp"] = int(kwargs[ATTR_COLOR_TEMP])
+        if (
+            ATTR_COLOR_TEMP_KELVIN in kwargs
+            and ColorMode.COLOR_TEMP in supported_color_modes
+        ):
+            attributes["color_temp"] = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
 
         if ATTR_EFFECT in kwargs:
             attributes["effect"] = kwargs[ATTR_EFFECT]

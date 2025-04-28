@@ -7,13 +7,13 @@ import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant import config as hass_config
-import homeassistant.components.input_number as input_number
-import homeassistant.components.input_select as input_select
-import homeassistant.components.media_player as media_player
-from homeassistant.components.media_player import MediaClass, MediaPlayerEntityFeature
-from homeassistant.components.media_player.browse_media import BrowseMedia
-import homeassistant.components.switch as switch
-import homeassistant.components.universal.media_player as universal
+from homeassistant.components import input_number, input_select, media_player, switch
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaClass,
+    MediaPlayerEntityFeature,
+)
+from homeassistant.components.universal import media_player as universal
 from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_OFF,
@@ -27,7 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service, get_fixture_path
+from tests.common import MockEntityPlatform, async_mock_service, get_fixture_path
 
 CONFIG_CHILDREN_ONLY = {
     "name": "test",
@@ -58,7 +58,7 @@ def validate_config(config):
 class MockMediaPlayer(media_player.MediaPlayerEntity):
     """Mock media player for testing."""
 
-    def __init__(self, hass, name):
+    def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize the media player."""
         self.hass = hass
         self._name = name
@@ -73,6 +73,8 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
         self._media_image_url = None
         self._shuffle = False
         self._sound_mode = None
+        self._repeat = None
+        self.platform = MockEntityPlatform(hass)
 
         self.service_calls = {
             "turn_on": async_mock_service(
@@ -222,7 +224,7 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
 
 
 @pytest.fixture
-async def mock_states(hass):
+async def mock_states(hass: HomeAssistant) -> Mock:
     """Set mock states used in tests."""
     result = Mock()
 
@@ -327,10 +329,10 @@ async def test_config_bad_children(hass: HomeAssistant) -> None:
     config_bad_children = {"name": "test", "children": {}, "platform": "universal"}
 
     config_no_children = validate_config(config_no_children)
-    assert [] == config_no_children["children"]
+    assert config_no_children["children"] == []
 
     config_bad_children = validate_config(config_bad_children)
-    assert [] == config_bad_children["children"]
+    assert config_bad_children["children"] == []
 
 
 async def test_config_bad_commands(hass: HomeAssistant) -> None:
@@ -338,7 +340,7 @@ async def test_config_bad_commands(hass: HomeAssistant) -> None:
     config = {"name": "test", "platform": "universal"}
 
     config = validate_config(config)
-    assert {} == config["commands"]
+    assert config["commands"] == {}
 
 
 async def test_config_bad_attributes(hass: HomeAssistant) -> None:
@@ -346,7 +348,7 @@ async def test_config_bad_attributes(hass: HomeAssistant) -> None:
     config = {"name": "test", "platform": "universal"}
 
     config = validate_config(config)
-    assert {} == config["attributes"]
+    assert config["attributes"] == {}
 
 
 async def test_config_bad_key(hass: HomeAssistant) -> None:
@@ -360,26 +362,10 @@ async def test_config_bad_key(hass: HomeAssistant) -> None:
 async def test_platform_setup(hass: HomeAssistant) -> None:
     """Test platform setup."""
     config = {"name": "test", "platform": "universal"}
-    bad_config = {"platform": "universal"}
-    entities = []
-
-    def add_entities(new_entities):
-        """Add devices to list."""
-        entities.extend(new_entities)
-
-    setup_ok = True
-    try:
-        await universal.async_setup_platform(
-            hass, validate_config(bad_config), add_entities
-        )
-    except MultipleInvalid:
-        setup_ok = False
-    assert not setup_ok
-    assert len(entities) == 0
-
-    await universal.async_setup_platform(hass, validate_config(config), add_entities)
-    assert len(entities) == 1
-    assert entities[0].name == "test"
+    assert await async_setup_component(hass, "media_player", {"media_player": config})
+    await hass.async_block_till_done()
+    assert hass.states.async_all() != []
+    assert hass.states.get("media_player.test") is not None
 
 
 async def test_master_state(hass: HomeAssistant) -> None:
@@ -460,11 +446,10 @@ async def test_active_child_state(hass: HomeAssistant, mock_states) -> None:
 
 async def test_name(hass: HomeAssistant) -> None:
     """Test name property."""
-    config = validate_config(CONFIG_CHILDREN_ONLY)
-
-    ump = universal.UniversalMediaPlayer(hass, config)
-
-    assert config["name"] == ump.name
+    assert await async_setup_component(
+        hass, "media_player", {"media_player": CONFIG_CHILDREN_ONLY}
+    )
+    assert hass.states.get("media_player.test") is not None
 
 
 async def test_polling(hass: HomeAssistant) -> None:
@@ -1123,12 +1108,15 @@ async def test_browse_media(hass: HomeAssistant) -> None:
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
-    with patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
-        MediaPlayerEntityFeature.BROWSE_MEDIA,
-    ), patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.async_browse_media",
-        return_value=MOCK_BROWSE_MEDIA,
+    with (
+        patch(
+            "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
+            MediaPlayerEntityFeature.BROWSE_MEDIA,
+        ),
+        patch(
+            "homeassistant.components.demo.media_player.MediaPlayerEntity.async_browse_media",
+            return_value=MOCK_BROWSE_MEDIA,
+        ),
     ):
         result = await ump.async_browse_media()
         assert result == MOCK_BROWSE_MEDIA
@@ -1155,12 +1143,15 @@ async def test_browse_media_override(hass: HomeAssistant) -> None:
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
-    with patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
-        MediaPlayerEntityFeature.BROWSE_MEDIA,
-    ), patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.async_browse_media",
-        return_value=MOCK_BROWSE_MEDIA,
+    with (
+        patch(
+            "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
+            MediaPlayerEntityFeature.BROWSE_MEDIA,
+        ),
+        patch(
+            "homeassistant.components.demo.media_player.MediaPlayerEntity.async_browse_media",
+            return_value=MOCK_BROWSE_MEDIA,
+        ),
     ):
         result = await ump.async_browse_media()
         assert result == MOCK_BROWSE_MEDIA
@@ -1267,11 +1258,15 @@ async def test_master_state_with_template(hass: HomeAssistant) -> None:
     events = []
 
     async_track_state_change_event(
-        hass, "media_player.tv", callback(lambda event: events.append(event))
+        hass,
+        "media_player.tv",
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda event: events.append(event)),
     )
 
     context = Context()
     hass.states.async_set("input_boolean.test", STATE_ON, context=context)
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     assert hass.states.get("media_player.tv").state == STATE_OFF

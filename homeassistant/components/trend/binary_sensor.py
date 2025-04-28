@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -31,14 +31,15 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -93,7 +94,7 @@ SENSOR_SCHEMA = vol.All(
     _validate_min_max,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
 )
 
@@ -132,9 +133,14 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up trend sensor from config entry."""
+
+    device_info = async_device_info_to_link_from_entity(
+        hass,
+        entry.options[CONF_ENTITY_ID],
+    )
 
     async_add_entities(
         [
@@ -150,6 +156,7 @@ async def async_setup_entry(
                 min_samples=entry.options.get(CONF_MIN_SAMPLES, DEFAULT_MIN_SAMPLES),
                 max_samples=entry.options.get(CONF_MAX_SAMPLES, DEFAULT_MAX_SAMPLES),
                 unique_id=entry.entry_id,
+                device_info=device_info,
             )
         ]
     )
@@ -175,6 +182,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         unique_id: str | None = None,
         device_class: BinarySensorDeviceClass | None = None,
         sensor_entity_id: str | None = None,
+        device_info: dr.DeviceInfo | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._entity_id = entity_id
@@ -188,14 +196,10 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         self._attr_name = name
         self._attr_device_class = device_class
         self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
 
         if sensor_entity_id:
             self.entity_id = sensor_entity_id
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if sensor is on."""
-        return self._state
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
@@ -225,10 +229,15 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
                     state = new_state.attributes.get(self._attribute)
                 else:
                     state = new_state.state
-                if state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+
+                if state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                    self._attr_available = False
+                else:
+                    self._attr_available = True
                     sample = (new_state.last_updated.timestamp(), float(state))  # type: ignore[arg-type]
                     self.samples.append(sample)
-                    self.async_schedule_update_ha_state(True)
+
+                self.async_schedule_update_ha_state(True)
             except (ValueError, TypeError) as ex:
                 _LOGGER.error(ex)
 
@@ -240,9 +249,9 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
 
         if not (state := await self.async_get_last_state()):
             return
-        if state.state == STATE_UNKNOWN:
+        if state.state in {STATE_UNKNOWN, STATE_UNAVAILABLE}:
             return
-        self._state = state.state == STATE_ON
+        self._attr_is_on = state.state == STATE_ON
 
     async def async_update(self) -> None:
         """Get the latest data and update the states."""
@@ -259,13 +268,13 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         await self.hass.async_add_executor_job(self._calculate_gradient)
 
         # Update state
-        self._state = (
+        self._attr_is_on = (
             abs(self._gradient) > abs(self._min_gradient)
             and math.copysign(self._gradient, self._min_gradient) == self._gradient
         )
 
         if self._invert:
-            self._state = not self._state
+            self._attr_is_on = not self._attr_is_on
 
     def _calculate_gradient(self) -> None:
         """Compute the linear trend gradient of the current samples.

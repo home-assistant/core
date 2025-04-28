@@ -2,21 +2,36 @@
   "config": {
     "step": {
       "user": {
+        "title": "Total Connect 2.0 Account Credentials",
+        "description": "It is highly recommended to use a 'standard' Total Connect user account with Home Assistant. The account should not have full administrative privileges.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "The Total Connect username",
+          "password": "The Total Connect password"
         }
       },
       "locations": {
         "title": "Location Usercodes",
         "description": "Enter the usercode for this user at location {location_id}",
         "data": {
-          "usercode": "Usercode"
+          "usercodes": "Usercode"
+        },
+        "data_description": {
+          "usercodes": "The usercode is usually a 4 digit number"
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Total Connect needs to re-authenticate your account"
+        "description": "Total Connect needs to re-authenticate your account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::totalconnect::config::step::user::data_description::password%]"
+        }
       }
     },
     "error": {
@@ -33,9 +48,13 @@
     "step": {
       "init": {
         "title": "TotalConnect Options",
-        "description": "Automatically bypass zones the moment they report a low battery.",
         "data": {
-          "auto_bypass_low_battery": "Auto bypass low battery"
+          "auto_bypass_low_battery": "Auto bypass low battery",
+          "code_required": "Require user to enter code for alarm actions"
+        },
+        "data_description": {
+          "auto_bypass_low_battery": "If enabled, Total Connect zones will immediately be bypassed when they report low battery. This option helps because zones tend to report low battery in the middle of the night. The downside of this option is that when the alarm system is armed, the bypassed zone will not be monitored.",
+          "code_required": "If enabled, you must enter the user code to arm or disarm the alarm"
         }
       }
     }
@@ -48,6 +67,74 @@
     "arm_home_instant": {
       "name": "Arm home instant",
       "description": "Arms Home with zero entry delay."
+    }
+  },
+  "entity": {
+    "alarm_control_panel": {
+      "partition": {
+        "name": "Partition {partition_id}"
+      }
+    },
+    "binary_sensor": {
+      "police": {
+        "name": "Police emergency",
+        "state": {
+          "off": "No emergency",
+          "on": "Police emergency"
+        }
+      }
+    },
+    "button": {
+      "clear_bypass": {
+        "name": "Clear bypass"
+      },
+      "bypass_all": {
+        "name": "Bypass all"
+      },
+      "bypass": {
+        "name": "Bypass"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_pin": {
+      "message": "Incorrect code entered"
+    },
+    "disarm_failed": {
+      "message": "Failed to disarm {device}"
+    },
+    "disarm_invalid_code": {
+      "message": "Usercode is invalid, did not disarm"
+    },
+    "arm_home_failed": {
+      "message": "Failed to arm home {device}"
+    },
+    "arm_home_invalid_code": {
+      "message": "Usercode is invalid, did not arm home"
+    },
+    "arm_away_failed": {
+      "message": "Failed to arm away {device}"
+    },
+    "arm_away_invalid_code": {
+      "message": "Usercode is invalid, did not arm away"
+    },
+    "arm_night_failed": {
+      "message": "Failed to arm night {device}"
+    },
+    "arm_night_invalid_code": {
+      "message": "Usercode is invalid, did not arm night"
+    },
+    "arm_home_instant_failed": {
+      "message": "Failed to arm home instant {device}"
+    },
+    "arm_home_instant_invalid_code": {
+      "message": "Usercode is invalid, did not arm home instant"
+    },
+    "arm_away_instant_failed": {
+      "message": "Failed to arm away instant {device}"
+    },
+    "arm_away_instant_invalid_code": {
+      "message": "Usercode is invalid, did not arm away instant"
     }
   }
 }

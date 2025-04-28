@@ -26,11 +26,12 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     TEMPLATE_ENTITY_BASE_SCHEMA,
     TEMPLATE_SENSOR_BASE_SCHEMA,
+    ValueTemplate,
 )
 from homeassistant.util.ssl import SSLCipherList
 
@@ -38,6 +39,7 @@ from .const import (
     CONF_ENCODING,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
+    CONF_PAYLOAD_TEMPLATE,
     CONF_SSL_CIPHER_LIST,
     DEFAULT_ENCODING,
     DEFAULT_FORCE_UPDATE,
@@ -60,7 +62,8 @@ RESOURCE_SCHEMA = {
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PAYLOAD): cv.string,
+    vol.Exclusive(CONF_PAYLOAD, CONF_PAYLOAD): cv.string,
+    vol.Exclusive(CONF_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(
         CONF_SSL_CIPHER_LIST,
@@ -74,7 +77,9 @@ SENSOR_SCHEMA = {
     **TEMPLATE_SENSOR_BASE_SCHEMA.schema,
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        cv.template, ValueTemplate.from_template
+    ),
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     vol.Optional(CONF_AVAILABILITY): cv.template,
 }
@@ -82,7 +87,9 @@ SENSOR_SCHEMA = {
 BINARY_SENSOR_SCHEMA = {
     **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
     vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+        cv.template, ValueTemplate.from_template
+    ),
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     vol.Optional(CONF_AVAILABILITY): cv.template,
 }

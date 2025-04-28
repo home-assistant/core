@@ -1,6 +1,8 @@
 """The profiler integration."""
 
 import asyncio
+from collections.abc import Generator
+import contextlib
 from contextlib import suppress
 from datetime import timedelta
 from functools import _lru_cache_wrapper
@@ -20,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 
@@ -37,6 +39,7 @@ SERVICE_LRU_STATS = "lru_stats"
 SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
 SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
 SERVICE_SET_ASYNCIO_DEBUG = "set_asyncio_debug"
+SERVICE_LOG_CURRENT_TASKS = "log_current_tasks"
 
 _LRU_CACHE_WRAPPER_OBJECT = _lru_cache_wrapper.__name__
 _SQLALCHEMY_LRU_OBJECT = "LRUCache"
@@ -59,6 +62,7 @@ SERVICES = (
     SERVICE_LOG_THREAD_FRAMES,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
     SERVICE_SET_ASYNCIO_DEBUG,
+    SERVICE_LOG_CURRENT_TASKS,
 )
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
@@ -229,7 +233,7 @@ async def async_setup_entry(  # noqa: C901
 
     async def _async_dump_thread_frames(call: ServiceCall) -> None:
         """Log all thread frames."""
-        frames = sys._current_frames()  # pylint: disable=protected-access
+        frames = sys._current_frames()  # noqa: SLF001
         main_thread = threading.main_thread()
         for thread in threading.enumerate():
             if thread == main_thread:
@@ -241,21 +245,20 @@ async def async_setup_entry(  # noqa: C901
                 "".join(traceback.format_stack(frames.get(ident))).strip(),
             )
 
+    async def _async_dump_current_tasks(call: ServiceCall) -> None:
+        """Log all current tasks in the event loop."""
+        with _increase_repr_limit():
+            for task in asyncio.all_tasks():
+                if not task.cancelled():
+                    _LOGGER.critical("Task: %s", _safe_repr(task))
+
     async def _async_dump_scheduled(call: ServiceCall) -> None:
         """Log all scheduled in the event loop."""
-        arepr = reprlib.aRepr
-        original_maxstring = arepr.maxstring
-        original_maxother = arepr.maxother
-        arepr.maxstring = 300
-        arepr.maxother = 300
-        handle: asyncio.Handle
-        try:
+        with _increase_repr_limit():
+            handle: asyncio.Handle
             for handle in getattr(hass.loop, "_scheduled"):
                 if not handle.cancelled():
                     _LOGGER.critical("Scheduled: %s", handle)
-        finally:
-            arepr.maxstring = original_maxstring
-            arepr.maxother = original_maxother
 
     async def _async_asyncio_debug(call: ServiceCall) -> None:
         """Enable or disable asyncio debug."""
@@ -370,6 +373,13 @@ async def async_setup_entry(  # noqa: C901
         SERVICE_SET_ASYNCIO_DEBUG,
         _async_asyncio_debug,
         schema=vol.Schema({vol.Optional(CONF_ENABLED, default=True): cv.boolean}),
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_LOG_CURRENT_TASKS,
+        _async_dump_current_tasks,
     )
 
     return True
@@ -495,7 +505,7 @@ def _safe_repr(obj: Any) -> str:
     """
     try:
         return repr(obj)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         return f"Failed to serialize {type(obj)}"
 
 
@@ -573,3 +583,18 @@ def _log_object_sources(
         _LOGGER.critical("New objects overflowed by %s", new_objects_overflow)
     elif not had_new_object_growth:
         _LOGGER.critical("No new object growth found")
+
+
+@contextlib.contextmanager
+def _increase_repr_limit() -> Generator[None]:
+    """Increase the repr limit."""
+    arepr = reprlib.aRepr
+    original_maxstring = arepr.maxstring
+    original_maxother = arepr.maxother
+    arepr.maxstring = 300
+    arepr.maxother = 300
+    try:
+        yield
+    finally:
+        arepr.maxstring = original_maxstring
+        arepr.maxother = original_maxother

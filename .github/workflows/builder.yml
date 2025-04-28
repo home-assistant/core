@@ -10,7 +10,7 @@ on:
 
 env:
   BUILD_TYPE: core
-  DEFAULT_PYTHON: "3.12"
+  DEFAULT_PYTHON: "3.13"
   PIP_TIMEOUT: 60
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
@@ -27,12 +27,12 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -51,6 +51,30 @@ jobs:
         with:
           ignore-dev: true
 
+      - name: Fail if translations files are checked in
+        run: |
+          if [ -n "$(find homeassistant/components/*/translations -type f)" ]; then
+              echo "Translations files are checked in, please remove the following files:"
+              find homeassistant/components/*/translations -type f
+              exit 1
+          fi
+
+      - name: Download Translations
+        run: python3 -m script.translations download
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+
+      - name: Archive translations
+        shell: bash
+        run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
+
+      - name: Upload translations
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: translations
+          path: translations.tar.gz
+          if-no-files-found: error
+
   build_base:
     name: Build ${{ matrix.arch }} base core image
     if: github.repository_owner == 'home-assistant'
@@ -66,11 +90,11 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.2.2
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@v3.1.4
+        uses: dawidd6/action-download-artifact@v9
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/frontend
@@ -81,7 +105,7 @@ jobs:
 
       - name: Download nightly wheels of intents
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@v3.1.4
+        uses: dawidd6/action-download-artifact@v9
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/intents-package
@@ -92,18 +116,20 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
       - name: Adjust nightly version
         if: needs.init.outputs.channel == 'dev'
         shell: bash
+        env:
+          UV_PRERELEASE: allow
         run: |
-          python3 -m pip install "$(grep '^uv' < requirements_test.txt)"
+          python3 -m pip install "$(grep '^uv' < requirements.txt)"
           uv pip install packaging tomli
           uv pip install .
-          version="$(python3 script/version_bump.py nightly)"
+          python3 script/version_bump.py nightly --set-nightly-version "${{ needs.init.outputs.version }}"
 
           if [[ "$(ls home_assistant_frontend*.whl)" =~ ^home_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
             echo "Found frontend wheel, setting version to: ${BASH_REMATCH[1]}"
@@ -148,19 +174,15 @@ jobs:
           sed -i "s|pyezviz|# pyezviz|g" requirements_all.txt
           sed -i "s|pykrakenapi|# pykrakenapi|g" requirements_all.txt
 
-      - name: Adjustments for 64-bit
-        if: matrix.arch == 'amd64' || matrix.arch == 'aarch64'
-        run: |
-          # Some speedups are only available on 64-bit, and since
-          # we build 32bit images on 64bit hosts, we only enable
-          # the speed ups on 64bit since the wheels for 32bit
-          # are not available.
-          sed -i "s|aiohttp-zlib-ng|aiohttp-zlib-ng\[isal\]|g" requirements_all.txt
+      - name: Download translations
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: translations
 
-      - name: Download Translations
-        run: python3 -m script.translations download
-        env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+      - name: Extract translations
+        run: |
+          tar xvf translations.tar.gz
+          rm translations.tar.gz
 
       - name: Write meta info file
         shell: bash
@@ -168,14 +190,14 @@ jobs:
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.1.0
+        uses: docker/login-action@v3.4.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2024.03.5
+        uses: home-assistant/builder@2025.03.0
         with:
           args: |
             $BUILD_ARGS \
@@ -183,17 +205,6 @@ jobs:
             --cosign \
             --target /data \
             --generic ${{ needs.init.outputs.version }}
-
-      - name: Archive translations
-        shell: bash
-        run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
-
-      - name: Upload translations
-        uses: actions/upload-artifact@v3
-        with:
-          name: translations
-          path: translations.tar.gz
-          if-no-files-found: error
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
@@ -231,7 +242,7 @@ jobs:
           - green
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.2.2
 
       - name: Set build additional args
         run: |
@@ -245,14 +256,14 @@ jobs:
           fi
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.1.0
+        uses: docker/login-action@v3.4.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2024.03.5
+        uses: home-assistant/builder@2025.03.0
         with:
           args: |
             $BUILD_ARGS \
@@ -268,7 +279,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.2.2
 
       - name: Initialize git
         uses: home-assistant/actions/helpers/git-init@master
@@ -305,27 +316,28 @@ jobs:
       packages: write
       id-token: write
     strategy:
+      fail-fast: false
       matrix:
         registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.2.2
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.4.0
+        uses: sigstore/cosign-installer@v3.8.2
         with:
           cosign-release: "v2.2.3"
 
       - name: Login to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
-        uses: docker/login-action@v3.1.0
+        uses: docker/login-action@v3.4.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
         if: matrix.registry == 'ghcr.io/home-assistant'
-        uses: docker/login-action@v3.1.0
+        uses: docker/login-action@v3.4.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -436,33 +448,91 @@ jobs:
     environment: ${{ needs.init.outputs.channel }}
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4.2.2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
-      - name: Download Translations
-        run: python3 -m script.translations download
-        env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+      - name: Download translations
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: translations
+
+      - name: Extract translations
+        run: |
+          tar xvf translations.tar.gz
+          rm translations.tar.gz
 
       - name: Build package
         shell: bash
         run: |
           # Remove dist, build, and homeassistant.egg-info
           # when build locally for testing!
-          pip install twine build
+          pip install build
           python -m build
 
-      - name: Upload package
-        shell: bash
-        run: |
-          export TWINE_USERNAME="__token__"
-          export TWINE_PASSWORD="${{ secrets.TWINE_TOKEN }}"
+      - name: Upload package to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.12.4
+        with:
+          skip-existing: true
 
-          twine upload dist/* --skip-existing
+  hassfest-image:
+    name: Build and test hassfest image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    needs: ["init"]
+    if: github.repository_owner == 'home-assistant'
+    env:
+      HASSFEST_IMAGE_NAME: ghcr.io/home-assistant/hassfest
+      HASSFEST_IMAGE_TAG: ghcr.io/home-assistant/hassfest:${{ needs.init.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: . # So action will not pull the repository again
+          file: ./script/hassfest/docker/Dockerfile
+          load: true
+          tags: ${{ env.HASSFEST_IMAGE_TAG }}
+
+      - name: Run hassfest against core
+        run: docker run --rm -v ${{ github.workspace }}:/github/workspace ${{ env.HASSFEST_IMAGE_TAG }} --core-path=/github/workspace
+
+      - name: Push Docker image
+        if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
+        id: push
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: . # So action will not pull the repository again
+          file: ./script/hassfest/docker/Dockerfile
+          push: true
+          tags: ${{ env.HASSFEST_IMAGE_TAG }},${{ env.HASSFEST_IMAGE_NAME }}:latest
+
+      - name: Generate artifact attestation
+        if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
+        uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
+        with:
+          subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true

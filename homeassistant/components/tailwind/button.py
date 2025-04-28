@@ -13,14 +13,13 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import TailwindDataUpdateCoordinator
+from .coordinator import TailwindConfigEntry
 from .entity import TailwindEntity
 
 
@@ -43,14 +42,13 @@ DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: TailwindConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tailwind button based on a config entry."""
-    coordinator: TailwindDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         TailwindButtonEntity(
-            coordinator,
+            entry.runtime_data,
             description,
         )
         for description in DESCRIPTIONS

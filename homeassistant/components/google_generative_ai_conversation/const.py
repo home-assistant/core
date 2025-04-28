@@ -1,35 +1,28 @@
 """Constants for the Google Generative AI Conversation integration."""
 
+import logging
+
 DOMAIN = "google_generative_ai_conversation"
+LOGGER = logging.getLogger(__package__)
 CONF_PROMPT = "prompt"
-DEFAULT_PROMPT = """This smart home is controlled by Home Assistant.
 
-An overview of the areas and the devices in this smart home:
-{%- for area in areas() %}
-  {%- set area_info = namespace(printed=false) %}
-  {%- for device in area_devices(area) -%}
-    {%- if not device_attr(device, "disabled_by") and not device_attr(device, "entry_type") and device_attr(device, "name") %}
-      {%- if not area_info.printed %}
-
-{{ area_name(area) }}:
-        {%- set area_info.printed = true %}
-      {%- endif %}
-- {{ device_attr(device, "name") }}{% if device_attr(device, "model") and (device_attr(device, "model") | string) not in (device_attr(device, "name") | string) %} ({{ device_attr(device, "model") }}){% endif %}
-    {%- endif %}
-  {%- endfor %}
-{%- endfor %}
-
-Answer the user's questions about the world truthfully.
-
-If the user wants to control a device, reject the request and suggest using the Home Assistant app.
-"""
+CONF_RECOMMENDED = "recommended"
 CONF_CHAT_MODEL = "chat_model"
-DEFAULT_CHAT_MODEL = "models/gemini-pro"
+RECOMMENDED_CHAT_MODEL = "models/gemini-2.0-flash"
 CONF_TEMPERATURE = "temperature"
-DEFAULT_TEMPERATURE = 0.9
+RECOMMENDED_TEMPERATURE = 1.0
 CONF_TOP_P = "top_p"
-DEFAULT_TOP_P = 1.0
+RECOMMENDED_TOP_P = 0.95
 CONF_TOP_K = "top_k"
-DEFAULT_TOP_K = 1
+RECOMMENDED_TOP_K = 64
 CONF_MAX_TOKENS = "max_tokens"
-DEFAULT_MAX_TOKENS = 150
+RECOMMENDED_MAX_TOKENS = 1500
+CONF_HARASSMENT_BLOCK_THRESHOLD = "harassment_block_threshold"
+CONF_HATE_BLOCK_THRESHOLD = "hate_block_threshold"
+CONF_SEXUAL_BLOCK_THRESHOLD = "sexual_block_threshold"
+CONF_DANGEROUS_BLOCK_THRESHOLD = "dangerous_block_threshold"
+RECOMMENDED_HARM_BLOCK_THRESHOLD = "BLOCK_MEDIUM_AND_ABOVE"
+CONF_USE_GOOGLE_SEARCH_TOOL = "enable_google_search_tool"
+RECOMMENDED_USE_GOOGLE_SEARCH_TOOL = False
+
+TIMEOUT_MILLIS = 10000

@@ -29,10 +29,10 @@
       "public_weather": {
         "data": {
           "area_name": "Name of the area",
-          "lat_ne": "North-East corner latitude",
-          "lon_ne": "North-East corner longitude",
-          "lat_sw": "South-West corner latitude",
-          "lon_sw": "South-West corner longitude",
+          "lat_ne": "Northeast corner latitude",
+          "lon_ne": "Northeast corner longitude",
+          "lat_sw": "Southwest corner latitude",
+          "lon_sw": "Southwest corner longitude",
           "mode": "Calculation",
           "show_on_map": "Show on map"
         },
@@ -165,6 +165,97 @@
     "clear_temperature_setting": {
       "name": "Clear temperature setting",
       "description": "Clears any temperature setting for a Netatmo climate device reverting it to the current preset or schedule."
+    }
+  },
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "frost_guard": "Frost guard",
+              "schedule": "Schedule",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
+    "button": {
+      "preferred_position": {
+        "name": "Preferred position"
+      }
+    },
+    "sensor": {
+      "temp_trend": {
+        "name": "Temperature trend"
+      },
+      "pressure_trend": {
+        "name": "Pressure trend"
+      },
+      "noise": {
+        "name": "Noise"
+      },
+      "sum_rain_1": {
+        "name": "Precipitation last hour"
+      },
+      "sum_rain_24": {
+        "name": "Precipitation today"
+      },
+      "wind_direction": {
+        "name": "Wind direction",
+        "state": {
+          "n": "North",
+          "ne": "Northeast",
+          "e": "East",
+          "se": "Southeast",
+          "s": "South",
+          "sw": "Southwest",
+          "w": "West",
+          "nw": "Northwest"
+        }
+      },
+      "wind_angle": {
+        "name": "Wind angle"
+      },
+      "gust_direction": {
+        "name": "Gust direction",
+        "state": {
+          "n": "[%key:component::netatmo::entity::sensor::wind_direction::state::n%]",
+          "ne": "[%key:component::netatmo::entity::sensor::wind_direction::state::ne%]",
+          "e": "[%key:component::netatmo::entity::sensor::wind_direction::state::e%]",
+          "se": "[%key:component::netatmo::entity::sensor::wind_direction::state::se%]",
+          "s": "[%key:component::netatmo::entity::sensor::wind_direction::state::s%]",
+          "sw": "[%key:component::netatmo::entity::sensor::wind_direction::state::sw%]",
+          "w": "[%key:component::netatmo::entity::sensor::wind_direction::state::w%]",
+          "nw": "[%key:component::netatmo::entity::sensor::wind_direction::state::nw%]"
+        }
+      },
+      "gust_angle": {
+        "name": "Gust angle"
+      },
+      "gust_strength": {
+        "name": "Gust strength"
+      },
+      "reachable": {
+        "name": "Reachability"
+      },
+      "rf_strength": {
+        "name": "RF strength"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi strength"
+      },
+      "health_idx": {
+        "name": "Health index",
+        "state": {
+          "healthy": "Healthy",
+          "fine": "Fine",
+          "fair": "Fair",
+          "poor": "Poor",
+          "unhealthy": "Unhealthy"
+        }
+      }
     }
   }
 }

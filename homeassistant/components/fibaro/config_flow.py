@@ -6,14 +6,15 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from pyfibaro.fibaro_client import FibaroAuthenticationFailed, FibaroConnectFailed
 from slugify import slugify
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import FibaroAuthFailed, FibaroConnectFailed, FibaroController
+from . import connect_fibaro_client
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,28 +29,21 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _connect_to_fibaro(data: dict[str, Any]) -> FibaroController:
-    """Validate the user input allows us to connect to fibaro."""
-    controller = FibaroController(data)
-    controller.connect_with_error_handling()
-    return controller
-
-
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    controller = await hass.async_add_executor_job(_connect_to_fibaro, data)
+    info, _ = await hass.async_add_executor_job(connect_fibaro_client, data)
 
     _LOGGER.debug(
         "Successfully connected to fibaro home center %s with name %s",
-        controller.hub_serial,
-        controller.hub_name,
+        info.serial_number,
+        info.hc_name,
     )
     return {
-        "serial_number": slugify(controller.hub_serial),
-        "name": controller.hub_name,
+        "serial_number": slugify(info.serial_number),
+        "name": info.hc_name,
     }
 
 
@@ -70,10 +64,6 @@ class FibaroConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize."""
-        self._reauth_entry: ConfigEntry | None = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -86,7 +76,7 @@ class FibaroConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await _validate_input(self.hass, user_input)
             except FibaroConnectFailed:
                 errors["base"] = "cannot_connect"
-            except FibaroAuthFailed:
+            except FibaroAuthenticationFailed:
                 errors["base"] = "invalid_auth"
             else:
                 await self.async_set_unique_id(info["serial_number"])
@@ -101,9 +91,6 @@ class FibaroConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -112,29 +99,27 @@ class FibaroConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by reauthentication."""
         errors = {}
 
-        assert self._reauth_entry
+        reauth_entry = self._get_reauth_entry()
+
         if user_input is not None:
-            new_data = self._reauth_entry.data | user_input
+            new_data = reauth_entry.data | user_input
             try:
                 await _validate_input(self.hass, new_data)
             except FibaroConnectFailed:
                 errors["base"] = "cannot_connect"
-            except FibaroAuthFailed:
+            except FibaroAuthenticationFailed:
                 errors["base"] = "invalid_auth"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=new_data
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME]
+                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                CONF_NAME: reauth_entry.title,
             },
         )

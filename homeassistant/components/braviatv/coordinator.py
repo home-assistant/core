@@ -6,8 +6,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from types import MappingProxyType
-from typing import Any, Concatenate, Final, ParamSpec, TypeVar
+from typing import Any, Concatenate, Final
 
 from pybravia import (
     BraviaAuthError,
@@ -20,6 +19,7 @@ from pybravia import (
 )
 
 from homeassistant.components.media_player import MediaType
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -35,14 +35,14 @@ from .const import (
     SourceType,
 )
 
-_BraviaTVCoordinatorT = TypeVar("_BraviaTVCoordinatorT", bound="BraviaTVCoordinator")
-_P = ParamSpec("_P")
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL: Final = timedelta(seconds=10)
 
+type BraviaTVConfigEntry = ConfigEntry[BraviaTVCoordinator]
 
-def catch_braviatv_errors(
+
+def catch_braviatv_errors[_BraviaTVCoordinatorT: BraviaTVCoordinator, **_P](
     func: Callable[Concatenate[_BraviaTVCoordinatorT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_BraviaTVCoordinatorT, _P], Coroutine[Any, Any, None]]:
     """Catch Bravia errors."""
@@ -66,19 +66,21 @@ def catch_braviatv_errors(
 class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     """Representation of a Bravia TV Coordinator."""
 
+    config_entry: BraviaTVConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: BraviaTVConfigEntry,
         client: BraviaClient,
-        config: MappingProxyType[str, Any],
     ) -> None:
         """Initialize Bravia TV Client."""
 
         self.client = client
-        self.pin = config[CONF_PIN]
-        self.use_psk = config.get(CONF_USE_PSK, False)
-        self.client_id = config.get(CONF_CLIENT_ID, LEGACY_CLIENT_ID)
-        self.nickname = config.get(CONF_NICKNAME, NICKNAME_PREFIX)
+        self.pin = config_entry.data[CONF_PIN]
+        self.use_psk = config_entry.data.get(CONF_USE_PSK, False)
+        self.client_id = config_entry.data.get(CONF_CLIENT_ID, LEGACY_CLIENT_ID)
+        self.nickname = config_entry.data.get(CONF_NICKNAME, NICKNAME_PREFIX)
         self.source: str | None = None
         self.source_list: list[str] = []
         self.source_map: dict[str, dict] = {}
@@ -100,6 +102,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
             request_refresh_debouncer=Debouncer(

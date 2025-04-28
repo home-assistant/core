@@ -4,19 +4,14 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import PyNUTData
-from .const import (
-    DOMAIN,
-    INTEGRATION_SUPPORTED_COMMANDS,
-    PYNUT_DATA,
-    USER_AVAILABLE_COMMANDS,
-)
+from . import NutRuntimeData
+from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS
 
 ACTION_TYPES = {cmd.replace(".", "_") for cmd in INTEGRATION_SUPPORTED_COMMANDS}
 
@@ -31,18 +26,15 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Network UPS Tools (NUT) devices."""
-    if (entry_id := _get_entry_id_from_device_id(hass, device_id)) is None:
+    if (runtime_data := _get_runtime_data_from_device_id(hass, device_id)) is None:
         return []
     base_action = {
         CONF_DEVICE_ID: device_id,
         CONF_DOMAIN: DOMAIN,
     }
-    user_available_commands: set[str] = hass.data[DOMAIN][entry_id][
-        USER_AVAILABLE_COMMANDS
-    ]
     return [
         {CONF_TYPE: _get_device_action_name(command_name)} | base_action
-        for command_name in user_available_commands
+        for command_name in runtime_data.user_available_commands
     ]
 
 
@@ -56,9 +48,16 @@ async def async_call_action_from_config(
     device_action_name: str = config[CONF_TYPE]
     command_name = _get_command_name(device_action_name)
     device_id: str = config[CONF_DEVICE_ID]
-    entry_id = _get_entry_id_from_device_id(hass, device_id)
-    data: PyNUTData = hass.data[DOMAIN][entry_id][PYNUT_DATA]
-    await data.async_run_command(command_name)
+    runtime_data = _get_runtime_data_from_device_id(hass, device_id)
+    if not runtime_data:
+        raise InvalidDeviceAutomationConfig(
+            translation_domain=DOMAIN,
+            translation_key="device_invalid",
+            translation_placeholders={
+                "device_id": device_id,
+            },
+        )
+    await runtime_data.data.async_run_command(command_name)
 
 
 def _get_device_action_name(command_name: str) -> str:
@@ -69,8 +68,14 @@ def _get_command_name(device_action_name: str) -> str:
     return device_action_name.replace("_", ".")
 
 
-def _get_entry_id_from_device_id(hass: HomeAssistant, device_id: str) -> str | None:
+def _get_runtime_data_from_device_id(
+    hass: HomeAssistant, device_id: str
+) -> NutRuntimeData | None:
     device_registry = dr.async_get(hass)
     if (device := device_registry.async_get(device_id)) is None:
         return None
-    return next(entry for entry in device.config_entries)
+    entry = hass.config_entries.async_get_entry(
+        next(entry_id for entry_id in device.config_entries)
+    )
+    assert entry and isinstance(entry.runtime_data, NutRuntimeData)
+    return entry.runtime_data

@@ -8,10 +8,13 @@ import logging
 from tapsaff import TapsAff
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_LOCATION, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -21,7 +24,7 @@ DEFAULT_NAME = "Taps Aff"
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_LOCATION): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

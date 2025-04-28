@@ -24,16 +24,18 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ToonDataUpdateCoordinator
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
+from .entity import ToonDisplayDeviceEntity
 from .helpers import toon_exception_handler
-from .models import ToonDisplayDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Toon binary sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -52,7 +54,6 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

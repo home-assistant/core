@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, NotRequired, TypedDict
 
-from homeassistant.helpers.dispatcher import SignalType
+from homeassistant.util.signal_type import SignalType
 
 if TYPE_CHECKING:
     from .helpers import ChromecastInfo
@@ -46,3 +46,4 @@ class HomeAssistantControllerData(TypedDict):
     hass_uuid: str
     client_id: str | None
     refresh_token: str
+    app_id: NotRequired[str]

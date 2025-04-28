@@ -1,0 +1,79 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "characteristics": [
+          {
+            "aid": 1,
+            "iid": 2,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "HAA-C718B3"
+          },
+          {
+            "aid": 1,
+            "iid": 3,
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Jos\u00e9 A. Jim\u00e9nez Campos"
+          },
+          {
+            "aid": 1,
+            "iid": 4,
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "C718B3-2"
+          },
+          {
+            "aid": 1,
+            "iid": 5,
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "RavenSystem HAA"
+          },
+          {
+            "aid": 1,
+            "iid": 6,
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "5.0.18"
+          },
+          {
+            "aid": 1,
+            "iid": 7,
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "perms": ["pw"],
+            "format": "bool"
+          }
+        ]
+      },
+      {
+        "iid": 8,
+        "type": "00000049-0000-1000-8000-0026BB765291",
+        "primary": true,
+        "hidden": false,
+        "characteristics": [
+          {
+            "aid": 1,
+            "iid": 9,
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "pw", "ev"],
+            "ev": true,
+            "format": "bool",
+            "value": false
+          }
+        ]
+      }
+    ]
+  }
+]

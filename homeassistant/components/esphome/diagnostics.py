@@ -6,34 +6,36 @@ from typing import Any
 
 from homeassistant.components.bluetooth import async_scanner_by_source
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from . import CONF_NOISE_PSK, DomainData
+from . import CONF_NOISE_PSK
 from .dashboard import async_get_dashboard
+from .entry_data import ESPHomeConfigEntry
 
-CONF_MAC_ADDRESS = "mac_address"
-
-REDACT_KEYS = {CONF_NOISE_PSK, CONF_PASSWORD, CONF_MAC_ADDRESS}
+REDACT_KEYS = {CONF_NOISE_PSK, CONF_PASSWORD, "mac_address", "bluetooth_mac_address"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ESPHomeConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     diag: dict[str, Any] = {}
 
     diag["config"] = config_entry.as_dict()
 
-    entry_data = DomainData.get(hass).get_entry_data(config_entry)
+    entry_data = config_entry.runtime_data
+    device_info = entry_data.device_info
 
     if (storage_data := await entry_data.store.async_load()) is not None:
         diag["storage_data"] = storage_data
 
     if (
-        config_entry.unique_id
-        and (scanner := async_scanner_by_source(hass, config_entry.unique_id.upper()))
+        device_info
+        and (
+            scanner_mac := device_info.bluetooth_mac_address or device_info.mac_address
+        )
+        and (scanner := async_scanner_by_source(hass, scanner_mac.upper()))
         and (bluetooth_device := entry_data.bluetooth_device)
     ):
         diag["bluetooth"] = {

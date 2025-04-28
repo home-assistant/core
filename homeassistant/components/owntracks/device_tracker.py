@@ -2,7 +2,7 @@
 
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
     TrackerEntity,
 )
@@ -16,23 +16,24 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN as OT_DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OwnTracks based off an entry."""
     # Restore previously loaded devices
     dev_reg = dr.async_get(hass)
     dev_ids = {
         identifier[1]
-        for device in dev_reg.devices.values()
+        for device in dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
         for identifier in device.identifiers
-        if identifier[0] == OT_DOMAIN
     }
 
     entities = []
@@ -67,7 +68,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         """Set up OwnTracks entity."""
         self._dev_id = dev_id
         self._data = data or {}
-        self.entity_id = f"{DOMAIN}.{dev_id}"
+        self.entity_id = f"{DEVICE_TRACKER_DOMAIN}.{dev_id}"
 
     @property
     def unique_id(self):

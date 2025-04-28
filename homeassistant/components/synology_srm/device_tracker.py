@@ -8,7 +8,7 @@ import synology_srm
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,7 +75,7 @@ def get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> SynologySrmDeviceScanner | None:
     """Validate the configuration and return Synology SRM scanner."""
-    scanner = SynologySrmDeviceScanner(config[DOMAIN])
+    scanner = SynologySrmDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -99,8 +99,6 @@ class SynologySrmDeviceScanner(DeviceScanner):
 
         self.devices = []
         self.success_init = self._update_info()
-
-        _LOGGER.info("Synology SRM scanner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""

@@ -63,7 +63,6 @@ class HMThermostat(HMDevice, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -113,7 +112,11 @@ class HMThermostat(HMDevice, ClimateEntity):
     @property
     def preset_modes(self):
         """Return a list of available preset modes."""
-        return [HM_PRESET_MAP[mode] for mode in self._hmdevice.ACTIONNODE]
+        return [
+            HM_PRESET_MAP[mode]
+            for mode in self._hmdevice.ACTIONNODE
+            if mode in HM_PRESET_MAP
+        ]
 
     @property
     def current_humidity(self):
@@ -121,6 +124,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         for node in HM_HUMI_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
     def current_temperature(self):
@@ -128,6 +132,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         for node in HM_TEMP_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
     def target_temperature(self):
@@ -137,7 +142,7 @@ class HMThermostat(HMDevice, ClimateEntity):
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return None
+            return
 
         self._hmdevice.writeNodeData(self._state, float(temperature))
 

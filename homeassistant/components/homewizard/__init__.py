@@ -1,65 +1,46 @@
 """The Homewizard integration."""
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homewizard_energy import (
+    HomeWizardEnergy,
+    HomeWizardEnergyV1,
+    HomeWizardEnergyV2,
+    has_v2_api,
+)
+
+from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN, LOGGER, PLATFORMS
-from .coordinator import HWEnergyDeviceUpdateCoordinator as Coordinator
-
-
-async def _async_migrate_entries(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
-    """Migrate old entry.
-
-    The HWE-SKT had no total_power_*_kwh in 2023.11, in 2023.12 it does.
-    But simultaneously, the total_power_*_t1_kwh was removed for HWE-SKT.
-
-    This migration migrates the old unique_id to the new one, if possible.
-
-    Migration can be removed after 2024.6
-    """
-    entity_registry = er.async_get(hass)
-
-    @callback
-    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
-        replacements = {
-            "total_power_import_t1_kwh": "total_power_import_kwh",
-            "total_power_export_t1_kwh": "total_power_export_kwh",
-        }
-
-        for old_id, new_id in replacements.items():
-            if entry.unique_id.endswith(old_id):
-                new_unique_id = entry.unique_id.replace(old_id, new_id)
-                if existing_entity_id := entity_registry.async_get_entity_id(
-                    entry.domain, entry.platform, new_unique_id
-                ):
-                    LOGGER.debug(
-                        "Cannot migrate to unique_id '%s', already exists for '%s'",
-                        new_unique_id,
-                        existing_entity_id,
-                    )
-                    return None
-                LOGGER.debug(
-                    "Migrating entity '%s' unique_id from '%s' to '%s'",
-                    entry.entity_id,
-                    entry.unique_id,
-                    new_unique_id,
-                )
-                return {
-                    "new_unique_id": new_unique_id,
-                }
-
-        return None
-
-    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+from .const import DOMAIN, PLATFORMS
+from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> bool:
     """Set up Homewizard from a config entry."""
-    coordinator = Coordinator(hass)
+
+    api: HomeWizardEnergy
+
+    is_battery = entry.unique_id.startswith("HWE-BAT") if entry.unique_id else False
+
+    if (token := entry.data.get(CONF_TOKEN)) and is_battery:
+        api = HomeWizardEnergyV2(
+            entry.data[CONF_IP_ADDRESS],
+            token=token,
+            clientsession=async_get_clientsession(hass),
+        )
+    else:
+        api = HomeWizardEnergyV1(
+            entry.data[CONF_IP_ADDRESS],
+            clientsession=async_get_clientsession(hass),
+        )
+
+        if is_battery:
+            await async_check_v2_support_and_create_issue(hass, entry)
+
+    coordinator = HWEnergyDeviceUpdateCoordinator(hass, entry, api)
     try:
         await coordinator.async_config_entry_first_refresh()
 
@@ -71,9 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         raise
 
-    await _async_migrate_entries(hass, entry)
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     # Abort reauth config flow if active
     for progress_flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN):
@@ -84,14 +63,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.config_entries.flow.async_abort(progress_flow["flow_id"])
 
     # Finalize
+    entry.async_on_unload(coordinator.api.close)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.api.close()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_check_v2_support_and_create_issue(
+    hass: HomeAssistant, entry: HomeWizardConfigEntry
+) -> None:
+    """Check if the device supports v2 and create an issue if not."""
+
+    if not await has_v2_api(entry.data[CONF_IP_ADDRESS], async_get_clientsession(hass)):
+        return
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"migrate_to_v2_api_{entry.entry_id}",
+        is_fixable=True,
+        is_persistent=False,
+        learn_more_url="https://home-assistant.io/integrations/homewizard/#which-button-do-i-need-to-press-to-configure-the-device",
+        translation_key="migrate_to_v2_api",
+        translation_placeholders={
+            "title": entry.title,
+        },
+        severity=IssueSeverity.WARNING,
+        data={"entry_id": entry.entry_id},
+    )

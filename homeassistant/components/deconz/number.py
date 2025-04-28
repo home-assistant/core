@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from pydeconz.gateway import DeconzSession
 from pydeconz.interfaces.sensors import SensorResources
@@ -13,30 +13,30 @@ from pydeconz.models.sensor import SensorBase as PydeconzSensorBase
 from pydeconz.models.sensor.presence import Presence
 
 from homeassistant.components.number import (
-    DOMAIN,
+    DOMAIN as NUMBER_DOMAIN,
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .deconz_device import DeconzDevice
+from . import DeconzConfigEntry
+from .entity import DeconzDevice
 from .hub import DeconzHub
-
-T = TypeVar("T", Presence, PydeconzSensorBase)
 
 
 @dataclass(frozen=True, kw_only=True)
-class DeconzNumberDescription(Generic[T], NumberEntityDescription):
+class DeconzNumberDescription[_T: (Presence, PydeconzSensorBase)](
+    NumberEntityDescription
+):
     """Class describing deCONZ number entities."""
 
-    instance_check: type[T]
+    instance_check: type[_T]
     name_suffix: str
     set_fn: Callable[[DeconzSession, str, int], Coroutine[Any, Any, dict[str, Any]]]
     update_key: str
-    value_fn: Callable[[T], float | None]
+    value_fn: Callable[[_T], float | None]
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzNumberDescription, ...] = (
@@ -69,12 +69,12 @@ ENTITY_DESCRIPTIONS: tuple[DeconzNumberDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DeconzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ number entity."""
-    hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub = config_entry.runtime_data
+    hub.entities[NUMBER_DOMAIN] = set()
 
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
@@ -99,7 +99,7 @@ async def async_setup_entry(
 class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
     """Representation of a deCONZ number entity."""
 
-    TYPE = DOMAIN
+    TYPE = NUMBER_DOMAIN
     entity_description: DeconzNumberDescription
 
     def __init__(

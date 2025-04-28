@@ -3,31 +3,15 @@
 from __future__ import annotations
 
 from datetime import date
+from functools import partial
 
 from aioesphomeapi import DateInfo, DateState
 
 from homeassistant.components.date import DateEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up esphome dates based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=DateInfo,
-        entity_type=EsphomeDate,
-        state_type=DateState,
-    )
+PARALLEL_UPDATES = 0
 
 
 class EsphomeDate(EsphomeEntity[DateInfo, DateState], DateEntity):
@@ -45,3 +29,11 @@ class EsphomeDate(EsphomeEntity[DateInfo, DateState], DateEntity):
     async def async_set_value(self, value: date) -> None:
         """Update the current date."""
         self._client.date_command(self._key, value.year, value.month, value.day)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=DateInfo,
+    entity_type=EsphomeDate,
+    state_type=DateState,
+)

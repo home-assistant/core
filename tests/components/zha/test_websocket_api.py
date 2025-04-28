@@ -10,35 +10,42 @@ from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 from freezegun import freeze_time
 import pytest
 import voluptuous as vol
-import zigpy.backups
-import zigpy.profiles.zha
-import zigpy.types
-from zigpy.types.named import EUI64
-import zigpy.util
-import zigpy.zcl.clusters.general as general
-from zigpy.zcl.clusters.general import Groups
-import zigpy.zcl.clusters.security as security
-import zigpy.zdo.types as zdo_types
-
-from homeassistant.components.websocket_api import const
-from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.core.const import (
+from zha.application.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_ENDPOINT_NAMES,
     ATTR_IEEE,
     ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_NEIGHBORS,
     ATTR_QUIRK_APPLIED,
     ATTR_TYPE,
-    BINDINGS,
     CLUSTER_TYPE_IN,
-    EZSP_OVERWRITE_EUI64,
-    GROUP_ID,
-    GROUP_IDS,
-    GROUP_NAME,
+)
+from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
+from zha.zigbee.device import ClusterHandlerConfigurationComplete
+import zigpy.backups
+from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+import zigpy.profiles.zha
+import zigpy.types
+from zigpy.types.named import EUI64
+import zigpy.util
+from zigpy.zcl.clusters import closures, general, security
+from zigpy.zcl.clusters.general import Groups
+import zigpy.zdo.types as zdo_types
+
+from homeassistant.components.websocket_api import (
+    ERR_INVALID_FORMAT,
+    ERR_NOT_FOUND,
+    TYPE_RESULT,
+)
+from homeassistant.components.zha import DOMAIN
+from homeassistant.components.zha.const import EZSP_OVERWRITE_EUI64
+from homeassistant.components.zha.helpers import (
+    ZHADeviceProxy,
+    ZHAGatewayProxy,
+    get_zha_gateway,
+    get_zha_gateway_proxy,
 )
 from homeassistant.components.zha.websocket_api import (
     ATTR_DURATION,
@@ -46,25 +53,23 @@ from homeassistant.components.zha.websocket_api import (
     ATTR_QR_CODE,
     ATTR_SOURCE_IEEE,
     ATTR_TARGET_IEEE,
+    BINDINGS,
+    GROUP_ID,
+    GROUP_IDS,
+    GROUP_NAME,
     ID,
     SERVICE_PERMIT,
     TYPE,
     async_load_api,
 )
-from homeassistant.const import ATTR_NAME, Platform
+from homeassistant.const import ATTR_MODEL, ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant
 
-from .conftest import (
-    FIXTURE_GRP_ID,
-    FIXTURE_GRP_NAME,
-    SIG_EP_INPUT,
-    SIG_EP_OUTPUT,
-    SIG_EP_PROFILE,
-    SIG_EP_TYPE,
-)
+from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
 from tests.common import MockConfigEntry, MockUser
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -89,10 +94,18 @@ def required_platform_only():
 
 
 @pytest.fixture
-async def device_switch(hass, zigpy_device_mock, zha_device_joined):
-    """Test ZHA switch platform."""
+async def zha_client(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup_zha,
+    zigpy_device_mock,
+) -> MockHAClientWebSocket:
+    """Get ZHA WebSocket client."""
 
-    zigpy_device = zigpy_device_mock(
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device_switch = zigpy_device_mock(
         {
             1: {
                 SIG_EP_INPUT: [general.OnOff.cluster_id, general.Basic.cluster_id],
@@ -103,35 +116,8 @@ async def device_switch(hass, zigpy_device_mock, zha_device_joined):
         },
         ieee=IEEE_SWITCH_DEVICE,
     )
-    zha_device = await zha_device_joined(zigpy_device)
-    zha_device.available = True
-    return zha_device
 
-
-@pytest.fixture
-async def device_ias_ace(hass, zigpy_device_mock, zha_device_joined):
-    """Test alarm control panel device."""
-
-    zigpy_device = zigpy_device_mock(
-        {
-            1: {
-                SIG_EP_INPUT: [security.IasAce.cluster_id],
-                SIG_EP_OUTPUT: [],
-                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL,
-                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
-            }
-        },
-    )
-    zha_device = await zha_device_joined(zigpy_device)
-    zha_device.available = True
-    return zha_device
-
-
-@pytest.fixture
-async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
-    """Test ZHA light platform."""
-
-    zigpy_device = zigpy_device_mock(
+    zigpy_device_groupable = zigpy_device_mock(
         {
             1: {
                 SIG_EP_INPUT: [
@@ -146,14 +132,14 @@ async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
         },
         ieee=IEEE_GROUPABLE_DEVICE,
     )
-    zha_device = await zha_device_joined(zigpy_device)
-    zha_device.available = True
-    return zha_device
 
+    gateway.get_or_create_device(zigpy_device_switch)
+    await gateway.async_device_initialized(zigpy_device_switch)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-@pytest.fixture
-async def zha_client(hass, hass_ws_client, device_switch, device_groupable):
-    """Get ZHA WebSocket client."""
+    gateway.get_or_create_device(zigpy_device_groupable)
+    await gateway.async_device_initialized(zigpy_device_groupable)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # load the ZHA API
     async_load_api(hass)
@@ -238,7 +224,7 @@ async def test_list_devices(zha_client) -> None:
     msg = await zha_client.receive_json()
 
     devices = msg["result"]
-    assert len(devices) == 2 + 1  # the coordinator is included as well
+    assert len(devices) == 3  # the coordinator is included as well
 
     msg_id = 100
     for device in devices:
@@ -275,9 +261,31 @@ async def test_get_zha_config(zha_client) -> None:
 
 
 async def test_get_zha_config_with_alarm(
-    hass: HomeAssistant, zha_client, device_ias_ace
+    hass: HomeAssistant, zha_client, zigpy_device_mock
 ) -> None:
     """Test getting ZHA custom configuration."""
+
+    gateway = get_zha_gateway(hass)
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
+
+    zigpy_device_ias = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [security.IasAce.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
+    )
+
+    gateway.get_or_create_device(zigpy_device_ias)
+    await gateway.async_device_initialized(zigpy_device_ias)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(
+        zigpy_device_ias.ieee
+    )
+
     await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
 
     msg = await zha_client.receive_json()
@@ -286,7 +294,7 @@ async def test_get_zha_config_with_alarm(
     assert configuration == CONFIG_WITH_ALARM_OPTIONS
 
     # test that the alarm options are not in the config when we remove the device
-    device_ias_ace.gateway.device_removed(device_ias_ace.device)
+    zha_device_proxy.gateway_proxy.gateway.device_removed(zha_device_proxy.device)
     await hass.async_block_till_done()
     await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
 
@@ -303,7 +311,7 @@ async def test_update_zha_config(
     app_controller: ControllerApplication,
 ) -> None:
     """Test updating ZHA custom configuration."""
-    configuration: dict = deepcopy(CONFIG_WITH_ALARM_OPTIONS)
+    configuration: dict = deepcopy(BASE_CUSTOM_CONFIGURATION)
     configuration["data"]["zha_options"]["default_light_transition"] = 10
 
     with patch(
@@ -318,8 +326,8 @@ async def test_update_zha_config(
 
     await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
     msg = await zha_client.receive_json()
-    configuration = msg["result"]
-    assert configuration == configuration
+    test_configuration = msg["result"]
+    assert test_configuration == configuration
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -331,9 +339,9 @@ async def test_device_not_found(zha_client) -> None:
     )
     msg = await zha_client.receive_json()
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
 async def test_list_groups(zha_client) -> None:
@@ -342,7 +350,7 @@ async def test_list_groups(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 1
@@ -359,7 +367,7 @@ async def test_get_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 8
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     group = msg["result"]
     assert group is not None
@@ -375,24 +383,25 @@ async def test_get_group_not_found(zha_client) -> None:
     msg = await zha_client.receive_json()
 
     assert msg["id"] == 9
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
 async def test_list_groupable_devices(
-    zha_client, device_groupable, zigpy_app_controller
+    hass: HomeAssistant, zha_client, zigpy_app_controller
 ) -> None:
     """Test getting ZHA devices that have a group cluster."""
     # Ensure the coordinator doesn't have a group cluster
     coordinator = zigpy_app_controller.get_device(nwk=0x0000)
+
     del coordinator.endpoints[1].in_clusters[Groups.cluster_id]
 
     await zha_client.send_json({ID: 10, TYPE: "zha/devices/groupable"})
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 10
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     device_endpoints = msg["result"]
     assert len(device_endpoints) == 1
@@ -411,41 +420,63 @@ async def test_list_groupable_devices(
             assert entity_reference[ATTR_NAME] is not None
             assert entity_reference["entity_id"] is not None
 
-        for entity_reference in endpoint["entities"]:
-            assert entity_reference["original_name"] is not None
+        if len(endpoint["entities"]) == 1:
+            assert endpoint["entities"][0]["original_name"] is None
+        else:
+            for entity_reference in endpoint["entities"]:
+                assert entity_reference["original_name"] is not None
 
     # Make sure there are no groupable devices when the device is unavailable
     # Make device unavailable
-    device_groupable.available = False
+    get_zha_gateway_proxy(hass).device_proxies[
+        EUI64.convert(IEEE_GROUPABLE_DEVICE)
+    ].device.available = False
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     await zha_client.send_json({ID: 11, TYPE: "zha/devices/groupable"})
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 11
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     device_endpoints = msg["result"]
     assert len(device_endpoints) == 0
 
 
-async def test_add_group(zha_client) -> None:
+async def test_add_group(hass: HomeAssistant, zha_client) -> None:
     """Test adding and getting a new ZHA zigbee group."""
-    await zha_client.send_json({ID: 12, TYPE: "zha/group/add", GROUP_NAME: "new_group"})
+    await zha_client.send_json(
+        {
+            ID: 12,
+            TYPE: "zha/group/add",
+            GROUP_NAME: "new_group",
+            "members": [{"ieee": IEEE_GROUPABLE_DEVICE, "endpoint_id": 1}],
+        }
+    )
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 12
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     added_group = msg["result"]
 
+    groupable_device = get_zha_gateway_proxy(hass).device_proxies[
+        EUI64.convert(IEEE_GROUPABLE_DEVICE)
+    ]
+
     assert added_group["name"] == "new_group"
-    assert added_group["members"] == []
+    assert len(added_group["members"]) == 1
+    assert added_group["members"][0]["device"]["ieee"] == IEEE_GROUPABLE_DEVICE
+    assert (
+        added_group["members"][0]["device"]["device_reg_id"]
+        == groupable_device.device_id
+    )
 
     await zha_client.send_json({ID: 13, TYPE: "zha/groups"})
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 13
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 2
@@ -461,7 +492,7 @@ async def test_remove_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 1
@@ -472,7 +503,7 @@ async def test_remove_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 15
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups_remaining = msg["result"]
     assert len(groups_remaining) == 0
@@ -481,10 +512,86 @@ async def test_remove_group(zha_client) -> None:
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 16
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
 
     groups = msg["result"]
     assert len(groups) == 0
+
+
+async def test_add_group_member(hass: HomeAssistant, zha_client) -> None:
+    """Test adding a ZHA zigbee group member."""
+    await zha_client.send_json(
+        {
+            ID: 12,
+            TYPE: "zha/group/add",
+            GROUP_NAME: "new_group",
+        }
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 12
+    assert msg["type"] == TYPE_RESULT
+
+    added_group = msg["result"]
+
+    assert len(added_group["members"]) == 0
+
+    await zha_client.send_json(
+        {
+            ID: 13,
+            TYPE: "zha/group/members/add",
+            GROUP_ID: added_group["group_id"],
+            "members": [{"ieee": IEEE_GROUPABLE_DEVICE, "endpoint_id": 1}],
+        }
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 13
+    assert msg["type"] == TYPE_RESULT
+
+    added_group = msg["result"]
+
+    assert len(added_group["members"]) == 1
+    assert added_group["name"] == "new_group"
+    assert added_group["members"][0]["device"]["ieee"] == IEEE_GROUPABLE_DEVICE
+
+
+async def test_remove_group_member(hass: HomeAssistant, zha_client) -> None:
+    """Test removing a ZHA zigbee group member."""
+    await zha_client.send_json(
+        {
+            ID: 12,
+            TYPE: "zha/group/add",
+            GROUP_NAME: "new_group",
+            "members": [{"ieee": IEEE_GROUPABLE_DEVICE, "endpoint_id": 1}],
+        }
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 12
+    assert msg["type"] == TYPE_RESULT
+
+    added_group = msg["result"]
+
+    assert added_group["name"] == "new_group"
+    assert len(added_group["members"]) == 1
+    assert added_group["members"][0]["device"]["ieee"] == IEEE_GROUPABLE_DEVICE
+
+    await zha_client.send_json(
+        {
+            ID: 13,
+            TYPE: "zha/group/members/remove",
+            GROUP_ID: added_group["group_id"],
+            "members": [{"ieee": IEEE_GROUPABLE_DEVICE, "endpoint_id": 1}],
+        }
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 13
+    assert msg["type"] == TYPE_RESULT
+
+    added_group = msg["result"]
+    assert len(added_group["members"]) == 0
 
 
 @pytest.fixture
@@ -705,14 +812,14 @@ async def test_ws_permit_with_qr_code(
     )
 
     msg_type = None
-    while msg_type != const.TYPE_RESULT:
+    while msg_type != TYPE_RESULT:
         # There will be logging events coming over the websocket
         # as well so we want to ignore those
         msg = await zha_client.receive_json()
         msg_type = msg["type"]
 
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     assert app_controller.permit.await_count == 0
@@ -734,7 +841,7 @@ async def test_ws_permit_with_install_code_fail(
 
     msg = await zha_client.receive_json()
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"] is False
 
     assert app_controller.permit.await_count == 0
@@ -768,14 +875,14 @@ async def test_ws_permit_ha12(
     )
 
     msg_type = None
-    while msg_type != const.TYPE_RESULT:
+    while msg_type != TYPE_RESULT:
         # There will be logging events coming over the websocket
         # as well so we want to ignore those
         msg = await zha_client.receive_json()
         msg_type = msg["type"]
 
     assert msg["id"] == 14
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     assert app_controller.permit.await_count == 1
@@ -795,7 +902,7 @@ async def test_get_network_settings(
     msg = await zha_client.receive_json()
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert "radio_type" in msg["result"]
     assert "network_info" in msg["result"]["settings"]
@@ -813,7 +920,7 @@ async def test_list_network_backups(
     msg = await zha_client.receive_json()
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert "network_info" in msg["result"][0]
 
@@ -829,7 +936,7 @@ async def test_create_network_backup(
     assert len(app_controller.backups.backups) == 1
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert "backup" in msg["result"] and "is_complete" in msg["result"]
 
@@ -855,7 +962,7 @@ async def test_restore_network_backup_success(
     assert "ezsp" not in backup.network_info.stack_specific
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
 
@@ -887,7 +994,7 @@ async def test_restore_network_backup_force_write_eui64(
     )
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
 
@@ -910,9 +1017,9 @@ async def test_restore_network_backup_failure(
     p.assert_called_once_with("a backup")
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_INVALID_FORMAT
+    assert msg["error"]["code"] == ERR_INVALID_FORMAT
 
 
 @pytest.mark.parametrize("new_channel", ["auto", 15])
@@ -935,7 +1042,7 @@ async def test_websocket_change_channel(
         msg = await zha_client.receive_json()
 
     assert msg["id"] == 6
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
     change_channel_mock.assert_has_calls([call(ANY, new_channel)])
@@ -968,7 +1075,7 @@ async def test_websocket_bind_unbind_devices(
         msg = await zha_client.receive_json()
 
     assert msg["id"] == 27
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert binding_operation_mock.mock_calls == [
         call(
@@ -1022,9 +1129,107 @@ async def test_websocket_bind_unbind_group(
         msg = await zha_client.receive_json()
 
     assert msg["id"] == 27
-    assert msg["type"] == const.TYPE_RESULT
+    assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     if command_type == "bind":
         assert bind_mock.mock_calls == [call(test_group_id, ANY)]
     elif command_type == "unbind":
         assert unbind_mock.mock_calls == [call(test_group_id, ANY)]
+
+
+async def test_websocket_reconfigure(
+    hass: HomeAssistant, zha_client: MockHAClientWebSocket, zigpy_device_mock
+) -> None:
+    """Test websocket API to reconfigure a device."""
+    gateway = get_zha_gateway(hass)
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [closures.WindowCovering.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.SHADE,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
+    )
+
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    zha_device_proxy = get_zha_gateway_proxy(hass).get_device_proxy(zha_device.ieee)
+
+    def mock_reconfigure() -> None:
+        zha_device_proxy.handle_zha_channel_configure_reporting(
+            ClusterConfigureReportingEvent(
+                cluster_name="Window Covering",
+                cluster_id=258,
+                attributes={
+                    "current_position_lift_percentage": {
+                        "min": 0,
+                        "max": 900,
+                        "id": "current_position_lift_percentage",
+                        "name": "current_position_lift_percentage",
+                        "change": 1,
+                        "status": "SUCCESS",
+                    },
+                    "current_position_tilt_percentage": {
+                        "min": 0,
+                        "max": 900,
+                        "id": "current_position_tilt_percentage",
+                        "name": "current_position_tilt_percentage",
+                        "change": 1,
+                        "status": "SUCCESS",
+                    },
+                },
+                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0102",
+                event_type="zha_channel_message",
+                event="zha_channel_configure_reporting",
+            )
+        )
+
+        zha_device_proxy.handle_zha_channel_bind(
+            ClusterBindEvent(
+                cluster_name="Window Covering",
+                cluster_id=1,
+                success=True,
+                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0012",
+                event_type="zha_channel_message",
+                event="zha_channel_bind",
+            )
+        )
+
+        zha_device_proxy.handle_zha_channel_cfg_done(
+            ClusterHandlerConfigurationComplete(
+                device_ieee="28:2c:02:bf:ff:ea:05:68",
+                unique_id="28:2c:02:bf:ff:ea:05:68",
+                event_type="zha_channel_message",
+                event="zha_channel_cfg_done",
+            )
+        )
+
+    with patch.object(
+        zha_device_proxy.device, "async_configure", side_effect=mock_reconfigure
+    ):
+        await zha_client.send_json(
+            {
+                ID: 6,
+                TYPE: "zha/devices/reconfigure",
+                ATTR_IEEE: str(zha_device_proxy.device.ieee),
+            }
+        )
+
+        messages = []
+
+        while len(messages) != 3:
+            msg = await zha_client.receive_json()
+
+            if msg[ID] == 6:
+                messages.append(msg)
+
+    # Ensure the frontend receives progress events
+    assert {m["event"]["type"] for m in messages} == {
+        "zha_channel_configure_reporting",
+        "zha_channel_bind",
+        "zha_channel_cfg_done",
+    }

@@ -1,0 +1,36 @@
+{
+  "config": {
+    "flow_title": "Touchline SL setup flow",
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "title": "Log in to Touchline SL",
+        "description": "Your credentials for the Roth Touchline SL mobile app/web service",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "climate": {
+      "zone": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "constant_temperature": "Constant temperature"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio.exceptions import TimeoutError
 from collections.abc import Mapping
 from typing import Any
 
@@ -14,13 +15,14 @@ from aiocomelit.api import ComelitCommonApi
 from aiocomelit.const import BRIDGE
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import _LOGGER, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN
+from .utils import async_client_session
 
 DEFAULT_HOST = "192.168.1.252"
 DEFAULT_PIN = 111111
@@ -46,17 +48,29 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """Validate the user input allows us to connect."""
 
     api: ComelitCommonApi
+
+    session = await async_client_session(hass)
     if data.get(CONF_TYPE, BRIDGE) == BRIDGE:
-        api = ComeliteSerialBridgeApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
+        api = ComeliteSerialBridgeApi(
+            data[CONF_HOST], data[CONF_PORT], data[CONF_PIN], session
+        )
     else:
-        api = ComelitVedoApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
+        api = ComelitVedoApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN], session)
 
     try:
         await api.login()
-    except aiocomelit_exceptions.CannotConnect as err:
-        raise CannotConnect from err
+    except (aiocomelit_exceptions.CannotConnect, TimeoutError) as err:
+        raise CannotConnect(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": repr(err)},
+        ) from err
     except aiocomelit_exceptions.CannotAuthenticate as err:
-        raise InvalidAuth from err
+        raise InvalidAuth(
+            translation_domain=DOMAIN,
+            translation_key="cannot_authenticate",
+            translation_placeholders={"error": repr(err)},
+        ) from err
     finally:
         await api.logout()
         await api.close()
@@ -68,10 +82,6 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Comelit."""
 
     VERSION = 1
-    _reauth_entry: ConfigEntry | None
-    _reauth_host: str
-    _reauth_port: int
-    _reauth_type: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -92,7 +102,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -106,31 +116,26 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth flow."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        self._reauth_host = entry_data[CONF_HOST]
-        self._reauth_port = entry_data.get(CONF_PORT, DEFAULT_PORT)
-        self._reauth_type = entry_data.get(CONF_TYPE, BRIDGE)
-
-        self.context["title_placeholders"] = {"host": self._reauth_host}
+        self.context["title_placeholders"] = {"host": entry_data[CONF_HOST]}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reauth confirm."""
-        assert self._reauth_entry
         errors = {}
+
+        reauth_entry = self._get_reauth_entry()
+        entry_data = reauth_entry.data
 
         if user_input is not None:
             try:
                 await validate_input(
                     self.hass,
                     {
-                        CONF_HOST: self._reauth_host,
-                        CONF_PORT: self._reauth_port,
-                        CONF_TYPE: self._reauth_type,
+                        CONF_HOST: entry_data[CONF_HOST],
+                        CONF_PORT: entry_data.get(CONF_PORT, DEFAULT_PORT),
+                        CONF_TYPE: entry_data.get(CONF_TYPE, BRIDGE),
                     }
                     | user_input,
                 )
@@ -138,27 +143,23 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry,
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
                     data={
-                        CONF_HOST: self._reauth_host,
-                        CONF_PORT: self._reauth_port,
+                        CONF_HOST: entry_data[CONF_HOST],
+                        CONF_PORT: entry_data.get(CONF_PORT, DEFAULT_PORT),
                         CONF_PIN: user_input[CONF_PIN],
-                        CONF_TYPE: self._reauth_type,
+                        CONF_TYPE: entry_data.get(CONF_TYPE, BRIDGE),
                     },
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={CONF_HOST: self._reauth_entry.data[CONF_HOST]},
+            description_placeholders={CONF_HOST: entry_data[CONF_HOST]},
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
