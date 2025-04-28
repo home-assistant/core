@@ -28,7 +28,7 @@ TOKEN_REFRESH_CHECK_INTERVAL = timedelta(days=1)
 STALE_TOKEN_THRESHOLD = timedelta(days=30).total_seconds()
 NOTIFICATION_ID = "enphase_envoy_notification"
 FIRMWARE_REFRESH_INTERVAL = timedelta(hours=4)
-MAC_VERIFICATION_DELAY = timedelta(seconds=17)
+MAC_VERIFICATION_DELAY = timedelta(seconds=34)
 _LOGGER = logging.getLogger(__name__)
 
 
