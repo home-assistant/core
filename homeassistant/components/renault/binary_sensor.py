@@ -31,7 +31,7 @@ class RenaultBinarySensorEntityDescription(
     """Class describing Renault binary sensor entities."""
 
     on_key: str
-    on_value: StateType | list[StateType]
+    on_value: StateType
 
 
 async def async_setup_entry(
@@ -62,8 +62,6 @@ class RenaultBinarySensor(
         if (data := self._get_data_attr(self.entity_description.on_key)) is None:
             return None
 
-        if isinstance(self.entity_description.on_value, list):
-            return data in self.entity_description.on_value
         return data == self.entity_description.on_value
 
 
