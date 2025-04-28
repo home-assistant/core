@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.kem.const import CONF_REFRESH_TOKEN, DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -50,13 +50,6 @@ def kem_config_entry_with_refresh_token_fixture() -> MockConfigEntry:
         },
         unique_id="myemail@mail.com",
     )
-
-
-@pytest.fixture(name="platform_sensor")
-async def platform_sensor_fixture():
-    """Patch KEM to only load Sensor platform."""
-    with patch("homeassistant.components.kem.PLATFORMS", [Platform.SENSOR]):
-        yield
 
 
 @pytest.fixture

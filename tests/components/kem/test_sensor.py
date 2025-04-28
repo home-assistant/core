@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiokem import AioKem
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.kem.const import SCAN_INTERVAL_MINUTES
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -22,6 +23,13 @@ DISABLED_ENTITIES = [
     "sensor.generator_1_device_ip_address",
     "sensor.generator_1_server_ip_address",
 ]
+
+
+@pytest.fixture(name="platform_sensor")
+async def platform_sensor_fixture():
+    """Patch KEM to only load Sensor platform."""
+    with patch("homeassistant.components.kem.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 async def test_sensors(
