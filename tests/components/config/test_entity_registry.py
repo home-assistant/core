@@ -1288,3 +1288,58 @@ async def test_remove_non_existing_entity(
     msg = await client.receive_json()
 
     assert not msg["success"]
+
+
+async def test_get_automatic_entity_ids(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
+    """Test get_automatic_entity_ids."""
+    mock_registry(
+        hass,
+        {
+            "test_domain.test_1": RegistryEntryWithDefaults(
+                entity_id="test_domain.test_1",
+                unique_id="uniq1",
+                platform="test_platform",
+            ),
+            "test_domain.test_2": RegistryEntryWithDefaults(
+                entity_id="test_domain.test_2",
+                unique_id="uniq2",
+                platform="test_platform",
+                suggested_object_id="blabla",
+            ),
+            "test_domain.test_3": RegistryEntryWithDefaults(
+                entity_id="test_domain.test_3",
+                unique_id="uniq3",
+                platform="test_platform",
+                suggested_object_id="collision",
+            ),
+            "test_domain.collision": RegistryEntryWithDefaults(
+                entity_id="test_domain.collision",
+                unique_id="uniq_collision",
+                platform="test_platform",
+            ),
+        },
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/get_automatic_entity_ids",
+            "entity_ids": [
+                "test_domain.test_1",
+                "test_domain.test_2",
+                "test_domain.test_3",
+                "test_domain.unknown",
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "test_domain.test_1": "test_domain.test_platform_uniq1",  # platform + unique_id
+        "test_domain.test_2": "test_domain.blabla",  # suggested_object_id
+        "test_domain.test_3": "test_domain.collision_2",  # suggested_object_id + _2
+        "test_domain.unknown": None,  # no test_domain.unknown in registry
+    }
