@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from homeassistant.const import ATTR_CONNECTIONS
+from typing import Any
+
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -58,14 +59,12 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
             sw_version=device_data[DEVICE_DATA_FIRMWARE_VERSION],
             model=device_data[DEVICE_DATA_MODEL_NAME],
             manufacturer=KOHLER,
-            connections=_get_device_connections(
-	            device_data[DEVICE_DATA_MAC_ADDRESS]
-	        )
+            connections=_get_device_connections(device_data[DEVICE_DATA_MAC_ADDRESS]),
         )
         self._use_device_key = use_device_key
 
     @property
-    def _device_data(self) -> dict:
+    def _device_data(self) -> dict[str, Any]:
         """Return the device data."""
         return self.coordinator.data[GENERATOR_DATA_DEVICE]
 
