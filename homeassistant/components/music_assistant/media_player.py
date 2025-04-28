@@ -151,6 +151,9 @@ async def async_setup_entry(
             assert event.object_id is not None
         if event.object_id in added_ids:
             return
+        player = mass.players.get(event.object_id)
+        if TYPE_CHECKING:
+            assert player is not None
         if not player.expose_to_ha:
             return
         added_ids.add(event.object_id)

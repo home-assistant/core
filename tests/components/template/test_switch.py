@@ -981,3 +981,49 @@ async def test_device_id(
     template_entity = entity_registry.async_get("switch.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("style", "switch_config"),
+    [
+        (
+            ConfigurationStyle.LEGACY,
+            {
+                TEST_OBJECT_ID: {
+                    "turn_on": [],
+                    "turn_off": [],
+                },
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "name": TEST_OBJECT_ID,
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+    ],
+)
+async def test_empty_action_config(hass: HomeAssistant, setup_switch) -> None:
+    """Test configuration with empty script."""
+    await hass.services.async_call(
+        switch.DOMAIN,
+        switch.SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        switch.DOMAIN,
+        switch.SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF

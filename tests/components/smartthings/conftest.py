@@ -107,7 +107,9 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "centralite",
         "da_ref_normal_000001",
         "da_ref_normal_01011",
+        "da_ref_normal_01001",
         "vd_network_audio_002s",
+        "vd_network_audio_003s",
         "vd_sensor_light_2023",
         "iphone",
         "da_sac_ehs_000001_sub",
@@ -146,6 +148,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "ikea_kadrilj",
         "aux_ac",
         "hw_q80r_soundbar",
+        "gas_meter",
     ]
 )
 def device_fixture(

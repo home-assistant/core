@@ -76,6 +76,18 @@
       },
       "muted": {
         "name": "Muted"
+      },
+      "evse_charging_status": {
+        "name": "Charging status"
+      },
+      "evse_plug": {
+        "name": "Plug state"
+      },
+      "evse_supply_charging_state": {
+        "name": "Supply charging state"
+      },
+      "boost_state": {
+        "name": "Boost state"
       }
     },
     "button": {
@@ -138,7 +150,7 @@
               "low": "[%key:common::state::low%]",
               "medium": "[%key:common::state::medium%]",
               "high": "[%key:common::state::high%]",
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
               "natural_wind": "Natural wind",
               "sleep_wind": "Sleep wind"
             }
@@ -213,13 +225,16 @@
         "name": "Number of rinses",
         "state": {
           "off": "[%key:common::state::off%]",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "extra": "Extra",
           "max": "Max"
         }
       },
       "laundry_washer_spin_speed": {
         "name": "Spin speed"
+      },
+      "water_heater_mode": {
+        "name": "Water heater mode"
       }
     },
     "sensor": {
@@ -229,7 +244,7 @@
       "contamination_state": {
         "name": "Contamination state",
         "state": {
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "low": "[%key:common::state::low%]",
           "warning": "Warning",
           "critical": "Critical"
@@ -261,7 +276,7 @@
           "stopped": "[%key:common::state::stopped%]",
           "running": "Running",
           "paused": "[%key:common::state::paused%]",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "seeking_charger": "Seeking charger",
           "charging": "[%key:common::state::charging%]",
           "docked": "Docked"
@@ -269,6 +284,15 @@
       },
       "switch_current_position": {
         "name": "Current switch position"
+      },
+      "estimated_heat_required": {
+        "name": "Required heating energy"
+      },
+      "tank_volume": {
+        "name": "Tank volume"
+      },
+      "tank_percentage": {
+        "name": "Hot water level"
       },
       "valve_position": {
         "name": "Valve position"
@@ -278,6 +302,42 @@
       },
       "current_phase": {
         "name": "Current phase"
+      },
+      "evse_fault_state": {
+        "name": "Fault state",
+        "state": {
+          "no_error": "OK",
+          "meter_failure": "Meter failure",
+          "over_voltage": "Overvoltage",
+          "under_voltage": "Undervoltage",
+          "over_current": "Overcurrent",
+          "contact_wet_failure": "Contact wet failure",
+          "contact_dry_failure": "Contact dry failure",
+          "power_loss": "Power loss",
+          "power_quality": "Power quality",
+          "pilot_short_circuit": "Pilot short circuit",
+          "emergency_stop": "Emergency stop",
+          "ev_disconnected": "EV disconnected",
+          "wrong_power_supply": "Wrong power supply",
+          "live_neutral_swap": "Live/neutral swap",
+          "over_temperature": "Overtemperature",
+          "other": "Other fault"
+        }
+      },
+      "evse_circuit_capacity": {
+        "name": "Circuit capacity"
+      },
+      "evse_charge_current": {
+        "name": "Charge current"
+      },
+      "evse_min_charge_current": {
+        "name": "Min charge current"
+      },
+      "evse_max_charge_current": {
+        "name": "Max charge current"
+      },
+      "evse_user_max_charge_current": {
+        "name": "User max charge current"
       }
     },
     "switch": {
@@ -289,6 +349,9 @@
       },
       "child_lock": {
         "name": "Child lock"
+      },
+      "evse_charging_switch": {
+        "name": "Enable charging"
       }
     },
     "vacuum": {
@@ -299,6 +362,11 @@
     "valve": {
       "valve": {
         "name": "[%key:component::valve::title%]"
+      }
+    },
+    "water_heater": {
+      "water_heater": {
+        "name": "[%key:component::water_heater::title%]"
       }
     }
   },
