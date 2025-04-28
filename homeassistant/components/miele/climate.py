@@ -131,16 +131,28 @@ async def async_setup_entry(
 ) -> None:
     """Set up the climate platform."""
     coordinator = config_entry.runtime_data
+    known_devices: set[str] = set()
 
-    async_add_entities(
-        MieleClimate(coordinator, device_id, definition.description)
-        for device_id, device in coordinator.data.devices.items()
-        for definition in CLIMATE_TYPES
-        if (
-            device.device_type in definition.types
-            and (definition.description.value_fn(device) not in DISABLED_TEMP_ENTITIES)
-        )
-    )
+    def _check_device() -> None:
+        current_devices = set(coordinator.data.devices)
+        new_devices = current_devices - known_devices
+        if new_devices:
+            known_devices.update(new_devices)
+            async_add_entities(
+                MieleClimate(coordinator, device_id, definition.description)
+                for device_id, device in coordinator.data.devices.items()
+                for definition in CLIMATE_TYPES
+                if (
+                    device.device_type in definition.types
+                    and (
+                        definition.description.value_fn(device)
+                        not in DISABLED_TEMP_ENTITIES
+                    )
+                )
+            )
+
+    _check_device()
+    config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class MieleClimate(MieleEntity, ClimateEntity):
