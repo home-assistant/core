@@ -28,10 +28,16 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  action-exceptions:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      No configuration parameters.
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -61,10 +67,7 @@ rules:
     comment: |
       No noisy/non-essential entities.
   entity-translations: done
-  exception-translations:
-    status: exempt
-    comment: |
-      No custom exceptions.
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
