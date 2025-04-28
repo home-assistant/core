@@ -8,6 +8,7 @@ import logging
 from typing import Any, Final
 
 from aiohttp import ClientResponseError
+from pymiele import MieleEnum
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
@@ -23,7 +24,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, PROCESS_ACTION, PROGRAM_ID, MieleActions, MieleAppliance
 from .coordinator import MieleConfigEntry
 from .entity import MieleEntity
-from .helpers import MieleEnum
 
 _LOGGER = logging.getLogger(__name__)
 
