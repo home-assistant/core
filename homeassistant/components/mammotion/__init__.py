@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from aiohttp import ClientConnectorError
 from pymammotion import CloudIOTGateway
-from pymammotion.aliyun.cloud_gateway import CheckSessionException
+from pymammotion.aliyun.cloud_gateway import (
+    CheckSessionException,
+    DeviceOfflineException,
+)
 from pymammotion.aliyun.model.aep_response import AepResponse
 from pymammotion.aliyun.model.connect_response import ConnectResponse
 from pymammotion.aliyun.model.dev_by_account_response import ListingDevByAccountResponse
@@ -58,11 +61,11 @@ type MammotionConfigEntry = ConfigEntry[list[MammotionMowerData]]
 async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> bool:
     """Set up Mammotion Luba from a config entry."""
 
-    device_name = entry.data.get(CONF_DEVICE_NAME)
-    address = entry.data.get(CONF_ADDRESS)
+    device_name = entry.data[CONF_DEVICE_NAME]
+    address = entry.data[CONF_ADDRESS]
     mammotion = Mammotion()
-    account = entry.data.get(CONF_ACCOUNTNAME)
-    password = entry.data.get(CONF_PASSWORD)
+    account = entry.data[CONF_ACCOUNTNAME]
+    password = entry.data[CONF_PASSWORD]
 
     stay_connected_ble = entry.data.get(CONF_STAY_CONNECTED_BLUETOOTH, False)
 
@@ -121,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                     hass, entry, device, mammotion
                 )
                 await report_coordinator.async_restore_data()
-                # other coordinator
+                # other coordinators
                 await maintenance_coordinator.async_config_entry_first_refresh()
                 await version_coordinator.async_config_entry_first_refresh()
                 await report_coordinator.async_config_entry_first_refresh()
@@ -153,7 +156,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                     mammotion_device.preference = ConnectionPreference.BLUETOOTH
                     await mammotion_device.cloud().stop()
                     mammotion_device.cloud().mqtt.disconnect() if mammotion_device.cloud().mqtt.is_connected() else None
-                    # not entirely sure this is a good idea
                     mammotion_device.remove_cloud()
 
                 mammotion_devices.append(
@@ -170,8 +172,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                 )
                 try:
                     await map_coordinator.async_request_refresh()
-                except:
-                    """Do nothing for now."""
+                except DeviceOfflineException:
+                    pass
 
     entry.runtime_data = mammotion_devices
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -179,7 +181,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
     return True
 
 
-def store_cloud_credentials(hass, config_entry, cloud_client: CloudIOTGateway) -> None:
+def store_cloud_credentials(
+    hass: HomeAssistant,
+    config_entry: MammotionConfigEntry,
+    cloud_client: CloudIOTGateway,
+) -> None:
     """Store cloud credentials in config entry."""
 
     if cloud_client is not None:
@@ -205,25 +211,22 @@ async def check_and_restore_cloud(
 ) -> CloudIOTGateway | None:
     """Check and restore previous cloud connection."""
 
-    auth_data = entry.data.get(CONF_AUTH_DATA)
-    region_data = entry.data.get(CONF_REGION_DATA)
-    aep_data = entry.data.get(CONF_AEP_DATA)
-    session_data = entry.data.get(CONF_SESSION_DATA)
-    device_data = entry.data.get(CONF_DEVICE_DATA)
-    connect_data = entry.data.get(CONF_CONNECT_DATA)
-    mammotion_data = entry.data.get(CONF_MAMMOTION_DATA)
+    auth_data = entry.data[CONF_AUTH_DATA]
+    region_data = entry.data[CONF_REGION_DATA]
+    aep_data = entry.data[CONF_AEP_DATA]
+    session_data = entry.data[CONF_SESSION_DATA]
+    device_data = entry.data[CONF_DEVICE_DATA]
+    connect_data = entry.data[CONF_CONNECT_DATA]
+    mammotion_data = entry.data[CONF_MAMMOTION_DATA]
 
-    if any(
-        data is None
-        for data in [
-            auth_data,
-            region_data,
-            aep_data,
-            session_data,
-            device_data,
-            connect_data,
-            mammotion_data,
-        ]
+    if None in (
+        auth_data,
+        region_data,
+        aep_data,
+        session_data,
+        device_data,
+        connect_data,
+        mammotion_data,
     ):
         return None
 

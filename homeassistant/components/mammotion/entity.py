@@ -3,7 +3,7 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN
+from .const import DEFAULT_RETRY_COUNT, DOMAIN
 from .coordinator import MammotionBaseUpdateCoordinator
 
 
@@ -53,8 +53,5 @@ class MammotionBaseEntity(CoordinatorEntity[MammotionBaseUpdateCoordinator]):
         """Return True if the entity is available."""
         return (
             self.coordinator.data is not None
-            and self.coordinator.update_failures
-            <= self.coordinator.config_entry.options.get(
-                CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
-            )
+            and self.coordinator.update_failures <= DEFAULT_RETRY_COUNT
         )
