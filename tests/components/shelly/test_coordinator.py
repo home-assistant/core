@@ -886,7 +886,8 @@ async def test_rpc_runs_connected_events_when_initialized(
     await hass.async_block_till_done()
 
     assert call.supports_scripts() in mock_rpc_device.mock_calls
-    # BLE script list is called during connected events if device supports scripts and Zigbee is disabled
+    # BLE script list is called during connected events if device supports scripts
+    # and Zigbee is disabled
     assert bool(call.script_list() in mock_rpc_device.mock_calls) == result
 
 
