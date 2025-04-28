@@ -27,6 +27,18 @@
             }
           }
         }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate with ntfy ({name})",
+        "description": "The access token for **{username}** is invalid. To re-authenticate with the ntfy service, you can either log in with your password (a new access token will be created automatically) or you can directly provide a valid access token",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "password": "Enter the password corresponding to the aforementioned username to automatically create an access token",
+          "token": "Enter a new access token. To create a new access token navigate to Account → Access tokens and click create access token"
+        }
       }
     },
     "error": {
@@ -35,7 +47,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "account_mismatch": "The provided access token corresponds to the account {wrong_username}. Please re-authenticate with with the account **{username}**"
     }
   },
   "config_subentries": {
