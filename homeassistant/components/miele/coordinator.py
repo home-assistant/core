@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio.timeouts
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -33,6 +34,10 @@ class MieleCoordinatorData:
 class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
     """Coordinator for Miele data."""
 
+    new_device_callbacks: list[Callable[[dict[str, MieleDevice]], None]] = []
+    known_devices: set[str] = set()
+    devices: dict[str, MieleDevice] = {}
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -60,7 +65,23 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
             for device_id in devices:
                 actions_json = await self.api.get_actions(device_id)
                 actions[device_id] = MieleAction(actions_json)
+            self.devices = devices
+            self._async_add_devices()
             return MieleCoordinatorData(devices=devices, actions=actions)
+
+    def _async_add_devices(self) -> None:
+        """Add new devices."""
+        current_devices = set(self.devices)
+        new_devices = current_devices - self.known_devices
+        if new_devices:
+            self.known_devices.update(new_devices)
+            for callback in self.new_device_callbacks:
+                callback(
+                    {
+                        device_id: self.data.devices[device_id]
+                        for device_id in new_devices
+                    }
+                )
 
     async def callback_update_data(self, devices_json: dict[str, dict]) -> None:
         """Handle data update from the API."""

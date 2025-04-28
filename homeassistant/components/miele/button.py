@@ -7,6 +7,7 @@ import logging
 from typing import Final
 
 import aiohttp
+from pymiele import MieleDevice
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -111,22 +112,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the button platform."""
     coordinator = config_entry.runtime_data
-    known_devices: set[str] = set()
 
-    def _check_device() -> None:
-        current_devices = set(coordinator.data.devices)
-        new_devices = current_devices - known_devices
-        if new_devices:
-            known_devices.update(new_devices)
-            async_add_entities(
-                MieleButton(coordinator, device_id, definition.description)
-                for device_id, device in coordinator.data.devices.items()
-                for definition in BUTTON_TYPES
-                if device.device_type in definition.types
-            )
+    def _async_add_new_devices(new_devices: dict[str, MieleDevice]) -> None:
+        async_add_entities(
+            MieleButton(coordinator, device_id, definition.description)
+            for device_id, device in new_devices.items()
+            for definition in BUTTON_TYPES
+            if device.device_type in definition.types
+        )
 
-    _check_device()
-    config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
+    coordinator.new_device_callbacks.append(_async_add_new_devices)
+    _async_add_new_devices(coordinator.data.devices)
 
 
 class MieleButton(MieleEntity, ButtonEntity):
