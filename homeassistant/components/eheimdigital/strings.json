@@ -47,6 +47,23 @@
         }
       }
     },
+    "number": {
+      "manual_speed": {
+        "name": "Manual speed"
+      },
+      "day_speed": {
+        "name": "Day speed"
+      },
+      "night_speed": {
+        "name": "Night speed"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
+      "night_temperature_offset": {
+        "name": "Night temperature offset"
+      }
+    },
     "sensor": {
       "current_speed": {
         "name": "Current speed"

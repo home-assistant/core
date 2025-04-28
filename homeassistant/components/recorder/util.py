@@ -650,7 +650,7 @@ def _wrap_retryable_database_job_func_or_meth[**_P](
                 # Failed with retryable error
                 return False
 
-            _LOGGER.warning("Error executing %s: %s", description, err)
+            _LOGGER.error("Error executing %s: %s", description, err)
 
         # Failed with permanent error
         return True

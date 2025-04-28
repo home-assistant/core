@@ -138,7 +138,7 @@ async def async_setup_entry(
                 SENSOR_TYPES[CONNECTED_PLC_DEVICES],
             )
         )
-        network = await device.plcnet.async_get_network_overview()
+        network: LogicalNetwork = coordinators[CONNECTED_PLC_DEVICES].data
         peers = [
             peer.mac_address for peer in network.devices if peer.topology == REMOTE
         ]

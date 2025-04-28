@@ -71,6 +71,7 @@ BASE_SUPPORTED_FEATURES = (
 
 PLAY_STATE_TO_STATE = {
     None: MediaPlayerState.IDLE,
+    PlayState.UNKNOWN: MediaPlayerState.IDLE,
     PlayState.PLAY: MediaPlayerState.PLAYING,
     PlayState.STOP: MediaPlayerState.IDLE,
     PlayState.PAUSE: MediaPlayerState.PAUSED,
