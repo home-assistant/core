@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DEVICE_DATA_DEVICES, DEVICE_DATA_ID
 from .coordinator import KemConfigEntry
@@ -213,6 +214,6 @@ class KemSensorEntity(KemEntity, SensorEntity):
     """Representation of an KEM sensor."""
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> StateType:
         """Return the sensors state."""
         return self._kem_value
