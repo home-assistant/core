@@ -263,8 +263,19 @@
   },
   "issues": {
     "ble_scanner_firmware_unsupported": {
-      "title": "Shelly BLE scanner {device_name} with unsupported firmware",
-      "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware} and acts as BLE scanner with active mode. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device."
+      "title": "{device_name} is running unsupported firmware",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "{device_name} is running unsupported firmware",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware} and acts as BLE scanner with active mode. This firmware version is not supported for BLE scanner active mode.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
+          }
+        },
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "Device does not offer firmware update. Check internet connectivity (gateway, DNS, time) and restart the device."
+        }
+      }
     },
     "device_not_calibrated": {
       "title": "Shelly device {device_name} is not calibrated",

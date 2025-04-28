@@ -337,7 +337,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(
                         unique=runtime_data.rpc.mac
                     ),
-                    is_fixable=False,
+                    is_fixable=True,
                     is_persistent=False,
                     severity=ir.IssueSeverity.WARNING,
                     translation_key="ble_scanner_firmware_unsupported",
@@ -346,6 +346,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                         "ip_address": runtime_data.rpc.device.ip_address,
                         "firmware": firmware,
                     },
+                    data={"entry_id": entry.entry_id},
                 )
     elif (
         sleep_period is None
