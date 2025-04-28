@@ -441,7 +441,7 @@ DISCOVERY_SCHEMAS = [
             key="LocalConfigDisabled",
             entity_category=EntityCategory.CONFIG,
             translation_key="local_config_disabled",
-            options=["Enable Local Configuration", "Disable Local Configuration"],
+            options=["enable", "disable"],
             measurement_to_ha={
                 False: "Enable Local Configuration",
                 True: "Disable Local Configuration",
