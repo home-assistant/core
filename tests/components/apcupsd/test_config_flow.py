@@ -157,7 +157,6 @@ async def test_flow_minimal_status(
 
 async def test_reconfigure_flow_works(hass: HomeAssistant) -> None:
     """Test successful reconfiguration of an existing entry."""
-    # First add an existing config entry to hass.
     mock_entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -189,7 +188,7 @@ async def test_reconfigure_flow_works(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reconfigure"
 
-        # Submit the new configuration
+        # Submit the new configuration.
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=new_conf_data
         )
@@ -207,7 +206,6 @@ async def test_reconfigure_flow_works(hass: HomeAssistant) -> None:
 
 async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test reconfiguration with connection error."""
-    # First add an existing config entry to hass
     mock_entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -241,7 +239,6 @@ async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_reconfigure_flow_wrong_device(hass: HomeAssistant) -> None:
     """Test reconfiguration with a different device (wrong serial number)."""
-    # First add an existing config entry to hass
     mock_entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -252,7 +249,7 @@ async def test_reconfigure_flow_wrong_device(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    # New configuration data with different host/port
+    # New configuration data with different host/port.
     new_conf_data = {CONF_HOST: "new_host", CONF_PORT: 4321}
 
     with patch("aioapcaccess.request_status") as mock_request_status:
