@@ -538,7 +538,7 @@ bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.13.1
+bleak-esphome==2.14.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.9.0
@@ -960,7 +960,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.39.0
+habluetooth==3.42.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.96.0
