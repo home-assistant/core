@@ -58,11 +58,11 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
             sw_version=device_data[DEVICE_DATA_FIRMWARE_VERSION],
             model=device_data[DEVICE_DATA_MODEL_NAME],
             manufacturer=KOHLER,
+            connections=_get_device_connections(
+	            device_data[DEVICE_DATA_MAC_ADDRESS]
+	        )
         )
         self._use_device_key = use_device_key
-        self._attr_device_info[ATTR_CONNECTIONS] = _get_device_connections(
-            device_data[DEVICE_DATA_MAC_ADDRESS]
-        )
 
     @property
     def _device_data(self) -> dict:
