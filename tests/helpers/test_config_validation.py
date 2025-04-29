@@ -1953,3 +1953,30 @@ async def test_is_entity_service_schema(
         vol.All(vol.Schema(cv.make_entity_service_schema({"some": str}))),
     ):
         assert cv.is_entity_service_schema(schema) is True
+
+
+def test_renamed(caplog: pytest.LogCaptureFixture, schema) -> None:
+    """Test renamed."""
+    renamed_schema = vol.All(cv.renamed("mors", "mars"), schema)
+
+    test_data = {"mars": True}
+    output = renamed_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert output == test_data
+
+    test_data = {"mors": True}
+    output = renamed_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert output == {"mars": True}
+
+    test_data = {"mars": True, "mors": True}
+    with pytest.raises(
+        vol.Invalid,
+        match="Cannot specify both 'mors' and 'mars'. Please use 'mars' only.",
+    ):
+        renamed_schema(test_data.copy())
+    assert len(caplog.records) == 0
+
+    # Check error handling if data is not a dict
+    with pytest.raises(vol.Invalid, match="expected a dictionary"):
+        renamed_schema([])
