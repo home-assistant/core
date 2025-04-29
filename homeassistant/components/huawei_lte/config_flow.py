@@ -276,11 +276,12 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert discovery_info.ssdp_location
         url = url_normalize(
-            discovery_info.upnp.get(
-                ATTR_UPNP_PRESENTATION_URL,
-                f"http://{urlparse(discovery_info.ssdp_location).hostname}/",
-            )
+            discovery_info.upnp.get(ATTR_UPNP_PRESENTATION_URL)
+            or f"http://{urlparse(discovery_info.ssdp_location).hostname}/"
         )
+        if TYPE_CHECKING:
+            # url_normalize only returns None if passed None, and we don't do that
+            assert url is not None
 
         unique_id = discovery_info.upnp.get(
             ATTR_UPNP_SERIAL, discovery_info.upnp[ATTR_UPNP_UDN]
