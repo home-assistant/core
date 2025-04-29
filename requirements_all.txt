@@ -1118,7 +1118,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.44.0
+habluetooth==3.45.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.96.0
