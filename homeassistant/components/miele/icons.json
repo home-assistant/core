@@ -25,6 +25,14 @@
         "default": "mdi:pause"
       }
     },
+    "sensor": {
+      "core_temperature": {
+        "default": "mdi:thermometer-probe"
+      },
+      "core_target_temperature": {
+        "default": "mdi:thermometer-probe"
+      }
+    },
     "switch": {
       "power": {
         "default": "mdi:power"

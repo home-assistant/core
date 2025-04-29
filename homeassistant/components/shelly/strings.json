@@ -176,7 +176,7 @@
         "state": {
           "warmup": "Warm-up",
           "normal": "[%key:common::state::normal%]",
-          "fault": "Fault"
+          "fault": "[%key:common::state::fault%]"
         },
         "state_attributes": {
           "self_test": {
