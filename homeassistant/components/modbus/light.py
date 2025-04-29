@@ -170,22 +170,19 @@ class ModbusLight(BaseSwitch, LightEntity):
                 )
 
     @staticmethod
-    def _convert_modbus_percent_to_brightness(percent: int | Any) -> int | None:
+    def _convert_modbus_percent_to_brightness(percent: int) -> int:
         """Convert Modbus scale (0-100) to the brightness (0-255)."""
-        if isinstance(percent, int):
-            return round(
-                percent
-                / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-                * LIGHT_MAX_BRIGHTNESS
-            )
-        return None
+        return round(
+            percent
+            / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+            * LIGHT_MAX_BRIGHTNESS
+        )
 
-    def _convert_modbus_percent_to_temperature(self, percent: int | Any) -> int | None:
+    def _convert_modbus_percent_to_temperature(self, percent: int) -> int | None:
         """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
         if (
             not isinstance(self._attr_min_color_temp_kelvin, int)
             or not isinstance(self._attr_max_color_temp_kelvin, int)
-            or not isinstance(percent, int)
         ):
             _LOGGER.error(
                 "Invalid color temp bounds or value from device: min=%s, max=%s, temp_value=%s",
