@@ -20,9 +20,13 @@ from homeassistant.helpers import entity_registry as er
 from . import check_entities_unavailable
 from .const import MOCK_VEHICLES
 
-from tests.common import load_fixture
+from tests.common import load_fixture, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+
+
+# Captur (fuel version) does not have a charge mode select
+_TEST_VEHICLES = [v for v in MOCK_VEHICLES if v != "captur_fuel"]
 
 
 @pytest.fixture(autouse=True)
@@ -33,6 +37,7 @@ def override_platforms() -> Generator[None]:
 
 
 @pytest.mark.usefixtures("fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", _TEST_VEHICLES, indirect=True)
 async def test_selects(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -43,15 +48,7 @@ async def test_selects(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_no_data")

@@ -16,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from . import check_entities_no_data
 from .const import ATTR_ENTITY_ID, MOCK_VEHICLES
 
-from tests.common import load_fixture
+from tests.common import load_fixture, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -39,15 +39,7 @@ async def test_buttons(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_no_data")
