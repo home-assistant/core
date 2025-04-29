@@ -67,7 +67,7 @@
         "state": {
           "enabled": "Enabled",
           "disabled": "Disabled",
-          "motor_fault_short": "Motor fault: Short",
+          "motor_fault_short": "Motor fault: short",
           "motor_ot_amps": "Motor over-torque amps",
           "motor_disconnected": "Motor disconnected",
           "empty": "Empty"
