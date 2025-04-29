@@ -1,5 +1,38 @@
 {
   "entity": {
+    "binary_sensor": {
+      "notification_active": {
+        "default": "mdi:information"
+      },
+      "mobile_start": {
+        "default": "mdi:cellphone-wireless"
+      },
+      "remote_control": {
+        "default": "mdi:remote"
+      },
+      "smart_grid": {
+        "default": "mdi:view-grid-plus-outline"
+      }
+    },
+    "button": {
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      },
+      "pause": {
+        "default": "mdi:pause"
+      }
+    },
+    "sensor": {
+      "core_temperature": {
+        "default": "mdi:thermometer-probe"
+      },
+      "core_target_temperature": {
+        "default": "mdi:thermometer-probe"
+      }
+    },
     "switch": {
       "power": {
         "default": "mdi:power"

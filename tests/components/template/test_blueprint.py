@@ -212,11 +212,16 @@ async def test_reload_template_when_blueprint_changes(hass: HomeAssistant) -> No
     assert not_inverted.state == "on"
 
 
+@pytest.mark.parametrize(
+    ("blueprint"),
+    ["test_event_sensor.yaml", "test_event_sensor_legacy_schema.yaml"],
+)
 async def test_trigger_event_sensor(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    blueprint: str,
 ) -> None:
     """Test event sensor blueprint."""
-    blueprint = "test_event_sensor.yaml"
     assert await async_setup_component(
         hass,
         "template",

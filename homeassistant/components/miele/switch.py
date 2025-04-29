@@ -25,7 +25,7 @@ from .const import (
     MieleAppliance,
     StateStatus,
 )
-from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
+from .coordinator import MieleConfigEntry
 from .entity import MieleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -138,16 +138,6 @@ class MieleSwitch(MieleEntity, SwitchEntity):
     """Representation of a Switch."""
 
     entity_description: MieleSwitchDescription
-
-    def __init__(
-        self,
-        coordinator: MieleDataUpdateCoordinator,
-        device_id: str,
-        description: MieleSwitchDescription,
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(coordinator, device_id, description)
-        self.api = coordinator.api
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""

@@ -104,7 +104,8 @@
     },
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner."
+      "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner.",
+      "zigbee_enabled": "Device with Zigbee enabled cannot be used as a Bluetooth scanner. Please disable it to use the device as a Bluetooth scanner."
     }
   },
   "selector": {
@@ -176,7 +177,7 @@
         "state": {
           "warmup": "Warm-up",
           "normal": "[%key:common::state::normal%]",
-          "fault": "Fault"
+          "fault": "[%key:common::state::fault%]"
         },
         "state_attributes": {
           "self_test": {
