@@ -65,10 +65,10 @@
       "hopper_status": {
         "name": "Hopper status",
         "state": {
-          "enabled": "Enabled",
-          "disabled": "Disabled",
-          "motor_fault_short": "Motor fault: short",
-          "motor_ot_amps": "Motor over-torque amps",
+          "enabled": "[%key:common::state::enabled%]",
+          "disabled": "[%key:common::state::disabled%]",
+          "motor_fault_short": "Motor shorted",
+          "motor_ot_amps": "Motor overtorqued",
           "motor_disconnected": "Motor disconnected",
           "empty": "Empty"
         }
