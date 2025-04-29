@@ -52,7 +52,7 @@ def _convert_duration(value_list: list[int]) -> int | None:
 class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
-    value_fn: Callable[[MieleDevice], StateType | list[int]]
+    value_fn: Callable[[MieleDevice], StateType]
     zone: int | None = None
 
 
