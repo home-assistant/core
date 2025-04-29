@@ -46,8 +46,8 @@ async def async_login(hass: HomeAssistant, username: str, password: str) -> Dreo
 
     try:
         devices = await hass.async_add_executor_job(setup_client)
-    except HsCloudBusinessException as ex:
-        raise ConfigEntryNotReady("invalid username or password") from ex
+    except (HsCloudBusinessException, HsCloudException) as ex:
+        raise ConfigEntryNotReady("Cannot connect to Dreo service") from ex
 
     return DreoData(client, devices, {})
 
@@ -217,7 +217,6 @@ async def _clean_entity_registry(
 ) -> None:
     """Remove entities associated with removed devices."""
     entity_registry = er.async_get(hass)
-    removed_entities = 0
 
     # Find and remove entities
     for entity in list(entity_registry.entities.values()):
@@ -230,7 +229,6 @@ async def _clean_entity_registry(
 
         if device_id not in cloud_device_ids:
             entity_registry.async_remove(entity.entity_id)
-            removed_entities += 1
 
 
 async def _clean_device_registry(
