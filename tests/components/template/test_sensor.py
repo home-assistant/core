@@ -2306,10 +2306,10 @@ async def test_trigger_conditional_action(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize("trigger_field", ["trigger", "triggers"])
 @pytest.mark.parametrize("condition_field", ["condition", "conditions"])
 @pytest.mark.parametrize("action_field", ["action", "actions"])
-async def test_legacy_and_new_config_sheme(
+async def test_legacy_and_new_config_schema(
     hass: HomeAssistant, trigger_field: str, condition_field: str, action_field: str
 ) -> None:
-    """Tests that both old and new config scheme (singular -> plural) work."""
+    """Tests that both old and new config schema (singular -> plural) work."""
 
     assert await async_setup_component(
         hass,
