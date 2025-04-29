@@ -49,16 +49,11 @@ async def ws_subscribe_discovery(
         if change is not SsdpChange.BYEBYE:
             _async_event_message({"add": [asdict(info)]})
             return
-        _async_event_message(
-            {
-                "remove": [
-                    {
-                        FIELD_SSDP_ST: info.ssdp_st,
-                        FIELD_SSDP_LOCATION: info.ssdp_location,
-                    }
-                ]
-            }
-        )
+        remove_msg = {
+            FIELD_SSDP_ST: info.ssdp_st,
+            FIELD_SSDP_LOCATION: info.ssdp_location,
+        }
+        _async_event_message({"remove": [remove_msg]})
 
     job = HassJob(_async_on_data)
     connection.subscriptions[msg_id] = await scanner.async_register_callback(job, None)
