@@ -84,7 +84,6 @@ async def test_sensor_access_denied(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault sensors with access denied failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -99,7 +98,6 @@ async def test_sensor_not_supported(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault sensors with access denied failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)

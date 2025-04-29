@@ -352,7 +352,8 @@ async def test_service_invalid_device_id2(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Create a device registry entry with a different vehicle ID
+    # Create a second entry in the device registry. It is linked to the config entry
+    # but for some reason it was not initialised by the hub.
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "VF1AAAAA111222333")},
