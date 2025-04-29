@@ -37,11 +37,11 @@ async def ws_subscribe_discovery(
 ) -> None:
     """Handle subscribe advertisements websocket command."""
     scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
-    ws_msg_id: int = msg["id"]
+    msg_id: int = msg["id"]
 
     def _async_event_message(message: dict[str, Any]) -> None:
         connection.send_message(
-            json_bytes(websocket_api.event_message(ws_msg_id, message))
+            json_bytes(websocket_api.event_message(msg_id, message))
         )
 
     @callback
@@ -61,7 +61,5 @@ async def ws_subscribe_discovery(
         )
 
     job = HassJob(_async_on_data)
-    connection.subscriptions[ws_msg_id] = await scanner.async_register_callback(
-        job, None
-    )
-    connection.send_message(json_bytes(websocket_api.result_message(ws_msg_id)))
+    connection.subscriptions[msg_id] = await scanner.async_register_callback(job, None)
+    connection.send_message(json_bytes(websocket_api.result_message(msg_id)))
