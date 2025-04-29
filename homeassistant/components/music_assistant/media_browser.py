@@ -6,7 +6,11 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from music_assistant_models.enums import MediaType as MASSMediaType
-from music_assistant_models.media_items import MediaItemType, SearchResults
+from music_assistant_models.media_items import (
+    BrowseFolder,
+    MediaItemType,
+    SearchResults,
+)
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -545,7 +549,9 @@ def _process_search_results(
 
         # Add available items to results
         for item in items:
-            if not hasattr(item, "available") or not item.available:
+            if TYPE_CHECKING:
+                assert not isinstance(item, BrowseFolder)
+            if not item.available:
                 continue
 
             # Create browse item
