@@ -82,8 +82,8 @@
       "description": "The 'image_filename' parameter in Google Generative AI actions is deprecated. Please edit scripts and automations to use 'filenames' instead."
     },
     "missing_config_entry_parameter": {
-      "title": "Missing 'config_entry' parameter",
-      "description": "The 'config_entry' parameter in Google Generative AI actions is required. Please edit scripts and automations to specify a config entry."
+      "title": "Missing 'Config entry' parameter",
+      "description": "The 'Config entry' parameter in Google Generative AI actions is required. Please edit scripts and automations to specify a config entry."
     }
   },
   "exceptions": {
