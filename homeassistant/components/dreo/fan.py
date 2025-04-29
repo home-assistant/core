@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 import math
-from typing import Any, cast
+from typing import Any
 
 from hscloud.const import DEVICE_TYPE, FAN_DEVICE
 
@@ -11,7 +12,6 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import percentage_to_ranged_value
-from homeassistant.util.scaling import int_states_in_range
 
 from . import DreoConfigEntry
 from .const import (
@@ -24,6 +24,8 @@ from .const import (
 from .coordinator import DreoDataUpdateCoordinator
 from .entity import DreoEntity
 
+_LOGGER = logging.getLogger(__name__)
+# Fan constants
 FAN_SUFFIX = "fan"
 
 
@@ -33,29 +35,48 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fan from a config entry."""
-    client = config_entry.runtime_data.client
-    fan_devices = []
 
-    for device in config_entry.runtime_data.devices:
-        device_model = device.get("model")
-        if DEVICE_TYPE.get(device_model) is None:
-            continue
+    @callback
+    def async_add_fan_devices() -> None:
+        """Add fan devices."""
+        new_fans = []
 
-        device_id = str(device.get("deviceSn", ""))
-        if not device_id:
-            continue
+        # Check all devices and add new ones
+        for device in config_entry.runtime_data.devices:
+            device_model = device.get("model")
+            # Check if device type is a fan
+            if DEVICE_TYPE.get(device_model) is None:
+                continue
 
-        # Create coordinator for this device
-        coordinator = DreoDataUpdateCoordinator(
-            hass, client, device_id, device_model or ""
-        )
+            if FAN_DEVICE.get("type") != DEVICE_TYPE.get(device_model):
+                continue
 
-        # Fetch initial data
-        await coordinator.async_config_entry_first_refresh()
+            device_id = str(device.get("deviceSn", ""))
+            if not device_id:
+                continue
 
-        fan_devices.append(DreoFan(device, coordinator))
+            coordinator = config_entry.runtime_data.coordinators.get(device_id)
+            if not coordinator:
+                continue
 
-    async_add_entities(fan_devices)
+            # Create new fan entity
+            fan = DreoFan(device, coordinator)
+            new_fans.append(fan)
+
+        # Add all new devices at once
+        if new_fans:
+            async_add_entities(new_fans)
+
+    # Initial setup
+    async_add_fan_devices()
+
+    # Register callback to respond to device changes
+    @callback
+    def update_listener(_hass, _entry):
+        """Handle device update."""
+        async_add_fan_devices()
+
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
 
 class DreoFan(DreoEntity, FanEntity):
@@ -68,6 +89,10 @@ class DreoFan(DreoEntity, FanEntity):
         | FanEntityFeature.TURN_ON
         | FanEntityFeature.TURN_OFF
     )
+    _attr_is_on = False
+    _attr_percentage = 0
+    _attr_preset_mode = None
+    _attr_oscillating = None
 
     def __init__(
         self,
@@ -82,48 +107,36 @@ class DreoFan(DreoEntity, FanEntity):
 
         self._attr_preset_modes = model_config.get("preset_modes")
         self._low_high_range = speed_range
-        self._attr_speed_count = int_states_in_range(speed_range) if speed_range else 0
+
+        # Update attributes from coordinator data
+        self._update_attributes()
 
     @callback
     def _handle_coordinator_update(self):
         """Handle updated data from the coordinator."""
+        self._update_attributes()
         self.async_write_ha_state()
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if the entity is on."""
-        return self.coordinator.data["is_on"]
+    def _update_attributes(self):
+        """Update attributes from coordinator data."""
+        if not self.coordinator.data:
+            return
 
-    @property
-    def percentage(self) -> int | None:
-        """Return the current speed percentage."""
-        if not self.is_on:
-            return 0
+        fan_state_data = self.coordinator.data
+        if fan_state_data["available"] is False:
+            self._attr_available = False
+            return
 
-        # Get speed value with a default of 0
-        speed_value = self.coordinator.data.get("speed", 0)
+        self._attr_available = fan_state_data.get("connected")
 
-        # Convert to int safely
-        try:
-            return int(cast(float, speed_value))
-        except (ValueError, TypeError):
-            return 0
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return the current preset mode."""
-        if not self.is_on:
-            return None
-        mode = self.coordinator.data.get("mode")
-        return str(mode) if mode is not None else None
-
-    @property
-    def oscillating(self) -> bool | None:
-        """Return oscillation state."""
-        if not self.is_on:
-            return None
-        oscillate = self.coordinator.data.get("oscillate")
-        return bool(oscillate) if oscillate is not None else None
+        if not fan_state_data["is_on"]:
+            self._attr_percentage = 0
+            self._attr_preset_mode = None
+            self._attr_oscillating = None
+        else:
+            self._attr_preset_mode = fan_state_data.get("mode")
+            self._attr_oscillating = fan_state_data.get("oscillate")
+            self._attr_percentage = fan_state_data.get("speed_percentage")
 
     async def async_turn_on(
         self,

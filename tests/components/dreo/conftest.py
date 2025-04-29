@@ -6,20 +6,18 @@ from typing import Any
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
+from hscloud.hscloud import HsCloud
 import pytest
 
 from homeassistant.components.dreo.const import DOMAIN
 from homeassistant.components.dreo.coordinator import (
     DreoDataUpdateCoordinator,
-    DreoGenericDeviceData,
     DreoFanDeviceData,
 )
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from hscloud.hscloud import HsCloud
 
 from tests.common import MockConfigEntry
 
@@ -76,7 +74,7 @@ class MockDreoFan(FanEntity):
     def percentage(self) -> int:
         """Return the fan speed."""
         # Use coordinator data if available
-        if self.coordinator and hasattr(self.coordinator.data, 'get'):
+        if self.coordinator and hasattr(self.coordinator.data, "get"):
             speed = self.coordinator.data.get("speed")
             if speed is not None:
                 try:
@@ -89,7 +87,7 @@ class MockDreoFan(FanEntity):
     def preset_mode(self) -> str:
         """Return the preset mode."""
         # Use coordinator data if available
-        if self.coordinator and hasattr(self.coordinator.data, 'get'):
+        if self.coordinator and hasattr(self.coordinator.data, "get"):
             mode = self.coordinator.data.get("mode")
             if mode is not None:
                 return str(mode)
@@ -99,7 +97,7 @@ class MockDreoFan(FanEntity):
     def oscillating(self) -> bool:
         """Return if oscillating."""
         # Use coordinator data if available
-        if self.coordinator and hasattr(self.coordinator.data, 'get'):
+        if self.coordinator and hasattr(self.coordinator.data, "get"):
             oscillate = self.coordinator.data.get("oscillate")
             if oscillate is not None:
                 return bool(oscillate)
@@ -152,16 +150,16 @@ class MockDreoCoordinator(DreoDataUpdateCoordinator):
     """Mock coordinator with test data."""
 
     def __init__(
-        self, 
-        hass: HomeAssistant, 
-        client: HsCloud, 
-        device_id: str, 
+        self,
+        hass: HomeAssistant,
+        client: HsCloud,
+        device_id: str,
         model: str,
     ) -> None:
         """Initialize mock coordinator."""
         # Call parent class init
         super().__init__(hass, client, device_id, model)
-        
+
         # Override the data with test values
         self.device_type = "fan"
         # Create a DreoFanDeviceData instance instead of adding keys to DreoGenericDeviceData
@@ -174,7 +172,7 @@ class MockDreoCoordinator(DreoDataUpdateCoordinator):
     async def async_refresh(self) -> None:
         """Mock refresh method."""
         # Return None to match the parent class signature
-        return None
+        return
 
 
 @pytest.fixture(name="mock_auth_api", autouse=True)
@@ -339,6 +337,8 @@ def mock_fan_device_data():
 
 
 @pytest.fixture
-def mock_coordinator(hass: HomeAssistant, mock_dreo_client: HsCloud) -> MockDreoCoordinator:
+def mock_coordinator(
+    hass: HomeAssistant, mock_dreo_client: HsCloud
+) -> MockDreoCoordinator:
     """Return a mock coordinator."""
     return MockDreoCoordinator(hass, mock_dreo_client, MOCK_DEVICE_ID1, "DR-HTF001S")
