@@ -11,6 +11,11 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_value_fixture
 
+TEST_EMAIL = "MyEmail@email.com"
+TEST_PASSWORD = "password"
+TEST_SUBJECT = TEST_EMAIL.lower()
+TEST_REFRESH_TOKEN = "my_refresh_token"
+
 
 @pytest.fixture(name="homes")
 def kem_homes_fixture() -> list[dict[str, Any]]:
@@ -30,10 +35,10 @@ def kem_config_entry_fixture() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_EMAIL: "myemail@mail.com",
-            CONF_PASSWORD: "password",
+            CONF_EMAIL: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
         },
-        unique_id="myemail@mail.com",
+        unique_id=TEST_SUBJECT,
     )
 
 
@@ -43,11 +48,11 @@ def kem_config_entry_with_refresh_token_fixture() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_EMAIL: "myemail@mail.com",
-            CONF_PASSWORD: "password",
-            CONF_REFRESH_TOKEN: "refresh_token",
+            CONF_EMAIL: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_REFRESH_TOKEN: TEST_REFRESH_TOKEN,
         },
-        unique_id="myemail@mail.com",
+        unique_id=TEST_SUBJECT,
     )
 
 

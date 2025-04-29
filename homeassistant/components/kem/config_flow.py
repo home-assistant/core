@@ -30,13 +30,11 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if not (errors := await self._async_validate_or_error(user_input)):
+            errors, token_subject = await self._async_validate_or_error(user_input)
+            if not errors:
                 email: str = user_input[CONF_EMAIL]
-                # Kohler does not allow the email to be changed on an account
-                # so we need to use the email as the unique ID
-                # for the config entry. The JWT sub is email
                 normalized_email = email.lower()
-                await self.async_set_unique_id(normalized_email)
+                await self.async_set_unique_id(token_subject)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=normalized_email, data=user_input)
 
@@ -51,12 +49,16 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_validate_or_error(self, config: dict[str, Any]) -> dict[str, str]:
+    async def _async_validate_or_error(
+        self, config: dict[str, Any]
+    ) -> tuple[dict[str, str], str | None]:
         """Validate the user input."""
         errors: dict[str, str] = {}
+        token_subject = None
         try:
             kem = AioKem(session=async_get_clientsession(self.hass))
             await kem.authenticate(config[CONF_EMAIL], config[CONF_PASSWORD])
+            token_subject = kem.get_token_subject()
         except CONNECTION_EXCEPTIONS:
             errors["base"] = "cannot_connect"
         except AuthenticationError:
@@ -64,7 +66,7 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
-        return errors
+        return errors, token_subject
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -84,7 +86,8 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         if user_input is not None:
             new_config = {**existing_data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
-            if not (errors := await self._async_validate_or_error(new_config)):
+            errors, _ = await self._async_validate_or_error(new_config)
+            if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
