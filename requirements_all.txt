@@ -3001,7 +3001,7 @@ upcloud-api==2.6.0
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
 # homeassistant.components.zwave_me
-url-normalize==2.2.0
+url-normalize==2.2.1
 
 # homeassistant.components.uvc
 uvcclient==0.12.1
