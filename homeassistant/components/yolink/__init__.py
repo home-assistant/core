@@ -26,7 +26,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import DOMAIN, YOLINK_EVENT
+from .const import ATTR_LORA_INFO, DOMAIN, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
 from .services import async_register_services
@@ -72,7 +72,7 @@ class YoLinkHomeMessageListener(MessageListener):
         if device_coordinator is None:
             return
         device_coordinator.dev_online = True
-        if (loraInfo := msg_data.get("loraInfo")) is not None:
+        if (loraInfo := msg_data.get(ATTR_LORA_INFO)) is not None:
             device_coordinator.dev_net_type = loraInfo.get("devNetType")
         device_coordinator.async_set_updated_data(msg_data)
         # handling events
