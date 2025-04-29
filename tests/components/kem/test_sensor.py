@@ -15,14 +15,6 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-DISABLED_ENTITIES = [
-    "sensor.generator_1_total_operation",
-    "sensor.generator_1_total_runtime",
-    "sensor.generator_1_runtime_since_last_maintenance",
-    "sensor.generator_1_device_ip_address",
-    "sensor.generator_1_server_ip_address",
-]
-
 
 @pytest.fixture(name="platform_sensor", autouse=True)
 async def platform_sensor_fixture():
@@ -31,6 +23,7 @@ async def platform_sensor_fixture():
         yield
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -40,16 +33,6 @@ async def test_sensors(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the KEM sensors."""
-
-    # Enable the disabled entities
-    for entity_id in DISABLED_ENTITIES:
-        entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-
-    # Move time to next update
-    freezer.tick(SCAN_INTERVAL_MINUTES)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
     await snapshot_platform(hass, entity_registry, snapshot, kem_config_entry.entry_id)
 
 
