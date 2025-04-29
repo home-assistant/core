@@ -20,6 +20,7 @@ DISABLED_TEMP_ENTITIES = (
     -32766 / 100,
 )
 
+
 class MieleAppliance(IntEnum):
     """Define appliance types."""
 
