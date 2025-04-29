@@ -14,11 +14,15 @@ from homeassistant.components import blueprint
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 from homeassistant.config import config_per_platform, config_without_domain
 from homeassistant.const import (
+    CONF_ACTION,
+    CONF_ACTIONS,
     CONF_ALIAS,
     CONF_CONDITION,
     CONF_CONDITIONS,
     CONF_DESCRIPTION,
     CONF_ID,
+    CONF_TRIGGER,
+    CONF_TRIGGERS,
     CONF_VARIABLES,
 )
 from homeassistant.core import HomeAssistant
@@ -30,14 +34,10 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.yaml.input import UndefinedSubstitution
 
 from .const import (
-    CONF_ACTION,
-    CONF_ACTIONS,
     CONF_HIDE_ENTITY,
     CONF_INITIAL_STATE,
     CONF_TRACE,
-    CONF_TRIGGER,
     CONF_TRIGGER_VARIABLES,
-    CONF_TRIGGERS,
     DOMAIN,
     LOGGER,
 )
