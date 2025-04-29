@@ -25,13 +25,8 @@ def override_platforms() -> Generator[None]:
         yield
 
 
-@pytest.fixture(autouse=True, name="vehicle_type", params=["zoe_40"])
-def override_vehicle_type(request: pytest.FixtureRequest) -> str:
-    """Parametrize vehicle type."""
-    return request.param
-
-
 @pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_setup_unload_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
