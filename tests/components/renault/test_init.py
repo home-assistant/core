@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 import aiohttp
 import pytest
 from renault_api.gigya.exceptions import GigyaException, InvalidCredentialsException
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
@@ -120,7 +121,24 @@ async def test_setup_entry_missing_vehicle_details(
 
 
 @pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
-@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_device_registry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test device is correctly registered."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 async def test_registry_cleanup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

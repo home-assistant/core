@@ -9,9 +9,9 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
-from . import check_entities_unavailable, check_in_device_registry
+from . import check_entities_unavailable
 from .const import MOCK_VEHICLES
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
@@ -28,19 +28,12 @@ def override_platforms() -> Generator[None]:
 async def test_binary_sensors(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault binary sensors."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    # Ensure devices are correctly registered
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    assert device_entries == snapshot
 
     # Ensure entities are correctly registered
     entity_entries = er.async_entries_for_config_entry(
@@ -57,19 +50,12 @@ async def test_binary_sensors(
 async def test_binary_sensor_empty(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault binary sensors with empty data from Renault."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    # Ensure devices are correctly registered
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    assert device_entries == snapshot
 
     # Ensure entities are correctly registered
     entity_entries = er.async_entries_for_config_entry(
@@ -87,7 +73,6 @@ async def test_binary_sensor_errors(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     vehicle_type: str,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for Renault binary sensors with temporary failure."""
@@ -95,7 +80,6 @@ async def test_binary_sensor_errors(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_in_device_registry(device_registry, vehicle_type)
 
     expected_entities = mock_vehicle[Platform.BINARY_SENSOR]
     assert len(entity_registry.entities) == len(expected_entities)
@@ -108,15 +92,11 @@ async def test_binary_sensor_errors(
 async def test_binary_sensor_access_denied(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for Renault binary sensors with access denied failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    check_in_device_registry(device_registry, vehicle_type)
 
     assert len(entity_registry.entities) == 0
 
@@ -126,14 +106,10 @@ async def test_binary_sensor_access_denied(
 async def test_binary_sensor_not_supported(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for Renault binary sensors with not supported failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    check_in_device_registry(device_registry, vehicle_type)
 
     assert len(entity_registry.entities) == 0

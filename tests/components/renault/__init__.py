@@ -4,15 +4,8 @@ from __future__ import annotations
 
 from types import MappingProxyType
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_ICON,
-    ATTR_IDENTIFIERS,
-    ATTR_STATE,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, ATTR_STATE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .const import (
@@ -20,7 +13,6 @@ from .const import (
     DYNAMIC_ATTRIBUTES,
     FIXED_ATTRIBUTES,
     ICON_FOR_EMPTY_VALUES,
-    MOCK_VEHICLES,
 )
 
 
@@ -28,18 +20,6 @@ def get_no_data_icon(expected_entity: MappingProxyType):
     """Check icon attribute for inactive sensors."""
     entity_id = expected_entity[ATTR_ENTITY_ID]
     return ICON_FOR_EMPTY_VALUES.get(entity_id, expected_entity.get(ATTR_ICON))
-
-
-def check_in_device_registry(
-    device_registry: DeviceRegistry, vehicle_type: str
-) -> None:
-    """Ensure that the vehicle_type is correctly registered."""
-    assert (
-        device_registry.async_get_device(
-            identifiers=MOCK_VEHICLES[vehicle_type][ATTR_IDENTIFIERS]
-        )
-        is not None
-    )
 
 
 def check_entities(
