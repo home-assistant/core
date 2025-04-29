@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from smarttub import SpaError, SpaReminder
 import voluptuous as vol
 
@@ -15,8 +17,18 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from .const import ATTR_ERRORS, ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubEntity, SmartTubSensorBase
+from .const import (
+    ATTR_ERRORS,
+    ATTR_REMINDERS,
+    ATTR_SENSORS,
+    DOMAIN,
+    SMARTTUB_CONTROLLER,
+)
+from .entity import (
+    SmartTubOnboardSensorBase,
+    SmartTubEntity,
+    SmartTubExternalSensorBase,
+)
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
@@ -41,6 +53,8 @@ SNOOZE_REMINDER_SCHEMA: VolDictType = {
     )
 }
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -59,6 +73,14 @@ async def async_setup_entry(
             SmartTubReminder(controller.coordinator, spa, reminder)
             for reminder in controller.coordinator.data[spa.id][ATTR_REMINDERS].values()
         )
+        for sensor in controller.coordinator.data[spa.id][ATTR_SENSORS].values():
+            name = sensor.name.strip("{}")
+            if name.startswith("cover-"):
+                entities.append(
+                    SmartTubCoverSensor(controller.coordinator, spa, sensor)
+                )
+            else:
+                _LOGGER.warning("Skipping unsupported sensor %s", sensor)
 
     async_add_entities(entities)
 
@@ -76,7 +98,7 @@ async def async_setup_entry(
     )
 
 
-class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
+class SmartTubOnline(SmartTubOnboardSensorBase, BinarySensorEntity):
     """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
@@ -180,3 +202,16 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
             ATTR_CREATED_AT: error.created_at.isoformat(),
             ATTR_UPDATED_AT: error.updated_at.isoformat(),
         }
+
+
+class SmartTubCoverSensor(SmartTubExternalSensorBase, BinarySensorEntity):
+    """Wireless magnetic cover sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.OPENING
+
+    @property
+    def is_on(self) -> bool:
+        """Return False if the cover is closed, True if open."""
+        # magnet is True when the cover is closed, False when open
+        # device class OPENING wants True to mean open, False to mean closed
+        return not self.sensor.magnet
