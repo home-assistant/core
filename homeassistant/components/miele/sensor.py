@@ -43,9 +43,9 @@ _LOGGER = logging.getLogger(__name__)
 DISABLED_TEMPERATURE = -32768
 
 
-def _convert_duration(value: list[int]) -> int | None:
+def _convert_duration(value_list: list[int]) -> int | None:
     """Convert duration to minutes."""
-    return None if len(value) == 0 else value[0] * 60 + value[1]
+    return value_list[0] * 60 + value_list[1] if value_list else None
 
 
 @dataclass(frozen=True, kw_only=True)
