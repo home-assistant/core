@@ -40,6 +40,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_PRESENTATION_URL,
     ATTR_UPNP_SERIAL,
     ATTR_UPNP_UDN,
@@ -309,8 +310,11 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
-                    or "Huawei LTE"
+                    CONF_NAME: (
+                        discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME)
+                        or discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
+                        or "Huawei LTE"
+                    )
                 }
             }
         )
