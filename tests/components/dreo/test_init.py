@@ -67,7 +67,7 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_invalid_auth(hass: HomeAssistant) -> None:
