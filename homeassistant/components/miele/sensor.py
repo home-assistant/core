@@ -95,7 +95,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             translation_key="status",
             value_fn=lambda value: value.state_status,
             device_class=SensorDeviceClass.ENUM,
-            options=list(set(STATE_STATUS_TAGS.values())),
+            options=sorted(set(STATE_STATUS_TAGS.values())),
         ),
     ),
     MieleSensorDefinition(
@@ -178,7 +178,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             value_fn=lambda value: value.state_program_type,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_class=SensorDeviceClass.ENUM,
-            options=list(set(STATE_PROGRAM_TYPE.values())),
+            options=sorted(set(STATE_PROGRAM_TYPE.values())),
         ),
     ),
     MieleSensorDefinition(
@@ -461,7 +461,9 @@ class MielePhaseSensor(MieleSensor):
     @property
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
-        return list(set(STATE_PROGRAM_PHASE.get(self.device.device_type, {}).values()))
+        return sorted(
+            set(STATE_PROGRAM_PHASE.get(self.device.device_type, {}).values())
+        )
 
 
 class MieleTypeSensor(MieleSensor):
@@ -500,4 +502,4 @@ class MieleProgramIdSensor(MieleSensor):
     @property
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
-        return list(set(STATE_PROGRAM_ID.get(self.device.device_type, {}).values()))
+        return sorted(set(STATE_PROGRAM_ID.get(self.device.device_type, {}).values()))
