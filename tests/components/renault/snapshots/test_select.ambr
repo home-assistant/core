@@ -1,83 +1,13 @@
 # serializer version: 1
 # name: test_select_empty[captur_fuel]
   list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777123',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Captur ii',
-      'model_id': 'XJB1SU',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
   ])
 # ---
 # name: test_select_empty[captur_fuel].1
   list([
   ])
 # ---
-# name: test_select_empty[captur_fuel].2
-  list([
-  ])
-# ---
 # name: test_select_empty[captur_phev]
-  list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777123',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Captur ii',
-      'model_id': 'XJB1SU',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_select_empty[captur_phev].1
   list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -120,7 +50,7 @@
     }),
   ])
 # ---
-# name: test_select_empty[captur_phev].2
+# name: test_select_empty[captur_phev].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -143,41 +73,6 @@
 # ---
 # name: test_select_empty[twingo_3_electric]
   list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777999',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Twingo iii',
-      'model_id': 'X071VE',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_select_empty[twingo_3_electric].1
-  list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -219,7 +114,7 @@
     }),
   ])
 # ---
-# name: test_select_empty[twingo_3_electric].2
+# name: test_select_empty[twingo_3_electric].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -242,41 +137,6 @@
 # ---
 # name: test_select_empty[zoe_40]
   list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777999',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Zoe',
-      'model_id': 'X101VE',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_select_empty[zoe_40].1
-  list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -318,7 +178,7 @@
     }),
   ])
 # ---
-# name: test_select_empty[zoe_40].2
+# name: test_select_empty[zoe_40].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -341,41 +201,6 @@
 # ---
 # name: test_select_empty[zoe_50]
   list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777999',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Zoe',
-      'model_id': 'X102VE',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_select_empty[zoe_50].1
-  list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -417,7 +242,7 @@
     }),
   ])
 # ---
-# name: test_select_empty[zoe_50].2
+# name: test_select_empty[zoe_50].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -440,83 +265,13 @@
 # ---
 # name: test_selects[captur_fuel]
   list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777123',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Captur ii',
-      'model_id': 'XJB1SU',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
   ])
 # ---
 # name: test_selects[captur_fuel].1
   list([
   ])
 # ---
-# name: test_selects[captur_fuel].2
-  list([
-  ])
-# ---
 # name: test_selects[captur_phev]
-  list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777123',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Captur ii',
-      'model_id': 'XJB1SU',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_selects[captur_phev].1
   list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -559,7 +314,7 @@
     }),
   ])
 # ---
-# name: test_selects[captur_phev].2
+# name: test_selects[captur_phev].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -582,41 +337,6 @@
 # ---
 # name: test_selects[twingo_3_electric]
   list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777999',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Twingo iii',
-      'model_id': 'X071VE',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_selects[twingo_3_electric].1
-  list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -658,7 +378,7 @@
     }),
   ])
 # ---
-# name: test_selects[twingo_3_electric].2
+# name: test_selects[twingo_3_electric].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -681,41 +401,6 @@
 # ---
 # name: test_selects[zoe_40]
   list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777999',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Zoe',
-      'model_id': 'X101VE',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_selects[zoe_40].1
-  list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -757,7 +442,7 @@
     }),
   ])
 # ---
-# name: test_selects[zoe_40].2
+# name: test_selects[zoe_40].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -780,41 +465,6 @@
 # ---
 # name: test_selects[zoe_50]
   list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777999',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Zoe',
-      'model_id': 'X102VE',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_selects[zoe_50].1
-  list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -856,7 +506,7 @@
     }),
   ])
 # ---
-# name: test_selects[zoe_50].2
+# name: test_selects[zoe_50].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
