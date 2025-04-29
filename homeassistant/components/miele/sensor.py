@@ -43,6 +43,11 @@ _LOGGER = logging.getLogger(__name__)
 DISABLED_TEMPERATURE = -32768
 
 
+def _convert_duration(value: list[int]) -> int | None:
+    """Convert duration to minutes."""
+    return None if len(value) == 0 else value[0] * 60 + value[1]
+
+
 @dataclass(frozen=True, kw_only=True)
 class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
@@ -252,7 +257,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_remaining_time",
             translation_key="remaining_time",
-            value_fn=lambda value: value.state_remaining_time,
+            value_fn=lambda value: _convert_duration(value.state_remaining_time),
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -277,7 +282,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_elapsed_time",
             translation_key="elapsed_time",
-            value_fn=lambda value: value.state_elapsed_time,
+            value_fn=lambda value: _convert_duration(value.state_elapsed_time),
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -304,7 +309,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_start_time",
             translation_key="start_time",
-            value_fn=lambda value: value.state_start_time,
+            value_fn=lambda value: _convert_duration(value.state_start_time),
             native_unit_of_measurement=UnitOfTime.MINUTES,
             device_class=SensorDeviceClass.DURATION,
             entity_category=EntityCategory.DIAGNOSTIC,
