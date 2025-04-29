@@ -7,11 +7,8 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: #Needd to do this here
-    status: exempt
-    comment: |
-      This integration does not use any actions.
-  docs-high-level-description: done
+  docs-actions: done
+  docs-high-level-description: done  #TODO
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup:
