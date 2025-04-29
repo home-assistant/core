@@ -125,7 +125,7 @@
           "postrun_ch": "Post run central heating",
           "boiler_int": "Boiler internal",
           "buffer": "Buffer",
-          "sensor_fault_after_self_check_e0": "Sensor fault after self check",
+          "sensor_fault_after_self_check_e0": "Sensor fault after self-check",
           "cv_temperature_too_high_e1": "Temperature too high",
           "s1_and_s2_interchanged_e2": "S1 and S2 interchanged",
           "no_flame_signal_e4": "No flame signal",
