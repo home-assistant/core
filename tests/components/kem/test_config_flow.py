@@ -11,7 +11,7 @@ from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_EMAIL, TEST_PASSWORD
+from .conftest import TEST_EMAIL, TEST_PASSWORD, TEST_SUBJECT
 
 
 async def test_configure_entry(hass: HomeAssistant, mock_kem: AsyncMock) -> None:
@@ -40,6 +40,7 @@ async def test_configure_entry(hass: HomeAssistant, mock_kem: AsyncMock) -> None
         "email": TEST_EMAIL,
         "password": TEST_PASSWORD,
     }
+    assert result["result"].unique_id == TEST_SUBJECT
     assert mock_setup_entry.call_count == 1
 
 
@@ -97,6 +98,7 @@ async def test_configure_entry_exceptions(
             "email": TEST_EMAIL,
             "password": TEST_PASSWORD,
         }
+        assert result["result"].unique_id == TEST_SUBJECT
         assert mock_setup_entry.call_count == 1
 
 
