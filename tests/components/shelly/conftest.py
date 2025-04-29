@@ -1,5 +1,6 @@
 """Test configuration for Shelly."""
 
+from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
@@ -497,6 +498,7 @@ def _mock_rpc_device(version: str | None = None):
             }
         ),
         xmod_info={},
+        zigbee_enabled=False,
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -690,3 +692,21 @@ async def mock_sleepy_rpc_device():
         rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
 
         yield rpc_device_mock.return_value
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.shelly.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_setup() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.shelly.async_setup", return_value=True
+    ) as mock_setup:
+        yield mock_setup

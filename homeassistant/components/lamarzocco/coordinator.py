@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=15)
 SETTINGS_UPDATE_INTERVAL = timedelta(hours=1)
 SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
@@ -82,35 +82,32 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
-    async def _async_connect_websocket(self) -> None:
-        """Set up the coordinator."""
-        if not self.device.websocket.connected:
-            _LOGGER.debug("Init WebSocket in background task")
-
-            self.config_entry.async_create_background_task(
-                hass=self.hass,
-                target=self.device.connect_dashboard_websocket(
-                    update_callback=lambda _: self.async_set_updated_data(None)
-                ),
-                name="lm_websocket_task",
-            )
-
-            async def websocket_close(_: Any | None = None) -> None:
-                if self.device.websocket.connected:
-                    await self.device.websocket.disconnect()
-
-            self.config_entry.async_on_unload(
-                self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_STOP, websocket_close
-                )
-            )
-            self.config_entry.async_on_unload(websocket_close)
-
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
+
+        if self.device.websocket.connected:
+            return
         await self.device.get_dashboard()
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
-        await self._async_connect_websocket()
+
+        _LOGGER.debug("Init WebSocket in background task")
+
+        self.config_entry.async_create_background_task(
+            hass=self.hass,
+            target=self.device.connect_dashboard_websocket(
+                update_callback=lambda _: self.async_set_updated_data(None)
+            ),
+            name="lm_websocket_task",
+        )
+
+        async def websocket_close(_: Any | None = None) -> None:
+            if self.device.websocket.connected:
+                await self.device.websocket.disconnect()
+
+        self.config_entry.async_on_unload(
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, websocket_close)
+        )
+        self.config_entry.async_on_unload(websocket_close)
 
 
 class LaMarzoccoSettingsUpdateCoordinator(LaMarzoccoUpdateCoordinator):

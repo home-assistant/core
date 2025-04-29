@@ -65,6 +65,12 @@
       "state": {
         "name": "Status"
       },
+      "cellular": {
+        "name": "Cellular"
+      },
+      "wifi": {
+        "name": "Wi-Fi"
+      },
       "storm_mode_active": {
         "name": "Storm watch active"
       },
@@ -190,6 +196,33 @@
       },
       "located_at_favorite": {
         "name": "Located at favorite"
+      },
+      "charge_enable_request": {
+        "name": "Charge enable request"
+      },
+      "defrost_for_preconditioning": {
+        "name": "Defrost for preconditioning"
+      },
+      "lights_high_beams": {
+        "name": "High beams"
+      },
+      "seat_vent_enabled": {
+        "name": "Seat vent enabled"
+      },
+      "speed_limit_mode": {
+        "name": "Speed limited"
+      },
+      "remote_start_enabled": {
+        "name": "Remote start"
+      },
+      "hvil": {
+        "name": "High voltage interlock loop fault"
+      },
+      "hvac_auto_mode": {
+        "name": "HVAC auto mode"
+      },
+      "grid_status": {
+        "name": "Grid status"
       }
     },
     "button": {
@@ -529,7 +562,7 @@
         "name": "Tire pressure rear right"
       },
       "version": {
-        "name": "version"
+        "name": "Version"
       },
       "vin": {
         "name": "Vehicle",
@@ -611,6 +644,17 @@
       },
       "total_grid_energy_exported": {
         "name": "Grid exported"
+      },
+      "sentry_mode": {
+        "name": "Sentry mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "idle": "[%key:common::state::idle%]",
+          "armed": "Armed",
+          "aware": "Aware",
+          "panic": "Panic",
+          "quiet": "Quiet"
+        }
       }
     },
     "switch": {

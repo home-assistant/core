@@ -7,6 +7,7 @@ from typing import cast
 
 from pylamarzocco.const import ModelName, WidgetType
 from pylamarzocco.models import (
+    BackFlush,
     BaseWidgetOutput,
     CoffeeBoiler,
     SteamBoilerLevel,
@@ -83,6 +84,17 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
             lambda coordinator: coordinator.device.dashboard.model_name
             in (ModelName.GS3_AV, ModelName.GS3_MP, ModelName.LINEA_MINI)
         ),
+    ),
+    LaMarzoccoSensorEntityDescription(
+        key="last_cleaning_time",
+        translation_key="last_cleaning_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=(
+            lambda config: cast(
+                BackFlush, config[WidgetType.CM_BACK_FLUSH]
+            ).last_cleaning_start_time
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 

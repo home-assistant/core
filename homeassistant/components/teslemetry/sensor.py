@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from propcache.api import cached_property
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.sensor import (
@@ -60,6 +59,15 @@ CHARGE_STATES = {
 }
 
 SHIFT_STATES = {"P": "p", "D": "d", "R": "r", "N": "n"}
+
+SENTRY_MODE_STATES = {
+    "Off": "off",
+    "Idle": "idle",
+    "Armed": "armed",
+    "Aware": "aware",
+    "Panic": "panic",
+    "Quiet": "quiet",
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -351,6 +359,14 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
     ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="sentry_mode",
+        streaming_listener=lambda x, y: x.listen_SentryMode(
+            lambda z: None if z is None else y(SENTRY_MODE_STATES.get(z))
+        ),
+        options=list(SENTRY_MODE_STATES.values()),
+        device_class=SensorDeviceClass.ENUM,
+    ),
 )
 
 
@@ -523,7 +539,10 @@ ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
     ),
-    SensorEntityDescription(key="version"),
+    SensorEntityDescription(
+        key="version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
@@ -635,11 +654,6 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
                     self.vehicle.stream_vehicle, self._async_value_from_stream
                 )
             )
-
-    @cached_property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.stream.connected
 
     def _async_value_from_stream(self, value: StateType) -> None:
         """Update the value of the entity."""
