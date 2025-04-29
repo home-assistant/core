@@ -309,7 +309,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 )
                 / 100.0
             ),
-        )
+        ),
     ),
     MieleSensorDefinition(
         types=(
