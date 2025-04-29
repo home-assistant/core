@@ -290,6 +290,46 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             value_fn=lambda value: value.state_temperatures[1].temperature / 100.0,  # type: ignore [operator]
         ),
     ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN_COMBI,
+        ),
+        description=MieleSensorDescription(
+            key="state_core_target_temperature",
+            translation_key="core_target_temperature",
+            zone=1,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=(
+                lambda value: cast(
+                    int, value.state_core_target_temperature[0].temperature
+                )
+                / 100.0
+            ),
+        )
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN_COMBI,
+        ),
+        description=MieleSensorDescription(
+            key="state_core_temperature",
+            translation_key="core_temperature",
+            zone=1,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=(
+                lambda value: cast(int, value.state_core_temperature[0].temperature)
+                / 100.0
+            ),
+        ),
+    ),
 )
 
 

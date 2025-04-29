@@ -15,6 +15,10 @@ LIGHT = "light"
 LIGHT_ON = 1
 LIGHT_OFF = 2
 
+DISABLED_TEMP_ENTITIES = (
+    -32768 / 100,
+    -32766 / 100,
+)
 
 class MieleAppliance(IntEnum):
     """Define appliance types."""

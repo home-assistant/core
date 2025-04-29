@@ -124,6 +124,9 @@
       "info": {
         "name": "Info"
       },
+      "notification_active": {
+        "name": "Notification active"
+      },
       "mobile_start": {
         "name": "Mobile start"
       },
@@ -134,12 +137,43 @@
         "name": "Smart grid"
       }
     },
+    "button": {
+      "start": {
+        "name": "[%key:common::action::start%]"
+      },
+      "stop": {
+        "name": "[%key:common::action::stop%]"
+      },
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      }
+    },
     "light": {
       "ambient_light": {
         "name": "Ambient light"
       },
       "light": {
         "name": "[%key:component::light::title%]"
+      }
+    },
+    "climate": {
+      "freezer": {
+        "name": "[%key:component::miele::device::freezer::name%]"
+      },
+      "refrigerator": {
+        "name": "[%key:component::miele::device::refrigerator::name%]"
+      },
+      "wine_cabinet": {
+        "name": "[%key:component::miele::device::wine_cabinet::name%]"
+      },
+      "zone_1": {
+        "name": "Zone 1"
+      },
+      "zone_2": {
+        "name": "Zone 2"
+      },
+      "zone_3": {
+        "name": "Zone 3"
       }
     },
     "sensor": {
@@ -806,11 +840,17 @@
       },
       "water_consumption": {
         "name": "Water consumption"
+      },
+      "core_temperature": {
+        "name": "Core temperature"
+      },
+      "core_target_temperature": {
+        "name": "Core target temperature"
       }
     },
     "switch": {
-      "power_on": {
-        "name": "Power on"
+      "power": {
+        "name": "Power"
       },
       "supercooling": {
         "name": "Supercooling"
