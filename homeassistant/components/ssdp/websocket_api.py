@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any, Final
 
 import voluptuous as vol
@@ -21,13 +22,13 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_subscribe_discovery)
 
 
-FIELD_LOCATION: Final = "location"
-FIELD_ST: Final = "st"
+FIELD_SSDP_ST: Final = "ssdp_st"
+FIELD_SSDP_LOCATION: Final = "ssdp_location"
 
 
 def serialize_service_info(service_info: SsdpServiceInfo) -> dict[str, Any]:
     """Serialize a SsdpServiceInfo object."""
-    return {FIELD_ST: service_info.ssdp_st, FIELD_LOCATION: service_info.ssdp_location}
+    return asdict(service_info)
 
 
 class _DiscoverySubscription:
@@ -71,15 +72,15 @@ class _DiscoverySubscription:
         )
 
     def _async_added(self, service_info: SsdpServiceInfo) -> None:
-        self._async_event_message({"add": [serialize_service_info(service_info)]})
+        self._async_event_message({"add": [asdict(service_info)]})
 
     def _async_removed(self, service_info: SsdpServiceInfo) -> None:
         self._async_event_message(
             {
                 "remove": [
                     {
-                        FIELD_ST: service_info.ssdp_st,
-                        FIELD_LOCATION: service_info.ssdp_location,
+                        FIELD_SSDP_ST: service_info.ssdp_st,
+                        FIELD_SSDP_LOCATION: service_info.ssdp_location,
                     }
                 ]
             }
