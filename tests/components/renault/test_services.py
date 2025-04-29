@@ -22,18 +22,9 @@ from homeassistant.components.renault.services import (
     SERVICE_CHARGE_SET_SCHEDULES,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-
-from .const import MOCK_VEHICLES
 
 from tests.common import load_fixture
 
@@ -361,18 +352,13 @@ async def test_service_invalid_device_id2(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    extra_vehicle = MOCK_VEHICLES["captur_phev"]["expected_device"]
-
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers=extra_vehicle[ATTR_IDENTIFIERS],
-        manufacturer=extra_vehicle[ATTR_MANUFACTURER],
-        name=extra_vehicle[ATTR_NAME],
-        model=extra_vehicle[ATTR_MODEL],
-        model_id=extra_vehicle[ATTR_MODEL_ID],
+        identifiers={(DOMAIN, "VF1AAAAA555777123")},
+        name="REG-NUMBER",
     )
     device_id = device_registry.async_get_device(
-        identifiers=extra_vehicle[ATTR_IDENTIFIERS]
+        identifiers={(DOMAIN, "VF1AAAAA555777123")},
     ).id
 
     data = {ATTR_VEHICLE: device_id}
