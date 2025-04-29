@@ -198,7 +198,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_GEN: device_info[CONF_GEN],
                             },
                         )
-                    errors["base"] = "firmware_not_fully_provisioned"
+                    return self.async_abort(reason="firmware_not_fully_provisioned")
 
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
@@ -238,7 +238,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_GEN: device_info[CONF_GEN],
                         },
                     )
-                errors["base"] = "firmware_not_fully_provisioned"
+                return self.async_abort(reason="firmware_not_fully_provisioned")
         else:
             user_input = {}
 
@@ -333,21 +333,19 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if not self.device_info[CONF_MODEL]:
-            errors["base"] = "firmware_not_fully_provisioned"
-            model = "Shelly"
-        else:
-            model = get_model_name(self.info)
-            if user_input is not None:
-                return self.async_create_entry(
-                    title=self.device_info["title"],
-                    data={
-                        CONF_HOST: self.host,
-                        CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
-                        CONF_MODEL: self.device_info[CONF_MODEL],
-                        CONF_GEN: self.device_info[CONF_GEN],
-                    },
-                )
-            self._set_confirm_only()
+            return self.async_abort(reason="firmware_not_fully_provisioned")
+        model = get_model_name(self.info)
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.device_info["title"],
+                data={
+                    CONF_HOST: self.host,
+                    CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
+                    CONF_MODEL: self.device_info[CONF_MODEL],
+                    CONF_GEN: self.device_info[CONF_GEN],
+                },
+            )
+        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",

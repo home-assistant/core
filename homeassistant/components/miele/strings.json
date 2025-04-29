@@ -114,6 +114,14 @@
     }
   },
   "entity": {
+    "light": {
+      "ambient_light": {
+        "name": "Ambient light"
+      },
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
@@ -147,7 +155,7 @@
     "config_entry_not_ready": {
       "message": "Error while loading the integration."
     },
-    "set_switch_error": {
+    "set_state_error": {
       "message": "Failed to set state for {entity}."
     }
   }

@@ -86,7 +86,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: todo
-    comment: implement aiohttp_client.async_create_clientsession
+  inject-websession: done
   strict-typing: done

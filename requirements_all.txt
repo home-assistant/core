@@ -213,7 +213,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==0.11.3
+aiocomelit==0.12.0
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
@@ -261,7 +261,7 @@ aioguardian==2022.07.0
 aioharmony==0.5.2
 
 # homeassistant.components.hassio
-aiohasupervisor==0.3.1b1
+aiohasupervisor==0.3.1
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.17.0
@@ -416,7 +416,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.6.1
+aiovodafone==0.10.0
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -1120,7 +1120,7 @@ habiticalib==0.3.7
 habluetooth==3.39.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.94.0
+hass-nabucasa==0.96.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1166,7 +1166,7 @@ home-assistant-frontend==20250411.0
 home-assistant-intents==2025.3.28
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.0
+homematicip==2.0.1
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -2328,7 +2328,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.0.4
+pysmartthings==3.0.5
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
