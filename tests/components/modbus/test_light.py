@@ -417,9 +417,9 @@ async def test_brightness_light(hass: HomeAssistant, mock_modbus_ha) -> None:
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
-
+    brightness = 128
     calls = mock_modbus_ha.write_register.call_args_list
-    modbus_brightness = ModbusLight._convert_brightness_to_modbus(brightness=128)
+    modbus_brightness = ModbusLight._convert_brightness_to_modbus(brightness)
 
     assert any(
         call.args[0] == 1 and call.kwargs["value"] == modbus_brightness
@@ -472,10 +472,12 @@ async def test_color_temp_light(hass: HomeAssistant, mock_modbus_ha) -> None:
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     calls = mock_modbus_ha.write_register.call_args_list
-    modbus_brightness = ModbusLight._convert_brightness_to_modbus(brightness=128)
+    brightness = 128
+    modbus_brightness = ModbusLight._convert_brightness_to_modbus(brightness)
+    color_temp = 2000
     modbus_temp = round(
         LIGHT_MODBUS_SCALE_MIN
-        + (2000 - LIGHT_DEFAULT_MIN_KELVIN)
+        + (color_temp - LIGHT_DEFAULT_MIN_KELVIN)
         * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
         / (LIGHT_DEFAULT_MAX_KELVIN - LIGHT_DEFAULT_MIN_KELVIN)
     )
