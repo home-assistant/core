@@ -82,7 +82,7 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
             hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_{result['reason']}",
-            breaks_in_ha_version="2025.9.0",
+            breaks_in_ha_version="2025.11.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
