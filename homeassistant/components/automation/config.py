@@ -58,34 +58,9 @@ _MINIMAL_PLATFORM_SCHEMA = vol.Schema(
 def _backward_compat_schema(value: Any | None) -> Any:
     """Backward compatibility for automations."""
 
-    if not isinstance(value, dict):
-        return value
-
-    # `trigger` has been renamed to `triggers`
-    if CONF_TRIGGER in value:
-        if CONF_TRIGGERS in value:
-            raise vol.Invalid(
-                "Cannot specify both 'trigger' and 'triggers'. Please use 'triggers' only."
-            )
-        value[CONF_TRIGGERS] = value.pop(CONF_TRIGGER)
-
-    # `condition` has been renamed to `conditions`
-    if CONF_CONDITION in value:
-        if CONF_CONDITIONS in value:
-            raise vol.Invalid(
-                "Cannot specify both 'condition' and 'conditions'. Please use 'conditions' only."
-            )
-        value[CONF_CONDITIONS] = value.pop(CONF_CONDITION)
-
-    # `action` has been renamed to `actions`
-    if CONF_ACTION in value:
-        if CONF_ACTIONS in value:
-            raise vol.Invalid(
-                "Cannot specify both 'action' and 'actions'. Please use 'actions' only."
-            )
-        value[CONF_ACTIONS] = value.pop(CONF_ACTION)
-
-    return value
+    value = cv.renamed(CONF_TRIGGER, CONF_TRIGGERS)(value)
+    value = cv.renamed(CONF_ACTION, CONF_ACTIONS)(value)
+    return cv.renamed(CONF_CONDITION, CONF_CONDITIONS)(value)
 
 
 PLATFORM_SCHEMA = vol.All(
