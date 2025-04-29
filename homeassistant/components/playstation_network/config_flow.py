@@ -27,8 +27,8 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             npsso = PlaystationNetwork.parse_npsso_token(user_input[CONF_NPSSO])
+            psn = PlaystationNetwork(npsso)
             try:
-                psn = PlaystationNetwork(npsso)
                 user: User = await self.hass.async_add_executor_job(psn.get_user)
             except PSNAWPAuthenticationError:
                 errors["base"] = "invalid_auth"

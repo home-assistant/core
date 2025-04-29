@@ -24,10 +24,9 @@ rules:
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry:
-    done
+  unique-config-entry: done
 
-    # Silver
+  # Silver
   action-exceptions:
     status: exempt
     comment: Integration has no actions
@@ -49,9 +48,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Discovery flow is not applicable for this integration
-  discovery:
-    status: exempt
-    comment: Discovery flow is not applicable for this integration
+  discovery: todo
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done

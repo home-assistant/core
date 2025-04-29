@@ -6,7 +6,7 @@
           "npsso": "NPSSO token"
         },
         "data_description": {
-          "npsso": "Please supply the NPSSO token generated during successful login of your PlayStation Network account"
+          "npsso": "The NPSSO token is generated during successful login of your PlayStation Network account and is used to authenticate your requests from with Home Assistant."
         },
         "description": "To obtain your NPSSO token, log in to your [PlayStation account]({psn_link}) first. Then [click here]({npsso_link}) to retrieve the token."
       }
@@ -18,7 +18,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   },
   "exceptions": {
