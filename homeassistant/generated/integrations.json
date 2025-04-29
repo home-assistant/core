@@ -605,6 +605,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "awtrix3": {
+      "name": "Awtrix 3",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "axis": {
       "name": "Axis",
       "integration_type": "device",
