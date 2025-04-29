@@ -17,7 +17,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_BRAND, CONF_BRANDS_MAP, CONF_REGIONS_MAP, DOMAIN
+from .const import BRANDS_CONF_MAP, CONF_BRAND, DOMAIN, REGIONS_CONF_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,15 +26,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_REGION): vol.In(list(CONF_REGIONS_MAP)),
-        vol.Required(CONF_BRAND): vol.In(list(CONF_BRANDS_MAP)),
+        vol.Required(CONF_REGION): vol.In(list(REGIONS_CONF_MAP)),
+        vol.Required(CONF_BRAND): vol.In(list(BRANDS_CONF_MAP)),
     }
 )
 
 REAUTH_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_BRAND): vol.In(list(CONF_BRANDS_MAP)),
+        vol.Required(CONF_BRAND): vol.In(list(BRANDS_CONF_MAP)),
     }
 )
 
@@ -48,8 +48,8 @@ async def authenticate(
     Returns the error translation key if authentication fails, or None on success.
     """
     session = async_get_clientsession(hass)
-    region = CONF_REGIONS_MAP[data[CONF_REGION]]
-    brand = CONF_BRANDS_MAP[data[CONF_BRAND]]
+    region = REGIONS_CONF_MAP[data[CONF_REGION]]
+    brand = BRANDS_CONF_MAP[data[CONF_BRAND]]
     backend_selector = BackendSelector(brand, region)
     auth = Auth(backend_selector, data[CONF_USERNAME], data[CONF_PASSWORD], session)
 
