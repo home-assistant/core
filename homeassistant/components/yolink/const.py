@@ -12,6 +12,7 @@ ATTR_VOLUME = "volume"
 ATTR_TEXT_MESSAGE = "message"
 ATTR_REPEAT = "repeat"
 ATTR_TONE = "tone"
+ATTR_LORA_INFO = "loraInfo"
 YOLINK_EVENT = f"{DOMAIN}_event"
 YOLINK_OFFLINE_TIME = 32400
 
