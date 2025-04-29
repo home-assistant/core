@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from contextlib import suppress
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -22,8 +23,10 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
+    CONF_ACTION,
     CONF_ACTIONS,
     CONF_BINARY_SENSORS,
+    CONF_CONDITION,
     CONF_CONDITIONS,
     CONF_NAME,
     CONF_SENSORS,
@@ -34,7 +37,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.automation import backward_compatibility_schema
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
@@ -76,8 +78,16 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
     return validate
 
 
+def _backward_compat_schema(value: Any | None) -> Any:
+    """Backward compatibility for automations."""
+
+    value = cv.renamed(CONF_TRIGGER, CONF_TRIGGERS)(value)
+    value = cv.renamed(CONF_ACTION, CONF_ACTIONS)(value)
+    return cv.renamed(CONF_CONDITION, CONF_CONDITIONS)(value)
+
+
 CONFIG_SECTION_SCHEMA = vol.All(
-    backward_compatibility_schema,
+    _backward_compat_schema,
     vol.Schema(
         {
             vol.Optional(CONF_UNIQUE_ID): cv.string,

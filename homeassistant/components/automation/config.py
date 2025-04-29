@@ -14,18 +14,20 @@ from homeassistant.components import blueprint
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 from homeassistant.config import config_per_platform, config_without_domain
 from homeassistant.const import (
+    CONF_ACTION,
     CONF_ACTIONS,
     CONF_ALIAS,
+    CONF_CONDITION,
     CONF_CONDITIONS,
     CONF_DESCRIPTION,
     CONF_ID,
+    CONF_TRIGGER,
     CONF_TRIGGERS,
     CONF_VARIABLES,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, script
-from homeassistant.helpers.automation import backward_compatibility_schema
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
@@ -53,8 +55,16 @@ _MINIMAL_PLATFORM_SCHEMA = vol.Schema(
 )
 
 
+def _backward_compat_schema(value: Any | None) -> Any:
+    """Backward compatibility for automations."""
+
+    value = cv.renamed(CONF_TRIGGER, CONF_TRIGGERS)(value)
+    value = cv.renamed(CONF_ACTION, CONF_ACTIONS)(value)
+    return cv.renamed(CONF_CONDITION, CONF_CONDITIONS)(value)
+
+
 PLATFORM_SCHEMA = vol.All(
-    backward_compatibility_schema,
+    _backward_compat_schema,
     cv.deprecated(CONF_HIDE_ENTITY),
     script.make_script_schema(
         {
@@ -76,7 +86,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 AUTOMATION_BLUEPRINT_SCHEMA = vol.All(
-    backward_compatibility_schema, blueprint.schemas.BLUEPRINT_SCHEMA
+    _backward_compat_schema, blueprint.schemas.BLUEPRINT_SCHEMA
 )
 
 
@@ -158,7 +168,7 @@ async def _async_validate_config_item(  # noqa: C901
         blueprints = async_get_blueprints(hass)
         try:
             blueprint_inputs = await blueprints.async_inputs_from_config(
-                backward_compatibility_schema(config)
+                _backward_compat_schema(config)
             )
         except blueprint.BlueprintException as err:
             if warn_on_errors:
