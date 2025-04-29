@@ -46,8 +46,8 @@ async def async_login(hass: HomeAssistant, username: str, password: str) -> Dreo
 
     try:
         devices = await hass.async_add_executor_job(setup_client)
-    except (HsCloudBusinessException, HsCloudException) as ex:
-        raise ConfigEntryNotReady("Cannot connect to Dreo service") from ex
+    except HsCloudBusinessException as ex:
+        raise ConfigEntryNotReady("invalid username or password") from ex
 
     return DreoData(client, devices, {})
 
