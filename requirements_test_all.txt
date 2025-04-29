@@ -1740,9 +1740,6 @@ pymailgunner==1.4
 # homeassistant.components.firmata
 pymata-express==1.19
 
-# homeassistant.components.melcloud
-pymelcloud==2.5.9
-
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
 
@@ -1984,6 +1981,9 @@ python-linkplay==0.2.4
 
 # homeassistant.components.matter
 python-matter-server==7.0.0
+
+# homeassistant.components.melcloud
+python-melcloud==0.1.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
