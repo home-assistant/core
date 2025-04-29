@@ -179,7 +179,7 @@ async def test_reauth_error_and_recover(
 
 
 @pytest.mark.usefixtures("mock_ista")
-async def test_form__already_configured(
+async def test_form_already_configured(
     hass: HomeAssistant,
     ista_config_entry: MockConfigEntry,
 ) -> None:
@@ -223,6 +223,127 @@ async def test_flow_reauth_unique_id_mismatch(hass: HomeAssistant) -> None:
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "new@example.com",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("mock_ista")
+async def test_reconfigure(
+    hass: HomeAssistant,
+    ista_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow."""
+
+    ista_config_entry.add_to_hass(hass)
+
+    result = await ista_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "new@example.com",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert ista_config_entry.data == {
+        CONF_EMAIL: "new@example.com",
+        CONF_PASSWORD: "new-password",
+    }
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_text"),
+    [
+        (LoginError(None), "invalid_auth"),
+        (ServerError, "cannot_connect"),
+        (IndexError, "unknown"),
+    ],
+)
+async def test_reconfigure_error_and_recover(
+    hass: HomeAssistant,
+    ista_config_entry: MockConfigEntry,
+    mock_ista: MagicMock,
+    side_effect: Exception,
+    error_text: str,
+) -> None:
+    """Test reconfigure flow error and recover."""
+
+    ista_config_entry.add_to_hass(hass)
+
+    result = await ista_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_ista.login.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "new@example.com",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_text}
+
+    mock_ista.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "new@example.com",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert ista_config_entry.data == {
+        CONF_EMAIL: "new@example.com",
+        CONF_PASSWORD: "new-password",
+    }
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("mock_ista")
+async def test_flow_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reconfigure flow unique id mismatch."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_EMAIL: "test@example.com",
+            CONF_PASSWORD: "test-password",
+        },
+        unique_id="42243134-21f6-40a2-a79f-e417a3a12104",
+    )
+
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
