@@ -1,4 +1,4 @@
-"""The tests for the dhcp WebSocket API."""
+"""The tests for the ssdp WebSocket API."""
 
 import asyncio
 from unittest.mock import ANY, AsyncMock, Mock, patch
