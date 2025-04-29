@@ -99,7 +99,7 @@ async def test_button_errors(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_in_device_registry(device_registry, mock_vehicle)
+    check_in_device_registry(device_registry, vehicle_type)
 
     expected_entities = mock_vehicle[Platform.BUTTON]
     assert len(entity_registry.entities) == len(expected_entities)
@@ -121,7 +121,7 @@ async def test_button_access_denied(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_in_device_registry(device_registry, mock_vehicle)
+    check_in_device_registry(device_registry, vehicle_type)
 
     expected_entities = mock_vehicle[Platform.BUTTON]
     assert len(entity_registry.entities) == len(expected_entities)
@@ -143,7 +143,7 @@ async def test_button_not_supported(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_in_device_registry(device_registry, mock_vehicle)
+    check_in_device_registry(device_registry, vehicle_type)
 
     expected_entities = mock_vehicle[Platform.BUTTON]
     assert len(entity_registry.entities) == len(expected_entities)

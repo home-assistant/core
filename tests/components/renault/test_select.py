@@ -103,7 +103,7 @@ async def test_select_errors(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_in_device_registry(device_registry, mock_vehicle)
+    check_in_device_registry(device_registry, vehicle_type)
 
     expected_entities = mock_vehicle[Platform.SELECT]
     assert len(entity_registry.entities) == len(expected_entities)
@@ -124,8 +124,7 @@ async def test_select_access_denied(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_in_device_registry(device_registry, mock_vehicle)
+    check_in_device_registry(device_registry, vehicle_type)
 
     assert len(entity_registry.entities) == 0
 
@@ -143,8 +142,7 @@ async def test_select_not_supported(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_in_device_registry(device_registry, mock_vehicle)
+    check_in_device_registry(device_registry, vehicle_type)
 
     assert len(entity_registry.entities) == 0
 

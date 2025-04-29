@@ -20,6 +20,7 @@ from .const import (
     DYNAMIC_ATTRIBUTES,
     FIXED_ATTRIBUTES,
     ICON_FOR_EMPTY_VALUES,
+    MOCK_VEHICLES,
 )
 
 
@@ -30,11 +31,13 @@ def get_no_data_icon(expected_entity: MappingProxyType):
 
 
 def check_in_device_registry(
-    device_registry: DeviceRegistry, expected_device: MappingProxyType
+    device_registry: DeviceRegistry, vehicle_type: str
 ) -> None:
-    """Ensure that the expected_device is correctly registered."""
+    """Ensure that the vehicle_type is correctly registered."""
     assert (
-        device_registry.async_get_device(identifiers=expected_device[ATTR_IDENTIFIERS])
+        device_registry.async_get_device(
+            identifiers=MOCK_VEHICLES[vehicle_type][ATTR_IDENTIFIERS]
+        )
         is not None
     )
 
