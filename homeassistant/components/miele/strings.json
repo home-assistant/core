@@ -182,6 +182,15 @@
       }
     },
     "sensor": {
+      "elapsed_time": {
+        "name": "Elapsed time"
+      },
+      "remaining_time": {
+        "name": "Remaining time"
+      },
+      "start_time": {
+        "name": "Start in"
+      },
       "energy_consumption": {
         "name": "Energy consumption"
       },
