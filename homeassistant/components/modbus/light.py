@@ -104,10 +104,10 @@ class ModbusLight(BaseSwitch, LightEntity):
     async def async_set_brightness(self, brightness: int | Any) -> None:
         """Set the brightness of the light."""
         if not self._brightness_address:
-            return None
+            return
         conv_brightness = self._convert_brightness_to_modbus(brightness)
         if conv_brightness is None:
-            return None
+            return
 
         await self._hub.async_pb_call(
             unit=self._slave,
@@ -121,10 +121,10 @@ class ModbusLight(BaseSwitch, LightEntity):
     async def async_set_color_temp(self, color_temp_kelvin: int | Any) -> None:
         """Send Modbus command to set color temperature."""
         if not self._color_temp_address:
-            return None
+            return
         conv_color_temp_kelvin = self._convert_color_temp_to_modbus(color_temp_kelvin)
         if conv_color_temp_kelvin is None:
-            return None
+            return
 
         await self._hub.async_pb_call(
             unit=self._slave,
@@ -184,9 +184,8 @@ class ModbusLight(BaseSwitch, LightEntity):
 
     def _convert_modbus_percent_to_temperature(self, percent: int) -> int | None:
         """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
-        if (
-            not isinstance(self._attr_min_color_temp_kelvin, int)
-            or not isinstance(self._attr_max_color_temp_kelvin, int)
+        if not isinstance(self._attr_min_color_temp_kelvin, int) or not isinstance(
+            self._attr_max_color_temp_kelvin, int
         ):
             _LOGGER.error(
                 "Invalid color temp bounds or value from device: min=%s, max=%s, temp_value=%s",
