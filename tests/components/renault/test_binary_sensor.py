@@ -11,7 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import check_device_registry, check_entities_unavailable
+from . import check_entities_unavailable, check_in_device_registry
 from .const import MOCK_VEHICLES
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
@@ -95,7 +95,7 @@ async def test_binary_sensor_errors(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    check_in_device_registry(device_registry, mock_vehicle)
 
     expected_entities = mock_vehicle[Platform.BINARY_SENSOR]
     assert len(entity_registry.entities) == len(expected_entities)
@@ -117,7 +117,7 @@ async def test_binary_sensor_access_denied(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    check_in_device_registry(device_registry, mock_vehicle)
 
     assert len(entity_registry.entities) == 0
 
@@ -136,6 +136,6 @@ async def test_binary_sensor_not_supported(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    check_in_device_registry(device_registry, mock_vehicle)
 
     assert len(entity_registry.entities) == 0

@@ -17,10 +17,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PASSWORD,
@@ -69,13 +65,7 @@ MOCK_CONFIG = {
 
 MOCK_VEHICLES = {
     "zoe_40": {
-        "expected_device": {
-            ATTR_IDENTIFIERS: {(DOMAIN, "VF1AAAAA555777999")},
-            ATTR_MANUFACTURER: "Renault",
-            ATTR_MODEL: "Zoe",
-            ATTR_NAME: "REG-NUMBER",
-            ATTR_MODEL_ID: "X101VE",
-        },
+        ATTR_IDENTIFIERS: {(DOMAIN, "VF1AAAAA555777999")},
         "endpoints": {
             "battery_status": "battery_status_charging.json",
             "charge_mode": "charge_mode_always.json",
@@ -259,13 +249,7 @@ MOCK_VEHICLES = {
         ],
     },
     "zoe_50": {
-        "expected_device": {
-            ATTR_IDENTIFIERS: {(DOMAIN, "VF1AAAAA555777999")},
-            ATTR_MANUFACTURER: "Renault",
-            ATTR_MODEL: "Zoe",
-            ATTR_NAME: "REG-NUMBER",
-            ATTR_MODEL_ID: "X102VE",
-        },
+        ATTR_IDENTIFIERS: {(DOMAIN, "VF1AAAAA555777999")},
         "endpoints": {
             "battery_status": "battery_status_not_charging.json",
             "charge_mode": "charge_mode_schedule.json",
@@ -513,13 +497,7 @@ MOCK_VEHICLES = {
         ],
     },
     "captur_phev": {
-        "expected_device": {
-            ATTR_IDENTIFIERS: {(DOMAIN, "VF1AAAAA555777123")},
-            ATTR_MANUFACTURER: "Renault",
-            ATTR_MODEL: "Captur ii",
-            ATTR_NAME: "REG-NUMBER",
-            ATTR_MODEL_ID: "XJB1SU",
-        },
+        ATTR_IDENTIFIERS: {(DOMAIN, "VF1AAAAA555777123")},
         "endpoints": {
             "battery_status": "battery_status_charging.json",
             "charge_mode": "charge_mode_always.json",
@@ -757,13 +735,7 @@ MOCK_VEHICLES = {
         ],
     },
     "captur_fuel": {
-        "expected_device": {
-            ATTR_IDENTIFIERS: {(DOMAIN, "VF1AAAAA555777123")},
-            ATTR_MANUFACTURER: "Renault",
-            ATTR_MODEL: "Captur ii",
-            ATTR_NAME: "REG-NUMBER",
-            ATTR_MODEL_ID: "XJB1SU",
-        },
+        ATTR_IDENTIFIERS: {(DOMAIN, "VF1AAAAA555777123")},
         "endpoints": {
             "cockpit": "cockpit_fuel.json",
             "location": "location.json",
@@ -874,13 +846,7 @@ MOCK_VEHICLES = {
         ],
     },
     "twingo_3_electric": {
-        "expected_device": {
-            ATTR_IDENTIFIERS: {(DOMAIN, "VF1AAAAA555777999")},
-            ATTR_MANUFACTURER: "Renault",
-            ATTR_MODEL: "Twingo iii",
-            ATTR_NAME: "REG-NUMBER",
-            ATTR_MODEL_ID: "X071VE",
-        },
+        ATTR_IDENTIFIERS: {(DOMAIN, "VF1AAAAA555777999")},
         "endpoints": {
             "battery_status": "battery_status_waiting_for_charger.json",
             "charge_mode": "charge_mode_always.2.json",

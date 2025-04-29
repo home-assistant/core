@@ -17,7 +17,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import check_device_registry, check_entities_unavailable
+from . import check_entities_unavailable, check_in_device_registry
 from .const import MOCK_VEHICLES
 
 from tests.common import load_fixture
@@ -103,7 +103,7 @@ async def test_select_errors(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    check_in_device_registry(device_registry, mock_vehicle)
 
     expected_entities = mock_vehicle[Platform.SELECT]
     assert len(entity_registry.entities) == len(expected_entities)
@@ -125,7 +125,7 @@ async def test_select_access_denied(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    check_in_device_registry(device_registry, mock_vehicle)
 
     assert len(entity_registry.entities) == 0
 
@@ -144,7 +144,7 @@ async def test_select_not_supported(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    check_in_device_registry(device_registry, mock_vehicle)
 
     assert len(entity_registry.entities) == 0
 

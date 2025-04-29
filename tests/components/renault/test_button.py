@@ -13,7 +13,7 @@ from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import check_device_registry, check_entities_no_data
+from . import check_entities_no_data, check_in_device_registry
 from .const import ATTR_ENTITY_ID, MOCK_VEHICLES
 
 from tests.common import load_fixture
@@ -99,7 +99,7 @@ async def test_button_errors(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    check_in_device_registry(device_registry, mock_vehicle)
 
     expected_entities = mock_vehicle[Platform.BUTTON]
     assert len(entity_registry.entities) == len(expected_entities)
@@ -121,7 +121,7 @@ async def test_button_access_denied(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    check_in_device_registry(device_registry, mock_vehicle)
 
     expected_entities = mock_vehicle[Platform.BUTTON]
     assert len(entity_registry.entities) == len(expected_entities)
@@ -143,7 +143,7 @@ async def test_button_not_supported(
     await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    check_in_device_registry(device_registry, mock_vehicle)
 
     expected_entities = mock_vehicle[Platform.BUTTON]
     assert len(entity_registry.entities) == len(expected_entities)
