@@ -61,6 +61,7 @@ homeassistant.components.airvisual.*
 homeassistant.components.airvisual_pro.*
 homeassistant.components.airzone.*
 homeassistant.components.airzone_cloud.*
+homeassistant.components.airzone_mqtt.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
