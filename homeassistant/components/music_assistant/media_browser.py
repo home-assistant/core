@@ -525,34 +525,20 @@ def _process_search_results(
         # Get items for each media type using pattern matching
         items: list[MediaItemType] = []
         match media_type:
-            case MASSMediaType.ARTIST if (
-                hasattr(search_results, "artists") and search_results.artists
-            ):
+            case MASSMediaType.ARTIST if search_results.artists:
                 # Cast to ensure type safety
                 items = cast(list[MediaItemType], search_results.artists)
-            case MASSMediaType.ALBUM if (
-                hasattr(search_results, "albums") and search_results.albums
-            ):
+            case MASSMediaType.ALBUM if search_results.albums:
                 items = cast(list[MediaItemType], search_results.albums)
-            case MASSMediaType.TRACK if (
-                hasattr(search_results, "tracks") and search_results.tracks
-            ):
+            case MASSMediaType.TRACK if search_results.tracks:
                 items = cast(list[MediaItemType], search_results.tracks)
-            case MASSMediaType.PLAYLIST if (
-                hasattr(search_results, "playlists") and search_results.playlists
-            ):
+            case MASSMediaType.PLAYLIST if search_results.playlists:
                 items = cast(list[MediaItemType], search_results.playlists)
-            case MASSMediaType.RADIO if (
-                hasattr(search_results, "radio") and search_results.radio
-            ):
+            case MASSMediaType.RADIO if search_results.radio:
                 items = cast(list[MediaItemType], search_results.radio)
-            case MASSMediaType.PODCAST if (
-                hasattr(search_results, "podcasts") and search_results.podcasts
-            ):
+            case MASSMediaType.PODCAST if search_results.podcasts:
                 items = cast(list[MediaItemType], search_results.podcasts)
-            case MASSMediaType.AUDIOBOOK if (
-                hasattr(search_results, "audiobooks") and search_results.audiobooks
-            ):
+            case MASSMediaType.AUDIOBOOK if search_results.audiobooks:
                 items = cast(list[MediaItemType], search_results.audiobooks)
             case _:
                 continue
