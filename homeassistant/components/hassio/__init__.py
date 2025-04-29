@@ -104,7 +104,6 @@ from .const import (
 )
 from .coordinator import (
     HassioDataUpdateCoordinator,
-    get_addons_changelogs,  # noqa: F401
     get_addons_info,
     get_addons_stats,  # noqa: F401
     get_core_info,  # noqa: F401

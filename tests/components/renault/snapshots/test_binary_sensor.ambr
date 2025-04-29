@@ -1,41 +1,6 @@
 # serializer version: 1
 # name: test_binary_sensor_empty[captur_fuel]
   list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777123',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Captur ii',
-      'model_id': 'XJB1SU',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_binary_sensor_empty[captur_fuel].1
-  list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -230,7 +195,7 @@
     }),
   ])
 # ---
-# name: test_binary_sensor_empty[captur_fuel].2
+# name: test_binary_sensor_empty[captur_fuel].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -307,41 +272,6 @@
   ])
 # ---
 # name: test_binary_sensor_empty[captur_phev]
-  list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777123',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Captur ii',
-      'model_id': 'XJB1SU',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_binary_sensor_empty[captur_phev].1
   list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -601,7 +531,7 @@
     }),
   ])
 # ---
-# name: test_binary_sensor_empty[captur_phev].2
+# name: test_binary_sensor_empty[captur_phev].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -701,216 +631,7 @@
     }),
   ])
 # ---
-# name: test_binary_sensor_empty[zoe_40]
-  list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777999',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Zoe',
-      'model_id': 'X101VE',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_binary_sensor_empty[zoe_40].1
-  list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'binary_sensor',
-      'entity_category': None,
-      'entity_id': 'binary_sensor.reg_number_plug',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
-      'original_icon': None,
-      'original_name': 'Plug',
-      'platform': 'renault',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': None,
-      'unique_id': 'vf1aaaaa555777999_plugged_in',
-      'unit_of_measurement': None,
-    }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'binary_sensor',
-      'entity_category': None,
-      'entity_id': 'binary_sensor.reg_number_charging',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
-      'original_icon': None,
-      'original_name': 'Charging',
-      'platform': 'renault',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': None,
-      'unique_id': 'vf1aaaaa555777999_charging',
-      'unit_of_measurement': None,
-    }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'binary_sensor',
-      'entity_category': None,
-      'entity_id': 'binary_sensor.reg_number_hvac',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'HVAC',
-      'platform': 'renault',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': 'hvac_status',
-      'unique_id': 'vf1aaaaa555777999_hvac_status',
-      'unit_of_measurement': None,
-    }),
-  ])
-# ---
-# name: test_binary_sensor_empty[zoe_40].2
-  list([
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'device_class': 'plug',
-        'friendly_name': 'REG-NUMBER Plug',
-      }),
-      'context': <ANY>,
-      'entity_id': 'binary_sensor.reg_number_plug',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'unknown',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'device_class': 'battery_charging',
-        'friendly_name': 'REG-NUMBER Charging',
-      }),
-      'context': <ANY>,
-      'entity_id': 'binary_sensor.reg_number_charging',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'unknown',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'friendly_name': 'REG-NUMBER HVAC',
-      }),
-      'context': <ANY>,
-      'entity_id': 'binary_sensor.reg_number_hvac',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'unknown',
-    }),
-  ])
-# ---
-# name: test_binary_sensor_empty[zoe_50]
-  list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777999',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Zoe',
-      'model_id': 'X102VE',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_binary_sensor_empty[zoe_50].1
+# name: test_binary_sensor_empty[twingo_3_electric]
   list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -1202,7 +923,549 @@
     }),
   ])
 # ---
-# name: test_binary_sensor_empty[zoe_50].2
+# name: test_binary_sensor_empty[twingo_3_electric].1
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'plug',
+        'friendly_name': 'REG-NUMBER Plug',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_plug',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'battery_charging',
+        'friendly_name': 'REG-NUMBER Charging',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_charging',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'REG-NUMBER HVAC',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_hvac',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'lock',
+        'friendly_name': 'REG-NUMBER Lock',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_lock',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'door',
+        'friendly_name': 'REG-NUMBER Hatch',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_hatch',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'door',
+        'friendly_name': 'REG-NUMBER Rear left door',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_rear_left_door',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'door',
+        'friendly_name': 'REG-NUMBER Rear right door',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_rear_right_door',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'door',
+        'friendly_name': 'REG-NUMBER Driver door',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_driver_door',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'door',
+        'friendly_name': 'REG-NUMBER Passenger door',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_passenger_door',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+  ])
+# ---
+# name: test_binary_sensor_empty[zoe_40]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_plug',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+      'original_icon': None,
+      'original_name': 'Plug',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'vf1aaaaa555777999_plugged_in',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_charging',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+      'original_icon': None,
+      'original_name': 'Charging',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'vf1aaaaa555777999_charging',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_hvac',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'HVAC',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'hvac_status',
+      'unique_id': 'vf1aaaaa555777999_hvac_status',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensor_empty[zoe_40].1
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'plug',
+        'friendly_name': 'REG-NUMBER Plug',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_plug',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'battery_charging',
+        'friendly_name': 'REG-NUMBER Charging',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_charging',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'REG-NUMBER HVAC',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_hvac',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+  ])
+# ---
+# name: test_binary_sensor_empty[zoe_50]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_plug',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+      'original_icon': None,
+      'original_name': 'Plug',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'vf1aaaaa555777999_plugged_in',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_charging',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+      'original_icon': None,
+      'original_name': 'Charging',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'vf1aaaaa555777999_charging',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_hvac',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'HVAC',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'hvac_status',
+      'unique_id': 'vf1aaaaa555777999_hvac_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+      'original_icon': None,
+      'original_name': 'Lock',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'vf1aaaaa555777999_lock_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_hatch',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+      'original_icon': None,
+      'original_name': 'Hatch',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'hatch_status',
+      'unique_id': 'vf1aaaaa555777999_hatch_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_rear_left_door',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+      'original_icon': None,
+      'original_name': 'Rear left door',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'rear_left_door_status',
+      'unique_id': 'vf1aaaaa555777999_rear_left_door_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_rear_right_door',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+      'original_icon': None,
+      'original_name': 'Rear right door',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'rear_right_door_status',
+      'unique_id': 'vf1aaaaa555777999_rear_right_door_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_driver_door',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+      'original_icon': None,
+      'original_name': 'Driver door',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'driver_door_status',
+      'unique_id': 'vf1aaaaa555777999_driver_door_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_passenger_door',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+      'original_icon': None,
+      'original_name': 'Passenger door',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'passenger_door_status',
+      'unique_id': 'vf1aaaaa555777999_passenger_door_status',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensor_empty[zoe_50].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1315,41 +1578,6 @@
 # ---
 # name: test_binary_sensors[captur_fuel]
   list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777123',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Captur ii',
-      'model_id': 'XJB1SU',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_binary_sensors[captur_fuel].1
-  list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -1544,7 +1772,7 @@
     }),
   ])
 # ---
-# name: test_binary_sensors[captur_fuel].2
+# name: test_binary_sensors[captur_fuel].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1621,41 +1849,6 @@
   ])
 # ---
 # name: test_binary_sensors[captur_phev]
-  list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777123',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Captur ii',
-      'model_id': 'XJB1SU',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_binary_sensors[captur_phev].1
   list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -1915,7 +2108,7 @@
     }),
   ])
 # ---
-# name: test_binary_sensors[captur_phev].2
+# name: test_binary_sensors[captur_phev].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2015,216 +2208,7 @@
     }),
   ])
 # ---
-# name: test_binary_sensors[zoe_40]
-  list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777999',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Zoe',
-      'model_id': 'X101VE',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_binary_sensors[zoe_40].1
-  list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'binary_sensor',
-      'entity_category': None,
-      'entity_id': 'binary_sensor.reg_number_plug',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
-      'original_icon': None,
-      'original_name': 'Plug',
-      'platform': 'renault',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': None,
-      'unique_id': 'vf1aaaaa555777999_plugged_in',
-      'unit_of_measurement': None,
-    }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'binary_sensor',
-      'entity_category': None,
-      'entity_id': 'binary_sensor.reg_number_charging',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
-      'original_icon': None,
-      'original_name': 'Charging',
-      'platform': 'renault',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': None,
-      'unique_id': 'vf1aaaaa555777999_charging',
-      'unit_of_measurement': None,
-    }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'binary_sensor',
-      'entity_category': None,
-      'entity_id': 'binary_sensor.reg_number_hvac',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'HVAC',
-      'platform': 'renault',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': 'hvac_status',
-      'unique_id': 'vf1aaaaa555777999_hvac_status',
-      'unit_of_measurement': None,
-    }),
-  ])
-# ---
-# name: test_binary_sensors[zoe_40].2
-  list([
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'device_class': 'plug',
-        'friendly_name': 'REG-NUMBER Plug',
-      }),
-      'context': <ANY>,
-      'entity_id': 'binary_sensor.reg_number_plug',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'on',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'device_class': 'battery_charging',
-        'friendly_name': 'REG-NUMBER Charging',
-      }),
-      'context': <ANY>,
-      'entity_id': 'binary_sensor.reg_number_charging',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'on',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'friendly_name': 'REG-NUMBER HVAC',
-      }),
-      'context': <ANY>,
-      'entity_id': 'binary_sensor.reg_number_hvac',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'off',
-    }),
-  ])
-# ---
-# name: test_binary_sensors[zoe_50]
-  list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'renault',
-          'VF1AAAAA555777999',
-        ),
-      }),
-      'is_new': False,
-      'labels': set({
-      }),
-      'manufacturer': 'Renault',
-      'model': 'Zoe',
-      'model_id': 'X102VE',
-      'name': 'REG-NUMBER',
-      'name_by_user': None,
-      'primary_config_entry': <ANY>,
-      'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_binary_sensors[zoe_50].1
+# name: test_binary_sensors[twingo_3_electric]
   list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -2516,7 +2500,549 @@
     }),
   ])
 # ---
-# name: test_binary_sensors[zoe_50].2
+# name: test_binary_sensors[twingo_3_electric].1
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'plug',
+        'friendly_name': 'REG-NUMBER Plug',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_plug',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'battery_charging',
+        'friendly_name': 'REG-NUMBER Charging',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_charging',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'REG-NUMBER HVAC',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_hvac',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'lock',
+        'friendly_name': 'REG-NUMBER Lock',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_lock',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'door',
+        'friendly_name': 'REG-NUMBER Hatch',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_hatch',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'door',
+        'friendly_name': 'REG-NUMBER Rear left door',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_rear_left_door',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'door',
+        'friendly_name': 'REG-NUMBER Rear right door',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_rear_right_door',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'door',
+        'friendly_name': 'REG-NUMBER Driver door',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_driver_door',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'door',
+        'friendly_name': 'REG-NUMBER Passenger door',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_passenger_door',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+  ])
+# ---
+# name: test_binary_sensors[zoe_40]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_plug',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+      'original_icon': None,
+      'original_name': 'Plug',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'vf1aaaaa555777999_plugged_in',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_charging',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+      'original_icon': None,
+      'original_name': 'Charging',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'vf1aaaaa555777999_charging',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_hvac',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'HVAC',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'hvac_status',
+      'unique_id': 'vf1aaaaa555777999_hvac_status',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[zoe_40].1
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'plug',
+        'friendly_name': 'REG-NUMBER Plug',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_plug',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'battery_charging',
+        'friendly_name': 'REG-NUMBER Charging',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_charging',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'REG-NUMBER HVAC',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.reg_number_hvac',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---
+# name: test_binary_sensors[zoe_50]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_plug',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+      'original_icon': None,
+      'original_name': 'Plug',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'vf1aaaaa555777999_plugged_in',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_charging',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+      'original_icon': None,
+      'original_name': 'Charging',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'vf1aaaaa555777999_charging',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_hvac',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'HVAC',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'hvac_status',
+      'unique_id': 'vf1aaaaa555777999_hvac_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+      'original_icon': None,
+      'original_name': 'Lock',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'vf1aaaaa555777999_lock_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_hatch',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+      'original_icon': None,
+      'original_name': 'Hatch',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'hatch_status',
+      'unique_id': 'vf1aaaaa555777999_hatch_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_rear_left_door',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+      'original_icon': None,
+      'original_name': 'Rear left door',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'rear_left_door_status',
+      'unique_id': 'vf1aaaaa555777999_rear_left_door_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_rear_right_door',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+      'original_icon': None,
+      'original_name': 'Rear right door',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'rear_right_door_status',
+      'unique_id': 'vf1aaaaa555777999_rear_right_door_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_driver_door',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+      'original_icon': None,
+      'original_name': 'Driver door',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'driver_door_status',
+      'unique_id': 'vf1aaaaa555777999_driver_door_status',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.reg_number_passenger_door',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+      'original_icon': None,
+      'original_name': 'Passenger door',
+      'platform': 'renault',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': 'passenger_door_status',
+      'unique_id': 'vf1aaaaa555777999_passenger_door_status',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[zoe_50].1
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
