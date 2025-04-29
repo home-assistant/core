@@ -648,8 +648,8 @@
       "sentry_mode": {
         "name": "Sentry mode",
         "state": {
-          "off": "Off",
-          "idle": "Idle",
+          "off": "[%key:common::state::off%]",
+          "idle": "[%key:common::state::idle%]",
           "armed": "Armed",
           "aware": "Aware",
           "panic": "Panic",
