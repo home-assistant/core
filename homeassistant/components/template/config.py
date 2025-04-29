@@ -133,8 +133,12 @@ CONFIG_SECTION_SCHEMA = vol.All(
                 cv.ensure_list, [cover_platform.COVER_SCHEMA]
             ),
         },
-        ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, COVER_DOMAIN),
     ),
+    ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, COVER_DOMAIN),
+)
+
+TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
+    _backward_compat_schema, blueprint_schemas.BLUEPRINT_SCHEMA
 )
 
 TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA = vol.Schema(
