@@ -31,8 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SPEED_RANGE = (1, 4)
 
-# FAN_READ_ONLY = [MieleAppliance.HOB_INDUCT_EXTR]
-
 
 @dataclass(frozen=True, kw_only=True)
 class MieleFanDefinition:
