@@ -21,6 +21,7 @@ pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 ENTITY_ID = "fan.hood_fan"
 
 
+@pytest.mark.parametrize("load_device_file", ["fan_devices.json"])
 async def test_fan_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
@@ -34,6 +35,7 @@ async def test_fan_states(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize("load_device_file", ["fan_devices.json"])
 @pytest.mark.parametrize(
     ("service", "expected_argument"),
     [
@@ -51,7 +53,10 @@ async def test_fan_control(
     """Test the fan can be turned on/off."""
 
     await hass.services.async_call(
-        TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        TEST_PLATFORM,
+        service,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     mock_miele_client.send_action.assert_called_once_with(
         "DummyAppliance_18", expected_argument
