@@ -142,11 +142,3 @@ class PsnMediaPlayerEntity(
             if title.get("format", "") == PlatformType.PS4:
                 return title.get("npTitleIconUrl")
         return None
-
-    @property
-    def is_on(self) -> bool:
-        """Is user available on the Playstation Network."""
-        return (
-            self.coordinator.data.available is True
-            and self.key == self.coordinator.data.platform.get("platform", "")
-        )

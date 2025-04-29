@@ -35,12 +35,12 @@ class mockUser:
         ('{"npsso": "TEST_NPSSO_TOKEN"}'),
     ],
 )
-async def test_form_success(hass: HomeAssistant, npsso) -> None:
-    """Test we get the form."""
+async def test_manual_config(hass: HomeAssistant, npsso) -> None:
+    """Test creating via manual configuration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -51,9 +51,9 @@ async def test_form_success(hass: HomeAssistant, npsso) -> None:
             result["flow_id"],
             {CONF_NPSSO: npsso},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "my-psn-id"
     assert result["data"] == {
         CONF_NPSSO: "TEST_NPSSO_TOKEN",
     }
@@ -82,7 +82,6 @@ async def test_form_already_configured(
             result["flow_id"],
             {CONF_NPSSO: NPSSO_TOKEN},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -116,7 +115,6 @@ async def test_form_failures(hass: HomeAssistant, raise_error, text_error) -> No
             context={"source": config_entries.SOURCE_USER},
             data={CONF_NPSSO: NPSSO_TOKEN},
         )
-        await hass.async_block_till_done()
 
     assert result["errors"] == {"base": text_error}
 
@@ -134,7 +132,6 @@ async def test_form_failures(hass: HomeAssistant, raise_error, text_error) -> No
             result["flow_id"],
             {CONF_NPSSO: NPSSO_TOKEN},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
