@@ -56,5 +56,5 @@ async def ws_subscribe_discovery(
         _async_event_message({"remove": [remove_msg]})
 
     job = HassJob(_async_on_data)
-    connection.subscriptions[msg_id] = await scanner.async_register_callback(job, None)
     connection.send_message(json_bytes(websocket_api.result_message(msg_id)))
+    connection.subscriptions[msg_id] = await scanner.async_register_callback(job, None)
