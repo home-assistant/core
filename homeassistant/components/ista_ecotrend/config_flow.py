@@ -146,4 +146,8 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async_step_reconfigure = async_step_reauth_confirm
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure flow for ista EcoTrend integration."""
+        return await self.async_step_reauth_confirm(user_input)
