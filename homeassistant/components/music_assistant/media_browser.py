@@ -543,10 +543,9 @@ def _process_search_results(
             ):
                 items = cast(list[MediaItemType], search_results.playlists)
             case MASSMediaType.RADIO if (
-                hasattr(search_results, "radio_stations")
-                and search_results.radio_stations
+                hasattr(search_results, "radio") and search_results.radio
             ):
-                items = cast(list[MediaItemType], search_results.radio_stations)
+                items = cast(list[MediaItemType], search_results.radio)
             case MASSMediaType.PODCAST if (
                 hasattr(search_results, "podcasts") and search_results.podcasts
             ):

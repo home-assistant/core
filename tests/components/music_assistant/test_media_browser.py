@@ -89,7 +89,7 @@ class MockSearchResults:
         self.albums = []
         self.tracks = []
         self.playlists = []
-        self.radio_stations = []
+        self.radio = []
         self.podcasts = []
         self.audiobooks = []
 
@@ -117,7 +117,7 @@ class MockSearchResults:
             elif media_type == "playlist":
                 self.playlists = items
             elif media_type == "radio":
-                self.radio_stations = items
+                self.radio = items
             elif media_type == "podcast":
                 self.podcasts = items
             elif media_type == "audiobook":
