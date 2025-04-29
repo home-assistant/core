@@ -26,20 +26,32 @@
       }
     },
     "sensor": {
+      "core_temperature": {
+        "default": "mdi:thermometer-probe"
+      },
+      "core_target_temperature": {
+        "default": "mdi:thermometer-probe"
+      },
+      "program_id": {
+        "default": "mdi:selection-ellipse-arrow-inside"
+      },
+      "program_phase": {
+        "default": "mdi:tray-full"
+      },
       "elapsed_time": {
         "default": "mdi:timelapse"
       },
       "start_time": {
         "default": "mdi:clock-start"
       },
+      "spin_speed": {
+        "default": "mdi:sync"
+      },
+      "program_type": {
+        "default": "mdi:state-machine"
+      },
       "remaining_time": {
         "default": "mdi:clock-end"
-      },
-      "core_temperature": {
-        "default": "mdi:thermometer-probe"
-      },
-      "core_target_temperature": {
-        "default": "mdi:thermometer-probe"
       }
     },
     "switch": {

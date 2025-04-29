@@ -495,7 +495,7 @@ apprise==1.9.1
 aprslib==0.7.2
 
 # homeassistant.components.apsystems
-apsystems-ez1==2.5.0
+apsystems-ez1==2.5.1
 
 # homeassistant.components.aqualogic
 aqualogic==2.6
@@ -1560,7 +1560,7 @@ oauth2client==4.1.3
 objgraph==3.5.0
 
 # homeassistant.components.garages_amsterdam
-odp-amsterdam==6.0.2
+odp-amsterdam==6.1.1
 
 # homeassistant.components.oem
 oemthermostat==1.1.1
@@ -2128,9 +2128,6 @@ pymata-express==1.19
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
 
-# homeassistant.components.melcloud
-pymelcloud==2.5.9
-
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
 
@@ -2362,7 +2359,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.12.0
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.0.1.dev2
+pystiebeleltron==0.1.0
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.4
@@ -2447,6 +2444,9 @@ python-linkplay==0.2.4
 
 # homeassistant.components.matter
 python-matter-server==7.0.0
+
+# homeassistant.components.melcloud
+python-melcloud==0.1.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -3138,7 +3138,7 @@ yeelight==0.7.16
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.4.9
+yolink-api==0.5.2
 
 # homeassistant.components.youless
 youless-api==2.2.0
@@ -3174,7 +3174,7 @@ ziggo-mediabox-xl==1.1.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.62.0
+zwave-js-server-python==0.63.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3

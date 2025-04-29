@@ -644,6 +644,17 @@
       },
       "total_grid_energy_exported": {
         "name": "Grid exported"
+      },
+      "sentry_mode": {
+        "name": "Sentry mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "idle": "[%key:common::state::idle%]",
+          "armed": "Armed",
+          "aware": "Aware",
+          "panic": "Panic",
+          "quiet": "Quiet"
+        }
       }
     },
     "switch": {

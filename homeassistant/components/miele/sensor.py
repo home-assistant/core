@@ -15,12 +15,26 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
+from homeassistant.const import (
+    REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
+    UnitOfEnergy,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import STATE_STATUS_TAGS, MieleAppliance, StateStatus
+from .const import (
+    STATE_PROGRAM_ID,
+    STATE_PROGRAM_PHASE,
+    STATE_PROGRAM_TYPE,
+    STATE_STATUS_TAGS,
+    MieleAppliance,
+    StateStatus,
+)
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
 
@@ -82,7 +96,139 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             translation_key="status",
             value_fn=lambda value: value.state_status,
             device_class=SensorDeviceClass.ENUM,
-            options=list(STATE_STATUS_TAGS.values()),
+            options=sorted(set(STATE_STATUS_TAGS.values())),
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.DISH_WARMER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN,
+            MieleAppliance.MICROWAVE,
+            MieleAppliance.COFFEE_SYSTEM,
+            MieleAppliance.ROBOT_VACUUM_CLEANER,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.STEAM_OVEN_MK2,
+        ),
+        description=MieleSensorDescription(
+            key="state_program_id",
+            translation_key="program_id",
+            device_class=SensorDeviceClass.ENUM,
+            value_fn=lambda value: value.state_program_id,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.DISH_WARMER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN,
+            MieleAppliance.MICROWAVE,
+            MieleAppliance.COFFEE_SYSTEM,
+            MieleAppliance.ROBOT_VACUUM_CLEANER,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.STEAM_OVEN_MK2,
+        ),
+        description=MieleSensorDescription(
+            key="state_program_phase",
+            translation_key="program_phase",
+            value_fn=lambda value: value.state_program_phase,
+            device_class=SensorDeviceClass.ENUM,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.DISH_WARMER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN,
+            MieleAppliance.MICROWAVE,
+            MieleAppliance.ROBOT_VACUUM_CLEANER,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.COFFEE_SYSTEM,
+            MieleAppliance.STEAM_OVEN_MK2,
+        ),
+        description=MieleSensorDescription(
+            key="state_program_type",
+            translation_key="program_type",
+            value_fn=lambda value: value.state_program_type,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorDeviceClass.ENUM,
+            options=sorted(set(STATE_PROGRAM_TYPE.values())),
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.WASHER_DRYER,
+        ),
+        description=MieleSensorDescription(
+            key="current_energy_consumption",
+            translation_key="energy_consumption",
+            value_fn=lambda value: value.current_energy_consumption,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.WASHER_DRYER,
+        ),
+        description=MieleSensorDescription(
+            key="current_water_consumption",
+            translation_key="water_consumption",
+            value_fn=lambda value: value.current_water_consumption,
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfVolume.LITERS,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+            MieleAppliance.WASHER_DRYER,
+        ),
+        description=MieleSensorDescription(
+            key="state_spinning_speed",
+            translation_key="spin_speed",
+            value_fn=lambda value: value.state_spinning_speed,
+            native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
     MieleSensorDefinition(
@@ -198,21 +344,32 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
     ),
     MieleSensorDefinition(
         types=(
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
             MieleAppliance.OVEN,
             MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.DISH_WARMER,
+            MieleAppliance.STEAM_OVEN,
+            MieleAppliance.MICROWAVE,
+            MieleAppliance.FRIDGE,
+            MieleAppliance.FREEZER,
+            MieleAppliance.FRIDGE_FREEZER,
             MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.WINE_CABINET,
+            MieleAppliance.WINE_CONDITIONING_UNIT,
+            MieleAppliance.WINE_STORAGE_CONDITIONING_UNIT,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.WINE_CABINET_FREEZER,
+            MieleAppliance.STEAM_OVEN_MK2,
         ),
         description=MieleSensorDescription(
-            key="state_core_temperature",
-            translation_key="core_temperature",
-            zone=1,
+            key="state_temperature_2",
+            zone=2,
             device_class=SensorDeviceClass.TEMPERATURE,
+            translation_key="temperature_zone_2",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=(
-                lambda value: cast(int, value.state_core_temperature[0].temperature)
-                / 100.0
-            ),
+            value_fn=lambda value: value.state_temperatures[1].temperature / 100.0,  # type: ignore [operator]
         ),
     ),
     MieleSensorDefinition(
@@ -236,6 +393,25 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             ),
         ),
     ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN_COMBI,
+        ),
+        description=MieleSensorDescription(
+            key="state_core_temperature",
+            translation_key="core_temperature",
+            zone=1,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=(
+                lambda value: cast(int, value.state_core_temperature[0].temperature)
+                / 100.0
+            ),
+        ),
+    ),
 )
 
 
@@ -255,14 +431,21 @@ async def async_setup_entry(
                 match definition.description.key:
                     case "state_status":
                         entity_class = MieleStatusSensor
-                    case (
-                        "state_remaining_time"
-                        | "state_elapsed_time"
-                        | "state_start_time"
-                    ):
-                        entity_class = MieleDurationSensor
+                    case "state_program_id":
+                        entity_class = MieleProgramIdSensor
+                    case "state_program_phase":
+                        entity_class = MielePhaseSensor
+                    case "state_program_type":
+                        entity_class = MieleTypeSensor
                     case _:
                         entity_class = MieleSensor
+                if (
+                    definition.description.device_class == SensorDeviceClass.TEMPERATURE
+                    and definition.description.value_fn(device)
+                    == DISABLED_TEMPERATURE / 100
+                ):
+                    # Don't create entity if API signals that datapoint is disabled
+                    continue
                 entities.append(
                     entity_class(coordinator, device_id, definition.description)
                 )
@@ -340,13 +523,65 @@ class MieleStatusSensor(MieleSensor):
         return True
 
 
-class MieleDurationSensor(MieleSensor):
-    """Representation of the duration sensor."""
+class MielePhaseSensor(MieleSensor):
+    """Representation of the program phase sensor."""
 
     @property
     def native_value(self) -> StateType:
-        """Return as minutes."""
-        value_list = cast(list[int], self.entity_description.value_fn(self.device))
-        if len(value_list) == 0:
-            return None
-        return value_list[0] * 60 + value_list[1]
+        """Return the state of the sensor."""
+        ret_val = STATE_PROGRAM_PHASE.get(self.device.device_type, {}).get(
+            self.device.state_program_phase
+        )
+        if ret_val is None:
+            _LOGGER.debug(
+                "Unknown program phase: %s on device type: %s",
+                self.device.state_program_phase,
+                self.device.device_type,
+            )
+        return ret_val
+
+    @property
+    def options(self) -> list[str]:
+        """Return the options list for the actual device type."""
+        return sorted(
+            set(STATE_PROGRAM_PHASE.get(self.device.device_type, {}).values())
+        )
+
+
+class MieleTypeSensor(MieleSensor):
+    """Representation of the program type sensor."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        ret_val = STATE_PROGRAM_TYPE.get(int(self.device.state_program_type))
+        if ret_val is None:
+            _LOGGER.debug(
+                "Unknown program type: %s on device type: %s",
+                self.device.state_program_type,
+                self.device.device_type,
+            )
+        return ret_val
+
+
+class MieleProgramIdSensor(MieleSensor):
+    """Representation of the program id sensor."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        ret_val = STATE_PROGRAM_ID.get(self.device.device_type, {}).get(
+            self.device.state_program_id
+        )
+        if ret_val is None:
+            _LOGGER.debug(
+                "Unknown program id: %s on device type: %s",
+                self.device.state_program_id,
+                self.device.device_type,
+            )
+        return ret_val
+
+    @property
+    def options(self) -> list[str]:
+        """Return the options list for the actual device type."""
+        return sorted(set(STATE_PROGRAM_ID.get(self.device.device_type, {}).values()))
