@@ -119,6 +119,7 @@
           "sensor_test": "Sensor test",
           "central_heating": "Central heating",
           "standby": "[%key:common::state::standby%]",
+          "off": "[%key:common::state::off%]",
           "postrun_boyler": "Post run boiler",
           "service": "Service",
           "tapwater": "Tap water",
