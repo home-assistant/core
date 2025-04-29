@@ -36,7 +36,7 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, kem_config_entry.entry_id)
 
 
-async def test_sensor_availability(
+async def test_sensor_availability_device_disconnect(
     hass: HomeAssistant,
     generator: dict[str, any],
     mock_kem: AsyncMock,
@@ -59,7 +59,17 @@ async def test_sensor_availability(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    generator["device"]["isConnected"] = True
+
+async def test_sensor_availability_poll_failure(
+    hass: HomeAssistant,
+    mock_kem: AsyncMock,
+    load_kem_config_entry: None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the KEM sensors."""
+    state = hass.states.get("sensor.generator_1_engine_state")
+    assert state
+    assert state.state == "Standby"
 
     mock_kem.get_generator_data.side_effect = Exception("Test exception")
 
