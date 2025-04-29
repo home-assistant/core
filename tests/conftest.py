@@ -1345,10 +1345,9 @@ def mock_zeroconf() -> Generator[MagicMock]:
     from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
 
     with (
-        patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True) as mock_zc,
+        patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc,
         patch(
             "homeassistant.components.zeroconf.discovery.AsyncServiceBrowser",
-            autospec=True,
         ),
     ):
         zc = mock_zc.return_value
