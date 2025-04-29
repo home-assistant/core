@@ -134,9 +134,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
             ),
         },
     ),
-    ensure_domains_do_not_have_trigger_or_action(
-        BUTTON_DOMAIN, COVER_DOMAIN, LIGHT_DOMAIN
-    ),
+    ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, COVER_DOMAIN),
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
