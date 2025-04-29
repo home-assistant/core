@@ -12,6 +12,7 @@ from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.modbus.const import MODBUS_DOMAIN as DOMAIN, TCP
+from homeassistant.components.modbus.light import ModbusLight
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_HOST,
@@ -206,3 +207,11 @@ async def mock_modbus_ha_fixture(
 async def caplog_setup_text_fixture(caplog: pytest.LogCaptureFixture) -> str:
     """Return setup log of integration."""
     return caplog.text
+
+
+@pytest.fixture
+def modbus_light_entity(hass) -> ModbusLight:
+    """Return the ModbusLight entity instance."""
+    return hass.data["domain_platform_entities"][("light", "modbus")][
+        "light.test_entity"
+    ]
