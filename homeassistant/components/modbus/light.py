@@ -84,7 +84,7 @@ class ModbusLight(BaseSwitch, LightEntity):
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: dict[str, Any]) -> None:
         """Turn light on and set brightness if provided."""
         if ATTR_BRIGHTNESS in kwargs:
             await self.async_set_brightness(
@@ -97,7 +97,7 @@ class ModbusLight(BaseSwitch, LightEntity):
             )
         await self.async_turn(self.command_on)
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: dict[str, Any]) -> None:
         """Turn light off."""
         await self.async_turn(self._command_off)
 
@@ -138,40 +138,41 @@ class ModbusLight(BaseSwitch, LightEntity):
     async def _async_update(self) -> None:
         """Update the entity state, including brightness and color temperature."""
         await super()._async_update()
-        if self._brightness_address:
-            brightness_result = await self._hub.async_pb_call(
-                unit=self._slave,
-                value=1,
-                address=self._brightness_address,
-                use_call=CALL_TYPE_REGISTER_HOLDING,
+        if not self._brightness_address:
+            return
+        brightness_result = await self._hub.async_pb_call(
+            unit=self._slave,
+            value=1,
+            address=self._brightness_address,
+            use_call=CALL_TYPE_REGISTER_HOLDING,
+        )
+
+        if (
+            brightness_result
+            and brightness_result.registers
+            and brightness_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
+        ):
+            self._attr_brightness = self._convert_modbus_percent_to_brightness(
+                brightness_result.registers[0]
             )
 
-            if (
-                brightness_result
-                and brightness_result.registers
-                and brightness_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
-            ):
-                self._attr_brightness = self._convert_modbus_percent_to_brightness(
-                    brightness_result.registers[0]
-                )
+        if not self._color_temp_address:
+            return
 
-        if self._color_temp_address:
-            color_result = await self._hub.async_pb_call(
-                unit=self._slave,
-                value=1,
-                address=self._color_temp_address,
-                use_call=CALL_TYPE_REGISTER_HOLDING,
+        color_result = await self._hub.async_pb_call(
+            unit=self._slave,
+            value=1,
+            address=self._color_temp_address,
+            use_call=CALL_TYPE_REGISTER_HOLDING,
+        )
+        if (
+            color_result
+            and color_result.registers
+            and color_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
+        ):
+            self._attr_color_temp_kelvin = self._convert_modbus_percent_to_temperature(
+                color_result.registers[0]
             )
-            if (
-                color_result
-                and color_result.registers
-                and color_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
-            ):
-                self._attr_color_temp_kelvin = (
-                    self._convert_modbus_percent_to_temperature(
-                        color_result.registers[0]
-                    )
-                )
 
     @staticmethod
     def _convert_modbus_percent_to_brightness(percent: int) -> int:
