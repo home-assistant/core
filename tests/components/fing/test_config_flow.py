@@ -5,7 +5,8 @@ from unittest.mock import patch
 import httpx
 
 from homeassistant import config_entries
-from homeassistant.components.fing.const import AGENT_IP, AGENT_KEY, AGENT_PORT, DOMAIN
+from homeassistant.components.fing.const import DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -38,9 +39,9 @@ async def test_verify_connection_success(
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"] == {
-            AGENT_IP: "192.168.1.1",
-            AGENT_PORT: "49090",
-            AGENT_KEY: "test_key",
+            CONF_IP_ADDRESS: "192.168.1.1",
+            CONF_PORT: "49090",
+            CONF_API_KEY: "test_key",
         }
 
 

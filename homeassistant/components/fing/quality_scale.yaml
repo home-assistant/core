@@ -14,7 +14,7 @@ rules:
     comment: There are no actions in Fing integration.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: Fing integration entities do not use events.
@@ -26,11 +26,11 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: 
+  action-exceptions:
     status: exempt
     comment: The integration has no actions.
   config-entry-unloading: done
-  docs-configuration-parameters: 
+  docs-configuration-parameters:
     status: exempt
     comment: The integration has no options flow.
   docs-installation-parameters: done
@@ -55,7 +55,7 @@ rules:
   docs-use-cases: todo
   dynamic-devices: done
   entity-category: todo
-  entity-device-class: 
+  entity-device-class:
     status: exempt
     comment: The integration creates only device tracker entities
   entity-disabled-by-default: todo

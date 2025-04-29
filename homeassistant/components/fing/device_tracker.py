@@ -69,12 +69,21 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         super().__init__(coordinator)
         self._mac = device.mac
         self._device = coordinator.data.devices[device.mac]
-        self._network_id = coordinator.data.network_id
+
+        self._agent_id = coordinator.data.network_id
+        if coordinator.data.agent_info is not None:
+            self._agent_id = coordinator.data.agent_info.agent_id
+
         self._attr_name = self._device.name
         self._attr_mac_address = self._mac
-        self._attr_unique_id = f"{self._network_id}-{self.mac_address}"
+        self._attr_unique_id = f"{self._agent_id}-{self.mac_address}"
         self._attr_icon = get_icon_from_type(self._device.type)
         self._attr_entity_registry_enabled_default = True
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return unique ID of the entity."""
+        return f"{self._agent_id}-{self.mac_address}"
 
     @property
     def ip_address(self) -> str | None:

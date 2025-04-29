@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from fing_agent_api import FingAgent
 import pytest
 
-from homeassistant.components.fing.const import AGENT_IP, AGENT_KEY, AGENT_PORT
+from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 
 from .const import mocked_dev_resp_new_API, mocked_dev_resp_old_API
 
@@ -17,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 def mocked_entry():
     """Fixture for mock config entry."""
     return {
-        AGENT_IP: "192.168.1.1",  # Mocked IP
-        AGENT_PORT: "49090",  # Mocked PORT
-        AGENT_KEY: "test_key",  # Mocked KEY
+        CONF_IP_ADDRESS: "192.168.1.1",  # Mocked IP
+        CONF_PORT: "49090",  # Mocked PORT
+        CONF_API_KEY: "test_key",  # Mocked KEY
     }
 
 

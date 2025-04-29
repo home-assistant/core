@@ -1,5 +1,6 @@
 """Config flow file."""
 
+from contextlib import suppress
 import logging
 from typing import Any
 
@@ -8,9 +9,10 @@ import httpx
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .const import AGENT_IP, AGENT_KEY, AGENT_PORT, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,17 +25,17 @@ def _get_data_schema(
     if user_input is None:
         return vol.Schema(
             {
-                vol.Required(AGENT_IP): str,
-                vol.Required(AGENT_PORT, default="49090"): str,
-                vol.Required(AGENT_KEY): str,
+                vol.Required(CONF_IP_ADDRESS): str,
+                vol.Required(CONF_PORT, default="49090"): str,
+                vol.Required(CONF_API_KEY): str,
             }
         )
 
     return vol.Schema(
         {
-            vol.Required(AGENT_IP, default=user_input.get(AGENT_IP)): str,
-            vol.Required(AGENT_PORT, default=user_input.get(AGENT_PORT)): str,
-            vol.Required(AGENT_KEY, default=user_input.get(AGENT_KEY)): str,
+            vol.Required(CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS)): str,
+            vol.Required(CONF_PORT, default=user_input.get(CONF_PORT)): str,
+            vol.Required(CONF_API_KEY, default=user_input.get(CONF_API_KEY)): str,
         }
     )
 
@@ -51,23 +53,21 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
 
         if user_input is not None:
-            response = None
+            devices_response = None
+            agent_info_response = None
 
-            existing_entries = [
-                entry
-                for entry in self._async_current_entries()
-                if entry.data.get(AGENT_IP) == user_input[AGENT_IP]
-            ]
-
-            if existing_entries:
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match(
+                {CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
+            )
 
             fing_api = FingAgent(
-                user_input[AGENT_IP], user_input[AGENT_PORT], user_input[AGENT_KEY]
+                user_input[CONF_IP_ADDRESS],
+                user_input[CONF_PORT],
+                user_input[CONF_API_KEY],
             )
 
             try:
-                response = await fing_api.get_devices()
+                devices_response = await fing_api.get_devices()
             except httpx.NetworkError as _:
                 errors["base"] = "cannot_connect"
             except httpx.TimeoutException as _:
@@ -91,11 +91,32 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
             ) as _:
                 errors["base"] = "unexpected_error"
 
-            if response is not None:
-                if response.network_id is not None and len(response.network_id) > 0:
-                    return self.async_create_entry(
-                        title=f"Fing Agent {user_input.get(AGENT_IP)}", data=user_input
-                    )
+            with suppress(httpx.HTTPError, httpx.StreamError):
+                # The suppression is needed because the get_agent_info method isn't available for desktop agents
+                agent_info_response = await fing_api.get_agent_info()
+
+            if devices_response is not None:
+                if (
+                    devices_response.network_id is not None
+                    and len(devices_response.network_id) > 0
+                ):
+                    agent_id = user_input.get(CONF_IP_ADDRESS)
+                    if agent_info_response is not None:
+                        agent_id = agent_info_response.agent_id
+                        await self.async_set_unique_id(agent_info_response.agent_id)
+                        self._abort_if_unique_id_configured()
+                    else:
+                        await self._async_handle_discovery_without_unique_id()
+
+                    if (
+                        devices_response.network_id is not None
+                        and len(devices_response.network_id) > 0
+                    ):
+                        return self.async_create_entry(
+                            title=f"Fing Agent {agent_id}",
+                            data=user_input,
+                        )
+
                 errors["base"] = "api_version_error"
 
         return self.async_show_form(
