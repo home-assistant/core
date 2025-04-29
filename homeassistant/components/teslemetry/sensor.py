@@ -841,14 +841,14 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
-<<<<<<< HEAD
         key="sentry_mode",
         streaming_listener=lambda x, y: x.listen_SentryMode(
             lambda z: None if z is None else y(SENTRY_MODE_STATES.get(z))
         ),
         options=list(SENTRY_MODE_STATES.values()),
         device_class=SensorDeviceClass.ENUM,
-=======
+    ),
+    TeslemetryVehicleSensorEntityDescription(
         key="energy_remaining",
         streaming_listener=lambda x, y: x.listen_EnergyRemaining(y),
         state_class=SensorStateClass.MEASUREMENT,
@@ -1133,7 +1133,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.SPEED,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
->>>>>>> e3c6221fa2f (Sensors)
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="hvac_power_state",

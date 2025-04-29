@@ -645,6 +645,7 @@
       "total_grid_energy_exported": {
         "name": "Grid exported"
       },
+
       "sentry_mode": {
         "name": "Sentry mode",
         "state": {

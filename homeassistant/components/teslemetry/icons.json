@@ -249,6 +249,7 @@
         "default": "mdi:ev-plug-ccs2"
       }
     },
+
     "sensor": {
       "battery_power": {
         "default": "mdi:home-battery"
