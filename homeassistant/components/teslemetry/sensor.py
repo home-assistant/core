@@ -60,6 +60,15 @@ CHARGE_STATES = {
 
 SHIFT_STATES = {"P": "p", "D": "d", "R": "r", "N": "n"}
 
+SENTRY_MODE_STATES = {
+    "Off": "off",
+    "Idle": "idle",
+    "Armed": "armed",
+    "Aware": "aware",
+    "Panic": "panic",
+    "Quiet": "quiet",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
@@ -349,6 +358,14 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
+    ),
+    TeslemetryVehicleSensorEntityDescription(
+        key="sentry_mode",
+        streaming_listener=lambda x, y: x.listen_SentryMode(
+            lambda z: None if z is None else y(SENTRY_MODE_STATES.get(z))
+        ),
+        options=list(SENTRY_MODE_STATES.values()),
+        device_class=SensorDeviceClass.ENUM,
     ),
 )
 

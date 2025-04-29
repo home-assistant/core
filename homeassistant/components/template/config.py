@@ -124,7 +124,7 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
             ),
         },
         ensure_domains_do_not_have_trigger_or_action(
-            BUTTON_DOMAIN, COVER_DOMAIN, LIGHT_DOMAIN, SWITCH_DOMAIN
+            BUTTON_DOMAIN, COVER_DOMAIN, LIGHT_DOMAIN
         ),
     )
 )

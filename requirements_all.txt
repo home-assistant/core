@@ -1560,7 +1560,7 @@ oauth2client==4.1.3
 objgraph==3.5.0
 
 # homeassistant.components.garages_amsterdam
-odp-amsterdam==6.0.2
+odp-amsterdam==6.1.1
 
 # homeassistant.components.oem
 oemthermostat==1.1.1
@@ -2128,9 +2128,6 @@ pymata-express==1.19
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
 
-# homeassistant.components.melcloud
-pymelcloud==2.5.9
-
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
 
@@ -2447,6 +2444,9 @@ python-linkplay==0.2.4
 
 # homeassistant.components.matter
 python-matter-server==7.0.0
+
+# homeassistant.components.melcloud
+python-melcloud==0.1.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
