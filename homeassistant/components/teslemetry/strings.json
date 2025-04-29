@@ -937,7 +937,6 @@
       "powershare_stop_reason": {
         "name": "Powershare stop reason",
         "state": {
-          "none": "None",
           "soc_too_low": "SOC too low",
           "retry": "Retry",
           "fault": "[%key:common::state::fault%]",
