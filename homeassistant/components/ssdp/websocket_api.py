@@ -62,28 +62,22 @@ class _DiscoverySubscription:
     @callback
     def _async_on_data(self, info: SsdpServiceInfo, change: SsdpChange) -> None:
         if change is SsdpChange.BYEBYE:
-            self._async_removed(info)
-        else:
-            self._async_added(info)
+            self._async_event_message(
+                {
+                    "remove": [
+                        {
+                            FIELD_SSDP_ST: info.ssdp_st,
+                            FIELD_SSDP_LOCATION: info.ssdp_location,
+                        }
+                    ]
+                }
+            )
+            return
+        self._async_event_message({"add": [asdict(info)]})
 
     def _async_event_message(self, message: dict[str, Any]) -> None:
         self.connection.send_message(
             json_bytes(websocket_api.event_message(self.ws_msg_id, message))
-        )
-
-    def _async_added(self, service_info: SsdpServiceInfo) -> None:
-        self._async_event_message({"add": [asdict(service_info)]})
-
-    def _async_removed(self, service_info: SsdpServiceInfo) -> None:
-        self._async_event_message(
-            {
-                "remove": [
-                    {
-                        FIELD_SSDP_ST: service_info.ssdp_st,
-                        FIELD_SSDP_LOCATION: service_info.ssdp_location,
-                    }
-                ]
-            }
         )
 
 
