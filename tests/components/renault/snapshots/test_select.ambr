@@ -1,267 +1,123 @@
 # serializer version: 1
-# name: test_select_empty[captur_fuel]
-  list([
-  ])
-# ---
-# name: test_select_empty[captur_fuel].1
-  list([
-  ])
-# ---
-# name: test_select_empty[captur_phev]
-  list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'options': list([
-          'always',
-          'always_charging',
-          'schedule_mode',
-          'scheduled',
-        ]),
-      }),
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'select',
-      'entity_category': None,
-      'entity_id': 'select.reg_number_charge_mode',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'Charge mode',
-      'platform': 'renault',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': 'charge_mode',
-      'unique_id': 'vf1aaaaa555777123_charge_mode',
-      'unit_of_measurement': None,
+# name: test_select_empty[zoe_40][select.reg_number_charge_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
     }),
-  ])
-# ---
-# name: test_select_empty[captur_phev].1
-  list([
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'friendly_name': 'REG-NUMBER Charge mode',
-        'options': list([
-          'always',
-          'always_charging',
-          'schedule_mode',
-          'scheduled',
-        ]),
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.reg_number_charge_mode',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'unknown',
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'always_charging',
+        'schedule_mode',
+        'scheduled',
+      ]),
     }),
-  ])
-# ---
-# name: test_select_empty[twingo_3_electric]
-  list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'options': list([
-          'always',
-          'always_charging',
-          'schedule_mode',
-          'scheduled',
-        ]),
-      }),
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'select',
-      'entity_category': None,
-      'entity_id': 'select.reg_number_charge_mode',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'Charge mode',
-      'platform': 'renault',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': 'charge_mode',
-      'unique_id': 'vf1aaaaa555777999_charge_mode',
-      'unit_of_measurement': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.reg_number_charge_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
     }),
-  ])
-# ---
-# name: test_select_empty[twingo_3_electric].1
-  list([
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'friendly_name': 'REG-NUMBER Charge mode',
-        'options': list([
-          'always',
-          'always_charging',
-          'schedule_mode',
-          'scheduled',
-        ]),
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.reg_number_charge_mode',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'unknown',
+    'name': None,
+    'options': dict({
     }),
-  ])
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_mode',
+    'unique_id': 'vf1aaaaa555777999_charge_mode',
+    'unit_of_measurement': None,
+  })
 # ---
-# name: test_select_empty[zoe_40]
-  list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'options': list([
-          'always',
-          'always_charging',
-          'schedule_mode',
-          'scheduled',
-        ]),
-      }),
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'select',
-      'entity_category': None,
-      'entity_id': 'select.reg_number_charge_mode',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'Charge mode',
-      'platform': 'renault',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': 'charge_mode',
-      'unique_id': 'vf1aaaaa555777999_charge_mode',
-      'unit_of_measurement': None,
+# name: test_select_empty[zoe_40][select.reg_number_charge_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-NUMBER Charge mode',
+      'options': list([
+        'always',
+        'always_charging',
+        'schedule_mode',
+        'scheduled',
+      ]),
     }),
-  ])
+    'context': <ANY>,
+    'entity_id': 'select.reg_number_charge_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
 # ---
-# name: test_select_empty[zoe_40].1
-  list([
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'friendly_name': 'REG-NUMBER Charge mode',
-        'options': list([
-          'always',
-          'always_charging',
-          'schedule_mode',
-          'scheduled',
-        ]),
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.reg_number_charge_mode',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'unknown',
+# name: test_select_errors[zoe_40][select.reg_number_charge_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
     }),
-  ])
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'always_charging',
+        'schedule_mode',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.reg_number_charge_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_mode',
+    'unique_id': 'vf1aaaaa555777999_charge_mode',
+    'unit_of_measurement': None,
+  })
 # ---
-# name: test_select_empty[zoe_50]
-  list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'options': list([
-          'always',
-          'always_charging',
-          'schedule_mode',
-          'scheduled',
-        ]),
-      }),
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'select',
-      'entity_category': None,
-      'entity_id': 'select.reg_number_charge_mode',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'Charge mode',
-      'platform': 'renault',
-      'previous_unique_id': None,
-      'supported_features': 0,
-      'translation_key': 'charge_mode',
-      'unique_id': 'vf1aaaaa555777999_charge_mode',
-      'unit_of_measurement': None,
+# name: test_select_errors[zoe_40][select.reg_number_charge_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-NUMBER Charge mode',
+      'options': list([
+        'always',
+        'always_charging',
+        'schedule_mode',
+        'scheduled',
+      ]),
     }),
-  ])
-# ---
-# name: test_select_empty[zoe_50].1
-  list([
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'friendly_name': 'REG-NUMBER Charge mode',
-        'options': list([
-          'always',
-          'always_charging',
-          'schedule_mode',
-          'scheduled',
-        ]),
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.reg_number_charge_mode',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'unknown',
-    }),
-  ])
+    'context': <ANY>,
+    'entity_id': 'select.reg_number_charge_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
 # ---
 # name: test_selects[captur_phev][select.reg_number_charge_mode-entry]
   EntityRegistryEntrySnapshot({
