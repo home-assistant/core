@@ -15,70 +15,14 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from .const import DOMAIN, SSDP_SCANNER
 from .scanner import Scanner, SsdpChange
 
+FIELD_SSDP_ST: Final = "ssdp_st"
+FIELD_SSDP_LOCATION: Final = "ssdp_location"
+
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the ssdp websocket API."""
     websocket_api.async_register_command(hass, ws_subscribe_discovery)
-
-
-FIELD_SSDP_ST: Final = "ssdp_st"
-FIELD_SSDP_LOCATION: Final = "ssdp_location"
-
-
-def serialize_service_info(service_info: SsdpServiceInfo) -> dict[str, Any]:
-    """Serialize a SsdpServiceInfo object."""
-    return asdict(service_info)
-
-
-class _DiscoverySubscription:
-    """Class to hold and manage the subscription data."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        connection: websocket_api.ActiveConnection,
-        ws_msg_id: int,
-        scanner: Scanner,
-    ) -> None:
-        """Initialize the subscription data."""
-        self.hass = hass
-        self.ws_msg_id = ws_msg_id
-        self.connection = connection
-        self.scanner = scanner
-        self._job = HassJob(self._async_on_data)
-
-    async def async_start(self) -> None:
-        """Start the subscription."""
-        connection = self.connection
-        cancel_adv_callback = await self.scanner.async_register_callback(
-            self._job, None
-        )
-        connection.subscriptions[self.ws_msg_id] = cancel_adv_callback
-        self.connection.send_message(
-            json_bytes(websocket_api.result_message(self.ws_msg_id))
-        )
-
-    @callback
-    def _async_on_data(self, info: SsdpServiceInfo, change: SsdpChange) -> None:
-        if change is SsdpChange.BYEBYE:
-            self._async_event_message(
-                {
-                    "remove": [
-                        {
-                            FIELD_SSDP_ST: info.ssdp_st,
-                            FIELD_SSDP_LOCATION: info.ssdp_location,
-                        }
-                    ]
-                }
-            )
-            return
-        self._async_event_message({"add": [asdict(info)]})
-
-    def _async_event_message(self, message: dict[str, Any]) -> None:
-        self.connection.send_message(
-            json_bytes(websocket_api.event_message(self.ws_msg_id, message))
-        )
 
 
 @websocket_api.require_admin
@@ -93,4 +37,31 @@ async def ws_subscribe_discovery(
 ) -> None:
     """Handle subscribe advertisements websocket command."""
     scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
-    await _DiscoverySubscription(hass, connection, msg["id"], scanner).async_start()
+    ws_msg_id: int = msg["id"]
+
+    def _async_event_message(message: dict[str, Any]) -> None:
+        connection.send_message(
+            json_bytes(websocket_api.event_message(ws_msg_id, message))
+        )
+
+    @callback
+    def _async_on_data(info: SsdpServiceInfo, change: SsdpChange) -> None:
+        if change is not SsdpChange.BYEBYE:
+            _async_event_message({"add": [asdict(info)]})
+            return
+        _async_event_message(
+            {
+                "remove": [
+                    {
+                        FIELD_SSDP_ST: info.ssdp_st,
+                        FIELD_SSDP_LOCATION: info.ssdp_location,
+                    }
+                ]
+            }
+        )
+
+    job = HassJob(_async_on_data)
+    connection.subscriptions[ws_msg_id] = await scanner.async_register_callback(
+        job, None
+    )
+    connection.send_message(json_bytes(websocket_api.result_message(ws_msg_id)))
