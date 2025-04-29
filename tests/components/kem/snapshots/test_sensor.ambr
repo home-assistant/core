@@ -31,7 +31,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_voltage',
-    'unique_id': 'myemail@mail.com_12345_batteryVoltageV',
+    'unique_id': 'myemail@email.com_12345_batteryVoltageV',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -83,7 +83,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'controller_temperature',
-    'unique_id': 'myemail@mail.com_12345_controllerTempF',
+    'unique_id': 'myemail@email.com_12345_controllerTempF',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -133,7 +133,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'device_ip_address',
-    'unique_id': 'myemail@mail.com_12345_deviceIpAddress',
+    'unique_id': 'myemail@email.com_12345_deviceIpAddress',
     'unit_of_measurement': None,
   })
 # ---
@@ -183,7 +183,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'engine_compartment_temperature',
-    'unique_id': 'myemail@mail.com_12345_engineCompartmentTempF',
+    'unique_id': 'myemail@email.com_12345_engineCompartmentTempF',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -235,7 +235,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'engine_coolant_temperature',
-    'unique_id': 'myemail@mail.com_12345_engineCoolantTempF',
+    'unique_id': 'myemail@email.com_12345_engineCoolantTempF',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -287,7 +287,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'engine_frequency',
-    'unique_id': 'myemail@mail.com_12345_engineFrequencyHz',
+    'unique_id': 'myemail@email.com_12345_engineFrequencyHz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -342,7 +342,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'engine_oil_pressure',
-    'unique_id': 'myemail@mail.com_12345_engineOilPressurePsi',
+    'unique_id': 'myemail@email.com_12345_engineOilPressurePsi',
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
@@ -394,7 +394,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'engine_speed',
-    'unique_id': 'myemail@mail.com_12345_engineSpeedRpm',
+    'unique_id': 'myemail@email.com_12345_engineSpeedRpm',
     'unit_of_measurement': 'rpm',
   })
 # ---
@@ -443,7 +443,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'engine_state',
-    'unique_id': 'myemail@mail.com_12345_engineState',
+    'unique_id': 'myemail@email.com_12345_engineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -492,7 +492,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'generator_load',
-    'unique_id': 'myemail@mail.com_12345_generatorLoadW',
+    'unique_id': 'myemail@email.com_12345_generatorLoadW',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -544,7 +544,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'generator_load_percent',
-    'unique_id': 'myemail@mail.com_12345_generatorLoadPercent',
+    'unique_id': 'myemail@email.com_12345_generatorLoadPercent',
     'unit_of_measurement': '%',
   })
 # ---
@@ -593,7 +593,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'generator_status',
-    'unique_id': 'myemail@mail.com_12345_status',
+    'unique_id': 'myemail@email.com_12345_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -642,7 +642,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'lube_oil_temperature',
-    'unique_id': 'myemail@mail.com_12345_lubeOilTempF',
+    'unique_id': 'myemail@email.com_12345_lubeOilTempF',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -692,7 +692,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_source',
-    'unique_id': 'myemail@mail.com_12345_powerSource',
+    'unique_id': 'myemail@email.com_12345_powerSource',
     'unit_of_measurement': None,
   })
 # ---
@@ -742,7 +742,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'runtime_since_last_maintenance',
-    'unique_id': 'myemail@mail.com_12345_runtimeSinceLastMaintenanceHours',
+    'unique_id': 'myemail@email.com_12345_runtimeSinceLastMaintenanceHours',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
@@ -792,7 +792,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'server_ip_address',
-    'unique_id': 'myemail@mail.com_12345_serverIpAddress',
+    'unique_id': 'myemail@email.com_12345_serverIpAddress',
     'unit_of_measurement': None,
   })
 # ---
@@ -842,7 +842,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_operation',
-    'unique_id': 'myemail@mail.com_12345_totalOperationHours',
+    'unique_id': 'myemail@email.com_12345_totalOperationHours',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
@@ -894,7 +894,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_runtime',
-    'unique_id': 'myemail@mail.com_12345_totalRuntimeHours',
+    'unique_id': 'myemail@email.com_12345_totalRuntimeHours',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
@@ -946,7 +946,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'utility_voltage',
-    'unique_id': 'myemail@mail.com_12345_utilityVoltageV',
+    'unique_id': 'myemail@email.com_12345_utilityVoltageV',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -998,7 +998,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'generator_voltage_avg',
-    'unique_id': 'myemail@mail.com_12345_generatorVoltageAvgV',
+    'unique_id': 'myemail@email.com_12345_generatorVoltageAvgV',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---

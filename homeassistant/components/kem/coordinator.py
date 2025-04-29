@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL_MINUTES
-from .data import HAAioKem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ class KemRuntimeData:
     """Dataclass to hold runtime data for the KEM integration."""
 
     coordinators: dict[int, KemUpdateCoordinator]
-    kem: HAAioKem
+    kem: AioKem
     homes: list[dict[str, Any]]
 
 

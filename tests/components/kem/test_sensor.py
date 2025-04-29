@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from aiokem import AioKem
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -25,7 +24,7 @@ DISABLED_ENTITIES = [
 ]
 
 
-@pytest.fixture(name="platform_sensor")
+@pytest.fixture(name="platform_sensor", autouse=True)
 async def platform_sensor_fixture():
     """Patch KEM to only load Sensor platform."""
     with patch("homeassistant.components.kem.PLATFORMS", [Platform.SENSOR]):
@@ -34,11 +33,10 @@ async def platform_sensor_fixture():
 
 async def test_sensors(
     hass: HomeAssistant,
-    platform_sensor,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     kem_config_entry: MockConfigEntry,
-    mock_kem: AioKem,
+    load_kem_config_entry: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the KEM sensors."""
@@ -58,7 +56,8 @@ async def test_sensors(
 async def test_sensor_availability(
     hass: HomeAssistant,
     generator: dict[str, any],
-    mock_kem_get_generator_data: AsyncMock,
+    mock_kem: AsyncMock,
+    load_kem_config_entry: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the KEM sensors."""
@@ -79,7 +78,7 @@ async def test_sensor_availability(
 
     generator["device"]["isConnected"] = True
 
-    mock_kem_get_generator_data.side_effect = Exception("Test exception")
+    mock_kem.get_generator_data.side_effect = Exception("Test exception")
 
     # Move time to next update
     freezer.tick(SCAN_INTERVAL_MINUTES)

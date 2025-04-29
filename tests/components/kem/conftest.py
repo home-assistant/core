@@ -1,7 +1,7 @@
 """Module for testing the KEM integration in Home Assistant."""
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -56,55 +56,36 @@ def kem_config_entry_with_refresh_token_fixture() -> MockConfigEntry:
     )
 
 
-@pytest.fixture
+@pytest.fixture(name="mock_kem")
 async def mock_kem(
-    hass: HomeAssistant,
     homes: list[dict[str, Any]],
     generator: dict[str, Any],
-    kem_config_entry: MockConfigEntry,
 ):
     """Mock KEM instance."""
-    kem_config_entry.add_to_hass(hass)
     with (
-        patch("homeassistant.components.kem.data.AioKem.authenticate") as mock_auth,
-        patch("homeassistant.components.kem.data.AioKem.get_homes") as mock_homes,
-        patch(
-            "homeassistant.components.kem.data.AioKem.get_generator_data"
-        ) as mock_generator,
+        patch("homeassistant.components.kem.AioKem") as mock_kem,
+        patch("homeassistant.components.kem.config_flow.AioKem") as mock_cf_kem,
     ):
-        mock_auth.return_value = None
-        mock_homes.return_value = homes
-        mock_generator.return_value = generator
-        await hass.config_entries.async_setup(kem_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        mocks = {
-            "authenticate": mock_auth,
-            "get_homes": mock_homes,
-            "get_generator_data": mock_generator,
-        }
-        yield mocks
-
-
-@pytest.fixture
-async def mock_kem_authenticate(
-    mock_kem: dict[str, AsyncMock],
-):
-    """Mock the authenticate method of the KEM instance."""
-    return mock_kem["authenticate"]
+        mock_instance = AsyncMock()
+        mock_kem.return_value = mock_instance
+        mock_cf_kem.return_value = mock_instance
+        mock_instance.get_homes = AsyncMock(return_value=homes)
+        mock_instance.get_generator_data = AsyncMock(return_value=generator)
+        mock_instance.authenticate = AsyncMock(return_value=None)
+        mock_instance.get_token_subject = Mock(return_value=TEST_SUBJECT)
+        mock_instance.get_refresh_token = AsyncMock(return_value=TEST_REFRESH_TOKEN)
+        mock_instance.set_refresh_token_callback = Mock()
+        mock_instance.set_retry_policy = Mock()
+        yield mock_instance
 
 
-@pytest.fixture
-async def mock_kem_get_homes(
-    mock_kem: dict[str, AsyncMock],
-):
-    """Mock the get_homes method of the KEM instance."""
-    return mock_kem["get_homes"]
-
-
-@pytest.fixture
-async def mock_kem_get_generator_data(
-    mock_kem: dict[str, AsyncMock],
-):
-    """Mock the get_generator_data method of the KEM instance."""
-    return mock_kem["get_generator_data"]
+@pytest.fixture(name="load_kem_config_entry")
+async def load_kem_config_entry(
+    hass: HomeAssistant,
+    mock_kem: Mock,
+    kem_config_entry: MockConfigEntry,
+) -> None:
+    """Load the config entry."""
+    kem_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(kem_config_entry.entry_id)
+    await hass.async_block_till_done()

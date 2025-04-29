@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from aiokem import AuthenticationError
+from aiokem import AioKem, AuthenticationError
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,6 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import KemConfigEntry, KemRuntimeData, KemUpdateCoordinator
-from .data import HAAioKem
 
 PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
@@ -29,8 +28,20 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: KemConfigEntry) -> bool:
     """Set up KEM from a config entry."""
     websession = async_get_clientsession(hass)
-    kem = HAAioKem(session=websession, hass=hass, config_entry=entry)
+    kem = AioKem(session=websession)
+
+    async def async_refresh_token_update(refresh_token: str) -> None:
+        """Handle refresh token update."""
+        _LOGGER.debug("Saving refresh token")
+        # Update the config entry with the new refresh token
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_REFRESH_TOKEN: refresh_token},
+        )
+
+    kem.set_refresh_token_callback(async_refresh_token_update)
     kem.set_retry_policy(retry_count=3, retry_delays=[5, 10, 20])
+
     try:
         await kem.authenticate(
             entry.data[CONF_EMAIL],
@@ -75,7 +86,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: KemConfigEntry) -> bool:
             await coordinator.async_config_entry_first_refresh()
             coordinators[device_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 
