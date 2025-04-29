@@ -61,7 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
     config_entry.runtime_data = await async_login(hass, username, password)
 
     # Set up coordinators for each device
-    await async_setup_devices(hass, config_entry)
+    for device in config_entry.runtime_data.devices:
+        await async_setup_device(hass, config_entry, device)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -72,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
             hasattr(config_entry, "runtime_data")
             and config_entry.runtime_data is not None
         ):
-            await async_sync_devices(hass, config_entry)
+            await async_discover_devices(hass, config_entry)
         else:
             _LOGGER.warning("Runtime data missing, skipping sync")
 
@@ -86,15 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
     )
 
     return True
-
-
-async def async_setup_devices(
-    hass: HomeAssistant, config_entry: DreoConfigEntry
-) -> None:
-    """Set up coordinators for all devices."""
-
-    for device in config_entry.runtime_data.devices:
-        await async_setup_device(hass, config_entry, device)
 
 
 async def async_setup_device(
@@ -124,7 +116,7 @@ async def async_setup_device(
     config_entry.runtime_data.coordinators[device_id] = coordinator
 
 
-async def async_sync_devices(
+async def async_discover_devices(
     hass: HomeAssistant, config_entry: DreoConfigEntry
 ) -> None:
     """Synchronize cloud devices with local devices."""
