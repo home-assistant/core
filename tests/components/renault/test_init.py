@@ -139,6 +139,7 @@ async def test_device_registry(
 
 
 @pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_registry_cleanup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
