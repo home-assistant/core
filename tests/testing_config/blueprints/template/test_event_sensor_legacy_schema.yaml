@@ -14,7 +14,7 @@ blueprint:
       description: The event_data for the event trigger
       selector:
         object:
-triggers:
+trigger:
   - trigger: event
     event_type: !input event_type
     event_data: !input event_data

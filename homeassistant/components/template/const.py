@@ -1,6 +1,5 @@
 """Constants for the Template Platform Components."""
 
-from homeassistant.components.blueprint import BLUEPRINT_SCHEMA
 from homeassistant.const import Platform
 from homeassistant.helpers.typing import ConfigType
 
@@ -37,8 +36,6 @@ PLATFORMS = [
     Platform.VACUUM,
     Platform.WEATHER,
 ]
-
-TEMPLATE_BLUEPRINT_SCHEMA = BLUEPRINT_SCHEMA
 
 
 class TemplateConfig(dict):

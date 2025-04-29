@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.blueprint import (
     BLUEPRINT_INSTANCE_FIELDS,
     is_blueprint_instance_config,
+    schemas as blueprint_schemas,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -136,6 +137,10 @@ CONFIG_SECTION_SCHEMA = vol.All(
     ensure_domains_do_not_have_trigger_or_action(
         BUTTON_DOMAIN, COVER_DOMAIN, LIGHT_DOMAIN
     ),
+)
+
+TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
+    _backward_compat_schema, blueprint_schemas.BLUEPRINT_SCHEMA
 )
 
 TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA = vol.Schema(
