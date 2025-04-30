@@ -334,19 +334,20 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[silabs_refrigerator][switch.refrigerator_power-entry]
+# name: test_switches[silabs_evse_charging][switch.evse_enable_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.refrigerator_power',
+    'entity_id': 'switch.evse_enable_charging',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -356,29 +357,28 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Enable charging',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'power',
-    'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-1-MatterPowerToggle-6-0',
+    'translation_key': 'evse_charging_switch',
+    'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseChargingSwitch-153-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[silabs_refrigerator][switch.refrigerator_power-state]
+# name: test_switches[silabs_evse_charging][switch.evse_enable_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Refrigerator Power',
+      'friendly_name': 'evse Enable charging',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_power',
+    'entity_id': 'switch.evse_enable_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_switches[switch_unit][switch.mock_switchunit-entry]
