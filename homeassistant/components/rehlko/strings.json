@@ -82,6 +82,15 @@
       },
       "generator_load_percent": {
         "name": "Generator load percentage"
+      },
+      "engine_state": {
+        "name": "Engine state"
+      },
+      "power_source": {
+        "name": "Power source"
+      },
+      "generator_status": {
+        "name": "Generator status"
       }
     }
   },
