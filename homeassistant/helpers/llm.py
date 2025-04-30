@@ -24,6 +24,7 @@ from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
 from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -577,6 +578,14 @@ class AssistAPI(API):
                     names.extend(info["names"].split(", "))
                 tools.append(CalendarGetEventsTool(names))
 
+            if exposed_domains is not None and TODO_DOMAIN in exposed_domains:
+                names = []
+                for info in exposed_entities["entities"].values():
+                    if info["domain"] != TODO_DOMAIN:
+                        continue
+                    names.extend(info["names"].split(", "))
+                tools.append(TodoGetItemsTool(names))
+
             tools.extend(
                 ScriptTool(self.hass, script_entity_id)
                 for script_entity_id in exposed_entities[SCRIPT_DOMAIN]
@@ -1022,6 +1031,65 @@ class CalendarGetEventsTool(Tool):
         ]
 
         return {"success": True, "result": events}
+
+
+class TodoGetItemsTool(Tool):
+    """LLM Tool allowing querying a to-do list."""
+
+    name = "todo_get_items"
+    description = (
+        "Query a to-do list to find out what items are on it. "
+        "Use this to answer questions like 'What's on my task list?' or 'Read my grocery list'. "
+        "Filters items by status (needs_action, completed, all)."
+    )
+
+    def __init__(self, todo_lists: list[str]) -> None:
+        """Init the get items tool."""
+        self.parameters = vol.Schema(
+            {
+                vol.Required("todo_list"): vol.In(todo_lists),
+                vol.Optional(
+                    "status",
+                    description="Filter returned items by status, by default returns incomplete items",
+                    default="needs_action",
+                ): vol.In(["needs_action", "completed", "all"]),
+            }
+        )
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Query a to-do list."""
+        data = self.parameters(tool_input.tool_args)
+        result = intent.async_match_targets(
+            hass,
+            intent.MatchTargetsConstraints(
+                name=data["todo_list"],
+                domains=[TODO_DOMAIN],
+                assistant=llm_context.assistant,
+            ),
+        )
+        if not result.is_match:
+            return {"success": False, "error": "To-do list not found"}
+        entity_id = result.states[0].entity_id
+        service_data: dict[str, Any] = {"entity_id": entity_id}
+        if status := data.get("status"):
+            if status == "all":
+                service_data["status"] = ["needs_action", "completed"]
+            else:
+                service_data["status"] = [status]
+        service_result = await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.GET_ITEMS,
+            service_data,
+            context=llm_context.context,
+            blocking=True,
+            return_response=True,
+        )
+        if not service_result:
+            return {"success": False, "error": "To-do list not found"}
+        items = cast(dict, service_result)[entity_id]["items"]
+        return {"success": True, "result": items}
 
 
 class GetLiveContextTool(Tool):
