@@ -1110,7 +1110,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Restore failed."""
-        return self.async_abort(reason="restore_failed")
+        if user_input is not None:
+            return await self.async_step_restore_nvm()
+
+        return self.async_show_form(
+            step_id="restore_failed",
+            description_placeholders={
+                "file_path": str(self.backup_filepath),
+            },
+        )
 
     async def async_step_migration_done(
         self, user_input: dict[str, Any] | None = None
