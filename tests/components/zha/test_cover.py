@@ -164,7 +164,7 @@ async def test_cover(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
     await send_attributes_report(
         hass, cluster, {WCAttrs.current_position_tilt_percentage.id: 0}
     )
-    assert hass.states.get(entity_id).state == CoverState.CLOSED  # CLOSED lift state currently takes precendence over OPEN tilt
+    assert hass.states.get(entity_id).state == CoverState.CLOSED  # CLOSED lift state currently takes precedence over OPEN tilt
     with patch("zigpy.zcl.Cluster.request", return_value=[0x1, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
             COVER_DOMAIN,
