@@ -30,7 +30,7 @@ type NtfyConfigEntry = ConfigEntry[Ntfy]
 async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool:
     """Set up ntfy from a config entry."""
 
-    session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
+    session = async_get_clientsession(hass, entry.data.get(CONF_VERIFY_SSL, True))
     ntfy = Ntfy(entry.data[CONF_URL], session, token=entry.data.get(CONF_TOKEN))
 
     try:
