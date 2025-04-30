@@ -1,7 +1,8 @@
 """Test the Google Maps Travel Time sensors."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from google.api_core.exceptions import GoogleAPIError
 from google.maps.routing_v2 import Units
 import pytest
@@ -17,9 +18,8 @@ from homeassistant.components.google_travel_time.const import (
     UNITS_METRIC,
 )
 from homeassistant.components.google_travel_time.sensor import SCAN_INTERVAL
-from homeassistant.const import CONF_MODE
+from homeassistant.const import CONF_MODE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -32,17 +32,17 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="mock_update_empty")
-def mock_update_empty_fixture(valid_return: AsyncMock) -> AsyncMock:
+def mock_update_empty_fixture(routes_mock: AsyncMock) -> AsyncMock:
     """Mock an update to the sensor with an empty response."""
-    valid_return.return_value = None
-    return valid_return
+    routes_mock.compute_routes.return_value = None
+    return routes_mock
 
 
 @pytest.mark.parametrize(
     ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
-@pytest.mark.usefixtures("valid_return", "mock_config")
+@pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor(hass: HomeAssistant) -> None:
     """Test that sensor works."""
     assert hass.states.get("sensor.google_travel_time").state == "27"
@@ -73,14 +73,14 @@ async def test_sensor(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("mock_update_empty", "mock_config")
 @pytest.mark.parametrize(
     ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
-@pytest.mark.usefixtures("mock_update_empty", "mock_config")
 async def test_sensor_empty_response(hass: HomeAssistant) -> None:
     """Test that sensor works for an empty response."""
-    assert hass.states.get("sensor.google_travel_time").state == "unknown"
+    assert hass.states.get("sensor.google_travel_time").state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -95,7 +95,7 @@ async def test_sensor_empty_response(hass: HomeAssistant) -> None:
         ),
     ],
 )
-@pytest.mark.usefixtures("valid_return", "mock_config")
+@pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor_departure_time(hass: HomeAssistant) -> None:
     """Test that sensor works for departure time."""
     assert hass.states.get("sensor.google_travel_time").state == "27"
@@ -116,7 +116,7 @@ async def test_sensor_departure_time(hass: HomeAssistant) -> None:
         ),
     ],
 )
-@pytest.mark.usefixtures("valid_return", "mock_config")
+@pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor_arrival_time(hass: HomeAssistant) -> None:
     """Test that sensor works for arrival time."""
     assert hass.states.get("sensor.google_travel_time").state == "27"
@@ -131,6 +131,7 @@ async def test_sensor_arrival_time(hass: HomeAssistant) -> None:
 )
 async def test_sensor_unit_system(
     hass: HomeAssistant,
+    routes_mock: AsyncMock,
     unit_system: UnitSystem,
     expected_unit_option: str,
 ) -> None:
@@ -144,16 +145,11 @@ async def test_sensor_unit_system(
         entry_id="test",
     )
     config_entry.add_to_hass(hass)
-    with (
-        patch(
-            "homeassistant.components.google_travel_time.sensor.RoutesAsyncClient.compute_routes",
-        ) as compute_routes_mock,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    compute_routes_mock.assert_called_once()
-    assert compute_routes_mock.call_args.args[0].units == expected_unit_option
+    routes_mock.compute_routes.assert_called_once()
+    assert routes_mock.compute_routes.call_args.args[0].units == expected_unit_option
 
 
 @pytest.mark.parametrize(
@@ -163,11 +159,14 @@ async def test_sensor_unit_system(
 async def test_sensor_exception(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    valid_return: AsyncMock,
+    routes_mock: AsyncMock,
     mock_config: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that exception gets caught."""
-    valid_return.side_effect = GoogleAPIError("Errormessage")
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    routes_mock.compute_routes.side_effect = GoogleAPIError("Errormessage")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    assert hass.states.get("sensor.google_travel_time").state == STATE_UNKNOWN
     assert "Error getting travel time" in caplog.text
