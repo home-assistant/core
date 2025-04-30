@@ -1,10 +1,9 @@
 """Test Adax climate entity."""
 
 from homeassistant.components.adax.const import SCAN_INTERVAL
-from homeassistant.components.climate.const import ATTR_CURRENT_TEMPERATURE, HVACMode
+from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_integration
 from .conftest import CLOUD_DEVICE_DATA, LOCAL_DEVICE_DATA
@@ -61,7 +60,9 @@ async def test_climate_local(
     assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
     entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
 
-    await async_update_entity(hass, entity_id)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
