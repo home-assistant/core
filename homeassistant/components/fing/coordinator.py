@@ -52,6 +52,11 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
         agent_info_response = None
         try:
             device_response = await self._fing.get_devices()
+
+            with suppress(Exception):
+                # The suppression is needed because the get_agent_info method isn't available for desktop agents
+                agent_info_response = await self._fing.get_agent_info()
+
         except httpx.NetworkError as err:
             raise UpdateFailed("Failed to connect") from err
         except httpx.TimeoutException as err:
@@ -71,10 +76,6 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             httpx.StreamError,
         ) as err:
             raise UpdateFailed("Unexpected error from HTTP request") from err
-
-        with suppress(httpx.HTTPError, httpx.StreamError):
-            # The suppression is needed because the get_agent_info method isn't available for desktop agents
-            agent_info_response = await self._fing.get_agent_info()
 
         if device_response is not None:
             return FingDataObject(

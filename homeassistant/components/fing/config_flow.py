@@ -68,6 +68,11 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 devices_response = await fing_api.get_devices()
+
+                with suppress(Exception):
+                    # The suppression is needed because the get_agent_info method isn't available for desktop agents
+                    agent_info_response = await fing_api.get_agent_info()
+
             except httpx.NetworkError as _:
                 errors["base"] = "cannot_connect"
             except httpx.TimeoutException as _:
@@ -90,10 +95,6 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 Exception,
             ) as _:
                 errors["base"] = "unexpected_error"
-
-            with suppress(httpx.HTTPError, httpx.StreamError):
-                # The suppression is needed because the get_agent_info method isn't available for desktop agents
-                agent_info_response = await fing_api.get_agent_info()
 
             if devices_response is not None:
                 if (

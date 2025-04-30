@@ -4,9 +4,14 @@
       "user": {
         "title": "Fing Agent Setup",
         "data": {
-          "agent_ip": "[%key:common::config_flow::data::ip%]",
-          "agent_port": "[%key:common::config_flow::data::port%]",
-          "agent_key": "[%key:common::config_flow::data::api_key%]"
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "ip_address": "Insert the IP address of the Fing agent.",
+          "port": "Insert the port used by the Fing API.",
+          "api_key": "Insert your Fing API key."
         }
       }
     },
