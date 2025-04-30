@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_device_tracker_empty[zoe_50][device_tracker.reg_number_location-entry]
+# name: test_device_tracker_empty[zoe_50][device_tracker.reg_zoe_50_location-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'device_tracker',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_zoe_50_location',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29,25 +29,25 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777999_location',
+    'unique_id': 'vf1zoe50vin_location',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_tracker_empty[zoe_50][device_tracker.reg_number_location-state]
+# name: test_device_tracker_empty[zoe_50][device_tracker.reg_zoe_50_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Location',
+      'friendly_name': 'REG-ZOE-50 Location',
       'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_zoe_50_location',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_device_tracker_errors[zoe_50][device_tracker.reg_number_location-entry]
+# name: test_device_tracker_errors[zoe_50][device_tracker.reg_zoe_50_location-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'device_tracker',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_zoe_50_location',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -77,24 +77,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777999_location',
+    'unique_id': 'vf1zoe50vin_location',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_tracker_errors[zoe_50][device_tracker.reg_number_location-state]
+# name: test_device_tracker_errors[zoe_50][device_tracker.reg_zoe_50_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Location',
+      'friendly_name': 'REG-ZOE-50 Location',
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_zoe_50_location',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_device_trackers[captur_fuel][device_tracker.reg_number_location-entry]
+# name: test_device_trackers[captur_fuel][device_tracker.reg_captur_fuel_location-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -107,7 +107,7 @@
     'disabled_by': None,
     'domain': 'device_tracker',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_captur_fuel_location',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -124,28 +124,28 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777123_location',
+    'unique_id': 'vf1capturfuelvin_location',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_trackers[captur_fuel][device_tracker.reg_number_location-state]
+# name: test_device_trackers[captur_fuel][device_tracker.reg_captur_fuel_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Location',
+      'friendly_name': 'REG-CAPTUR-FUEL Location',
       'gps_accuracy': 0,
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_captur_fuel_location',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'not_home',
   })
 # ---
-# name: test_device_trackers[captur_phev][device_tracker.reg_number_location-entry]
+# name: test_device_trackers[captur_phev][device_tracker.reg_captur_phev_location-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -158,7 +158,7 @@
     'disabled_by': None,
     'domain': 'device_tracker',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_captur_phev_location',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -175,28 +175,28 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777123_location',
+    'unique_id': 'vf1capturphevvin_location',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_trackers[captur_phev][device_tracker.reg_number_location-state]
+# name: test_device_trackers[captur_phev][device_tracker.reg_captur_phev_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Location',
+      'friendly_name': 'REG-CAPTUR_PHEV Location',
       'gps_accuracy': 0,
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_captur_phev_location',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'not_home',
   })
 # ---
-# name: test_device_trackers[twingo_3_electric][device_tracker.reg_number_location-entry]
+# name: test_device_trackers[twingo_3_electric][device_tracker.reg_twingo_iii_location-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -209,7 +209,7 @@
     'disabled_by': None,
     'domain': 'device_tracker',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_twingo_iii_location',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -226,28 +226,28 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777999_location',
+    'unique_id': 'vf1twingoiiivin_location',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_trackers[twingo_3_electric][device_tracker.reg_number_location-state]
+# name: test_device_trackers[twingo_3_electric][device_tracker.reg_twingo_iii_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Location',
+      'friendly_name': 'REG-TWINGO-III Location',
       'gps_accuracy': 0,
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_twingo_iii_location',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'not_home',
   })
 # ---
-# name: test_device_trackers[zoe_50][device_tracker.reg_number_location-entry]
+# name: test_device_trackers[zoe_50][device_tracker.reg_zoe_50_location-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -260,7 +260,7 @@
     'disabled_by': None,
     'domain': 'device_tracker',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_zoe_50_location',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -277,21 +277,21 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777999_location',
+    'unique_id': 'vf1zoe50vin_location',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_trackers[zoe_50][device_tracker.reg_number_location-state]
+# name: test_device_trackers[zoe_50][device_tracker.reg_zoe_50_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Location',
+      'friendly_name': 'REG-ZOE-50 Location',
       'gps_accuracy': 0,
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.reg_number_location',
+    'entity_id': 'device_tracker.reg_zoe_50_location',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

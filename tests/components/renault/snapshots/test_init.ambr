@@ -15,7 +15,7 @@
       'identifiers': set({
         tuple(
           'renault',
-          'VF1AAAAA555777123',
+          'VF1CAPTURFUELVIN',
         ),
       }),
       'is_new': False,
@@ -24,7 +24,7 @@
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'model_id': 'XJB1SU',
-      'name': 'REG-NUMBER',
+      'name': 'REG-CAPTUR-FUEL',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -50,7 +50,7 @@
       'identifiers': set({
         tuple(
           'renault',
-          'VF1AAAAA555777123',
+          'VF1CAPTURPHEVVIN',
         ),
       }),
       'is_new': False,
@@ -59,7 +59,7 @@
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'model_id': 'XJB1SU',
-      'name': 'REG-NUMBER',
+      'name': 'REG-CAPTUR_PHEV',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -85,7 +85,7 @@
       'identifiers': set({
         tuple(
           'renault',
-          'VF1AAAAA555777999',
+          'VF1TWINGOIIIVIN',
         ),
       }),
       'is_new': False,
@@ -94,7 +94,7 @@
       'manufacturer': 'Renault',
       'model': 'Twingo iii',
       'model_id': 'X071VE',
-      'name': 'REG-NUMBER',
+      'name': 'REG-TWINGO-III',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -120,7 +120,7 @@
       'identifiers': set({
         tuple(
           'renault',
-          'VF1AAAAA555777999',
+          'VF1ZOE40VIN',
         ),
       }),
       'is_new': False,
@@ -129,7 +129,7 @@
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'model_id': 'X101VE',
-      'name': 'REG-NUMBER',
+      'name': 'REG-ZOE-40',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -155,7 +155,7 @@
       'identifiers': set({
         tuple(
           'renault',
-          'VF1AAAAA555777999',
+          'VF1ZOE50VIN',
         ),
       }),
       'is_new': False,
@@ -164,7 +164,7 @@
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'model_id': 'X102VE',
-      'name': 'REG-NUMBER',
+      'name': 'REG-ZOE-50',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,

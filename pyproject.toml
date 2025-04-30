@@ -86,7 +86,7 @@ dependencies = [
   "Pillow==11.2.1",
   "propcache==0.3.1",
   "pyOpenSSL==25.0.0",
-  "orjson==3.10.16",
+  "orjson==3.10.18",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   # pymicro_vad is indirectly imported from onboarding via the import chain

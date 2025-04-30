@@ -267,6 +267,9 @@ aioimaplib==2.0.1
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
 
+# homeassistant.components.rehlko
+aiokem==0.5.6
+
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
 
@@ -302,9 +305,6 @@ aiontfy==0.5.1
 
 # homeassistant.components.nut
 aionut==4.3.4
-
-# homeassistant.components.oncue
-aiooncue==0.3.9
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8
@@ -653,7 +653,7 @@ dbus-fast==2.43.0
 debugpy==1.8.13
 
 # homeassistant.components.ecovacs
-deebot-client==12.5.0
+deebot-client==13.0.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns

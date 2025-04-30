@@ -180,6 +180,16 @@ def mock_usb_serial_by_id_fixture() -> Generator[MagicMock]:
         yield mock_usb_serial_by_id
 
 
+@pytest.fixture
+def mock_sdk_version(client: MagicMock) -> Generator[None]:
+    """Mock the SDK version of the controller."""
+    original_sdk_version = client.driver.controller.data.get("sdkVersion")
+    client.driver.controller.data["sdkVersion"] = "6.60"
+    yield
+    if original_sdk_version is not None:
+        client.driver.controller.data["sdkVersion"] = original_sdk_version
+
+
 async def test_manual(hass: HomeAssistant) -> None:
     """Test we create an entry with manual step."""
 
@@ -3478,6 +3488,30 @@ async def test_reconfigure_migrate_no_addon(hass: HomeAssistant, integration) ->
     assert result["reason"] == "addon_required"
 
 
+@pytest.mark.usefixtures("mock_sdk_version")
+async def test_reconfigure_migrate_low_sdk_version(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+) -> None:
+    """Test migration flow fails with too low controller SDK version."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "migration_low_sdk_version"
+
+
 @pytest.mark.parametrize(
     "discovery_info",
     [
@@ -3880,8 +3914,27 @@ async def test_reconfigure_migrate_restore_failure(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "restore_failed"
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "restore_failed"
+    assert result["description_placeholders"]["file_path"]
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+
+    await hass.async_block_till_done()
+
+    assert client.driver.controller.async_restore_nvm.call_count == 2
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "restore_failed"
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
 
 
 async def test_get_driver_failure(hass: HomeAssistant, integration, client) -> None:
@@ -3906,7 +3959,7 @@ async def test_get_driver_failure(hass: HomeAssistant, integration, client) -> N
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "backup_failed"
+    assert result["reason"] == "config_entry_not_loaded"
 
 
 async def test_hard_reset_failure(hass: HomeAssistant, integration, client) -> None:

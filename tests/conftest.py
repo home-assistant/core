@@ -286,6 +286,7 @@ def garbage_collection() -> None:
     to run per test case if needed.
     """
     gc.collect()
+    gc.freeze()
 
 
 @pytest.fixture(autouse=True)

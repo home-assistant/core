@@ -47,7 +47,7 @@ def override_vehicle_type(request: pytest.FixtureRequest) -> str:
 def get_device_id(hass: HomeAssistant) -> str:
     """Get device_id."""
     device_registry = dr.async_get(hass)
-    identifiers = {(DOMAIN, "VF1AAAAA555777999")}
+    identifiers = {(DOMAIN, "VF1ZOE40VIN")}
     device = device_registry.async_get_device(identifiers=identifiers)
     return device.id
 
