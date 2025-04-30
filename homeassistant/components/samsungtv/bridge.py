@@ -566,7 +566,7 @@ class SamsungTVWSBridge(
         """Try to gather infos of this TV."""
         if self._rest_api is None:
             assert self.port
-            rest_api = SamsungTVAsyncRest(
+            self._rest_api = SamsungTVAsyncRest(
                 host=self.host,
                 session=async_get_clientsession(self.hass),
                 port=self.port,
@@ -574,7 +574,7 @@ class SamsungTVWSBridge(
             )
 
         with contextlib.suppress(*REST_EXCEPTIONS):
-            device_info: dict[str, Any] = await rest_api.rest_device_info()
+            device_info: dict[str, Any] = await self._rest_api.rest_device_info()
             LOGGER.debug("Device info on %s is: %s", self.host, device_info)
             self._device_info = device_info
             return device_info
