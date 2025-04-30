@@ -8494,7 +8494,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_water-entry]
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_water_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8509,7 +8509,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.machine_a_laver_water',
+    'entity_id': 'sensor.machine_a_laver_water_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8521,7 +8521,7 @@
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
-    'original_name': 'Water',
+    'original_name': 'Water consumption',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -8530,16 +8530,16 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_water-state]
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_water_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Machine à Laver Water',
+      'friendly_name': 'Machine à Laver Water consumption',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.machine_a_laver_water',
+    'entity_id': 'sensor.machine_a_laver_water_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
