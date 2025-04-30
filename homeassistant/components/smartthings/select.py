@@ -28,6 +28,15 @@ class SmartThingsSelectDescription(SelectEntityDescription):
 
 
 CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
+    Capability.DISHWASHER_OPERATING_STATE: SmartThingsSelectDescription(
+        key=Capability.DISHWASHER_OPERATING_STATE,
+        name=None,
+        translation_key="operating_state",
+        requires_remote_control_status=True,
+        options_attribute=Attribute.SUPPORTED_MACHINE_STATES,
+        status_attribute=Attribute.MACHINE_STATE,
+        command=Command.SET_MACHINE_STATE,
+    ),
     Capability.DRYER_OPERATING_STATE: SmartThingsSelectDescription(
         key=Capability.DRYER_OPERATING_STATE,
         name=None,
@@ -83,9 +92,7 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             capabilities.add(Capability.REMOTE_CONTROL_STATUS)
         super().__init__(client, device, capabilities)
         self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{device.device.device_id}_{MAIN}_{entity_description.key}"
-        )
+        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{entity_description.key}_{entity_description.status_attribute}_{entity_description.status_attribute}"
 
     @property
     def options(self) -> list[str]:

@@ -1072,7 +1072,7 @@ class TemplateStateBase(State):
         raise KeyError
 
     @under_cached_property
-    def entity_id(self) -> str:  # type: ignore[override]
+    def entity_id(self) -> str:
         """Wrap State.entity_id.
 
         Intentionally does not collect state
@@ -1128,7 +1128,7 @@ class TemplateStateBase(State):
         return self._state.object_id
 
     @property
-    def name(self) -> str:  # type: ignore[override]
+    def name(self) -> str:
         """Wrap State.name."""
         self._collect_state()
         return self._state.name
@@ -1413,6 +1413,28 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     )
 
 
+def device_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the device name from an device id, or entity id."""
+    device_reg = device_registry.async_get(hass)
+    if device := device_reg.async_get(lookup_value):
+        return device.name_by_user or device.name
+
+    ent_reg = entity_registry.async_get(hass)
+    # Import here, not at top-level to avoid circular import
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+
+    try:
+        cv.entity_id(lookup_value)
+    except vol.Invalid:
+        pass
+    else:
+        if entity := ent_reg.async_get(lookup_value):
+            if entity.device_id and (device := device_reg.async_get(entity.device_id)):
+                return device.name_by_user or device.name
+
+    return None
+
+
 def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
     """Get the device specific attribute."""
     device_reg = device_registry.async_get(hass)
@@ -1478,10 +1500,14 @@ def floors(hass: HomeAssistant) -> Iterable[str | None]:
 
 
 def floor_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
-    """Get the floor ID from a floor name."""
+    """Get the floor ID from a floor or area name, alias, device id, or entity id."""
     floor_registry = fr.async_get(hass)
-    if floor := floor_registry.async_get_floor_by_name(str(lookup_value)):
+    lookup_str = str(lookup_value)
+    if floor := floor_registry.async_get_floor_by_name(lookup_str):
         return floor.floor_id
+    floors_list = floor_registry.async_get_floors_by_alias(lookup_str)
+    if floors_list:
+        return floors_list[0].floor_id
 
     if aid := area_id(hass, lookup_value):
         area_reg = area_registry.async_get(hass)
@@ -1541,10 +1567,14 @@ def areas(hass: HomeAssistant) -> Iterable[str | None]:
 
 
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the area ID from an area name, device id, or entity id."""
+    """Get the area ID from an area name, alias, device id, or entity id."""
     area_reg = area_registry.async_get(hass)
-    if area := area_reg.async_get_area_by_name(str(lookup_value)):
+    lookup_str = str(lookup_value)
+    if area := area_reg.async_get_area_by_name(lookup_str):
         return area.id
+    areas_list = area_reg.async_get_areas_by_alias(lookup_str)
+    if areas_list:
+        return areas_list[0].id
 
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
@@ -2785,6 +2815,50 @@ def flatten(value: Iterable[Any], levels: int | None = None) -> list[Any]:
     return flattened
 
 
+def intersect(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
+    """Return the common elements between two lists."""
+    if not isinstance(value, Iterable) or isinstance(value, str):
+        raise TypeError(f"intersect expected a list, got {type(value).__name__}")
+    if not isinstance(other, Iterable) or isinstance(other, str):
+        raise TypeError(f"intersect expected a list, got {type(other).__name__}")
+
+    return list(set(value) & set(other))
+
+
+def difference(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
+    """Return elements in first list that are not in second list."""
+    if not isinstance(value, Iterable) or isinstance(value, str):
+        raise TypeError(f"difference expected a list, got {type(value).__name__}")
+    if not isinstance(other, Iterable) or isinstance(other, str):
+        raise TypeError(f"difference expected a list, got {type(other).__name__}")
+
+    return list(set(value) - set(other))
+
+
+def union(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
+    """Return all unique elements from both lists combined."""
+    if not isinstance(value, Iterable) or isinstance(value, str):
+        raise TypeError(f"union expected a list, got {type(value).__name__}")
+    if not isinstance(other, Iterable) or isinstance(other, str):
+        raise TypeError(f"union expected a list, got {type(other).__name__}")
+
+    return list(set(value) | set(other))
+
+
+def symmetric_difference(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
+    """Return elements that are in either list but not in both."""
+    if not isinstance(value, Iterable) or isinstance(value, str):
+        raise TypeError(
+            f"symmetric_difference expected a list, got {type(value).__name__}"
+        )
+    if not isinstance(other, Iterable) or isinstance(other, str):
+        raise TypeError(
+            f"symmetric_difference expected a list, got {type(other).__name__}"
+        )
+
+    return list(set(value) ^ set(other))
+
+
 def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
     """Combine multiple dictionaries into one."""
     if not args:
@@ -2996,11 +3070,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["bool"] = forgiving_boolean
         self.globals["combine"] = combine
         self.globals["cos"] = cosine
+        self.globals["difference"] = difference
         self.globals["e"] = math.e
         self.globals["flatten"] = flatten
         self.globals["float"] = forgiving_float
         self.globals["iif"] = iif
         self.globals["int"] = forgiving_int
+        self.globals["intersect"] = intersect
         self.globals["is_number"] = is_number
         self.globals["log"] = logarithm
         self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
@@ -3020,11 +3096,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["sqrt"] = square_root
         self.globals["statistical_mode"] = statistical_mode
         self.globals["strptime"] = strptime
+        self.globals["symmetric_difference"] = symmetric_difference
         self.globals["tan"] = tangent
         self.globals["tau"] = math.pi * 2
         self.globals["timedelta"] = timedelta
         self.globals["tuple"] = _to_tuple
         self.globals["typeof"] = typeof
+        self.globals["union"] = union
         self.globals["unpack"] = struct_unpack
         self.globals["urlencode"] = urlencode
         self.globals["version"] = version
@@ -3049,11 +3127,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["combine"] = combine
         self.filters["contains"] = contains
         self.filters["cos"] = cosine
+        self.filters["difference"] = difference
         self.filters["flatten"] = flatten
         self.filters["float"] = forgiving_float_filter
         self.filters["from_json"] = from_json
         self.filters["iif"] = iif
         self.filters["int"] = forgiving_int_filter
+        self.filters["intersect"] = intersect
         self.filters["is_defined"] = fail_when_undefined
         self.filters["is_number"] = is_number
         self.filters["log"] = logarithm
@@ -3078,12 +3158,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["slugify"] = slugify
         self.filters["sqrt"] = square_root
         self.filters["statistical_mode"] = statistical_mode
+        self.filters["symmetric_difference"] = symmetric_difference
         self.filters["tan"] = tangent
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
         self.filters["to_json"] = to_json
         self.filters["typeof"] = typeof
+        self.filters["union"] = union
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
@@ -3169,6 +3251,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["config_entry_id"] = self.globals["config_entry_id"]
 
         # Device extensions
+
+        self.globals["device_name"] = hassfunction(device_name)
+        self.filters["device_name"] = self.globals["device_name"]
 
         self.globals["device_attr"] = hassfunction(device_attr)
         self.filters["device_attr"] = self.globals["device_attr"]

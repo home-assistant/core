@@ -15,10 +15,10 @@
         "data_description": {
           "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'.",
           "port": "The HTTP(s) port to connect to the Reolink device API. For HTTP normally: '80', for HTTPS normally '443'.",
-          "use_https": "Use a HTTPS (SSL) connection to the Reolink device.",
+          "use_https": "Use an HTTPS (SSL) connection to the Reolink device.",
           "baichuan_port": "The 'Basic Service Port' to connect to the Reolink device over TCP. Normally '9000' unless manually changed in the Reolink desktop client.",
-          "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
-          "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
+          "username": "Username to log in to the Reolink device itself. Not the Reolink cloud account.",
+          "password": "Password to log in to the Reolink device itself. Not the Reolink cloud account."
         }
       },
       "privacy": {
@@ -33,7 +33,7 @@
       "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
       "password_incompatible": "Password contains incompatible special character or is too long, maximum 31 characters and only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "update_needed": "Failed to login because of outdated firmware, please update the firmware to version {needed_firmware} using the Reolink Download Center: {download_center_url}, currently version {current_firmware} is installed",
+      "update_needed": "Failed to log in because of outdated firmware, please update the firmware to version {needed_firmware} using the Reolink Download Center: {download_center_url}, currently version {current_firmware} is installed",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
     "abort": {
@@ -66,7 +66,7 @@
       "message": "Invalid input parameter: {err}"
     },
     "api_error": {
-      "message": "The device responded with a error: {err}"
+      "message": "The device responded with an error: {err}"
     },
     "invalid_content_type": {
       "message": "Received a different content type than expected: {err}"
@@ -103,6 +103,12 @@
     },
     "config_entry_not_ready": {
       "message": "Error while trying to set up {host}: {err}"
+    },
+    "update_already_running": {
+      "message": "Reolink firmware update already running, wait on completion before starting another"
+    },
+    "firmware_rate_limit": {
+      "message": "Reolink firmware update server reached hourly rate limit: updating can be tried again in 1 hour"
     }
   },
   "issues": {
@@ -124,7 +130,7 @@
     },
     "firmware_update": {
       "title": "Reolink firmware update required",
-      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The firmware can be updated by pressing \"install\" in the more info dialog of the update entity of \"{name}\" from within Home Assistant. Alternatively, the latest firmware can be downloaded from the [Reolink download center]({download_link})."
+      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running an old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The firmware can be updated by pressing \"install\" in the more info dialog of the update entity of \"{name}\" from within Home Assistant. Alternatively, the latest firmware can be downloaded from the [Reolink download center]({download_link})."
     },
     "hub_switch_deprecated": {
       "title": "Reolink Home Hub switches deprecated",
@@ -562,6 +568,21 @@
       "ai_animal_sensitivity": {
         "name": "AI animal sensitivity"
       },
+      "crossline_sensitivity": {
+        "name": "AI crossline {zone_name} sensitivity"
+      },
+      "intrusion_sensitivity": {
+        "name": "AI intrusion {zone_name} sensitivity"
+      },
+      "linger_sensitivity": {
+        "name": "AI linger {zone_name} sensitivity"
+      },
+      "forgotten_item_sensitivity": {
+        "name": "AI item forgotten {zone_name} sensitivity"
+      },
+      "taken_item_sensitivity": {
+        "name": "AI item taken {zone_name} sensitivity"
+      },
       "ai_face_delay": {
         "name": "AI face delay"
       },
@@ -579,6 +600,18 @@
       },
       "ai_animal_delay": {
         "name": "AI animal delay"
+      },
+      "intrusion_delay": {
+        "name": "AI intrusion {zone_name} delay"
+      },
+      "linger_delay": {
+        "name": "AI linger {zone_name} delay"
+      },
+      "forgotten_item_delay": {
+        "name": "AI item forgotten {zone_name} delay"
+      },
+      "taken_item_delay": {
+        "name": "AI item taken {zone_name} delay"
       },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"
@@ -619,7 +652,7 @@
         "name": "Floodlight mode",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
+          "auto": "[%key:common::state::auto%]",
           "onatnight": "On at night",
           "schedule": "Schedule",
           "adaptive": "Adaptive",
@@ -629,7 +662,7 @@
       "day_night_mode": {
         "name": "Day night mode",
         "state": {
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "color": "Color",
           "blackwhite": "Black & white"
         }
@@ -658,7 +691,7 @@
         "name": "Doorbell LED",
         "state": {
           "stayoff": "Stay off",
-          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
+          "auto": "[%key:common::state::auto%]",
           "alwaysonatnight": "Auto & always on at night",
           "always": "Always on",
           "alwayson": "Always on"
@@ -669,7 +702,7 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
-          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
+          "auto": "[%key:common::state::auto%]"
         }
       },
       "binning_mode": {
@@ -677,7 +710,7 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
-          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
+          "auto": "[%key:common::state::auto%]"
         }
       },
       "hub_alarm_ringtone": {
@@ -809,9 +842,12 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "disarm": "Disarmed",
-          "home": "Home",
-          "away": "Away"
+          "home": "[%key:common::state::home%]",
+          "away": "[%key:common::state::not_home%]"
         }
+      },
+      "packing_time": {
+        "name": "Recording packing time"
       }
     },
     "sensor": {
@@ -860,7 +896,7 @@
     },
     "switch": {
       "ir_lights": {
-        "name": "Infra red lights in night mode"
+        "name": "Infrared lights in night mode"
       },
       "record_audio": {
         "name": "Record audio"

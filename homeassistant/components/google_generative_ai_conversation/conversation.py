@@ -55,6 +55,10 @@ from .const import (
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
 
+ERROR_GETTING_RESPONSE = (
+    "Sorry, I had a problem getting a response from Google Generative AI."
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -171,17 +175,25 @@ def _escape_decode(value: Any) -> Any:
     return value
 
 
+def _create_google_tool_response_parts(
+    parts: list[conversation.ToolResultContent],
+) -> list[Part]:
+    """Create Google tool response parts."""
+    return [
+        Part.from_function_response(
+            name=tool_result.tool_name, response=tool_result.tool_result
+        )
+        for tool_result in parts
+    ]
+
+
 def _create_google_tool_response_content(
     content: list[conversation.ToolResultContent],
 ) -> Content:
     """Create a Google tool response content."""
     return Content(
-        parts=[
-            Part.from_function_response(
-                name=tool_result.tool_name, response=tool_result.tool_result
-            )
-            for tool_result in content
-        ]
+        role="user",
+        parts=_create_google_tool_response_parts(content),
     )
 
 
@@ -348,6 +360,15 @@ class GoogleGenerativeAIConversationEntity(
 
             messages.append(_convert_content(chat_content))
 
+        # The SDK requires the first message to be a user message
+        # This is not the case if user used `start_conversation`
+        # Workaround from https://github.com/googleapis/python-genai/issues/529#issuecomment-2740964537
+        if messages and messages[0].role != "user":
+            messages.insert(
+                0,
+                Content(role="user", parts=[Part.from_text(text=" ")]),
+            )
+
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
         generateContentConfig = GenerateContentConfig(
@@ -402,7 +423,7 @@ class GoogleGenerativeAIConversationEntity(
         chat = self._genai_client.aio.chats.create(
             model=model_name, history=messages, config=generateContentConfig
         )
-        chat_request: str | Content = user_input.text
+        chat_request: str | list[Part] = user_input.text
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
@@ -412,6 +433,12 @@ class GoogleGenerativeAIConversationEntity(
                     raise HomeAssistantError(
                         f"The message got blocked due to content violations, reason: {chat_response.prompt_feedback.block_reason_message}"
                     )
+                if not chat_response.candidates:
+                    LOGGER.error(
+                        "No candidates found in the response: %s",
+                        chat_response,
+                    )
+                    raise HomeAssistantError(ERROR_GETTING_RESPONSE)
 
             except (
                 APIError,
@@ -435,9 +462,7 @@ class GoogleGenerativeAIConversationEntity(
 
             response_parts = chat_response.candidates[0].content.parts
             if not response_parts:
-                raise HomeAssistantError(
-                    "Sorry, I had a problem getting a response from Google Generative AI."
-                )
+                raise HomeAssistantError(ERROR_GETTING_RESPONSE)
             content = " ".join(
                 [part.text.strip() for part in response_parts if part.text]
             )
@@ -456,7 +481,7 @@ class GoogleGenerativeAIConversationEntity(
                     )
                 )
 
-            chat_request = _create_google_tool_response_content(
+            chat_request = _create_google_tool_response_parts(
                 [
                     tool_response
                     async for tool_response in chat_log.async_add_assistant_content(

@@ -9,6 +9,7 @@ from datetime import timedelta
 from decimal import Decimal
 from enum import Enum
 from functools import cache, partial
+from operator import attrgetter
 from typing import Any, cast
 
 import slugify as unicode_slug
@@ -71,6 +72,19 @@ NO_ENTITIES_PROMPT = (
     "to their voice assistant in Home Assistant."
 )
 
+DYNAMIC_CONTEXT_PROMPT = """You ARE equipped to answer questions about the current state of
+the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
+functionality if the question requires live data.
+If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer
+from the static context below.
+If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",
+"Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):
+    1.  Recognize this requires live data.
+    2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).
+    3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
+For general knowledge questions not about the home: Answer truthfully from internal knowledge.
+"""
+
 
 @callback
 def async_render_no_api_prompt(hass: HomeAssistant) -> str:
@@ -109,15 +123,29 @@ def async_register_api(hass: HomeAssistant, api: API) -> Callable[[], None]:
 
 
 async def async_get_api(
-    hass: HomeAssistant, api_id: str, llm_context: LLMContext
+    hass: HomeAssistant, api_id: str | list[str], llm_context: LLMContext
 ) -> APIInstance:
-    """Get an API."""
+    """Get an API.
+
+    This returns a single APIInstance for one or more API ids, merging into
+    a single instance of necessary.
+    """
     apis = _async_get_apis(hass)
 
-    if api_id not in apis:
-        raise HomeAssistantError(f"API {api_id} not found")
+    if isinstance(api_id, str):
+        api_id = [api_id]
 
-    return await apis[api_id].async_get_api_instance(llm_context)
+    for key in api_id:
+        if key not in apis:
+            raise HomeAssistantError(f"API {key} not found")
+
+    api: API
+    if len(api_id) == 1:
+        api = apis[api_id[0]]
+    else:
+        api = MergedAPI([apis[key] for key in api_id])
+
+    return await api.async_get_api_instance(llm_context)
 
 
 @callback
@@ -285,6 +313,102 @@ class IntentTool(Tool):
         return response
 
 
+class NamespacedTool(Tool):
+    """A tool that wraps another tool, prepending a namespace.
+
+    This is used to support tools from multiple API. This tool dispatches
+    the original tool with the original non-namespaced name.
+    """
+
+    def __init__(self, namespace: str, tool: Tool) -> None:
+        """Init the class."""
+        self.namespace = namespace
+        self.name = f"{namespace}.{tool.name}"
+        self.description = tool.description
+        self.parameters = tool.parameters
+        self.tool = tool
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Handle the intent."""
+        return await self.tool.async_call(
+            hass,
+            ToolInput(
+                tool_name=self.tool.name,
+                tool_args=tool_input.tool_args,
+                id=tool_input.id,
+            ),
+            llm_context,
+        )
+
+
+class MergedAPI(API):
+    """An API that represents a merged view of multiple APIs."""
+
+    def __init__(self, llm_apis: list[API]) -> None:
+        """Init the class."""
+        if not llm_apis:
+            raise ValueError("No APIs provided")
+        hass = llm_apis[0].hass
+        api_ids = [unicode_slug.slugify(api.id) for api in llm_apis]
+        if len(set(api_ids)) != len(api_ids):
+            raise ValueError("API IDs must be unique")
+        super().__init__(
+            hass=hass,
+            id="|".join(unicode_slug.slugify(api.id) for api in llm_apis),
+            name="Merged LLM API",
+        )
+        self.llm_apis = llm_apis
+
+    async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
+        """Return the instance of the API."""
+        # These usually don't do I/O and execute right away
+        llm_apis = [
+            await llm_api.async_get_api_instance(llm_context)
+            for llm_api in self.llm_apis
+        ]
+        prompt_parts = []
+        tools: list[Tool] = []
+        for api_instance in llm_apis:
+            namespace = unicode_slug.slugify(api_instance.api.name)
+            prompt_parts.append(
+                f'Follow these instructions for tools from "{namespace}":\n'
+            )
+            prompt_parts.append(api_instance.api_prompt)
+            prompt_parts.append("\n\n")
+            tools.extend(
+                [NamespacedTool(namespace, tool) for tool in api_instance.tools]
+            )
+
+        return APIInstance(
+            api=self,
+            api_prompt="".join(prompt_parts),
+            llm_context=llm_context,
+            tools=tools,
+            custom_serializer=self._custom_serializer(llm_apis),
+        )
+
+    def _custom_serializer(
+        self, llm_apis: list[APIInstance]
+    ) -> Callable[[Any], Any] | None:
+        serializers = [
+            api_instance.custom_serializer
+            for api_instance in llm_apis
+            if api_instance.custom_serializer is not None
+        ]
+        if not serializers:
+            return None
+
+        def merged(x: Any) -> Any:
+            for serializer in serializers:
+                if (result := serializer(x)) is not None:
+                    return result
+            return x
+
+        return merged
+
+
 class AssistAPI(API):
     """API exposing Assist API to LLMs."""
 
@@ -384,6 +508,8 @@ class AssistAPI(API):
         ):
             prompt.append("This device is not able to start timers.")
 
+        prompt.append(DYNAMIC_CONTEXT_PROMPT)
+
         return prompt
 
     @callback
@@ -395,7 +521,7 @@ class AssistAPI(API):
 
         if exposed_entities and exposed_entities["entities"]:
             prompt.append(
-                "An overview of the areas and the devices in this smart home:"
+                "Static Context: An overview of the areas and the devices in this smart home:"
             )
             prompt.append(yaml_util.dump(list(exposed_entities["entities"].values())))
 
@@ -457,7 +583,7 @@ class AssistAPI(API):
             )
 
         if exposed_domains:
-            tools.append(GetHomeStateTool())
+            tools.append(GetLiveContextTool())
 
         return tools
 
@@ -496,7 +622,7 @@ def _get_exposed_entities(
         CALENDAR_DOMAIN: {},
     }
 
-    for state in hass.states.async_all():
+    for state in sorted(hass.states.async_all(), key=attrgetter("name")):
         if not async_should_expose(hass, assistant, state.entity_id):
             continue
 
@@ -898,7 +1024,7 @@ class CalendarGetEventsTool(Tool):
         return {"success": True, "result": events}
 
 
-class GetHomeStateTool(Tool):
+class GetLiveContextTool(Tool):
     """Tool for getting the current state of exposed entities.
 
     This returns state for all entities that have been exposed to
@@ -906,8 +1032,13 @@ class GetHomeStateTool(Tool):
     returns state for entities based on intent parameters.
     """
 
-    name = "get_home_state"
-    description = "Get the current state of all devices in the home. "
+    name = "GetLiveContext"
+    description = (
+        "Use this tool when the user asks a question about the CURRENT state, "
+        "value, or mode of a specific device, sensor, entity, or area in the "
+        "smart home, and the answer can be improved with real-time data not "
+        "available in the static device overview list. "
+    )
 
     async def async_call(
         self,
@@ -925,7 +1056,7 @@ class GetHomeStateTool(Tool):
         if not exposed_entities["entities"]:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
         prompt = [
-            "An overview of the areas and the devices in this smart home:",
+            "Live Context: An overview of the areas and the devices in this smart home:",
             yaml_util.dump(list(exposed_entities["entities"].values())),
         ]
         return {

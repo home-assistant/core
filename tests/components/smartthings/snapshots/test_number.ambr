@@ -7,7 +7,7 @@
     'capabilities': dict({
       'max': 5,
       'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
@@ -16,7 +16,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'number',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'number.washer_rinse_cycles',
     'has_entity_name': True,
     'hidden_by': None,
@@ -34,7 +34,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'washer_rinse_cycles',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_custom.washerRinseCycles',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_custom.washerRinseCycles_washerRinseCycles_washerRinseCycles',
     'unit_of_measurement': 'cycles',
   })
 # ---
@@ -44,7 +44,7 @@
       'friendly_name': 'Washer Rinse cycles',
       'max': 5,
       'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
       'unit_of_measurement': 'cycles',
     }),
@@ -64,7 +64,7 @@
     'capabilities': dict({
       'max': 5,
       'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
@@ -73,7 +73,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'number',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'number.washing_machine_rinse_cycles',
     'has_entity_name': True,
     'hidden_by': None,
@@ -91,7 +91,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'washer_rinse_cycles',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_custom.washerRinseCycles',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_custom.washerRinseCycles_washerRinseCycles_washerRinseCycles',
     'unit_of_measurement': 'cycles',
   })
 # ---
@@ -101,7 +101,7 @@
       'friendly_name': 'Washing Machine Rinse cycles',
       'max': 5,
       'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
       'unit_of_measurement': 'cycles',
     }),

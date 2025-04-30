@@ -1,5 +1,6 @@
 """Config flow for Remote Calendar integration."""
 
+from http import HTTPStatus
 import logging
 from typing import Any
 
@@ -42,10 +43,21 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match(
             {CONF_CALENDAR_NAME: user_input[CONF_CALENDAR_NAME]}
         )
+        if user_input[CONF_URL].startswith("webcal://"):
+            user_input[CONF_URL] = user_input[CONF_URL].replace(
+                "webcal://", "https://", 1
+            )
         self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
         client = get_async_client(self.hass)
         try:
             res = await client.get(user_input[CONF_URL], follow_redirects=True)
+            if res.status_code == HTTPStatus.FORBIDDEN:
+                errors["base"] = "forbidden"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=STEP_USER_DATA_SCHEMA,
+                    errors=errors,
+                )
             res.raise_for_status()
         except (HTTPError, InvalidURL) as err:
             errors["base"] = "cannot_connect"
@@ -57,7 +69,10 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except CalendarParseError as err:
                 errors["base"] = "invalid_ics_file"
-                _LOGGER.debug("Invalid .ics file: %s", err)
+                _LOGGER.error("Error reading the calendar information: %s", err.message)
+                _LOGGER.debug(
+                    "Additional calendar error detail: %s", str(err.detailed_error)
+                )
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_CALENDAR_NAME], data=user_input

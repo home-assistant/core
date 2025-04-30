@@ -7,13 +7,20 @@ from typing import Any
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import INVALID_SWITCH_CATEGORIES, MAIN
 from .entity import SmartThingsEntity
+from .util import deprecate_entity
 
 CAPABILITIES = (
     Capability.SWITCH_LEVEL,
@@ -29,12 +36,18 @@ AC_CAPABILITIES = (
     Capability.THERMOSTAT_COOLING_SETPOINT,
 )
 
+MEDIA_PLAYER_CAPABILITIES = (
+    Capability.AUDIO_MUTE,
+    Capability.AUDIO_VOLUME,
+)
+
 
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSwitchEntityDescription(SwitchEntityDescription):
     """Describe a SmartThings switch entity."""
 
     status_attribute: Attribute
+    component_translation_key: dict[str, str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -57,6 +70,7 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         translation_key="wrinkle_prevent",
         status_attribute=Attribute.DRYER_WRINKLE_PREVENT,
         command=Command.SET_DRYER_WRINKLE_PREVENT,
+        entity_category=EntityCategory.CONFIG,
     )
 }
 CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
@@ -64,7 +78,15 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         key=Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK,
         translation_key="bubble_soak",
         status_attribute=Attribute.STATUS,
-    )
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SWITCH: SmartThingsSwitchEntityDescription(
+        key=Capability.SWITCH,
+        status_attribute=Attribute.SWITCH,
+        component_translation_key={
+            "icemaker": "ice_maker",
+        },
+    ),
 }
 
 
@@ -76,13 +98,6 @@ async def async_setup_entry(
     """Add switches for a config entry."""
     entry_data = entry.runtime_data
     entities: list[SmartThingsEntity] = [
-        SmartThingsSwitch(entry_data.client, device, SWITCH, Capability.SWITCH)
-        for device in entry_data.devices.values()
-        if Capability.SWITCH in device.status[MAIN]
-        and not any(capability in device.status[MAIN] for capability in CAPABILITIES)
-        and not all(capability in device.status[MAIN] for capability in AC_CAPABILITIES)
-    ]
-    entities.extend(
         SmartThingsCommandSwitch(
             entry_data.client,
             device,
@@ -92,18 +107,72 @@ async def async_setup_entry(
         for device in entry_data.devices.values()
         for capability, description in CAPABILITY_TO_COMMAND_SWITCHES.items()
         if capability in device.status[MAIN]
-    )
+    ]
     entities.extend(
         SmartThingsSwitch(
             entry_data.client,
             device,
             description,
             Capability(capability),
+            component,
         )
         for device in entry_data.devices.values()
         for capability, description in CAPABILITY_TO_SWITCHES.items()
-        if capability in device.status[MAIN]
+        for component in device.status
+        if capability in device.status[component]
+        and (
+            (description.component_translation_key is None and component == MAIN)
+            or (
+                description.component_translation_key is not None
+                and component in description.component_translation_key
+            )
+        )
     )
+    entity_registry = er.async_get(hass)
+    for device in entry_data.devices.values():
+        if (
+            Capability.SWITCH in device.status[MAIN]
+            and not any(
+                capability in device.status[MAIN] for capability in CAPABILITIES
+            )
+            and not all(
+                capability in device.status[MAIN] for capability in AC_CAPABILITIES
+            )
+        ):
+            media_player = all(
+                capability in device.status[MAIN]
+                for capability in MEDIA_PLAYER_CAPABILITIES
+            )
+            appliance = (
+                device.device.components[MAIN].manufacturer_category
+                in INVALID_SWITCH_CATEGORIES
+            )
+            if media_player or appliance:
+                issue = "media_player" if media_player else "appliance"
+                if deprecate_entity(
+                    hass,
+                    entity_registry,
+                    SWITCH_DOMAIN,
+                    f"{device.device.device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
+                    f"deprecated_switch_{issue}",
+                ):
+                    entities.append(
+                        SmartThingsSwitch(
+                            entry_data.client,
+                            device,
+                            SWITCH,
+                            Capability.SWITCH,
+                        )
+                    )
+                continue
+            entities.append(
+                SmartThingsSwitch(
+                    entry_data.client,
+                    device,
+                    SWITCH,
+                    Capability.SWITCH,
+                )
+            )
     async_add_entities(entities)
 
 
@@ -118,14 +187,19 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         device: FullDevice,
         entity_description: SmartThingsSwitchEntityDescription,
         capability: Capability,
+        component: str = MAIN,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(client, device, {capability})
+        super().__init__(client, device, {capability}, component=component)
         self.entity_description = entity_description
         self.switch_capability = capability
-        self._attr_unique_id = device.device.device_id
-        if capability is not Capability.SWITCH:
-            self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{capability}"
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}_{entity_description.status_attribute}_{entity_description.status_attribute}"
+        if (
+            translation_keys := entity_description.component_translation_key
+        ) is not None and (
+            translation_key := translation_keys.get(component)
+        ) is not None:
+            self._attr_translation_key = translation_key
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""

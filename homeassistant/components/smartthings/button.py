@@ -29,6 +29,11 @@ CAPABILITIES_TO_BUTTONS: dict[Capability | str, SmartThingsButtonDescription] = 
         translation_key="stop",
         command=Command.STOP,
     ),
+    Capability.CUSTOM_WATER_FILTER: SmartThingsButtonDescription(
+        key=Capability.CUSTOM_WATER_FILTER,
+        translation_key="reset_water_filter",
+        command=Command.RESET_WATER_FILTER,
+    ),
 }
 
 
@@ -63,9 +68,7 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
         """Initialize the instance."""
         super().__init__(client, device, set())
         self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{device.device.device_id}_{MAIN}_{entity_description.key}"
-        )
+        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{entity_description.key}_{entity_description.command}"
 
     async def async_press(self) -> None:
         """Press the button."""

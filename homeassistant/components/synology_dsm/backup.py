@@ -58,6 +58,7 @@ async def async_get_backup_agents(
         if entry.unique_id is not None
         and entry.runtime_data.api.file_station
         and entry.options.get(CONF_BACKUP_PATH)
+        and entry.runtime_data.coordinator_central.last_update_success
     ]
 
 

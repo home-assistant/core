@@ -1,10 +1,5 @@
 {
   "entity": {
-    "button": {
-      "outlet_number_load_cycle": {
-        "default": "mdi:restart"
-      }
-    },
     "sensor": {
       "ambient_humidity_status": {
         "default": "mdi:information-outline"
@@ -42,11 +37,26 @@
       "battery_packs_bad": {
         "default": "mdi:information-outline"
       },
+      "battery_runtime": {
+        "default": "mdi:clock-outline"
+      },
+      "battery_runtime_low": {
+        "default": "mdi:clock-alert-outline"
+      },
+      "battery_runtime_restart": {
+        "default": "mdi:clock-start"
+      },
       "battery_type": {
         "default": "mdi:information-outline"
       },
+      "battery_voltage_high": {
+        "default": "mdi:battery-high"
+      },
+      "battery_voltage_low": {
+        "default": "mdi:battery-low"
+      },
       "input_bypass_phases": {
-        "default": "mdi:information-outline"
+        "default": "mdi:sine-wave"
       },
       "input_current_status": {
         "default": "mdi:information-outline"
@@ -55,13 +65,10 @@
         "default": "mdi:information-outline"
       },
       "input_load": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-box-outline"
       },
       "input_phases": {
-        "default": "mdi:information-outline"
-      },
-      "input_power": {
-        "default": "mdi:gauge"
+        "default": "mdi:sine-wave"
       },
       "input_sensitivity": {
         "default": "mdi:information-outline"
@@ -72,35 +79,23 @@
       "input_voltage_status": {
         "default": "mdi:information-outline"
       },
-      "outlet_number_current": {
-        "default": "mdi:gauge"
-      },
       "outlet_number_current_status": {
         "default": "mdi:information-outline"
       },
       "outlet_number_desc": {
         "default": "mdi:information-outline"
       },
-      "outlet_number_power": {
-        "default": "mdi:gauge"
-      },
-      "outlet_number_realpower": {
-        "default": "mdi:gauge"
-      },
-      "outlet_voltage": {
-        "default": "mdi:gauge"
-      },
       "output_l1_power_percent": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-circle-outline"
       },
       "output_l2_power_percent": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-circle-outline"
       },
       "output_l3_power_percent": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-circle-outline"
       },
       "output_phases": {
-        "default": "mdi:information-outline"
+        "default": "mdi:sine-wave"
       },
       "ups_alarm": {
         "default": "mdi:alarm"
@@ -111,20 +106,29 @@
       "ups_contacts": {
         "default": "mdi:information-outline"
       },
+      "ups_delay_reboot": {
+        "default": "mdi:timelapse"
+      },
+      "ups_delay_shutdown": {
+        "default": "mdi:timelapse"
+      },
+      "ups_delay_start": {
+        "default": "mdi:timelapse"
+      },
       "ups_display_language": {
         "default": "mdi:information-outline"
       },
       "ups_efficiency": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-outline"
       },
       "ups_id": {
         "default": "mdi:information-outline"
       },
       "ups_load": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-box-outline"
       },
       "ups_load_high": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-box-outline"
       },
       "ups_shutdown": {
         "default": "mdi:information-outline"
@@ -147,8 +151,20 @@
       "ups_test_date": {
         "default": "mdi:calendar"
       },
+      "ups_test_interval": {
+        "default": "mdi:timelapse"
+      },
       "ups_test_result": {
         "default": "mdi:information-outline"
+      },
+      "ups_timer_reboot": {
+        "default": "mdi:timer-refresh-outline"
+      },
+      "ups_timer_shutdown": {
+        "default": "mdi:timer-stop-outline"
+      },
+      "ups_timer_start": {
+        "default": "mdi:timer-play-outline"
       },
       "ups_type": {
         "default": "mdi:information-outline"
