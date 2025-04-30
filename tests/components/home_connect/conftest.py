@@ -15,7 +15,6 @@ from aiohomeconnect.model import (
     ArrayOfOptions,
     ArrayOfPrograms,
     ArrayOfSettings,
-    ArrayOfStatus,
     Event,
     EventKey,
     EventMessage,
@@ -41,24 +40,17 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from . import MOCK_AVAILABLE_COMMANDS, MOCK_PROGRAMS, MOCK_SETTINGS, MOCK_STATUS
 
-MOCK_APPLIANCES = ArrayOfHomeAppliances.from_dict(
-    load_json_object_fixture("home_connect/appliances.json")["data"]
-)
-MOCK_PROGRAMS: dict[str, Any] = load_json_object_fixture("home_connect/programs.json")
-MOCK_SETTINGS: dict[str, Any] = load_json_object_fixture("home_connect/settings.json")
-MOCK_STATUS = ArrayOfStatus.from_dict(
-    load_json_object_fixture("home_connect/status.json")["data"]
-)
-MOCK_AVAILABLE_COMMANDS: dict[str, Any] = load_json_object_fixture(
-    "home_connect/available_commands.json"
-)
-
+from tests.common import MockConfigEntry, load_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
-FAKE_ACCESS_TOKEN = "some-access-token"
+FAKE_ACCESS_TOKEN = (
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+    ".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
+    ".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+)
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 FAKE_AUTH_IMPL = "conftest-imported-cred"
 
@@ -96,7 +88,8 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
             "auth_implementation": FAKE_AUTH_IMPL,
             "token": token_entry,
         },
-        minor_version=2,
+        minor_version=3,
+        unique_id="1234567890",
     )
 
 
@@ -110,6 +103,19 @@ def mock_config_entry_v1_1(token_entry: dict[str, Any]) -> MockConfigEntry:
             "token": token_entry,
         },
         minor_version=1,
+    )
+
+
+@pytest.fixture(name="config_entry_v1_2")
+def mock_config_entry_v1_2(token_entry: dict[str, Any]) -> MockConfigEntry:
+    """Fixture for a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": FAKE_AUTH_IMPL,
+            "token": token_entry,
+        },
+        minor_version=2,
     )
 
 
@@ -153,14 +159,6 @@ async def mock_integration_setup(
         return result
 
     return run
-
-
-def _get_specific_appliance_side_effect(ha_id: str) -> HomeAppliance:
-    """Get specific appliance side effect."""
-    for appliance in copy.deepcopy(MOCK_APPLIANCES).homeappliances:
-        if appliance.ha_id == ha_id:
-            return appliance
-    raise HomeConnectApiError("error.key", "error description")
 
 
 def _get_set_program_side_effect(
@@ -278,68 +276,12 @@ def _get_set_program_options_side_effect(
     return set_program_options_side_effect
 
 
-async def _get_all_programs_side_effect(ha_id: str) -> ArrayOfPrograms:
-    """Get all programs."""
-    appliance_type = next(
-        appliance
-        for appliance in MOCK_APPLIANCES.homeappliances
-        if appliance.ha_id == ha_id
-    ).type
-    if appliance_type not in MOCK_PROGRAMS:
-        raise HomeConnectApiError("error.key", "error description")
-
-    return ArrayOfPrograms(
-        [
-            EnumerateProgram.from_dict(program)
-            for program in MOCK_PROGRAMS[appliance_type]["data"]["programs"]
-        ],
-        Program.from_dict(MOCK_PROGRAMS[appliance_type]["data"]["programs"][0]),
-        Program.from_dict(MOCK_PROGRAMS[appliance_type]["data"]["programs"][0]),
-    )
-
-
-async def _get_settings_side_effect(ha_id: str) -> ArrayOfSettings:
-    """Get settings."""
-    return ArrayOfSettings.from_dict(
-        MOCK_SETTINGS.get(
-            next(
-                appliance
-                for appliance in MOCK_APPLIANCES.homeappliances
-                if appliance.ha_id == ha_id
-            ).type,
-            {},
-        ).get("data", {"settings": []})
-    )
-
-
-async def _get_setting_side_effect(ha_id: str, setting_key: SettingKey):
-    """Get setting."""
-    for appliance in MOCK_APPLIANCES.homeappliances:
-        if appliance.ha_id == ha_id:
-            settings = MOCK_SETTINGS.get(
-                next(
-                    appliance
-                    for appliance in MOCK_APPLIANCES.homeappliances
-                    if appliance.ha_id == ha_id
-                ).type,
-                {},
-            ).get("data", {"settings": []})
-            for setting_dict in cast(list[dict], settings["settings"]):
-                if setting_dict["key"] == setting_key:
-                    return GetSetting.from_dict(setting_dict)
-    raise HomeConnectApiError("error.key", "error description")
-
-
-async def _get_available_commands_side_effect(ha_id: str) -> ArrayOfCommands:
-    """Get available commands."""
-    for appliance in MOCK_APPLIANCES.homeappliances:
-        if appliance.ha_id == ha_id and appliance.type in MOCK_AVAILABLE_COMMANDS:
-            return ArrayOfCommands.from_dict(MOCK_AVAILABLE_COMMANDS[appliance.type])
-    raise HomeConnectApiError("error.key", "error description")
-
-
 @pytest.fixture(name="client")
-def mock_client(request: pytest.FixtureRequest) -> MagicMock:
+def mock_client(
+    appliances: list[HomeAppliance],
+    appliance: HomeAppliance | None,
+    request: pytest.FixtureRequest,
+) -> MagicMock:
     """Fixture to mock Client from HomeConnect."""
 
     mock = MagicMock(
@@ -376,17 +318,78 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
             ]
         )
 
+    appliances = [appliance] if appliance else appliances
+
     async def stream_all_events() -> AsyncGenerator[EventMessage]:
         """Mock stream_all_events."""
         while True:
             for event in await event_queue.get():
                 yield event
 
-    mock.get_home_appliances = AsyncMock(return_value=copy.deepcopy(MOCK_APPLIANCES))
+    mock.get_home_appliances = AsyncMock(return_value=ArrayOfHomeAppliances(appliances))
+
+    def _get_specific_appliance_side_effect(ha_id: str) -> HomeAppliance:
+        """Get specific appliance side effect."""
+        for appliance_ in appliances:
+            if appliance_.ha_id == ha_id:
+                return appliance_
+        raise HomeConnectApiError("error.key", "error description")
+
     mock.get_specific_appliance = AsyncMock(
         side_effect=_get_specific_appliance_side_effect
     )
     mock.stream_all_events = stream_all_events
+
+    async def _get_all_programs_side_effect(ha_id: str) -> ArrayOfPrograms:
+        """Get all programs."""
+        appliance_type = next(
+            appliance for appliance in appliances if appliance.ha_id == ha_id
+        ).type
+        if appliance_type not in MOCK_PROGRAMS:
+            raise HomeConnectApiError("error.key", "error description")
+
+        return ArrayOfPrograms(
+            [
+                EnumerateProgram.from_dict(program)
+                for program in MOCK_PROGRAMS[appliance_type]["data"]["programs"]
+            ],
+            Program.from_dict(MOCK_PROGRAMS[appliance_type]["data"]["programs"][0]),
+            Program.from_dict(MOCK_PROGRAMS[appliance_type]["data"]["programs"][0]),
+        )
+
+    async def _get_settings_side_effect(ha_id: str) -> ArrayOfSettings:
+        """Get settings."""
+        return ArrayOfSettings.from_dict(
+            MOCK_SETTINGS.get(
+                next(
+                    appliance for appliance in appliances if appliance.ha_id == ha_id
+                ).type,
+                {},
+            ).get("data", {"settings": []})
+        )
+
+    async def _get_setting_side_effect(ha_id: str, setting_key: SettingKey):
+        """Get setting."""
+        for appliance_ in appliances:
+            if appliance_.ha_id == ha_id:
+                settings = MOCK_SETTINGS.get(
+                    appliance_.type,
+                    {},
+                ).get("data", {"settings": []})
+                for setting_dict in cast(list[dict], settings["settings"]):
+                    if setting_dict["key"] == setting_key:
+                        return GetSetting.from_dict(setting_dict)
+        raise HomeConnectApiError("error.key", "error description")
+
+    async def _get_available_commands_side_effect(ha_id: str) -> ArrayOfCommands:
+        """Get available commands."""
+        for appliance_ in appliances:
+            if appliance_.ha_id == ha_id and appliance_.type in MOCK_AVAILABLE_COMMANDS:
+                return ArrayOfCommands.from_dict(
+                    MOCK_AVAILABLE_COMMANDS[appliance_.type]
+                )
+        raise HomeConnectApiError("error.key", "error description")
+
     mock.start_program = AsyncMock(
         side_effect=_get_set_program_side_effect(
             event_queue, EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
@@ -438,7 +441,11 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
 
 
 @pytest.fixture(name="client_with_exception")
-def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
+def mock_client_with_exception(
+    appliances: list[HomeAppliance],
+    appliance: HomeAppliance | None,
+    request: pytest.FixtureRequest,
+) -> MagicMock:
     """Fixture to mock Client from HomeConnect that raise exceptions."""
     mock = MagicMock(
         autospec=HomeConnectClient,
@@ -456,7 +463,8 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
             for event in await event_queue.get():
                 yield event
 
-    mock.get_home_appliances = AsyncMock(return_value=copy.deepcopy(MOCK_APPLIANCES))
+    appliances = [appliance] if appliance else appliances
+    mock.get_home_appliances = AsyncMock(return_value=ArrayOfHomeAppliances(appliances))
     mock.stream_all_events = stream_all_events
 
     mock.start_program = AsyncMock(side_effect=exception)
@@ -483,13 +491,39 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
     return mock
 
 
-@pytest.fixture(name="appliance_ha_id")
-def mock_appliance_ha_id(request: pytest.FixtureRequest) -> str:
-    """Fixture to mock Appliance."""
-    app = "Washer"
+@pytest.fixture(name="appliances")
+def mock_appliances(
+    appliances_data: str, request: pytest.FixtureRequest
+) -> list[HomeAppliance]:
+    """Fixture to mock the returned appliances."""
+    appliances = ArrayOfHomeAppliances.from_json(appliances_data).homeappliances
+    appliance_types = {appliance.type for appliance in appliances}
     if hasattr(request, "param") and request.param:
-        app = request.param
-    for appliance in MOCK_APPLIANCES.homeappliances:
-        if appliance.type == app:
-            return appliance.ha_id
-    raise ValueError(f"Appliance {app} not found")
+        appliance_types = request.param
+    return [appliance for appliance in appliances if appliance.type in appliance_types]
+
+
+@pytest.fixture(name="appliance")
+def mock_appliance(
+    appliances_data: str, request: pytest.FixtureRequest
+) -> HomeAppliance | None:
+    """Fixture to mock a single specific appliance to return."""
+    appliance_type = None
+    if hasattr(request, "param") and request.param:
+        appliance_type = request.param
+    return next(
+        (
+            appliance
+            for appliance in ArrayOfHomeAppliances.from_json(
+                appliances_data
+            ).homeappliances
+            if appliance.type == appliance_type
+        ),
+        None,
+    )
+
+
+@pytest.fixture(name="appliances_data")
+def appliances_data_fixture() -> str:
+    """Fixture to return a the string for an array of appliances."""
+    return load_fixture("appliances.json", integration=DOMAIN)

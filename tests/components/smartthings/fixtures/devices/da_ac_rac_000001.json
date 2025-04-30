@@ -9,7 +9,7 @@
       "deviceManufacturerCode": "Samsung Electronics",
       "locationId": "58d3fd7c-c512-4da3-b500-ef269382756c",
       "ownerId": "f9a28d7c-1ed5-d9e9-a81c-18971ec081db",
-      "roomId": "85a79db4-9cf2-4f09-a5b2-cd70a5c0cef0",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
       "deviceTypeName": "Samsung OCF Air Conditioner",
       "components": [
         {
@@ -286,18 +286,10 @@
         "id": "60fbc713-8da5-315d-b31a-6d6dcde4be7b"
       },
       "ocf": {
-        "ocfDeviceType": "oic.d.airconditioner",
-        "name": "[room a/c] Samsung",
-        "specVersion": "core.1.1.0",
-        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "ocfDeviceType": "x.com.st.d.sensor.light",
         "manufacturerName": "Samsung Electronics",
-        "modelNumber": "ARTIK051_KRAC_18K|10193441|60010132001111110200000000000000",
-        "platformVersion": "0G3MPDCKA00010E",
-        "platformOS": "TizenRT2.0",
-        "hwVersion": "1.0",
-        "firmwareVersion": "0.1.0",
-        "vendorId": "DA-AC-RAC-000001",
-        "lastSignupTime": "2021-04-06T16:43:27.889445Z",
+        "vendorId": "VD-Sensor.Light-2023",
+        "lastSignupTime": "2025-01-08T02:32:04.631093137Z",
         "transferCandidate": false,
         "additionalAuthCodeRequired": false
       },

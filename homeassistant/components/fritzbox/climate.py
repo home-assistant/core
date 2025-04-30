@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     ClimateEntity,
@@ -38,7 +39,7 @@ from .sensor import value_scheduled_preset
 HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
 PRESET_HOLIDAY = "holiday"
 PRESET_SUMMER = "summer"
-PRESET_MODES = [PRESET_ECO, PRESET_COMFORT]
+PRESET_MODES = [PRESET_ECO, PRESET_COMFORT, PRESET_BOOST]
 SUPPORTED_FEATURES = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.PRESET_MODE
@@ -52,8 +53,11 @@ MAX_TEMPERATURE = 28
 # special temperatures for on/off in Fritz!Box API (modified by pyfritzhome)
 ON_API_TEMPERATURE = 127.0
 OFF_API_TEMPERATURE = 126.5
-ON_REPORT_SET_TEMPERATURE = 30.0
-OFF_REPORT_SET_TEMPERATURE = 0.0
+PRESET_API_HKR_STATE_MAPPING = {
+    PRESET_COMFORT: "comfort",
+    PRESET_BOOST: "on",
+    PRESET_ECO: "eco",
+}
 
 
 async def async_setup_entry(
@@ -127,29 +131,28 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         return self.data.actual_temperature  # type: ignore [no-any-return]
 
     @property
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.data.target_temperature == ON_API_TEMPERATURE:
-            return ON_REPORT_SET_TEMPERATURE
-        if self.data.target_temperature == OFF_API_TEMPERATURE:
-            return OFF_REPORT_SET_TEMPERATURE
+        if self.data.target_temperature in [ON_API_TEMPERATURE, OFF_API_TEMPERATURE]:
+            return None
         return self.data.target_temperature  # type: ignore [no-any-return]
+
+    async def async_set_hkr_state(self, hkr_state: str) -> None:
+        """Set the state of the climate."""
+        await self.hass.async_add_executor_job(self.data.set_hkr_state, hkr_state, True)
+        await self.coordinator.async_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is HVACMode.OFF:
-            await self.async_set_hvac_mode(hvac_mode)
+        if kwargs.get(ATTR_HVAC_MODE) is HVACMode.OFF:
+            await self.async_set_hkr_state("off")
         elif (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            if target_temp == OFF_API_TEMPERATURE:
-                target_temp = OFF_REPORT_SET_TEMPERATURE
-            elif target_temp == ON_API_TEMPERATURE:
-                target_temp = ON_REPORT_SET_TEMPERATURE
             await self.hass.async_add_executor_job(
                 self.data.set_target_temperature, target_temp, True
             )
+            await self.coordinator.async_refresh()
         else:
             return
-        await self.coordinator.async_refresh()
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -158,10 +161,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return HVACMode.HEAT
         if self.data.summer_active:
             return HVACMode.OFF
-        if self.data.target_temperature in (
-            OFF_REPORT_SET_TEMPERATURE,
-            OFF_API_TEMPERATURE,
-        ):
+        if self.data.target_temperature == OFF_API_TEMPERATURE:
             return HVACMode.OFF
 
         return HVACMode.HEAT
@@ -179,7 +179,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             )
             return
         if hvac_mode is HVACMode.OFF:
-            await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
+            await self.async_set_hkr_state("off")
         else:
             if value_scheduled_preset(self.data) == PRESET_ECO:
                 target_temp = self.data.eco_temperature
@@ -194,6 +194,8 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return PRESET_HOLIDAY
         if self.data.summer_active:
             return PRESET_SUMMER
+        if self.data.target_temperature == ON_API_TEMPERATURE:
+            return PRESET_BOOST
         if self.data.target_temperature == self.data.comfort_temperature:
             return PRESET_COMFORT
         if self.data.target_temperature == self.data.eco_temperature:
@@ -207,14 +209,12 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="change_preset_while_active_mode",
             )
-        if preset_mode == PRESET_COMFORT:
-            await self.async_set_temperature(temperature=self.data.comfort_temperature)
-        elif preset_mode == PRESET_ECO:
-            await self.async_set_temperature(temperature=self.data.eco_temperature)
+        await self.async_set_hkr_state(PRESET_API_HKR_STATE_MAPPING[preset_mode])
 
     @property
     def extra_state_attributes(self) -> ClimateExtraAttributes:
         """Return the device specific state attributes."""
+        # deprecated with #143394, can be removed in 2025.11
         attrs: ClimateExtraAttributes = {
             ATTR_STATE_BATTERY_LOW: self.data.battery_low,
         }

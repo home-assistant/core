@@ -35,17 +35,18 @@ from homeassistant.components.intent import (
     async_register_timer_handler,
 )
 from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .entity import EsphomeAssistEntity
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+from .entity import EsphomeAssistEntity, convert_api_error_ha_error
+from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
 from .ffmpeg_proxy import async_create_proxy_url
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +96,7 @@ async def async_setup_entry(
     if entry_data.device_info.voice_assistant_feature_flags_compat(
         entry_data.api_version
     ):
-        async_add_entities([EsphomeAssistSatellite(entry, entry_data)])
+        async_add_entities([EsphomeAssistSatellite(entry)])
 
 
 class EsphomeAssistSatellite(
@@ -107,17 +108,12 @@ class EsphomeAssistSatellite(
         key="assist_satellite", translation_key="assist_satellite"
     )
 
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        entry_data: RuntimeEntryData,
-    ) -> None:
+    def __init__(self, entry: ESPHomeConfigEntry) -> None:
         """Initialize satellite."""
-        super().__init__(entry_data)
+        super().__init__(entry.runtime_data)
 
-        self.config_entry = config_entry
-        self.entry_data = entry_data
-        self.cli = self.entry_data.client
+        self.config_entry = entry
+        self.cli = self._entry_data.client
 
         self._is_running: bool = True
         self._pipeline_task: asyncio.Task | None = None
@@ -133,23 +129,23 @@ class EsphomeAssistSatellite(
     @property
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
-        assert self.entry_data.device_info is not None
+        assert self._entry_data.device_info is not None
         ent_reg = er.async_get(self.hass)
         return ent_reg.async_get_entity_id(
             Platform.SELECT,
             DOMAIN,
-            f"{self.entry_data.device_info.mac_address}-pipeline",
+            f"{self._entry_data.device_info.mac_address}-pipeline",
         )
 
     @property
     def vad_sensitivity_entity_id(self) -> str | None:
         """Return the entity ID of the VAD sensitivity to use for the next conversation."""
-        assert self.entry_data.device_info is not None
+        assert self._entry_data.device_info is not None
         ent_reg = er.async_get(self.hass)
         return ent_reg.async_get_entity_id(
             Platform.SELECT,
             DOMAIN,
-            f"{self.entry_data.device_info.mac_address}-vad_sensitivity",
+            f"{self._entry_data.device_info.mac_address}-vad_sensitivity",
         )
 
     @callback
@@ -195,16 +191,16 @@ class EsphomeAssistSatellite(
         _LOGGER.debug("Received satellite configuration: %s", self._satellite_config)
 
         # Inform listeners that config has been updated
-        self.entry_data.async_assist_satellite_config_updated(self._satellite_config)
+        self._entry_data.async_assist_satellite_config_updated(self._satellite_config)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
 
-        assert self.entry_data.device_info is not None
+        assert self._entry_data.device_info is not None
         feature_flags = (
-            self.entry_data.device_info.voice_assistant_feature_flags_compat(
-                self.entry_data.api_version
+            self._entry_data.device_info.voice_assistant_feature_flags_compat(
+                self._entry_data.api_version
             )
         )
         if feature_flags & VoiceAssistantFeature.API_AUDIO:
@@ -253,9 +249,14 @@ class EsphomeAssistSatellite(
             # Will use media player for TTS/announcements
             self._update_tts_format()
 
+        if feature_flags & VoiceAssistantFeature.START_CONVERSATION:
+            self._attr_supported_features |= (
+                assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
+            )
+
         # Update wake word select when config is updated
         self.async_on_remove(
-            self.entry_data.async_register_assist_satellite_set_wake_word_callback(
+            self._entry_data.async_register_assist_satellite_set_wake_word_callback(
                 self.async_set_wake_word
             )
         )
@@ -277,14 +278,17 @@ class EsphomeAssistSatellite(
 
         data_to_send: dict[str, Any] = {}
         if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_START:
-            self.entry_data.async_set_assist_pipeline_state(True)
+            self._entry_data.async_set_assist_pipeline_state(True)
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
             assert event.data is not None
             data_to_send = {"text": event.data["stt_output"]["text"]}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
             assert event.data is not None
             data_to_send = {
-                "conversation_id": event.data["intent_output"]["conversation_id"] or "",
+                "conversation_id": event.data["intent_output"]["conversation_id"],
+                "continue_conversation": str(
+                    int(event.data["intent_output"]["continue_conversation"])
+                ),
             }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None
@@ -296,18 +300,19 @@ class EsphomeAssistSatellite(
                 url = async_process_play_media_url(self.hass, path)
                 data_to_send = {"url": url}
 
-                assert self.entry_data.device_info is not None
+                assert self._entry_data.device_info is not None
                 feature_flags = (
-                    self.entry_data.device_info.voice_assistant_feature_flags_compat(
-                        self.entry_data.api_version
+                    self._entry_data.device_info.voice_assistant_feature_flags_compat(
+                        self._entry_data.api_version
                     )
                 )
-                if feature_flags & VoiceAssistantFeature.SPEAKER:
-                    media_id = tts_output["media_id"]
+                if feature_flags & VoiceAssistantFeature.SPEAKER and (
+                    stream := tts.async_get_stream(self.hass, tts_output["token"])
+                ):
                     self._tts_streaming_task = (
                         self.config_entry.async_create_background_task(
                             self.hass,
-                            self._stream_tts_audio(media_id),
+                            self._stream_tts_audio(stream),
                             "esphome_voice_assistant_tts",
                         )
                     )
@@ -325,13 +330,20 @@ class EsphomeAssistSatellite(
                 "code": event.data["code"],
                 "message": event.data["message"],
             }
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_RUN_START:
+            assert event.data is not None
+            if tts_output := event.data["tts_output"]:
+                path = tts_output["url"]
+                url = async_process_play_media_url(self.hass, path)
+                data_to_send = {"url": url}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END:
             if self._tts_streaming_task is None:
                 # No TTS
-                self.entry_data.async_set_assist_pipeline_state(False)
+                self._entry_data.async_set_assist_pipeline_state(False)
 
         self.cli.send_voice_assistant_event(event_type, data_to_send)
 
+    @convert_api_error_ha_error
     async def async_announce(
         self, announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
@@ -339,17 +351,37 @@ class EsphomeAssistSatellite(
 
         Should block until the announcement is done playing.
         """
+        await self._do_announce(announcement, run_pipeline_after=False)
+
+    @convert_api_error_ha_error
+    async def async_start_conversation(
+        self, start_announcement: assist_satellite.AssistSatelliteAnnouncement
+    ) -> None:
+        """Start a conversation from the satellite."""
+        await self._do_announce(start_announcement, run_pipeline_after=True)
+
+    async def _do_announce(
+        self,
+        announcement: assist_satellite.AssistSatelliteAnnouncement,
+        run_pipeline_after: bool,
+    ) -> None:
+        """Announce media on the satellite.
+
+        Optionally run a voice pipeline after the announcement has finished.
+        """
         _LOGGER.debug(
             "Waiting for announcement to finished (message=%s, media_id=%s)",
             announcement.message,
             announcement.media_id,
         )
         media_id = announcement.media_id
-        if announcement.media_id_source != "tts":
-            # Route non-TTS media through the proxy
+        is_media_tts = announcement.media_id_source == "tts"
+        preannounce_media_id = announcement.preannounce_media_id
+        if (not is_media_tts) or preannounce_media_id:
+            # Route media through the proxy
             format_to_use: MediaPlayerSupportedFormat | None = None
             for supported_format in chain(
-                *self.entry_data.media_player_formats.values()
+                *self._entry_data.media_player_formats.values()
             ):
                 if supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT:
                     format_to_use = supported_format
@@ -359,19 +391,33 @@ class EsphomeAssistSatellite(
                 assert (self.registry_entry is not None) and (
                     self.registry_entry.device_id is not None
                 )
-                proxy_url = async_create_proxy_url(
-                    self.hass,
-                    self.registry_entry.device_id,
-                    media_id,
+
+                make_proxy_url = partial(
+                    async_create_proxy_url,
+                    hass=self.hass,
+                    device_id=self.registry_entry.device_id,
                     media_format=format_to_use.format,
                     rate=format_to_use.sample_rate or None,
                     channels=format_to_use.num_channels or None,
                     width=format_to_use.sample_bytes or None,
                 )
-                media_id = async_process_play_media_url(self.hass, proxy_url)
+
+                if not is_media_tts:
+                    media_id = async_process_play_media_url(
+                        self.hass, make_proxy_url(media_url=media_id)
+                    )
+
+                if preannounce_media_id:
+                    preannounce_media_id = async_process_play_media_url(
+                        self.hass, make_proxy_url(media_url=preannounce_media_id)
+                    )
 
         await self.cli.send_voice_assistant_announcement_await_response(
-            media_id, _ANNOUNCEMENT_TIMEOUT_SEC, announcement.message
+            media_id,
+            _ANNOUNCEMENT_TIMEOUT_SEC,
+            announcement.message,
+            start_conversation=run_pipeline_after,
+            preannounce_media_id=preannounce_media_id or "",
         )
 
     async def handle_pipeline_start(
@@ -393,10 +439,10 @@ class EsphomeAssistSatellite(
 
         # API or UDP output audio
         port: int = 0
-        assert self.entry_data.device_info is not None
+        assert self._entry_data.device_info is not None
         feature_flags = (
-            self.entry_data.device_info.voice_assistant_feature_flags_compat(
-                self.entry_data.api_version
+            self._entry_data.device_info.voice_assistant_feature_flags_compat(
+                self._entry_data.api_version
             )
         )
         if (feature_flags & VoiceAssistantFeature.SPEAKER) and not (
@@ -497,7 +543,7 @@ class EsphomeAssistSatellite(
 
     def _update_tts_format(self) -> None:
         """Update the TTS format from the first media player."""
-        for supported_format in chain(*self.entry_data.media_player_formats.values()):
+        for supported_format in chain(*self._entry_data.media_player_formats.values()):
             # Find first announcement format
             if supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT:
                 self._attr_tts_options = {
@@ -523,7 +569,7 @@ class EsphomeAssistSatellite(
 
     async def _stream_tts_audio(
         self,
-        media_id: str,
+        tts_result: tts.ResultStream,
         sample_rate: int = 16000,
         sample_width: int = 2,
         sample_channels: int = 1,
@@ -538,14 +584,13 @@ class EsphomeAssistSatellite(
             if not self._is_running:
                 return
 
-            extension, data = await tts.async_get_media_source_audio(
-                self.hass,
-                media_id,
-            )
-
-            if extension != "wav":
-                _LOGGER.error("Only WAV audio can be streamed, got %s", extension)
+            if tts_result.extension != "wav":
+                _LOGGER.error(
+                    "Only WAV audio can be streamed, got %s", tts_result.extension
+                )
                 return
+
+            data = b"".join([chunk async for chunk in tts_result.async_stream_result()])
 
             with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
                 if (
@@ -584,7 +629,7 @@ class EsphomeAssistSatellite(
 
         # State change
         self.tts_response_finished()
-        self.entry_data.async_set_assist_pipeline_state(False)
+        self._entry_data.async_set_assist_pipeline_state(False)
 
     async def _wrap_audio_stream(self) -> AsyncIterable[bytes]:
         """Yield audio chunks from the queue until None."""

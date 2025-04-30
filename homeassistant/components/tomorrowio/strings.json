@@ -115,33 +115,33 @@
         "name": "Tree pollen index",
         "state": {
           "none": "None",
-          "very_low": "Very low",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High",
-          "very_high": "Very high"
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
         }
       },
       "weed_pollen_index": {
         "name": "Weed pollen index",
         "state": {
           "none": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::none%]",
-          "very_low": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::very_low%]",
-          "low": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::low%]",
-          "medium": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::medium%]",
-          "high": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::high%]",
-          "very_high": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::very_high%]"
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
         }
       },
       "grass_pollen_index": {
         "name": "Grass pollen index",
         "state": {
           "none": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::none%]",
-          "very_low": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::very_low%]",
-          "low": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::low%]",
-          "medium": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::medium%]",
-          "high": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::high%]",
-          "very_high": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::very_high%]"
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
         }
       },
       "fire_index": {
@@ -153,10 +153,10 @@
       "uv_radiation_health_concern": {
         "name": "UV radiation health concern",
         "state": {
-          "low": "Low",
+          "low": "[%key:common::state::low%]",
           "moderate": "Moderate",
-          "high": "High",
-          "very_high": "Very high",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]",
           "extreme": "Extreme"
         }
       }

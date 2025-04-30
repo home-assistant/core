@@ -8,8 +8,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.singleton import singleton
 
-from .const import DOMAIN, TEMPLATE_BLUEPRINT_SCHEMA
-from .template_entity import TemplateEntity
+from .const import DOMAIN
+from .entity import AbstractTemplateEntity
 
 DATA_BLUEPRINTS = "template_blueprints"
 
@@ -23,7 +23,7 @@ def templates_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[s
         entity_id
         for platform in async_get_platforms(hass, DOMAIN)
         for entity_id, template_entity in platform.entities.items()
-        if isinstance(template_entity, TemplateEntity)
+        if isinstance(template_entity, AbstractTemplateEntity)
         and template_entity.referenced_blueprint == blueprint_path
     ]
 
@@ -33,7 +33,8 @@ def blueprint_in_template(hass: HomeAssistant, entity_id: str) -> str | None:
     """Return the blueprint the template entity is based on or None."""
     for platform in async_get_platforms(hass, DOMAIN):
         if isinstance(
-            (template_entity := platform.entities.get(entity_id)), TemplateEntity
+            (template_entity := platform.entities.get(entity_id)),
+            AbstractTemplateEntity,
         ):
             return template_entity.referenced_blueprint
     return None
@@ -53,6 +54,9 @@ async def _reload_blueprint_templates(hass: HomeAssistant, blueprint_path: str) 
 @callback
 def async_get_blueprints(hass: HomeAssistant) -> blueprint.DomainBlueprints:
     """Get template blueprints."""
+    # pylint: disable-next=import-outside-toplevel
+    from .config import TEMPLATE_BLUEPRINT_SCHEMA
+
     return blueprint.DomainBlueprints(
         hass,
         DOMAIN,

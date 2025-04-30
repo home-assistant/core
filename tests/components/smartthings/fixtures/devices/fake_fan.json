@@ -9,7 +9,7 @@
       "deviceManufacturerCode": "0086-0002-005F",
       "locationId": "6f11ddf5-f0cb-4516-a06a-3a2a6ec22bca",
       "ownerId": "9f257fc4-6471-2566-b06e-2fe72dd979fa",
-      "roomId": "cdf080f0-0542-41d7-a606-aff69683e04c",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
       "components": [
         {
           "id": "main",
@@ -36,7 +36,6 @@
         }
       ],
       "createTime": "2023-01-12T23:02:44.917Z",
-      "parentDeviceId": "6a2dd7a4-dd77-48bc-9acf-017029aaf099",
       "profile": {
         "id": "6372cd27-93c7-32ef-9be5-aef2221adff1"
       },

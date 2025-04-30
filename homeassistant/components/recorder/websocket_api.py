@@ -37,7 +37,7 @@ from homeassistant.util.unit_conversion import (
     VolumeFlowRateConverter,
 )
 
-from .models import StatisticPeriod
+from .models import StatisticMeanType, StatisticPeriod
 from .statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     async_add_external_statistics,
@@ -532,6 +532,10 @@ def ws_import_statistics(
 ) -> None:
     """Import statistics."""
     metadata = msg["metadata"]
+    # The WS command will be changed in a follow up PR
+    metadata["mean_type"] = (
+        StatisticMeanType.ARITHMETIC if metadata["has_mean"] else StatisticMeanType.NONE
+    )
     stats = msg["stats"]
 
     if valid_entity_id(metadata["statistic_id"]):
