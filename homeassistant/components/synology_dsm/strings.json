@@ -28,7 +28,7 @@
           "backup_path": "Path"
         },
         "data_description": {
-          "backup_share": "Select the shared folder, where the automatic Home-Assistant backup should be stored.",
+          "backup_share": "Select the shared folder where the automatic Home Assistant backup should be stored.",
           "backup_path": "Define the path on the selected shared folder (will automatically be created, if not exist)."
         }
       },
@@ -54,14 +54,14 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "missing_data": "Missing data: please retry later or an other configuration",
-      "otp_failed": "Two-step authentication failed, retry with a new pass code",
+      "otp_failed": "Two-step authentication failed, retry with a new passcode",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "no_mac_address": "The MAC address is missing from the zeroconf record",
+      "no_mac_address": "The MAC address is missing from the Zeroconf record",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "Re-configuration was successful"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
@@ -113,6 +113,12 @@
       "cpu_user_load": {
         "name": "CPU utilization (user)"
       },
+      "device_size_total": {
+        "name": "Device size"
+      },
+      "device_status": {
+        "name": "Status"
+      },
       "disk_smart_status": {
         "name": "Status (smart)"
       },
@@ -148,6 +154,15 @@
       },
       "network_up": {
         "name": "Upload throughput"
+      },
+      "partition_percentage_used": {
+        "name": "Partition used"
+      },
+      "partition_size_total": {
+        "name": "Partition size"
+      },
+      "partition_size_used": {
+        "name": "Partition used space"
       },
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"

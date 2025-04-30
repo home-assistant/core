@@ -293,6 +293,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                     translation_key="firmware_unsupported",
                     translation_placeholders={"device": entry.title},
                 )
+            runtime_data.rpc_zigbee_enabled = device.zigbee_enabled
             runtime_data.rpc_supports_scripts = await device.supports_scripts()
             if runtime_data.rpc_supports_scripts:
                 runtime_data.rpc_script_events = await get_rpc_scripts_event_types(

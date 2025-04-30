@@ -93,7 +93,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_sabbath_mode-entry]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_ice_maker-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -106,7 +106,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.refrigerator_sabbath_mode',
+    'entity_id': 'switch.refrigerator_ice_maker',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -118,26 +118,26 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sabbath mode',
+    'original_name': 'Ice maker',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'sabbath_mode',
-    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_samsungce.sabbathMode',
+    'translation_key': 'ice_maker',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_icemaker_switch_switch_switch',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_sabbath_mode-state]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_ice_maker-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Sabbath mode',
+      'friendly_name': 'Refrigerator Ice maker',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_sabbath_mode',
+    'entity_id': 'switch.refrigerator_ice_maker',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum-entry]
@@ -246,7 +246,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.dryer_wrinkle_prevent',
     'has_entity_name': True,
     'hidden_by': None,
@@ -293,7 +293,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.seca_roupa_wrinkle_prevent',
     'has_entity_name': True,
     'hidden_by': None,
@@ -340,7 +340,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.washing_machine_bubble_soak',
     'has_entity_name': True,
     'hidden_by': None,

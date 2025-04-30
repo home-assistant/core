@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pylamarzocco.exceptions import RequestNotSuccessful
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -16,6 +17,7 @@ from . import async_init_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -63,6 +65,7 @@ async def test_sensor_going_unavailable(
     assert state
     assert state.state != STATE_UNAVAILABLE
 
+    mock_lamarzocco.websocket.connected = False
     mock_lamarzocco.get_dashboard.side_effect = RequestNotSuccessful("")
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
