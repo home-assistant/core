@@ -63,9 +63,8 @@ async def async_get_config_entry_diagnostics(
         diag_dashboard["supports_update"] = dashboard.supports_update
         diag_dashboard["last_update_success"] = dashboard.last_update_success
         diag_dashboard["addon"] = dashboard.addon_slug
-        if device_name:
-            has_matching_name = device_name in dashboard.data
-            diag_dashboard["has_matching_name"] = has_matching_name
+        if device_name and dashboard.data:
+            diag_dashboard["has_matching_name"] = device_name in dashboard.data
             if data := dashboard.data.get(device_name):
                 diag_dashboard["device"] = {
                     key: data.get(key) for key in CONFIGURED_DEVICE_KEYS
