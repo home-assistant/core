@@ -306,9 +306,6 @@ aiontfy==0.5.1
 # homeassistant.components.nut
 aionut==4.3.4
 
-# homeassistant.components.oncue
-aiooncue==0.3.9
-
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8
 
