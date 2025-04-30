@@ -573,10 +573,18 @@ class SamsungTVWSBridge(
                 timeout=TIMEOUT_WEBSOCKET,
             )
 
-        with contextlib.suppress(*REST_EXCEPTIONS):
+        try:
             device_info: dict[str, Any] = await self._rest_api.rest_device_info()
             LOGGER.debug("Device info on %s is: %s", self.host, device_info)
             self._device_info = device_info
+        except REST_EXCEPTIONS as err:
+            LOGGER.debug(
+                "Failed to load device info from %s:%s: %s",
+                self.host,
+                self.port,
+                str(err),
+            )
+        else:
             return device_info
 
         return None if force else self._device_info
