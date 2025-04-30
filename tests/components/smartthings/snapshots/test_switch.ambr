@@ -434,7 +434,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.machine_a_laver_bubble_soak',
     'has_entity_name': True,
     'hidden_by': None,

@@ -130,7 +130,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'number',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'number.machine_a_laver_rinse_cycles',
     'has_entity_name': True,
     'hidden_by': None,
