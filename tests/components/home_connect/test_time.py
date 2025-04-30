@@ -45,34 +45,20 @@ def platforms() -> list[str]:
     return [Platform.TIME]
 
 
-async def test_time(
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-) -> None:
-    """Test time entity."""
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_paired_depaired_devices_flow(
-    appliance: HomeAppliance,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
@@ -124,15 +110,14 @@ async def test_paired_depaired_devices_flow(
     indirect=["appliance"],
 )
 async def test_connected_devices(
-    appliance: HomeAppliance,
-    keys_to_check: tuple,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    keys_to_check: tuple,
 ) -> None:
     """Test that devices reconnected.
 
@@ -149,9 +134,8 @@ async def test_connected_devices(
         return await get_settings_original_mock.side_effect(ha_id)
 
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
@@ -186,19 +170,17 @@ async def test_connected_devices(
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_time_entity_availability(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test if time entities availability are based on the appliance connection state."""
     entity_ids = [
         "time.oven_alarm_clock",
     ]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
@@ -248,14 +230,13 @@ async def test_time_entity_availability(
     ],
 )
 async def test_time_entity_functionality(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     entity_id: str,
     setting_key: SettingKey,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
 ) -> None:
     """Test time entity functionality."""
     assert config_entry.state is ConfigEntryState.NOT_LOADED
@@ -293,14 +274,13 @@ async def test_time_entity_functionality(
     ],
 )
 async def test_time_entity_error(
+    hass: HomeAssistant,
+    client_with_exception: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     setting_key: SettingKey,
     mock_attr: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client_with_exception: MagicMock,
 ) -> None:
     """Test time entity error."""
     client_with_exception.get_settings.side_effect = None
@@ -339,12 +319,10 @@ async def test_time_entity_error(
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_create_alarm_clock_deprecation_issue(
     hass: HomeAssistant,
-    appliance: HomeAppliance,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that we create an issue when an automation or script is using a alarm clock time entity or the entity is used by the user."""
     entity_id = f"{TIME_DOMAIN}.oven_alarm_clock"
@@ -386,9 +364,8 @@ async def test_create_alarm_clock_deprecation_issue(
         },
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         TIME_DOMAIN,
@@ -420,13 +397,11 @@ async def test_create_alarm_clock_deprecation_issue(
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_alarm_clock_deprecation_issue_fix(
     hass: HomeAssistant,
-    appliance: HomeAppliance,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-    issue_registry: ir.IssueRegistry,
-    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test we can fix the issues created when a alarm clock time entity is in an automation or in a script or when is used."""
     entity_id = f"{TIME_DOMAIN}.oven_alarm_clock"
@@ -468,9 +443,8 @@ async def test_alarm_clock_deprecation_issue_fix(
         },
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         TIME_DOMAIN,
