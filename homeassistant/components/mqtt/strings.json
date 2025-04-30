@@ -402,7 +402,7 @@
               "data_description": {
                 "rgb_command_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose message which will be sent to RGB command topic. Available variables: `red`, `green` and `blue`.",
                 "rgb_command_topic": "The MQTT topic to publish commands to change the light’s RGB state. [Learn more.]({url}#rgb_command_topic)",
-                "rgb_state_topic": "The MQTT topic subscribed to receive RGB state updates. The expected payload is the RGB values separated by commas, for example, `255,0,127`. [Learn more.]({url}rgb_state_topic)",
+                "rgb_state_topic": "The MQTT topic subscribed to receive RGB state updates. The expected payload is the RGB values separated by commas, for example, `255,0,127`. [Learn more.]({url}#rgb_state_topic)",
                 "rgb_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the RGB value."
               }
             },
