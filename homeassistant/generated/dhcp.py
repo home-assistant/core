@@ -405,11 +405,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "9CADEF*",
     },
     {
-        "domain": "oncue",
-        "hostname": "kohlergen*",
-        "macaddress": "00146F*",
-    },
-    {
         "domain": "onvif",
         "registered_devices": True,
     },
