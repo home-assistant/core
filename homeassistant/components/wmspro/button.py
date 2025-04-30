@@ -20,10 +20,11 @@ async def async_setup_entry(
     """Set up the WMS based identify buttons from a config entry."""
     hub = config_entry.runtime_data
 
-    entities: list[WebControlProGenericEntity] = []
-    for dest in hub.dests.values():
-        if dest.action(WMS_WebControl_pro_API_actionDescription.Identify):
-            entities.append(WebControlProIdentifyButton(config_entry.entry_id, dest))  # noqa: PERF401
+    entities: list[WebControlProGenericEntity] = [
+        WebControlProIdentifyButton(config_entry.entry_id, dest)
+        for dest in hub.dests.values()
+        if dest.action(WMS_WebControl_pro_API_actionDescription.Identify)
+    ]
 
     async_add_entities(entities)
 
