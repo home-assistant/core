@@ -1034,7 +1034,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_HomelinkDeviceCount(
             callback
         ),
-        native_unit_of_measurement="devices",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -1291,7 +1290,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsHardWarnings(
             callback
         ),
-        native_unit_of_measurement="warnings",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -1300,7 +1298,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsSoftWarnings(
             callback
         ),
-        native_unit_of_measurement="warnings",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

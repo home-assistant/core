@@ -868,7 +868,8 @@
         }
       },
       "homelink_device_count": {
-        "name": "Homelink devices"
+        "name": "Homelink devices",
+        "unit_of_measurement": "devices"
       },
       "hvac_fan_speed": {
         "name": "HVAC fan speed setting"
@@ -988,10 +989,12 @@
         }
       },
       "tpms_hard_warnings": {
-        "name": "Tire pressure hard warnings"
+        "name": "Tire pressure hard warnings",
+        "unit_of_measurement": "warnings"
       },
       "tpms_soft_warnings": {
-        "name": "Tire pressure soft warnings"
+        "name": "Tire pressure soft warnings",
+        "unit_of_measurement": "warnings"
       },
       "lights_turn_signal": {
         "name": "Turn signal",
