@@ -41,6 +41,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_MODEL,
     CONF_NAME,
+    CONF_PIN,
     CONF_PORT,
     CONF_TOKEN,
 )
@@ -324,13 +325,13 @@ async def test_user_encrypted_websocket(
         assert result2["step_id"] == "encrypted_pairing"
 
         result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"], user_input={"pin": "invalid"}
+            result2["flow_id"], user_input={CONF_PIN: "invalid"}
         )
         assert result3["step_id"] == "encrypted_pairing"
         assert result3["errors"] == {"base": "invalid_pin"}
 
         result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"], user_input={"pin": "1234"}
+            result3["flow_id"], user_input={CONF_PIN: "1234"}
         )
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
@@ -728,13 +729,13 @@ async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_l
         assert result2["step_id"] == "encrypted_pairing"
 
         result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"], user_input={"pin": "invalid"}
+            result2["flow_id"], user_input={CONF_PIN: "invalid"}
         )
         assert result3["step_id"] == "encrypted_pairing"
         assert result3["errors"] == {"base": "invalid_pin"}
 
         result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"], user_input={"pin": "1234"}
+            result3["flow_id"], user_input={CONF_PIN: "1234"}
         )
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
@@ -1947,14 +1948,14 @@ async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
 
         # Invalid PIN
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"pin": "invalid"}
+            result["flow_id"], user_input={CONF_PIN: "invalid"}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm_encrypted"
 
         # Valid PIN
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"pin": "1234"}
+            result["flow_id"], user_input={CONF_PIN: "1234"}
         )
         await hass.async_block_till_done()
         assert result["type"] is FlowResultType.ABORT
