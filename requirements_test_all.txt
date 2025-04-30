@@ -556,7 +556,7 @@ blinkpy==0.23.0
 bluecurrent-api==1.2.3
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.3.0
+bluemaestro-ble==0.4.0
 
 # homeassistant.components.bluetooth
 bluetooth-adapters==0.21.4
