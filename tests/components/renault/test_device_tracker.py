@@ -11,10 +11,14 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import check_entities_unavailable
 from .const import MOCK_VEHICLES
 
+from tests.common import snapshot_platform
+
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+
+# Zoe 40 does not expose GPS information
+_TEST_VEHICLES = [v for v in MOCK_VEHICLES if v != "zoe_40"]
 
 
 @pytest.fixture(autouse=True)
@@ -25,6 +29,7 @@ def override_platforms() -> Generator[None]:
 
 
 @pytest.mark.usefixtures("fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", _TEST_VEHICLES, indirect=True)
 async def test_device_trackers(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -35,18 +40,11 @@ async def test_device_trackers(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_no_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_50"], indirect=True)
 async def test_device_tracker_empty(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -57,38 +55,26 @@ async def test_device_tracker_empty(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")
+@pytest.mark.parametrize("vehicle_type", ["zoe_50"], indirect=True)
 async def test_device_tracker_errors(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault device trackers with temporary failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-
-    expected_entities = mock_vehicle[Platform.DEVICE_TRACKER]
-    assert len(entity_registry.entities) == len(expected_entities)
-
-    check_entities_unavailable(hass, entity_registry, expected_entities)
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_access_denied_exception")
-@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+@pytest.mark.parametrize("vehicle_type", ["zoe_50"], indirect=True)
 async def test_device_tracker_access_denied(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -102,7 +88,7 @@ async def test_device_tracker_access_denied(
 
 
 @pytest.mark.usefixtures("fixtures_with_not_supported_exception")
-@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+@pytest.mark.parametrize("vehicle_type", ["zoe_50"], indirect=True)
 async def test_device_tracker_not_supported(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
