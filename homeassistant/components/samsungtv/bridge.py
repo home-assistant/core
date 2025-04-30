@@ -510,6 +510,7 @@ class SamsungTVWSBridge(
 
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
+        temp_result = None
         for self.port in WEBSOCKET_PORTS:
             config = {
                 CONF_NAME: VALUE_CONF_NAME,
@@ -521,7 +522,6 @@ class SamsungTVWSBridge(
                 CONF_TIMEOUT: TIMEOUT_REQUEST,
             }
 
-            result = None
             try:
                 LOGGER.debug("Try config: %s", config)
                 async with SamsungTVWSAsyncRemote(
@@ -545,22 +545,19 @@ class SamsungTVWSBridge(
                     config,
                     err,
                 )
-                result = RESULT_NOT_SUPPORTED
+                temp_result = RESULT_NOT_SUPPORTED
             except WebSocketException as err:
                 LOGGER.debug(
                     "Working but unsupported config: %s, error: %s", config, err
                 )
-                result = RESULT_NOT_SUPPORTED
+                temp_result = RESULT_NOT_SUPPORTED
             except UnauthorizedError as err:
                 LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
                 return RESULT_AUTH_MISSING
             except (ConnectionFailure, OSError, AsyncioTimeoutError) as err:
                 LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
-        else:  # noqa: PLW0120
-            if result:
-                return result
 
-        return RESULT_CANNOT_CONNECT
+        return temp_result or RESULT_CANNOT_CONNECT
 
     async def async_device_info(self, force: bool = False) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
