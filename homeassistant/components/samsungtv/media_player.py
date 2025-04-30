@@ -102,8 +102,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
 
-        self._bridge.register_app_list_callback(self._app_list_callback)
-
         self._dmr_device: DmrDevice | None = None
         self._upnp_server: AiohttpNotifyServer | None = None
 
@@ -130,8 +128,11 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+
+        self._bridge.register_app_list_callback(self._app_list_callback)
         await self._async_extra_update()
         self.coordinator.async_extra_update = self._async_extra_update
+
         if self.coordinator.is_on:
             self._attr_state = MediaPlayerState.ON
             self._update_from_upnp()
