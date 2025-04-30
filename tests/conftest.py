@@ -21,7 +21,7 @@ import threading
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
-from aiohttp import client
+from aiohttp import client, web_app
 from aiohttp.resolver import AsyncResolver
 from aiohttp.test_utils import (
     BaseTestServer,
@@ -468,6 +468,9 @@ def reset_globals() -> Generator[None]:
     # Reset the frame helper globals
     frame.async_setup(None)
     frame._REPORTED_INTEGRATIONS.clear()
+
+    # Reset the aiohttp cache
+    web_app._cached_build_middleware.cache_clear()
 
     # Reset patch_json
     if patch_json.mock_objects:
