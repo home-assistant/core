@@ -14,6 +14,12 @@ from .dashboard import async_get_dashboard
 from .entry_data import ESPHomeConfigEntry
 
 REDACT_KEYS = {CONF_NOISE_PSK, CONF_PASSWORD, "mac_address", "bluetooth_mac_address"}
+CONFIGURED_DEVICE_KEYS = (
+    "configuration",
+    "current_version",
+    "deployed_version",
+    "loaded_integrations",
+)
 
 
 async def async_get_config_entry_diagnostics(
@@ -49,14 +55,11 @@ async def async_get_config_entry_diagnostics(
     diag["dashboard"] = diag_dashboard
     if dashboard := async_get_dashboard(hass):
         diag_dashboard["configured"] = True
+        diag_dashboard["supports_update"] = dashboard.supports_update
         diag_dashboard["last_update_success"] = dashboard.last_update_success
         diag_dashboard["addon"] = dashboard.addon_slug
         diag_dashboard["devices"] = {
-            name: {
-                "current_version": data["current_version"],
-                "deployed_version": data["deployed_version"],
-                "loaded_integrations": data["loaded_integrations"],
-            }
+            name: {key: data.get(key) for key in CONFIGURED_DEVICE_KEYS}
             for name, data in dashboard.data.items()
         }
 
