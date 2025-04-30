@@ -2,20 +2,20 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import RepairsFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 
 class BleScannerFirmwareUpdateFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
-
-    _device: RpcDevice
 
     def __init__(self, device: RpcDevice) -> None:
         """Initialize."""
@@ -63,13 +63,14 @@ async def async_create_fix_flow(
     hass: HomeAssistant, issue_id: str, data: dict[str, str] | None
 ) -> RepairsFlow:
     """Create flow."""
-    if issue_id.startswith("ble_scanner_firmware_unsupported"):
-        if (
-            data is not None
-            and (entry_id := data.get("entry_id")) is not None
-            and (entry := hass.config_entries.async_get_entry(entry_id)) is not None
-        ):
-            device: RpcDevice = entry.runtime_data.rpc.device
-            return BleScannerFirmwareUpdateFlow(device=device)
+    if TYPE_CHECKING:
+        assert isinstance(data, dict)
 
-    return ConfirmRepairFlow()
+    entry_id = data["entry_id"]
+    entry = hass.config_entries.async_get_entry(entry_id)
+
+    if TYPE_CHECKING:
+        assert entry is not None
+
+    device = entry.runtime_data.rpc.device
+    return BleScannerFirmwareUpdateFlow(device)
