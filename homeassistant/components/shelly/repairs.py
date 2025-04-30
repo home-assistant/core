@@ -49,13 +49,11 @@ class BleScannerFirmwareUpdateFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
+        if not self._device.status["sys"]["available_updates"]:
+            return self.async_abort(reason="update_not_available")
         try:
             await self._device.trigger_ota_update()
-        except RpcCallError as err:
-            if "Resource unavailable: No update info!" in str(err):
-                return self.async_abort(reason="update_not_available")
-            return self.async_abort(reason="cannot_connect")
-        except DeviceConnectionError:
+        except (DeviceConnectionError, RpcCallError):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="", data={})
