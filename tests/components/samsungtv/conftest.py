@@ -92,13 +92,13 @@ def upnp_factory_fixture() -> Generator[Mock]:
 
 
 @pytest.fixture(name="upnp_device")
-def upnp_device_fixture(upnp_factory: Mock) -> Generator[Mock]:
+def upnp_device_fixture(upnp_factory: Mock) -> Mock:
     """Patch async_upnp_client."""
     upnp_device = Mock(UpnpDevice)
     upnp_device.services = {}
 
-    with patch.object(upnp_factory, "async_create_device", side_effect=[upnp_device]):
-        yield upnp_device
+    upnp_factory.async_create_device.side_effect = [upnp_device]
+    return upnp_device
 
 
 @pytest.fixture(name="dmr_device")
