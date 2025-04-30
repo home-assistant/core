@@ -487,6 +487,9 @@
           "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]",
           "freeze_protection": "Freeze protection"
         }
+      },
+      "water_consumption": {
+        "name": "Water consumption"
       }
     },
     "switch": {
