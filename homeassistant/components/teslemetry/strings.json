@@ -760,30 +760,30 @@
       "di_state_r": {
         "name": "Rear drive inverter",
         "state": {
-          "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
+          "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable%]",
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:common::state::fault%]",
-          "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
+          "abort": "[%key:component::teslemetry:sensor:di_state_f:abort%]",
           "enabled": "[%key:common::state::enabled%]"
         }
       },
       "di_state_rel": {
         "name": "Rear left drive inverter",
         "state": {
-          "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
+          "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable%]",
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:common::state::fault%]",
-          "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
+          "abort": "[%key:component::teslemetry:sensor:di_state_f:abort%]",
           "enabled": "[%key:common::state::enabled%]"
         }
       },
       "di_state_rer": {
         "name": "Rear right drive inverter",
         "state": {
-          "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable]",
+          "unavailable": "[%key:component::teslemetry:sensor:di_state_f:unavailable%]",
           "standby": "[%key:common::state::standby%]",
           "fault": "[%key:common::state::fault%]",
-          "abort": "[%key:component::teslemetry:sensor:di_state_f:abort]",
+          "abort": "[%key:component::teslemetry:sensor:di_state_f:abort%]",
           "enabled": "[%key:common::state::enabled%]"
         }
       },
