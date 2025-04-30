@@ -36,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
 from homeassistant.util.logging import catch_log_exception
 
+from . import websocket_api
 from .const import DOMAIN, SSDP_SCANNER, UPNP_SERVER
 from .scanner import (
     IntegrationMatchers,
@@ -213,6 +214,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await scanner.async_start()
     await server.async_start()
+    websocket_api.async_setup(hass)
 
     return True
 
