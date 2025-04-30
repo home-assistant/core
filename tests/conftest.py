@@ -286,6 +286,7 @@ def garbage_collection() -> None:
     to run per test case if needed.
     """
     gc.collect()
+    gc.freeze()
 
 
 @pytest.fixture(autouse=True)
@@ -1345,12 +1346,13 @@ def mock_zeroconf() -> Generator[MagicMock]:
     from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
 
     with (
-        patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True) as mock_zc,
+        patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc,
         patch(
             "homeassistant.components.zeroconf.discovery.AsyncServiceBrowser",
-            autospec=True,
-        ),
+        ) as mock_browser,
     ):
+        asb = mock_browser.return_value
+        asb.async_cancel = AsyncMock()
         zc = mock_zc.return_value
         # DNSCache has strong Cython type checks, and MagicMock does not work
         # so we must mock the class directly
@@ -1940,7 +1942,7 @@ async def hassio_stubs(
             return_value={"result": "ok"},
         ) as hass_api,
         patch(
-            "homeassistant.components.hassio.HassIO.update_hass_timezone",
+            "homeassistant.components.hassio.HassIO.update_hass_config",
             return_value={"result": "ok"},
         ),
         patch(

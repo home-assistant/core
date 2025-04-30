@@ -40,7 +40,7 @@ env:
   CACHE_VERSION: 12
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 9
-  HA_SHORT_VERSION: "2025.5"
+  HA_SHORT_VERSION: "2025.6"
   DEFAULT_PYTHON: "3.13"
   ALL_PYTHON_VERSIONS: "['3.13']"
   # 10.3 is the oldest supported version
@@ -968,7 +968,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           name: pytest_buckets
       - name: Compile English translations
@@ -1312,7 +1312,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
@@ -1454,7 +1454,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
@@ -1479,7 +1479,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.2.1
+        uses: actions/download-artifact@v4.3.0
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov

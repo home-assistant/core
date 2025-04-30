@@ -959,6 +959,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_wm_wm_01011]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'b854ca5f-dc54-140d-6349-758b4d973c41',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_WM_TP1_21_COMMON',
+    'model_id': None,
+    'name': 'Machine à Laver',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'DA_WM_TP1_21_COMMON_30240927',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[ecobee_sensor]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

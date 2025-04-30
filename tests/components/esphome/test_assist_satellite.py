@@ -1,7 +1,6 @@
 """Test ESPHome voice assistant server."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from dataclasses import replace
 import io
 import socket
@@ -10,12 +9,9 @@ import wave
 
 from aioesphomeapi import (
     APIClient,
-    EntityInfo,
-    EntityState,
     MediaPlayerFormatPurpose,
     MediaPlayerInfo,
     MediaPlayerSupportedFormat,
-    UserService,
     VoiceAssistantAnnounceFinished,
     VoiceAssistantAudioSettings,
     VoiceAssistantCommandFlag,
@@ -51,7 +47,7 @@ from homeassistant.helpers import device_registry as dr, intent as intent_helper
 from homeassistant.helpers.network import get_url
 
 from .common import get_satellite_entity
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDeviceType
 
 from tests.components.tts.common import MockResultStream
 
@@ -72,13 +68,10 @@ def mock_wav() -> bytes:
 async def test_no_satellite_without_voice_assistant(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test that an assist satellite entity is not created if a voice assistant is not present."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -95,16 +88,13 @@ async def test_pipeline_api_audio(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     mock_wav: bytes,
 ) -> None:
     """Test a complete pipeline run with API audio (over the TCP connection)."""
     conversation_id = "test-conversation-id"
 
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -404,10 +394,7 @@ async def test_pipeline_api_audio(
 async def test_pipeline_udp_audio(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     mock_wav: bytes,
 ) -> None:
     """Test a complete pipeline run with legacy UDP audio.
@@ -417,7 +404,7 @@ async def test_pipeline_udp_audio(
     """
     conversation_id = "test-conversation-id"
 
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -617,10 +604,7 @@ async def test_udp_errors() -> None:
 async def test_pipeline_media_player(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     mock_wav: bytes,
 ) -> None:
     """Test a complete pipeline run with the TTS response sent to a media player instead of a speaker.
@@ -630,7 +614,7 @@ async def test_pipeline_media_player(
     """
     conversation_id = "test-conversation-id"
 
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -772,14 +756,11 @@ async def test_timer_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test that injecting timer events results in the correct api client calls."""
 
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -846,14 +827,11 @@ async def test_unknown_timer_event(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test that unknown (new) timer event types do not result in api calls."""
 
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -893,14 +871,11 @@ async def test_unknown_timer_event(
 async def test_streaming_tts_errors(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     mock_wav: bytes,
 ) -> None:
     """Test error conditions for _stream_tts_audio function."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -978,13 +953,10 @@ async def test_streaming_tts_errors(
 async def test_tts_format_from_media_player(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test that the text-to-speech format is pulled from the first media player."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[
             MediaPlayerInfo(
@@ -1048,13 +1020,10 @@ async def test_tts_format_from_media_player(
 async def test_tts_minimal_format_from_media_player(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test text-to-speech format when media player only specifies the codec."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[
             MediaPlayerInfo(
@@ -1115,13 +1084,10 @@ async def test_tts_minimal_format_from_media_player(
 async def test_announce_message(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test announcement with message."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -1192,14 +1158,11 @@ async def test_announce_message(
 async def test_announce_media_id(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test announcement with media id."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[
             MediaPlayerInfo(
@@ -1292,13 +1255,10 @@ async def test_announce_media_id(
 async def test_announce_message_with_preannounce(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test announcement with message and preannounce media id."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -1369,13 +1329,10 @@ async def test_announce_message_with_preannounce(
 async def test_non_default_supported_features(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test that the start conversation and announce are not set by default."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -1398,13 +1355,10 @@ async def test_non_default_supported_features(
 async def test_start_conversation_message(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test start conversation with message."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -1494,14 +1448,11 @@ async def test_start_conversation_message(
 async def test_start_conversation_media_id(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test start conversation with media id."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[
             MediaPlayerInfo(
@@ -1613,13 +1564,10 @@ async def test_start_conversation_media_id(
 async def test_start_conversation_message_with_preannounce(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test start conversation with message and preannounce media id."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -1709,13 +1657,10 @@ async def test_start_conversation_message_with_preannounce(
 async def test_satellite_unloaded_on_disconnect(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test that the assist satellite platform is unloaded on disconnect."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -1744,13 +1689,10 @@ async def test_satellite_unloaded_on_disconnect(
 async def test_pipeline_abort(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test aborting a pipeline (no further processing)."""
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -1821,10 +1763,7 @@ async def test_pipeline_abort(
 async def test_get_set_configuration(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test getting and setting the satellite configuration."""
     expected_config = AssistSatelliteConfiguration(
@@ -1837,7 +1776,7 @@ async def test_get_set_configuration(
     )
     mock_client.get_voice_assistant_configuration.return_value = expected_config
 
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],
@@ -1874,10 +1813,7 @@ async def test_get_set_configuration(
 async def test_wake_word_select(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test wake word select."""
     device_config = AssistSatelliteConfiguration(
@@ -1901,7 +1837,7 @@ async def test_wake_word_select(
 
     mock_client.set_voice_assistant_configuration = AsyncMock(side_effect=wrapper)
 
-    mock_device: MockESPHomeDevice = await mock_esphome_device(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
         user_service=[],

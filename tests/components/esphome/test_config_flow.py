@@ -1,6 +1,5 @@
 """Test config flow."""
 
-from collections.abc import Awaitable, Callable
 from ipaddress import ip_address
 import json
 from typing import Any
@@ -10,13 +9,10 @@ from aioesphomeapi import (
     APIClient,
     APIConnectionError,
     DeviceInfo,
-    EntityInfo,
-    EntityState,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     RequiresEncryptionAPIError,
     ResolveAPIError,
-    UserService,
 )
 import aiohttp
 import pytest
@@ -41,6 +37,7 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import VALID_NOISE_PSK
+from .conftest import MockGenericDeviceEntryType
 
 from tests.common import MockConfigEntry
 
@@ -1660,10 +1657,7 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
 async def test_option_flow_allow_service_calls(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockConfigEntry],
-    ],
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test config flow options for allow service calls."""
     entry = await mock_generic_device_entry(
@@ -1708,10 +1702,7 @@ async def test_option_flow_allow_service_calls(
 async def test_option_flow_subscribe_logs(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockConfigEntry],
-    ],
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test config flow options with subscribe logs."""
     entry = await mock_generic_device_entry(

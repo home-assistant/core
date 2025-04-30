@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from aiontfy import Message
-from aiontfy.exceptions import NtfyException, NtfyHTTPError
+from aiontfy.exceptions import (
+    NtfyException,
+    NtfyHTTPError,
+    NtfyUnauthorizedAuthenticationError,
+)
 from yarl import URL
 
 from homeassistant.components.notify import (
@@ -66,6 +70,7 @@ class NtfyNotifyEntity(NotifyEntity):
             configuration_url=URL(config_entry.data[CONF_URL]) / self.topic,
             identifiers={(DOMAIN, f"{config_entry.entry_id}_{subentry.subentry_id}")},
         )
+        self.config_entry = config_entry
         self.ntfy = config_entry.runtime_data
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
@@ -73,6 +78,12 @@ class NtfyNotifyEntity(NotifyEntity):
         msg = Message(topic=self.topic, message=message, title=title)
         try:
             await self.ntfy.publish(msg)
+        except NtfyUnauthorizedAuthenticationError as e:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from e
         except NtfyHTTPError as e:
             raise HomeAssistantError(
                 translation_key="publish_failed_request_error",
