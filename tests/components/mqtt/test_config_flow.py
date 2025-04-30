@@ -43,7 +43,7 @@ from .common import (
     MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS,
 )
 
-from tests.common import MockConfigEntry, MockMqttReasonCode
+from tests.common import MockConfigEntry, MockMqttReasonCode, get_schema_suggested_value
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 ADD_ON_DISCOVERY_INFO = {
@@ -1454,19 +1454,6 @@ def get_default(schema: vol.Schema, key: str) -> Any | None:
     return None
 
 
-def get_suggested(schema: vol.Schema, key: str) -> Any | None:
-    """Get suggested value for key in voluptuous schema."""
-    for schema_key in schema:  # type:ignore[attr-defined]
-        if schema_key == key:
-            if (
-                schema_key.description is None
-                or "suggested_value" not in schema_key.description
-            ):
-                return None
-            return schema_key.description["suggested_value"]
-    return None
-
-
 @pytest.mark.usefixtures("mock_reload_after_entry_update")
 async def test_option_flow_default_suggested_values(
     hass: HomeAssistant,
@@ -1521,7 +1508,7 @@ async def test_option_flow_default_suggested_values(
     for key, value in defaults.items():
         assert get_default(result["data_schema"].schema, key) == value
     for key, value in suggested.items():
-        assert get_suggested(result["data_schema"].schema, key) == value
+        assert get_schema_suggested_value(result["data_schema"].schema, key) == value
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -1557,7 +1544,7 @@ async def test_option_flow_default_suggested_values(
     for key, value in defaults.items():
         assert get_default(result["data_schema"].schema, key) == value
     for key, value in suggested.items():
-        assert get_suggested(result["data_schema"].schema, key) == value
+        assert get_schema_suggested_value(result["data_schema"].schema, key) == value
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -2039,7 +2026,7 @@ async def test_try_connection_with_advanced_parameters(
     for k, v in defaults.items():
         assert get_default(result["data_schema"].schema, k) == v
     for k, v in suggested.items():
-        assert get_suggested(result["data_schema"].schema, k) == v
+        assert get_schema_suggested_value(result["data_schema"].schema, k) == v
 
     # test we can change username and password
     mock_try_connection_success.reset_mock()
