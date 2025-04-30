@@ -157,7 +157,6 @@ async def _async_resolve_blueprints(
     if is_blueprint_instance_config(config):
         blueprints = async_get_blueprints(hass)
 
-        blueprint_inputs = await blueprints.async_inputs_from_config(config)
         blueprint_inputs = await blueprints.async_inputs_from_config(
             _backward_compat_schema(config)
         )
