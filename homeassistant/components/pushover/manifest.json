@@ -8,3 +8,4 @@
   "loggers": ["pushover_complete"],
   "requirements": ["pushover_complete==1.2.0"]
 }
+
