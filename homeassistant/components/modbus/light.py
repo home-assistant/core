@@ -63,7 +63,7 @@ class ModbusLight(BaseSwitch, LightEntity):
         self._color_temp_address: int | None = config.get(CONF_COLOR_TEMP_REGISTER)
 
         # Determine color mode dynamically
-        self._attr_color_mode = self._detect_color_mode(config=config)
+        self._attr_color_mode = self._detect_color_mode(config)
         self._attr_supported_color_modes = {self._attr_color_mode}
 
         # Set min/max kelvin values if the mode is COLOR_TEMP
