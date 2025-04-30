@@ -98,7 +98,7 @@
           "dc_input_voltage_mppt_2_too_high": "DC input voltage MPPT 2 too high",
           "current_sensor_calibration_timeout": "Current sensor calibration timeout",
           "ac_current_sensor_error": "AC current sensor error",
-          "interrupt_check_fail": "Interrupt check fail",
+          "interrupt_check_fail": "Interrupt Check fail",
           "overtemperature_in_connection_area": "Overtemperature in the connection area",
           "fan_1_error": "Fan 1 error",
           "fan_2_error": "Fan 2 error",
