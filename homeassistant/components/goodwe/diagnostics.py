@@ -4,19 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from goodwe import Inverter
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, KEY_INVERTER
+from .coordinator import GoodweConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: GoodweConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    inverter: Inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
+    inverter = config_entry.runtime_data.inverter
 
     return {
         "config_entry": config_entry.as_dict(),

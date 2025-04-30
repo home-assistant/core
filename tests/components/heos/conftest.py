@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
+from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
 from pyheos import (
+    BrowseResult,
     HeosGroup,
     HeosHost,
     HeosNowPlayingMedia,
@@ -14,10 +16,12 @@ from pyheos import (
     HeosSystem,
     LineOutLevelType,
     MediaItem,
+    MediaMusicSource,
     MediaType,
     NetworkType,
     PlayerUpdateResult,
     PlayState,
+    QueueItem,
     RepeatType,
     const,
 )
@@ -36,6 +40,7 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import MockHeos
 
@@ -281,6 +286,36 @@ def discovery_data_fixture_bedroom() -> SsdpServiceInfo:
     )
 
 
+@pytest.fixture(name="zeroconf_discovery_data")
+def zeroconf_discovery_data_fixture() -> ZeroconfServiceInfo:
+    """Return mock discovery data for testing."""
+    host = "127.0.0.1"
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        port=10101,
+        hostname=host,
+        type="mock_type",
+        name="MyDenon._heos-audio._tcp.local.",
+        properties={},
+    )
+
+
+@pytest.fixture(name="zeroconf_discovery_data_bedroom")
+def zeroconf_discovery_data_fixture_bedroom() -> ZeroconfServiceInfo:
+    """Return mock discovery data for testing."""
+    host = "127.0.0.2"
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        port=10101,
+        hostname=host,
+        type="mock_type",
+        name="MyDenonBedroom._heos-audio._tcp.local.",
+        properties={},
+    )
+
+
 @pytest.fixture(name="quick_selects")
 def quick_selects_fixture() -> dict[int, str]:
     """Create a dict of quick selects for testing."""
@@ -294,10 +329,10 @@ def quick_selects_fixture() -> dict[int, str]:
     }
 
 
-@pytest.fixture(name="playlists")
-def playlists_fixture() -> list[MediaItem]:
-    """Create favorites fixture."""
-    playlist = MediaItem(
+@pytest.fixture(name="playlist")
+def playlist_fixture() -> MediaItem:
+    """Create playlist fixture."""
+    return MediaItem(
         source_id=const.MUSIC_SOURCE_PLAYLISTS,
         name="Awesome Music",
         type=MediaType.PLAYLIST,
@@ -306,6 +341,44 @@ def playlists_fixture() -> list[MediaItem]:
         image_url="",
         heos=None,
     )
+
+
+@pytest.fixture(name="music_sources")
+def music_sources_fixture() -> dict[int, MediaMusicSource]:
+    """Create music sources fixture."""
+    return {
+        const.MUSIC_SOURCE_PANDORA: MediaMusicSource(
+            source_id=const.MUSIC_SOURCE_PANDORA,
+            name="Pandora",
+            type=MediaType.MUSIC_SERVICE,
+            available=True,
+            service_username="user",
+            image_url="",
+            heos=None,
+        ),
+        const.MUSIC_SOURCE_TUNEIN: MediaMusicSource(
+            source_id=const.MUSIC_SOURCE_TUNEIN,
+            name="TuneIn",
+            type=MediaType.MUSIC_SERVICE,
+            available=False,
+            service_username=None,
+            image_url="",
+            heos=None,
+        ),
+    }
+
+
+@pytest.fixture(name="pandora_browse_result")
+def pandora_browse_response_fixture(favorites: dict[int, MediaItem]) -> BrowseResult:
+    """Create a mock response for browsing Pandora."""
+    return BrowseResult(
+        1, 1, const.MUSIC_SOURCE_PANDORA, items=[favorites[1]], options=[]
+    )
+
+
+@pytest.fixture(name="playlists")
+def playlists_fixture(playlist: MediaItem) -> list[MediaItem]:
+    """Create playlists fixture."""
     return [playlist]
 
 
@@ -319,3 +392,28 @@ def change_data_fixture() -> PlayerUpdateResult:
 def change_data_mapped_ids_fixture() -> PlayerUpdateResult:
     """Create player change data for testing."""
     return PlayerUpdateResult(updated_player_ids={1: 101})
+
+
+@pytest.fixture(name="queue")
+def queue_fixture() -> list[QueueItem]:
+    """Create a queue fixture."""
+    return [
+        QueueItem(
+            queue_id=1,
+            song="Espresso",
+            album="Espresso",
+            artist="Sabrina Carpenter",
+            image_url="http://resources.wimpmusic.com/images/e4f2d75f/a69e/4b8a/b800/e18546b1ad4c/640x640.jpg",
+            media_id="356276483",
+            album_id="356276481",
+        ),
+        QueueItem(
+            queue_id=2,
+            song="A Bar Song (Tipsy)",
+            album="A Bar Song (Tipsy)",
+            artist="Shaboozey",
+            image_url="http://resources.wimpmusic.com/images/d05b8da3/4fae/45ff/ac1b/7ab7caab3523/640x640.jpg",
+            media_id="354365598",
+            album_id="354365596",
+        ),
+    ]

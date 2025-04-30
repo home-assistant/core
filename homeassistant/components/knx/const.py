@@ -14,7 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 DOMAIN: Final = "knx"
 KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
@@ -104,9 +104,9 @@ class KNXConfigEntryData(TypedDict, total=False):
     multicast_group: str
     multicast_port: int
     route_back: bool  # not required
-    host: str  # only required for tunnelling
-    port: int  # only required for tunnelling
-    tunnel_endpoint_ia: str | None  # tunnelling only - not required (use get())
+    host: str  # only required for tunneling
+    port: int  # only required for tunneling
+    tunnel_endpoint_ia: str | None  # tunneling only - not required (use get())
     # KNX secure
     user_id: int | None  # not required
     user_password: str | None  # not required
@@ -160,6 +160,8 @@ SUPPORTED_PLATFORMS_YAML: Final = {
 
 SUPPORTED_PLATFORMS_UI: Final = {
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
     Platform.LIGHT,
     Platform.SWITCH,
 }
@@ -182,3 +184,33 @@ CURRENT_HVAC_ACTIONS: Final = {
     HVACMode.FAN_ONLY: HVACAction.FAN,
     HVACMode.DRY: HVACAction.DRYING,
 }
+
+
+class CoverConf:
+    """Common config keys for cover."""
+
+    TRAVELLING_TIME_DOWN: Final = "travelling_time_down"
+    TRAVELLING_TIME_UP: Final = "travelling_time_up"
+    INVERT_UPDOWN: Final = "invert_updown"
+    INVERT_POSITION: Final = "invert_position"
+    INVERT_ANGLE: Final = "invert_angle"
+
+
+class ClimateConf:
+    """Common config keys for climate."""
+
+    MIN_TEMP: Final = "min_temp"
+    MAX_TEMP: Final = "max_temp"
+    TEMPERATURE_STEP: Final = "temperature_step"
+    SETPOINT_SHIFT_MAX: Final = "setpoint_shift_max"
+    SETPOINT_SHIFT_MIN: Final = "setpoint_shift_min"
+
+    ON_OFF_INVERT: Final = "on_off_invert"
+
+    OPERATION_MODES: Final = "operation_modes"
+    CONTROLLER_MODES: Final = "controller_modes"
+    DEFAULT_CONTROLLER_MODE: Final = "default_controller_mode"
+
+    FAN_MAX_STEP: Final = "fan_max_step"
+    FAN_SPEED_MODE: Final = "fan_speed_mode"
+    FAN_ZERO_MODE: Final = "fan_zero_mode"

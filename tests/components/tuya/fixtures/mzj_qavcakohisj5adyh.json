@@ -1,0 +1,117 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Sous Vide",
+  "category": "mzj",
+  "product_id": "qavcakohisj5adyh",
+  "product_name": "Sous Vide",
+  "online": false,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-01-08T17:56:06+00:00",
+  "create_time": "2025-01-08T17:56:06+00:00",
+  "update_time": "2025-01-08T17:56:06+00:00",
+  "function": {
+    "start": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "cook_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 5999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "cook_temperature": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 250,
+        "max": 925,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    }
+  },
+  "status_range": {
+    "start": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "status": {
+      "type": "Enum",
+      "value": {
+        "range": ["standby", "cooking", "done"]
+      }
+    },
+    "cook_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 5999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "remain_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 5999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "cook_temperature": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 250,
+        "max": 925,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 0,
+        "max": 1000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    }
+  },
+  "status": {
+    "start": false,
+    "status": "standby",
+    "cook_time": 1,
+    "remain_time": 1,
+    "cook_temperature": 550,
+    "temp_current": 267,
+    "temp_unit_convert": "c"
+  },
+  "set_up": true,
+  "support_local": true
+}

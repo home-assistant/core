@@ -25,7 +25,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
+from .common import mock_dsm_information
+from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import ANY, MockConfigEntry
 from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
@@ -48,7 +49,7 @@ def mock_dsm_with_filestation():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(
             get_shared_folders=AsyncMock(
                 return_value=[
@@ -255,7 +256,7 @@ async def test_missing_backup_no_shares(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
+    "ignore_missing_translations",
     ["component.synology_dsm.issues.other_issue.title"],
 )
 async def test_other_fixable_issues(

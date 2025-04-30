@@ -4,6 +4,8 @@ from typing import Final
 
 from systembridgemodels.modules import Module
 
+SYNTAX_KEYS_DOCUMENTATION_URL = "http://robotjs.io/docs/syntax#keys"
+
 DOMAIN = "system_bridge"
 
 MODULES: Final[list[Module]] = [
@@ -18,4 +20,6 @@ MODULES: Final[list[Module]] = [
     Module.SYSTEM,
 ]
 
-DATA_WAIT_TIMEOUT: Final[int] = 10
+DATA_WAIT_TIMEOUT: Final[int] = 20
+
+GET_DATA_WAIT_TIMEOUT: Final[int] = 15

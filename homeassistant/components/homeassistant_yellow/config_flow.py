@@ -5,15 +5,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, Protocol, final
 
-import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
-    HassioAPIError,
-    async_get_yellow_settings,
-    async_set_yellow_settings,
+    SupervisorError,
+    YellowOptions,
     get_supervisor_client,
 )
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
@@ -24,17 +22,31 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     OptionsFlowHandler as MultiprotocolOptionsFlowHandler,
     SerialPortSettings as MultiprotocolSerialPortSettings,
 )
-from homeassistant.components.homeassistant_hardware.util import ApplicationType
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    FirmwareInfo,
+    ResetTarget,
+    probe_silabs_firmware_info,
+)
 from homeassistant.config_entries import (
     SOURCE_HARDWARE,
     ConfigEntry,
+    ConfigEntryBaseFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
 from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import discovery_flow, selector
 
-from .const import DOMAIN, FIRMWARE, RADIO_DEVICE, ZHA_DOMAIN, ZHA_HW_DISCOVERY_DATA
+from .const import (
+    DOMAIN,
+    FIRMWARE,
+    FIRMWARE_VERSION,
+    NABU_CASA_FIRMWARE_RELEASES_URL,
+    RADIO_DEVICE,
+    ZHA_DOMAIN,
+    ZHA_HW_DISCOVERY_DATA,
+)
 from .hardware import BOARD_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,12 +59,65 @@ STEP_HW_SETTINGS_SCHEMA = vol.Schema(
     }
 )
 
+if TYPE_CHECKING:
 
-class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
+    class FirmwareInstallFlowProtocol(Protocol):
+        """Protocol describing `BaseFirmwareInstallFlow` for a mixin."""
+
+        async def _install_firmware_step(
+            self,
+            fw_update_url: str,
+            fw_type: str,
+            firmware_name: str,
+            expected_installed_firmware_type: ApplicationType,
+            step_id: str,
+            next_step_id: str,
+        ) -> ConfigFlowResult: ...
+
+else:
+    # Multiple inheritance with `Protocol` seems to break
+    FirmwareInstallFlowProtocol = object
+
+
+class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
+    """Mixin for Home Assistant Yellow firmware methods."""
+
+    BOOTLOADER_RESET_METHODS = [ResetTarget.YELLOW]
+
+    async def async_step_install_zigbee_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Zigbee firmware."""
+        return await self._install_firmware_step(
+            fw_update_url=NABU_CASA_FIRMWARE_RELEASES_URL,
+            fw_type="yellow_zigbee_ncp",
+            firmware_name="Zigbee",
+            expected_installed_firmware_type=ApplicationType.EZSP,
+            step_id="install_zigbee_firmware",
+            next_step_id="pre_confirm_zigbee",
+        )
+
+    async def async_step_install_thread_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Thread firmware."""
+        return await self._install_firmware_step(
+            fw_update_url=NABU_CASA_FIRMWARE_RELEASES_URL,
+            fw_type="yellow_openthread_rcp",
+            firmware_name="OpenThread",
+            expected_installed_firmware_type=ApplicationType.SPINEL,
+            step_id="install_thread_firmware",
+            next_step_id="finish_thread_installation",
+        )
+
+
+class HomeAssistantYellowConfigFlow(
+    YellowFirmwareMixin, BaseFirmwareConfigFlow, domain=DOMAIN
+):
     """Handle a config flow for Home Assistant Yellow."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 4
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Instantiate config flow."""
@@ -78,11 +143,16 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
         self, data: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        assert self._device is not None
+
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
-        await self._probe_firmware_type()
+        self._probed_firmware_info = await probe_silabs_firmware_info(self._device)
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
-        if self._probed_firmware_type is ApplicationType.EZSP:
+        if (
+            self._probed_firmware_info is not None
+            and self._probed_firmware_info.firmware_type is ApplicationType.EZSP
+        ):
             discovery_flow.async_create_flow(
                 self.hass,
                 ZHA_DOMAIN,
@@ -98,7 +168,16 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
             title=BOARD_NAME,
             data={
                 # Assume the firmware type is EZSP if we cannot probe it
-                FIRMWARE: (self._probed_firmware_type or ApplicationType.EZSP).value,
+                FIRMWARE: (
+                    self._probed_firmware_info.firmware_type
+                    if self._probed_firmware_info is not None
+                    else ApplicationType.EZSP
+                ).value,
+                FIRMWARE_VERSION: (
+                    self._probed_firmware_info.firmware_version
+                    if self._probed_firmware_info is not None
+                    else None
+                ),
             },
         )
 
@@ -141,21 +220,22 @@ class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
                 return self.async_create_entry(data={})
             try:
                 async with asyncio.timeout(10):
-                    await async_set_yellow_settings(self.hass, user_input)
-            except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
+                    await self._supervisor_client.os.set_yellow_options(
+                        YellowOptions.from_dict(user_input)
+                    )
+            except (TimeoutError, SupervisorError) as err:
                 _LOGGER.warning("Failed to write hardware settings", exc_info=err)
                 return self.async_abort(reason="write_hw_settings_error")
             return await self.async_step_reboot_menu()
 
         try:
             async with asyncio.timeout(10):
-                self._hw_settings: dict[str, bool] = await async_get_yellow_settings(
-                    self.hass
-                )
-        except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
+                yellow_info = await self._supervisor_client.os.yellow_info()
+        except (TimeoutError, SupervisorError) as err:
             _LOGGER.warning("Failed to read hardware settings", exc_info=err)
             return self.async_abort(reason="read_hw_settings_error")
 
+        self._hw_settings: dict[str, bool] = yellow_info.to_dict()
         schema = self.add_suggested_values_to_schema(
             STEP_HW_SETTINGS_SCHEMA, self._hw_settings
         )
@@ -253,7 +333,9 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
 
 
 class HomeAssistantYellowOptionsFlowHandler(
-    BaseHomeAssistantYellowOptionsFlow, BaseFirmwareOptionsFlow
+    YellowFirmwareMixin,
+    BaseHomeAssistantYellowOptionsFlow,
+    BaseFirmwareOptionsFlow,
 ):
     """Handle a firmware options flow for Home Assistant Yellow."""
 
@@ -263,6 +345,14 @@ class HomeAssistantYellowOptionsFlowHandler(
 
         self._hardware_name = BOARD_NAME
         self._device = RADIO_DEVICE
+
+        self._probed_firmware_info = FirmwareInfo(
+            device=self._device,
+            firmware_type=ApplicationType(self._config_entry.data["firmware"]),
+            firmware_version=None,
+            source="guess",
+            owners=[],
+        )
 
         # Regenerate the translation placeholders
         self._get_translation_placeholders()
@@ -285,13 +375,14 @@ class HomeAssistantYellowOptionsFlowHandler(
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
-        assert self._probed_firmware_type is not None
+        assert self._probed_firmware_info is not None
 
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                FIRMWARE: self._probed_firmware_type.value,
+                FIRMWARE: self._probed_firmware_info.firmware_type.value,
+                FIRMWARE_VERSION: self._probed_firmware_info.firmware_version,
             },
         )
 

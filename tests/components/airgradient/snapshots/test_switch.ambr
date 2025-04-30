@@ -27,6 +27,7 @@
     'original_name': 'Post data to Airgradient',
     'platform': 'airgradient',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'post_data_to_airgradient',
     'unique_id': '84fce612f5b8-post_data_to_airgradient',

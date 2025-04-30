@@ -15,7 +15,7 @@ def get_button_entity_ids() -> list[str]:
     """Return a list of entity_ids that Mozart devices (except Beoconnect Core) provides."""
     return [
         f"event.beosound_balance_11111111_{underscore(button_type)}".replace(
-            "preset", "favourite_"
+            "preset", "favorite_"
         )
         for button_type in DEVICE_BUTTONS
     ]

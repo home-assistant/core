@@ -37,6 +37,7 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
@@ -45,7 +46,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -932,6 +933,63 @@ async def test_send_stop_cover_command(
     )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "STOP", 2, False)
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "payload_stop"),
+    [
+        (
+            {
+                mqtt.DOMAIN: {
+                    cover.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "state-topic",
+                        "tilt_command_topic": "tilt-command-topic",
+                        "payload_stop_tilt": "TILT_STOP",
+                        "qos": 2,
+                    }
+                }
+            },
+            "TILT_STOP",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    cover.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "state-topic",
+                        "tilt_command_topic": "tilt-command-topic",
+                        "qos": 2,
+                    }
+                }
+            },
+            "STOP",
+        ),
+    ],
+)
+async def test_send_stop_tilt_command(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    payload_stop: str,
+) -> None:
+    """Test the sending of stop_cover_tilt."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test"},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", payload_stop, 2, False
+    )
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
 

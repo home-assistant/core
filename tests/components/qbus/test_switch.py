@@ -1,7 +1,5 @@
 """Test Qbus switch entities."""
 
-import json
-
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -9,11 +7,8 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.util.json import JsonObjectType
 
-from .const import TOPIC_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
 
 _PAYLOAD_SWITCH_STATE_ON = '{"id":"UL10","properties":{"value":true},"type":"state"}'
@@ -34,16 +29,9 @@ _SWITCH_ENTITY_ID = "switch.living"
 async def test_switch_turn_on_off(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
-    mock_config_entry: MockConfigEntry,
-    payload_config: JsonObjectType,
+    setup_integration: None,
 ) -> None:
     """Test turning on and off."""
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    async_fire_mqtt_message(hass, TOPIC_CONFIG, json.dumps(payload_config))
-    await hass.async_block_till_done()
 
     # Switch ON
     mqtt_mock.reset_mock()

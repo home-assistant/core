@@ -257,7 +257,7 @@ async def test_invalid_error(
 
     with (
         patch(
-            "homeassistant.components.tesla_fleet.VehicleSpecific.auto_conditioning_start",
+            "tesla_fleet_api.tesla.VehicleFleet.auto_conditioning_start",
             side_effect=InvalidCommand,
         ) as mock_on,
         pytest.raises(
@@ -285,7 +285,7 @@ async def test_errors(
 
     with (
         patch(
-            "homeassistant.components.tesla_fleet.VehicleSpecific.auto_conditioning_start",
+            "tesla_fleet_api.tesla.VehicleFleet.auto_conditioning_start",
             return_value=response,
         ) as mock_on,
         pytest.raises(HomeAssistantError),
@@ -308,7 +308,7 @@ async def test_ignored_error(
     await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.auto_conditioning_start",
+        "tesla_fleet_api.tesla.VehicleFleet.auto_conditioning_start",
         return_value=COMMAND_IGNORED_REASON,
     ) as mock_on:
         await hass.services.async_call(
@@ -401,7 +401,8 @@ async def test_climate_noscope(
     entity_id = "climate.test_climate"
 
     with pytest.raises(
-        ServiceValidationError, match="Climate mode off is not supported"
+        ServiceValidationError,
+        match="HVAC mode off is not valid. Valid HVAC modes are: heat_cool",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -444,7 +445,7 @@ async def test_climate_notemp(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Set temperature action was used with the target temperature low/high parameter but the entity does not support it",
+        match="Set temperature action was used with the 'Lower/Upper target temperature' parameter but the entity does not support it",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,

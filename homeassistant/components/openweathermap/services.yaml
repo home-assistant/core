@@ -1,0 +1,5 @@
+get_minute_forecast:
+  target:
+    entity:
+      domain: weather
+      integration: openweathermap

@@ -14,6 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
+from tests.common import async_load_json_object_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -87,7 +88,7 @@ async def test_create_entity_error(
     assert res["success"], res
     assert not res["result"]["success"]
     assert res["result"]["errors"][0]["path"] == ["platform"]
-    assert res["result"]["error_base"].startswith("expected Platform or one of")
+    assert res["result"]["error_base"].startswith("expected EntityPlatforms or one of")
 
     # create entity with unsupported platform
     await client.send_json_auto_id(
@@ -379,6 +380,7 @@ async def test_validate_entity(
     await knx.setup_integration()
     client = await hass_ws_client(hass)
 
+    # valid data
     await client.send_json_auto_id(
         {
             "type": "knx/validate_entity",
@@ -410,3 +412,65 @@ async def test_validate_entity(
     assert res["result"]["errors"][0]["path"] == ["data", "knx", "ga_switch", "write"]
     assert res["result"]["errors"][0]["error_message"] == "required key not provided"
     assert res["result"]["error_base"].startswith("required key not provided")
+
+    # invalid group_select data
+    await client.send_json_auto_id(
+        {
+            "type": "knx/validate_entity",
+            "platform": Platform.LIGHT,
+            "data": {
+                "entity": {"name": "test_name"},
+                "knx": {
+                    "color": {
+                        "ga_red_brightness": {"write": "1/2/3"},
+                        "ga_green_brightness": {"write": "1/2/4"},
+                        # ga_blue_brightness is missing - which is required
+                    }
+                },
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    # This shall test that a required key of the second GroupSelect schema is missing
+    # and not yield the "extra keys not allowed" error of the first GroupSelect Schema
+    assert res["result"]["errors"][0]["path"] == [
+        "data",
+        "knx",
+        "color",
+        "ga_blue_brightness",
+    ]
+    assert res["result"]["errors"][0]["error_message"] == "required key not provided"
+    assert res["result"]["error_base"].startswith("required key not provided")
+
+
+async def test_migration_1_to_2(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test migration from schema 1 to schema 2."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_light_v1.json", state_updater=False
+    )
+    new_data = await async_load_json_object_fixture(
+        hass, "config_store_light.json", "knx"
+    )
+    assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
+
+
+async def test_migration_2_1_to_2_2(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test migration from schema 2.1 to schema 2.2."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_binarysensor_v2_1.json",
+        state_updater=False,
+    )
+    new_data = await async_load_json_object_fixture(
+        hass, "config_store_binarysensor.json", "knx"
+    )
+    assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data

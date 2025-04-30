@@ -20,7 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as DOVADO_DOMAIN
+from . import DOMAIN
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
@@ -90,7 +90,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Dovado sensor platform."""
-    dovado = hass.data[DOVADO_DOMAIN]
+    dovado = hass.data[DOMAIN]
 
     sensors = config[CONF_SENSORS]
     entities = [

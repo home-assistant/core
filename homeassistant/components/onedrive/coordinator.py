@@ -66,6 +66,7 @@ class OneDriveUpdateCoordinator(DataUpdateCoordinator[Drive]):
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from err
         except OneDriveException as err:
+            _LOGGER.debug("Failed to fetch drive data: %s", err, exc_info=True)
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="update_failed"
             ) from err
@@ -88,8 +89,8 @@ class OneDriveUpdateCoordinator(DataUpdateCoordinator[Drive]):
                 ),
                 translation_key=key,
                 translation_placeholders={
-                    "total": str(drive.quota.total),
-                    "used": str(drive.quota.used),
+                    "total": f"{drive.quota.total / (1024**3):.2f}",
+                    "used": f"{drive.quota.used / (1024**3):.2f}",
                 },
             )
         return drive

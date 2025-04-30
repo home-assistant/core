@@ -15,7 +15,7 @@ from .common import get_test_config_dir
 
 
 @pytest.fixture(autouse=True)
-def remove_restore_result_file() -> Generator[None, Any, Any]:
+def remove_restore_result_file() -> Generator[None]:
     """Remove the restore result file."""
     yield
     Path(get_test_config_dir(".HA_RESTORE_RESULT")).unlink(missing_ok=True)

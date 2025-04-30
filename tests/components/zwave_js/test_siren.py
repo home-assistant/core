@@ -1,5 +1,6 @@
 """Test the Z-Wave JS siren platform."""
 
+import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.siren import (
@@ -7,7 +8,7 @@ from homeassistant.components.siren import (
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 
 SIREN_ENTITY = "siren.indoor_siren_6_play_tone_2"
@@ -62,6 +63,12 @@ TONE_ID_VALUE_ID = {
         "valueChangeOptions": ["volume"],
     },
 }
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SIREN]
 
 
 async def test_siren(

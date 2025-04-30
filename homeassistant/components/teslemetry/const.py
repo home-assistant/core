@@ -9,13 +9,6 @@ DOMAIN = "teslemetry"
 
 LOGGER = logging.getLogger(__package__)
 
-MODELS = {
-    "S": "Model S",
-    "3": "Model 3",
-    "X": "Model X",
-    "Y": "Model Y",
-}
-
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",
     "generator_energy_exported",

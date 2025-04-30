@@ -18,8 +18,9 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util.ssl import client_context_no_verify
 
-from .const import DOMAIN, KEY_MAC, TIMEOUT
+from .const import DOMAIN, KEY_MAC, TIMEOUT_SEC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,13 +84,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             password = None
 
         try:
-            async with asyncio.timeout(TIMEOUT):
+            async with asyncio.timeout(TIMEOUT_SEC):
                 device: Appliance = await DaikinFactory(
                     host,
                     async_get_clientsession(self.hass),
                     key=key,
                     uuid=uuid,
                     password=password,
+                    ssl_context=client_context_no_verify(),
                 )
         except (TimeoutError, ClientError):
             self.host = None

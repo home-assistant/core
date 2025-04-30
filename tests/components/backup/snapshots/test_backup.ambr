@@ -75,7 +75,11 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -102,7 +106,11 @@
             'instance_id': 'unknown_uuid',
             'with_automatic_settings': True,
           }),
+          'failed_addons': list([
+          ]),
           'failed_agent_ids': list([
+          ]),
+          'failed_folders': list([
           ]),
           'folders': list([
             'media',
@@ -114,9 +122,9 @@
           'with_automatic_settings': None,
         }),
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -148,9 +156,9 @@
       }),
       'backups': list([
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -182,9 +190,9 @@
       }),
       'backups': list([
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -216,9 +224,9 @@
       }),
       'backups': list([
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',
@@ -250,9 +258,9 @@
       }),
       'backups': list([
       ]),
+      'last_action_event': None,
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
-      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
       'state': 'idle',

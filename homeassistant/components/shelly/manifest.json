@@ -1,18 +1,24 @@
 {
   "domain": "shelly",
   "name": "Shelly",
-  "codeowners": ["@balloob", "@bieniu", "@thecode", "@chemelli74", "@bdraco"],
+  "bluetooth": [
+    {
+      "local_name": "Shelly*"
+    }
+  ],
+  "codeowners": ["@bieniu", "@thecode", "@chemelli74", "@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth", "http", "network"],
   "documentation": "https://www.home-assistant.io/integrations/shelly",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aioshelly"],
-  "requirements": ["aioshelly==12.4.2"],
+  "quality_scale": "silver",
+  "requirements": ["aioshelly==13.17.0"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
-      "name": "shelly*"
+      "name": "shelly*",
+      "type": "_http._tcp.local."
     },
     {
       "type": "_shelly._tcp.local."

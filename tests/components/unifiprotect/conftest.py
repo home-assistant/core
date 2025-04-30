@@ -32,6 +32,7 @@ from uiprotect.data import (
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DOMAIN
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -68,6 +69,7 @@ def mock_ufp_config_entry():
             "host": "1.1.1.1",
             "username": "test-username",
             "password": "test-password",
+            CONF_API_KEY: "test-api-key",
             "id": "UnifiProtect",
             "port": 443,
             "verify_ssl": False,

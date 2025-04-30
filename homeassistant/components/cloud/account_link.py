@@ -71,8 +71,11 @@ async def _get_services(hass: HomeAssistant) -> list[dict[str, Any]]:
         services = await account_link.async_fetch_available_services(
             hass.data[DATA_CLOUD]
         )
-    except (aiohttp.ClientError, TimeoutError):
-        return []
+    except (aiohttp.ClientError, TimeoutError) as err:
+        raise config_entry_oauth2_flow.ImplementationUnavailableError(
+            "Cannot provide OAuth2 implementation for cloud services. "
+            "Failed to fetch from account link server."
+        ) from err
 
     hass.data[DATA_SERVICES] = services
 
@@ -127,7 +130,11 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
                     flow_id=flow_id, user_input=tokens
                 )
 
-        self.hass.async_create_task(await_tokens())
+        # It's a background task because it should be cancelled on shutdown and there's nothing else
+        # we can do in such case. There's also no need to wait for this during setup.
+        self.hass.async_create_background_task(
+            await_tokens(), name="Awaiting OAuth tokens"
+        )
 
         return authorize_url
 

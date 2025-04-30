@@ -13,10 +13,11 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
-    OptionsFlow,
+    OptionsFlowWithReload,
     SubentryFlowResult,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
 from . import DOMAIN
 
@@ -64,7 +65,7 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="reauth_successful")
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     async def async_step_init(
@@ -80,30 +81,30 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(data=self.config_entry.options | user_input)
 
-        return self.async_show_form(
-            step_id="options_1",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("section_1"): data_entry_flow.section(
-                        vol.Schema(
-                            {
-                                vol.Optional(
-                                    CONF_BOOLEAN,
-                                    default=self.config_entry.options.get(
-                                        CONF_BOOLEAN, False
-                                    ),
-                                ): bool,
-                                vol.Optional(
-                                    CONF_INT,
-                                    default=self.config_entry.options.get(CONF_INT, 10),
-                                ): int,
-                            }
-                        ),
-                        {"collapsed": False},
+        data_schema = vol.Schema(
+            {
+                vol.Required("section_1"): data_entry_flow.section(
+                    vol.Schema(
+                        {
+                            vol.Optional(
+                                CONF_BOOLEAN,
+                                default=self.config_entry.options.get(
+                                    CONF_BOOLEAN, False
+                                ),
+                            ): bool,
+                            vol.Optional(CONF_INT): cv.positive_int,
+                        }
                     ),
-                }
-            ),
+                    {"collapsed": False},
+                ),
+            }
         )
+        data_schema = self.add_suggested_values_to_schema(
+            data_schema,
+            {"section_1": {"int": self.config_entry.options.get(CONF_INT, 10)}},
+        )
+
+        return self.async_show_form(step_id="options_1", data_schema=data_schema)
 
 
 class SubentryFlowHandler(ConfigSubentryFlow):
@@ -145,8 +146,8 @@ class SubentryFlowHandler(ConfigSubentryFlow):
         """Reconfigure a sensor."""
         if user_input is not None:
             title = user_input.pop("name")
-            return self.async_update_and_abort(
-                self._get_reconfigure_entry(),
+            return self.async_update_reload_and_abort(
+                self._get_entry(),
                 self._get_reconfigure_subentry(),
                 data=user_input,
                 title=title,

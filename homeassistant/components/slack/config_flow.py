@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from slack.errors import SlackApiError
+from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncSlackResponse, AsyncWebClient
 import voluptuous as vol
 

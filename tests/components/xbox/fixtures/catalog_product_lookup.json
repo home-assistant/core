@@ -1,0 +1,4163 @@
+{
+  "BigIds": ["9WZDNCRFJ3TJ"],
+  "HasMorePages": false,
+  "Products": [
+    {
+      "LastModifiedDate": "2020-10-09T18:02:12.6570851Z",
+      "LocalizedProperties": [
+        {
+          "DeveloperName": "",
+          "DisplayPlatformProperties": null,
+          "PublisherName": "Netflix, Inc.",
+          "PublisherWebsiteUri": "http://www.netflix.com/",
+          "SupportUri": "https://contactus.netflix.com/Help",
+          "EligibilityProperties": null,
+          "Franchises": [],
+          "Images": [
+            {
+              "FileId": "2000000000072347014",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 956,
+              "ForegroundColor": "",
+              "Height": 50,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Logo",
+              "UnscaledImageSHA256Hash": "LsuIkwA6lGKfAPofYUpnKg3B6p4HLVk70Q3QCRviWEk=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.52014.9007199266246365.c2b9376d-d1a2-40c9-95ef-cff0f4ba91ca.0b056c35-6486-4947-852e-7149d9ab5851",
+              "Width": 50
+            },
+            {
+              "FileId": "2000000000072347040",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 1503,
+              "ForegroundColor": "",
+              "Height": 75,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Logo",
+              "UnscaledImageSHA256Hash": "WeQgusypQlBh3coam7AlFaMX7RTR4wNcVKDI8N9h7I8=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.58457.9007199266246365.3746ed8c-09d0-4007-9d2f-8ba20a9f4705.3292d53d-3ad8-4f34-943f-13d6d3c8ce3a",
+              "Width": 75
+            },
+            {
+              "FileId": "2000000000072347012",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2140,
+              "ForegroundColor": "",
+              "Height": 100,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Logo",
+              "UnscaledImageSHA256Hash": "JP364/KAZY1xbViqGWzChg6OKjA7Tp+1CuE1UFpjgRU=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.64804.9007199266246365.9e04b4a8-0637-4cbc-97b8-433eda07b081.64b4abe2-2f6d-4e87-a7af-900f58c8d4ae",
+              "Width": 100
+            },
+            {
+              "FileId": "2000000000072347015",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2272,
+              "ForegroundColor": "",
+              "Height": 150,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "jsnB/K6bXIuyDpPXu4zAzYelVN3T4dbn/Jx5QTQYLuM=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.51598.9007199266246365.9538e419-4ced-4bb5-b027-e23a78887cd2.c4963fa6-7627-4a17-b2a8-fb1321b226d0",
+              "Width": 150
+            },
+            {
+              "FileId": "2000000000072347041",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 3378,
+              "ForegroundColor": "",
+              "Height": 225,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "SzSfQgEgBEYLTb6uYdA1nrjKLTfJjLUnuMnG2ToXy4k=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.13387.9007199266246365.4d313a91-19f5-4900-9c7f-4e3f8085e869.3806d656-7896-4389-ba98-65f0b161eac0",
+              "Width": 225
+            },
+            {
+              "FileId": "2000000000072347007",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 4949,
+              "ForegroundColor": "",
+              "Height": 300,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "VybSV+2Tqmda3p4wZ+Oz61aIjPHl6LOBSc7f1QoT4J4=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.9815.9007199266246365.7dc5d343-fe4a-40c3-93dd-c78e77f97331.45eebdef-f725-4799-bbf8-9ad8391a8279",
+              "Width": 300
+            },
+            {
+              "FileId": "2000000000072347025",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 834,
+              "ForegroundColor": "",
+              "Height": 44,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "89cTEkobrZYY+Bv1uh1Y2BlYzVyKQw7OCBeVdSQ+00E=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.55283.9007199266246365.92a7f7d2-b5a8-4e3b-b093-2ce286d163f7.e7c178ca-fc0f-4357-bc23-28a6809d79f1",
+              "Width": 44
+            },
+            {
+              "FileId": "2000000000072347050",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 1292,
+              "ForegroundColor": "",
+              "Height": 66,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "fHoFBrOG4g2vbvmZobtVumDu4BSB6XZb9cDPByEyWzo=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.31356.9007199266246365.a955d0b2-934a-40df-9e26-f0085299a7b3.9f250d3a-ab30-4adf-9971-5c0ddcb34bfd",
+              "Width": 66
+            },
+            {
+              "FileId": "2000000000072346999",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 1841,
+              "ForegroundColor": "",
+              "Height": 88,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "490CuYQ2n11lpU4+dJlfhDNYhD4imyRWC34FPPc9X5I=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.56803.9007199266246365.df3025a0-c29c-43e4-8976-741647270c26.ba1fe8d7-0c07-4aed-9675-8d950c30637a",
+              "Width": 88
+            },
+            {
+              "FileId": "2000000000072347016",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 5154,
+              "ForegroundColor": "",
+              "Height": 310,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "eN/i5Qn7MmW1MCmbF9UOHwST4IE18jJ1F2s3da3rkf0=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.57208.9007199266246365.9aa1d4bb-c3b4-48d6-93cf-f6674fb40e8d.0bf15307-86b5-4f68-924c-9ecb2001a85a",
+              "Width": 310
+            },
+            {
+              "FileId": "2000000000072347029",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 8502,
+              "ForegroundColor": "",
+              "Height": 465,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "csqXF1GotwvYfOCCAPGUnBp4ITdVpQva4zenmHlLfio=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.51826.9007199266246365.4a31a46b-0288-4248-9dfb-cfff182818e9.7ca531f7-bdf8-4a82-9d3d-d0cecbfc19e5",
+              "Width": 465
+            },
+            {
+              "FileId": "2000000000072347020",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 13157,
+              "ForegroundColor": "",
+              "Height": 620,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "9ci+J2nZh9wWYu7ip7aeXLnn8Ql3zIWrt3z2F55jNFw=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.51445.9007199266246365.c6dce6b1-5edd-4e64-a117-0e45b8165403.c7938026-2c39-48b0-b8f8-067273b77187",
+              "Width": 620
+            },
+            {
+              "FileId": "2000000000072347034",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 1445,
+              "ForegroundColor": "",
+              "Height": 71,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "2TSwOl7rhajG8DN4/CmEjsKL3Br19vAhoC7tAxpjof8=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.13529.9007199266246365.25e80878-8386-4369-86e6-d58a6bdfa53f.5abac0fb-6cd2-4496-8b3d-c7455db0e5c4",
+              "Width": 71
+            },
+            {
+              "FileId": "2000000000072347042",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2362,
+              "ForegroundColor": "",
+              "Height": 107,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "ounSPvPq8jMPEQWBN3IJoDGgdgwakXrB466qO3pn0h4=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.59810.9007199266246365.d14eb120-7f2d-457d-a4b0-cb1a3bde44a8.c46c249a-a6c1-478a-8ec2-231650c67fa4",
+              "Width": 107
+            },
+            {
+              "FileId": "2000000000072347021",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 3395,
+              "ForegroundColor": "",
+              "Height": 142,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "VigAz/TpRsdUIIgK09mLYknu1N09Cn4PAiEhOSON26w=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.10326.9007199266246365.7067ae39-fd29-4b3b-90c7-bea207312e70.3883898b-7f30-4227-937a-a05330d3df53",
+              "Width": 142
+            },
+            {
+              "FileId": "2000000000072347033",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 4114,
+              "ForegroundColor": "",
+              "Height": 150,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "OoywViH1L5i7JaWjucFHoZzMqppnpXNvZ2nIhni4krU=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.35898.9007199266246365.f1a052c7-8ec1-42c2-b97c-ede1c1304e46.215d2a9b-5718-4a0d-9d4d-9aaa0b80ae71",
+              "Width": 310
+            },
+            {
+              "FileId": "2000000000072347037",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 6616,
+              "ForegroundColor": "",
+              "Height": 225,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "5MYdONTXb4CpAIaxkgUytqVYQhxHrSS3d9zMFXwl/mk=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.50916.9007199266246365.2a757954-4d70-4d41-a224-aff3d7b9bcc6.6cdae504-11a7-4b11-82f1-76c2d85e4a16",
+              "Width": 465
+            },
+            {
+              "FileId": "2000000000072347013",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 10118,
+              "ForegroundColor": "",
+              "Height": 300,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Tile",
+              "UnscaledImageSHA256Hash": "i2443NWbgRAqdj+HSijWf5ycUv+XcvN0ioFdT+FvyvA=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.28299.9007199266246365.75015a39-4585-418e-b169-dc023bde061c.5a53befa-4a1d-4db7-8f68-482fcaa8a61f",
+              "Width": 620
+            },
+            {
+              "FileId": "1152921504606999752",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 34740,
+              "ForegroundColor": "",
+              "Height": 468,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Hero",
+              "UnscaledImageSHA256Hash": "SxrdQz3t5GnWVny2jwbxyW45Htq8v0dcalJFjaCB0u0=",
+              "Uri": "//store-images.microsoft.com/image/apps.6731.9007199266246365.6d6d6d51-7bdc-45fa-b753-b6c94934f29d.f1b3ec1f-f15f-4f55-b299-0381031dec52",
+              "Width": 846
+            },
+            {
+              "FileId": "1152921504606999975",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 35305,
+              "ForegroundColor": "",
+              "Height": 756,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Hero",
+              "UnscaledImageSHA256Hash": "uqWgLSKfis9rQ1FWuQ+yIR4yshq8t3n9BRYOfCwlnbg=",
+              "Uri": "//store-images.microsoft.com/image/apps.42426.9007199266246365.5a617abc-89f6-407e-b972-d98abef1641f.6450ed42-2199-43fe-bf8c-f0b8699c856c",
+              "Width": 558
+            },
+            {
+              "FileId": "1152921504606999754",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 25992,
+              "ForegroundColor": "",
+              "Height": 468,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Hero",
+              "UnscaledImageSHA256Hash": "xM/CjBseWP4CiqNd2JP6DyCZMhVIGkcelwLQza8TUmA=",
+              "Uri": "//store-images.microsoft.com/image/apps.53188.9007199266246365.726115d0-7838-4bdc-b258-8d6aff8fdee4.240fcf51-0794-414c-8689-62f3dee4554e",
+              "Width": 414
+            },
+            {
+              "FileId": "1152921504606999753",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 17241,
+              "ForegroundColor": "",
+              "Height": 180,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Hero",
+              "UnscaledImageSHA256Hash": "IZlRV1m/aLYfqALEirTW4ig1BvbGgdUbAFv+etAXBZI=",
+              "Uri": "//store-images.microsoft.com/image/apps.39201.9007199266246365.2a024a35-1e3b-40fb-b8b3-e678027a8fad.507c33d8-aae2-4303-8e8a-9dd70f03c67f",
+              "Width": 414
+            },
+            {
+              "FileId": "2000000000068936641",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2444680,
+              "ForegroundColor": "",
+              "Height": 1920,
+              "ImagePositionInfo": "Mobile/0",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "OEOlvSR3aRst44dSvHAKh3O41PyDWTg9Aex9xydIw5I=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.17208.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.63794f19-99db-44a1-a0d8-3c0ed656085d",
+              "Width": 1080
+            },
+            {
+              "FileId": "2000000000068936644",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 1985861,
+              "ForegroundColor": "",
+              "Height": 1920,
+              "ImagePositionInfo": "Mobile/1",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "7GpTGDHKWsoRCu74hp2pKePBJMD1oQivWy73P1Sa9pY=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.27372.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.12fc42eb-9cca-426e-b151-4438728c935a",
+              "Width": 1080
+            },
+            {
+              "FileId": "2000000000068936675",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 1822167,
+              "ForegroundColor": "",
+              "Height": 1920,
+              "ImagePositionInfo": "Mobile/3",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "A8bu2elhwcxGXtoHeLimnAukf0vwU3VEUwPOBMLpybY=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.50691.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.ae0eaab0-e300-4674-b947-693b1e6ecf42",
+              "Width": 1080
+            },
+            {
+              "FileId": "2000000000068936671",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 1524326,
+              "ForegroundColor": "",
+              "Height": 1920,
+              "ImagePositionInfo": "Mobile/2",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "6SCBT/vdy8dXFtX3weuqsKCV2EmultabmqEtG8zJSPk=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.8425.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.c4f4222f-417e-4713-a6d1-6493c0a731ba",
+              "Width": 1080
+            },
+            {
+              "FileId": "2000000000068936792",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2885717,
+              "ForegroundColor": "",
+              "Height": 1920,
+              "ImagePositionInfo": "Mobile/4",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "7Hs7yBqZ2a4jxPBiIPCLzTTe4VKmCzpTNr+tVIYy/0I=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.31724.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.2514f39d-8e35-4e3b-b4e5-44968d2300c5",
+              "Width": 1080
+            },
+            {
+              "FileId": "2000000000068936874",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 3044495,
+              "ForegroundColor": "",
+              "Height": 1920,
+              "ImagePositionInfo": "Mobile/5",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "23xX2XWqKC+OSJZ+Ji7mnuLLakOBIF/0RaPrMq/zjWk=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.31963.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.ae6e92fe-6ffc-4185-93df-6e70197936c4",
+              "Width": 1080
+            },
+            {
+              "FileId": "2000000000068936879",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 3518542,
+              "ForegroundColor": "",
+              "Height": 1920,
+              "ImagePositionInfo": "Mobile/6",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "kTSkd8IOQyEvgrdo1KzLO6DiEx9uQ7ykHLJxqMyVQhE=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.13457.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.40c234de-2e46-43aa-8976-295be71640e3",
+              "Width": 1080
+            },
+            {
+              "FileId": "2000000000068936903",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2070430,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Desktop/1",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "JFjfks2Cm7u16sTfYJLrCPe6C2kXZUmyfjCuA4uf9XA=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.22564.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.caa00164-3db9-4a6c-8cde-380e6eb80ba0",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936904",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 1530467,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Desktop/2",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "Cb/9BUNgZUCdVWzbx1VhUv4LQNaW7vHOA9ZuGVtR9aE=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.48905.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.2c11047b-929a-42bc-bd10-a2d89e0f7033",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936905",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2853810,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Desktop/3",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "p4KAHNmtQyhI+jxsHuoJQHFyskJBFp4R6eyKJs5Gzlg=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.33447.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.4451173a-58aa-4e7d-8e7f-80df8f170ec7",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936906",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 1951319,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Desktop/4",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "kvZGNfxX8CWsDGCxw2OPtLXAtcFKYxajT3+eQuJ+Ypw=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.63122.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.3754a3be-ef04-4a73-87ce-08e68100184f",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936907",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2470078,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Desktop/5",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "3X4nLKMNvvRjiJlFPhVM0Awx9jRmbea++bGaYIFv+VU=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.32477.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.0edb30ed-871a-41ab-85dc-4287bd812939",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936941",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 3930222,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Desktop/7",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "J8LUHpiICezD+eduimg+48RKjsqGoMTvqH1eKRxxFvI=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.49703.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.6748f60f-869e-4173-bd41-c0de92cd6d89",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936901",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2256820,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Desktop/0",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "vCsolecePGGTJZEffwcQNjtHXDzTsbWt5aHL6TQh3yM=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.11196.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.470710fc-4dec-4479-8d36-a3e79acebd65",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936908",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2905175,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Desktop/6",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "DAsJFGwP8T+umK7qmtjboLdXRNxZ1O2rOM5qSEl8ZbM=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.2828.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.b9c8711d-8ace-446b-bf78-fad9c4e5dd22",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936943",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2693771,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Xbox/1",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "ln7zhXFqnDUL5yEC6Pxrly9dl4cy3RWC5aiPUf5NzG8=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.32406.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.cd0b2b61-58e8-4ae3-8db5-b5722c131206",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936942",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 3297769,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Xbox/0",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "EJLAZw0urLQLPUk1A4Ij1snHxrTgsVPwssncUmww56k=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.37392.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.6a791e47-a096-41ff-bcf5-5bc1a5cd8855",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936944",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 3473788,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Xbox/2",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "+mRMKxUPQhP3r74NhJA396O9SKqauRe/QmJPHURGhkw=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.25850.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.a3a0ede1-1a4b-4a39-b593-61eeb2a7b0fe",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936945",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2717135,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Xbox/3",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "TqUJ1ic+YoYlrkPDmdmsR5r3UxAqKqhoIt9cmO2Zz58=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.42318.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.fc8fd224-86da-4fa6-8fc5-65167ce7b540",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000068936946",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 2518061,
+              "ForegroundColor": "",
+              "Height": 1080,
+              "ImagePositionInfo": "Xbox/4",
+              "ImagePurpose": "Screenshot",
+              "UnscaledImageSHA256Hash": "nnZxfDrpeTXZXRrjCk8MAup4MAjs648bZNgi800335w=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.30366.9007199266246365.fc3e1dac-58ff-4db5-9d08-4cca1b6f53e3.5deebc32-c626-4246-9c3a-2bdfaeaf1bee",
+              "Width": 1920
+            },
+            {
+              "FileId": "2000000000076292302",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "#000000",
+              "Caption": "",
+              "FileSizeInBytes": 5091,
+              "ForegroundColor": "",
+              "Height": 300,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "Logo",
+              "UnscaledImageSHA256Hash": "Ydu5wZruM5w6znIrK6Q/QptnSjGxhgw25/l/M0XpcV0=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.56161.9007199266246365.1d5a6a53-3c49-4f80-95d7-78d76b0e05d0.a3e87fea-e03e-4c0a-8f26-9ecef205fa7b",
+              "Width": 300
+            },
+            {
+              "FileId": "2000000000076313496",
+              "EISListingIdentifier": null,
+              "BackgroundColor": "",
+              "Caption": "",
+              "FileSizeInBytes": 8779790,
+              "ForegroundColor": "",
+              "Height": 2160,
+              "ImagePositionInfo": "",
+              "ImagePurpose": "SuperHeroArt",
+              "UnscaledImageSHA256Hash": "U36a96Na9LKfty7hp7CoapzMlthhX5ymgf1sucHCWM8=",
+              "Uri": "//store-images.s-microsoft.com/image/apps.32339.9007199266246365.1d5a6a53-3c49-4f80-95d7-78d76b0e05d0.ac2899bf-ba6c-4f7b-b2d4-c854cc7a6f55",
+              "Width": 3840
+            }
+          ],
+          "Videos": [],
+          "ProductDescription": "Netflix has something for everyone. Watch TV shows and movies recommended just for you, including award-winning Netflix original series, movies, and documentaries. There’s even a safe watching experience just for kids with family-friendly entertainment.\r\n\r\nNow on Windows, you can enjoy every detail of the world’s favorite shows in 4K Ultra HD on Netflix. Download many of your favorite series and movies with the simple click of the download button. You can watch while you’re on the go or without an Internet connection on your PC, tablet or laptop with Windows 10. \r\n\r\nHow does Netflix work?\r\n- Instantly watch TV shows and movies through thousands of internet-connected devices. You can play, pause, and resume watching, all without commercials.\r\n- Netflix adds new content all the time. Browse titles or search for your favorites.\r\n- The more you watch, the better Netflix gets at recommending TV shows and movies that you’ll love — just for you. \r\n- You can create up to five individual profiles within a single Netflix account. Profiles allow different members of your household to have their own personalized Netflix experience built around the movies and TV shows they enjoy. \r\n\r\nIf you decide Netflix isn't for you - no problem. No contract, no cancellation fees, no commitment. Cancel online anytime.\r\n\r\nBy clicking INSTALL, you consent to the installation of the Netflix application and any updates or upgrades thereto.",
+          "ProductTitle": "Netflix",
+          "ShortTitle": "",
+          "SortTitle": "",
+          "FriendlyTitle": null,
+          "ShortDescription": "",
+          "SearchTitles": [
+            {
+              "SearchTitleString": "netflix",
+              "SearchTitleType": "SearchHint"
+            },
+            {
+              "SearchTitleString": "streaming",
+              "SearchTitleType": "SearchHint"
+            },
+            {
+              "SearchTitleString": "movie",
+              "SearchTitleType": "SearchHint"
+            },
+            {
+              "SearchTitleString": "movies",
+              "SearchTitleType": "SearchHint"
+            },
+            {
+              "SearchTitleString": "video",
+              "SearchTitleType": "SearchHint"
+            },
+            {
+              "SearchTitleString": "The Irishman",
+              "SearchTitleType": "SearchHint"
+            }
+          ],
+          "VoiceTitle": "",
+          "RenderGroupDetails": null,
+          "ProductDisplayRanks": [],
+          "InteractiveModelConfig": null,
+          "Interactive3DEnabled": false,
+          "Language": "en-us",
+          "Markets": [
+            "US",
+            "DZ",
+            "AR",
+            "AU",
+            "AT",
+            "BH",
+            "BD",
+            "BE",
+            "BR",
+            "BG",
+            "CA",
+            "CL",
+            "CN",
+            "CO",
+            "CR",
+            "HR",
+            "CY",
+            "CZ",
+            "DK",
+            "EG",
+            "EE",
+            "FI",
+            "FR",
+            "DE",
+            "GR",
+            "GT",
+            "HK",
+            "HU",
+            "IS",
+            "IN",
+            "ID",
+            "IQ",
+            "IE",
+            "IL",
+            "IT",
+            "JP",
+            "JO",
+            "KZ",
+            "KE",
+            "KW",
+            "LV",
+            "LB",
+            "LI",
+            "LT",
+            "LU",
+            "MY",
+            "MT",
+            "MR",
+            "MX",
+            "MA",
+            "NL",
+            "NZ",
+            "NG",
+            "NO",
+            "OM",
+            "PK",
+            "PE",
+            "PH",
+            "PL",
+            "PT",
+            "QA",
+            "RO",
+            "RU",
+            "SA",
+            "RS",
+            "SG",
+            "SK",
+            "SI",
+            "ZA",
+            "KR",
+            "ES",
+            "SE",
+            "CH",
+            "TW",
+            "TH",
+            "TT",
+            "TN",
+            "TR",
+            "UA",
+            "AE",
+            "GB",
+            "VN",
+            "YE",
+            "LY",
+            "LK",
+            "UY",
+            "VE",
+            "AF",
+            "AX",
+            "AL",
+            "AS",
+            "AO",
+            "AI",
+            "AQ",
+            "AG",
+            "AM",
+            "AW",
+            "BO",
+            "BQ",
+            "BA",
+            "BW",
+            "BV",
+            "IO",
+            "BN",
+            "BF",
+            "BI",
+            "KH",
+            "CM",
+            "CV",
+            "KY",
+            "CF",
+            "TD",
+            "TL",
+            "DJ",
+            "DM",
+            "DO",
+            "EC",
+            "SV",
+            "GQ",
+            "ER",
+            "ET",
+            "FK",
+            "FO",
+            "FJ",
+            "GF",
+            "PF",
+            "TF",
+            "GA",
+            "GM",
+            "GE",
+            "GH",
+            "GI",
+            "GL",
+            "GD",
+            "GP",
+            "GU",
+            "GG",
+            "GN",
+            "GW",
+            "GY",
+            "HT",
+            "HM",
+            "HN",
+            "AZ",
+            "BS",
+            "BB",
+            "BY",
+            "BZ",
+            "BJ",
+            "BM",
+            "BT",
+            "KM",
+            "CG",
+            "CD",
+            "CK",
+            "CX",
+            "CC",
+            "CI",
+            "CW",
+            "JM",
+            "SJ",
+            "JE",
+            "KI",
+            "KG",
+            "LA",
+            "LS",
+            "LR",
+            "MO",
+            "MK",
+            "MG",
+            "MW",
+            "IM",
+            "MH",
+            "MQ",
+            "MU",
+            "YT",
+            "FM",
+            "MD",
+            "MN",
+            "MS",
+            "MZ",
+            "MM",
+            "NA",
+            "NR",
+            "NP",
+            "MV",
+            "ML",
+            "NC",
+            "NI",
+            "NE",
+            "NU",
+            "NF",
+            "PW",
+            "PS",
+            "PA",
+            "PG",
+            "PY",
+            "RE",
+            "RW",
+            "BL",
+            "MF",
+            "WS",
+            "ST",
+            "SN",
+            "MP",
+            "PN",
+            "SX",
+            "SB",
+            "SO",
+            "SC",
+            "SL",
+            "GS",
+            "SH",
+            "KN",
+            "LC",
+            "PM",
+            "VC",
+            "TJ",
+            "TZ",
+            "TG",
+            "TK",
+            "TO",
+            "TM",
+            "TC",
+            "TV",
+            "UM",
+            "UG",
+            "VI",
+            "VG",
+            "WF",
+            "EH",
+            "ZM",
+            "ZW",
+            "UZ",
+            "VU",
+            "SR",
+            "SZ",
+            "AD",
+            "MC",
+            "SM",
+            "ME",
+            "VA",
+            "NEUTRAL"
+          ]
+        }
+      ],
+      "MarketProperties": [
+        {
+          "OriginalReleaseDate": "2010-10-18T20:04:26.4400000Z",
+          "OriginalReleaseDateFriendlyName": "",
+          "MinimumUserAge": 12,
+          "ContentRatings": [
+            {
+              "RatingSystem": "ESRB",
+              "RatingId": "ESRB:T",
+              "RatingDescriptors": ["ESRB:DivConDisAdv"],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "PEGI",
+              "RatingId": "PEGI:!",
+              "RatingDescriptors": ["PEGI:ParGuiRec"],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "DJCTQ",
+              "RatingId": "DJCTQ:16",
+              "RatingDescriptors": [
+                "DJCTQ:Vio",
+                "DJCTQ:SexCon",
+                "DJCTQ:IllDru"
+              ],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "USK",
+              "RatingId": "USK:16",
+              "RatingDescriptors": ["USK:ConDifAge"],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "IARC",
+              "RatingId": "IARC:12",
+              "RatingDescriptors": ["IARC:ParGuiRec"],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "PCBP",
+              "RatingId": "PCBP:18",
+              "RatingDescriptors": [],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "CSRR",
+              "RatingId": "CSRR:PG15",
+              "RatingDescriptors": [],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "Microsoft",
+              "RatingId": "Microsoft:12",
+              "RatingDescriptors": [],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            },
+            {
+              "RatingSystem": "CCC",
+              "RatingId": "CCC:14",
+              "RatingDescriptors": [],
+              "RatingDisclaimers": [],
+              "InteractiveElements": []
+            }
+          ],
+          "RelatedProducts": [],
+          "UsageData": [
+            {
+              "AggregateTimeSpan": "7Days",
+              "AverageRating": 3.6,
+              "PlayCount": 0,
+              "RatingCount": 201,
+              "RentalCount": "0",
+              "TrialCount": "0",
+              "PurchaseCount": "0"
+            },
+            {
+              "AggregateTimeSpan": "30Days",
+              "AverageRating": 3.3,
+              "PlayCount": 0,
+              "RatingCount": 947,
+              "RentalCount": "0",
+              "TrialCount": "0",
+              "PurchaseCount": "0"
+            },
+            {
+              "AggregateTimeSpan": "AllTime",
+              "AverageRating": 4.0,
+              "PlayCount": 0,
+              "RatingCount": 685202,
+              "RentalCount": "0",
+              "TrialCount": "0",
+              "PurchaseCount": "0"
+            }
+          ],
+          "BundleConfig": null,
+          "Markets": ["US"]
+        }
+      ],
+      "ProductASchema": "Product;3",
+      "ProductBSchema": "ProductUnifiedApp;3",
+      "ProductId": "9WZDNCRFJ3TJ",
+      "Properties": {
+        "Attributes": [],
+        "CanInstallToSDCard": true,
+        "Category": "Entertainment",
+        "SubCategory": "",
+        "Categories": null,
+        "Extensions": null,
+        "IsAccessible": false,
+        "IsLineOfBusinessApp": false,
+        "IsPublishedToLegacyWindowsPhoneStore": true,
+        "IsPublishedToLegacyWindowsStore": true,
+        "IsSettingsApp": false,
+        "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+        "PackageIdentityName": "4DF9E0F8.NETFLIX",
+        "PublisherCertificateName": "CN=52120C15-ACFA-47FC-A7E3-4974DBA79445",
+        "PublisherId": "10101050",
+        "XboxLiveTier": null,
+        "XboxXPA": null,
+        "XboxCrossGenSetId": null,
+        "XboxConsoleGenOptimized": null,
+        "XboxConsoleGenCompatible": null,
+        "XboxLiveGoldRequired": false,
+        "OwnershipType": null,
+        "PdpBackgroundColor": "#FFFFFF",
+        "HasAddOns": false,
+        "RevisionId": "2020-10-09T18:03:52.1324696Z",
+        "ProductGroupId": "f6c7aeef-99e9-4096-b9fc-b0ddc1f8749b",
+        "ProductGroupName": "Netflix"
+      },
+      "AlternateIds": [
+        {
+          "IdType": "LegacyWindowsStoreProductId",
+          "Value": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa"
+        },
+        {
+          "IdType": "LegacyWindowsPhoneProductId",
+          "Value": "c3a509cd-61d6-df11-a844-00237de2db9e"
+        },
+        {
+          "IdType": "XboxTitleId",
+          "Value": "327370029"
+        },
+        {
+          "IdType": "SRAProductId",
+          "Value": "337f7d51-bc20-4b9b-ad6c-2a2395a42ecb"
+        }
+      ],
+      "DomainDataVersion": null,
+      "IngestionSource": "DCE",
+      "IsMicrosoftProduct": false,
+      "PreferredSkuId": "0010",
+      "ProductType": "Application",
+      "ValidationData": {
+        "PassedValidation": false,
+        "RevisionId": "2020-10-09T18:03:52.1324696Z||.||7319fa59-58e1-4130-9142-e5d991b61b73||1152921505691950666||Null||fullrelease",
+        "ValidationResultUri": ""
+      },
+      "MerchandizingTags": [],
+      "PartD": "",
+      "ProductFamily": "Apps",
+      "SchemaVersion": "3",
+      "ProductKind": "Application",
+      "DisplaySkuAvailabilities": [
+        {
+          "Sku": {
+            "LastModifiedDate": "2020-10-09T18:02:12.6570851Z",
+            "LocalizedProperties": [
+              {
+                "Contributors": [],
+                "Features": [],
+                "MinimumNotes": "",
+                "RecommendedNotes": "",
+                "ReleaseNotes": "",
+                "DisplayPlatformProperties": null,
+                "SkuDescription": "Netflix has something for everyone. Watch TV shows and movies recommended just for you, including award-winning Netflix original series, movies, and documentaries. There’s even a safe watching experience just for kids with family-friendly entertainment.\r\n\r\nNow on Windows, you can enjoy every detail of the world’s favorite shows in 4K Ultra HD on Netflix. Download many of your favorite series and movies with the simple click of the download button. You can watch while you’re on the go or without an Internet connection on your PC, tablet or laptop with Windows 10. \r\n\r\nHow does Netflix work?\r\n- Instantly watch TV shows and movies through thousands of internet-connected devices. You can play, pause, and resume watching, all without commercials.\r\n- Netflix adds new content all the time. Browse titles or search for your favorites.\r\n- The more you watch, the better Netflix gets at recommending TV shows and movies that you’ll love — just for you. \r\n- You can create up to five individual profiles within a single Netflix account. Profiles allow different members of your household to have their own personalized Netflix experience built around the movies and TV shows they enjoy. \r\n\r\nIf you decide Netflix isn't for you - no problem. No contract, no cancellation fees, no commitment. Cancel online anytime.\r\n\r\nBy clicking INSTALL, you consent to the installation of the Netflix application and any updates or upgrades thereto.",
+                "SkuTitle": "Netflix",
+                "SkuButtonTitle": "",
+                "DeliveryDateOverlay": null,
+                "SkuDisplayRank": [],
+                "TextResources": null,
+                "Images": [],
+                "LegalText": {
+                  "AdditionalLicenseTerms": "By downloading this application you agree to the Netflix Terms of Use and Privacy Policy, located at www.netflix.com.\r\n \r\nInternet access and valid payment method are required. Your Netflix membership is a month-to-month subscription that you can cancel at any time. Go to \"Your Account\" on the Netflix website for cancellation instructions. No refund or credit for partial monthly subscription periods. The Netflix service is only available in the country where you originally signed up. A device that streams from Netflix (manufactured and sold separately) and broadband Internet connection are required to watch instantly. For complete terms and conditions, please visit http://www.netflix.com/TermsOfUse.",
+                  "Copyright": "© 1997-2018 Netflix, Inc.",
+                  "CopyrightUri": "",
+                  "PrivacyPolicy": "",
+                  "PrivacyPolicyUri": "https://signup.netflix.com/PrivacyPolicy",
+                  "Tou": "By downloading this application you agree to the Netflix Terms of Use and Privacy Policy, located at www.netflix.com.\r\n \r\nInternet access and valid payment method are required. Your Netflix membership is a month-to-month subscription that you can cancel at any time. Go to \"Your Account\" on the Netflix website for cancellation instructions. No refund or credit for partial monthly subscription periods. The Netflix service is only available in the country where you originally signed up. A device that streams from Netflix (manufactured and sold separately) and broadband Internet connection are required to watch instantly. For complete terms and conditions, please visit http://www.netflix.com/TermsOfUse.",
+                  "TouUri": ""
+                },
+                "Language": "en-us",
+                "Markets": [
+                  "US",
+                  "DZ",
+                  "AR",
+                  "AU",
+                  "AT",
+                  "BH",
+                  "BD",
+                  "BE",
+                  "BR",
+                  "BG",
+                  "CA",
+                  "CL",
+                  "CN",
+                  "CO",
+                  "CR",
+                  "HR",
+                  "CY",
+                  "CZ",
+                  "DK",
+                  "EG",
+                  "EE",
+                  "FI",
+                  "FR",
+                  "DE",
+                  "GR",
+                  "GT",
+                  "HK",
+                  "HU",
+                  "IS",
+                  "IN",
+                  "ID",
+                  "IQ",
+                  "IE",
+                  "IL",
+                  "IT",
+                  "JP",
+                  "JO",
+                  "KZ",
+                  "KE",
+                  "KW",
+                  "LV",
+                  "LB",
+                  "LI",
+                  "LT",
+                  "LU",
+                  "MY",
+                  "MT",
+                  "MR",
+                  "MX",
+                  "MA",
+                  "NL",
+                  "NZ",
+                  "NG",
+                  "NO",
+                  "OM",
+                  "PK",
+                  "PE",
+                  "PH",
+                  "PL",
+                  "PT",
+                  "QA",
+                  "RO",
+                  "RU",
+                  "SA",
+                  "RS",
+                  "SG",
+                  "SK",
+                  "SI",
+                  "ZA",
+                  "KR",
+                  "ES",
+                  "SE",
+                  "CH",
+                  "TW",
+                  "TH",
+                  "TT",
+                  "TN",
+                  "TR",
+                  "UA",
+                  "AE",
+                  "GB",
+                  "VN",
+                  "YE",
+                  "LY",
+                  "LK",
+                  "UY",
+                  "VE",
+                  "AF",
+                  "AX",
+                  "AL",
+                  "AS",
+                  "AO",
+                  "AI",
+                  "AQ",
+                  "AG",
+                  "AM",
+                  "AW",
+                  "BO",
+                  "BQ",
+                  "BA",
+                  "BW",
+                  "BV",
+                  "IO",
+                  "BN",
+                  "BF",
+                  "BI",
+                  "KH",
+                  "CM",
+                  "CV",
+                  "KY",
+                  "CF",
+                  "TD",
+                  "TL",
+                  "DJ",
+                  "DM",
+                  "DO",
+                  "EC",
+                  "SV",
+                  "GQ",
+                  "ER",
+                  "ET",
+                  "FK",
+                  "FO",
+                  "FJ",
+                  "GF",
+                  "PF",
+                  "TF",
+                  "GA",
+                  "GM",
+                  "GE",
+                  "GH",
+                  "GI",
+                  "GL",
+                  "GD",
+                  "GP",
+                  "GU",
+                  "GG",
+                  "GN",
+                  "GW",
+                  "GY",
+                  "HT",
+                  "HM",
+                  "HN",
+                  "AZ",
+                  "BS",
+                  "BB",
+                  "BY",
+                  "BZ",
+                  "BJ",
+                  "BM",
+                  "BT",
+                  "KM",
+                  "CG",
+                  "CD",
+                  "CK",
+                  "CX",
+                  "CC",
+                  "CI",
+                  "CW",
+                  "JM",
+                  "SJ",
+                  "JE",
+                  "KI",
+                  "KG",
+                  "LA",
+                  "LS",
+                  "LR",
+                  "MO",
+                  "MK",
+                  "MG",
+                  "MW",
+                  "IM",
+                  "MH",
+                  "MQ",
+                  "MU",
+                  "YT",
+                  "FM",
+                  "MD",
+                  "MN",
+                  "MS",
+                  "MZ",
+                  "MM",
+                  "NA",
+                  "NR",
+                  "NP",
+                  "MV",
+                  "ML",
+                  "NC",
+                  "NI",
+                  "NE",
+                  "NU",
+                  "NF",
+                  "PW",
+                  "PS",
+                  "PA",
+                  "PG",
+                  "PY",
+                  "RE",
+                  "RW",
+                  "BL",
+                  "MF",
+                  "WS",
+                  "ST",
+                  "SN",
+                  "MP",
+                  "PN",
+                  "SX",
+                  "SB",
+                  "SO",
+                  "SC",
+                  "SL",
+                  "GS",
+                  "SH",
+                  "KN",
+                  "LC",
+                  "PM",
+                  "VC",
+                  "TJ",
+                  "TZ",
+                  "TG",
+                  "TK",
+                  "TO",
+                  "TM",
+                  "TC",
+                  "TV",
+                  "UM",
+                  "UG",
+                  "VI",
+                  "VG",
+                  "WF",
+                  "EH",
+                  "ZM",
+                  "ZW",
+                  "UZ",
+                  "VU",
+                  "SR",
+                  "SZ",
+                  "AD",
+                  "MC",
+                  "SM",
+                  "ME",
+                  "VA",
+                  "NEUTRAL"
+                ]
+              }
+            ],
+            "MarketProperties": [
+              {
+                "FirstAvailableDate": "2010-10-18T20:04:26.4400000Z",
+                "SupportedLanguages": [
+                  "en-us",
+                  "da",
+                  "es",
+                  "fi",
+                  "fr",
+                  "nb",
+                  "nl",
+                  "pt",
+                  "sv",
+                  "en-gb",
+                  "en-ca",
+                  "de",
+                  "fr-ca",
+                  "en-au",
+                  "es-es",
+                  "it",
+                  "ja",
+                  "pt-pt",
+                  "pt-br",
+                  "da-dk",
+                  "fi-fi",
+                  "nl-nl",
+                  "sv-se",
+                  "es-mx",
+                  "nb-no",
+                  "de-de",
+                  "fr-fr",
+                  "en",
+                  "ko",
+                  "zh-cn",
+                  "zh-tw",
+                  "ar",
+                  "zh-hant",
+                  "pl",
+                  "tr",
+                  "th",
+                  "ro",
+                  "he",
+                  "el",
+                  "id",
+                  "cs",
+                  "hu",
+                  "vi",
+                  "en-in"
+                ],
+                "PackageIds": null,
+                "PIFilter": null,
+                "Markets": ["US"]
+              }
+            ],
+            "ProductId": "9WZDNCRFJ3TJ",
+            "Properties": {
+              "EarlyAdopterEnrollmentUrl": null,
+              "FulfillmentData": {
+                "ProductId": "9WZDNCRFJ3TJ",
+                "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                "SkuId": "0010",
+                "Content": null,
+                "PackageFeatures": null
+              },
+              "FulfillmentType": "WindowsUpdate",
+              "FulfillmentPluginId": null,
+              "HasThirdPartyIAPs": false,
+              "LastUpdateDate": "2020-10-09T18:02:12.0000000Z",
+              "HardwareProperties": {
+                "MinimumHardware": [],
+                "RecommendedHardware": [],
+                "MinimumProcessor": null,
+                "RecommendedProcessor": null,
+                "MinimumGraphics": null,
+                "RecommendedGraphics": null
+              },
+              "HardwareRequirements": [],
+              "HardwareWarningList": [],
+              "InstallationTerms": "InstallationTermsStandard",
+              "Packages": [
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "Netflix.App",
+                      "DeclarationOrder": 0,
+                      "Extensions": [
+                        "search-search",
+                        "protocol-netflix",
+                        "backgroundTasks-backgroundTasks"
+                      ]
+                    }
+                  ],
+                  "Architectures": ["x64", "arm", "x86"],
+                  "Capabilities": [
+                    "internetClient",
+                    "internetClientServer",
+                    "privateNetworkClientServer"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "5JwYk5NZCfrPpZUg2YhKU0W+m6HUP3Vx+3+mS4rXN5Q=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "en-in",
+                    "ar",
+                    "bg",
+                    "cs",
+                    "da",
+                    "de",
+                    "el",
+                    "es",
+                    "fi",
+                    "fr",
+                    "he",
+                    "hu",
+                    "it",
+                    "ja",
+                    "ko",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "pl",
+                    "ro",
+                    "tr",
+                    "sv",
+                    "zh-hant",
+                    "th",
+                    "vi"
+                  ],
+                  "MaxDownloadSizeInBytes": 7250253,
+                  "MaxInstallSizeInBytes": 7610368,
+                  "PackageFormat": "AppxBundle",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_6.97.752.0_neutral_~_mcm4njqhnhss8",
+                  "PackageId": "c76eb995-37f6-0df7-3573-95c498140c24-X86-X64-Arm",
+                  "ContentId": "6f5a9e8f-f920-1658-72ff-16c1448402f9",
+                  "KeyId": null,
+                  "PackageRank": 30003,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750438195200,
+                      "MinVersion": 2814750438195200,
+                      "PlatformName": "Windows.Desktop"
+                    },
+                    {
+                      "MaxTested": 2814750438195200,
+                      "MinVersion": 2814750438195200,
+                      "PlatformName": "Windows.Holographic"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.bundledPackages\":[\"4DF9E0F8.Netflix_6.97.752.0_x64__mcm4njqhnhss8\",\"4DF9E0F8.Netflix_6.97.752.0_arm__mcm4njqhnhss8\",\"4DF9E0F8.Netflix_6.97.752.0_x86__mcm4njqhnhss8\"],\"content.isMain\":false,\"content.packageId\":\"4DF9E0F8.Netflix_6.97.752.0_neutral_~_mcm4njqhnhss8\",\"content.productId\":\"c3a509cd-61d6-df11-a844-00237de2db9e\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750438195200,\"platform.minVersion\":2814750438195200,\"platform.target\":3},{\"platform.maxVersionTested\":2814750438195200,\"platform.minVersion\":2814750438195200,\"platform.target\":10}],\"content.type\":7,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "~",
+                  "Version": "1689266521374720",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": [
+                        "DialProtocol-Netflix",
+                        "protocol-netflix",
+                        "appUriHandler-appUriHandler"
+                      ]
+                    }
+                  ],
+                  "Architectures": ["x64"],
+                  "Capabilities": [
+                    "internetClient",
+                    "internetClientServer",
+                    "privateNetworkClientServer",
+                    "hevcPlayback"
+                  ],
+                  "DeviceCapabilities": [
+                    "6a7e5907-885c-4bcb-b40a-073c067bd3d5"
+                  ],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3940651496505344,
+                      "PackageIdentity": "Microsoft.VCLibs.140.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "06P4J+OstU7MzIf5HE769f3XL8mSikambNQFuqzFgaA=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": ["en-us"],
+                  "MaxDownloadSizeInBytes": 81100341,
+                  "MaxInstallSizeInBytes": 81489920,
+                  "PackageFormat": "EMsixBundle",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_8.38.0.70_neutral_~_mcm4njqhnhss8",
+                  "PackageId": "f9ceeb09-ebef-6107-dcbd-e1d3537b3d03-X64",
+                  "ContentId": "6ab456e6-b2e4-5f12-9459-2267c3bd2e01",
+                  "KeyId": "6ab456e6-b2e4-5f12-9459-2267c3bd2e01",
+                  "PackageRank": 30012,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750970478592,
+                      "MinVersion": 2814750931222528,
+                      "PlatformName": "Windows.Xbox"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.bundledPackages\":[\"4DF9E0F8.Netflix_8.38.0.70_x64__mcm4njqhnhss8\"],\"content.isMain\":false,\"content.packageId\":\"4DF9E0F8.Netflix_8.38.0.70_neutral_~_mcm4njqhnhss8\",\"content.productId\":\"c3a509cd-61d6-df11-a844-00237de2db9e\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750970478592,\"platform.minVersion\":2814750931222528,\"platform.target\":5}],\"content.type\":7,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "~",
+                  "Version": "2251963022442566",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "WP",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": ["neutral"],
+                  "Capabilities": [
+                    "ID_CAP_IDENTITY_DEVICE",
+                    "ID_CAP_MEDIALIB",
+                    "ID_CAP_NETWORKING",
+                    "ID_FNCTNL_SILVERLIGHT_FRAMEWORK",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "",
+                  "HashAlgorithm": "",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "da-dk",
+                    "de-de",
+                    "en",
+                    "en-gb",
+                    "en-us",
+                    "es-es",
+                    "fi-fi",
+                    "fr-ca",
+                    "fr-fr",
+                    "nb-no",
+                    "nl-nl",
+                    "pt-br",
+                    "sv-se"
+                  ],
+                  "MaxDownloadSizeInBytes": 2124298,
+                  "MaxInstallSizeInBytes": null,
+                  "PackageFormat": "Xap",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "",
+                  "PackageId": "6851614b-8337-4b5f-9025-1b1d21966cf0",
+                  "ContentId": "b7bc0da1-a0ff-8753-d972-13d41ea223e1",
+                  "KeyId": null,
+                  "PackageRank": 10000,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2251804108652544,
+                      "MinVersion": 2251799813685248,
+                      "PlatformName": "Windows.WindowsPhone8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.payloadId\":\"6851614b-8337-4b5f-9025-1b1d21966cf0\",\"content.productId\":\"c3a509cd-61d6-df11-a844-00237de2db9e\",\"content.type\":1,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "562992917970944",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "WP",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": ["neutral"],
+                  "Capabilities": [
+                    "ID_CAP_IDENTITY_DEVICE",
+                    "ID_CAP_MEDIALIB_PLAYBACK",
+                    "ID_CAP_NETWORKING",
+                    "ID_FNCTNL_SILVERLIGHT_FRAMEWORK",
+                    "ID_RESOLUTION_HD720P",
+                    "ID_RESOLUTION_WVGA",
+                    "ID_RESOLUTION_WXGA",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "",
+                  "HashAlgorithm": "",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "da-dk",
+                    "de-de",
+                    "en-gb",
+                    "en-us",
+                    "es-mx",
+                    "fi-fi",
+                    "fr-ca",
+                    "fr-fr",
+                    "nb-no",
+                    "nl-nl",
+                    "pt-br",
+                    "sv-se"
+                  ],
+                  "MaxDownloadSizeInBytes": 2079578,
+                  "MaxInstallSizeInBytes": null,
+                  "PackageFormat": "Xap",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "",
+                  "PackageId": "c828f646-52ec-4c11-847f-768bcf8a6eae",
+                  "ContentId": "b7bc0da1-a0ff-8753-d972-13d41ea223e1",
+                  "KeyId": null,
+                  "PackageRank": 11000,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2251804108652544,
+                      "MinVersion": 2251799813685248,
+                      "PlatformName": "Windows.WindowsPhone8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.payloadId\":\"c828f646-52ec-4c11-847f-768bcf8a6eae\",\"content.productId\":\"c3a509cd-61d6-df11-a844-00237de2db9e\",\"content.type\":2,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "844454994903063",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "WP",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": ["neutral"],
+                  "Capabilities": [
+                    "internetClient",
+                    "ID_RESOLUTION_WVGA",
+                    "ID_RESOLUTION_WXGA",
+                    "ID_RESOLUTION_HD720P",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": ["microphone"],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562993039212545,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient.Phone.2"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3377701694013440,
+                      "PackageIdentity": "Microsoft.VCLibs.120.00.Phone"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "GsUkUC+HXkRvEE6PU5EjQnKAR9VfEoEq+WWNCX8MxoA=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 7948191,
+                  "MaxInstallSizeInBytes": 11083776,
+                  "PackageFormat": "Appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_4.15.0.62_arm__mcm4njqhnhss8",
+                  "PackageId": "4c9dc6c4-e410-466a-9e98-eee520f15b5e-Neutral",
+                  "ContentId": "6a97cc96-9d91-fff0-912f-d26c240e578b",
+                  "KeyId": null,
+                  "PackageRank": 17000,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2251804108652544,
+                      "MinVersion": 2251804108652544,
+                      "PlatformName": "Windows.WindowsPhone8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688862745231360,\"content.minOS\":1688862745231360,\"content.packageId\":\"4DF9E0F8.Netflix_4.15.0.62_arm__mcm4njqhnhss8\",\"content.productId\":\"c3a509cd-61d6-df11-a844-00237de2db9e\",\"content.type\":4,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "1125964331352126",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["x64"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562962948292608,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3096228093100033,
+                      "PackageIdentity": "Microsoft.VCLibs.110.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "42X7uS/LytxrsxrF7PGreVD3fb8n+u5p6/W9KXeGfgc=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5747705,
+                  "MaxInstallSizeInBytes": 10559488,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_1.33.0.109_x64__mcm4njqhnhss8",
+                  "PackageId": "e20498c8-c01f-440c-a167-5213d4ed9914-X64",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20002,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688858450264064,
+                      "MinVersion": 1688858450264064,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688858450264064,\"content.minOS\":1688858450264064,\"content.packageId\":\"4DF9E0F8.Netflix_1.33.0.109_x64__mcm4njqhnhss8\",\"content.type\":5,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281616710631533",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["x86"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562962948292608,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3096228093100033,
+                      "PackageIdentity": "Microsoft.VCLibs.110.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "z7PFAh/WD46LPrHKm0DcT6UloZp0iaTZjf/2nBvdcnc=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5733181,
+                  "MaxInstallSizeInBytes": 10518528,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_1.33.0.109_x86__mcm4njqhnhss8",
+                  "PackageId": "b4cf45f0-2677-4520-b7ef-18728082c0ec-X86",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20001,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688858450264064,
+                      "MinVersion": 1688858450264064,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688858450264064,\"content.minOS\":1688858450264064,\"content.packageId\":\"4DF9E0F8.Netflix_1.33.0.109_x86__mcm4njqhnhss8\",\"content.type\":5,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281616710631533",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["arm"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562962948292608,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3096228093100033,
+                      "PackageIdentity": "Microsoft.VCLibs.110.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "OMZ/IIRve1/aBnMmSb/u639E8E0jXUVlXvoBHqtixYc=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5744175,
+                  "MaxInstallSizeInBytes": 10526720,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_1.33.0.109_arm__mcm4njqhnhss8",
+                  "PackageId": "896936b6-abe8-485d-9542-706b7b1f6fc4-Arm",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20003,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688858450264064,
+                      "MinVersion": 1688858450264064,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688858450264064,\"content.minOS\":1688858450264064,\"content.packageId\":\"4DF9E0F8.Netflix_1.33.0.109_arm__mcm4njqhnhss8\",\"content.type\":5,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281616710631533",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["x86"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562997339226112,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient.2"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3377701097111553,
+                      "PackageIdentity": "Microsoft.VCLibs.120.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "IvNSqzzyRmD5ZgCFVU/2x7QddCSw25ak2ix9oMmyh4E=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5925423,
+                  "MaxInstallSizeInBytes": 10891264,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_2.22.0.39_x86__mcm4njqhnhss8",
+                  "PackageId": "3789cd7b-3858-441a-aa0c-523366516efd-X86",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20011,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688862745165824,
+                      "MinVersion": 1688862745165824,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688862745165824,\"content.minOS\":1688862745165824,\"content.packageId\":\"4DF9E0F8.Netflix_2.22.0.39_x86__mcm4njqhnhss8\",\"content.type\":6,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "563044442701863",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["x64"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562997339226112,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient.2"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3377701097111553,
+                      "PackageIdentity": "Microsoft.VCLibs.120.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "fA7AhxxOocoGdURdUaAWp9rjM2Kr4JPJE3YQAxznYtw=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5939929,
+                  "MaxInstallSizeInBytes": 10952704,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_2.22.0.39_x64__mcm4njqhnhss8",
+                  "PackageId": "671978e9-fefc-4766-8bc8-0eb62503c5d4-X64",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20012,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688862745165824,
+                      "MinVersion": 1688862745165824,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688862745165824,\"content.minOS\":1688862745165824,\"content.packageId\":\"4DF9E0F8.Netflix_2.22.0.39_x64__mcm4njqhnhss8\",\"content.type\":6,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "563044442701863",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["arm"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562997339226112,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient.2"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3377701097111553,
+                      "PackageIdentity": "Microsoft.VCLibs.120.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "F4dbkqdksFrGfBVewsJJkQd7NHxc3GfFCEFeOa9m56A=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5935941,
+                  "MaxInstallSizeInBytes": 10903552,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_2.22.0.39_arm__mcm4njqhnhss8",
+                  "PackageId": "5f2e3a30-363d-4f64-bc6a-fea9bd3a69a7-Arm",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20013,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688862745165824,
+                      "MinVersion": 1688862745165824,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688862745165824,\"content.minOS\":1688862745165824,\"content.packageId\":\"4DF9E0F8.Netflix_2.22.0.39_arm__mcm4njqhnhss8\",\"content.type\":6,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "563044442701863",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0010",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                }
+              ],
+              "VersionString": "",
+              "VisibleToB2BServiceIds": [],
+              "XboxXPA": false,
+              "BundledSkus": [],
+              "IsRepurchasable": false,
+              "SkuDisplayRank": 0,
+              "DisplayPhysicalStoreInventory": null,
+              "AdditionalIdentifiers": [],
+              "IsTrial": false,
+              "IsPreOrder": false,
+              "IsBundle": false
+            },
+            "SkuASchema": "Sku;3",
+            "SkuBSchema": "SkuUnifiedApp;3",
+            "SkuId": "0010",
+            "SkuType": "full",
+            "RecurrencePolicy": null,
+            "SubscriptionPolicyId": null
+          },
+          "Availabilities": [
+            {
+              "Actions": [
+                "Details",
+                "Fulfill",
+                "Purchase",
+                "Browse",
+                "Curate",
+                "Redeem"
+              ],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityUnifiedApp;3",
+              "AvailabilityId": "9NF83GM638LJ",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Desktop"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Mobile"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Xbox"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.8828080"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": ["1"],
+                "StartDate": "1753-01-01T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2020-10-09T18:02:17.8524346Z",
+              "Markets": ["US"],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "PIFilter": {
+                  "ExclusionProperties": [],
+                  "InclusionProperties": []
+                },
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 0.0,
+                  "MSRP": 0.0,
+                  "TaxType": "TaxesNotIncluded",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {
+                "OriginalReleaseDate": "2010-10-18T20:04:26.4400000Z"
+              },
+              "SkuId": "0010",
+              "DisplayRank": 0,
+              "RemediationRequired": false
+            },
+            {
+              "Actions": ["License", "Browse", "Details"],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityUnifiedApp;3",
+              "AvailabilityId": "9PVM1DW12FV2",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Desktop"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Mobile"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Xbox"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.8828080"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": ["1"],
+                "StartDate": "1753-01-01T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2020-10-09T18:02:17.8524346Z",
+              "LicensingData": {
+                "SatisfyingEntitlementKeys": [
+                  {
+                    "EntitlementKeys": ["big:9WZDNCRFJ3TJ:0010"],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "wes:App:c3a509cd-61d6-df11-a844-00237de2db9e:Full"
+                    ],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "wes:App:d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa:Full"
+                    ],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": ["big:9WZDNCRFJ3TJ:0001"],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": ["big:9WZDNCRFJ3TJ:0002"],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "xbx:GameV2:337f7d51-bc20-4b9b-ad6c-2a2395a42ecb:Full"
+                    ],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "xbx:GameV2:337f7d51-bc20-4b9b-ad6c-2a2395a42ecb:Presale"
+                    ],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": ["big:9VWGNH0VBZR3:0001"],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": ["big:9VWGNH0VBZR3:0003"],
+                    "LicensingKeyIds": ["1"]
+                  }
+                ]
+              },
+              "Markets": ["US"],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 0.0,
+                  "MSRP": 0.0,
+                  "TaxType": "",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {},
+              "SkuId": "0010",
+              "DisplayRank": 1,
+              "RemediationRequired": false
+            },
+            {
+              "Actions": ["License", "Details"],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityUnifiedApp;3",
+              "AvailabilityId": "9NFKK7NRXLPL",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Team"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Holographic"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Core"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": ["1"],
+                "StartDate": "1753-01-01T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2020-10-09T18:02:17.8524346Z",
+              "LicensingData": {
+                "SatisfyingEntitlementKeys": [
+                  {
+                    "EntitlementKeys": ["big:9WZDNCRFJ3TJ:0010"],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "wes:App:c3a509cd-61d6-df11-a844-00237de2db9e:Full"
+                    ],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "wes:App:d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa:Full"
+                    ],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": ["big:9WZDNCRFJ3TJ:0001"],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": ["big:9WZDNCRFJ3TJ:0002"],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "xbx:GameV2:337f7d51-bc20-4b9b-ad6c-2a2395a42ecb:Full"
+                    ],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": [
+                      "xbx:GameV2:337f7d51-bc20-4b9b-ad6c-2a2395a42ecb:Presale"
+                    ],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": ["big:9VWGNH0VBZR3:0001"],
+                    "LicensingKeyIds": ["1"]
+                  },
+                  {
+                    "EntitlementKeys": ["big:9VWGNH0VBZR3:0003"],
+                    "LicensingKeyIds": ["1"]
+                  }
+                ]
+              },
+              "Markets": ["US"],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 0.0,
+                  "MSRP": 0.0,
+                  "TaxType": "",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {},
+              "SkuId": "0010",
+              "DisplayRank": 2,
+              "RemediationRequired": false
+            }
+          ]
+        },
+        {
+          "Sku": {
+            "LastModifiedDate": "2020-10-09T18:02:12.6570851Z",
+            "LocalizedProperties": [
+              {
+                "Contributors": [],
+                "Features": [],
+                "MinimumNotes": "",
+                "RecommendedNotes": "",
+                "ReleaseNotes": "",
+                "DisplayPlatformProperties": null,
+                "SkuDescription": "Netflix has something for everyone. Watch TV shows and movies recommended just for you, including award-winning Netflix original series, movies, and documentaries. There’s even a safe watching experience just for kids with family-friendly entertainment.\r\n\r\nNow on Windows, you can enjoy every detail of the world’s favorite shows in 4K Ultra HD on Netflix. Download many of your favorite series and movies with the simple click of the download button. You can watch while you’re on the go or without an Internet connection on your PC, tablet or laptop with Windows 10. \r\n\r\nHow does Netflix work?\r\n- Instantly watch TV shows and movies through thousands of internet-connected devices. You can play, pause, and resume watching, all without commercials.\r\n- Netflix adds new content all the time. Browse titles or search for your favorites.\r\n- The more you watch, the better Netflix gets at recommending TV shows and movies that you’ll love — just for you. \r\n- You can create up to five individual profiles within a single Netflix account. Profiles allow different members of your household to have their own personalized Netflix experience built around the movies and TV shows they enjoy. \r\n\r\nIf you decide Netflix isn't for you - no problem. No contract, no cancellation fees, no commitment. Cancel online anytime.\r\n\r\nBy clicking INSTALL, you consent to the installation of the Netflix application and any updates or upgrades thereto.",
+                "SkuTitle": "Netflix",
+                "SkuButtonTitle": "",
+                "DeliveryDateOverlay": null,
+                "SkuDisplayRank": [],
+                "TextResources": null,
+                "Images": [],
+                "LegalText": {
+                  "AdditionalLicenseTerms": "By downloading this application you agree to the Netflix Terms of Use and Privacy Policy, located at www.netflix.com.\r\n \r\nInternet access and valid payment method are required. Your Netflix membership is a month-to-month subscription that you can cancel at any time. Go to \"Your Account\" on the Netflix website for cancellation instructions. No refund or credit for partial monthly subscription periods. The Netflix service is only available in the country where you originally signed up. A device that streams from Netflix (manufactured and sold separately) and broadband Internet connection are required to watch instantly. For complete terms and conditions, please visit http://www.netflix.com/TermsOfUse.",
+                  "Copyright": "© 1997-2018 Netflix, Inc.",
+                  "CopyrightUri": "",
+                  "PrivacyPolicy": "",
+                  "PrivacyPolicyUri": "https://signup.netflix.com/PrivacyPolicy",
+                  "Tou": "By downloading this application you agree to the Netflix Terms of Use and Privacy Policy, located at www.netflix.com.\r\n \r\nInternet access and valid payment method are required. Your Netflix membership is a month-to-month subscription that you can cancel at any time. Go to \"Your Account\" on the Netflix website for cancellation instructions. No refund or credit for partial monthly subscription periods. The Netflix service is only available in the country where you originally signed up. A device that streams from Netflix (manufactured and sold separately) and broadband Internet connection are required to watch instantly. For complete terms and conditions, please visit http://www.netflix.com/TermsOfUse.",
+                  "TouUri": ""
+                },
+                "Language": "en-us",
+                "Markets": [
+                  "US",
+                  "DZ",
+                  "AR",
+                  "AU",
+                  "AT",
+                  "BH",
+                  "BD",
+                  "BE",
+                  "BR",
+                  "BG",
+                  "CA",
+                  "CL",
+                  "CN",
+                  "CO",
+                  "CR",
+                  "HR",
+                  "CY",
+                  "CZ",
+                  "DK",
+                  "EG",
+                  "EE",
+                  "FI",
+                  "FR",
+                  "DE",
+                  "GR",
+                  "GT",
+                  "HK",
+                  "HU",
+                  "IS",
+                  "IN",
+                  "ID",
+                  "IQ",
+                  "IE",
+                  "IL",
+                  "IT",
+                  "JP",
+                  "JO",
+                  "KZ",
+                  "KE",
+                  "KW",
+                  "LV",
+                  "LB",
+                  "LI",
+                  "LT",
+                  "LU",
+                  "MY",
+                  "MT",
+                  "MR",
+                  "MX",
+                  "MA",
+                  "NL",
+                  "NZ",
+                  "NG",
+                  "NO",
+                  "OM",
+                  "PK",
+                  "PE",
+                  "PH",
+                  "PL",
+                  "PT",
+                  "QA",
+                  "RO",
+                  "RU",
+                  "SA",
+                  "RS",
+                  "SG",
+                  "SK",
+                  "SI",
+                  "ZA",
+                  "KR",
+                  "ES",
+                  "SE",
+                  "CH",
+                  "TW",
+                  "TH",
+                  "TT",
+                  "TN",
+                  "TR",
+                  "UA",
+                  "AE",
+                  "GB",
+                  "VN",
+                  "YE",
+                  "LY",
+                  "LK",
+                  "UY",
+                  "VE",
+                  "AF",
+                  "AX",
+                  "AL",
+                  "AS",
+                  "AO",
+                  "AI",
+                  "AQ",
+                  "AG",
+                  "AM",
+                  "AW",
+                  "BO",
+                  "BQ",
+                  "BA",
+                  "BW",
+                  "BV",
+                  "IO",
+                  "BN",
+                  "BF",
+                  "BI",
+                  "KH",
+                  "CM",
+                  "CV",
+                  "KY",
+                  "CF",
+                  "TD",
+                  "TL",
+                  "DJ",
+                  "DM",
+                  "DO",
+                  "EC",
+                  "SV",
+                  "GQ",
+                  "ER",
+                  "ET",
+                  "FK",
+                  "FO",
+                  "FJ",
+                  "GF",
+                  "PF",
+                  "TF",
+                  "GA",
+                  "GM",
+                  "GE",
+                  "GH",
+                  "GI",
+                  "GL",
+                  "GD",
+                  "GP",
+                  "GU",
+                  "GG",
+                  "GN",
+                  "GW",
+                  "GY",
+                  "HT",
+                  "HM",
+                  "HN",
+                  "AZ",
+                  "BS",
+                  "BB",
+                  "BY",
+                  "BZ",
+                  "BJ",
+                  "BM",
+                  "BT",
+                  "KM",
+                  "CG",
+                  "CD",
+                  "CK",
+                  "CX",
+                  "CC",
+                  "CI",
+                  "CW",
+                  "JM",
+                  "SJ",
+                  "JE",
+                  "KI",
+                  "KG",
+                  "LA",
+                  "LS",
+                  "LR",
+                  "MO",
+                  "MK",
+                  "MG",
+                  "MW",
+                  "IM",
+                  "MH",
+                  "MQ",
+                  "MU",
+                  "YT",
+                  "FM",
+                  "MD",
+                  "MN",
+                  "MS",
+                  "MZ",
+                  "MM",
+                  "NA",
+                  "NR",
+                  "NP",
+                  "MV",
+                  "ML",
+                  "NC",
+                  "NI",
+                  "NE",
+                  "NU",
+                  "NF",
+                  "PW",
+                  "PS",
+                  "PA",
+                  "PG",
+                  "PY",
+                  "RE",
+                  "RW",
+                  "BL",
+                  "MF",
+                  "WS",
+                  "ST",
+                  "SN",
+                  "MP",
+                  "PN",
+                  "SX",
+                  "SB",
+                  "SO",
+                  "SC",
+                  "SL",
+                  "GS",
+                  "SH",
+                  "KN",
+                  "LC",
+                  "PM",
+                  "VC",
+                  "TJ",
+                  "TZ",
+                  "TG",
+                  "TK",
+                  "TO",
+                  "TM",
+                  "TC",
+                  "TV",
+                  "UM",
+                  "UG",
+                  "VI",
+                  "VG",
+                  "WF",
+                  "EH",
+                  "ZM",
+                  "ZW",
+                  "UZ",
+                  "VU",
+                  "SR",
+                  "SZ",
+                  "AD",
+                  "MC",
+                  "SM",
+                  "ME",
+                  "VA",
+                  "NEUTRAL"
+                ]
+              }
+            ],
+            "MarketProperties": [
+              {
+                "FirstAvailableDate": "2010-10-18T20:04:26.4400000Z",
+                "SupportedLanguages": [
+                  "en-us",
+                  "da",
+                  "es",
+                  "fi",
+                  "fr",
+                  "nb",
+                  "nl",
+                  "pt",
+                  "sv",
+                  "en-gb",
+                  "en-ca",
+                  "de",
+                  "fr-ca",
+                  "en-au",
+                  "es-es",
+                  "it",
+                  "ja",
+                  "pt-pt",
+                  "pt-br",
+                  "da-dk",
+                  "fi-fi",
+                  "nl-nl",
+                  "sv-se",
+                  "es-mx",
+                  "nb-no",
+                  "de-de",
+                  "fr-fr",
+                  "en",
+                  "ko",
+                  "zh-cn",
+                  "zh-tw",
+                  "ar",
+                  "zh-hant",
+                  "pl",
+                  "tr",
+                  "th",
+                  "ro",
+                  "he",
+                  "el",
+                  "id",
+                  "cs",
+                  "hu",
+                  "vi",
+                  "en-in"
+                ],
+                "PackageIds": null,
+                "PIFilter": null,
+                "Markets": ["US"]
+              }
+            ],
+            "ProductId": "9WZDNCRFJ3TJ",
+            "Properties": {
+              "EarlyAdopterEnrollmentUrl": null,
+              "FulfillmentData": {
+                "ProductId": "9WZDNCRFJ3TJ",
+                "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                "SkuId": "0011",
+                "Content": null,
+                "PackageFeatures": null
+              },
+              "FulfillmentType": "WindowsUpdate",
+              "FulfillmentPluginId": null,
+              "HasThirdPartyIAPs": false,
+              "LastUpdateDate": "2020-10-09T18:02:12.0000000Z",
+              "HardwareProperties": {
+                "MinimumHardware": [],
+                "RecommendedHardware": [],
+                "MinimumProcessor": null,
+                "RecommendedProcessor": null,
+                "MinimumGraphics": null,
+                "RecommendedGraphics": null
+              },
+              "HardwareRequirements": [],
+              "HardwareWarningList": [],
+              "InstallationTerms": "InstallationTermsStandard",
+              "Packages": [
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "Netflix.App",
+                      "DeclarationOrder": 0,
+                      "Extensions": [
+                        "search-search",
+                        "protocol-netflix",
+                        "backgroundTasks-backgroundTasks"
+                      ]
+                    }
+                  ],
+                  "Architectures": ["x64", "arm", "x86"],
+                  "Capabilities": [
+                    "internetClient",
+                    "internetClientServer",
+                    "privateNetworkClientServer"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "5JwYk5NZCfrPpZUg2YhKU0W+m6HUP3Vx+3+mS4rXN5Q=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "en-in",
+                    "ar",
+                    "bg",
+                    "cs",
+                    "da",
+                    "de",
+                    "el",
+                    "es",
+                    "fi",
+                    "fr",
+                    "he",
+                    "hu",
+                    "it",
+                    "ja",
+                    "ko",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "pl",
+                    "ro",
+                    "tr",
+                    "sv",
+                    "zh-hant",
+                    "th",
+                    "vi"
+                  ],
+                  "MaxDownloadSizeInBytes": 7250253,
+                  "MaxInstallSizeInBytes": 7610368,
+                  "PackageFormat": "AppxBundle",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_6.97.752.0_neutral_~_mcm4njqhnhss8",
+                  "PackageId": "c76eb995-37f6-0df7-3573-95c498140c24-X86-X64-Arm",
+                  "ContentId": "6f5a9e8f-f920-1658-72ff-16c1448402f9",
+                  "KeyId": null,
+                  "PackageRank": 30003,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750438195200,
+                      "MinVersion": 2814750438195200,
+                      "PlatformName": "Windows.Desktop"
+                    },
+                    {
+                      "MaxTested": 2814750438195200,
+                      "MinVersion": 2814750438195200,
+                      "PlatformName": "Windows.Holographic"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.bundledPackages\":[\"4DF9E0F8.Netflix_6.97.752.0_x64__mcm4njqhnhss8\",\"4DF9E0F8.Netflix_6.97.752.0_arm__mcm4njqhnhss8\",\"4DF9E0F8.Netflix_6.97.752.0_x86__mcm4njqhnhss8\"],\"content.isMain\":false,\"content.packageId\":\"4DF9E0F8.Netflix_6.97.752.0_neutral_~_mcm4njqhnhss8\",\"content.productId\":\"c3a509cd-61d6-df11-a844-00237de2db9e\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750438195200,\"platform.minVersion\":2814750438195200,\"platform.target\":3},{\"platform.maxVersionTested\":2814750438195200,\"platform.minVersion\":2814750438195200,\"platform.target\":10}],\"content.type\":7,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "~",
+                  "Version": "1689266521374720",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": [
+                        "DialProtocol-Netflix",
+                        "protocol-netflix",
+                        "appUriHandler-appUriHandler"
+                      ]
+                    }
+                  ],
+                  "Architectures": ["x64"],
+                  "Capabilities": [
+                    "internetClient",
+                    "internetClientServer",
+                    "privateNetworkClientServer",
+                    "hevcPlayback"
+                  ],
+                  "DeviceCapabilities": [
+                    "6a7e5907-885c-4bcb-b40a-073c067bd3d5"
+                  ],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3940651496505344,
+                      "PackageIdentity": "Microsoft.VCLibs.140.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "06P4J+OstU7MzIf5HE769f3XL8mSikambNQFuqzFgaA=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": ["en-us"],
+                  "MaxDownloadSizeInBytes": 81100341,
+                  "MaxInstallSizeInBytes": 81489920,
+                  "PackageFormat": "EMsixBundle",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_8.38.0.70_neutral_~_mcm4njqhnhss8",
+                  "PackageId": "f9ceeb09-ebef-6107-dcbd-e1d3537b3d03-X64",
+                  "ContentId": "6ab456e6-b2e4-5f12-9459-2267c3bd2e01",
+                  "KeyId": "6ab456e6-b2e4-5f12-9459-2267c3bd2e01",
+                  "PackageRank": 30012,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2814750970478592,
+                      "MinVersion": 2814750931222528,
+                      "PlatformName": "Windows.Xbox"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.bundledPackages\":[\"4DF9E0F8.Netflix_8.38.0.70_x64__mcm4njqhnhss8\"],\"content.isMain\":false,\"content.packageId\":\"4DF9E0F8.Netflix_8.38.0.70_neutral_~_mcm4njqhnhss8\",\"content.productId\":\"c3a509cd-61d6-df11-a844-00237de2db9e\",\"content.targetPlatforms\":[{\"platform.maxVersionTested\":2814750970478592,\"platform.minVersion\":2814750931222528,\"platform.target\":5}],\"content.type\":7,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "~",
+                  "Version": "2251963022442566",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "WP",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": ["neutral"],
+                  "Capabilities": [
+                    "ID_CAP_IDENTITY_DEVICE",
+                    "ID_CAP_MEDIALIB",
+                    "ID_CAP_NETWORKING",
+                    "ID_FNCTNL_SILVERLIGHT_FRAMEWORK",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "",
+                  "HashAlgorithm": "",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "da-dk",
+                    "de-de",
+                    "en",
+                    "en-gb",
+                    "en-us",
+                    "es-es",
+                    "fi-fi",
+                    "fr-ca",
+                    "fr-fr",
+                    "nb-no",
+                    "nl-nl",
+                    "pt-br",
+                    "sv-se"
+                  ],
+                  "MaxDownloadSizeInBytes": 2124298,
+                  "MaxInstallSizeInBytes": null,
+                  "PackageFormat": "Xap",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "",
+                  "PackageId": "6851614b-8337-4b5f-9025-1b1d21966cf0",
+                  "ContentId": "b7bc0da1-a0ff-8753-d972-13d41ea223e1",
+                  "KeyId": null,
+                  "PackageRank": 10000,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2251804108652544,
+                      "MinVersion": 2251799813685248,
+                      "PlatformName": "Windows.WindowsPhone8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.payloadId\":\"6851614b-8337-4b5f-9025-1b1d21966cf0\",\"content.productId\":\"c3a509cd-61d6-df11-a844-00237de2db9e\",\"content.type\":1,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "562992917970944",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "WP",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": ["neutral"],
+                  "Capabilities": [
+                    "ID_CAP_IDENTITY_DEVICE",
+                    "ID_CAP_MEDIALIB_PLAYBACK",
+                    "ID_CAP_NETWORKING",
+                    "ID_FNCTNL_SILVERLIGHT_FRAMEWORK",
+                    "ID_RESOLUTION_HD720P",
+                    "ID_RESOLUTION_WVGA",
+                    "ID_RESOLUTION_WXGA",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "",
+                  "HashAlgorithm": "",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "da-dk",
+                    "de-de",
+                    "en-gb",
+                    "en-us",
+                    "es-mx",
+                    "fi-fi",
+                    "fr-ca",
+                    "fr-fr",
+                    "nb-no",
+                    "nl-nl",
+                    "pt-br",
+                    "sv-se"
+                  ],
+                  "MaxDownloadSizeInBytes": 2079578,
+                  "MaxInstallSizeInBytes": null,
+                  "PackageFormat": "Xap",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "",
+                  "PackageId": "c828f646-52ec-4c11-847f-768bcf8a6eae",
+                  "ContentId": "b7bc0da1-a0ff-8753-d972-13d41ea223e1",
+                  "KeyId": null,
+                  "PackageRank": 11000,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2251804108652544,
+                      "MinVersion": 2251799813685248,
+                      "PlatformName": "Windows.WindowsPhone8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.payloadId\":\"c828f646-52ec-4c11-847f-768bcf8a6eae\",\"content.productId\":\"c3a509cd-61d6-df11-a844-00237de2db9e\",\"content.type\":2,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "844454994903063",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "WP",
+                      "DeclarationOrder": 0,
+                      "Extensions": []
+                    }
+                  ],
+                  "Architectures": ["neutral"],
+                  "Capabilities": [
+                    "internetClient",
+                    "ID_RESOLUTION_WVGA",
+                    "ID_RESOLUTION_WXGA",
+                    "ID_RESOLUTION_HD720P",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": ["microphone"],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562993039212545,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient.Phone.2"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3377701694013440,
+                      "PackageIdentity": "Microsoft.VCLibs.120.00.Phone"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "GsUkUC+HXkRvEE6PU5EjQnKAR9VfEoEq+WWNCX8MxoA=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 7948191,
+                  "MaxInstallSizeInBytes": 11083776,
+                  "PackageFormat": "Appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_4.15.0.62_arm__mcm4njqhnhss8",
+                  "PackageId": "4c9dc6c4-e410-466a-9e98-eee520f15b5e-Neutral",
+                  "ContentId": "6a97cc96-9d91-fff0-912f-d26c240e578b",
+                  "KeyId": null,
+                  "PackageRank": 17000,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 2251804108652544,
+                      "MinVersion": 2251804108652544,
+                      "PlatformName": "Windows.WindowsPhone8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688862745231360,\"content.minOS\":1688862745231360,\"content.packageId\":\"4DF9E0F8.Netflix_4.15.0.62_arm__mcm4njqhnhss8\",\"content.productId\":\"c3a509cd-61d6-df11-a844-00237de2db9e\",\"content.type\":4,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "1125964331352126",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["x64"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562962948292608,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3096228093100033,
+                      "PackageIdentity": "Microsoft.VCLibs.110.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "42X7uS/LytxrsxrF7PGreVD3fb8n+u5p6/W9KXeGfgc=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5747705,
+                  "MaxInstallSizeInBytes": 10559488,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_1.33.0.109_x64__mcm4njqhnhss8",
+                  "PackageId": "e20498c8-c01f-440c-a167-5213d4ed9914-X64",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20002,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688858450264064,
+                      "MinVersion": 1688858450264064,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688858450264064,\"content.minOS\":1688858450264064,\"content.packageId\":\"4DF9E0F8.Netflix_1.33.0.109_x64__mcm4njqhnhss8\",\"content.type\":5,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281616710631533",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["x86"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562962948292608,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3096228093100033,
+                      "PackageIdentity": "Microsoft.VCLibs.110.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "z7PFAh/WD46LPrHKm0DcT6UloZp0iaTZjf/2nBvdcnc=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5733181,
+                  "MaxInstallSizeInBytes": 10518528,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_1.33.0.109_x86__mcm4njqhnhss8",
+                  "PackageId": "b4cf45f0-2677-4520-b7ef-18728082c0ec-X86",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20001,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688858450264064,
+                      "MinVersion": 1688858450264064,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688858450264064,\"content.minOS\":1688858450264064,\"content.packageId\":\"4DF9E0F8.Netflix_1.33.0.109_x86__mcm4njqhnhss8\",\"content.type\":5,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281616710631533",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["arm"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562962948292608,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3096228093100033,
+                      "PackageIdentity": "Microsoft.VCLibs.110.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "OMZ/IIRve1/aBnMmSb/u639E8E0jXUVlXvoBHqtixYc=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5744175,
+                  "MaxInstallSizeInBytes": 10526720,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_1.33.0.109_arm__mcm4njqhnhss8",
+                  "PackageId": "896936b6-abe8-485d-9542-706b7b1f6fc4-Arm",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20003,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688858450264064,
+                      "MinVersion": 1688858450264064,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688858450264064,\"content.minOS\":1688858450264064,\"content.packageId\":\"4DF9E0F8.Netflix_1.33.0.109_arm__mcm4njqhnhss8\",\"content.type\":5,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "281616710631533",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["x86"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562997339226112,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient.2"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3377701097111553,
+                      "PackageIdentity": "Microsoft.VCLibs.120.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "IvNSqzzyRmD5ZgCFVU/2x7QddCSw25ak2ix9oMmyh4E=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5925423,
+                  "MaxInstallSizeInBytes": 10891264,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_2.22.0.39_x86__mcm4njqhnhss8",
+                  "PackageId": "3789cd7b-3858-441a-aa0c-523366516efd-X86",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20011,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688862745165824,
+                      "MinVersion": 1688862745165824,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688862745165824,\"content.minOS\":1688862745165824,\"content.packageId\":\"4DF9E0F8.Netflix_2.22.0.39_x86__mcm4njqhnhss8\",\"content.type\":6,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "563044442701863",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["x64"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562997339226112,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient.2"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3377701097111553,
+                      "PackageIdentity": "Microsoft.VCLibs.120.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "fA7AhxxOocoGdURdUaAWp9rjM2Kr4JPJE3YQAxznYtw=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5939929,
+                  "MaxInstallSizeInBytes": 10952704,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_2.22.0.39_x64__mcm4njqhnhss8",
+                  "PackageId": "671978e9-fefc-4766-8bc8-0eb62503c5d4-X64",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20012,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688862745165824,
+                      "MinVersion": 1688862745165824,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688862745165824,\"content.minOS\":1688862745165824,\"content.packageId\":\"4DF9E0F8.Netflix_2.22.0.39_x64__mcm4njqhnhss8\",\"content.type\":6,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "563044442701863",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                },
+                {
+                  "Applications": [
+                    {
+                      "ApplicationId": "App",
+                      "DeclarationOrder": 0,
+                      "Extensions": ["search-search", "protocol-netflix"]
+                    }
+                  ],
+                  "Architectures": ["arm"],
+                  "Capabilities": [
+                    "internetClient",
+                    "Microsoft.storeFilter.core.notSupported_8wekyb3d8bbwe"
+                  ],
+                  "DeviceCapabilities": [],
+                  "ExperienceIds": [],
+                  "FrameworkDependencies": [
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 562997339226112,
+                      "PackageIdentity": "Microsoft.Media.PlayReadyClient.2"
+                    },
+                    {
+                      "MaxTested": 0,
+                      "MinVersion": 3377701097111553,
+                      "PackageIdentity": "Microsoft.VCLibs.120.00"
+                    }
+                  ],
+                  "HardwareDependencies": [],
+                  "HardwareRequirements": [],
+                  "Hash": "F4dbkqdksFrGfBVewsJJkQd7NHxc3GfFCEFeOa9m56A=",
+                  "HashAlgorithm": "SHA256",
+                  "IsStreamingApp": false,
+                  "Languages": [
+                    "en-us",
+                    "da",
+                    "de",
+                    "es",
+                    "fi",
+                    "fr",
+                    "fr-ca",
+                    "nb",
+                    "nl",
+                    "pt",
+                    "sv",
+                    "en-gb",
+                    "en-ca",
+                    "en-au",
+                    "es-es",
+                    "it",
+                    "ja",
+                    "ko",
+                    "pl",
+                    "pt-pt",
+                    "th",
+                    "tr",
+                    "zh-cn",
+                    "zh-tw"
+                  ],
+                  "MaxDownloadSizeInBytes": 5935941,
+                  "MaxInstallSizeInBytes": 10903552,
+                  "PackageFormat": "appx",
+                  "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                  "MainPackageFamilyNameForDlc": null,
+                  "PackageFullName": "4DF9E0F8.Netflix_2.22.0.39_arm__mcm4njqhnhss8",
+                  "PackageId": "5f2e3a30-363d-4f64-bc6a-fea9bd3a69a7-Arm",
+                  "ContentId": "f1ebc660-8f05-a12f-4aa3-4d888433c435",
+                  "KeyId": null,
+                  "PackageRank": 20013,
+                  "PackageUri": "https://productingestionbin1.blob.core.windows.net",
+                  "PlatformDependencies": [
+                    {
+                      "MaxTested": 1688862745165824,
+                      "MinVersion": 1688862745165824,
+                      "PlatformName": "Windows.Windows8x"
+                    }
+                  ],
+                  "PlatformDependencyXmlBlob": "{\"blob.version\":1688867040526336,\"content.isMain\":false,\"content.maxOSTested\":1688862745165824,\"content.minOS\":1688862745165824,\"content.packageId\":\"4DF9E0F8.Netflix_2.22.0.39_arm__mcm4njqhnhss8\",\"content.type\":6,\"policy\":{\"category.first\":\"app\",\"category.second\":\"Entertainment\",\"optOut.backupRestore\":false,\"optOut.removeableMedia\":false},\"policy2\":{\"ageRating\":3,\"optOut.DVR\":false,\"thirdPartyAppRatings\":[{\"level\":9,\"systemId\":3},{\"level\":81,\"systemId\":5},{\"level\":52,\"systemId\":12},{\"level\":30,\"systemId\":9},{\"level\":78,\"systemId\":16},{\"level\":72,\"systemId\":15},{\"level\":67,\"systemId\":13}]}}",
+                  "ResourceId": "",
+                  "Version": "563044442701863",
+                  "PackageDownloadUris": null,
+                  "DriverDependencies": [],
+                  "FulfillmentData": {
+                    "ProductId": "9WZDNCRFJ3TJ",
+                    "WuBundleId": "cb9ef3a5-ffd4-438f-9291-6874513df1dc",
+                    "WuCategoryId": "d8d75bb2-c5cd-44f2-8c26-c1d1ae5b13fa",
+                    "PackageFamilyName": "4DF9E0F8.Netflix_mcm4njqhnhss8",
+                    "SkuId": "0011",
+                    "Content": null,
+                    "PackageFeatures": null
+                  }
+                }
+              ],
+              "VersionString": "",
+              "VisibleToB2BServiceIds": [],
+              "XboxXPA": false,
+              "BundledSkus": [],
+              "IsRepurchasable": false,
+              "SkuDisplayRank": 2,
+              "DisplayPhysicalStoreInventory": null,
+              "AdditionalIdentifiers": [],
+              "IsTrial": true,
+              "IsPreOrder": false,
+              "IsBundle": false
+            },
+            "SkuASchema": "Sku;3",
+            "SkuBSchema": "SkuUnifiedApp;3",
+            "SkuId": "0011",
+            "SkuType": "trial",
+            "RecurrencePolicy": null,
+            "SubscriptionPolicyId": null
+          },
+          "Availabilities": [
+            {
+              "Actions": ["Details", "Fulfill"],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityUnifiedApp;3",
+              "AvailabilityId": "9V8PWXLLKR4Z",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Desktop"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Mobile"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Xbox"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.8828080"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": ["1"],
+                "StartDate": "1753-01-01T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2020-10-09T18:02:17.8524346Z",
+              "Markets": ["US"],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 0.0,
+                  "MSRP": 0.0,
+                  "TaxType": "",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {},
+              "SkuId": "0011",
+              "DisplayRank": 0,
+              "RemediationRequired": false
+            },
+            {
+              "Actions": ["License", "Details"],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityUnifiedApp;3",
+              "AvailabilityId": "9W02NT053STL",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Desktop"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Mobile"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Xbox"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.8828080"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": ["1"],
+                "StartDate": "1753-01-01T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2020-10-09T18:02:17.8524346Z",
+              "Markets": ["US"],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 0.0,
+                  "MSRP": 0.0,
+                  "TaxType": "",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {},
+              "SkuId": "0011",
+              "DisplayRank": 1,
+              "RemediationRequired": false
+            },
+            {
+              "Actions": ["License", "Details"],
+              "AvailabilityASchema": "Availability;3",
+              "AvailabilityBSchema": "AvailabilityUnifiedApp;3",
+              "AvailabilityId": "B290Z3766JN5",
+              "Conditions": {
+                "ClientConditions": {
+                  "AllowedPlatforms": [
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Team"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Holographic"
+                    },
+                    {
+                      "MaxVersion": 2147483647,
+                      "MinVersion": 0,
+                      "PlatformName": "Windows.Core"
+                    }
+                  ]
+                },
+                "EndDate": "9998-12-30T00:00:00.0000000Z",
+                "ResourceSetIds": ["1"],
+                "StartDate": "1753-01-01T00:00:00.0000000Z"
+              },
+              "LastModifiedDate": "2020-10-09T18:02:17.8524346Z",
+              "Markets": ["US"],
+              "OrderManagementData": {
+                "GrantedEntitlementKeys": [],
+                "Price": {
+                  "CurrencyCode": "USD",
+                  "IsPIRequired": false,
+                  "ListPrice": 0.0,
+                  "MSRP": 0.0,
+                  "TaxType": "",
+                  "WholesaleCurrencyCode": ""
+                }
+              },
+              "Properties": {},
+              "SkuId": "0011",
+              "DisplayRank": 2,
+              "RemediationRequired": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "TotalResultCount": 1
+}

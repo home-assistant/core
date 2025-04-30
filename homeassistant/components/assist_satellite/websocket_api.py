@@ -198,7 +198,8 @@ async def websocket_test_connection(
 
     hass.async_create_background_task(
         satellite.async_internal_announce(
-            media_id=f"{CONNECTION_TEST_URL_BASE}/{connection_id}"
+            media_id=f"{CONNECTION_TEST_URL_BASE}/{connection_id}",
+            preannounce=False,
         ),
         f"assist_satellite_connection_test_{msg['entity_id']}",
     )

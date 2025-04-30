@@ -11,6 +11,7 @@ from onedrive_personal_sdk.exceptions import (
     HashMismatchError,
     OneDriveException,
 )
+from onedrive_personal_sdk.models.items import File
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
@@ -23,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .const import BACKUP_METADATA, MOCK_BACKUP_FILE, MOCK_METADATA_FILE
+from .const import BACKUP_METADATA
 
 from tests.common import AsyncMock, MockConfigEntry
 from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
@@ -72,7 +73,6 @@ async def test_agents_info(
 async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test agent list backups."""
 
@@ -89,17 +89,35 @@ async def test_agents_list_backups(
                 "onedrive.mock_drive_id": {"protected": False, "size": 34519040}
             },
             "backup_id": "23e64aec",
-            "date": "2024-11-22T11:48:48.727189+01:00",
             "database_included": True,
+            "date": "2024-11-22T11:48:48.727189+01:00",
             "extra_metadata": {},
+            "failed_addons": [],
+            "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0.dev0",
             "name": "Core 2024.12.0.dev0",
-            "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
     ]
+
+
+async def test_agents_list_backups_with_download_failure(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test agent list backups still works if one of the items fails to download."""
+    mock_onedrive_client.download_drive_item.side_effect = OneDriveException("test")
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backups"] == []
 
 
 async def test_agents_get_backup(
@@ -125,14 +143,16 @@ async def test_agents_get_backup(
             }
         },
         "backup_id": "23e64aec",
-        "date": "2024-11-22T11:48:48.727189+01:00",
         "database_included": True,
+        "date": "2024-11-22T11:48:48.727189+01:00",
         "extra_metadata": {},
+        "failed_addons": [],
+        "failed_agent_ids": [],
+        "failed_folders": [],
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2024.12.0.dev0",
         "name": "Core 2024.12.0.dev0",
-        "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
 
@@ -228,6 +248,78 @@ async def test_agents_upload_corrupt_upload(
     assert "Hash validation failed, backup file might be corrupt" in caplog.text
 
 
+async def test_agents_upload_metadata_upload_failed(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_onedrive_client: MagicMock,
+    mock_large_file_upload_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test metadata upload fails."""
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+    mock_onedrive_client.upload_file.side_effect = OneDriveException("test")
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+    mock_large_file_upload_client.assert_called_once()
+    mock_onedrive_client.delete_drive_item.assert_called_once()
+    assert mock_onedrive_client.update_drive_item.call_count == 0
+
+
+async def test_agents_upload_metadata_metadata_failed(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_onedrive_client: MagicMock,
+    mock_large_file_upload_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test metadata upload on file description update."""
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+    mock_onedrive_client.update_drive_item.side_effect = OneDriveException("test")
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+    mock_large_file_upload_client.assert_called_once()
+    assert mock_onedrive_client.update_drive_item.call_count == 1
+    assert mock_onedrive_client.delete_drive_item.call_count == 2
+
+
 async def test_agents_download(
     hass_client: ClientSessionGenerator,
     mock_onedrive_client: MagicMock,
@@ -248,12 +340,14 @@ async def test_error_on_agents_download(
     hass_client: ClientSessionGenerator,
     mock_onedrive_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_backup_file: File,
+    mock_metadata_file: File,
 ) -> None:
     """Test we get not found on an not existing backup on download."""
     client = await hass_client()
     backup_id = BACKUP_METADATA["backup_id"]
     mock_onedrive_client.list_drive_items.side_effect = [
-        [MOCK_BACKUP_FILE, MOCK_METADATA_FILE],
+        [mock_backup_file, mock_metadata_file],
         [],
     ]
 

@@ -200,7 +200,7 @@ async def test_service_say_error(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == FORM_DATA
@@ -234,7 +234,7 @@ async def test_service_say_timeout(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == FORM_DATA
@@ -273,7 +273,7 @@ async def test_service_say_error_msg(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == FORM_DATA

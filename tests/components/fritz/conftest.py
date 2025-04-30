@@ -27,6 +27,26 @@ class FritzServiceMock(Service):
         self.serviceId = serviceId
 
 
+class FritzResponseMock:
+    """Response mocking."""
+
+    def json(self):
+        """Mock json method."""
+        return {"CPUTEMP": "69,68,67"}
+
+
+class FritzHttpMock:
+    """FritzHttp mocking."""
+
+    def __init__(self) -> None:
+        """Init Mocking class."""
+        self.router_url = "http://fritz.box"
+
+    def call_url(self, *args, **kwargs):
+        """Mock call_url method."""
+        return FritzResponseMock()
+
+
 class FritzConnectionMock:
     """FritzConnection mocking."""
 
@@ -39,6 +59,7 @@ class FritzConnectionMock:
             srv: FritzServiceMock(serviceId=srv, actions=actions)
             for srv, actions in services.items()
         }
+        self.http_interface = FritzHttpMock()
         LOGGER.debug("-" * 80)
         LOGGER.debug("FritzConnectionMock - services: %s", self.services)
 

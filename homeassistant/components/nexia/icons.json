@@ -23,6 +23,9 @@
     "set_aircleaner_mode": {
       "service": "mdi:air-filter"
     },
+    "set_dehumidify_setpoint": {
+      "service": "mdi:water-percent"
+    },
     "set_humidify_setpoint": {
       "service": "mdi:water-percent"
     },

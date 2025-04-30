@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from pyloadapi.api import CannotConnect, InvalidAuth, PyLoadAPI
+from pyloadapi import CannotConnect, InvalidAuth, PyLoadAPI
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -17,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import PyLoadConfigEntry
 from .entity import BasePyLoadEntity
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(kw_only=True, frozen=True)

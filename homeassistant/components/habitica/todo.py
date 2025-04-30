@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 import logging
+import math
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -117,19 +118,24 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
         """Move an item in the To-do list."""
         if TYPE_CHECKING:
             assert self.todo_items
+        tasks_order = (
+            self.coordinator.data.user.tasksOrder.todos
+            if self.entity_description.key is HabiticaTodoList.TODOS
+            else self.coordinator.data.user.tasksOrder.dailys
+        )
 
         if previous_uid:
-            pos = (
-                self.todo_items.index(
-                    next(item for item in self.todo_items if item.uid == previous_uid)
-                )
-                + 1
-            )
+            pos = tasks_order.index(UUID(previous_uid))
+            if pos < tasks_order.index(UUID(uid)):
+                pos += 1
+
         else:
             pos = 0
 
         try:
-            await self.coordinator.habitica.reorder_task(UUID(uid), pos)
+            tasks_order[:] = (
+                await self.coordinator.habitica.reorder_task(UUID(uid), pos)
+            ).data
         except TooManyRequestsError as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -143,20 +149,6 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 translation_key=f"move_{self.entity_description.key}_item_failed",
                 translation_placeholders={"pos": str(pos)},
             ) from e
-        else:
-            # move tasks in the coordinator until we have fresh data
-            tasks = self.coordinator.data.tasks
-            new_pos = (
-                tasks.index(
-                    next(task for task in tasks if task.id == UUID(previous_uid))
-                )
-                + 1
-                if previous_uid
-                else 0
-            )
-            old_pos = tasks.index(next(task for task in tasks if task.id == UUID(uid)))
-            tasks.insert(new_pos, tasks.pop(old_pos))
-            await self.coordinator.async_request_refresh()
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a Habitica todo."""
@@ -270,7 +262,7 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
     def todo_items(self) -> list[TodoItem]:
         """Return the todo items."""
 
-        return [
+        tasks = [
             *(
                 TodoItem(
                     uid=str(task.id),
@@ -287,6 +279,15 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
                 if task.Type is TaskType.TODO
             ),
         ]
+        return sorted(
+            tasks,
+            key=lambda task: (
+                math.inf
+                if (uid := UUID(task.uid))
+                not in (tasks_order := self.coordinator.data.user.tasksOrder.todos)
+                else tasks_order.index(uid)
+            ),
+        )
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Create a Habitica todo."""
@@ -347,7 +348,7 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
         if TYPE_CHECKING:
             assert self.coordinator.data.user.lastCron
 
-        return [
+        tasks = [
             *(
                 TodoItem(
                     uid=str(task.id),
@@ -364,3 +365,12 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
                 if task.Type is TaskType.DAILY
             )
         ]
+        return sorted(
+            tasks,
+            key=lambda task: (
+                math.inf
+                if (uid := UUID(task.uid))
+                not in (tasks_order := self.coordinator.data.user.tasksOrder.dailys)
+                else tasks_order.index(uid)
+            ),
+        )

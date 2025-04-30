@@ -338,7 +338,7 @@ def get_influx_connection(  # noqa: C901
     conf, test_write=False, test_read=False
 ) -> InfluxClient:
     """Create the correct influx connection for the API version."""
-    kwargs = {
+    kwargs: dict[str, Any] = {
         CONF_TIMEOUT: TIMEOUT,
     }
     precision = conf.get(CONF_PRECISION)

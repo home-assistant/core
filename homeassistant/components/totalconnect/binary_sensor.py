@@ -172,9 +172,9 @@ class TotalConnectZoneBinarySensor(TotalConnectZoneEntity, BinarySensorEntity):
         super().__init__(coordinator, zone, location_id, entity_description.key)
         self.entity_description = entity_description
         self._attr_extra_state_attributes = {
-            "zone_id": zone.zoneid,
+            "zone_id": str(zone.zoneid),
             "location_id": location_id,
-            "partition": zone.partition,
+            "partition": str(zone.partition),
         }
 
     @property

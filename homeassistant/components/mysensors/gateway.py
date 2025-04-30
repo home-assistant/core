@@ -47,7 +47,6 @@ from .handler import HANDLERS
 from .helpers import (
     discover_mysensors_node,
     discover_mysensors_platform,
-    on_unload,
     validate_child,
     validate_node,
 )
@@ -293,9 +292,7 @@ async def _gw_start(
         """Stop the gateway."""
         await gw_stop(hass, entry, gateway)
 
-    on_unload(
-        hass,
-        entry.entry_id,
+    entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw),
     )
 

@@ -27,6 +27,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:80:00:12:ac:f2-DeviceType.NLP',

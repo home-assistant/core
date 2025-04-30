@@ -135,7 +135,7 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
                 vol.Optional(
                     CONF_WEATHER_AREAS,
                     default=weather_areas,
-                ): cv.multi_select({wa: None for wa in weather_areas}),
+                ): cv.multi_select(dict.fromkeys(weather_areas)),
                 vol.Optional(CONF_NEW_AREA): str,
             }
         )

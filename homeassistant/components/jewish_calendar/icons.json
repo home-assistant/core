@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "erev_shabbat_hag": { "default": "mdi:candle-light" },
+      "issur_melacha_in_effect": { "default": "mdi:power-plug-off" },
+      "motzei_shabbat_hag": { "default": "mdi:fire" }
+    },
+    "sensor": {
+      "alot_hashachar": { "default": "mdi:weather-sunset-up" },
+      "chatzot_hayom": { "default": "mdi:calendar-clock" },
+      "daf_yomi": { "default": "mdi:book-open-variant" },
+      "hebrew_date": { "default": "mdi:star-david" },
+      "holiday": { "default": "mdi:calendar-star" },
+      "mincha_gedola": { "default": "mdi:calendar-clock" },
+      "mincha_ketana": { "default": "mdi:calendar-clock" },
+      "netz_hachama": { "default": "mdi:calendar-clock" },
+      "omer_count": { "default": "mdi:counter" },
+      "plag_hamincha": { "default": "mdi:weather-sunset-down" },
+      "shkia": { "default": "mdi:weather-sunset" },
+      "sof_zman_shema_gra": { "default": "mdi:calendar-clock" },
+      "sof_zman_shema_mga": { "default": "mdi:calendar-clock" },
+      "sof_zman_tfilla_gra": { "default": "mdi:calendar-clock" },
+      "sof_zman_tfilla_mga": { "default": "mdi:calendar-clock" },
+      "talit_and_tefillin": { "default": "mdi:calendar-clock" },
+      "tset_hakohavim_shabbat": { "default": "mdi:weather-night" },
+      "tset_hakohavim_tsom": { "default": "mdi:weather-night" },
+      "upcoming_candle_lighting": { "default": "mdi:candle" },
+      "upcoming_havdalah": { "default": "mdi:weather-night" },
+      "upcoming_shabbat_candle_lighting": { "default": "mdi:candle" },
+      "upcoming_shabbat_havdalah": { "default": "mdi:weather-night" },
+      "weekly_portion": { "default": "mdi:book-open-variant" }
+    }
+  },
+  "services": {
+    "count_omer": {
+      "service": "mdi:counter"
+    }
+  }
+}

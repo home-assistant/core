@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from pypalazzetti.exceptions import CommunicationError, ValidationError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,

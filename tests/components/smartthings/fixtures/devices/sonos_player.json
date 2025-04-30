@@ -1,0 +1,81 @@
+{
+  "items": [
+    {
+      "deviceId": "c85fced9-c474-4a47-93c2-037cc7829536",
+      "name": "sonos-player",
+      "label": "Elliots Rum",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "ef0a871d-9ed1-377d-8746-0da1dfd50598",
+      "deviceManufacturerCode": "Sonos",
+      "locationId": "eed0e167-e793-459b-80cb-a0b02e2b86c2",
+      "ownerId": "2c69cc36-85ae-c41a-9981-a4ee96cd9137",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "mediaPlayback",
+              "version": 1
+            },
+            {
+              "id": "mediaGroup",
+              "version": 1
+            },
+            {
+              "id": "mediaPresets",
+              "version": 1
+            },
+            {
+              "id": "mediaTrackControl",
+              "version": 1
+            },
+            {
+              "id": "audioMute",
+              "version": 1
+            },
+            {
+              "id": "audioNotification",
+              "version": 1
+            },
+            {
+              "id": "audioTrackData",
+              "version": 1
+            },
+            {
+              "id": "audioVolume",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Speaker",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2025-02-02T13:18:28.570Z",
+      "profile": {
+        "id": "0443d359-3f76-383f-82a4-6fc4a879ef1d"
+      },
+      "lan": {
+        "networkId": "38420B9108F6",
+        "driverId": "c21a6c77-872c-474e-be5b-5f6f11a240ef",
+        "executingLocally": true,
+        "hubId": "2f7f7d2b-e683-48ae-86f7-e57df6a0bce2",
+        "provisioningState": "TYPED"
+      },
+      "type": "LAN",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "LOCAL"
+    }
+  ],
+  "_links": {}
+}

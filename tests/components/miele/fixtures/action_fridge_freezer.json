@@ -1,0 +1,31 @@
+{
+  "processAction": [6],
+  "light": [],
+  "ambientLight": [],
+  "startTime": [],
+  "ventilationStep": [],
+  "programId": [],
+  "targetTemperature": [
+    {
+      "zone": 1,
+      "min": 1,
+      "max": 9
+    },
+    {
+      "zone": 2,
+      "min": -28,
+      "max": -14
+    },
+    {
+      "zone": 3,
+      "min": -30,
+      "max": -15
+    }
+  ],
+  "deviceName": true,
+  "powerOn": false,
+  "powerOff": false,
+  "colors": [],
+  "modes": [1],
+  "runOnTime": []
+}

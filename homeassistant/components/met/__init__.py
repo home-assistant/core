@@ -47,7 +47,6 @@ async def async_setup_entry(
 
     config_entry.runtime_data = coordinator
 
-    config_entry.async_on_unload(config_entry.add_update_listener(async_update_entry))
     config_entry.async_on_unload(coordinator.untrack_home)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -62,11 +61,6 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-async def async_update_entry(hass: HomeAssistant, config_entry: MetWeatherConfigEntry):
-    """Reload Met component when options changed."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def cleanup_old_device(hass: HomeAssistant) -> None:

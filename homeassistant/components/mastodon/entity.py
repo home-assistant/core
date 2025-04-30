@@ -4,7 +4,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN, INSTANCE_VERSION
+from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import MastodonConfigEntry, MastodonCoordinator
 from .utils import construct_mastodon_username
 
@@ -40,7 +40,7 @@ class MastodonEntity(CoordinatorEntity[MastodonCoordinator]):
             manufacturer="Mastodon gGmbH",
             model=full_account_name,
             entry_type=DeviceEntryType.SERVICE,
-            sw_version=data.runtime_data.instance[INSTANCE_VERSION],
+            sw_version=data.runtime_data.instance.version,
             name=name,
         )
 

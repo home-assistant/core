@@ -7,7 +7,6 @@ from random import randint
 from time import time
 from typing import TYPE_CHECKING, Any
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InvalidToken,
@@ -17,6 +16,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     VehicleOffline,
 )
+from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
 
-VEHICLE_INTERVAL_SECONDS = 300
+VEHICLE_INTERVAL_SECONDS = 600
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
 VEHICLE_WAIT = timedelta(minutes=15)
 
@@ -39,9 +39,9 @@ ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
     VehicleDataEndpoint.CLIMATE_STATE,
     VehicleDataEndpoint.DRIVE_STATE,
-    VehicleDataEndpoint.LOCATION_DATA,
     VehicleDataEndpoint.VEHICLE_STATE,
     VehicleDataEndpoint.VEHICLE_CONFIG,
+    VehicleDataEndpoint.LOCATION_DATA,
 ]
 
 
@@ -65,13 +65,15 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     updated_once: bool
     pre2021: bool
     last_active: datetime
+    endpoints: list[VehicleDataEndpoint]
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: VehicleSpecific,
+        api: VehicleFleet,
         product: dict,
+        location: bool,
     ) -> None:
         """Initialize TeslaFleet Vehicle Update Coordinator."""
         super().__init__(
@@ -85,6 +87,11 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data = flatten(product)
         self.updated_once = False
         self.last_active = datetime.now()
+        self.endpoints = (
+            ENDPOINTS
+            if location
+            else [ep for ep in ENDPOINTS if ep != VehicleDataEndpoint.LOCATION_DATA]
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
@@ -97,7 +104,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if self.data["state"] != TeslaFleetState.ONLINE:
                 return self.data
 
-            response = await self.api.vehicle_data(endpoints=ENDPOINTS)
+            response = await self.api.vehicle_data(endpoints=self.endpoints)
             data = response["response"]
 
         except VehicleOffline:
@@ -149,7 +156,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
     ) -> None:
         """Initialize TeslaFleet Energy Site Live coordinator."""
         super().__init__(
@@ -202,7 +209,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
     ) -> None:
         """Initialize Tesla Fleet Energy Site History coordinator."""
         super().__init__(
@@ -247,11 +254,18 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             raise UpdateFailed(e.message) from e
         self.updated_once = True
 
+        if not data or not isinstance(data.get("time_series"), list):
+            raise UpdateFailed("Received invalid data")
+
         # Add all time periods together
-        output = {key: 0 for key in ENERGY_HISTORY_FIELDS}
+        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
         for period in data.get("time_series", []):
             for key in ENERGY_HISTORY_FIELDS:
-                output[key] += period.get(key, 0)
+                if key in period:
+                    if output[key] is None:
+                        output[key] = period[key]
+                    else:
+                        output[key] += period[key]
 
         return output
 
@@ -266,7 +280,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
         product: dict,
     ) -> None:
         """Initialize TeslaFleet Energy Info coordinator."""

@@ -8,7 +8,12 @@ from typing import Any
 
 from google_drive_api.exceptions import GoogleDriveApiError
 
-from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgent,
+    BackupAgentError,
+    BackupNotFound,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
@@ -93,13 +98,13 @@ class GoogleDriveBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
         backups = await self.async_list_backups()
         for backup in backups:
             if backup.backup_id == backup_id:
                 return backup
-        return None
+        raise BackupNotFound(f"Backup {backup_id} not found")
 
     async def async_download_backup(
         self,
@@ -120,7 +125,7 @@ class GoogleDriveBackupAgent(BackupAgent):
                 return ChunkAsyncStreamIterator(stream)
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
             raise BackupAgentError(f"Failed to download backup: {err}") from err
-        raise BackupAgentError("Backup not found")
+        raise BackupNotFound(f"Backup {backup_id} not found")
 
     async def async_delete_backup(
         self,
@@ -138,5 +143,7 @@ class GoogleDriveBackupAgent(BackupAgent):
                 _LOGGER.debug("Deleting file_id: %s", file_id)
                 await self._client.async_delete(file_id)
                 _LOGGER.debug("Deleted backup_id: %s", backup_id)
+                return
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
             raise BackupAgentError(f"Failed to delete backup: {err}") from err
+        raise BackupNotFound(f"Backup {backup_id} not found")

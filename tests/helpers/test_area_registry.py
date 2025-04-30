@@ -494,6 +494,54 @@ async def test_async_get_area_by_name(area_registry: ar.AreaRegistry) -> None:
     assert area_registry.async_get_area_by_name("M o c k 1").normalized_name == "mock1"
 
 
+async def test_async_get_areas_by_alias(
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Make sure we can get the areas by alias."""
+    area1 = area_registry.async_create("Mock1", aliases=("alias_1", "alias_2"))
+    area2 = area_registry.async_create("Mock2", aliases=("alias_1", "alias_3"))
+
+    assert len(area_registry.areas) == 2
+
+    assert area_registry.async_get_areas_by_alias("A l i a s_1") == [area1, area2]
+    assert area_registry.async_get_areas_by_alias("A l i a s_2") == [area1]
+    assert area_registry.async_get_areas_by_alias("A l i a s_3")
+
+
+async def test_async_get_areas_by_alias_collisions(
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Make sure we can get the areas by alias when the aliases have collisions."""
+    area = area_registry.async_create("Mock1")
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == []
+
+    # Add an alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Add a colliding alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1", "alias  1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Add a colliding alias
+    updated_area = area_registry.async_update(
+        area.id, aliases={"alias1", "alias 1", "alias  1"}
+    )
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Remove a colliding alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1", "alias  1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Remove a colliding alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Remove all aliases
+    updated_area = area_registry.async_update(area.id, aliases={})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == []
+
+
 async def test_async_get_area_by_name_not_found(area_registry: ar.AreaRegistry) -> None:
     """Make sure we return None for non-existent areas."""
     area_registry.async_create("Mock1")

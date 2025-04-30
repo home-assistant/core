@@ -125,6 +125,15 @@
         'tracks': dict({
           'items': list([
             dict({
+              'added_at': '2015-01-15T12:39:22+00:00',
+              'added_by': dict({
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/user/jmperezperez',
+                }),
+                'href': 'https://api.spotify.com/v1/users/jmperezperez',
+                'uri': 'spotify:user:jmperezperez',
+                'user_id': 'jmperezperez',
+              }),
               'track': dict({
                 'album': dict({
                   'album_id': '2pANdqPvxInB0YvcDiw4ko',
@@ -182,6 +191,15 @@
               }),
             }),
             dict({
+              'added_at': '2015-01-15T12:40:03+00:00',
+              'added_by': dict({
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/user/jmperezperez',
+                }),
+                'href': 'https://api.spotify.com/v1/users/jmperezperez',
+                'uri': 'spotify:user:jmperezperez',
+                'user_id': 'jmperezperez',
+              }),
               'track': dict({
                 'album': dict({
                   'album_id': '6nlfkk5GoXRL1nktlATNsy',
@@ -239,6 +257,15 @@
               }),
             }),
             dict({
+              'added_at': '2015-01-15T12:22:30+00:00',
+              'added_by': dict({
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/user/jmperezperez',
+                }),
+                'href': 'https://api.spotify.com/v1/users/jmperezperez',
+                'uri': 'spotify:user:jmperezperez',
+                'user_id': 'jmperezperez',
+              }),
               'track': dict({
                 'album': dict({
                   'album_id': '4hnqM0JK4CM1phwfq1Ldyz',
@@ -296,6 +323,15 @@
               }),
             }),
             dict({
+              'added_at': '2015-01-15T12:40:35+00:00',
+              'added_by': dict({
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/user/jmperezperez',
+                }),
+                'href': 'https://api.spotify.com/v1/users/jmperezperez',
+                'uri': 'spotify:user:jmperezperez',
+                'user_id': 'jmperezperez',
+              }),
               'track': dict({
                 'album': dict({
                   'album_id': '2usKFntxa98WHMcyW6xJBz',
@@ -353,6 +389,15 @@
               }),
             }),
             dict({
+              'added_at': '2015-01-15T12:41:10+00:00',
+              'added_by': dict({
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/user/jmperezperez',
+                }),
+                'href': 'https://api.spotify.com/v1/users/jmperezperez',
+                'uri': 'spotify:user:jmperezperez',
+                'user_id': 'jmperezperez',
+              }),
               'track': dict({
                 'album': dict({
                   'album_id': '0ivM6kSawaug0j3tZVusG2',
@@ -410,6 +455,15 @@
               }),
             }),
             dict({
+              'added_at': '2024-11-28T11:20:58+00:00',
+              'added_by': dict({
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/user/1112264649',
+                }),
+                'href': 'https://api.spotify.com/v1/users/1112264649',
+                'uri': 'spotify:user:1112264649',
+                'user_id': '1112264649',
+              }),
               'track': dict({
                 'description': 'Patreon: https://www.patreon.com/safetythirdMerch: https://safetythird.shopYouTube: https://www.youtube.com/@safetythird/Advertising Inquiries: https://redcircle.com/brandsPrivacy & Opt-Out: https://redcircle.com/privacy',
                 'duration_ms': 3690161,

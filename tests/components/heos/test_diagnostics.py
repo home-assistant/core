@@ -1,8 +1,6 @@
 """Tests for the HEOS diagnostics module."""
 
-from unittest import mock
-
-from pyheos import HeosSystem
+from pyheos import HeosError, HeosSystem
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
@@ -33,12 +31,10 @@ async def test_config_entry_diagnostics(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    with mock.patch.object(
-        controller, controller.get_system_info.__name__, return_value=system
-    ):
-        diagnostics = await get_diagnostics_for_config_entry(
-            hass, hass_client, config_entry
-        )
+    controller.get_system_info.return_value = system
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    )
 
     assert diagnostics == snapshot(
         exclude=props("created_at", "modified_at", "entry_id")
@@ -50,13 +46,14 @@ async def test_config_entry_diagnostics_error_getting_system(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    controller: MockHeos,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test generating diagnostics with error during getting system info."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    # Not patching get_system_info to raise error 'Not connected to device'
+    controller.get_system_info.side_effect = HeosError("Not connected to device")
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry

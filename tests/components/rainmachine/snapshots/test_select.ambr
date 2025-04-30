@@ -34,6 +34,7 @@
     'original_name': 'Freeze protection temperature',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'freeze_protection_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff_freeze_protection_temperature',

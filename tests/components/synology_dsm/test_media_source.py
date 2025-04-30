@@ -9,13 +9,8 @@ import pytest
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
 
-from homeassistant.components.media_player import MediaClass
-from homeassistant.components.media_source import (
-    BrowseError,
-    BrowseMedia,
-    MediaSourceItem,
-    Unresolvable,
-)
+from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
+from homeassistant.components.media_source import MediaSourceItem, Unresolvable
 from homeassistant.components.synology_dsm.const import DOMAIN
 from homeassistant.components.synology_dsm.media_source import (
     SynologyDsmMediaView,
@@ -33,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util.aiohttp import MockRequest
 
+from .common import mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
@@ -44,6 +40,7 @@ def dsm_with_photos() -> MagicMock:
     dsm = MagicMock()
     dsm.login = AsyncMock(return_value=True)
     dsm.update = AsyncMock(return_value=True)
+    dsm.information = mock_dsm_information()
     dsm.network.update = AsyncMock(return_value=True)
     dsm.surveillance_station.update = AsyncMock(return_value=True)
     dsm.upgrade.update = AsyncMock(return_value=True)
@@ -56,6 +53,11 @@ def dsm_with_photos() -> MagicMock:
             SynoPhotosItem(
                 10, "", "filename.jpg", 12345, "10_1298753", "sm", False, ""
             ),
+            SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm", True, ""),
+        ]
+    )
+    dsm.photos.get_items_from_shared_space = AsyncMock(
+        return_value=[
             SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm", True, ""),
         ]
     )
@@ -255,13 +257,16 @@ async def test_browse_media_get_albums(
     result = await source.async_browse_media(item)
 
     assert result
-    assert len(result.children) == 2
+    assert len(result.children) == 3
     assert isinstance(result.children[0], BrowseMedia)
     assert result.children[0].identifier == "mocked_syno_dsm_entry/0"
     assert result.children[0].title == "All images"
     assert isinstance(result.children[1], BrowseMedia)
-    assert result.children[1].identifier == "mocked_syno_dsm_entry/1_"
-    assert result.children[1].title == "Album 1"
+    assert result.children[1].identifier == "mocked_syno_dsm_entry/shared"
+    assert result.children[1].title == "Shared space"
+    assert isinstance(result.children[2], BrowseMedia)
+    assert result.children[2].identifier == "mocked_syno_dsm_entry/1_"
+    assert result.children[2].title == "Album 1"
 
 
 @pytest.mark.usefixtures("setup_media_source")
@@ -307,6 +312,17 @@ async def test_browse_media_get_items_error(
         side_effect=SynologyDSMException("", None)
     )
     item = MediaSourceItem(hass, DOMAIN, "mocked_syno_dsm_entry/1", None)
+    result = await source.async_browse_media(item)
+
+    assert result
+    assert result.identifier is None
+    assert len(result.children) == 0
+
+    # exception in get_items_from_shared_space()
+    dsm_with_photos.photos.get_items_from_shared_space = AsyncMock(
+        side_effect=SynologyDSMException("", None)
+    )
+    item = MediaSourceItem(hass, DOMAIN, "mocked_syno_dsm_entry/shared", None)
     result = await source.async_browse_media(item)
 
     assert result
@@ -402,6 +418,22 @@ async def test_browse_media_get_items(
     item = result.children[1]
     assert isinstance(item, BrowseMedia)
     assert item.identifier == "mocked_syno_dsm_entry/1_/10_1298753/filename.jpg_shared"
+    assert item.title == "filename.jpg"
+    assert item.media_class == MediaClass.IMAGE
+    assert item.media_content_type == "image/jpeg"
+    assert item.can_play
+    assert not item.can_expand
+    assert item.thumbnail == "http://my.thumbnail.url"
+
+    item = MediaSourceItem(hass, DOMAIN, "mocked_syno_dsm_entry/shared", None)
+    result = await source.async_browse_media(item)
+    assert result
+    assert len(result.children) == 1
+    item = result.children[0]
+    assert (
+        item.identifier
+        == "mocked_syno_dsm_entry/shared_/10_1298753/filename.jpg_shared"
+    )
     assert item.title == "filename.jpg"
     assert item.media_class == MediaClass.IMAGE
     assert item.media_content_type == "image/jpeg"

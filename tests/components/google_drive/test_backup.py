@@ -48,11 +48,13 @@ TEST_AGENT_BACKUP_RESULT = {
     "database_included": True,
     "date": "2025-01-01T01:23:45.678Z",
     "extra_metadata": {"with_automatic_settings": False},
+    "failed_addons": [],
+    "failed_agent_ids": [],
+    "failed_folders": [],
     "folders": [],
     "homeassistant_included": True,
     "homeassistant_version": "2024.12.0",
     "name": "Test",
-    "failed_agent_ids": [],
     "with_automatic_settings": None,
 }
 
@@ -245,9 +247,9 @@ async def test_agents_download_file_not_found(
     resp = await client.get(
         f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={TEST_AGENT_ID}"
     )
-    assert resp.status == 500
+    assert resp.status == 404
     content = await resp.content.read()
-    assert "Backup not found" in content.decode()
+    assert content == b""
 
 
 async def test_agents_download_metadata_not_found(

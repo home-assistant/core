@@ -6,8 +6,7 @@ from unittest.mock import AsyncMock, patch
 from laundrify_aio import LaundrifyAPI, LaundrifyDevice
 import pytest
 
-from homeassistant.components.laundrify import DOMAIN
-from homeassistant.components.laundrify.const import MANUFACTURER
+from homeassistant.components.laundrify.const import DOMAIN, MANUFACTURER
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 

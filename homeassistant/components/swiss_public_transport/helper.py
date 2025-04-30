@@ -1,7 +1,7 @@
 """Helper functions for swiss_public_transport."""
 
+from collections.abc import Mapping
 from datetime import timedelta
-from types import MappingProxyType
 from typing import Any
 
 from opendata_transport import OpendataTransport
@@ -36,7 +36,7 @@ def dict_duration_to_str_duration(
     return f"{d['hours']:02d}:{d['minutes']:02d}:{d['seconds']:02d}"
 
 
-def unique_id_from_config(config: MappingProxyType[str, Any] | dict[str, Any]) -> str:
+def unique_id_from_config(config: Mapping[str, Any]) -> str:
     """Build a unique id from a config entry."""
     return (
         f"{config[CONF_START]} {config[CONF_DESTINATION]}"

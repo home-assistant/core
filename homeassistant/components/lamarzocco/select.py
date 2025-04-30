@@ -2,18 +2,18 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from pylamarzocco.const import (
-    MachineModel,
-    PhysicalKey,
-    PrebrewMode,
-    SmartStandbyMode,
-    SteamLevel,
+    ModelName,
+    PreExtractionMode,
+    SmartStandByType,
+    SteamTargetLevel,
+    WidgetType,
 )
-from pylamarzocco.devices.machine import LaMarzoccoMachine
+from pylamarzocco.devices import LaMarzoccoMachine
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.models import LaMarzoccoMachineConfig
+from pylamarzocco.models import PreBrewing, SteamBoilerLevel
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -23,29 +23,29 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, LaMarzoccScaleEntity
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 PARALLEL_UPDATES = 1
 
 STEAM_LEVEL_HA_TO_LM = {
-    "1": SteamLevel.LEVEL_1,
-    "2": SteamLevel.LEVEL_2,
-    "3": SteamLevel.LEVEL_3,
+    "1": SteamTargetLevel.LEVEL_1,
+    "2": SteamTargetLevel.LEVEL_2,
+    "3": SteamTargetLevel.LEVEL_3,
 }
 
 STEAM_LEVEL_LM_TO_HA = {value: key for key, value in STEAM_LEVEL_HA_TO_LM.items()}
 
 PREBREW_MODE_HA_TO_LM = {
-    "disabled": PrebrewMode.DISABLED,
-    "prebrew": PrebrewMode.PREBREW,
-    "preinfusion": PrebrewMode.PREINFUSION,
+    "disabled": PreExtractionMode.DISABLED,
+    "prebrew": PreExtractionMode.PREBREWING,
+    "preinfusion": PreExtractionMode.PREINFUSION,
 }
 
 PREBREW_MODE_LM_TO_HA = {value: key for key, value in PREBREW_MODE_HA_TO_LM.items()}
 
 STANDBY_MODE_HA_TO_LM = {
-    "power_on": SmartStandbyMode.POWER_ON,
-    "last_brewing": SmartStandbyMode.LAST_BREWING,
+    "power_on": SmartStandByType.POWER_ON,
+    "last_brewing": SmartStandByType.LAST_BREW,
 }
 
 STANDBY_MODE_LM_TO_HA = {value: key for key, value in STANDBY_MODE_HA_TO_LM.items()}
@@ -58,7 +58,7 @@ class LaMarzoccoSelectEntityDescription(
 ):
     """Description of a La Marzocco select entity."""
 
-    current_option_fn: Callable[[LaMarzoccoMachineConfig], str | None]
+    current_option_fn: Callable[[LaMarzoccoMachine], str | None]
     select_option_fn: Callable[[LaMarzoccoMachine, str], Coroutine[Any, Any, bool]]
 
 
@@ -70,24 +70,36 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         select_option_fn=lambda machine, option: machine.set_steam_level(
             STEAM_LEVEL_HA_TO_LM[option]
         ),
-        current_option_fn=lambda config: STEAM_LEVEL_LM_TO_HA[config.steam_level],
-        supported_fn=lambda coordinator: coordinator.device.model
-        == MachineModel.LINEA_MICRA,
+        current_option_fn=lambda machine: STEAM_LEVEL_LM_TO_HA[
+            cast(
+                SteamBoilerLevel,
+                machine.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL],
+            ).target_level
+        ],
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
+        ),
     ),
     LaMarzoccoSelectEntityDescription(
         key="prebrew_infusion_select",
         translation_key="prebrew_infusion_select",
         entity_category=EntityCategory.CONFIG,
         options=["disabled", "prebrew", "preinfusion"],
-        select_option_fn=lambda machine, option: machine.set_prebrew_mode(
+        select_option_fn=lambda machine, option: machine.set_pre_extraction_mode(
             PREBREW_MODE_HA_TO_LM[option]
         ),
-        current_option_fn=lambda config: PREBREW_MODE_LM_TO_HA[config.prebrew_mode],
-        supported_fn=lambda coordinator: coordinator.device.model
-        in (
-            MachineModel.GS3_AV,
-            MachineModel.LINEA_MICRA,
-            MachineModel.LINEA_MINI,
+        current_option_fn=lambda machine: PREBREW_MODE_LM_TO_HA[
+            cast(PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]).mode
+        ],
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (
+                ModelName.LINEA_MICRA,
+                ModelName.LINEA_MINI,
+                ModelName.LINEA_MINI_R,
+                ModelName.GS3_AV,
+            )
         ),
     ),
     LaMarzoccoSelectEntityDescription(
@@ -96,29 +108,13 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         options=["power_on", "last_brewing"],
         select_option_fn=lambda machine, option: machine.set_smart_standby(
-            enabled=machine.config.smart_standby.enabled,
+            enabled=machine.schedule.smart_wake_up_sleep.smart_stand_by_enabled,
             mode=STANDBY_MODE_HA_TO_LM[option],
-            minutes=machine.config.smart_standby.minutes,
+            minutes=machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes,
         ),
-        current_option_fn=lambda config: STANDBY_MODE_LM_TO_HA[
-            config.smart_standby.mode
+        current_option_fn=lambda machine: STANDBY_MODE_LM_TO_HA[
+            machine.schedule.smart_wake_up_sleep.smart_stand_by_after
         ],
-    ),
-)
-
-SCALE_ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
-    LaMarzoccoSelectEntityDescription(
-        key="active_bbw",
-        translation_key="active_bbw",
-        options=["a", "b"],
-        select_option_fn=lambda machine, option: machine.set_active_bbw_recipe(
-            PhysicalKey[option.upper()]
-        ),
-        current_option_fn=lambda config: (
-            config.bbw_settings.active_dose.name.lower()
-            if config.bbw_settings
-            else None
-        ),
     ),
 )
 
@@ -131,30 +127,11 @@ async def async_setup_entry(
     """Set up select entities."""
     coordinator = entry.runtime_data.config_coordinator
 
-    entities = [
+    async_add_entities(
         LaMarzoccoSelectEntity(coordinator, description)
         for description in ENTITIES
         if description.supported_fn(coordinator)
-    ]
-
-    if (
-        coordinator.device.model == MachineModel.LINEA_MINI
-        and coordinator.device.config.scale
-    ):
-        entities.extend(
-            LaMarzoccoScaleSelectEntity(coordinator, description)
-            for description in SCALE_ENTITIES
-        )
-
-    def _async_add_new_scale() -> None:
-        async_add_entities(
-            LaMarzoccoScaleSelectEntity(coordinator, description)
-            for description in SCALE_ENTITIES
-        )
-
-    coordinator.new_device_callback.append(_async_add_new_scale)
-
-    async_add_entities(entities)
+    )
 
 
 class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
@@ -165,9 +142,7 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        return str(
-            self.entity_description.current_option_fn(self.coordinator.device.config)
-        )
+        return self.entity_description.current_option_fn(self.coordinator.device)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
@@ -186,9 +161,3 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
                     },
                 ) from exc
             self.async_write_ha_state()
-
-
-class LaMarzoccoScaleSelectEntity(LaMarzoccoSelectEntity, LaMarzoccScaleEntity):
-    """Select entity for La Marzocco scales."""
-
-    entity_description: LaMarzoccoSelectEntityDescription

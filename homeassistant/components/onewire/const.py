@@ -13,6 +13,7 @@ DEVICE_KEYS_A_B = ("A", "B")
 DEVICE_KEYS_A_D = ("A", "B", "C", "D")
 
 DEVICE_SUPPORT = {
+    "01": (),
     "05": (),
     "10": (),
     "12": (),
@@ -50,7 +51,3 @@ INPUT_ENTRY_DEVICE_SELECTION = "device_selection"
 MANUFACTURER_MAXIM = "Maxim Integrated"
 MANUFACTURER_HOBBYBOARDS = "Hobby Boards"
 MANUFACTURER_EDS = "Embedded Data Systems"
-
-READ_MODE_BOOL = "bool"
-READ_MODE_FLOAT = "float"
-READ_MODE_INT = "int"

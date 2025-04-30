@@ -18,7 +18,7 @@
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'number.trv_name_external_temperature',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -29,9 +29,10 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TRV-Name external temperature',
+    'original_name': 'External temperature',
     'platform': 'shelly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'external_temperature',
     'unique_id': '123456789ABC-blutrv:200-external_temperature',
@@ -41,7 +42,7 @@
 # name: test_blu_trv_number_entity[number.trv_name_external_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TRV-Name external temperature',
+      'friendly_name': 'TRV-Name External temperature',
       'max': 50,
       'min': -50,
       'mode': <NumberMode.BOX: 'box'>,
@@ -75,7 +76,7 @@
     'domain': 'number',
     'entity_category': None,
     'entity_id': 'number.trv_name_valve_position',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -86,9 +87,10 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TRV-Name valve position',
+    'original_name': 'Valve position',
     'platform': 'shelly',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve_position',
     'unique_id': '123456789ABC-blutrv:200-valve_position',
@@ -98,7 +100,7 @@
 # name: test_blu_trv_number_entity[number.trv_name_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TRV-Name valve position',
+      'friendly_name': 'TRV-Name Valve position',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -111,5 +113,121 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_cury_number_entity[number.test_name_left_slot_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.test_name_left_slot_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Left slot intensity',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-cury:0-left_slot_intensity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_cury_number_entity[number.test_name_left_slot_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Left slot intensity',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.test_name_left_slot_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '70',
+  })
+# ---
+# name: test_cury_number_entity[number.test_name_right_slot_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.test_name_right_slot_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Right slot intensity',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-cury:0-right_slot_intensity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_cury_number_entity[number.test_name_right_slot_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Right slot intensity',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.test_name_right_slot_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '70',
   })
 # ---

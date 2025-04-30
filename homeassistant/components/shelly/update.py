@@ -23,9 +23,17 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD, OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS
+from .const import (
+    CONF_SLEEP_PERIOD,
+    DOMAIN,
+    OTA_BEGIN,
+    OTA_ERROR,
+    OTA_PROGRESS,
+    OTA_SUCCESS,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,
@@ -39,6 +47,8 @@ from .entity import (
 from .utils import get_device_entry_gen, get_release_url
 
 LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -59,7 +69,6 @@ class RestUpdateDescription(RestEntityDescription, UpdateEntityDescription):
 
 REST_UPDATES: Final = {
     "fwupdate": RestUpdateDescription(
-        name="Firmware",
         key="fwupdate",
         latest_version=lambda status: status["update"]["new_version"],
         beta=False,
@@ -68,8 +77,8 @@ REST_UPDATES: Final = {
         entity_registry_enabled_default=False,
     ),
     "fwupdate_beta": RestUpdateDescription(
-        name="Beta firmware",
         key="fwupdate",
+        translation_key="beta_firmware",
         latest_version=lambda status: status["update"].get("beta_version"),
         beta=True,
         device_class=UpdateDeviceClass.FIRMWARE,
@@ -80,7 +89,6 @@ REST_UPDATES: Final = {
 
 RPC_UPDATES: Final = {
     "fwupdate": RpcUpdateDescription(
-        name="Firmware",
         key="sys",
         sub_key="available_updates",
         latest_version=lambda status: status.get("stable", {"version": ""})["version"],
@@ -89,9 +97,9 @@ RPC_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
     ),
     "fwupdate_beta": RpcUpdateDescription(
-        name="Beta firmware",
         key="sys",
         sub_key="available_updates",
+        translation_key="beta_firmware",
         latest_version=lambda status: status.get("beta", {"version": ""})["version"],
         beta=True,
         device_class=UpdateDeviceClass.FIRMWARE,
@@ -106,22 +114,20 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up update entities for Shelly component."""
+    """Set up update entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        if config_entry.data[CONF_SLEEP_PERIOD]:
-            async_setup_entry_rpc(
-                hass,
-                config_entry,
-                async_add_entities,
-                RPC_UPDATES,
-                RpcSleepingUpdateEntity,
-            )
-        else:
-            async_setup_entry_rpc(
-                hass, config_entry, async_add_entities, RPC_UPDATES, RpcUpdateEntity
-            )
-        return
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
+
+
+@callback
+def _async_setup_block_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for BLOCK device."""
     if not config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_rest(
             hass,
@@ -129,6 +135,27 @@ async def async_setup_entry(
             async_add_entities,
             REST_UPDATES,
             RestUpdateEntity,
+        )
+
+
+@callback
+def _async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    if config_entry.data[CONF_SLEEP_PERIOD]:
+        async_setup_entry_rpc(
+            hass,
+            config_entry,
+            async_add_entities,
+            RPC_UPDATES,
+            RpcSleepingUpdateEntity,
+        )
+    else:
+        async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_UPDATES, RpcUpdateEntity
         )
 
 
@@ -154,6 +181,9 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
             description.beta,
         )
         self._in_progress_old_version: str | None = None
+
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
 
     @property
     def installed_version(self) -> str | None:
@@ -198,7 +228,11 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         try:
             result = await self.coordinator.device.trigger_ota_update(beta=beta)
         except DeviceConnectionError as err:
-            raise HomeAssistantError(f"Error starting OTA update: {err!r}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="ota_update_connection_error",
+                translation_placeholders={"device": self.coordinator.name},
+            ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
         else:
@@ -243,6 +277,9 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         self._attr_release_url = get_release_url(
             coordinator.device.gen, coordinator.model, description.beta
         )
+
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -310,9 +347,20 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         try:
             await self.coordinator.device.trigger_ota_update(beta=beta)
         except DeviceConnectionError as err:
-            raise HomeAssistantError(f"OTA update connection error: {err!r}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="ota_update_connection_error",
+                translation_placeholders={"device": self.coordinator.name},
+            ) from err
         except RpcCallError as err:
-            raise HomeAssistantError(f"OTA update request error: {err!r}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="ota_update_rpc_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
         else:
@@ -327,6 +375,20 @@ class RpcSleepingUpdateEntity(
     """Represent a RPC sleeping update entity."""
 
     entity_description: RpcUpdateDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcUpdateDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, key, attribute, description, entry)
+
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

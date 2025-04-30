@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.venstar.const import DOMAIN as VENSTAR_DOMAIN
+from homeassistant.components.venstar.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_SSL
 from homeassistant.core import HomeAssistant
@@ -17,7 +17,7 @@ TEST_HOST = "venstartest.localdomain"
 async def test_setup_entry(hass: HomeAssistant) -> None:
     """Validate that setup entry also configure the client."""
     config_entry = MockConfigEntry(
-        domain=VENSTAR_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_HOST: TEST_HOST,
             CONF_SSL: False,
@@ -64,7 +64,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 async def test_setup_entry_exception(hass: HomeAssistant) -> None:
     """Validate that setup entry also configure the client."""
     config_entry = MockConfigEntry(
-        domain=VENSTAR_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_HOST: TEST_HOST,
             CONF_SSL: False,

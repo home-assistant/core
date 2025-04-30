@@ -12,7 +12,6 @@ from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartScene
 import voluptuous as vol
 
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -20,7 +19,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .bridge import HueBridge
+from .bridge import HueBridge, HueConfigEntry
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
@@ -33,11 +32,11 @@ ATTR_BRIGHTNESS = "brightness"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HueConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up scene platform from Hue group scenes."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
 
     if bridge.api_version == 1:

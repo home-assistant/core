@@ -13,11 +13,27 @@
       "info_total_songs": {
         "default": "mdi:file-music"
       },
-      "player_count": {
-        "default": "mdi:folder-play"
-      },
       "other_player_count": {
         "default": "mdi:folder-play-outline"
+      },
+      "player_count": {
+        "default": "mdi:folder-play"
+      }
+    },
+    "switch": {
+      "alarm": {
+        "default": "mdi:alarm",
+        "state": {
+          "off": "mdi:alarm-off",
+          "on": "mdi:alarm"
+        }
+      },
+      "alarms_enabled": {
+        "default": "mdi:alarm-check",
+        "state": {
+          "off": "mdi:alarm-off",
+          "on": "mdi:alarm-check"
+        }
       }
     }
   },

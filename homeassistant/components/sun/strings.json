@@ -1,5 +1,4 @@
 {
-  "title": "Sun",
   "config": {
     "step": {
       "user": {
@@ -7,16 +6,16 @@
       }
     }
   },
-  "entity_component": {
-    "_": {
-      "name": "[%key:component::sun::title%]",
-      "state": {
-        "above_horizon": "Above horizon",
-        "below_horizon": "Below horizon"
-      }
-    }
-  },
   "entity": {
+    "binary_sensor": {
+      "solar_rising": {
+        "name": "Solar rising",
+        "state": {
+          "off": "Setting",
+          "on": "Rising"
+        }
+      }
+    },
     "sensor": {
       "next_dawn": { "name": "Next dawn" },
       "next_dusk": { "name": "Next dusk" },
@@ -28,5 +27,21 @@
       "solar_elevation": { "name": "Solar elevation" },
       "solar_rising": { "name": "Solar rising" }
     }
-  }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::sun::title%]",
+      "state": {
+        "above_horizon": "Above horizon",
+        "below_horizon": "Below horizon"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_sun_solar_rising": {
+      "description": "The 'Solar rising' sensor of the Sun integration is being deprecated; an equivalent 'Solar rising' binary sensor has been made available as a replacement. To resolve this issue, disable {entity}.",
+      "title": "Deprecated 'Solar rising' sensor"
+    }
+  },
+  "title": "Sun"
 }

@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity
+from .entity import EnvoyBaseEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -132,6 +132,7 @@ class EnvoyRelayNumberEntity(EnvoyBaseEntity, NumberEntity):
             self.data.dry_contact_settings[self._relay_id]
         )
 
+    @exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Update the relay."""
         await self.envoy.update_dry_contact(
@@ -164,6 +165,7 @@ class EnvoyStorageSettingsNumberEntity(EnvoyBaseEntity, NumberEntity):
                 name=f"Enpower {self._serial_number}",
                 sw_version=str(enpower.firmware_version),
                 via_device=(DOMAIN, self.envoy_serial_num),
+                serial_number=self._serial_number,
             )
         else:
             # If no enpower device assign numbers to Envoy itself
@@ -185,6 +187,7 @@ class EnvoyStorageSettingsNumberEntity(EnvoyBaseEntity, NumberEntity):
         assert self.data.tariff.storage_settings is not None
         return self.entity_description.value_fn(self.data.tariff.storage_settings)
 
+    @exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Update the storage setting."""
         await self.entity_description.update_fn(self.envoy, value)

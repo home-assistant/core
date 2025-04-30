@@ -15,7 +15,7 @@ from pyotgw.vars import (
 )
 import pytest
 
-from homeassistant.components.opentherm_gw import DOMAIN as OPENTHERM_DOMAIN
+from homeassistant.components.opentherm_gw import DOMAIN
 from homeassistant.components.opentherm_gw.const import (
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
@@ -133,7 +133,7 @@ async def test_select_change_value(
     assert (
         select_entity_id := entity_registry.async_get_entity_id(
             SELECT_DOMAIN,
-            OPENTHERM_DOMAIN,
+            DOMAIN,
             f"{mock_config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}-{entity_key}",
         )
     ) is not None
@@ -203,7 +203,7 @@ async def test_select_state_update(
     assert (
         select_entity_id := entity_registry.async_get_entity_id(
             SELECT_DOMAIN,
-            OPENTHERM_DOMAIN,
+            DOMAIN,
             f"{mock_config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}-{entity_key}",
         )
     ) is not None

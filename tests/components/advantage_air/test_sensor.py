@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.advantage_air.const import DOMAIN as ADVANTAGE_AIR_DOMAIN
+from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.components.advantage_air.sensor import (
     ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
     ADVANTAGE_AIR_SET_COUNTDOWN_VALUE,
@@ -41,7 +41,7 @@ async def test_sensor_platform(
     value = 20
 
     await hass.services.async_call(
-        ADVANTAGE_AIR_DOMAIN,
+        DOMAIN,
         ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
         {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
         blocking=True,
@@ -61,7 +61,7 @@ async def test_sensor_platform(
 
     value = 0
     await hass.services.async_call(
-        ADVANTAGE_AIR_DOMAIN,
+        DOMAIN,
         ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
         {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
         blocking=True,

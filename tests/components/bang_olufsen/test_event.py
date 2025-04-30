@@ -15,6 +15,7 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
+from .conftest import mock_websocket_connection
 from .const import TEST_BUTTON_EVENT_ENTITY_ID, TEST_REMOTE_KEY_EVENT_ENTITY_ID
 from .util import get_button_entity_ids, get_remote_entity_ids
 
@@ -23,17 +24,11 @@ from tests.common import MockConfigEntry
 
 async def test_button_and_key_event_creation(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_mozart_client: AsyncMock,
+    integration: None,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test button and remote key event entities are created."""
-
-    # Load entry
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
     entity_ids: list[str] = []
     # Add Button Event entity ids
     entity_ids.extend(get_button_entity_ids())
@@ -69,6 +64,7 @@ async def test_no_button_and_remote_key_event_creation(
     # Load entry
     mock_config_entry_core.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_core.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
 
     # Check number of entities
     # The media_player entity should be the only available
@@ -81,14 +77,12 @@ async def test_no_button_and_remote_key_event_creation(
 
 async def test_button(
     hass: HomeAssistant,
+    integration: None,
     mock_config_entry: MockConfigEntry,
     mock_mozart_client: AsyncMock,
     entity_registry: EntityRegistry,
 ) -> None:
     """Test button event entity."""
-    # Load entry
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Enable the entity
     entity_registry.async_update_entity(TEST_BUTTON_EVENT_ENTITY_ID, disabled_by=None)

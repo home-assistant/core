@@ -105,6 +105,20 @@ async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     raise HomeAssistantError("Unable to get image")
 
 
+async def async_get_image(
+    hass: HomeAssistant,
+    entity_id: str,
+    timeout: int = 10,
+) -> Image:
+    """Fetch an image from an image entity."""
+    component = hass.data[DATA_COMPONENT]
+
+    if (image := component.get_entity(entity_id)) is None:
+        raise HomeAssistantError(f"Image entity {entity_id} not found")
+
+    return await _async_get_image(image, timeout)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image component."""
     component = hass.data[DATA_COMPONENT] = EntityComponent[ImageEntity](
@@ -288,8 +302,10 @@ class ImageView(HomeAssistantView):
         """Initialize an image view."""
         self.component = component
 
-    async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
-        """Start a GET request."""
+    async def _authenticate_request(
+        self, request: web.Request, entity_id: str
+    ) -> ImageEntity:
+        """Authenticate request and return image entity."""
         if (image_entity := self.component.get_entity(entity_id)) is None:
             raise web.HTTPNotFound
 
@@ -306,6 +322,31 @@ class ImageView(HomeAssistantView):
             # Invalid sigAuth or image entity access token
             raise web.HTTPForbidden
 
+        return image_entity
+
+    async def head(self, request: web.Request, entity_id: str) -> web.Response:
+        """Start a HEAD request.
+
+        This is sent by some DLNA renderers, like Samsung ones, prior to sending
+        the GET request.
+        """
+        image_entity = await self._authenticate_request(request, entity_id)
+
+        # Don't use `handle` as we don't care about the stream case, we only want
+        # to verify that the image exists.
+        try:
+            image = await _async_get_image(image_entity, IMAGE_TIMEOUT)
+        except (HomeAssistantError, ValueError) as ex:
+            raise web.HTTPInternalServerError from ex
+
+        return web.Response(
+            content_type=image.content_type,
+            headers={"Content-Length": str(len(image.content))},
+        )
+
+    async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
+        """Start a GET request."""
+        image_entity = await self._authenticate_request(request, entity_id)
         return await self.handle(request, image_entity)
 
     async def handle(
@@ -317,7 +358,11 @@ class ImageView(HomeAssistantView):
         except (HomeAssistantError, ValueError) as ex:
             raise web.HTTPInternalServerError from ex
 
-        return web.Response(body=image.content, content_type=image.content_type)
+        return web.Response(
+            body=image.content,
+            content_type=image.content_type,
+            headers={"Content-Length": str(len(image.content))},
+        )
 
 
 async def async_get_still_stream(

@@ -1,6 +1,7 @@
 """Test the Tesla Fleet init."""
 
 from copy import deepcopy
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import RequestInfo
@@ -8,6 +9,7 @@ from aiohttp.client_exceptions import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InvalidRegion,
     InvalidToken,
@@ -35,6 +37,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
+from .conftest import create_config_entry
 from .const import VEHICLE_ASLEEP, VEHICLE_DATA_ALT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -231,57 +234,58 @@ async def test_vehicle_sleep(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
-    await setup_platform(hass, normal_config_entry)
-    assert mock_vehicle_data.call_count == 1
 
-    freezer.tick(VEHICLE_WAIT + VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    # Let vehicle sleep, no updates for 15 minutes
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 2
+    TEST_INTERVAL = timedelta(seconds=120)
 
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    # No polling, call_count should not increase
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 2
+    with patch(
+        "homeassistant.components.tesla_fleet.coordinator.VEHICLE_INTERVAL",
+        TEST_INTERVAL,
+    ):
+        await setup_platform(hass, normal_config_entry)
+        assert mock_vehicle_data.call_count == 1
 
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    # No polling, call_count should not increase
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 2
+        freezer.tick(VEHICLE_WAIT + TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # Let vehicle sleep, no updates for 15 minutes
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 2
 
-    freezer.tick(VEHICLE_WAIT)
-    async_fire_time_changed(hass)
-    # Vehicle didn't sleep, go back to normal
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 3
+        freezer.tick(TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # No polling, call_count should not increase
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 2
 
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    # Regular polling
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 4
+        freezer.tick(VEHICLE_WAIT)
+        async_fire_time_changed(hass)
+        # Vehicle didn't sleep, go back to normal
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 3
 
-    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    # Vehicle active
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 5
+        freezer.tick(TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # Regular polling
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 4
 
-    freezer.tick(VEHICLE_WAIT)
-    async_fire_time_changed(hass)
-    # Dont let sleep when active
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 6
+        mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+        freezer.tick(TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # Vehicle active
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 5
 
-    freezer.tick(VEHICLE_WAIT)
-    async_fire_time_changed(hass)
-    # Dont let sleep when active
-    await hass.async_block_till_done()
-    assert mock_vehicle_data.call_count == 7
+        freezer.tick(TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # Dont let sleep when active
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 6
+
+        freezer.tick(TEST_INTERVAL)
+        async_fire_time_changed(hass)
+        # Dont let sleep when active
+        await hass.async_block_till_done()
+        assert mock_vehicle_data.call_count == 7
 
 
 # Test Energy Live Coordinator
@@ -315,18 +319,26 @@ async def test_energy_site_refresh_error(
 
 
 # Test Energy History Coordinator
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+@pytest.mark.parametrize(("side_effect"), [side_effect for side_effect, _ in ERRORS])
 async def test_energy_history_refresh_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_energy_history: AsyncMock,
     side_effect: TeslaFleetError,
-    state: ConfigEntryState,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
-    mock_energy_history.side_effect = side_effect
     await setup_platform(hass, normal_config_entry)
-    assert normal_config_entry.state is state
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    # Now test that the coordinator handles errors during refresh
+    mock_energy_history.side_effect = side_effect
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The coordinator should handle the error gracefully
+    assert normal_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_energy_live_refresh_ratelimited(
@@ -408,20 +420,20 @@ async def test_energy_history_refresh_ratelimited(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_energy_history.call_count == 2
+    assert mock_energy_history.call_count == 1
 
     freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should not call for another 10 seconds
-    assert mock_energy_history.call_count == 2
+    assert mock_energy_history.call_count == 1
 
     freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_energy_history.call_count == 3
+    assert mock_energy_history.call_count == 2
 
 
 async def test_init_region_issue(
@@ -487,3 +499,65 @@ async def test_bad_implementation(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert not result["errors"]
+
+
+async def test_vehicle_without_location_scope(
+    hass: HomeAssistant,
+    expires_at: int,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test vehicle setup without VEHICLE_LOCATION scope excludes location endpoint."""
+
+    # Create config entry without VEHICLE_LOCATION scope
+    config_entry = create_config_entry(
+        expires_at,
+        [
+            Scope.OPENID,
+            Scope.OFFLINE_ACCESS,
+            Scope.VEHICLE_DEVICE_DATA,
+            # Deliberately exclude Scope.VEHICLE_LOCATION
+        ],
+    )
+
+    await setup_platform(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Verify that vehicle_data was called without LOCATION_DATA endpoint
+    mock_vehicle_data.assert_called()
+    call_args = mock_vehicle_data.call_args
+    endpoints = call_args.kwargs.get("endpoints", [])
+
+    # Should not include LOCATION_DATA endpoint
+    assert VehicleDataEndpoint.LOCATION_DATA not in endpoints
+
+    # Should include other endpoints
+    assert VehicleDataEndpoint.CHARGE_STATE in endpoints
+    assert VehicleDataEndpoint.CLIMATE_STATE in endpoints
+    assert VehicleDataEndpoint.DRIVE_STATE in endpoints
+    assert VehicleDataEndpoint.VEHICLE_STATE in endpoints
+    assert VehicleDataEndpoint.VEHICLE_CONFIG in endpoints
+
+
+async def test_vehicle_with_location_scope(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test vehicle setup with VEHICLE_LOCATION scope includes location endpoint."""
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify that vehicle_data was called with LOCATION_DATA endpoint
+    mock_vehicle_data.assert_called()
+    call_args = mock_vehicle_data.call_args
+    endpoints = call_args.kwargs.get("endpoints", [])
+
+    # Should include LOCATION_DATA endpoint when scope is present
+    assert VehicleDataEndpoint.LOCATION_DATA in endpoints
+
+    # Should include all other endpoints
+    assert VehicleDataEndpoint.CHARGE_STATE in endpoints
+    assert VehicleDataEndpoint.CLIMATE_STATE in endpoints
+    assert VehicleDataEndpoint.DRIVE_STATE in endpoints
+    assert VehicleDataEndpoint.VEHICLE_STATE in endpoints
+    assert VehicleDataEndpoint.VEHICLE_CONFIG in endpoints

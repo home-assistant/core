@@ -24,6 +24,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -111,6 +112,37 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         translation_key="one_time_charge",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getOneTimeCharge(),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="device_error",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_getter=lambda api: len(api.getDeviceErrors()) > 0,
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="identification_mode",
+        translation_key="identification_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getIdentification(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="mounting_mode",
+        translation_key="mounting_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getMountingMode(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="child_safety_lock_mode",
+        translation_key="child_safety_lock_mode",
+        value_getter=lambda api: api.getChildLock() == "active",
+        entity_registry_enabled_default=False,
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="valve",
+        translation_key="valve",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value_getter=lambda api: api.isValveOpen(),
     ),
 )
 

@@ -466,6 +466,7 @@ async def async_setup_entry(
                 for energysite in entry.runtime_data.energysites
                 for description in ENERGY_LIVE_DESCRIPTIONS
                 if description.key in energysite.live_coordinator.data
+                or description.key == "percentage_charged"
             ),
             (  # Add energy site history
                 TeslaFleetEnergyHistorySensorEntity(energysite, description)

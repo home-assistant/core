@@ -29,9 +29,9 @@ from .conftest import MockConfigEntry, MockModuleConnection, init_integration
 
 from tests.common import snapshot_platform
 
-LIGHT_OUTPUT1 = "light.light_output1"
-LIGHT_OUTPUT2 = "light.light_output2"
-LIGHT_RELAY1 = "light.light_relay1"
+LIGHT_OUTPUT1 = "light.testmodule_light_output1"
+LIGHT_OUTPUT2 = "light.testmodule_light_output2"
+LIGHT_RELAY1 = "light.testmodule_light_relay1"
 
 
 async def test_setup_lcn_light(
@@ -51,9 +51,9 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
     """Test the output light turns on."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "dim_output") as dim_output:
+    with patch.object(MockModuleConnection, "toggle_output") as toggle_output:
         # command failed
-        dim_output.return_value = False
+        toggle_output.return_value = False
 
         await hass.services.async_call(
             DOMAIN_LIGHT,
@@ -62,15 +62,15 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
             blocking=True,
         )
 
-        dim_output.assert_awaited_with(0, 100, 9)
+        toggle_output.assert_awaited_with(0, 9, to_memory=True)
 
         state = hass.states.get(LIGHT_OUTPUT1)
         assert state is not None
         assert state.state != STATE_ON
 
         # command success
-        dim_output.reset_mock(return_value=True)
-        dim_output.return_value = True
+        toggle_output.reset_mock(return_value=True)
+        toggle_output.return_value = True
 
         await hass.services.async_call(
             DOMAIN_LIGHT,
@@ -79,7 +79,7 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
             blocking=True,
         )
 
-        dim_output.assert_awaited_with(0, 100, 9)
+        toggle_output.assert_awaited_with(0, 9, to_memory=True)
 
         state = hass.states.get(LIGHT_OUTPUT1)
         assert state is not None
@@ -117,12 +117,16 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
     """Test the output light turns off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "dim_output") as dim_output:
-        state = hass.states.get(LIGHT_OUTPUT1)
-        state.state = STATE_ON
+    with patch.object(MockModuleConnection, "toggle_output") as toggle_output:
+        await hass.services.async_call(
+            DOMAIN_LIGHT,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
+            blocking=True,
+        )
 
         # command failed
-        dim_output.return_value = False
+        toggle_output.return_value = False
 
         await hass.services.async_call(
             DOMAIN_LIGHT,
@@ -131,15 +135,15 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
             blocking=True,
         )
 
-        dim_output.assert_awaited_with(0, 0, 9)
+        toggle_output.assert_awaited_with(0, 9, to_memory=True)
 
         state = hass.states.get(LIGHT_OUTPUT1)
         assert state is not None
         assert state.state != STATE_OFF
 
         # command success
-        dim_output.reset_mock(return_value=True)
-        dim_output.return_value = True
+        toggle_output.reset_mock(return_value=True)
+        toggle_output.return_value = True
 
         await hass.services.async_call(
             DOMAIN_LIGHT,
@@ -148,36 +152,7 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
             blocking=True,
         )
 
-        dim_output.assert_awaited_with(0, 0, 9)
-
-        state = hass.states.get(LIGHT_OUTPUT1)
-        assert state is not None
-        assert state.state == STATE_OFF
-
-
-async def test_output_turn_off_with_attributes(
-    hass: HomeAssistant, entry: MockConfigEntry
-) -> None:
-    """Test the output light turns off."""
-    await init_integration(hass, entry)
-
-    with patch.object(MockModuleConnection, "dim_output") as dim_output:
-        dim_output.return_value = True
-
-        state = hass.states.get(LIGHT_OUTPUT1)
-        state.state = STATE_ON
-
-        await hass.services.async_call(
-            DOMAIN_LIGHT,
-            SERVICE_TURN_OFF,
-            {
-                ATTR_ENTITY_ID: LIGHT_OUTPUT1,
-                ATTR_TRANSITION: 2,
-            },
-            blocking=True,
-        )
-
-        dim_output.assert_awaited_with(0, 0, 6)
+        toggle_output.assert_awaited_with(0, 9, to_memory=True)
 
         state = hass.states.get(LIGHT_OUTPUT1)
         assert state is not None
@@ -288,7 +263,7 @@ async def test_pushed_output_status_change(
     state = hass.states.get(LIGHT_OUTPUT1)
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_BRIGHTNESS] == 127
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
 
     # push status "off"
     inp = ModStatusOutput(address, 0, 0)
