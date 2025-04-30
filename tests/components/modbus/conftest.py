@@ -210,7 +210,7 @@ async def caplog_setup_text_fixture(caplog: pytest.LogCaptureFixture) -> str:
 
 
 @pytest.fixture
-def modbus_light_entity(hass) -> ModbusLight:
+def modbus_light_entity(hass: HomeAssistant) -> ModbusLight:
     """Return the ModbusLight entity instance."""
     return hass.data["domain_platform_entities"][("light", "modbus")][
         "light.test_entity"
