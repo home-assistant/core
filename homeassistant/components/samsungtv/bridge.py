@@ -150,9 +150,7 @@ class SamsungTVBridge(ABC):
     ) -> SamsungTVBridge:
         """Get Bridge instance."""
         if method == METHOD_LEGACY or port == LEGACY_PORT:
-            return SamsungTVLegacyBridge(
-                hass, method, host, LEGACY_PORT if port is None else port
-            )
+            return SamsungTVLegacyBridge(hass, method, host, port or LEGACY_PORT)
         if method == METHOD_ENCRYPTED_WEBSOCKET or port == ENCRYPTED_WEBSOCKET_PORT:
             return SamsungTVEncryptedBridge(hass, method, host, port, entry_data)
         return SamsungTVWSBridge(hass, method, host, port, entry_data)
