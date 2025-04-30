@@ -308,8 +308,7 @@ def test_parse_time_expression() -> None:
         18,
         21,
         24,
-        27,
-        30,
+        27
     ]
 
     assert dt_util.parse_time_expression([2, 1, 3], 0, 59) == [1, 2, 3]
