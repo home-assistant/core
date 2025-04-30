@@ -29,7 +29,7 @@
     'dashboard': dict({
       'addon': 'mock-slug',
       'configured': True,
-      'has_matching_name': False,
+      'last_exception': None,
       'last_update_success': True,
       'supports_update': None,
     }),
@@ -72,6 +72,7 @@
         'target_platform': None,
       }),
       'has_matching_name': True,
+      'last_exception': None,
       'last_update_success': True,
       'supports_update': False,
     }),
