@@ -20,10 +20,6 @@ async def mock_tts(hass: HomeAssistant):
     assert await async_setup_component(hass, "tts", {})
     with (
         patch(
-            "homeassistant.components.tts.generate_media_source_id",
-            return_value="media-source://bla",
-        ),
-        patch(
             "homeassistant.components.tts.async_create_stream",
             return_value=MockResultStream(hass, "wav", b""),
         ),

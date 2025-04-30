@@ -190,7 +190,6 @@ async def test_new_pipeline_cancels_pipeline(
             AssistSatelliteAnnouncement(
                 message="Hello",
                 media_id="http://10.10.10.10:8123/api/tts_proxy/test-token",
-                original_media_id="media-source://bla",
                 tts_token="test-token",
                 media_id_source="tts",
             ),
@@ -204,7 +203,6 @@ async def test_new_pipeline_cancels_pipeline(
             AssistSatelliteAnnouncement(
                 message="Hello",
                 media_id="https://www.home-assistant.io/resolved.mp3",
-                original_media_id="media-source://given",
                 tts_token=None,
                 media_id_source="media_id",
             ),
@@ -214,7 +212,6 @@ async def test_new_pipeline_cancels_pipeline(
             AssistSatelliteAnnouncement(
                 message="",
                 media_id="http://example.com/bla.mp3",
-                original_media_id="http://example.com/bla.mp3",
                 tts_token=None,
                 media_id_source="url",
             ),
@@ -227,7 +224,6 @@ async def test_new_pipeline_cancels_pipeline(
             AssistSatelliteAnnouncement(
                 message="",
                 media_id="http://example.com/bla.mp3",
-                original_media_id="http://example.com/bla.mp3",
                 tts_token=None,
                 media_id_source="url",
                 preannounce_media_id="http://example.com/preannounce.mp3",
@@ -250,23 +246,7 @@ async def test_announce(
         assert entity.state == AssistSatelliteState.RESPONDING
         await original_announce(announcement)
 
-    def tts_generate_media_source_id(
-        hass: HomeAssistant,
-        message: str,
-        engine: str | None = None,
-        language: str | None = None,
-        options: dict | None = None,
-        cache: bool | None = None,
-    ):
-        # Check that TTS options are passed here
-        assert options == {"test-option": "test-value", "voice": "test-voice"}
-        return "media-source://bla"
-
     with (
-        patch(
-            "homeassistant.components.tts.generate_media_source_id",
-            new=tts_generate_media_source_id,
-        ),
         patch(
             "homeassistant.components.tts.async_resolve_engine",
             return_value="tts.cloud",
@@ -550,7 +530,6 @@ async def test_vad_sensitivity_entity_not_found(
                     message="Hello",
                     media_id="http://10.10.10.10:8123/api/tts_proxy/test-token",
                     tts_token="test-token",
-                    original_media_id="media-source://generated",
                     media_id_source="tts",
                 ),
             ),
@@ -568,7 +547,6 @@ async def test_vad_sensitivity_entity_not_found(
                     message="Hello",
                     media_id="https://www.home-assistant.io/resolved.mp3",
                     tts_token=None,
-                    original_media_id="media-source://given",
                     media_id_source="media_id",
                 ),
             ),
@@ -585,7 +563,6 @@ async def test_vad_sensitivity_entity_not_found(
                     message="",
                     media_id="http://example.com/given.mp3",
                     tts_token=None,
-                    original_media_id="http://example.com/given.mp3",
                     media_id_source="url",
                 ),
             ),
@@ -602,7 +579,6 @@ async def test_vad_sensitivity_entity_not_found(
                     message="",
                     media_id="http://example.com/given.mp3",
                     tts_token=None,
-                    original_media_id="http://example.com/given.mp3",
                     media_id_source="url",
                     preannounce_media_id="http://example.com/preannounce.mp3",
                 ),
@@ -633,10 +609,6 @@ async def test_start_conversation(
     )
 
     with (
-        patch(
-            "homeassistant.components.tts.generate_media_source_id",
-            return_value="media-source://generated",
-        ),
         patch(
             "homeassistant.components.tts.async_resolve_engine",
             return_value="tts.cloud",

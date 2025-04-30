@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
+from homeassistant.components.tts.media_source import generate_media_source_id
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -32,6 +33,7 @@ from .common import (
     MockTTS,
     MockTTSEntity,
     MockTTSProvider,
+    async_get_media_source_audio,
     get_media_source_url,
     mock_config_entry_setup,
     mock_setup,
@@ -820,7 +822,7 @@ async def test_service_receive_voice(
     assert req.status == HTTPStatus.OK
     assert await req.read() == tts_data
 
-    extension, data = await tts.async_get_media_source_audio(
+    extension, data = await async_get_media_source_audio(
         hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
     )
     assert extension == "mp3"
@@ -1314,7 +1316,7 @@ async def test_generate_media_source_id(
     result_query: str,
 ) -> None:
     """Test generating a media source ID."""
-    media_source_id = tts.generate_media_source_id(
+    media_source_id = generate_media_source_id(
         hass, "msg", engine, language, options, cache
     )
 
@@ -1352,7 +1354,7 @@ async def test_generate_media_source_id_invalid_options(
 ) -> None:
     """Test generating a media source ID."""
     with pytest.raises(HomeAssistantError):
-        tts.generate_media_source_id(hass, "msg", engine, language, options, None)
+        generate_media_source_id(hass, "msg", engine, language, options, None)
 
 
 @pytest.mark.parametrize(
@@ -1404,7 +1406,7 @@ async def test_legacy_fetching_in_async(
     await mock_setup(hass, ProviderWithAsyncFetching(DEFAULT_LANG))
 
     # Test async_get_media_source_audio
-    media_source_id = tts.generate_media_source_id(
+    media_source_id = generate_media_source_id(
         hass,
         "test message",
         "test",
@@ -1412,12 +1414,8 @@ async def test_legacy_fetching_in_async(
         cache=None,
     )
 
-    task = hass.async_create_task(
-        tts.async_get_media_source_audio(hass, media_source_id)
-    )
-    task2 = hass.async_create_task(
-        tts.async_get_media_source_audio(hass, media_source_id)
-    )
+    task = hass.async_create_task(async_get_media_source_audio(hass, media_source_id))
+    task2 = hass.async_create_task(async_get_media_source_audio(hass, media_source_id))
 
     url = await get_media_source_url(hass, media_source_id)
     client = await hass_client()
@@ -1438,17 +1436,17 @@ async def test_legacy_fetching_in_async(
     assert await req.read() == b"test"
 
     # Test error is not cached
-    media_source_id = tts.generate_media_source_id(
+    media_source_id = generate_media_source_id(
         hass, "test message 2", "test", "en_US", None, None
     )
     tts_audio = asyncio.Future()
     tts_audio.set_exception(HomeAssistantError("test error"))
     with pytest.raises(HomeAssistantError):
-        assert await tts.async_get_media_source_audio(hass, media_source_id)
+        assert await async_get_media_source_audio(hass, media_source_id)
 
     tts_audio = asyncio.Future()
     tts_audio.set_result(b"test 2")
-    assert await tts.async_get_media_source_audio(hass, media_source_id) == (
+    assert await async_get_media_source_audio(hass, media_source_id) == (
         "mp3",
         b"test 2",
     )
@@ -1471,7 +1469,7 @@ async def test_fetching_in_async(
     await mock_config_entry_setup(hass, EntityWithAsyncFetching(DEFAULT_LANG))
 
     # Test async_get_media_source_audio
-    media_source_id = tts.generate_media_source_id(
+    media_source_id = generate_media_source_id(
         hass,
         "test message",
         "tts.test",
@@ -1479,12 +1477,8 @@ async def test_fetching_in_async(
         cache=None,
     )
 
-    task = hass.async_create_task(
-        tts.async_get_media_source_audio(hass, media_source_id)
-    )
-    task2 = hass.async_create_task(
-        tts.async_get_media_source_audio(hass, media_source_id)
-    )
+    task = hass.async_create_task(async_get_media_source_audio(hass, media_source_id))
+    task2 = hass.async_create_task(async_get_media_source_audio(hass, media_source_id))
 
     url = await get_media_source_url(hass, media_source_id)
     client = await hass_client()
@@ -1505,17 +1499,17 @@ async def test_fetching_in_async(
     assert await req.read() == b"test"
 
     # Test error is not cached
-    media_source_id = tts.generate_media_source_id(
+    media_source_id = generate_media_source_id(
         hass, "test message 2", "tts.test", "en_US", None, None
     )
     tts_audio = asyncio.Future()
     tts_audio.set_exception(HomeAssistantError("test error"))
     with pytest.raises(HomeAssistantError):
-        assert await tts.async_get_media_source_audio(hass, media_source_id)
+        assert await async_get_media_source_audio(hass, media_source_id)
 
     tts_audio = asyncio.Future()
     tts_audio.set_result(b"test 2")
-    assert await tts.async_get_media_source_audio(hass, media_source_id) == (
+    assert await async_get_media_source_audio(hass, media_source_id) == (
         "mp3",
         b"test 2",
     )

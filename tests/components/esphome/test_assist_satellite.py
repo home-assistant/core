@@ -1123,10 +1123,6 @@ async def test_announce_message(
 
     with (
         patch(
-            "homeassistant.components.tts.generate_media_source_id",
-            return_value="media-source://bla",
-        ),
-        patch(
             "homeassistant.components.tts.async_resolve_engine",
             return_value="tts.cloud_tts",
         ),
@@ -1294,10 +1290,6 @@ async def test_announce_message_with_preannounce(
 
     with (
         patch(
-            "homeassistant.components.tts.generate_media_source_id",
-            return_value="media-source://bla",
-        ),
-        patch(
             "homeassistant.components.tts.async_resolve_engine",
             return_value="tts.cloud_tts",
         ),
@@ -1408,10 +1400,6 @@ async def test_start_conversation_message(
         done.set()
 
     with (
-        patch(
-            "homeassistant.components.tts.generate_media_source_id",
-            return_value="media-source://bla",
-        ),
         patch(
             "homeassistant.components.tts.async_resolve_engine",
             return_value="tts.cloud_tts",
@@ -1617,10 +1605,6 @@ async def test_start_conversation_message_with_preannounce(
         done.set()
 
     with (
-        patch(
-            "homeassistant.components.tts.generate_media_source_id",
-            return_value="media-source://bla",
-        ),
         patch(
             "homeassistant.components.tts.async_resolve_engine",
             return_value="tts.cloud_tts",
