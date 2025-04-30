@@ -1289,7 +1289,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_rear_left_door-entry]
