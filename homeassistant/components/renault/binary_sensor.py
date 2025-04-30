@@ -78,7 +78,8 @@ def _plugged_in_value_lambda(self: RenaultBinarySensor) -> bool | None:
     data = self.coordinator.data
     plug_status = data.get_plug_status() if data else None
 
-    if plug_status is None:
+    if plug_status is not None:
+        return plug_status == PlugState.PLUGGED
         charging_status = data.get_charging_status() if data else None
         if charging_status is not None and charging_status in [
             ChargeState.CHARGE_IN_PROGRESS,
