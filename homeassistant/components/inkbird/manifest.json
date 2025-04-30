@@ -49,5 +49,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/inkbird",
   "iot_class": "local_push",
-  "requirements": ["inkbird-ble==0.14.1"]
+  "requirements": ["inkbird-ble==0.15.0"]
 }
