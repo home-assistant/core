@@ -17,6 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from .conftest import FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -64,12 +66,8 @@ async def test_full_flow(
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": (
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-                ".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-                ".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-            ),
+            "refresh_token": FAKE_REFRESH_TOKEN,
+            "access_token": FAKE_ACCESS_TOKEN,
             "type": "Bearer",
             "expires_in": 60,
         },
@@ -128,12 +126,8 @@ async def test_prevent_reconfiguring_same_account(
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": (
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-                ".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-                ".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-            ),
+            "refresh_token": FAKE_REFRESH_TOKEN,
+            "access_token": FAKE_ACCESS_TOKEN,
             "type": "Bearer",
             "expires_in": 60,
         },
@@ -179,12 +173,8 @@ async def test_reauth_flow(
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": (
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-                ".eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
-                ".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-            ),
+            "refresh_token": FAKE_REFRESH_TOKEN,
+            "access_token": FAKE_ACCESS_TOKEN,
             "type": "Bearer",
             "expires_in": 60,
         },

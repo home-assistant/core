@@ -20,7 +20,7 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @property
     def logger(self) -> logging.Logger:
