@@ -1210,7 +1210,7 @@ async def test_abort_usb_discovery_with_existing_flow(
     assert result2["reason"] == "already_in_progress"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_options")
+@pytest.mark.usefixtures("supervisor", "addon_installed")
 async def test_usb_discovery_with_existing_usb_flow(hass: HomeAssistant) -> None:
     """Test usb discovery allows more than one USB flow in progress."""
     first_usb_info = UsbServiceInfo(
@@ -1243,6 +1243,11 @@ async def test_usb_discovery_with_existing_usb_flow(hass: HomeAssistant) -> None
     )
 
     assert len(usb_flows_in_progress) == 2
+
+    for flow in (result, result2):
+        hass.config_entries.flow.async_abort(flow["flow_id"])
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
 
 
 async def test_abort_usb_discovery_addon_required(
