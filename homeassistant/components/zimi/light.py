@@ -28,15 +28,11 @@ async def async_setup_entry(
     api = config_entry.runtime_data
 
     lights: list[ZimiLight | ZimiDimmer] = [
-        ZimiLight(device, api)
-        for device in api.lights if device.type != "dimmer"
+        ZimiLight(device, api) for device in api.lights if device.type != "dimmer"
     ]
 
     lights.extend(
-        [
-            ZimiDimmer(device, api)
-            for device in api.lights if device.type == "dimmer"
-        ]
+        [ZimiDimmer(device, api) for device in api.lights if device.type == "dimmer"]
     )
 
     async_add_entities(lights)
