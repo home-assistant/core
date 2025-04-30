@@ -117,7 +117,7 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                             data=user_input,
                         )
 
-                errors["base"] = "api_version_error"
+                return self.async_abort(reason="api_version_error")
 
         return self.async_show_form(
             step_id="user",

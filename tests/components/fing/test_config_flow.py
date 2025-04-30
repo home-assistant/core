@@ -48,8 +48,8 @@ async def test_verify_api_version_outdated(
         result["flow_id"], user_input=mocked_entry
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "api_version_error"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "api_version_error"
 
 
 @pytest.mark.parametrize(
@@ -85,6 +85,7 @@ async def test_http_error_handling(
     )
 
     assert result["type"] is FlowResultType.FORM
+
     if isinstance(error, httpx.NetworkError):
         assert result["errors"]["base"] == "cannot_connect"
     elif isinstance(error, httpx.TimeoutException):
@@ -117,3 +118,29 @@ async def test_http_error_handling(
         CONF_PORT: "49090",
         CONF_API_KEY: "test_key",
     }
+
+
+async def test_duplicate_entries(
+    hass: HomeAssistant, mocked_entry, mocked_fing_agent
+) -> None:
+    """Test successful connection verification."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=mocked_entry
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=mocked_entry
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

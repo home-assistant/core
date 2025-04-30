@@ -21,11 +21,11 @@
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect]",
       "unexpected_error": "[%key:common::config_flow::error::unknown]",
       "url_error": "[%key:common::config_flow::error::invalid_host]",
-      "http_status_error": "HTTP request failed -> {message}",
-      "api_version_error": "Your agent is using an outdated API version. The required 'network_id' parameter is missing. Please update to the latest API version."
+      "http_status_error": "HTTP request failed -> {message}"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "api_version_error": "Your agent is using an outdated API version. The required 'network_id' parameter is missing. Please update to the latest API version."
     }
   }
 }
