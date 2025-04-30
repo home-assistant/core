@@ -1260,6 +1260,8 @@ build.json @home-assistant/supervisor
 /tests/components/recovery_mode/ @home-assistant/core
 /homeassistant/components/refoss/ @ashionky
 /tests/components/refoss/ @ashionky
+/homeassistant/components/rehlko/ @bdraco @peterager
+/tests/components/rehlko/ @bdraco @peterager
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/remote_calendar/ @Thomas55555
