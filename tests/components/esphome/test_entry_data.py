@@ -12,12 +12,14 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import MockGenericDeviceEntryType
+
 
 async def test_migrate_entity_unique_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic sensor entity unique id migration."""
     entity_registry.async_get_or_create(
@@ -60,7 +62,7 @@ async def test_migrate_entity_unique_id_downgrade_upgrade(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test unique id migration prefers the original entity on downgrade upgrade."""
     entity_registry.async_get_or_create(
