@@ -19,6 +19,8 @@ from aioshelly.const import (
     MODEL_EM3,
     MODEL_I3,
     MODEL_NAMES,
+    MODEL_OUT_PLUG_S_G3,
+    MODEL_PLUG_S_G3,
     RPC_GENERATIONS,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
@@ -691,3 +693,14 @@ async def get_rpc_scripts_event_types(
         script_events[script_id] = await get_rpc_script_event_types(device, script_id)
 
     return script_events
+
+
+def is_firmware_update_available(model: str) -> bool:
+    """Return true if firmware update should be available for the device.
+
+    Latest available firmware for Plug S Gen3 and Outdoor Plug S Gen3 is 1.2.3.
+    """
+    if model in (MODEL_PLUG_S_G3, MODEL_OUT_PLUG_S_G3):
+        return False
+
+    return True

@@ -7,12 +7,7 @@ from typing import Final
 from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import (
-    DEFAULT_COAP_PORT,
-    MODEL_OUT_PLUG_S_G3,
-    MODEL_PLUG_S_G3,
-    RPC_GENERATIONS,
-)
+from aioshelly.const import DEFAULT_COAP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -73,6 +68,7 @@ from .utils import (
     get_http_port,
     get_rpc_scripts_event_types,
     get_ws_context,
+    is_firmware_update_available,
 )
 
 PLATFORMS: Final = [
@@ -331,10 +327,8 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             entry, runtime_data.platforms
         )
 
-        # Latest available firmware for Plug S Gen3 and Outdoor Plug S Gen3 is 1.2.3.
-        if runtime_data.rpc_supports_scripts and runtime_data.rpc.model not in (
-            MODEL_PLUG_S_G3,
-            MODEL_OUT_PLUG_S_G3,
+        if runtime_data.rpc_supports_scripts and is_firmware_update_available(
+            runtime_data.rpc.model
         ):
             firmware = AwesomeVersion(device.shelly["ver"])
             issue_id = BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(
