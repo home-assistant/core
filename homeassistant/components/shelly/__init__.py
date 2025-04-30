@@ -338,13 +338,14 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             and runtime_data.rpc.model not in (MODEL_PLUG_S_G3, MODEL_OUT_PLUG_S_G3)
         ):
             firmware = AwesomeVersion(device.shelly["ver"])
+            issue_id = BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(
+                unique=entry.unique_id
+            )
             if firmware < BLE_SCANNER_MIN_FIRMWARE:
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
-                    BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(
-                        unique=runtime_data.rpc.mac
-                    ),
+                    issue_id,
                     is_fixable=True,
                     is_persistent=True,
                     severity=ir.IssueSeverity.WARNING,
@@ -360,9 +361,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 ir.async_delete_issue(
                     hass,
                     DOMAIN,
-                    BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(
-                        unique=entry.unique_id
-                    ),
+                    issue_id,
                 )
     elif (
         sleep_period is None
