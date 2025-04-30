@@ -22,6 +22,7 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
