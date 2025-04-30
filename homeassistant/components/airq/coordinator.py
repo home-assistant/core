@@ -75,6 +75,8 @@ class AirQCoordinator(DataUpdateCoordinator):
             return_average=self.return_average,
             clip_negative_values=self.clip_negative,
         )
+        data["brightness"] = await self.airq.get_current_brightness()
+
         if warming_up_sensors := identify_warming_up_sensors(data):
             _LOGGER.debug(
                 "Following sensors are still warming up: %s", warming_up_sensors

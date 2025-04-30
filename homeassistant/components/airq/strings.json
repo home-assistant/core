@@ -35,6 +35,11 @@
     }
   },
   "entity": {
+    "light": {
+      "airq_leds": {
+        "name": "LED"
+      }
+    },
     "sensor": {
       "acetaldehyde": {
         "name": "Acetaldehyde"
