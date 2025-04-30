@@ -110,6 +110,17 @@
     }
   },
   "issues": {
+    "home_connect_too_many_connected_paired_events": {
+      "title": "{appliance_name} sent too many connected or paired events",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::home_connect_too_many_connected_paired_events::title%]",
+            "description": "The appliance \"{appliance_name}\" has been reported as connected or paired {times} times in less than {time_window} minutes, so refreshes on connected or paired events has been disabled to avoid exceeding the API rate limit.\n\nPlease refer to the [Home Connect Wi-Fi requirements and recommendations]({home_connect_resource_url}). If everything seems right with your network configuration, restart the appliance.\n\nClick \"submit\" to re-enable the updates.\nIf the issue persists, please create an issue in the [Home Assistant core repository]({home_assistant_core_new_issue_url})."
+          }
+        }
+      }
+    },
     "deprecated_time_alarm_clock_in_automations_scripts": {
       "title": "Deprecated alarm clock entity detected in some automations or scripts",
       "fix_flow": {
@@ -128,17 +139,6 @@
           "confirm": {
             "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock::title%]",
             "description": "The alarm clock entity `{entity_id}` is deprecated because it's being moved to the `number` platform.\n\nPlease use the new `number` entity."
-          }
-        }
-      }
-    },
-    "deprecated_binary_common_door_sensor": {
-      "title": "Deprecated binary door sensor detected in some automations or scripts",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::home_connect::issues::deprecated_binary_common_door_sensor::title%]",
-            "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
           }
         }
       }
@@ -487,9 +487,9 @@
     },
     "warming_level": {
       "options": {
-        "cooking_oven_enum_type_warming_level_low": "Low",
-        "cooking_oven_enum_type_warming_level_medium": "Medium",
-        "cooking_oven_enum_type_warming_level_high": "High"
+        "cooking_oven_enum_type_warming_level_low": "[%key:common::state::low%]",
+        "cooking_oven_enum_type_warming_level_medium": "[%key:common::state::medium%]",
+        "cooking_oven_enum_type_warming_level_high": "[%key:common::state::high%]"
       }
     },
     "washer_temperature": {
@@ -522,9 +522,9 @@
         "laundry_care_washer_enum_type_spin_speed_r_p_m_1400": "1400 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_1600": "1600 rpm",
         "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]",
-        "laundry_care_washer_enum_type_spin_speed_ul_low": "Low",
-        "laundry_care_washer_enum_type_spin_speed_ul_medium": "Medium",
-        "laundry_care_washer_enum_type_spin_speed_ul_high": "High"
+        "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:common::state::low%]",
+        "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:common::state::medium%]",
+        "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:common::state::high%]"
       }
     },
     "vario_perfect": {
@@ -1468,9 +1468,9 @@
       "warming_level": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_oven_option_warming_level::name%]",
         "state": {
-          "cooking_oven_enum_type_warming_level_low": "[%key:component::home_connect::selector::warming_level::options::cooking_oven_enum_type_warming_level_low%]",
-          "cooking_oven_enum_type_warming_level_medium": "[%key:component::home_connect::selector::warming_level::options::cooking_oven_enum_type_warming_level_medium%]",
-          "cooking_oven_enum_type_warming_level_high": "[%key:component::home_connect::selector::warming_level::options::cooking_oven_enum_type_warming_level_high%]"
+          "cooking_oven_enum_type_warming_level_low": "[%key:common::state::low%]",
+          "cooking_oven_enum_type_warming_level_medium": "[%key:common::state::medium%]",
+          "cooking_oven_enum_type_warming_level_high": "[%key:common::state::high%]"
         }
       },
       "washer_temperature": {
@@ -1505,9 +1505,9 @@
           "laundry_care_washer_enum_type_spin_speed_r_p_m_1400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1400%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m_1600": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1600%]",
           "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]",
-          "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_low%]",
-          "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_medium%]",
-          "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_high%]"
+          "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:common::state::low%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:common::state::medium%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:common::state::high%]"
         }
       },
       "vario_perfect": {
@@ -1536,7 +1536,7 @@
           "pause": "[%key:common::state::paused%]",
           "actionrequired": "Action required",
           "finished": "Finished",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "aborting": "Aborting"
         }
       },
@@ -1587,7 +1587,7 @@
           "streaminglocal": "Streaming local",
           "streamingcloud": "Streaming cloud",
           "streaminglocal_and_cloud": "Streaming local and cloud",
-          "error": "Error"
+          "error": "[%key:common::state::error%]"
         }
       },
       "last_selected_map": {

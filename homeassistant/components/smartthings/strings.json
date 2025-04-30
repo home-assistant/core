@@ -48,6 +48,9 @@
       "cooler_door": {
         "name": "Cooler door"
       },
+      "cool_select_plus_door": {
+        "name": "CoolSelect+ door"
+      },
       "remote_control": {
         "name": "Remote control"
       },
@@ -354,11 +357,11 @@
       "robot_cleaner_cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
-          "auto": "Auto",
+          "stop": "[%key:common::action::stop%]",
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
           "part": "Partial",
           "repeat": "Repeat",
-          "manual": "Manual",
-          "stop": "[%key:common::action::stop%]",
           "map": "Map"
         }
       },
@@ -475,6 +478,9 @@
       },
       "ice_maker": {
         "name": "Ice maker"
+      },
+      "sabbath_mode": {
+        "name": "Sabbath mode"
       }
     }
   },

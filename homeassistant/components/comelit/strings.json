@@ -52,7 +52,9 @@
           "rest": "Rest",
           "sabotated": "Sabotated"
         }
-      },
+      }
+    },
+    "humidifier": {
       "humidifier": {
         "name": "Humidifier"
       },
@@ -67,6 +69,15 @@
     },
     "invalid_clima_data": {
       "message": "Invalid 'clima' data"
+    },
+    "cannot_connect": {
+      "message": "Error connecting: {error}"
+    },
+    "cannot_authenticate": {
+      "message": "Error authenticating"
+    },
+    "updated_failed": {
+      "message": "Failed to update data: {error}"
     }
   }
 }
