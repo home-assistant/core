@@ -223,7 +223,18 @@ async def test_all_light(hass: HomeAssistant, mock_do_cycle, expected) -> None:
 
 @pytest.mark.parametrize(
     "mock_test_state",
-    [(State(ENTITY_ID, STATE_ON),)],
+    [
+        (
+            State(
+                ENTITY_ID,
+                STATE_ON,
+                {
+                    ATTR_BRIGHTNESS: 128,
+                    ATTR_COLOR_TEMP_KELVIN: 4000,
+                },
+            ),
+        )
+    ],
     indirect=True,
 )
 @pytest.mark.parametrize(
@@ -235,6 +246,8 @@ async def test_all_light(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SCAN_INTERVAL: 0,
+                    CONF_BRIGHTNESS_REGISTER: 1,
+                    CONF_COLOR_TEMP_REGISTER: 2,
                 }
             ]
         },
@@ -243,8 +256,14 @@ async def test_all_light(hass: HomeAssistant, mock_do_cycle, expected) -> None:
 async def test_restore_state_light(
     hass: HomeAssistant, mock_test_state, mock_modbus
 ) -> None:
-    """Run test for sensor restore state."""
+    """Test Modbus Light restore state with brightness and color_temp."""
     assert hass.states.get(ENTITY_ID).state == mock_test_state[0].state
+    assert hass.states.get(ENTITY_ID).attributes.get(
+        ATTR_BRIGHTNESS
+    ) == mock_test_state[0].attributes.get(ATTR_BRIGHTNESS)
+    assert hass.states.get(ENTITY_ID).attributes.get(
+        ATTR_COLOR_TEMP_KELVIN
+    ) == mock_test_state[0].attributes.get(ATTR_COLOR_TEMP_KELVIN)
 
 
 @pytest.mark.parametrize(
@@ -319,11 +338,101 @@ async def test_light_service_turn(
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 0,
+                    CONF_BRIGHTNESS_REGISTER: 1,
+                    CONF_COLOR_TEMP_REGISTER: 2,
+                },
+                {
+                    CONF_NAME: f"{TEST_ENTITY_NAME} 2",
+                    CONF_ADDRESS: 1234,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 0,
+                    CONF_BRIGHTNESS_REGISTER: 1,
+                },
+            ]
+        }
+    ],
+)
+async def test_color_temp_light(
+    hass: HomeAssistant, mock_modbus_ha, modbus_light_entity
+) -> None:
+    """Test Modbus Light color temperature amd brightness."""
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_BRIGHTNESS: 128,
+            ATTR_COLOR_TEMP_KELVIN: 2000,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    calls = mock_modbus_ha.write_register.call_args_list
+    expected_modbus_brightness = 50
+    expected_modbus_temp = 0
+    assert any(
+        call.args[0] == 1 and call.kwargs["value"] == expected_modbus_brightness
+        for call in calls
+    )
+    assert any(
+        call.args[0] == 2 and call.kwargs["value"] == expected_modbus_temp
+        for call in calls
+    )
+    color_temp = 2000
+    brightness = 255
+    modbus_color_temp = 0
+    incorrect_input = "invalid"
+    result = await modbus_light_entity.async_set_brightness(incorrect_input)
+    assert result is None
+    modbus_light_entity._brightness_address = None
+    result = await modbus_light_entity.async_set_brightness(brightness)
+    assert result is None
+    result = await modbus_light_entity.async_set_color_temp(incorrect_input)
+    assert result is None
+    modbus_light_entity._attr_min_color_temp_kelvin = None
+    result = modbus_light_entity._convert_color_temp_to_modbus(color_temp)
+    assert result is None
+    result = modbus_light_entity._convert_modbus_percent_to_temperature(
+        modbus_color_temp
+    )
+    assert result is None
+    modbus_light_entity._color_temp_address = None
+    result = await modbus_light_entity.async_set_color_temp(color_temp)
+    assert result is None
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
                     CONF_BRIGHTNESS_REGISTER: 1,
                     CONF_COLOR_TEMP_REGISTER: 2,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
                     CONF_VERIFY: {},
-                }
+                },
+                {
+                    CONF_NAME: f"{TEST_ENTITY_NAME} 2",
+                    CONF_ADDRESS: 1234,
+                    CONF_BRIGHTNESS_REGISTER: 1,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                    CONF_VERIFY: {},
+                },
             ]
         },
     ],
@@ -379,128 +488,3 @@ async def test_no_discovery_info_light(
     )
     await hass.async_block_till_done()
     assert LIGHT_DOMAIN in hass.config.components
-
-
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_LIGHTS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 1234,
-                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                    CONF_SCAN_INTERVAL: 0,
-                    CONF_BRIGHTNESS_REGISTER: 1,
-                }
-            ]
-        }
-    ],
-)
-async def test_brightness_light(
-    hass: HomeAssistant, mock_modbus_ha, modbus_light_entity
-) -> None:
-    """Test Modbus Light brightness."""
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_BRIGHTNESS: 128,
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
-    calls = mock_modbus_ha.write_register.call_args_list
-    expected_modbus_brightness = 50
-    assert any(
-        call.args[0] == 1 and call.kwargs["value"] == expected_modbus_brightness
-        for call in calls
-    )
-    brightness = 255
-    incorrect_input = "invalid"
-    result = await modbus_light_entity.async_set_brightness(incorrect_input)
-    assert result is None
-    modbus_light_entity._brightness_address = None
-    result = await modbus_light_entity.async_set_brightness(brightness)
-    assert result is None
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        service_data={ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
-
-
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_LIGHTS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 1234,
-                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                    CONF_SCAN_INTERVAL: 0,
-                    CONF_BRIGHTNESS_REGISTER: 1,
-                    CONF_COLOR_TEMP_REGISTER: 2,
-                }
-            ]
-        }
-    ],
-)
-async def test_color_temp_light(
-    hass: HomeAssistant, mock_modbus_ha, modbus_light_entity
-) -> None:
-    """Test Modbus Light color temperature."""
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_BRIGHTNESS: 128,
-            ATTR_COLOR_TEMP_KELVIN: 2000,
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
-    calls = mock_modbus_ha.write_register.call_args_list
-    expected_modbus_brightness = 50
-    expected_modbus_temp = 0
-    assert any(
-        call.args[0] == 1 and call.kwargs["value"] == expected_modbus_brightness
-        for call in calls
-    )
-    assert any(
-        call.args[0] == 2 and call.kwargs["value"] == expected_modbus_temp
-        for call in calls
-    )
-    color_temp = 2000
-    modbus_color_temp = 0
-    incorrect_input = "invalid"
-    result = await modbus_light_entity.async_set_color_temp(incorrect_input)
-    assert result is None
-    modbus_light_entity._attr_min_color_temp_kelvin = None
-    result = modbus_light_entity._convert_color_temp_to_modbus(color_temp)
-    assert result is None
-    result = modbus_light_entity._convert_modbus_percent_to_temperature(
-        modbus_color_temp
-    )
-    assert result is None
-    modbus_light_entity._color_temp_address = None
-    result = await modbus_light_entity.async_set_color_temp(color_temp)
-    assert result is None
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        service_data={ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
