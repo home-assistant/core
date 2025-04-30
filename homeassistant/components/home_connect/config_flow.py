@@ -46,15 +46,16 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
-        if self.source == SOURCE_REAUTH:
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(),
-                data_updates=data,
-            )
         await self.async_set_unique_id(
             jwt.decode(
                 data["token"]["access_token"], options={"verify_signature": False}
             )["sub"]
         )
+        if self.source == SOURCE_REAUTH:
+            reauth_entry = self._get_reauth_entry()
+            if self.unique_id == reauth_entry.unique_id:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=data
+                )
         self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)
