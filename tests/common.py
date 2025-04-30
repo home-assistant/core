@@ -642,7 +642,8 @@ def mock_registry(
         registry.entities[key] = entry
 
     hass.data[er.DATA_REGISTRY] = registry
-    er.async_get.cache_clear()
+    with suppress(AttributeError):
+        er.async_get.cache_clear()
     return registry
 
 
@@ -694,7 +695,8 @@ def mock_area_registry(
         registry.areas[key] = entry
 
     hass.data[ar.DATA_REGISTRY] = registry
-    ar.async_get.cache_clear()
+    with suppress(AttributeError):
+        ar.async_get.cache_clear()
     return registry
 
 
@@ -723,7 +725,8 @@ def mock_device_registry(
     registry.deleted_devices = dr.DeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
-    dr.async_get.cache_clear()
+    with suppress(AttributeError):
+        dr.async_get.cache_clear()
     return registry
 
 
@@ -1307,7 +1310,8 @@ def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
-    rs.async_get.cache_clear()
+    with suppress(AttributeError):
+        rs.async_get.cache_clear()
     hass.data[key] = data
 
 
@@ -1335,7 +1339,8 @@ def mock_restore_cache_with_extra_data(
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
-    rs.async_get.cache_clear()
+    with suppress(AttributeError):
+        rs.async_get.cache_clear()
     hass.data[key] = data
 
 
