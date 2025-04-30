@@ -61,7 +61,7 @@ class SmarlaSwitch(SmarlaBaseEntity, SwitchEntity):
         desc: SmarlaSwitchEntityDescription,
     ) -> None:
         """Initialize a Smarla switch."""
-        prop = federwiege.get_service(desc.service).get_property(desc.property)
+        prop = federwiege.get_property(desc.service, desc.property)
         super().__init__(federwiege, prop)
         self.entity_description = desc
         self._attr_unique_id = f"{federwiege.serial_number}-{desc.key}"
