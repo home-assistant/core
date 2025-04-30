@@ -4234,6 +4234,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "national_grid_us": {
+      "name": "National Grid US",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "neato": {
       "name": "Neato Botvac",
       "integration_type": "hub",
