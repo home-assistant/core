@@ -17,6 +17,7 @@ import pytest
 
 from homeassistant.components.shelly.const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
+    BLE_SCANNER_MIN_FIRMWARE,
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
@@ -597,7 +598,7 @@ async def test_ble_scanner_unsupported_firmware_fixed(
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 1
 
-    monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1.5.1")
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", BLE_SCANNER_MIN_FIRMWARE)
 
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
