@@ -41,6 +41,7 @@ from typing import (
     final,
     overload,
 )
+import weakref
 
 from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
@@ -409,6 +410,9 @@ class CoreState(enum.Enum):
         return self.value
 
 
+hass_instances: list[weakref.ref[HomeAssistant]] = []
+
+
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
@@ -419,6 +423,7 @@ class HomeAssistant:
     def __new__(cls, config_dir: str) -> Self:
         """Set the _hass thread local data."""
         hass = super().__new__(cls)
+        hass_instances.append(weakref.ref(hass))
         _hass.hass = hass
         return hass
 

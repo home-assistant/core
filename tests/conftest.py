@@ -288,8 +288,25 @@ def garbage_collection() -> None:
     handles the most common cases and let each module override
     to run per test case if needed.
     """
+    start_live_hass_instances = len(
+        [hass() for hass in ha.hass_instances if hass() is not None]
+    )
+    yield
     gc.collect()
-    gc.freeze()
+    end_live_hass_instances = len(
+        [hass() for hass in ha.hass_instances if hass() is not None]
+    )
+    if abs(start_live_hass_instances - end_live_hass_instances) > 1:
+        _LOGGER.error(
+            "Garbage collection did not clean up all Home Assistant instances. "
+            "Start: %s, End: %s",
+            start_live_hass_instances,
+            end_live_hass_instances,
+        )
+        pytest.fail(
+            f"Garbage collection did not clean up all Home Assistant instances. "
+            f"Start: {start_live_hass_instances}, End: {end_live_hass_instances}"
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -1325,7 +1342,8 @@ def disable_translations_once(
     translations_once.start()
 
 
-@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+# @pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+@pytest_asyncio.fixture(autouse=True)
 async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
     """Mock out the zeroconf resolver."""
     resolver = AsyncResolver()
