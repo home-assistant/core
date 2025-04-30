@@ -127,7 +127,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ip-network',
+    'original_icon': None,
     'original_name': 'Device IP address',
     'platform': 'rheklo',
     'previous_unique_id': None,
@@ -141,7 +141,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Generator 1 Device IP address',
-      'icon': 'mdi:ip-network',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.generator_1_device_ip_address',
@@ -413,53 +412,6 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[sensor.generator_1_engine_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.generator_1_engine_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Engine state',
-    'platform': 'rheklo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'engine_state',
-    'unique_id': 'myemail@email.com_12345_engineState',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.generator_1_engine_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Generator 1 Engine state',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.generator_1_engine_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Standby',
-  })
-# ---
 # name: test_sensors[sensor.generator_1_generator_load-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -563,53 +515,6 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[sensor.generator_1_generator_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.generator_1_generator_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Generator status',
-    'platform': 'rheklo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'generator_status',
-    'unique_id': 'myemail@email.com_12345_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.generator_1_generator_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Generator 1 Generator status',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.generator_1_generator_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'ReadyToRun',
-  })
-# ---
 # name: test_sensors[sensor.generator_1_lube_oil_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -660,54 +565,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.0',
-  })
-# ---
-# name: test_sensors[sensor.generator_1_power_source-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.generator_1_power_source',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:home-lightning-bolt',
-    'original_name': 'Power source',
-    'platform': 'rheklo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'power_source',
-    'unique_id': 'myemail@email.com_12345_powerSource',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.generator_1_power_source-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Generator 1 Power source',
-      'icon': 'mdi:home-lightning-bolt',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.generator_1_power_source',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Utility',
   })
 # ---
 # name: test_sensors[sensor.generator_1_runtime_since_last_maintenance-entry]
@@ -786,7 +643,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:server-network',
+    'original_icon': None,
     'original_name': 'Server IP address',
     'platform': 'rheklo',
     'previous_unique_id': None,
@@ -800,7 +657,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Generator 1 Server IP address',
-      'icon': 'mdi:server-network',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.generator_1_server_ip_address',

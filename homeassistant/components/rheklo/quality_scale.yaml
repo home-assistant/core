@@ -47,7 +47,9 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: done
+  discovery-update-info:
+    status: exempt
+    comment: Network information not useful as it is a cloud integration.
   discovery: done
   docs-data-update: todo
   docs-examples: todo
@@ -62,10 +64,7 @@ rules:
       Device type integration.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: |
-      No noisy/non-essential entities.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done

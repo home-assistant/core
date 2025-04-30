@@ -1,4 +1,4 @@
-"""Base class for RHEKLO entities."""
+"""Base class for Rheklo entities."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def _get_device_connections(mac_address: str) -> set[tuple[str, str]]:
 
 
 class RhekloEntity(CoordinatorEntity[RhekloUpdateCoordinator]):
-    """Representation of an RHEKLO entity."""
+    """Representation of a Rheklo entity."""
 
     _attr_has_entity_name = True
 

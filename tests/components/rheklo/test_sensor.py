@@ -30,7 +30,6 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
     rheklo_config_entry: MockConfigEntry,
     load_rheklo_config_entry: None,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Rheklo sensors."""
     await snapshot_platform(

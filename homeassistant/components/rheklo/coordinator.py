@@ -24,7 +24,7 @@ SCAN_INTERVAL_MINUTES = timedelta(minutes=10)
 
 @dataclass
 class RhekloRuntimeData:
-    """Dataclass to hold runtime data for the RHEKLO integration."""
+    """Dataclass to hold runtime data for the Rheklo integration."""
 
     coordinators: dict[int, RhekloUpdateCoordinator]
     rheklo: AioKem
@@ -32,7 +32,7 @@ class RhekloRuntimeData:
 
 
 class RhekloUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching RHEKLO data API."""
+    """Class to manage fetching Rheklo data API."""
 
     config_entry: RhekloConfigEntry
 
@@ -62,7 +62,6 @@ class RhekloUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        result = {}
         try:
             result = await self.rheklo.get_generator_data(self.device_id)
         except CommunicationError as error:

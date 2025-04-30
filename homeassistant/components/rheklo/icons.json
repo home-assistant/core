@@ -7,11 +7,11 @@
       "engine_state": {
         "default": "mdi:engine"
       },
-      "generator_status": {
-        "default": "mdi:home-lightning-bolt"
+      "device_ip_address": {
+        "default": "mdi:ip-network"
       },
-      "power_source": {
-        "default": "mdi:transmission-tower"
+      "server_ip_address": {
+        "default": "mdi:server-network"
       }
     }
   }

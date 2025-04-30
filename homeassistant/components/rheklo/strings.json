@@ -56,20 +56,11 @@
       "engine_frequency": {
         "name": "Engine frequency"
       },
-      "engine_state": {
-        "name": "Engine state"
-      },
-      "power_source": {
-        "name": "Power source"
-      },
       "total_operation": {
         "name": "Total operation"
       },
       "total_runtime": {
         "name": "Total runtime"
-      },
-      "total_runtime_hours": {
-        "name": "Total runtime hours"
       },
       "runtime_since_last_maintenance": {
         "name": "Runtime since last maintenance"
@@ -84,16 +75,13 @@
         "name": "Utility voltage"
       },
       "generator_voltage_average": {
-        "name": "Generator voltage average"
+        "name": "Average generator voltage"
       },
       "generator_load": {
         "name": "Generator load"
       },
       "generator_load_percent": {
         "name": "Generator load percentage"
-      },
-      "generator_status": {
-        "name": "Generator status"
       }
     }
   },

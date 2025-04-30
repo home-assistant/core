@@ -1,4 +1,4 @@
-"""Support for RHEKLO sensors."""
+"""Support for Rheklo sensors."""
 
 from __future__ import annotations
 
@@ -100,20 +100,6 @@ SENSORS: tuple[RhekloSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RhekloSensorEntityDescription(
-        key="status",
-        translation_key="generator_status",
-        use_device_key=True,
-    ),
-    RhekloSensorEntityDescription(
-        key="engineState",
-        translation_key="engine_state",
-    ),
-    RhekloSensorEntityDescription(
-        key="powerSource",
-        icon="mdi:home-lightning-bolt",
-        translation_key="power_source",
-    ),
-    RhekloSensorEntityDescription(
         key="totalOperationHours",
         translation_key="total_operation",
         device_class=SensorDeviceClass.DURATION,
@@ -143,7 +129,6 @@ SENSORS: tuple[RhekloSensorEntityDescription, ...] = (
     ),
     RhekloSensorEntityDescription(
         key="deviceIpAddress",
-        icon="mdi:ip-network",
         translation_key="device_ip_address",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -151,7 +136,6 @@ SENSORS: tuple[RhekloSensorEntityDescription, ...] = (
     ),
     RhekloSensorEntityDescription(
         key="serverIpAddress",
-        icon="mdi:server-network",
         translation_key="server_ip_address",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -211,9 +195,9 @@ async def async_setup_entry(
 
 
 class RhekloSensorEntity(RhekloEntity, SensorEntity):
-    """Representation of an RHEKLO sensor."""
+    """Representation of a Rheklo sensor."""
 
     @property
     def native_value(self) -> StateType:
-        """Return the sensors state."""
+        """Return the sensor state."""
         return self._rheklo_value

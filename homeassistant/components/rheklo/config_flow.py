@@ -55,10 +55,9 @@ class RhekloConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the user input."""
         errors: dict[str, str] = {}
         token_subject = None
+        rheklo = AioKem(session=async_get_clientsession(self.hass))
         try:
-            rheklo = AioKem(session=async_get_clientsession(self.hass))
             await rheklo.authenticate(config[CONF_EMAIL], config[CONF_PASSWORD])
-            token_subject = rheklo.get_token_subject()
         except CONNECTION_EXCEPTIONS:
             errors["base"] = "cannot_connect"
         except AuthenticationError:
@@ -66,6 +65,8 @@ class RhekloConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
+        else:
+            token_subject = rheklo.get_token_subject()
         return errors, token_subject
 
     async def async_step_reauth(
@@ -85,12 +86,13 @@ class RhekloConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_EMAIL: existing_data[CONF_EMAIL]
         }
         if user_input is not None:
-            new_config = {**existing_data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
-            errors, _ = await self._async_validate_or_error(new_config)
+            errors, _ = await self._async_validate_or_error(
+                {**existing_data, **user_input}
+            )
             if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                    data_updates=user_input,
                 )
 
         return self.async_show_form(

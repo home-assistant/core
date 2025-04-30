@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RhekloConfigEntry) -> bo
                 name=f"{DOMAIN} {device_data[DEVICE_DATA_DISPLAY_NAME]}",
             )
             # Intentionally done in series to avoid overloading
-            # the RHEKLO API with requests
+            # the Rheklo API with requests
             await coordinator.async_config_entry_first_refresh()
             coordinators[device_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
