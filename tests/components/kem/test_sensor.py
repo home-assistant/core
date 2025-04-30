@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.kem.const import SCAN_INTERVAL_MINUTES
+from homeassistant.components.kem.coordinator import SCAN_INTERVAL_MINUTES
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -43,7 +43,7 @@ async def test_sensor_availability_device_disconnect(
     load_kem_config_entry: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the KEM sensors."""
+    """Test the KEM sensor availability when device is disconnected."""
     state = hass.states.get("sensor.generator_1_engine_state")
     assert state
     assert state.state == "Standby"
@@ -66,7 +66,7 @@ async def test_sensor_availability_poll_failure(
     load_kem_config_entry: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the KEM sensors."""
+    """Test the KEM sensor availability when cloud poll fails."""
     state = hass.states.get("sensor.generator_1_engine_state")
     assert state
     assert state.state == "Standby"

@@ -32,10 +32,10 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors, token_subject = await self._async_validate_or_error(user_input)
             if not errors:
-                email: str = user_input[CONF_EMAIL]
-                normalized_email = email.lower()
                 await self.async_set_unique_id(token_subject)
                 self._abort_if_unique_id_configured()
+                email: str = user_input[CONF_EMAIL]
+                normalized_email = email.lower()
                 return self.async_create_entry(title=normalized_email, data=user_input)
 
         return self.async_show_form(

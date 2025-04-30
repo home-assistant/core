@@ -1,7 +1,5 @@
 """Constants for the KEM integration."""
 
-from datetime import timedelta
-
 from aiokem import CommunicationError
 
 DOMAIN = "kem"
@@ -25,6 +23,3 @@ CONNECTION_EXCEPTIONS = (
     TimeoutError,
     CommunicationError,
 )
-
-
-SCAN_INTERVAL_MINUTES = timedelta(minutes=10)

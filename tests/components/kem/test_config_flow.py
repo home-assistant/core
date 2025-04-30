@@ -105,7 +105,7 @@ async def test_configure_entry_exceptions(
 async def test_already_configured(
     hass: HomeAssistant, kem_config_entry, mock_kem: AsyncMock
 ) -> None:
-    """Test already configured."""
+    """Test if entry is already configured."""
     kem_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

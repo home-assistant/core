@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -12,11 +13,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL_MINUTES
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 type KemConfigEntry = ConfigEntry[KemRuntimeData]
+
+SCAN_INTERVAL_MINUTES = timedelta(minutes=10)
 
 
 @dataclass
@@ -37,7 +40,7 @@ class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
-        config_entry: ConfigEntry,
+        config_entry: KemConfigEntry,
         kem: AioKem,
         home_data: dict[str, Any],
         device_data: dict[str, Any],
