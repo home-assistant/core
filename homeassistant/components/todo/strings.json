@@ -44,7 +44,7 @@
       "fields": {
         "item": {
           "name": "Item name or UID",
-          "description": "The name/summary of the to-do item. In some cases, for example if you have items with the same name, it can make sense to use the UID instead of the name. To find the UID of an item, perform a `get_items` action on the to-do list."
+          "description": "The name/summary of the to-do item. If you have items with duplicate names, you can reference specific ones using their UID instead."
         },
         "rename": {
           "name": "Rename item",
@@ -77,8 +77,8 @@
       "description": "Removes an existing to-do list item by its name or UID.",
       "fields": {
         "item": {
-          "name": "Item name or UID",
-          "description": "The name/summary of the to-do item. In some cases, for example if you have items with the same name, it can make sense to use the UID instead of the name. To find the UID of an item, perform a `get_items` action on the to-do list."
+          "name": "[%key:component::todo::services::update_item::fields::item::name%]",
+          "description": "[%key:component::todo::services::update_item::fields::item::description%]"
         }
       }
     }
