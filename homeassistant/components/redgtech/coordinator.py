@@ -1,16 +1,20 @@
 """Coordinator for Redgtech integration."""
 
+from __future__ import annotations
+
 import logging
-import aiohttp
 from datetime import timedelta
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_OFF, CONF_ACCESS_TOKEN
+from homeassistant.const import STATE_ON, STATE_OFF, CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.exceptions import HomeAssistantError, ConfigEntryError
 from redgtech_api.api import RedgtechAPI, RedgtechAuthError, RedgtechConnectionError
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import RedgtechConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.debug("Coordinator for Redgtech is being initialized.")
@@ -21,9 +25,6 @@ class RedgtechDevice:
     id: str
     name: str
     state: str
-
-class RedgtechConfigEntry(ConfigEntry):
-    """Custom ConfigEntry for Redgtech integration."""
 
 class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]]):
     """Coordinator to manage fetching data from the Redgtech API."""
@@ -39,7 +40,6 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_method=self.fetch_data,
             update_interval=timedelta(seconds=60),
             config_entry=config_entry,
         )
@@ -51,24 +51,20 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
             self.access_token = access_token
             return access_token
         except Exception as e:
-            _LOGGER.error("Unexpected error during login: %s", e)
             raise ConfigEntryError("Unexpected error during login") from e
 
-    async def fetch_data(self) -> list[RedgtechDevice]:
+    async def _async_update_data(self) -> list[RedgtechDevice]:
         """Fetch data from the API on demand."""
         _LOGGER.debug("Fetching data from Redgtech API on demand")
         try:
             data = await self.api.get_data(self.access_token)
         except RedgtechAuthError:
-            _LOGGER.warning("Access token expired, attempting to renew")
-            await self.renew_token(self.config_entry.data["email"], self.config_entry.data["password"])
+            await self.renew_token(self.config_entry.data[CONF_EMAIL], self.config_entry.data[CONF_PASSWORD])
             data = await self.api.get_data(self.access_token)
         except RedgtechConnectionError as e:
-            _LOGGER.error("Connection error while fetching data: %s", e)
             raise UpdateFailed("Failed to connect to Redgtech API") from e
-        except Exception as e:
-            _LOGGER.error("Unexpected error while fetching data: %s", e)
-            raise UpdateFailed("Unexpected error while fetching data") from e
+        except HomeAssistantError as e:
+            raise UpdateFailed("Home Assistant-specific error while fetching data") from e
 
         devices: list[RedgtechDevice] = []
 
@@ -83,32 +79,19 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
 
         return devices
 
-    async def set_device_state(self, device_id: str, state: bool) -> None:
-        """Set the state of a device."""
-        _LOGGER.debug("Setting device state: %s to %s", device_id, state)
-        try:
-            await self.api.set_switch_state(device_id, state, self.access_token)
-        except RedgtechAuthError:
-            _LOGGER.warning("Access token expired, attempting to renew")
-            await self.renew_token(self.config_entry.data["email"], self.config_entry.data["password"])
-            await self.api.set_switch_state(device_id, state, self.access_token)
-        except RedgtechConnectionError as e:
-            _LOGGER.error("Connection error while setting device state: %s", e)
-            raise ConfigEntryError("Failed to set device state") from e
-        except Exception as e:
-            _LOGGER.error("Unexpected error setting device state: %s", e)
-            raise HomeAssistantError("Unexpected error setting device state") from e
-        _LOGGER.debug("Device state set successfully")
-        await self._async_update_data()
-        _LOGGER.debug("Device state updated and data refreshed")
-
-    async def renew_token(self, email: str, password: str) -> None:
+    async def renew_token(self) -> None:
         """Renew the access token."""
         _LOGGER.debug("Renewing access token")
         try:
-            new_access_token = await self.api.login(email, password)
+            new_access_token = await self.api.login(
+                self.config_entry.data[CONF_EMAIL], 
+                self.config_entry.data[CONF_PASSWORD]
+            )
             self.access_token = new_access_token
             _LOGGER.debug("Access token renewed successfully")
+        except RedgtechAuthError as e:
+            raise ConfigEntryError("Authentication error while renewing access token") from e
+        except RedgtechConnectionError as e:
+            raise ConfigEntryError("Connection error while renewing access token") from e
         except Exception as e:
-            _LOGGER.error("Failed to renew access token: %s", e)
-            raise ConfigEntryError("Failed to renew access token") from e
+            raise HomeAssistantError("Unexpected error while renewing access token") from e

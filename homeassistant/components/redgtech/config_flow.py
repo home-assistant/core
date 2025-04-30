@@ -26,19 +26,14 @@ class RedgtechConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 access_token = await api.login(email, password)
             except RedgtechAuthError:
-                _LOGGER.error("Invalid authentication credentials")
                 errors["base"] = "invalid_auth"
             except RedgtechConnectionError:
-                _LOGGER.error("Unable to connect to the Redgtech API")
                 errors["base"] = "cannot_connect"
-            except Exception as e:
-                _LOGGER.error("Unexpected error during login: %s", e)
+            except Exception:
+                _LOGGER.exception("Unexpected error during login")
                 errors["base"] = "unknown"
             else:
-                if not access_token:
-                    _LOGGER.error("Login failed: No access token received")
-                    errors["base"] = "invalid_auth"
-                else:
+                if access_token:
                     _LOGGER.debug("Login successful, token received.")
                     self._async_abort_entries_match({CONF_EMAIL: email})
                     return self.async_create_entry(
@@ -49,6 +44,7 @@ class RedgtechConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_ACCESS_TOKEN: access_token
                         }
                     )
+                errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user",
