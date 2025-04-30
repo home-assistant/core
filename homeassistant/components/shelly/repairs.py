@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 
 class BleScannerFirmwareUpdateFlow(RepairsFlow):
@@ -16,7 +17,7 @@ class BleScannerFirmwareUpdateFlow(RepairsFlow):
 
     _device: RpcDevice
 
-    def __init__(self, *, device: RpcDevice) -> None:
+    def __init__(self, device: RpcDevice) -> None:
         """Initialize."""
         self._device = device
 
@@ -33,7 +34,16 @@ class BleScannerFirmwareUpdateFlow(RepairsFlow):
         if user_input is not None:
             return await self.async_step_update_firmware()
 
-        return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
+        issue_registry = ir.async_get(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders=description_placeholders,
+        )
 
     async def async_step_update_firmware(
         self, user_input: dict[str, str] | None = None
