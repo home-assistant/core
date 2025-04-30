@@ -40,12 +40,10 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: str | dict[str, EheimDigitalDevice],
+        device_address: dict[str, EheimDigitalDevice],
     ) -> None:
         """Set up the climate entities for one or multiple devices."""
         entities: list[EheimDigitalHeaterClimate] = []
-        if isinstance(device_address, str):
-            device_address = {device_address: coordinator.hub.devices[device_address]}
         for device in device_address.values():
             if isinstance(device, EheimDigitalHeater):
                 entities.append(EheimDigitalHeaterClimate(coordinator, device))

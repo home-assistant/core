@@ -117,7 +117,7 @@ MODEL_TO_BUTTON_MAP: dict[str, tuple[str, ...]] = {
         ATTR_RESET_DUST_FILTER,
         ATTR_RESET_UPPER_FILTER,
     ),
-    **{model: BUTTONS_FOR_VACUUM for model in MODELS_VACUUM},
+    **dict.fromkeys(MODELS_VACUUM, BUTTONS_FOR_VACUUM),
 }
 
 

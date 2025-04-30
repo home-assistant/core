@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "engine_speed": {
+        "default": "mdi:speedometer"
+      },
+      "engine_state": {
+        "default": "mdi:engine"
+      },
+      "device_ip_address": {
+        "default": "mdi:ip-network"
+      },
+      "server_ip_address": {
+        "default": "mdi:server-network"
+      }
+    }
+  }
+}

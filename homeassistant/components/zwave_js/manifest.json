@@ -9,7 +9,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["zwave_js_server"],
-  "requirements": ["pyserial==3.5", "zwave-js-server-python==0.60.0"],
+  "requirements": ["pyserial==3.5", "zwave-js-server-python==0.63.0"],
   "usb": [
     {
       "vid": "0658",
@@ -21,6 +21,13 @@
       "pid": "8A2A",
       "description": "*z-wave*",
       "known_devices": ["Nortek HUSBZB-1"]
+    },
+    {
+      "vid": "303A",
+      "pid": "4001",
+      "description": "*nabu casa zwa-2*",
+      "manufacturer": "nabu casa",
+      "known_devices": ["Nabu Casa Connect ZWA-2"]
     }
   ],
   "zeroconf": ["_zwave-js-server._tcp.local."]

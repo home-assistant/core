@@ -59,6 +59,9 @@ SUPPORT_SAMSUNGTV = (
 # Max delay waiting for app_list to return, as some TVs simply ignore the request
 APP_LIST_DELAY = 3
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -296,10 +299,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             return
         await self._bridge.async_send_keys(keys)
 
-    async def async_turn_off(self) -> None:
-        """Turn off media player."""
-        await super()._async_turn_off()
-
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
         if (dmr_device := self._dmr_device) is None:
@@ -369,10 +368,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         await self._async_send_keys(
             keys=[f"KEY_{digit}" for digit in media_id] + ["KEY_ENTER"]
         )
-
-    async def async_turn_on(self) -> None:
-        """Turn the media player on."""
-        await super()._async_turn_on()
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""

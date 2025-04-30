@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from mastodon.Mastodon import Mastodon, MastodonError
+from mastodon.Mastodon import Account, Instance, InstanceV2, Mastodon, MastodonError
 
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -107,7 +107,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -
     return True
 
 
-def setup_mastodon(entry: MastodonConfigEntry) -> tuple[Mastodon, dict, dict]:
+def setup_mastodon(
+    entry: MastodonConfigEntry,
+) -> tuple[Mastodon, InstanceV2 | Instance, Account]:
     """Get mastodon details."""
     client = create_mastodon_client(
         entry.data[CONF_BASE_URL],

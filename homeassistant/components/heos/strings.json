@@ -11,6 +11,10 @@
           "host": "Host name or IP address of a HEOS-capable product (preferably one connected via wire to the network)."
         }
       },
+      "confirm_discovery": {
+        "title": "Discovered HEOS System",
+        "description": "Do you want to add your HEOS devices to Home Assistant?"
+      },
       "reconfigure": {
         "title": "Reconfigure HEOS",
         "description": "Change the host name or IP address of the HEOS-capable product used to access your HEOS System.",
@@ -43,6 +47,7 @@
     },
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
@@ -78,6 +83,34 @@
         "volume_level": {
           "name": "Level",
           "description": "The volume. 0 is inaudible, 1 is the maximum volume."
+        }
+      }
+    },
+    "get_queue": {
+      "name": "Get queue",
+      "description": "Retrieves the queue of the media player."
+    },
+    "remove_from_queue": {
+      "name": "Remove from queue",
+      "description": "Removes items from the play queue.",
+      "fields": {
+        "queue_ids": {
+          "name": "Queue IDs",
+          "description": "The IDs (indexes) of the items in the queue to remove."
+        }
+      }
+    },
+    "move_queue_item": {
+      "name": "Move queue item",
+      "description": "Move one or more items within the play queue.",
+      "fields": {
+        "queue_ids": {
+          "name": "Queue IDs",
+          "description": "The IDs (indexes) of the items in the queue to move."
+        },
+        "destination_position": {
+          "name": "Destination position",
+          "description": "The position index in the queue to move the items to."
         }
       }
     },
@@ -141,6 +174,9 @@
     },
     "unknown_source": {
       "message": "Unknown source: {source}"
+    },
+    "unsupported_media_content_id": {
+      "message": "Unsupported media_content_id: {media_content_id}"
     }
   },
   "issues": {

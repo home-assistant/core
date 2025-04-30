@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
-from tesla_fleet_api import VehicleSpecific
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
+from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -40,7 +40,7 @@ LEVEL = {OFF: 0, LOW: 1, MEDIUM: 2, HIGH: 3}
 class TeslemetrySelectEntityDescription(SelectEntityDescription):
     """Seat Heater entity description."""
 
-    select_fn: Callable[[VehicleSpecific, int], Awaitable[Any]]
+    select_fn: Callable[[Vehicle, int], Awaitable[Any]]
     supported_fn: Callable[[dict], bool] = lambda _: True
     streaming_listener: (
         Callable[

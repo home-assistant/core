@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -33,7 +33,6 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
@@ -90,7 +89,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 )
 
 
-async def _async_create_entities(hass, config):
+async def _async_create_entities(hass: HomeAssistant, config: ConfigType):
     """Create the Template Vacuums."""
     vacuums = []
 
@@ -127,11 +126,11 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         object_id,
-        config,
+        config: ConfigType,
         unique_id,
-    ):
+    ) -> None:
         """Initialize the vacuum."""
         super().__init__(
             hass, config=config, fallback_name=object_id, unique_id=unique_id
@@ -139,7 +138,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        friendly_name = self._attr_name
+        name = self._attr_name
+        if TYPE_CHECKING:
+            assert name is not None
 
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._battery_level_template = config.get(CONF_BATTERY_LEVEL_TEMPLATE)
@@ -148,43 +149,19 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             VacuumEntityFeature.START | VacuumEntityFeature.STATE
         )
 
-        self._start_script = Script(hass, config[SERVICE_START], friendly_name, DOMAIN)
-
-        self._pause_script = None
-        if pause_action := config.get(SERVICE_PAUSE):
-            self._pause_script = Script(hass, pause_action, friendly_name, DOMAIN)
-            self._attr_supported_features |= VacuumEntityFeature.PAUSE
-
-        self._stop_script = None
-        if stop_action := config.get(SERVICE_STOP):
-            self._stop_script = Script(hass, stop_action, friendly_name, DOMAIN)
-            self._attr_supported_features |= VacuumEntityFeature.STOP
-
-        self._return_to_base_script = None
-        if return_to_base_action := config.get(SERVICE_RETURN_TO_BASE):
-            self._return_to_base_script = Script(
-                hass, return_to_base_action, friendly_name, DOMAIN
-            )
-            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
-
-        self._clean_spot_script = None
-        if clean_spot_action := config.get(SERVICE_CLEAN_SPOT):
-            self._clean_spot_script = Script(
-                hass, clean_spot_action, friendly_name, DOMAIN
-            )
-            self._attr_supported_features |= VacuumEntityFeature.CLEAN_SPOT
-
-        self._locate_script = None
-        if locate_action := config.get(SERVICE_LOCATE):
-            self._locate_script = Script(hass, locate_action, friendly_name, DOMAIN)
-            self._attr_supported_features |= VacuumEntityFeature.LOCATE
-
-        self._set_fan_speed_script = None
-        if set_fan_speed_action := config.get(SERVICE_SET_FAN_SPEED):
-            self._set_fan_speed_script = Script(
-                hass, set_fan_speed_action, friendly_name, DOMAIN
-            )
-            self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
+        for action_id, supported_feature in (
+            (SERVICE_START, 0),
+            (SERVICE_PAUSE, VacuumEntityFeature.PAUSE),
+            (SERVICE_STOP, VacuumEntityFeature.STOP),
+            (SERVICE_RETURN_TO_BASE, VacuumEntityFeature.RETURN_HOME),
+            (SERVICE_CLEAN_SPOT, VacuumEntityFeature.CLEAN_SPOT),
+            (SERVICE_LOCATE, VacuumEntityFeature.LOCATE),
+            (SERVICE_SET_FAN_SPEED, VacuumEntityFeature.FAN_SPEED),
+        ):
+            # Scripts can be an empty list, therefore we need to check for None
+            if (action_config := config.get(action_id)) is not None:
+                self.add_script(action_id, action_config, name, DOMAIN)
+                self._attr_supported_features |= supported_feature
 
         self._state = None
         self._battery_level = None
@@ -203,61 +180,49 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
-        await self.async_run_script(self._start_script, context=self._context)
+        await self.async_run_script(
+            self._action_scripts[SERVICE_START], context=self._context
+        )
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
-        if self._pause_script is None:
-            return
-
-        await self.async_run_script(self._pause_script, context=self._context)
+        if script := self._action_scripts.get(SERVICE_PAUSE):
+            await self.async_run_script(script, context=self._context)
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task."""
-        if self._stop_script is None:
-            return
-
-        await self.async_run_script(self._stop_script, context=self._context)
+        if script := self._action_scripts.get(SERVICE_STOP):
+            await self.async_run_script(script, context=self._context)
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
-        if self._return_to_base_script is None:
-            return
-
-        await self.async_run_script(self._return_to_base_script, context=self._context)
+        if script := self._action_scripts.get(SERVICE_RETURN_TO_BASE):
+            await self.async_run_script(script, context=self._context)
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
-        if self._clean_spot_script is None:
-            return
-
-        await self.async_run_script(self._clean_spot_script, context=self._context)
+        if script := self._action_scripts.get(SERVICE_CLEAN_SPOT):
+            await self.async_run_script(script, context=self._context)
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
-        if self._locate_script is None:
-            return
-
-        await self.async_run_script(self._locate_script, context=self._context)
+        if script := self._action_scripts.get(SERVICE_LOCATE):
+            await self.async_run_script(script, context=self._context)
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        if self._set_fan_speed_script is None:
-            return
-
-        if fan_speed in self._attr_fan_speed_list:
-            self._attr_fan_speed = fan_speed
-            await self.async_run_script(
-                self._set_fan_speed_script,
-                run_variables={ATTR_FAN_SPEED: fan_speed},
-                context=self._context,
-            )
-        else:
+        if fan_speed not in self._attr_fan_speed_list:
             _LOGGER.error(
                 "Received invalid fan speed: %s for entity %s. Expected: %s",
                 fan_speed,
                 self.entity_id,
                 self._attr_fan_speed_list,
+            )
+            return
+
+        if script := self._action_scripts.get(SERVICE_SET_FAN_SPEED):
+            await self.async_run_script(
+                script, run_variables={ATTR_FAN_SPEED: fan_speed}, context=self._context
             )
 
     @callback

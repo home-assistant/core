@@ -109,8 +109,8 @@
       'entity_picture_local': None,
       'friendly_name': 'Test Group Player 1',
       'group_members': list([
-        'media_player.my_super_test_player_2',
         'media_player.test_player_1',
+        'media_player.my_super_test_player_2',
       ]),
       'icon': 'mdi:speaker-multiple',
       'is_volume_muted': False,

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyenphase.exceptions import EnvoyError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,6 +14,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -99,6 +101,43 @@ async def test_number_operation_storage(
     mock_envoy.set_reserve_soc.assert_awaited_once_with(test_value)
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy", "use_serial", "target", "test_value"),
+    [
+        ("envoy_metered_batt_relay", "enpower_654321", "reserve_battery_level", 30.0),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_number_operation_storage_with_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    use_serial: bool,
+    target: str,
+    test_value: float,
+) -> None:
+    """Test enphase_envoy number storage entities operation."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry)
+
+    test_entity = f"number.{use_serial}_{target}"
+
+    mock_envoy.set_reserve_soc.side_effect = EnvoyError("Test")
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute async_set_native_value for {test_entity}, host",
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: test_entity,
+                ATTR_VALUE: test_value,
+            },
+            blocking=True,
+        )
+
+
 @pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
 @pytest.mark.parametrize(
     ("relay", "target", "expected_value", "test_value", "test_field"),
@@ -125,12 +164,10 @@ async def test_number_operation_relays(
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, config_entry)
 
-    entity_base = f"{Platform.NUMBER}."
-
     assert (dry_contact := mock_envoy.data.dry_contact_settings[relay])
     assert (name := dry_contact.load_name.lower().replace(" ", "_"))
 
-    test_entity = f"{entity_base}{name}_{target}"
+    test_entity = f"number.{name}_{target}"
 
     assert (entity_state := hass.states.get(test_entity))
     assert float(entity_state.state) == expected_value
@@ -148,3 +185,43 @@ async def test_number_operation_relays(
     mock_envoy.update_dry_contact.assert_awaited_once_with(
         {"id": relay, test_field: int(test_value)}
     )
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "relay", "target", "test_value"),
+    [
+        ("envoy_metered_batt_relay", "NC1", "cutoff_battery_level", 15.0),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_number_operation_relays_with_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    relay: str,
+    target: str,
+    test_value: float,
+) -> None:
+    """Test enphase_envoy number relay entities operation with error returned."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry)
+
+    assert (dry_contact := mock_envoy.data.dry_contact_settings[relay])
+    assert (name := dry_contact.load_name.lower().replace(" ", "_"))
+
+    test_entity = f"number.{name}_{target}"
+
+    mock_envoy.update_dry_contact.side_effect = EnvoyError("Test")
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute async_set_native_value for {test_entity}, host",
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: test_entity,
+                ATTR_VALUE: test_value,
+            },
+            blocking=True,
+        )

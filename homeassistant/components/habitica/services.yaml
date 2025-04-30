@@ -140,3 +140,307 @@ get_tasks:
           required: false
           selector:
             text:
+update_reward:
+  fields:
+    config_entry: *config_entry
+    task: *task
+    rename: &rename
+      selector:
+        text:
+    notes: &notes
+      required: false
+      selector:
+        text:
+          multiline: true
+    cost:
+      required: false
+      selector: &cost_selector
+        number:
+          min: 0
+          step: 0.01
+          unit_of_measurement: "🪙"
+          mode: box
+    tag_options: &tag_options
+      collapsed: true
+      fields:
+        tag: &tag
+          required: false
+          selector:
+            text:
+              multiple: true
+        remove_tag:
+          required: false
+          selector:
+            text:
+              multiple: true
+    developer_options: &developer_options
+      collapsed: true
+      fields:
+        alias: &alias
+          required: false
+          selector:
+            text:
+create_reward:
+  fields:
+    config_entry: *config_entry
+    name: &name
+      required: true
+      selector:
+        text:
+    notes: *notes
+    cost:
+      required: true
+      selector: *cost_selector
+    tag: *tag
+    developer_options: *developer_options
+update_habit:
+  fields:
+    config_entry: *config_entry
+    task: *task
+    rename: *rename
+    notes: *notes
+    up_down: &up_down
+      required: false
+      selector:
+        select:
+          options:
+            - value: up
+              label: "➕"
+            - value: down
+              label: "➖"
+          multiple: true
+          mode: list
+    priority: &priority
+      required: false
+      selector:
+        select:
+          options:
+            - "trivial"
+            - "easy"
+            - "medium"
+            - "hard"
+          mode: dropdown
+          translation_key: "priority"
+    frequency: &frequency
+      required: false
+      selector:
+        select:
+          options:
+            - "daily"
+            - "weekly"
+            - "monthly"
+          translation_key: "frequency"
+          mode: dropdown
+    tag_options: *tag_options
+    developer_options:
+      collapsed: true
+      fields:
+        counter_up:
+          required: false
+          selector:
+            number:
+              min: 0
+              step: 1
+              unit_of_measurement: "➕"
+              mode: box
+        counter_down:
+          required: false
+          selector:
+            number:
+              min: 0
+              step: 1
+              unit_of_measurement: "➖"
+              mode: box
+        alias: *alias
+create_habit:
+  fields:
+    config_entry: *config_entry
+    name: *name
+    notes: *notes
+    up_down: *up_down
+    priority: *priority
+    frequency: *frequency
+    tag: *tag
+    developer_options: *developer_options
+update_todo:
+  fields:
+    config_entry: *config_entry
+    task: *task
+    rename: *rename
+    notes: *notes
+    checklist_options: &checklist_options
+      collapsed: true
+      fields:
+        add_checklist_item: &add_checklist_item
+          required: false
+          selector:
+            text:
+              multiple: true
+        remove_checklist_item:
+          required: false
+          selector:
+            text:
+              multiple: true
+        score_checklist_item:
+          required: false
+          selector:
+            text:
+              multiple: true
+        unscore_checklist_item:
+          required: false
+          selector:
+            text:
+              multiple: true
+    priority: *priority
+    duedate_options:
+      collapsed: true
+      fields:
+        date: &due_date
+          required: false
+          selector:
+            date:
+        clear_date:
+          required: false
+          selector:
+            constant:
+              value: true
+              label: "🗑️"
+    reminder_options:
+      collapsed: true
+      fields:
+        reminder: &reminder
+          required: false
+          selector:
+            text:
+              type: datetime-local
+              multiple: true
+        remove_reminder:
+          required: false
+          selector:
+            text:
+              type: datetime-local
+              multiple: true
+        clear_reminder: &clear_reminder
+          required: false
+          selector:
+            constant:
+              value: true
+              label: "🗑️"
+    tag_options: *tag_options
+    developer_options: *developer_options
+create_todo:
+  fields:
+    config_entry: *config_entry
+    name: *name
+    notes: *notes
+    add_checklist_item: *add_checklist_item
+    priority: *priority
+    date: *due_date
+    reminder: *reminder
+    tag: *tag
+    developer_options: *developer_options
+update_daily:
+  fields:
+    config_entry: *config_entry
+    task: *task
+    rename: *rename
+    notes: *notes
+    checklist_options: *checklist_options
+    priority: *priority
+    start_date: &start_date
+      required: false
+      selector:
+        date:
+    frequency: &frequency_daily
+      required: false
+      selector:
+        select:
+          options:
+            - "daily"
+            - "weekly"
+            - "monthly"
+            - "yearly"
+          translation_key: "frequency"
+          mode: dropdown
+    every_x: &every_x
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          unit_of_measurement: "🔃"
+          mode: box
+    repeat_weekly_options: &repeat_weekly_options
+      collapsed: true
+      fields:
+        repeat:
+          required: false
+          selector:
+            select:
+              options:
+                - "m"
+                - "t"
+                - "w"
+                - "th"
+                - "f"
+                - "s"
+                - "su"
+              mode: list
+              translation_key: repeat
+              multiple: true
+    repeat_monthly_options: &repeat_monthly_options
+      collapsed: true
+      fields:
+        repeat_monthly:
+          required: false
+          selector:
+            select:
+              options:
+                - "day_of_month"
+                - "day_of_week"
+              translation_key: repeat_monthly
+              mode: list
+    reminder_options:
+      collapsed: true
+      fields:
+        reminder: &reminder_daily
+          required: false
+          selector:
+            text:
+              type: time
+              multiple: true
+        remove_reminder:
+          required: false
+          selector:
+            text:
+              type: time
+              multiple: true
+        clear_reminder: *clear_reminder
+    tag_options: *tag_options
+    developer_options:
+      collapsed: true
+      fields:
+        streak: &streak
+          required: false
+          selector:
+            number:
+              min: 0
+              step: 1
+              unit_of_measurement: "▶▶"
+              mode: box
+        alias: *alias
+create_daily:
+  fields:
+    config_entry: *config_entry
+    name: *name
+    notes: *notes
+    add_checklist_item: *add_checklist_item
+    priority: *priority
+    start_date: *start_date
+    frequency: *frequency_daily
+    every_x: *every_x
+    repeat_weekly_options: *repeat_weekly_options
+    repeat_monthly_options: *repeat_monthly_options
+    reminder: *reminder_daily
+    tag: *tag
+    developer_options: *developer_options
