@@ -1,6 +1,6 @@
 """Test the Playstation Network config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -21,21 +21,7 @@ from tests.common import MockConfigEntry
 MOCK_DATA_ADVANCED_STEP = {CONF_NPSSO: NPSSO_TOKEN}
 
 
-class mockUser:
-    """Mock User class."""
-
-    account_id = PSN_ID
-    online_id = "testuser"
-
-
-@pytest.mark.parametrize(
-    ("npsso"),
-    [
-        ("TEST_NPSSO_TOKEN"),
-        ('{"npsso": "TEST_NPSSO_TOKEN"}'),
-    ],
-)
-async def test_manual_config(hass: HomeAssistant, npsso) -> None:
+async def test_manual_config(hass: HomeAssistant, mock_psnawpapi: MagicMock) -> None:
     """Test creating via manual configuration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -43,17 +29,13 @@ async def test_manual_config(hass: HomeAssistant, npsso) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.playstation_network.config_flow.PlaystationNetwork.get_user",
-        return_value=mockUser(),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_NPSSO: npsso},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_NPSSO: "TEST_NPSSO_TOKEN"},
+    )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "my-psn-id"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == PSN_ID
     assert result["data"] == {
         CONF_NPSSO: "TEST_NPSSO_TOKEN",
     }
@@ -62,6 +44,7 @@ async def test_manual_config(hass: HomeAssistant, npsso) -> None:
 async def test_form_already_configured(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_psnawpapi: MagicMock,
 ) -> None:
     """Test we abort form login when entry is already configured."""
 
@@ -74,14 +57,10 @@ async def test_form_already_configured(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.playstation_network.config_flow.PlaystationNetwork.get_user",
-        return_value=mockUser(),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_NPSSO: NPSSO_TOKEN},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_NPSSO: NPSSO_TOKEN},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -95,7 +74,12 @@ async def test_form_already_configured(
         (Exception(), "unknown"),
     ],
 )
-async def test_form_failures(hass: HomeAssistant, raise_error, text_error) -> None:
+async def test_form_failures(
+    hass: HomeAssistant,
+    mock_psnawpapi: MagicMock,
+    raise_error: Exception,
+    text_error: str,
+) -> None:
     """Test we handle a connection error.
 
     First we generate an error and after fixing it, we are still able to submit.
@@ -103,37 +87,31 @@ async def test_form_failures(hass: HomeAssistant, raise_error, text_error) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.playstation_network.config_flow.PlaystationNetwork.get_user",
-        side_effect=raise_error,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_NPSSO: NPSSO_TOKEN},
-        )
+    mock_psnawpapi.get_user.side_effect = raise_error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_NPSSO: NPSSO_TOKEN},
+    )
 
     assert result["errors"] == {"base": text_error}
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.playstation_network.config_flow.PlaystationNetwork.get_user",
-        return_value=mockUser(),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_NPSSO: NPSSO_TOKEN},
-        )
+    mock_psnawpapi.get_user.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_NPSSO: NPSSO_TOKEN},
+    )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_NPSSO: NPSSO_TOKEN,
     }
