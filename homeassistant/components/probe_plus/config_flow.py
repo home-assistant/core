@@ -42,8 +42,6 @@ def title(discovery_info: BluetoothServiceInfo) -> str:
 class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BT Probe."""
 
-    _entry: ConfigEntry
-
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_devices: dict[str, Discovery] = {}

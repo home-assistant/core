@@ -35,11 +35,7 @@ class ProbePlusEntity(CoordinatorEntity[ProbePlusDataUpdateCoordinator]):
         self._attr_unique_id = (
             f"{format_mac(coordinator.device.mac)}_{entity_description.key}"
         )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about the Probe Plus device."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, format_mac(self.coordinator.device.mac))},
             name=self.coordinator.device.name,
             manufacturer="Probe Plus",
