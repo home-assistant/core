@@ -359,7 +359,7 @@ async def test_temperature_control(
     """Test TemperatureControl base attributes and state updates."""
     # test entity attributes
     state = hass.states.get("climate.refrigerator")
-    assert state.state == HVACMode.HEAT_COOL
+    assert state.state == HVACMode.COOL
 
     # test common state updates from refrigerator device (freezer cabinet)
     set_node_attribute(matter_node, 2, 86, 1, -1700)

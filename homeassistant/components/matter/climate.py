@@ -414,7 +414,7 @@ class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     # We can't set the mode for a TemperatureControl cluster but only set the target temperature.
-    _attr_hvac_mode: HVACMode = HVACMode.HEAT_COOL
+    _attr_hvac_mode: HVACMode = HVACMode.COOL
     _feature_map: int | None = None
 
     _platform_translation_key = "temperature_control"
@@ -469,7 +469,8 @@ class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
         if self._feature_map == feature_map:
             return
         self._feature_map = feature_map
-        self._attr_hvac_modes: list[HVACMode] = [HVACMode.HEAT_COOL]
+        # For now we only have freezers or (combo)fridges and both can only cool
+        self._attr_hvac_modes: list[HVACMode] = [HVACMode.COOL]
         if feature_map & TemperatureControlFeature.kTemperatureNumber:
             self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         if feature_map & TemperatureControlFeature.kTemperatureStep:

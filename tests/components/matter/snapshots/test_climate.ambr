@@ -203,7 +203,7 @@
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
       ]),
       'max_temp': 35,
       'min_temp': 7,
@@ -242,7 +242,7 @@
       'current_temperature': None,
       'friendly_name': 'LaundryWasher',
       'hvac_modes': list([
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
       ]),
       'max_temp': 35,
       'min_temp': 7,
@@ -253,7 +253,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'heat_cool',
+    'state': 'cool',
   })
 # ---
 # name: test_climates[silabs_refrigerator][climate.refrigerator-entry]
@@ -263,7 +263,7 @@
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
       ]),
       'max_temp': -15.0,
       'min_temp': -18.0,
@@ -302,7 +302,7 @@
       'current_temperature': None,
       'friendly_name': 'Refrigerator',
       'hvac_modes': list([
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
       ]),
       'max_temp': -15.0,
       'min_temp': -18.0,
@@ -314,7 +314,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'heat_cool',
+    'state': 'cool',
   })
 # ---
 # name: test_climates[silabs_refrigerator][climate.refrigerator_2-entry]
@@ -324,7 +324,7 @@
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
       ]),
       'max_temp': 4.0,
       'min_temp': 1.0,
@@ -363,7 +363,7 @@
       'current_temperature': None,
       'friendly_name': 'Refrigerator',
       'hvac_modes': list([
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
       ]),
       'max_temp': 4.0,
       'min_temp': 1.0,
@@ -375,7 +375,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'heat_cool',
+    'state': 'cool',
   })
 # ---
 # name: test_climates[thermostat][climate.longan_link_hvac-entry]
