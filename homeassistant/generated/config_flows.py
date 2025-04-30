@@ -518,6 +518,7 @@ FLOWS = {
         "rdw",
         "recollect_waste",
         "refoss",
+        "rehlko",
         "remote_calendar",
         "renault",
         "renson",
