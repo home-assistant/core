@@ -428,7 +428,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
-        if self._async_in_progress():
+        if any(
+            flow
+            for flow in self._async_in_progress()
+            if flow["context"].get("source") != SOURCE_USB
+        ):
+            # Allow multiple USB discovery flows to be in progress.
+            # Migration requires more than one USB stick to be connected,
+            # which can cause more than one discovery flow to be in progress,
+            # at least for a short time.
             return self.async_abort(reason="already_in_progress")
         if current_config_entries := self._async_current_entries(include_ignore=False):
             config_entry = next(
