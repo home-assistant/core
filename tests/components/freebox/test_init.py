@@ -5,7 +5,11 @@ from unittest.mock import ANY, Mock, patch
 from pytest_unordered import unordered
 
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
-from homeassistant.components.freebox.const import DOMAIN, SERVICE_REBOOT
+from homeassistant.components.freebox.const import (
+    CONF_SERVICE_USER_NAME,
+    DOMAIN,
+    SERVICE_REBOOT,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,7 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_HOST, MOCK_PORT
+from .const import MOCK_CONF_SERVICE_USER_NAME, MOCK_HOST, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +26,11 @@ async def test_setup(hass: HomeAssistant, router: Mock) -> None:
     """Test setup of integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_SERVICE_USER_NAME: MOCK_CONF_SERVICE_USER_NAME,
+        },
         unique_id=MOCK_HOST,
     )
     entry.add_to_hass(hass)
@@ -52,12 +60,24 @@ async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_SERVICE_USER_NAME: MOCK_CONF_SERVICE_USER_NAME,
+        },
         unique_id=MOCK_HOST,
     )
     entry.add_to_hass(hass)
     assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}}
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_HOST: MOCK_HOST,
+                CONF_PORT: MOCK_PORT,
+                CONF_SERVICE_USER_NAME: MOCK_CONF_SERVICE_USER_NAME,
+            }
+        },
     )
     await hass.async_block_till_done()
     assert hass.config_entries.async_entries() == unordered([entry, ANY])

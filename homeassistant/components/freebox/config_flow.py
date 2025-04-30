@@ -1,6 +1,7 @@
 """Config flow to configure the Freebox integration."""
 
 import logging
+import socket
 from typing import Any
 
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
@@ -10,7 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
+from .const import CONF_SERVICE_USER_NAME, DOMAIN
 from .router import get_api, get_hosts_list_if_supported
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +37,10 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
                     {
                         vol.Required(CONF_HOST): str,
                         vol.Required(CONF_PORT): int,
+                        vol.Optional(
+                            CONF_SERVICE_USER_NAME,
+                            default=socket.gethostname(),
+                        ): str,
                     }
                 ),
                 errors={},
@@ -62,7 +67,9 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        fbx = await get_api(self.hass, self._data[CONF_HOST])
+        fbx = await get_api(
+            self.hass, self._data[CONF_HOST], self._data[CONF_SERVICE_USER_NAME]
+        )
         try:
             # Open connection and check authentication
             await fbx.open(self._data[CONF_HOST], self._data[CONF_PORT])

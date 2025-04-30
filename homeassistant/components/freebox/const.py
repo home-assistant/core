@@ -35,6 +35,8 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
+CONF_SERVICE_USER_NAME = "service_user_name"
+
 CONNECTION_SENSORS_KEYS = {"rate_down", "rate_up"}
 
 # Icons
