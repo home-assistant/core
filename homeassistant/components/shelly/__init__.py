@@ -15,7 +15,6 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, bluetooth_mac_from_primary_mac
-from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import async_remove_scanner
@@ -39,11 +38,8 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
-    BLE_SCANNER_MIN_FIRMWARE,
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
-    CONF_BLE_SCANNER_MODE,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
@@ -51,7 +47,6 @@ from .const import (
     LOGGER,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
     PUSH_UPDATE_ISSUE_ID,
-    BLEScannerMode,
 )
 from .coordinator import (
     ShellyBlockCoordinator,
@@ -61,6 +56,7 @@ from .coordinator import (
     ShellyRpcCoordinator,
     ShellyRpcPollingCoordinator,
 )
+from .repairs import async_manage_ble_scanner_firmware_unsupported_issue
 from .utils import (
     async_create_issue_unsupported_firmware,
     get_coap_context,
@@ -68,7 +64,6 @@ from .utils import (
     get_http_port,
     get_rpc_scripts_event_types,
     get_ws_context,
-    is_firmware_update_available,
 )
 
 PLATFORMS: Final = [
@@ -326,39 +321,10 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
-
-        if runtime_data.rpc_supports_scripts and is_firmware_update_available(
-            runtime_data.rpc.model
-        ):
-            firmware = AwesomeVersion(device.shelly["ver"])
-            issue_id = BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(
-                unique=entry.unique_id
-            )
-            if (
-                firmware < BLE_SCANNER_MIN_FIRMWARE
-                and entry.options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE
-            ):
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    issue_id,
-                    is_fixable=True,
-                    is_persistent=True,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="ble_scanner_firmware_unsupported",
-                    translation_placeholders={
-                        "device_name": device.name,
-                        "ip_address": device.ip_address,
-                        "firmware": firmware,
-                    },
-                    data={"entry_id": entry.entry_id},
-                )
-            else:
-                ir.async_delete_issue(
-                    hass,
-                    DOMAIN,
-                    issue_id,
-                )
+        async_manage_ble_scanner_firmware_unsupported_issue(
+            hass,
+            entry,
+        )
     elif (
         sleep_period is None
         or device_entry is None

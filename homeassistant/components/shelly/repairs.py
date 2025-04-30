@@ -4,14 +4,65 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
+
+from .const import (
+    BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
+    BLE_SCANNER_MIN_FIRMWARE,
+    CONF_BLE_SCANNER_MODE,
+    DOMAIN,
+    BLEScannerMode,
+)
+from .coordinator import ShellyConfigEntry
+
+
+@callback
+def async_manage_ble_scanner_firmware_unsupported_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+) -> None:
+    """Manage the BLE scanner firmware unsupported issue."""
+    issue_id = BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.rpc is not None
+
+    device = entry.runtime_data.rpc.device
+    supports_scripts = entry.runtime_data.rpc_supports_scripts
+
+    if supports_scripts and device.model not in (MODEL_PLUG_S_G3, MODEL_OUT_PLUG_S_G3):
+        firmware = AwesomeVersion(device.shelly["ver"])
+        if (
+            firmware < BLE_SCANNER_MIN_FIRMWARE
+            and entry.options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE
+        ):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=True,
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="ble_scanner_firmware_unsupported",
+                translation_placeholders={
+                    "device_name": device.name,
+                    "ip_address": device.ip_address,
+                    "firmware": firmware,
+                },
+                data={"entry_id": entry.entry_id},
+            )
+            return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 class BleScannerFirmwareUpdateFlow(RepairsFlow):
