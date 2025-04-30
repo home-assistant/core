@@ -2,7 +2,7 @@ rules:
   # Bronze
   action-setup: done
   appropriate-polling: done
-  brands: done #TODO
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done

@@ -1,86 +1,59 @@
-"""Tests for the Fluss+ integration's config flow."""
+"""Config flow for Fluss+ integration."""
 
-from unittest.mock import patch
+from __future__ import annotations
+
+import logging
+from typing import Any
 
 from fluss_api import (
+    FlussApiClient,
     FlussApiClientAuthenticationError,
     FlussApiClientCommunicationError,
 )
-import pytest
+import voluptuous as vol
 
-from homeassistant.components.fluss.config_flow import FlussConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
 
 
-@pytest.fixture
-def config_flow(hass):
-    """Fixture to create a FlussConfigFlow instance with hass."""
-    flow = FlussConfigFlow()
-    flow.hass = hass
-    return flow
+class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Fluss+."""
 
+    VERSION = 1
 
-async def test_step_user_success(config_flow: FlussConfigFlow) -> None:
-    """Test successful user step."""
-    user_input = {CONF_API_KEY: "valid_api_key"}
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        await self.async_set_unique_id(DOMAIN)
 
-    with patch("homeassistant.components.fluss.config_flow.FlussApiClient") as mock_client:
-        mock_client.return_value = None
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
-        result = await config_flow.async_step_user(user_input)
+        errors: dict[str, str] = {}
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "My Fluss+ Devices"
-    assert result["data"] == user_input
+        if user_input is not None:
+            try:
+                FlussApiClient(user_input[CONF_API_KEY], self.hass)
+            except FlussApiClientCommunicationError:
+                errors["base"] = "cannot_connect"
+            except FlussApiClientAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception occurred")
+                errors["base"] = "unknown"
+            if not errors:
+                return self.async_create_entry(
+                    title="My Fluss+ Devices", data=user_input
+                )
 
-
-async def test_step_user_invalid_auth(config_flow: FlussConfigFlow) -> None:
-    """Test invalid authentication."""
-    user_input = {CONF_API_KEY: "invalid_api_key"}
-
-    with patch("homeassistant.components.fluss.config_flow.FlussApiClient") as mock_client:
-        mock_client.side_effect = FlussApiClientAuthenticationError
-
-        result = await config_flow.async_step_user(user_input)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_step_user_cannot_connect(config_flow: FlussConfigFlow) -> None:
-    """Test connection failure."""
-    user_input = {CONF_API_KEY: "some_api_key"}
-
-    with patch("homeassistant.components.fluss.config_flow.FlussApiClient") as mock_client:
-        mock_client.side_effect = FlussApiClientCommunicationError
-
-        result = await config_flow.async_step_user(user_input)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_step_user_unexpected_error(config_flow: FlussConfigFlow) -> None:
-    """Test unexpected exception handling."""
-    user_input = {CONF_API_KEY: "some_api_key"}
-
-    with patch("homeassistant.components.fluss.config_flow.FlussApiClient") as mock_client:
-        mock_client.side_effect = Exception("Unexpected error")
-
-        result = await config_flow.async_step_user(user_input)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_single_instance_allowed(config_flow: FlussConfigFlow) -> None:
-    """Test that only one instance is allowed."""
-    with patch.object(config_flow, "_async_current_entries", return_value=[True]):
-        result = await config_flow.async_step_user(None)
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
