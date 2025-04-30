@@ -29,8 +29,7 @@
     'dashboard': dict({
       'addon': 'mock-slug',
       'configured': True,
-      'devices': dict({
-      }),
+      'has_matching_name': False,
       'last_update_success': True,
       'supports_update': None,
     }),
@@ -65,14 +64,14 @@
     'dashboard': dict({
       'addon': 'mock-slug',
       'configured': True,
-      'devices': dict({
-        'test': dict({
-          'configuration': 'test.yaml',
-          'current_version': '2023.1.0',
-          'deployed_version': None,
-          'loaded_integrations': None,
-        }),
+      'device': dict({
+        'configuration': 'test.yaml',
+        'current_version': '2023.1.0',
+        'deployed_version': None,
+        'loaded_integrations': None,
+        'target_platform': None,
       }),
+      'has_matching_name': True,
       'last_update_success': True,
       'supports_update': False,
     }),
