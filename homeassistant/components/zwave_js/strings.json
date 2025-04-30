@@ -61,7 +61,7 @@
         "title": "[%key:component::zwave_js::config::step::configure_addon::title%]"
       },
       "hassio_confirm": {
-        "title": "Set up Z-Wave integration with the Z-Wave add-on"
+        "description": "Do you want to set up the Z-Wave integration with the Z-Wave add-on?"
       },
       "install_addon": {
         "title": "The Z-Wave add-on installation has started"

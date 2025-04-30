@@ -4,19 +4,8 @@ from __future__ import annotations
 
 from types import MappingProxyType
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_ICON,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-    ATTR_STATE,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, ATTR_STATE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .const import (
@@ -31,22 +20,6 @@ def get_no_data_icon(expected_entity: MappingProxyType):
     """Check icon attribute for inactive sensors."""
     entity_id = expected_entity[ATTR_ENTITY_ID]
     return ICON_FOR_EMPTY_VALUES.get(entity_id, expected_entity.get(ATTR_ICON))
-
-
-def check_device_registry(
-    device_registry: DeviceRegistry, expected_device: MappingProxyType
-) -> None:
-    """Ensure that the expected_device is correctly registered."""
-    assert len(device_registry.devices) == 1
-    registry_entry = device_registry.async_get_device(
-        identifiers=expected_device[ATTR_IDENTIFIERS]
-    )
-    assert registry_entry is not None
-    assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
-    assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
-    assert registry_entry.name == expected_device[ATTR_NAME]
-    assert registry_entry.model == expected_device[ATTR_MODEL]
-    assert registry_entry.model_id == expected_device[ATTR_MODEL_ID]
 
 
 def check_entities(

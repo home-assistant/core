@@ -9,6 +9,7 @@ from pylamarzocco.const import ModelName, WidgetType
 from pylamarzocco.models import (
     BackFlush,
     BaseWidgetOutput,
+    CoffeeAndFlushCounter,
     CoffeeBoiler,
     SteamBoilerLevel,
     SteamBoilerTemperature,
@@ -18,6 +19,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -98,6 +100,31 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     ),
 )
 
+STATISTIC_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
+    LaMarzoccoSensorEntityDescription(
+        key="drink_stats_coffee",
+        translation_key="total_coffees_made",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=(
+            lambda statistics: cast(
+                CoffeeAndFlushCounter, statistics[WidgetType.COFFEE_AND_FLUSH_COUNTER]
+            ).total_coffee
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LaMarzoccoSensorEntityDescription(
+        key="drink_stats_flushing",
+        translation_key="total_flushes_done",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=(
+            lambda statistics: cast(
+                CoffeeAndFlushCounter, statistics[WidgetType.COFFEE_AND_FLUSH_COUNTER]
+            ).total_flush
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -107,15 +134,21 @@ async def async_setup_entry(
     """Set up sensor entities."""
     coordinator = entry.runtime_data.config_coordinator
 
-    async_add_entities(
+    entities = [
         LaMarzoccoSensorEntity(coordinator, description)
         for description in ENTITIES
         if description.supported_fn(coordinator)
+    ]
+    entities.extend(
+        LaMarzoccoStatisticSensorEntity(coordinator, description)
+        for description in STATISTIC_ENTITIES
+        if description.supported_fn(coordinator)
     )
+    async_add_entities(entities)
 
 
 class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
-    """Sensor representing espresso machine water reservoir status."""
+    """Sensor for La Marzocco."""
 
     entity_description: LaMarzoccoSensorEntityDescription
 
@@ -124,4 +157,15 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
         """Return  value of the sensor."""
         return self.entity_description.value_fn(
             self.coordinator.device.dashboard.config
+        )
+
+
+class LaMarzoccoStatisticSensorEntity(LaMarzoccoSensorEntity):
+    """Sensor for La Marzocco statistics."""
+
+    @property
+    def native_value(self) -> StateType | datetime | None:
+        """Return the value of the sensor."""
+        return self.entity_description.value_fn(
+            self.coordinator.device.statistics.widgets
         )

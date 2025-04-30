@@ -662,6 +662,9 @@
           }),
         }),
       }),
+      'missing_code_warnings': list([
+        'None',
+      ]),
     }),
   })
 # ---
@@ -842,6 +845,9 @@
           }),
         }),
       }),
+      'missing_code_warnings': list([
+        'None',
+      ]),
       'programs': 'Not implemented',
     }),
   })
