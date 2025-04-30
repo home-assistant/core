@@ -4,7 +4,7 @@
   "vehicleLinks": [
     {
       "brand": "RENAULT",
-      "vin": "VF1AAAAA555777999",
+      "vin": "VF1ZOE40VIN",
       "status": "ACTIVE",
       "linkType": "OWNER",
       "garageBrand": "RENAULT",
@@ -21,7 +21,7 @@
         "lastModifiedDate": "2019-06-17T09:49:06.880627Z"
       },
       "vehicleDetails": {
-        "vin": "VF1AAAAA555777999",
+        "vin": "VF1ZOE40VIN",
         "registrationDate": "2017-08-01",
         "firstRegistrationDate": "2017-08-01",
         "engineType": "5AQ",

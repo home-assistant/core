@@ -4,7 +4,7 @@
   "vehicleLinks": [
     {
       "brand": "RENAULT",
-      "vin": "VF1AAAAA555777123",
+      "vin": "VF1CAPTURPHEVVIN",
       "status": "ACTIVE",
       "linkType": "OWNER",
       "garageBrand": "RENAULT",
@@ -19,7 +19,7 @@
         "lastModifiedDate": "2020-10-08T17:36:39.445523Z"
       },
       "vehicleDetails": {
-        "vin": "VF1AAAAA555777123",
+        "vin": "VF1CAPTURPHEVVIN",
         "registrationDate": "2020-09-30",
         "firstRegistrationDate": "2020-09-30",
         "engineType": "H4M",

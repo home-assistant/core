@@ -36,7 +36,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
-    'unique_id': 'vf1aaaaa555777999_charge_mode',
+    'unique_id': 'vf1zoe40vin_charge_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -96,7 +96,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
-    'unique_id': 'vf1aaaaa555777999_charge_mode',
+    'unique_id': 'vf1zoe40vin_charge_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -156,7 +156,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
-    'unique_id': 'vf1aaaaa555777123_charge_mode',
+    'unique_id': 'vf1capturphevvin_charge_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -216,7 +216,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
-    'unique_id': 'vf1aaaaa555777999_charge_mode',
+    'unique_id': 'vf1twingoiiivin_charge_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -276,7 +276,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
-    'unique_id': 'vf1aaaaa555777999_charge_mode',
+    'unique_id': 'vf1zoe40vin_charge_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -336,7 +336,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_mode',
-    'unique_id': 'vf1aaaaa555777999_charge_mode',
+    'unique_id': 'vf1zoe50vin_charge_mode',
     'unit_of_measurement': None,
   })
 # ---
