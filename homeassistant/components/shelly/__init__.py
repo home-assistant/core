@@ -332,16 +332,18 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         )
 
         # Latest available firmware for Plug S Gen3 and Outdoor Plug S Gen3 is 1.2.3.
-        if (
-            runtime_data.rpc_supports_scripts
-            and entry.options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE
-            and runtime_data.rpc.model not in (MODEL_PLUG_S_G3, MODEL_OUT_PLUG_S_G3)
+        if runtime_data.rpc_supports_scripts and runtime_data.rpc.model not in (
+            MODEL_PLUG_S_G3,
+            MODEL_OUT_PLUG_S_G3,
         ):
             firmware = AwesomeVersion(device.shelly["ver"])
             issue_id = BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(
                 unique=entry.unique_id
             )
-            if firmware < BLE_SCANNER_MIN_FIRMWARE:
+            if (
+                firmware < BLE_SCANNER_MIN_FIRMWARE
+                and entry.options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE
+            ):
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
