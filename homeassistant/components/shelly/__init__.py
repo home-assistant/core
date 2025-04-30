@@ -339,7 +339,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                         unique=runtime_data.rpc.mac
                     ),
                     is_fixable=True,
-                    is_persistent=False,
+                    is_persistent=True,
                     severity=ir.IssueSeverity.WARNING,
                     translation_key="ble_scanner_firmware_unsupported",
                     translation_placeholders={
@@ -348,6 +348,14 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                         "firmware": firmware,
                     },
                     data={"entry_id": entry.entry_id},
+                )
+            else:
+                ir.async_delete_issue(
+                    hass,
+                    DOMAIN,
+                    BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(
+                        unique=entry.unique_id
+                    ),
                 )
     elif (
         sleep_period is None
@@ -391,12 +399,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
     )
     ir.async_delete_issue(
         hass, DOMAIN, PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
-    )
-
-    ir.async_delete_issue(
-        hass,
-        DOMAIN,
-        BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id),
     )
 
     runtime_data = entry.runtime_data
