@@ -49,7 +49,6 @@ def singleton[_S, _T, _U](
         """Wrap a function with caching logic."""
         if not asyncio.iscoroutinefunction(func):
 
-            @functools.lru_cache(maxsize=1)
             @bind_hass
             @functools.wraps(func)
             def wrapped(hass: HomeAssistant) -> _U:
