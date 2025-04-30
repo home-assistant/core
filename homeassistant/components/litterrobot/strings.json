@@ -93,7 +93,7 @@
           "hpf": "Home position fault",
           "off": "[%key:common::state::off%]",
           "offline": "Offline",
-          "otf": "Over torque fault",
+          "otf": "Overtorque fault",
           "p": "[%key:common::state::paused%]",
           "pd": "Pinch detect",
           "pwrd": "Powering down",
