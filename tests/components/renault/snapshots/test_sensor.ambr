@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_empty[zoe_40][sensor.reg_number_battery-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_zoe_40_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -35,23 +35,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_battery-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'REG-NUMBER Battery',
+      'friendly_name': 'REG-ZOE-40 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_zoe_40_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_battery_autonomy-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -66,7 +66,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_zoe_40_battery_autonomy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -87,23 +87,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_battery_autonomy-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Battery autonomy',
+      'friendly_name': 'REG-ZOE-40 Battery autonomy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_zoe_40_battery_autonomy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_battery_available_energy-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -118,7 +118,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_zoe_40_battery_available_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -139,23 +139,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_battery_available_energy-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery_available_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'REG-NUMBER Battery available energy',
+      'friendly_name': 'REG-ZOE-40 Battery available energy',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_zoe_40_battery_available_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_battery_temperature-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -170,7 +170,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_zoe_40_battery_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -191,23 +191,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_battery_temperature-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_battery_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'REG-NUMBER Battery temperature',
+      'friendly_name': 'REG-ZOE-40 Battery temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_zoe_40_battery_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_charge_state-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -231,7 +231,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_zoe_40_charge_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -252,11 +252,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_charge_state-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Charge state',
+      'friendly_name': 'REG-ZOE-40 Charge state',
       'options': list([
         'not_in_charge',
         'waiting_for_a_planned_charge',
@@ -269,14 +269,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_zoe_40_charge_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_charging_power-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -291,7 +291,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charging_power',
+    'entity_id': 'sensor.reg_zoe_40_charging_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -312,23 +312,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_charging_power-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'REG-NUMBER Charging power',
+      'friendly_name': 'REG-ZOE-40 Charging power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charging_power',
+    'entity_id': 'sensor.reg_zoe_40_charging_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_charging_remaining_time-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -343,7 +343,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_zoe_40_charging_remaining_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -364,23 +364,23 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_charging_remaining_time-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_remaining_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'REG-NUMBER Charging remaining time',
+      'friendly_name': 'REG-ZOE-40 Charging remaining time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_zoe_40_charging_remaining_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_hvac_soc_threshold-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -393,7 +393,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_hvac_soc_threshold',
+    'entity_id': 'sensor.reg_zoe_40_hvac_soc_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -414,21 +414,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_hvac_soc_threshold-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_hvac_soc_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER HVAC SoC threshold',
+      'friendly_name': 'REG-ZOE-40 HVAC SoC threshold',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_hvac_soc_threshold',
+    'entity_id': 'sensor.reg_zoe_40_hvac_soc_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_last_battery_activity-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -441,7 +441,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_battery_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -462,21 +462,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_last_battery_activity-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_last_battery_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last battery activity',
+      'friendly_name': 'REG-ZOE-40 Last battery activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_battery_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_last_hvac_activity-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -489,7 +489,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_hvac_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_hvac_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -510,21 +510,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_last_hvac_activity-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_last_hvac_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last HVAC activity',
+      'friendly_name': 'REG-ZOE-40 Last HVAC activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_hvac_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_hvac_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_mileage-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -539,7 +539,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_zoe_40_mileage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -560,23 +560,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_mileage-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Mileage',
+      'friendly_name': 'REG-ZOE-40 Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_zoe_40_mileage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_outside_temperature-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -591,7 +591,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_outside_temperature',
+    'entity_id': 'sensor.reg_zoe_40_outside_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -612,23 +612,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_outside_temperature-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'REG-NUMBER Outside temperature',
+      'friendly_name': 'REG-ZOE-40 Outside temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_outside_temperature',
+    'entity_id': 'sensor.reg_zoe_40_outside_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_plug_state-entry]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_plug_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -649,7 +649,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_zoe_40_plug_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -670,11 +670,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_empty[zoe_40][sensor.reg_number_plug_state-state]
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_plug_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Plug state',
+      'friendly_name': 'REG-ZOE-40 Plug state',
       'options': list([
         'unplugged',
         'plugged',
@@ -684,14 +684,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_zoe_40_plug_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_battery-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -706,7 +706,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_zoe_40_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -727,23 +727,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_battery-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'REG-NUMBER Battery',
+      'friendly_name': 'REG-ZOE-40 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_zoe_40_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_battery_autonomy-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -758,7 +758,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_zoe_40_battery_autonomy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -779,23 +779,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_battery_autonomy-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Battery autonomy',
+      'friendly_name': 'REG-ZOE-40 Battery autonomy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_zoe_40_battery_autonomy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_battery_available_energy-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -810,7 +810,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_zoe_40_battery_available_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -831,23 +831,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_battery_available_energy-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery_available_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'REG-NUMBER Battery available energy',
+      'friendly_name': 'REG-ZOE-40 Battery available energy',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_zoe_40_battery_available_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_battery_temperature-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -862,7 +862,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_zoe_40_battery_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -883,23 +883,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_battery_temperature-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_battery_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'REG-NUMBER Battery temperature',
+      'friendly_name': 'REG-ZOE-40 Battery temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_zoe_40_battery_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_charge_state-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -923,7 +923,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_zoe_40_charge_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -944,11 +944,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_charge_state-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Charge state',
+      'friendly_name': 'REG-ZOE-40 Charge state',
       'options': list([
         'not_in_charge',
         'waiting_for_a_planned_charge',
@@ -961,14 +961,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_zoe_40_charge_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_charging_power-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -983,7 +983,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charging_power',
+    'entity_id': 'sensor.reg_zoe_40_charging_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1004,23 +1004,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_charging_power-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'REG-NUMBER Charging power',
+      'friendly_name': 'REG-ZOE-40 Charging power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charging_power',
+    'entity_id': 'sensor.reg_zoe_40_charging_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_charging_remaining_time-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1035,7 +1035,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_zoe_40_charging_remaining_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1056,23 +1056,23 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_charging_remaining_time-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_remaining_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'REG-NUMBER Charging remaining time',
+      'friendly_name': 'REG-ZOE-40 Charging remaining time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_zoe_40_charging_remaining_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_hvac_soc_threshold-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1085,7 +1085,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_hvac_soc_threshold',
+    'entity_id': 'sensor.reg_zoe_40_hvac_soc_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1106,21 +1106,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_hvac_soc_threshold-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_hvac_soc_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER HVAC SoC threshold',
+      'friendly_name': 'REG-ZOE-40 HVAC SoC threshold',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_hvac_soc_threshold',
+    'entity_id': 'sensor.reg_zoe_40_hvac_soc_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_last_battery_activity-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1133,7 +1133,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_battery_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1154,21 +1154,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_last_battery_activity-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_last_battery_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last battery activity',
+      'friendly_name': 'REG-ZOE-40 Last battery activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_battery_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_last_hvac_activity-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1181,7 +1181,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_hvac_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_hvac_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1202,21 +1202,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_last_hvac_activity-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_last_hvac_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last HVAC activity',
+      'friendly_name': 'REG-ZOE-40 Last HVAC activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_hvac_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_hvac_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_mileage-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1231,7 +1231,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_zoe_40_mileage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1252,23 +1252,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_mileage-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Mileage',
+      'friendly_name': 'REG-ZOE-40 Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_zoe_40_mileage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_outside_temperature-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1283,7 +1283,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_outside_temperature',
+    'entity_id': 'sensor.reg_zoe_40_outside_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1304,23 +1304,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_outside_temperature-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'REG-NUMBER Outside temperature',
+      'friendly_name': 'REG-ZOE-40 Outside temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_outside_temperature',
+    'entity_id': 'sensor.reg_zoe_40_outside_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_plug_state-entry]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_plug_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1341,7 +1341,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_zoe_40_plug_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1362,11 +1362,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_errors[zoe_40][sensor.reg_number_plug_state-state]
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_plug_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Plug state',
+      'friendly_name': 'REG-ZOE-40 Plug state',
       'options': list([
         'unplugged',
         'plugged',
@@ -1376,14 +1376,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_zoe_40_plug_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_fuel_autonomy-entry]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_fuel_autonomy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1398,7 +1398,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_fuel_autonomy',
+    'entity_id': 'sensor.reg_captur_fuel_fuel_autonomy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1419,23 +1419,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_fuel_autonomy-state]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_fuel_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Fuel autonomy',
+      'friendly_name': 'REG-CAPTUR-FUEL Fuel autonomy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_fuel_autonomy',
+    'entity_id': 'sensor.reg_captur_fuel_fuel_autonomy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '35',
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_fuel_quantity-entry]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_fuel_quantity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1450,7 +1450,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_fuel_quantity',
+    'entity_id': 'sensor.reg_captur_fuel_fuel_quantity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1471,23 +1471,23 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_fuel_quantity-state]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_fuel_quantity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume',
-      'friendly_name': 'REG-NUMBER Fuel quantity',
+      'friendly_name': 'REG-CAPTUR-FUEL Fuel quantity',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_fuel_quantity',
+    'entity_id': 'sensor.reg_captur_fuel_fuel_quantity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_last_location_activity-entry]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1500,7 +1500,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_location_activity',
+    'entity_id': 'sensor.reg_captur_fuel_last_location_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1521,21 +1521,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_last_location_activity-state]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_last_location_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last location activity',
+      'friendly_name': 'REG-CAPTUR-FUEL Last location activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_location_activity',
+    'entity_id': 'sensor.reg_captur_fuel_last_location_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2020-02-18T16:58:38+00:00',
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_mileage-entry]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1550,7 +1550,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_captur_fuel_mileage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1571,23 +1571,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_mileage-state]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Mileage',
+      'friendly_name': 'REG-CAPTUR-FUEL Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_captur_fuel_mileage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5567',
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_remote_engine_start-entry]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_remote_engine_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1600,7 +1600,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_remote_engine_start',
+    'entity_id': 'sensor.reg_captur_fuel_remote_engine_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1621,20 +1621,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_remote_engine_start-state]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_remote_engine_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Remote engine start',
+      'friendly_name': 'REG-CAPTUR-FUEL Remote engine start',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_remote_engine_start',
+    'entity_id': 'sensor.reg_captur_fuel_remote_engine_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Stopped, ready for RES',
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_remote_engine_start_code-entry]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_remote_engine_start_code-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1647,7 +1647,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_remote_engine_start_code',
+    'entity_id': 'sensor.reg_captur_fuel_remote_engine_start_code',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1668,20 +1668,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_number_remote_engine_start_code-state]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_remote_engine_start_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Remote engine start code',
+      'friendly_name': 'REG-CAPTUR-FUEL Remote engine start code',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_remote_engine_start_code',
+    'entity_id': 'sensor.reg_captur_fuel_remote_engine_start_code',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_admissible_charging_power-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_admissible_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1696,7 +1696,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_admissible_charging_power',
+    'entity_id': 'sensor.reg_captur_phev_admissible_charging_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1717,23 +1717,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_admissible_charging_power-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_admissible_charging_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'REG-NUMBER Admissible charging power',
+      'friendly_name': 'REG-CAPTUR_PHEV Admissible charging power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_admissible_charging_power',
+    'entity_id': 'sensor.reg_captur_phev_admissible_charging_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '27.0',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_battery-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1748,7 +1748,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_captur_phev_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1769,23 +1769,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_battery-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'REG-NUMBER Battery',
+      'friendly_name': 'REG-CAPTUR_PHEV Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_captur_phev_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_battery_autonomy-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1800,7 +1800,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_captur_phev_battery_autonomy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1821,23 +1821,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_battery_autonomy-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_battery_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Battery autonomy',
+      'friendly_name': 'REG-CAPTUR_PHEV Battery autonomy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_captur_phev_battery_autonomy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '141',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_battery_available_energy-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1852,7 +1852,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_captur_phev_battery_available_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1873,23 +1873,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_battery_available_energy-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_battery_available_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'REG-NUMBER Battery available energy',
+      'friendly_name': 'REG-CAPTUR_PHEV Battery available energy',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_captur_phev_battery_available_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '31',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_battery_temperature-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1904,7 +1904,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_captur_phev_battery_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1925,23 +1925,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_battery_temperature-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_battery_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'REG-NUMBER Battery temperature',
+      'friendly_name': 'REG-CAPTUR_PHEV Battery temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_captur_phev_battery_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_charge_state-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_charge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1965,7 +1965,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_captur_phev_charge_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1986,11 +1986,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_charge_state-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_charge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Charge state',
+      'friendly_name': 'REG-CAPTUR_PHEV Charge state',
       'options': list([
         'not_in_charge',
         'waiting_for_a_planned_charge',
@@ -2003,14 +2003,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_captur_phev_charge_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'charge_in_progress',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_charging_remaining_time-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2025,7 +2025,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_captur_phev_charging_remaining_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2046,23 +2046,23 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_charging_remaining_time-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_remaining_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'REG-NUMBER Charging remaining time',
+      'friendly_name': 'REG-CAPTUR_PHEV Charging remaining time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_captur_phev_charging_remaining_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '145',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_fuel_autonomy-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_fuel_autonomy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2077,7 +2077,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_fuel_autonomy',
+    'entity_id': 'sensor.reg_captur_phev_fuel_autonomy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2098,23 +2098,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_fuel_autonomy-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_fuel_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Fuel autonomy',
+      'friendly_name': 'REG-CAPTUR_PHEV Fuel autonomy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_fuel_autonomy',
+    'entity_id': 'sensor.reg_captur_phev_fuel_autonomy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '35',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_fuel_quantity-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_fuel_quantity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2129,7 +2129,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_fuel_quantity',
+    'entity_id': 'sensor.reg_captur_phev_fuel_quantity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2150,23 +2150,23 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_fuel_quantity-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_fuel_quantity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume',
-      'friendly_name': 'REG-NUMBER Fuel quantity',
+      'friendly_name': 'REG-CAPTUR_PHEV Fuel quantity',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_fuel_quantity',
+    'entity_id': 'sensor.reg_captur_phev_fuel_quantity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_last_battery_activity-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2179,7 +2179,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_captur_phev_last_battery_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2200,21 +2200,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_last_battery_activity-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_last_battery_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last battery activity',
+      'friendly_name': 'REG-CAPTUR_PHEV Last battery activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_captur_phev_last_battery_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2020-01-12T21:40:16+00:00',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_last_location_activity-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2227,7 +2227,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_location_activity',
+    'entity_id': 'sensor.reg_captur_phev_last_location_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2248,21 +2248,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_last_location_activity-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_last_location_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last location activity',
+      'friendly_name': 'REG-CAPTUR_PHEV Last location activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_location_activity',
+    'entity_id': 'sensor.reg_captur_phev_last_location_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2020-02-18T16:58:38+00:00',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_mileage-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2277,7 +2277,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_captur_phev_mileage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2298,23 +2298,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_mileage-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Mileage',
+      'friendly_name': 'REG-CAPTUR_PHEV Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_captur_phev_mileage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5567',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_plug_state-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_plug_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2335,7 +2335,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_captur_phev_plug_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2356,11 +2356,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_plug_state-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_plug_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Plug state',
+      'friendly_name': 'REG-CAPTUR_PHEV Plug state',
       'options': list([
         'unplugged',
         'plugged',
@@ -2370,14 +2370,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_captur_phev_plug_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plugged',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_remote_engine_start-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_remote_engine_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2390,7 +2390,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_remote_engine_start',
+    'entity_id': 'sensor.reg_captur_phev_remote_engine_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2411,20 +2411,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_remote_engine_start-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_remote_engine_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Remote engine start',
+      'friendly_name': 'REG-CAPTUR_PHEV Remote engine start',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_remote_engine_start',
+    'entity_id': 'sensor.reg_captur_phev_remote_engine_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Stopped, ready for RES',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_remote_engine_start_code-entry]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_remote_engine_start_code-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2437,7 +2437,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_remote_engine_start_code',
+    'entity_id': 'sensor.reg_captur_phev_remote_engine_start_code',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2458,20 +2458,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_number_remote_engine_start_code-state]
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_remote_engine_start_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Remote engine start code',
+      'friendly_name': 'REG-CAPTUR_PHEV Remote engine start code',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_remote_engine_start_code',
+    'entity_id': 'sensor.reg_captur_phev_remote_engine_start_code',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_admissible_charging_power-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_admissible_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2486,7 +2486,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_admissible_charging_power',
+    'entity_id': 'sensor.reg_twingo_iii_admissible_charging_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2507,23 +2507,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_admissible_charging_power-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_admissible_charging_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'REG-NUMBER Admissible charging power',
+      'friendly_name': 'REG-TWINGO-III Admissible charging power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_admissible_charging_power',
+    'entity_id': 'sensor.reg_twingo_iii_admissible_charging_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_battery-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2538,7 +2538,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_twingo_iii_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2559,23 +2559,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_battery-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'REG-NUMBER Battery',
+      'friendly_name': 'REG-TWINGO-III Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_twingo_iii_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '96',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_battery_autonomy-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2590,7 +2590,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_twingo_iii_battery_autonomy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2611,23 +2611,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_battery_autonomy-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Battery autonomy',
+      'friendly_name': 'REG-TWINGO-III Battery autonomy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_twingo_iii_battery_autonomy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '182',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_battery_available_energy-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2642,7 +2642,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_twingo_iii_battery_available_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2663,23 +2663,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_battery_available_energy-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery_available_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'REG-NUMBER Battery available energy',
+      'friendly_name': 'REG-TWINGO-III Battery available energy',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_twingo_iii_battery_available_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_battery_temperature-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2694,7 +2694,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_twingo_iii_battery_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2715,23 +2715,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_battery_temperature-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_battery_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'REG-NUMBER Battery temperature',
+      'friendly_name': 'REG-TWINGO-III Battery temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_twingo_iii_battery_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_charge_state-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2755,7 +2755,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_twingo_iii_charge_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2776,11 +2776,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_charge_state-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Charge state',
+      'friendly_name': 'REG-TWINGO-III Charge state',
       'options': list([
         'not_in_charge',
         'waiting_for_a_planned_charge',
@@ -2793,14 +2793,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_twingo_iii_charge_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'waiting_for_current_charge',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_charging_remaining_time-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2815,7 +2815,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_twingo_iii_charging_remaining_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2836,23 +2836,23 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_charging_remaining_time-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_remaining_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'REG-NUMBER Charging remaining time',
+      'friendly_name': 'REG-TWINGO-III Charging remaining time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_twingo_iii_charging_remaining_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_hvac_soc_threshold-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2865,7 +2865,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_hvac_soc_threshold',
+    'entity_id': 'sensor.reg_twingo_iii_hvac_soc_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2886,21 +2886,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_hvac_soc_threshold-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_hvac_soc_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER HVAC SoC threshold',
+      'friendly_name': 'REG-TWINGO-III HVAC SoC threshold',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_hvac_soc_threshold',
+    'entity_id': 'sensor.reg_twingo_iii_hvac_soc_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_last_battery_activity-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2913,7 +2913,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_twingo_iii_last_battery_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2934,21 +2934,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_last_battery_activity-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_last_battery_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last battery activity',
+      'friendly_name': 'REG-TWINGO-III Last battery activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_twingo_iii_last_battery_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-04-28T05:27:07+00:00',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_last_hvac_activity-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2961,7 +2961,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_hvac_activity',
+    'entity_id': 'sensor.reg_twingo_iii_last_hvac_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2982,21 +2982,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_last_hvac_activity-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_last_hvac_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last HVAC activity',
+      'friendly_name': 'REG-TWINGO-III Last HVAC activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_hvac_activity',
+    'entity_id': 'sensor.reg_twingo_iii_last_hvac_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-04-28T04:29:26+00:00',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_last_location_activity-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3009,7 +3009,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_location_activity',
+    'entity_id': 'sensor.reg_twingo_iii_last_location_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3030,21 +3030,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_last_location_activity-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_last_location_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last location activity',
+      'friendly_name': 'REG-TWINGO-III Last location activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_location_activity',
+    'entity_id': 'sensor.reg_twingo_iii_last_location_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2020-02-18T16:58:38+00:00',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_mileage-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3059,7 +3059,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_twingo_iii_mileage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3080,23 +3080,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_mileage-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Mileage',
+      'friendly_name': 'REG-TWINGO-III Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_twingo_iii_mileage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '49114',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_outside_temperature-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3111,7 +3111,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_outside_temperature',
+    'entity_id': 'sensor.reg_twingo_iii_outside_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3132,23 +3132,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_outside_temperature-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'REG-NUMBER Outside temperature',
+      'friendly_name': 'REG-TWINGO-III Outside temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_outside_temperature',
+    'entity_id': 'sensor.reg_twingo_iii_outside_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_plug_state-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_plug_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3169,7 +3169,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_twingo_iii_plug_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3190,11 +3190,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_plug_state-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_plug_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Plug state',
+      'friendly_name': 'REG-TWINGO-III Plug state',
       'options': list([
         'unplugged',
         'plugged',
@@ -3204,14 +3204,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_twingo_iii_plug_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_remote_engine_start-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_remote_engine_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3224,7 +3224,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_remote_engine_start',
+    'entity_id': 'sensor.reg_twingo_iii_remote_engine_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3245,20 +3245,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_remote_engine_start-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_remote_engine_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Remote engine start',
+      'friendly_name': 'REG-TWINGO-III Remote engine start',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_remote_engine_start',
+    'entity_id': 'sensor.reg_twingo_iii_remote_engine_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_remote_engine_start_code-entry]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_remote_engine_start_code-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3271,7 +3271,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_remote_engine_start_code',
+    'entity_id': 'sensor.reg_twingo_iii_remote_engine_start_code',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3292,20 +3292,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_number_remote_engine_start_code-state]
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_remote_engine_start_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Remote engine start code',
+      'friendly_name': 'REG-TWINGO-III Remote engine start code',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_remote_engine_start_code',
+    'entity_id': 'sensor.reg_twingo_iii_remote_engine_start_code',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_battery-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3320,7 +3320,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_zoe_40_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3341,23 +3341,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_battery-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'REG-NUMBER Battery',
+      'friendly_name': 'REG-ZOE-40 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_zoe_40_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_battery_autonomy-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3372,7 +3372,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_zoe_40_battery_autonomy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3393,23 +3393,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_battery_autonomy-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_battery_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Battery autonomy',
+      'friendly_name': 'REG-ZOE-40 Battery autonomy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_zoe_40_battery_autonomy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '141',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_battery_available_energy-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3424,7 +3424,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_zoe_40_battery_available_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3445,23 +3445,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_battery_available_energy-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_battery_available_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'REG-NUMBER Battery available energy',
+      'friendly_name': 'REG-ZOE-40 Battery available energy',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_zoe_40_battery_available_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '31',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_battery_temperature-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3476,7 +3476,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_zoe_40_battery_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3497,23 +3497,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_battery_temperature-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_battery_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'REG-NUMBER Battery temperature',
+      'friendly_name': 'REG-ZOE-40 Battery temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_zoe_40_battery_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_charge_state-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_charge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3537,7 +3537,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_zoe_40_charge_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3558,11 +3558,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_charge_state-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_charge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Charge state',
+      'friendly_name': 'REG-ZOE-40 Charge state',
       'options': list([
         'not_in_charge',
         'waiting_for_a_planned_charge',
@@ -3575,14 +3575,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_zoe_40_charge_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'charge_in_progress',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_charging_power-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3597,7 +3597,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charging_power',
+    'entity_id': 'sensor.reg_zoe_40_charging_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3618,23 +3618,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_charging_power-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'REG-NUMBER Charging power',
+      'friendly_name': 'REG-ZOE-40 Charging power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charging_power',
+    'entity_id': 'sensor.reg_zoe_40_charging_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.027',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_charging_remaining_time-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3649,7 +3649,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_zoe_40_charging_remaining_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3670,23 +3670,23 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_charging_remaining_time-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_remaining_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'REG-NUMBER Charging remaining time',
+      'friendly_name': 'REG-ZOE-40 Charging remaining time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_zoe_40_charging_remaining_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '145',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_hvac_soc_threshold-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3699,7 +3699,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_hvac_soc_threshold',
+    'entity_id': 'sensor.reg_zoe_40_hvac_soc_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3720,21 +3720,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_hvac_soc_threshold-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_hvac_soc_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER HVAC SoC threshold',
+      'friendly_name': 'REG-ZOE-40 HVAC SoC threshold',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_hvac_soc_threshold',
+    'entity_id': 'sensor.reg_zoe_40_hvac_soc_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_last_battery_activity-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3747,7 +3747,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_battery_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3768,21 +3768,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_last_battery_activity-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_last_battery_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last battery activity',
+      'friendly_name': 'REG-ZOE-40 Last battery activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_battery_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2020-01-12T21:40:16+00:00',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_last_hvac_activity-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3795,7 +3795,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_hvac_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_hvac_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3816,21 +3816,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_last_hvac_activity-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_last_hvac_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last HVAC activity',
+      'friendly_name': 'REG-ZOE-40 Last HVAC activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_hvac_activity',
+    'entity_id': 'sensor.reg_zoe_40_last_hvac_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_mileage-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3845,7 +3845,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_zoe_40_mileage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3866,23 +3866,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_mileage-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Mileage',
+      'friendly_name': 'REG-ZOE-40 Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_zoe_40_mileage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '49114',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_outside_temperature-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3897,7 +3897,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_outside_temperature',
+    'entity_id': 'sensor.reg_zoe_40_outside_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3918,23 +3918,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_outside_temperature-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'REG-NUMBER Outside temperature',
+      'friendly_name': 'REG-ZOE-40 Outside temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_outside_temperature',
+    'entity_id': 'sensor.reg_zoe_40_outside_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '8.0',
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_plug_state-entry]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_plug_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3955,7 +3955,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_zoe_40_plug_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3976,11 +3976,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zoe_40][sensor.reg_number_plug_state-state]
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_plug_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Plug state',
+      'friendly_name': 'REG-ZOE-40 Plug state',
       'options': list([
         'unplugged',
         'plugged',
@@ -3990,14 +3990,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_zoe_40_plug_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plugged',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_admissible_charging_power-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_admissible_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4012,7 +4012,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_admissible_charging_power',
+    'entity_id': 'sensor.reg_zoe_50_admissible_charging_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4033,23 +4033,23 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_admissible_charging_power-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_admissible_charging_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'REG-NUMBER Admissible charging power',
+      'friendly_name': 'REG-ZOE-50 Admissible charging power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_admissible_charging_power',
+    'entity_id': 'sensor.reg_zoe_50_admissible_charging_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_battery-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4064,7 +4064,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_zoe_50_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4085,23 +4085,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_battery-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'REG-NUMBER Battery',
+      'friendly_name': 'REG-ZOE-50 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery',
+    'entity_id': 'sensor.reg_zoe_50_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_battery_autonomy-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_battery_autonomy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4116,7 +4116,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_zoe_50_battery_autonomy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4137,23 +4137,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_battery_autonomy-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_battery_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Battery autonomy',
+      'friendly_name': 'REG-ZOE-50 Battery autonomy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_autonomy',
+    'entity_id': 'sensor.reg_zoe_50_battery_autonomy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '128',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_battery_available_energy-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_battery_available_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4168,7 +4168,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_zoe_50_battery_available_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4189,23 +4189,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_battery_available_energy-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_battery_available_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'REG-NUMBER Battery available energy',
+      'friendly_name': 'REG-ZOE-50 Battery available energy',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_available_energy',
+    'entity_id': 'sensor.reg_zoe_50_battery_available_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_battery_temperature-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_battery_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4220,7 +4220,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_zoe_50_battery_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4241,23 +4241,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_battery_temperature-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_battery_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'REG-NUMBER Battery temperature',
+      'friendly_name': 'REG-ZOE-50 Battery temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_battery_temperature',
+    'entity_id': 'sensor.reg_zoe_50_battery_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_charge_state-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_charge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4281,7 +4281,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_zoe_50_charge_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4302,11 +4302,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_charge_state-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_charge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Charge state',
+      'friendly_name': 'REG-ZOE-50 Charge state',
       'options': list([
         'not_in_charge',
         'waiting_for_a_planned_charge',
@@ -4319,14 +4319,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charge_state',
+    'entity_id': 'sensor.reg_zoe_50_charge_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'charge_error',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_charging_remaining_time-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4341,7 +4341,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_zoe_50_charging_remaining_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4362,23 +4362,23 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_charging_remaining_time-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_remaining_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'REG-NUMBER Charging remaining time',
+      'friendly_name': 'REG-ZOE-50 Charging remaining time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_charging_remaining_time',
+    'entity_id': 'sensor.reg_zoe_50_charging_remaining_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_hvac_soc_threshold-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4391,7 +4391,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_hvac_soc_threshold',
+    'entity_id': 'sensor.reg_zoe_50_hvac_soc_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4412,21 +4412,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_hvac_soc_threshold-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_hvac_soc_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER HVAC SoC threshold',
+      'friendly_name': 'REG-ZOE-50 HVAC SoC threshold',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_hvac_soc_threshold',
+    'entity_id': 'sensor.reg_zoe_50_hvac_soc_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_last_battery_activity-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4439,7 +4439,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_zoe_50_last_battery_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4460,21 +4460,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_last_battery_activity-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_last_battery_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last battery activity',
+      'friendly_name': 'REG-ZOE-50 Last battery activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_battery_activity',
+    'entity_id': 'sensor.reg_zoe_50_last_battery_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2020-11-17T08:06:48+00:00',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_last_hvac_activity-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_last_hvac_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4487,7 +4487,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_hvac_activity',
+    'entity_id': 'sensor.reg_zoe_50_last_hvac_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4508,21 +4508,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_last_hvac_activity-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_last_hvac_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last HVAC activity',
+      'friendly_name': 'REG-ZOE-50 Last HVAC activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_hvac_activity',
+    'entity_id': 'sensor.reg_zoe_50_last_hvac_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2020-12-03T00:00:00+00:00',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_last_location_activity-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4535,7 +4535,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_last_location_activity',
+    'entity_id': 'sensor.reg_zoe_50_last_location_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4556,21 +4556,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_last_location_activity-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_last_location_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'REG-NUMBER Last location activity',
+      'friendly_name': 'REG-ZOE-50 Last location activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_last_location_activity',
+    'entity_id': 'sensor.reg_zoe_50_last_location_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2020-02-18T16:58:38+00:00',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_mileage-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4585,7 +4585,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_zoe_50_mileage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4606,23 +4606,23 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_mileage-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'REG-NUMBER Mileage',
+      'friendly_name': 'REG-ZOE-50 Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_mileage',
+    'entity_id': 'sensor.reg_zoe_50_mileage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '49114',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_outside_temperature-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4637,7 +4637,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_outside_temperature',
+    'entity_id': 'sensor.reg_zoe_50_outside_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4658,23 +4658,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_outside_temperature-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'REG-NUMBER Outside temperature',
+      'friendly_name': 'REG-ZOE-50 Outside temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_outside_temperature',
+    'entity_id': 'sensor.reg_zoe_50_outside_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_plug_state-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_plug_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4695,7 +4695,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_zoe_50_plug_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4716,11 +4716,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_plug_state-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_plug_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'REG-NUMBER Plug state',
+      'friendly_name': 'REG-ZOE-50 Plug state',
       'options': list([
         'unplugged',
         'plugged',
@@ -4730,14 +4730,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_plug_state',
+    'entity_id': 'sensor.reg_zoe_50_plug_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unplugged',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_remote_engine_start-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_remote_engine_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4750,7 +4750,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_remote_engine_start',
+    'entity_id': 'sensor.reg_zoe_50_remote_engine_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4771,20 +4771,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_remote_engine_start-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_remote_engine_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Remote engine start',
+      'friendly_name': 'REG-ZOE-50 Remote engine start',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_remote_engine_start',
+    'entity_id': 'sensor.reg_zoe_50_remote_engine_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Stopped, ready for RES',
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_remote_engine_start_code-entry]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_remote_engine_start_code-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4797,7 +4797,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_number_remote_engine_start_code',
+    'entity_id': 'sensor.reg_zoe_50_remote_engine_start_code',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4818,13 +4818,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zoe_50][sensor.reg_number_remote_engine_start_code-state]
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_remote_engine_start_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Remote engine start code',
+      'friendly_name': 'REG-ZOE-50 Remote engine start code',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_number_remote_engine_start_code',
+    'entity_id': 'sensor.reg_zoe_50_remote_engine_start_code',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

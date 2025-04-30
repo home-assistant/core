@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_button_access_denied[zoe_40][button.reg_number_start_air_conditioner-entry]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -33,20 +33,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_access_denied[zoe_40][button.reg_number_start_air_conditioner-state]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_start_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start air conditioner',
+      'friendly_name': 'REG-ZOE-40 Start air conditioner',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_access_denied[zoe_40][button.reg_number_start_charge-entry]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_start_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,7 +59,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_40_start_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -80,20 +80,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_access_denied[zoe_40][button.reg_number_start_charge-state]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_start_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start charge',
+      'friendly_name': 'REG-ZOE-40 Start charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_40_start_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_access_denied[zoe_40][button.reg_number_stop_charge-entry]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_stop_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -106,7 +106,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_40_stop_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -127,20 +127,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_access_denied[zoe_40][button.reg_number_stop_charge-state]
+# name: test_button_access_denied[zoe_40][button.reg_zoe_40_stop_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Stop charge',
+      'friendly_name': 'REG-ZOE-40 Stop charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_40_stop_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_empty[zoe_40][button.reg_number_start_air_conditioner-entry]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -153,7 +153,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -174,20 +174,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_empty[zoe_40][button.reg_number_start_air_conditioner-state]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_start_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start air conditioner',
+      'friendly_name': 'REG-ZOE-40 Start air conditioner',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_empty[zoe_40][button.reg_number_start_charge-entry]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_start_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -200,7 +200,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_40_start_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -221,20 +221,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_empty[zoe_40][button.reg_number_start_charge-state]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_start_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start charge',
+      'friendly_name': 'REG-ZOE-40 Start charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_40_start_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_empty[zoe_40][button.reg_number_stop_charge-entry]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_stop_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -247,7 +247,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_40_stop_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -268,20 +268,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_empty[zoe_40][button.reg_number_stop_charge-state]
+# name: test_button_empty[zoe_40][button.reg_zoe_40_stop_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Stop charge',
+      'friendly_name': 'REG-ZOE-40 Stop charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_40_stop_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_number_start_air_conditioner-entry]
+# name: test_button_errors[zoe_40][button.reg_zoe_40_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -294,7 +294,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -315,20 +315,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_number_start_air_conditioner-state]
+# name: test_button_errors[zoe_40][button.reg_zoe_40_start_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start air conditioner',
+      'friendly_name': 'REG-ZOE-40 Start air conditioner',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_number_start_charge-entry]
+# name: test_button_errors[zoe_40][button.reg_zoe_40_start_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -341,7 +341,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_40_start_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -362,20 +362,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_number_start_charge-state]
+# name: test_button_errors[zoe_40][button.reg_zoe_40_start_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start charge',
+      'friendly_name': 'REG-ZOE-40 Start charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_40_start_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_number_stop_charge-entry]
+# name: test_button_errors[zoe_40][button.reg_zoe_40_stop_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -388,7 +388,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_40_stop_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -409,20 +409,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_errors[zoe_40][button.reg_number_stop_charge-state]
+# name: test_button_errors[zoe_40][button.reg_zoe_40_stop_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Stop charge',
+      'friendly_name': 'REG-ZOE-40 Stop charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_40_stop_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_number_start_air_conditioner-entry]
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -435,7 +435,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -456,20 +456,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_number_start_air_conditioner-state]
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_start_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start air conditioner',
+      'friendly_name': 'REG-ZOE-40 Start air conditioner',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_number_start_charge-entry]
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_start_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -482,7 +482,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_40_start_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -503,20 +503,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_number_start_charge-state]
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_start_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start charge',
+      'friendly_name': 'REG-ZOE-40 Start charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_40_start_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_number_stop_charge-entry]
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_stop_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -529,7 +529,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_40_stop_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -550,20 +550,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_not_supported[zoe_40][button.reg_number_stop_charge-state]
+# name: test_button_not_supported[zoe_40][button.reg_zoe_40_stop_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Stop charge',
+      'friendly_name': 'REG-ZOE-40 Stop charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_40_stop_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[captur_fuel][button.reg_number_start_air_conditioner-entry]
+# name: test_buttons[captur_fuel][button.reg_captur_fuel_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -576,7 +576,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_captur_fuel_start_air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -597,20 +597,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[captur_fuel][button.reg_number_start_air_conditioner-state]
+# name: test_buttons[captur_fuel][button.reg_captur_fuel_start_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start air conditioner',
+      'friendly_name': 'REG-CAPTUR-FUEL Start air conditioner',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_captur_fuel_start_air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[captur_phev][button.reg_number_start_air_conditioner-entry]
+# name: test_buttons[captur_phev][button.reg_captur_phev_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -623,7 +623,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_captur_phev_start_air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -644,20 +644,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[captur_phev][button.reg_number_start_air_conditioner-state]
+# name: test_buttons[captur_phev][button.reg_captur_phev_start_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start air conditioner',
+      'friendly_name': 'REG-CAPTUR_PHEV Start air conditioner',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_captur_phev_start_air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[captur_phev][button.reg_number_start_charge-entry]
+# name: test_buttons[captur_phev][button.reg_captur_phev_start_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -670,7 +670,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_captur_phev_start_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -691,20 +691,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[captur_phev][button.reg_number_start_charge-state]
+# name: test_buttons[captur_phev][button.reg_captur_phev_start_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start charge',
+      'friendly_name': 'REG-CAPTUR_PHEV Start charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_captur_phev_start_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[captur_phev][button.reg_number_stop_charge-entry]
+# name: test_buttons[captur_phev][button.reg_captur_phev_stop_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -717,7 +717,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_captur_phev_stop_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -738,20 +738,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[captur_phev][button.reg_number_stop_charge-state]
+# name: test_buttons[captur_phev][button.reg_captur_phev_stop_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Stop charge',
+      'friendly_name': 'REG-CAPTUR_PHEV Stop charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_captur_phev_stop_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_number_start_air_conditioner-entry]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -764,7 +764,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_twingo_iii_start_air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -785,20 +785,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_number_start_air_conditioner-state]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_start_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start air conditioner',
+      'friendly_name': 'REG-TWINGO-III Start air conditioner',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_twingo_iii_start_air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_number_start_charge-entry]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_start_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -811,7 +811,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_twingo_iii_start_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -832,20 +832,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_number_start_charge-state]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_start_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start charge',
+      'friendly_name': 'REG-TWINGO-III Start charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_twingo_iii_start_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_number_stop_charge-entry]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_stop_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -858,7 +858,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_twingo_iii_stop_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -879,20 +879,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[twingo_3_electric][button.reg_number_stop_charge-state]
+# name: test_buttons[twingo_3_electric][button.reg_twingo_iii_stop_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Stop charge',
+      'friendly_name': 'REG-TWINGO-III Stop charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_twingo_iii_stop_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_number_start_air_conditioner-entry]
+# name: test_buttons[zoe_40][button.reg_zoe_40_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -905,7 +905,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -926,20 +926,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_number_start_air_conditioner-state]
+# name: test_buttons[zoe_40][button.reg_zoe_40_start_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start air conditioner',
+      'friendly_name': 'REG-ZOE-40 Start air conditioner',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_40_start_air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_number_start_charge-entry]
+# name: test_buttons[zoe_40][button.reg_zoe_40_start_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -952,7 +952,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_40_start_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -973,20 +973,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_number_start_charge-state]
+# name: test_buttons[zoe_40][button.reg_zoe_40_start_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start charge',
+      'friendly_name': 'REG-ZOE-40 Start charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_40_start_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_number_stop_charge-entry]
+# name: test_buttons[zoe_40][button.reg_zoe_40_stop_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -999,7 +999,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_40_stop_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1020,20 +1020,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_40][button.reg_number_stop_charge-state]
+# name: test_buttons[zoe_40][button.reg_zoe_40_stop_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Stop charge',
+      'friendly_name': 'REG-ZOE-40 Stop charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_40_stop_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_number_start_air_conditioner-entry]
+# name: test_buttons[zoe_50][button.reg_zoe_50_start_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1046,7 +1046,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_50_start_air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1067,20 +1067,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_number_start_air_conditioner-state]
+# name: test_buttons[zoe_50][button.reg_zoe_50_start_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start air conditioner',
+      'friendly_name': 'REG-ZOE-50 Start air conditioner',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_air_conditioner',
+    'entity_id': 'button.reg_zoe_50_start_air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_number_start_charge-entry]
+# name: test_buttons[zoe_50][button.reg_zoe_50_start_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1093,7 +1093,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_50_start_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1114,20 +1114,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_number_start_charge-state]
+# name: test_buttons[zoe_50][button.reg_zoe_50_start_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Start charge',
+      'friendly_name': 'REG-ZOE-50 Start charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_start_charge',
+    'entity_id': 'button.reg_zoe_50_start_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_number_stop_charge-entry]
+# name: test_buttons[zoe_50][button.reg_zoe_50_stop_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1140,7 +1140,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_50_stop_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1161,13 +1161,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[zoe_50][button.reg_number_stop_charge-state]
+# name: test_buttons[zoe_50][button.reg_zoe_50_stop_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Stop charge',
+      'friendly_name': 'REG-ZOE-50 Stop charge',
     }),
     'context': <ANY>,
-    'entity_id': 'button.reg_number_stop_charge',
+    'entity_id': 'button.reg_zoe_50_stop_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

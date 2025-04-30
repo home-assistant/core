@@ -125,7 +125,7 @@ async def test_sensor_throttling_during_setup(
         await hass.async_block_till_done()
 
     # Initial state
-    entity_id = "sensor.reg_number_battery"
+    entity_id = "sensor.reg_zoe_40_battery"
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # Test QuotaLimitException recovery, with new battery level
@@ -156,7 +156,7 @@ async def test_sensor_throttling_after_init(
         await hass.async_block_till_done()
 
     # Initial state
-    entity_id = "sensor.reg_number_battery"
+    entity_id = "sensor.reg_zoe_40_battery"
     assert hass.states.get(entity_id).state == "60"
     assert not hass.states.get(entity_id).attributes.get(ATTR_ASSUMED_STATE)
     assert "Renault API throttled: scan skipped" not in caplog.text

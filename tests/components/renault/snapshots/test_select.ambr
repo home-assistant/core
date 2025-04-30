@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_select_empty[zoe_40][select.reg_number_charge_mode-entry]
+# name: test_select_empty[zoe_40][select.reg_zoe_40_charge_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19,7 +19,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_zoe_40_charge_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -40,10 +40,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_empty[zoe_40][select.reg_number_charge_mode-state]
+# name: test_select_empty[zoe_40][select.reg_zoe_40_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Charge mode',
+      'friendly_name': 'REG-ZOE-40 Charge mode',
       'options': list([
         'always',
         'always_charging',
@@ -52,14 +52,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_zoe_40_charge_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_select_errors[zoe_40][select.reg_number_charge_mode-entry]
+# name: test_select_errors[zoe_40][select.reg_zoe_40_charge_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -79,7 +79,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_zoe_40_charge_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -100,10 +100,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_errors[zoe_40][select.reg_number_charge_mode-state]
+# name: test_select_errors[zoe_40][select.reg_zoe_40_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Charge mode',
+      'friendly_name': 'REG-ZOE-40 Charge mode',
       'options': list([
         'always',
         'always_charging',
@@ -112,14 +112,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_zoe_40_charge_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_selects[captur_phev][select.reg_number_charge_mode-entry]
+# name: test_selects[captur_phev][select.reg_captur_phev_charge_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -139,7 +139,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_captur_phev_charge_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -160,10 +160,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[captur_phev][select.reg_number_charge_mode-state]
+# name: test_selects[captur_phev][select.reg_captur_phev_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Charge mode',
+      'friendly_name': 'REG-CAPTUR_PHEV Charge mode',
       'options': list([
         'always',
         'always_charging',
@@ -172,14 +172,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_captur_phev_charge_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'always',
   })
 # ---
-# name: test_selects[twingo_3_electric][select.reg_number_charge_mode-entry]
+# name: test_selects[twingo_3_electric][select.reg_twingo_iii_charge_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -199,7 +199,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_twingo_iii_charge_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -220,10 +220,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[twingo_3_electric][select.reg_number_charge_mode-state]
+# name: test_selects[twingo_3_electric][select.reg_twingo_iii_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Charge mode',
+      'friendly_name': 'REG-TWINGO-III Charge mode',
       'options': list([
         'always',
         'always_charging',
@@ -232,14 +232,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_twingo_iii_charge_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'always_charging',
   })
 # ---
-# name: test_selects[zoe_40][select.reg_number_charge_mode-entry]
+# name: test_selects[zoe_40][select.reg_zoe_40_charge_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -259,7 +259,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_zoe_40_charge_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -280,10 +280,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[zoe_40][select.reg_number_charge_mode-state]
+# name: test_selects[zoe_40][select.reg_zoe_40_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Charge mode',
+      'friendly_name': 'REG-ZOE-40 Charge mode',
       'options': list([
         'always',
         'always_charging',
@@ -292,14 +292,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_zoe_40_charge_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'always',
   })
 # ---
-# name: test_selects[zoe_50][select.reg_number_charge_mode-entry]
+# name: test_selects[zoe_50][select.reg_zoe_50_charge_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -319,7 +319,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_zoe_50_charge_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -340,10 +340,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[zoe_50][select.reg_number_charge_mode-state]
+# name: test_selects[zoe_50][select.reg_zoe_50_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER Charge mode',
+      'friendly_name': 'REG-ZOE-50 Charge mode',
       'options': list([
         'always',
         'always_charging',
@@ -352,7 +352,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.reg_number_charge_mode',
+    'entity_id': 'select.reg_zoe_50_charge_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
