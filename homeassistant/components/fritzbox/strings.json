@@ -54,7 +54,6 @@
   "entity": {
     "binary_sensor": {
       "alarm": { "name": "Alarm" },
-      "battery_low": { "name": "Battery low" },
       "device_lock": { "name": "Button lock via UI" },
       "holiday_active": { "name": "Holiday mode" },
       "lock": { "name": "Button lock on device" },

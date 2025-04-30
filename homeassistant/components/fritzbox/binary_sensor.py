@@ -62,7 +62,6 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
     ),
     FritzBinarySensorEntityDescription(
         key="battery_low",
-        translation_key="battery_low",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         suitable=lambda device: device.battery_low is not None,
