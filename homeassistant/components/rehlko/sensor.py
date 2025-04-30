@@ -179,7 +179,6 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
     ),
     RehlkoSensorEntityDescription(
         key="powerSource",
-        icon="mdi:home-lightning-bolt",
         translation_key="power_source",
     ),
 )
