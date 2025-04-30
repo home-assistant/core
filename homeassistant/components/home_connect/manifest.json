@@ -8,5 +8,6 @@
   "iot_class": "cloud_push",
   "loggers": ["aiohomeconnect"],
   "requirements": ["aiohomeconnect==0.17.0"],
-  "single_config_entry": true
+  "single_config_entry": true,
+  "zeroconf": ["_homeconnect._tcp.local."]
 }
