@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_charging',
+    'unique_id': 'vf1zoe40vin_charging',
     'unit_of_measurement': None,
   })
 # ---
@@ -77,7 +77,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_status',
-    'unique_id': 'vf1aaaaa555777999_hvac_status',
+    'unique_id': 'vf1zoe40vin_hvac_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -124,7 +124,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_plugged_in',
+    'unique_id': 'vf1zoe40vin_plugged_in',
     'unit_of_measurement': None,
   })
 # ---
@@ -172,7 +172,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_charging',
+    'unique_id': 'vf1zoe40vin_charging',
     'unit_of_measurement': None,
   })
 # ---
@@ -220,7 +220,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_status',
-    'unique_id': 'vf1aaaaa555777999_hvac_status',
+    'unique_id': 'vf1zoe40vin_hvac_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -267,7 +267,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_plugged_in',
+    'unique_id': 'vf1zoe40vin_plugged_in',
     'unit_of_measurement': None,
   })
 # ---
@@ -315,7 +315,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'driver_door_status',
-    'unique_id': 'vf1aaaaa555777123_driver_door_status',
+    'unique_id': 'vf1capturfuelvin_driver_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -363,7 +363,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hatch_status',
-    'unique_id': 'vf1aaaaa555777123_hatch_status',
+    'unique_id': 'vf1capturfuelvin_hatch_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -411,7 +411,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777123_lock_status',
+    'unique_id': 'vf1capturfuelvin_lock_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -459,7 +459,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'passenger_door_status',
-    'unique_id': 'vf1aaaaa555777123_passenger_door_status',
+    'unique_id': 'vf1capturfuelvin_passenger_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -507,7 +507,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'rear_left_door_status',
-    'unique_id': 'vf1aaaaa555777123_rear_left_door_status',
+    'unique_id': 'vf1capturfuelvin_rear_left_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -555,7 +555,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'rear_right_door_status',
-    'unique_id': 'vf1aaaaa555777123_rear_right_door_status',
+    'unique_id': 'vf1capturfuelvin_rear_right_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -603,7 +603,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777123_charging',
+    'unique_id': 'vf1capturphevvin_charging',
     'unit_of_measurement': None,
   })
 # ---
@@ -651,7 +651,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'driver_door_status',
-    'unique_id': 'vf1aaaaa555777123_driver_door_status',
+    'unique_id': 'vf1capturphevvin_driver_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -699,7 +699,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hatch_status',
-    'unique_id': 'vf1aaaaa555777123_hatch_status',
+    'unique_id': 'vf1capturphevvin_hatch_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -747,7 +747,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777123_lock_status',
+    'unique_id': 'vf1capturphevvin_lock_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -795,7 +795,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'passenger_door_status',
-    'unique_id': 'vf1aaaaa555777123_passenger_door_status',
+    'unique_id': 'vf1capturphevvin_passenger_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -843,7 +843,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777123_plugged_in',
+    'unique_id': 'vf1capturphevvin_plugged_in',
     'unit_of_measurement': None,
   })
 # ---
@@ -891,7 +891,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'rear_left_door_status',
-    'unique_id': 'vf1aaaaa555777123_rear_left_door_status',
+    'unique_id': 'vf1capturphevvin_rear_left_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -939,7 +939,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'rear_right_door_status',
-    'unique_id': 'vf1aaaaa555777123_rear_right_door_status',
+    'unique_id': 'vf1capturphevvin_rear_right_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -987,7 +987,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_charging',
+    'unique_id': 'vf1twingoiiivin_charging',
     'unit_of_measurement': None,
   })
 # ---
@@ -1035,7 +1035,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'driver_door_status',
-    'unique_id': 'vf1aaaaa555777999_driver_door_status',
+    'unique_id': 'vf1twingoiiivin_driver_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1083,7 +1083,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hatch_status',
-    'unique_id': 'vf1aaaaa555777999_hatch_status',
+    'unique_id': 'vf1twingoiiivin_hatch_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1131,7 +1131,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_status',
-    'unique_id': 'vf1aaaaa555777999_hvac_status',
+    'unique_id': 'vf1twingoiiivin_hvac_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1178,7 +1178,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_lock_status',
+    'unique_id': 'vf1twingoiiivin_lock_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1226,7 +1226,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'passenger_door_status',
-    'unique_id': 'vf1aaaaa555777999_passenger_door_status',
+    'unique_id': 'vf1twingoiiivin_passenger_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1274,7 +1274,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_plugged_in',
+    'unique_id': 'vf1twingoiiivin_plugged_in',
     'unit_of_measurement': None,
   })
 # ---
@@ -1322,7 +1322,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'rear_left_door_status',
-    'unique_id': 'vf1aaaaa555777999_rear_left_door_status',
+    'unique_id': 'vf1twingoiiivin_rear_left_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1370,7 +1370,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'rear_right_door_status',
-    'unique_id': 'vf1aaaaa555777999_rear_right_door_status',
+    'unique_id': 'vf1twingoiiivin_rear_right_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1418,7 +1418,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_charging',
+    'unique_id': 'vf1zoe40vin_charging',
     'unit_of_measurement': None,
   })
 # ---
@@ -1466,7 +1466,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_status',
-    'unique_id': 'vf1aaaaa555777999_hvac_status',
+    'unique_id': 'vf1zoe40vin_hvac_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1513,7 +1513,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_plugged_in',
+    'unique_id': 'vf1zoe40vin_plugged_in',
     'unit_of_measurement': None,
   })
 # ---
@@ -1561,7 +1561,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_charging',
+    'unique_id': 'vf1zoe50vin_charging',
     'unit_of_measurement': None,
   })
 # ---
@@ -1609,7 +1609,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'driver_door_status',
-    'unique_id': 'vf1aaaaa555777999_driver_door_status',
+    'unique_id': 'vf1zoe50vin_driver_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1657,7 +1657,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hatch_status',
-    'unique_id': 'vf1aaaaa555777999_hatch_status',
+    'unique_id': 'vf1zoe50vin_hatch_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1705,7 +1705,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_status',
-    'unique_id': 'vf1aaaaa555777999_hvac_status',
+    'unique_id': 'vf1zoe50vin_hvac_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1752,7 +1752,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_lock_status',
+    'unique_id': 'vf1zoe50vin_lock_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1800,7 +1800,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'passenger_door_status',
-    'unique_id': 'vf1aaaaa555777999_passenger_door_status',
+    'unique_id': 'vf1zoe50vin_passenger_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1848,7 +1848,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_plugged_in',
+    'unique_id': 'vf1zoe50vin_plugged_in',
     'unit_of_measurement': None,
   })
 # ---
@@ -1896,7 +1896,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'rear_left_door_status',
-    'unique_id': 'vf1aaaaa555777999_rear_left_door_status',
+    'unique_id': 'vf1zoe50vin_rear_left_door_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1944,7 +1944,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'rear_right_door_status',
-    'unique_id': 'vf1aaaaa555777999_rear_right_door_status',
+    'unique_id': 'vf1zoe50vin_rear_right_door_status',
     'unit_of_measurement': None,
   })
 # ---

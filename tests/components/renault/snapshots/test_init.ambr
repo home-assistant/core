@@ -15,7 +15,7 @@
       'identifiers': set({
         tuple(
           'renault',
-          'VF1AAAAA555777123',
+          'VF1CAPTURFUELVIN',
         ),
       }),
       'is_new': False,
@@ -50,7 +50,7 @@
       'identifiers': set({
         tuple(
           'renault',
-          'VF1AAAAA555777123',
+          'VF1CAPTURPHEVVIN',
         ),
       }),
       'is_new': False,
@@ -85,7 +85,7 @@
       'identifiers': set({
         tuple(
           'renault',
-          'VF1AAAAA555777999',
+          'VF1TWINGOIIIVIN',
         ),
       }),
       'is_new': False,
@@ -120,7 +120,7 @@
       'identifiers': set({
         tuple(
           'renault',
-          'VF1AAAAA555777999',
+          'VF1ZOE40VIN',
         ),
       }),
       'is_new': False,
@@ -155,7 +155,7 @@
       'identifiers': set({
         tuple(
           'renault',
-          'VF1AAAAA555777999',
+          'VF1ZOE50VIN',
         ),
       }),
       'is_new': False,

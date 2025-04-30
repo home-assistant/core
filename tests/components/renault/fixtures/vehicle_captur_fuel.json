@@ -4,7 +4,7 @@
   "vehicleLinks": [
     {
       "brand": "RENAULT",
-      "vin": "VF1AAAAA555777123",
+      "vin": "VF1CAPTURFUELVIN",
       "status": "ACTIVE",
       "linkType": "USER",
       "garageBrand": "RENAULT",
@@ -19,7 +19,7 @@
         "lastModifiedDate": "2020-06-15T06:20:39.107794Z"
       },
       "vehicleDetails": {
-        "vin": "VF1AAAAA555777123",
+        "vin": "VF1CAPTURFUELVIN",
         "engineType": "H5H",
         "engineRatio": "470",
         "modelSCR": "CP1",
