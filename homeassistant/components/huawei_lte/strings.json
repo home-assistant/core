@@ -132,6 +132,9 @@
       "enodeb_id": {
         "name": "eNodeB ID"
       },
+      "ims": {
+        "name": "IMS"
+      },
       "lac": {
         "name": "LAC"
       },
@@ -143,6 +146,9 @@
       },
       "mode": {
         "name": "Mode"
+      },
+      "nei_cellid": {
+        "name": "Neighbor cell ID"
       },
       "nrbler": {
         "name": "5G block error rate"
@@ -207,6 +213,12 @@
       "rssi": {
         "name": "RSSI"
       },
+      "rxlev": {
+        "name": "Received signal level"
+      },
+      "sc": {
+        "name": "Scrambling code"
+      },
       "sinr": {
         "name": "SINR"
       },
@@ -230,6 +242,9 @@
       },
       "uplink_frequency": {
         "name": "Uplink frequency"
+      },
+      "wdlfreq": {
+        "name": "WCDMA downlink frequency"
       },
       "sms_unread": {
         "name": "SMS unread"

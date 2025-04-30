@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Generic
 
 from deebot_client.capabilities import CapabilityEvent
-from deebot_client.events.water_info import WaterInfoEvent
+from deebot_client.events.water_info import MopAttachedEvent
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -32,9 +32,9 @@ class EcovacsBinarySensorEntityDescription(
 
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsBinarySensorEntityDescription, ...] = (
-    EcovacsBinarySensorEntityDescription[WaterInfoEvent](
-        capability_fn=lambda caps: caps.water,
-        value_fn=lambda e: e.mop_attached,
+    EcovacsBinarySensorEntityDescription[MopAttachedEvent](
+        capability_fn=lambda caps: caps.water.mop_attached if caps.water else None,
+        value_fn=lambda e: e.value,
         key="water_mop_attached",
         translation_key="water_mop_attached",
         entity_category=EntityCategory.DIAGNOSTIC,

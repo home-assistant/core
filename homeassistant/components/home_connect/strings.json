@@ -14,13 +14,15 @@
       }
     },
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "wrong_account": "Please ensure you reconfigure against the same account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -1549,31 +1551,39 @@
         }
       },
       "coffee_counter": {
-        "name": "Coffees"
+        "name": "Coffees",
+        "unit_of_measurement": "coffees"
       },
       "powder_coffee_counter": {
-        "name": "Powder coffees"
+        "name": "Powder coffees",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::coffee_counter::unit_of_measurement%]"
       },
       "hot_water_counter": {
         "name": "Hot water"
       },
       "hot_water_cups_counter": {
-        "name": "Hot water cups"
+        "name": "Hot water cups",
+        "unit_of_measurement": "cups"
       },
       "hot_milk_counter": {
-        "name": "Hot milk cups"
+        "name": "Hot milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "frothy_milk_counter": {
-        "name": "Frothy milk cups"
+        "name": "Frothy milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "milk_counter": {
-        "name": "Milk cups"
+        "name": "Milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "coffee_and_milk_counter": {
-        "name": "Coffee and milk cups"
+        "name": "Coffee and milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "ristretto_espresso_counter": {
-        "name": "Ristretto espresso cups"
+        "name": "Ristretto espresso cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "battery_level": {
         "name": "Battery level"
