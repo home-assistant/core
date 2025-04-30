@@ -1942,7 +1942,7 @@ async def hassio_stubs(
             return_value={"result": "ok"},
         ) as hass_api,
         patch(
-            "homeassistant.components.hassio.HassIO.update_hass_timezone",
+            "homeassistant.components.hassio.HassIO.update_hass_config",
             return_value={"result": "ok"},
         ),
         patch(
