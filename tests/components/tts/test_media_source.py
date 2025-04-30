@@ -9,9 +9,8 @@ import pytest
 from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.tts.media_source import (
-    MediaSourceOptions,
     generate_media_source_id,
-    media_source_id_to_kwargs,
+    parse_media_source_id,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -249,13 +248,13 @@ async def test_resolving_errors(hass: HomeAssistant, setup: str, engine: str) ->
     ],
     indirect=["setup"],
 )
-async def test_generate_media_source_id_and_media_source_id_to_kwargs(
+async def test_generate_media_source_id_and_parse_media_source_id(
     hass: HomeAssistant,
     setup: str,
     result_engine: str,
 ) -> None:
-    """Test media_source_id and media_source_id_to_kwargs."""
-    kwargs: MediaSourceOptions = {
+    """Test media_source_id and parse_media_source_id."""
+    kwargs = {
         "engine": None,
         "message": "hello",
         "language": "en_US",
@@ -263,12 +262,14 @@ async def test_generate_media_source_id_and_media_source_id_to_kwargs(
         "cache": True,
     }
     media_source_id = generate_media_source_id(hass, **kwargs)
-    assert media_source_id_to_kwargs(media_source_id) == {
-        "engine": result_engine,
+    assert parse_media_source_id(media_source_id) == {
         "message": "hello",
-        "language": "en_US",
-        "options": {"age": 5},
-        "use_file_cache": True,
+        "options": {
+            "engine": result_engine,
+            "language": "en_US",
+            "options": {"age": 5},
+            "use_file_cache": True,
+        },
     }
 
     kwargs = {
@@ -279,12 +280,14 @@ async def test_generate_media_source_id_and_media_source_id_to_kwargs(
         "cache": True,
     }
     media_source_id = generate_media_source_id(hass, **kwargs)
-    assert media_source_id_to_kwargs(media_source_id) == {
-        "engine": result_engine,
+    assert parse_media_source_id(media_source_id) == {
         "message": "hello",
-        "language": "en_US",
-        "options": {"age": [5, 6]},
-        "use_file_cache": True,
+        "options": {
+            "engine": result_engine,
+            "language": "en_US",
+            "options": {"age": [5, 6]},
+            "use_file_cache": True,
+        },
     }
 
     kwargs = {
@@ -295,10 +298,12 @@ async def test_generate_media_source_id_and_media_source_id_to_kwargs(
         "cache": True,
     }
     media_source_id = generate_media_source_id(hass, **kwargs)
-    assert media_source_id_to_kwargs(media_source_id) == {
-        "engine": result_engine,
+    assert parse_media_source_id(media_source_id) == {
         "message": "hello",
-        "language": "en_US",
-        "options": {"age": {"k1": [5, 6], "k2": "v2"}},
-        "use_file_cache": True,
+        "options": {
+            "engine": result_engine,
+            "language": "en_US",
+            "options": {"age": {"k1": [5, 6], "k2": "v2"}},
+            "use_file_cache": True,
+        },
     }

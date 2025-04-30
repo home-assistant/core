@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
@@ -10,14 +11,15 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
+from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
-from .const import VEHICLE_DATA_ALT
+from .const import PRODUCTS_MODERN, VEHICLE_DATA_ALT
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -130,7 +132,7 @@ async def test_vehicle_stream(
     mock_add_listener.assert_called()
 
     state = hass.states.get("binary_sensor.test_status")
-    assert state.state == STATE_ON
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("binary_sensor.test_user_present")
     assert state.state == STATE_OFF
@@ -139,10 +141,14 @@ async def test_vehicle_stream(
         {
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
             "vehicle_data": VEHICLE_DATA_ALT["response"],
+            "state": "online",
             "createdAt": "2024-10-04T10:45:17.537Z",
         }
     )
     await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_status")
+    assert state.state == STATE_ON
 
     state = hass.states.get("binary_sensor.test_user_present")
     assert state.state == STATE_ON
@@ -169,3 +175,21 @@ async def test_no_live_status(
     await setup_platform(hass)
 
     assert hass.states.get("sensor.energy_site_grid_power") is None
+
+
+async def test_modern_no_poll(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_products: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that modern vehicles do not poll vehicle_data."""
+
+    mock_products.return_value = PRODUCTS_MODERN
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert mock_vehicle_data.called is False
+    freezer.tick(VEHICLE_INTERVAL)
+    assert mock_vehicle_data.called is False
+    freezer.tick(VEHICLE_INTERVAL)
+    assert mock_vehicle_data.called is False

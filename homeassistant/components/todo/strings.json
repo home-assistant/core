@@ -55,16 +55,16 @@
           "description": "A status or confirmation of the to-do item."
         },
         "due_date": {
-          "name": "Due date",
-          "description": "The date the to-do item is expected to be completed."
+          "name": "[%key:component::todo::services::add_item::fields::due_date::name%]",
+          "description": "[%key:component::todo::services::add_item::fields::due_date::description%]"
         },
         "due_datetime": {
-          "name": "Due date and time",
-          "description": "The date and time the to-do item is expected to be completed."
+          "name": "[%key:component::todo::services::add_item::fields::due_datetime::name%]",
+          "description": "[%key:component::todo::services::add_item::fields::due_datetime::description%]"
         },
         "description": {
-          "name": "Description",
-          "description": "A more complete description of the to-do item than provided by the item name."
+          "name": "[%key:component::todo::services::add_item::fields::description::name%]",
+          "description": "[%key:component::todo::services::add_item::fields::description::description%]"
         }
       }
     },
