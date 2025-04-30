@@ -29,6 +29,7 @@ async def test_subscribe_discovery(
 <root>
   <device>
     <deviceType>Paulus</deviceType>
+    <friendlyName>Bedroom TV</friendlyName>
   </device>
 </root>
     """,
@@ -80,7 +81,12 @@ async def test_subscribe_discovery(
             "ssdp_st": "mock-st",
             "ssdp_udn": "uuid:mock-udn",
             "ssdp_usn": "uuid:mock-udn::mock-st",
-            "upnp": {"UDN": "uuid:mock-udn", "deviceType": "Paulus"},
+            "upnp": {
+                "UDN": "uuid:mock-udn",
+                "deviceType": "Paulus",
+                "friendlyName": "Bedroom TV",
+            },
+            "name": "Bedroom TV",
             "x_homeassistant_matching_domains": [],
         }
     ]
@@ -119,7 +125,12 @@ async def test_subscribe_discovery(
             "ssdp_st": "upnp:rootdevice",
             "ssdp_udn": "uuid:mock-udn",
             "ssdp_usn": "uuid:mock-udn::mock-st",
-            "upnp": {"UDN": "uuid:mock-udn", "deviceType": "Paulus"},
+            "upnp": {
+                "UDN": "uuid:mock-udn",
+                "deviceType": "Paulus",
+                "friendlyName": "Bedroom TV",
+            },
+            "name": "Bedroom TV",
             "x_homeassistant_matching_domains": ["mock-domain"],
         }
     ]
