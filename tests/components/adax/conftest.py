@@ -1,6 +1,5 @@
 """Fixtures for Adax testing."""
 
-import json
 from typing import Any
 from unittest.mock import patch
 
@@ -20,7 +19,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 
-from tests.common import AsyncMock, MockConfigEntry, load_fixture
+from tests.common import AsyncMock, MockConfigEntry
 
 CLOUD_CONFIG = {
     ACCOUNT_ID: 12345,
