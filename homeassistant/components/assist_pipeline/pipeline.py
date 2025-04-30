@@ -20,9 +20,6 @@ import hass_nabucasa
 import voluptuous as vol
 
 from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
-from homeassistant.components.tts import (
-    generate_media_source_id as tts_generate_media_source_id,
-)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -1276,33 +1273,19 @@ class PipelineRun:
             )
         )
 
-        try:
-            # Synthesize audio and get URL
-            tts_media_id = tts_generate_media_source_id(
-                self.hass,
-                tts_input,
-                engine=self.tts_stream.engine,
-                language=self.tts_stream.language,
-                options=self.tts_stream.options,
-            )
-        except Exception as src_error:
-            _LOGGER.exception("Unexpected error during text-to-speech")
-            raise TextToSpeechError(
-                code="tts-failed",
-                message="Unexpected error during text-to-speech",
-            ) from src_error
-
         self.tts_stream.async_set_message(tts_input)
 
-        tts_output = {
-            "media_id": tts_media_id,
-            "token": self.tts_stream.token,
-            "url": self.tts_stream.url,
-            "mime_type": self.tts_stream.content_type,
-        }
-
         self.process_event(
-            PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
+            PipelineEvent(
+                PipelineEventType.TTS_END,
+                {
+                    "tts_output": {
+                        "token": self.tts_stream.token,
+                        "url": self.tts_stream.url,
+                        "mime_type": self.tts_stream.content_type,
+                    }
+                },
+            )
         )
 
     def _capture_chunk(self, audio_bytes: bytes | None) -> None:
