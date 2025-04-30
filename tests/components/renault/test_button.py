@@ -9,14 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import check_entities_no_data
-from .const import ATTR_ENTITY_ID, MOCK_VEHICLES
-
-from tests.common import load_fixture
+from tests.common import load_fixture, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -39,18 +36,11 @@ async def test_buttons(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_no_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_button_empty(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -61,34 +51,22 @@ async def test_button_empty(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_button_errors(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault device trackers with temporary failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-
-    expected_entities = mock_vehicle[Platform.BUTTON]
-    assert len(entity_registry.entities) == len(expected_entities)
-
-    check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_access_denied_exception")
@@ -96,19 +74,14 @@ async def test_button_errors(
 async def test_button_access_denied(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault device trackers with access denied failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-
-    expected_entities = mock_vehicle[Platform.BUTTON]
-    assert len(entity_registry.entities) == len(expected_entities)
-
-    check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_not_supported_exception")
@@ -116,19 +89,14 @@ async def test_button_access_denied(
 async def test_button_not_supported(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault device trackers with not supported failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-
-    expected_entities = mock_vehicle[Platform.BUTTON]
-    assert len(entity_registry.entities) == len(expected_entities)
-
-    check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_data")
@@ -141,7 +109,7 @@ async def test_button_start_charge(
     await hass.async_block_till_done()
 
     data = {
-        ATTR_ENTITY_ID: "button.reg_number_start_charge",
+        ATTR_ENTITY_ID: "button.reg_zoe_40_start_charge",
     }
 
     with patch(
@@ -169,7 +137,7 @@ async def test_button_stop_charge(
     await hass.async_block_till_done()
 
     data = {
-        ATTR_ENTITY_ID: "button.reg_number_stop_charge",
+        ATTR_ENTITY_ID: "button.reg_zoe_40_stop_charge",
     }
 
     with patch(
@@ -197,7 +165,7 @@ async def test_button_start_air_conditioner(
     await hass.async_block_till_done()
 
     data = {
-        ATTR_ENTITY_ID: "button.reg_number_start_air_conditioner",
+        ATTR_ENTITY_ID: "button.reg_zoe_40_start_air_conditioner",
     }
 
     with patch(

@@ -23,12 +23,7 @@ rules:
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry:
-    status: exempt
-    comment: |
-      The Home Connect API does not allow to identify a user, so there is no
-      way to know if multiple config entries are using the same account.
-      Therefore, the integration does only allow one config entry.
+  unique-config-entry: done
 
   # Silver
   action-exceptions: done
@@ -47,11 +42,9 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      Devices from this integration can't be discovered.
-  discovery:
-    status: exempt
-    comment: |
-      Devices from this integration can't be discovered.
+      The integration does not talk directly to the devices, so there's no
+      information that can be updated.
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

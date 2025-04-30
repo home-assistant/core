@@ -38,7 +38,7 @@ cryptography==44.0.1
 Pillow==11.2.1
 propcache==0.3.1
 pyOpenSSL==25.0.0
-orjson==3.10.16
+orjson==3.10.18
 packaging>=23.1
 psutil-home-assistant==0.0.1
 pymicro-vad==1.0.1
@@ -54,7 +54,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.13.0,<5.0
 ulid-transform==1.4.0
 urllib3>=1.26.5,<2
-uv==0.6.10
+uv==0.7.1
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.7

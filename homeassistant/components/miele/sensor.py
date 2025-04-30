@@ -496,7 +496,7 @@ class MieleSensor(MieleEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return cast(StateType, self.entity_description.value_fn(self.device))
+        return self.entity_description.value_fn(self.device)
 
 
 class MieleStatusSensor(MieleSensor):

@@ -267,6 +267,9 @@ aioimaplib==2.0.1
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
 
+# homeassistant.components.rehlko
+aiokem==0.5.6
+
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
 
@@ -302,9 +305,6 @@ aiontfy==0.5.1
 
 # homeassistant.components.nut
 aionut==4.3.4
-
-# homeassistant.components.oncue
-aiooncue==0.3.9
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8
@@ -468,7 +468,7 @@ apprise==1.9.1
 aprslib==0.7.2
 
 # homeassistant.components.apsystems
-apsystems-ez1==2.5.1
+apsystems-ez1==2.6.0
 
 # homeassistant.components.aranet
 aranet4==2.5.1
@@ -556,7 +556,7 @@ blinkpy==0.23.0
 bluecurrent-api==1.2.3
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.3.0
+bluemaestro-ble==0.4.0
 
 # homeassistant.components.bluetooth
 bluetooth-adapters==0.21.4
@@ -653,7 +653,7 @@ dbus-fast==2.43.0
 debugpy==1.8.13
 
 # homeassistant.components.ecovacs
-deebot-client==12.5.0
+deebot-client==13.0.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -960,7 +960,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.44.0
+habluetooth==3.45.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.96.0
@@ -1045,7 +1045,7 @@ imeon_inverter_api==0.3.12
 imgw_pib==1.0.10
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.7
+incomfort-client==0.6.8
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1054,7 +1054,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.14.1
+inkbird-ble==0.15.0
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1118,7 +1118,7 @@ lcn-frontend==0.2.4
 ld2410-ble==0.1.1
 
 # homeassistant.components.leaone
-leaone-ble==0.2.0
+leaone-ble==0.3.0
 
 # homeassistant.components.led_ble
 led-ble==1.1.7
@@ -1747,7 +1747,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.4.0
+pymiele==0.4.1
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -2202,13 +2202,13 @@ sense-energy==0.13.7
 sensirion-ble==0.1.1
 
 # homeassistant.components.sensorpro
-sensorpro-ble==0.6.0
+sensorpro-ble==0.7.0
 
 # homeassistant.components.sensorpush_cloud
 sensorpush-api==2.1.2
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.8.0
+sensorpush-ble==1.9.0
 
 # homeassistant.components.sensorpush_cloud
 sensorpush-ha==1.3.2
@@ -2347,10 +2347,10 @@ teslemetry-stream==0.7.5
 tessie-api==0.1.1
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.9.0
+thermobeacon-ble==0.10.0
 
 # homeassistant.components.thermopro
-thermopro-ble==0.12.0
+thermopro-ble==0.13.0
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.5
