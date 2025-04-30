@@ -2,27 +2,27 @@
   "config": {
     "step": {
       "user": {
-        "title": "Hive Login",
+        "title": "Hive login",
         "description": "Enter your Hive login information.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "scan_interval": "Scan Interval (seconds)"
+          "scan_interval": "Scan interval (seconds)"
         }
       },
       "2fa": {
-        "title": "Hive Two-factor Authentication.",
-        "description": "Enter your Hive authentication code. \n \n Please enter code 0000 to request another code.",
+        "title": "Hive two-factor authentication",
+        "description": "Enter your Hive authentication code.\n\nPlease enter code 0000 to request another code.",
         "data": {
           "2fa": "Two-factor code"
         }
       },
       "configuration": {
+        "title": "Hive configuration",
+        "description": "Enter your Hive configuration.",
         "data": {
-          "device_name": "Device Name"
-        },
-        "description": "Enter your Hive configuration",
-        "title": "Hive Configuration."
+          "device_name": "Device name"
+        }
       },
       "reauth": {
         "title": "[%key:component::hive::config::step::user::title%]",
@@ -34,10 +34,10 @@
       }
     },
     "error": {
-      "invalid_username": "Failed to sign into Hive. Your email address is not recognised.",
-      "invalid_password": "Failed to sign into Hive. Incorrect password, please try again.",
-      "invalid_code": "Failed to sign into Hive. Your two-factor authentication code was incorrect.",
-      "no_internet_available": "An internet connection is required to connect to Hive.",
+      "invalid_username": "Failed to sign in to Hive. Your email address is not recognised.",
+      "invalid_password": "Failed to sign in to Hive. Incorrect password, please try again.",
+      "invalid_code": "Failed to sign in to Hive. Your two-factor authentication code was incorrect.",
+      "no_internet_available": "An Internet connection is required to connect to Hive.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -105,7 +105,7 @@
     "sensor": {
       "heating": {
         "state": {
-          "manual": "Manual",
+          "manual": "[%key:common::state::manual%]",
           "off": "[%key:common::state::off%]",
           "schedule": "Schedule"
         }

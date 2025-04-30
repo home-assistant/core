@@ -20,7 +20,7 @@
   "services": {
     "select_next": {
       "name": "Next",
-      "description": "Select the next option.",
+      "description": "Selects the next option.",
       "fields": {
         "cycle": {
           "name": "Cycle",
@@ -44,7 +44,7 @@
       "fields": {
         "cycle": {
           "name": "[%key:component::input_select::services::select_next::fields::cycle::name%]",
-          "description": "[%key:component::input_select::services::select_next::fields::cycle::description%]"
+          "description": "If the option should cycle from the first to the last option on the list."
         }
       }
     },

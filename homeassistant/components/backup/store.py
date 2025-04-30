@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 STORE_DELAY_SAVE = 30
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 6
 
 
 class StoredBackupData(TypedDict):
@@ -67,6 +67,15 @@ class _BackupStore(Store[StoredBackupData]):
                     data["config"]["retention"]["copies"] = None
                 if data["config"]["retention"]["days"] == 0:
                     data["config"]["retention"]["days"] = None
+            if old_minor_version < 5:
+                # Version 1.5 adds automatic_backups_configured
+                data["config"]["automatic_backups_configured"] = (
+                    data["config"]["create_backup"]["password"] is not None
+                )
+            if old_minor_version < 6:
+                # Version 1.6 adds agent retention settings
+                for agent in data["config"]["agents"]:
+                    data["config"]["agents"][agent]["retention"] = None
 
         # Note: We allow reading data with major version 2.
         # Reject if major version is higher than 2.

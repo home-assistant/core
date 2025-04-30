@@ -25,11 +25,7 @@ from .common import (
     simulate_webhook,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_get_persistent_notifications,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.cloud import mock_cloud
 from tests.typing import WebSocketGenerator
 
@@ -423,9 +419,8 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert hass.config_entries.async_entries(DOMAIN)
 
-    notifications = async_get_persistent_notifications(hass)
-
-    assert len(notifications) > 0
+    # Test a reauth flow is initiated
+    assert len(list(config_entry.async_get_active_flows(hass, {"reauth"}))) == 1
 
     for config_entry in hass.config_entries.async_entries("netatmo"):
         await hass.config_entries.async_remove(config_entry.entry_id)
@@ -476,8 +471,9 @@ async def test_setup_component_invalid_token(
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert hass.config_entries.async_entries(DOMAIN)
-    notifications = async_get_persistent_notifications(hass)
-    assert len(notifications) > 0
+
+    # Test a reauth flow is initiated
+    assert len(list(config_entry.async_get_active_flows(hass, {"reauth"}))) == 1
 
     for entry in hass.config_entries.async_entries("netatmo"):
         await hass.config_entries.async_remove(entry.entry_id)

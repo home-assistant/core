@@ -128,7 +128,7 @@
       "storage_mode": {
         "name": "Storage mode",
         "state": {
-          "self_consumption": "Self consumption",
+          "self_consumption": "Self-consumption",
           "backup": "Full backup",
           "savings": "Savings mode"
         }
@@ -187,13 +187,13 @@
         "name": "Lifetime energy consumption {phase_name}"
       },
       "balanced_net_consumption": {
-        "name": "balanced net power consumption"
+        "name": "Balanced net power consumption"
       },
       "lifetime_balanced_net_consumption": {
         "name": "Lifetime balanced net energy consumption"
       },
       "balanced_net_consumption_phase": {
-        "name": "balanced net power consumption {phase_name}"
+        "name": "Balanced net power consumption {phase_name}"
       },
       "lifetime_balanced_net_consumption_phase": {
         "name": "Lifetime balanced net energy consumption {phase_name}"
@@ -217,7 +217,7 @@
         "name": "Net consumption CT current"
       },
       "net_ct_powerfactor": {
-        "name": "Powerfactor net consumption CT"
+        "name": "Power factor net consumption CT"
       },
       "net_ct_metering_status": {
         "name": "Metering status net consumption CT"
@@ -235,7 +235,7 @@
         "name": "Production CT current"
       },
       "production_ct_powerfactor": {
-        "name": "powerfactor production CT"
+        "name": "Power factor production CT"
       },
       "production_ct_metering_status": {
         "name": "Metering status production CT"
@@ -262,7 +262,7 @@
         "name": "Storage CT current"
       },
       "storage_ct_powerfactor": {
-        "name": "Powerfactor storage CT"
+        "name": "Power factor storage CT"
       },
       "storage_ct_metering_status": {
         "name": "Metering status storage CT"
@@ -289,7 +289,7 @@
         "name": "Net consumption CT current {phase_name}"
       },
       "net_ct_powerfactor_phase": {
-        "name": "Powerfactor net consumption CT {phase_name}"
+        "name": "Power factor net consumption CT {phase_name}"
       },
       "net_ct_metering_status_phase": {
         "name": "Metering status net consumption CT {phase_name}"
@@ -307,7 +307,7 @@
         "name": "Production CT current {phase_name}"
       },
       "production_ct_powerfactor_phase": {
-        "name": "Powerfactor production CT {phase_name}"
+        "name": "Power factor production CT {phase_name}"
       },
       "production_ct_metering_status_phase": {
         "name": "Metering status production CT {phase_name}"
@@ -334,7 +334,7 @@
         "name": "Storage CT current {phase_name}"
       },
       "storage_ct_powerfactor_phase": {
-        "name": "Powerfactor storage CT {phase_name}"
+        "name": "Power factor storage CT {phase_name}"
       },
       "storage_ct_metering_status_phase": {
         "name": "Metering status storage CT {phase_name}"
@@ -360,9 +360,9 @@
       "acb_battery_state": {
         "name": "Battery state",
         "state": {
-          "discharging": "Discharging",
+          "discharging": "[%key:common::state::discharging%]",
           "idle": "[%key:common::state::idle%]",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "full": "Full"
         }
       },
@@ -393,7 +393,7 @@
   },
   "exceptions": {
     "unexpected_device": {
-      "message": "Unexpected Envoy serial-number found at {host}; expected {expected_serial}, found {actual_serial}"
+      "message": "Unexpected Envoy serial number found at {host}; expected {expected_serial}, found {actual_serial}"
     },
     "authentication_error": {
       "message": "Envoy authentication failure on {host}: {args}"

@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, ValuesView
+from collections.abc import Callable, Mapping, ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
 import re
-from types import MappingProxyType
 from typing import Any, TypedDict, cast
 
 from fritzconnection import FritzConnection
@@ -187,7 +186,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         )
 
         self._devices: dict[str, FritzDevice] = {}
-        self._options: MappingProxyType[str, Any] | None = None
+        self._options: Mapping[str, Any] | None = None
         self._unique_id: str | None = None
         self.connection: FritzConnection = None
         self.fritz_guest_wifi: FritzGuestWLAN = None
@@ -213,9 +212,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
 
-    async def async_setup(
-        self, options: MappingProxyType[str, Any] | None = None
-    ) -> None:
+    async def async_setup(self, options: Mapping[str, Any] | None = None) -> None:
         """Wrap up FritzboxTools class setup."""
         self._options = options
         await self.hass.async_add_executor_job(self.setup)
@@ -526,7 +523,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     def manage_device_info(
         self, dev_info: Device, dev_mac: str, consider_home: bool
     ) -> bool:
-        """Update device lists."""
+        """Update device lists and return if device is new."""
         _LOGGER.debug("Client dev_info: %s", dev_info)
 
         if dev_mac in self._devices:
@@ -536,6 +533,16 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         device = FritzDevice(dev_mac, dev_info.name)
         device.update(dev_info, consider_home)
         self._devices[dev_mac] = device
+
+        # manually register device entry for new connected device
+        dr.async_get(self.hass).async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            connections={(CONNECTION_NETWORK_MAC, dev_mac)},
+            default_manufacturer="AVM",
+            default_model="FRITZ!Box Tracked device",
+            default_name=device.hostname,
+            via_device=(DOMAIN, self.unique_id),
+        )
         return True
 
     async def async_send_signal_device_update(self, new_device: bool) -> None:

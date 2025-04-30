@@ -138,6 +138,8 @@ class WebDavTodoListEntity(TodoListEntity):
             await self.hass.async_add_executor_job(
                 partial(self._calendar.save_todo, **item_data),
             )
+            # refreshing async otherwise it would take too much time
+            self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
@@ -172,6 +174,8 @@ class WebDavTodoListEntity(TodoListEntity):
                     obj_type="todo",
                 ),
             )
+            # refreshing async otherwise it would take too much time
+            self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
@@ -195,3 +199,5 @@ class WebDavTodoListEntity(TodoListEntity):
                 await self.hass.async_add_executor_job(item.delete)
             except (requests.ConnectionError, DAVError) as err:
                 raise HomeAssistantError(f"CalDAV delete error: {err}") from err
+        # refreshing async otherwise it would take too much time
+        self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))

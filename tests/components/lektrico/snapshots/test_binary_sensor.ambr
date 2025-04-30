@@ -24,7 +24,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Ev diode short',
+    'original_name': 'EV diode short',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -37,7 +37,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Ev diode short',
+      'friendly_name': '1p7k_500006 EV diode short',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_ev_diode_short',
@@ -72,7 +72,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Ev error',
+    'original_name': 'EV error',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -85,7 +85,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Ev error',
+      'friendly_name': '1p7k_500006 EV error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_ev_error',
@@ -312,7 +312,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Rcd error',
+    'original_name': 'RCD error',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -325,7 +325,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Rcd error',
+      'friendly_name': '1p7k_500006 RCD error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_rcd_error',

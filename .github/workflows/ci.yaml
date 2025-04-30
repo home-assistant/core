@@ -37,10 +37,10 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 11
+  CACHE_VERSION: 12
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 9
-  HA_SHORT_VERSION: "2025.3"
+  HA_SHORT_VERSION: "2025.6"
   DEFAULT_PYTHON: "3.13"
   ALL_PYTHON_VERSIONS: "['3.13']"
   # 10.3 is the oldest supported version
@@ -89,6 +89,7 @@ jobs:
       test_groups: ${{ steps.info.outputs.test_groups }}
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       tests: ${{ steps.info.outputs.tests }}
+      lint_only: ${{ steps.info.outputs.lint_only }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
     runs-on: ubuntu-24.04
     steps:
@@ -142,6 +143,7 @@ jobs:
           test_group_count=10
           tests="[]"
           tests_glob=""
+          lint_only=""
           skip_coverage=""
 
           if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
@@ -192,6 +194,17 @@ jobs:
             test_full_suite="true"
           fi
 
+          if [[ "${{ github.event.inputs.lint-only }}" == "true" ]] \
+            || [[ "${{ github.event.inputs.pylint-only }}" == "true" ]] \
+            || [[ "${{ github.event.inputs.mypy-only }}" == "true" ]] \
+            || [[ "${{ github.event.inputs.audit-licenses-only }}" == "true" ]] \
+            || [[ "${{ github.event_name }}" == "push" \
+              && "${{ github.event.repository.full_name }}" != "home-assistant/core" ]];
+          then
+            lint_only="true"
+            skip_coverage="true"
+          fi
+
           if [[ "${{ github.event.inputs.skip-coverage }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-skip-coverage') }}" == "true" ]];
           then
@@ -217,6 +230,8 @@ jobs:
           echo "tests=${tests}" >> $GITHUB_OUTPUT
           echo "tests_glob: ${tests_glob}"
           echo "tests_glob=${tests_glob}" >> $GITHUB_OUTPUT
+          echo "lint_only": ${lint_only}
+          echo "lint_only=${lint_only}" >> $GITHUB_OUTPUT
           echo "skip_coverage: ${skip_coverage}"
           echo "skip_coverage=${skip_coverage}" >> $GITHUB_OUTPUT
 
@@ -234,13 +249,13 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.3
         with:
           path: venv
           key: >-
@@ -256,7 +271,7 @@ jobs:
           uv pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.3
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           lookup-only: true
@@ -279,14 +294,14 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -295,7 +310,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -319,14 +334,14 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -335,7 +350,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -359,14 +374,14 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -375,7 +390,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -469,7 +484,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -482,7 +497,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.3
         with:
           path: venv
           key: >-
@@ -490,7 +505,7 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.3
         with:
           path: ${{ env.UV_CACHE_DIR }}
           key: >-
@@ -537,7 +552,7 @@ jobs:
           python --version
           uv pip freeze >> pip_freeze.txt
       - name: Upload pip_freeze artifact
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: pip-freeze-${{ matrix.python-version }}
           path: pip_freeze.txt
@@ -572,13 +587,13 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -605,13 +620,13 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -622,6 +637,25 @@ jobs:
         run: |
           . venv/bin/activate
           python -m script.gen_requirements_all validate
+
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-24.04
+    needs:
+      - info
+      - base
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.requirements == 'true'
+      && github.event_name == 'pull_request'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.2.2
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4.6.0
+        with:
+          license-check: false # We use our own license audit checks
 
   audit-licenses:
     name: Audit licenses
@@ -643,13 +677,13 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -661,7 +695,7 @@ jobs:
           . venv/bin/activate
           python -m script.licenses extract --output-file=licenses-${{ matrix.python-version }}.json
       - name: Upload licenses
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: licenses-${{ github.run_number }}-${{ matrix.python-version }}
           path: licenses-${{ matrix.python-version }}.json
@@ -686,13 +720,13 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -733,13 +767,13 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -778,7 +812,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -791,7 +825,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -799,7 +833,7 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.3
         with:
           path: .mypy_cache
           key: >-
@@ -829,11 +863,7 @@ jobs:
   prepare-pytest-full:
     runs-on: ubuntu-24.04
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && github.event.inputs.lint-only != 'true'
-      && github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -859,13 +889,13 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -877,7 +907,7 @@ jobs:
           . venv/bin/activate
           python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
       - name: Upload pytest_buckets
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: pytest_buckets
           path: pytest_buckets.txt
@@ -886,11 +916,7 @@ jobs:
   pytest-full:
     runs-on: ubuntu-24.04
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && github.event.inputs.lint-only != 'true'
-      && github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -923,13 +949,13 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -942,7 +968,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.3.0
         with:
           name: pytest_buckets
       - name: Compile English translations
@@ -962,6 +988,7 @@ jobs:
           if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
             cov_params+=(--cov="homeassistant")
             cov_params+=(--cov-report=xml)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           echo "Test group ${{ matrix.group }}: $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt)"
@@ -980,18 +1007,24 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-full.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: test-results-full-${{ matrix.python-version }}-${{ matrix.group }}
+          path: junit.xml
       - name: Remove pytest_buckets
         run: rm pytest_buckets.txt
       - name: Check dirty
@@ -1009,11 +1042,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: password
         options: --health-cmd="mysqladmin ping -uroot -ppassword" --health-interval=5s --health-timeout=2s --health-retries=3
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && github.event.inputs.lint-only != 'true'
-      && github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.mariadb_groups != '[]'
     needs:
       - info
@@ -1045,13 +1074,13 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1088,6 +1117,7 @@ jobs:
             cov_params+=(--cov="homeassistant.components.recorder")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           python3 -b -X dev -m pytest \
@@ -1108,7 +1138,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1116,12 +1146,19 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: test-results-mariadb-${{ matrix.python-version }}-${{
+            steps.pytest-partial.outputs.mariadb }}
+          path: junit.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -1137,11 +1174,7 @@ jobs:
           POSTGRES_PASSWORD: password
         options: --health-cmd="pg_isready -hlocalhost -Upostgres" --health-interval=5s --health-timeout=2s --health-retries=3
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && github.event.inputs.lint-only != 'true'
-      && github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.postgresql_groups != '[]'
     needs:
       - info
@@ -1175,13 +1208,13 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1218,6 +1251,7 @@ jobs:
             cov_params+=(--cov="homeassistant.components.recorder")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           python3 -b -X dev -m pytest \
@@ -1239,7 +1273,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1247,12 +1281,19 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: test-results-postgres-${{ matrix.python-version }}-${{
+            steps.pytest-partial.outputs.postgresql }}
+          path: junit.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -1271,12 +1312,12 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.3.0
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v5.3.1
+        uses: codecov/codecov-action@v5.4.2
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1285,11 +1326,7 @@ jobs:
   pytest-partial:
     runs-on: ubuntu-24.04
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && github.event.inputs.lint-only != 'true'
-      && github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.tests_glob
       && needs.info.outputs.test_full_suite == 'false'
     needs:
@@ -1322,13 +1359,13 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.2.0
+        uses: actions/cache/restore@v4.2.3
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1365,6 +1402,7 @@ jobs:
             cov_params+=(--cov="homeassistant.components.${{ matrix.group }}")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           python3 -b -X dev -m pytest \
@@ -1382,18 +1420,24 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: test-results-partial-${{ matrix.python-version }}-${{ matrix.group }}
+          path: junit.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -1410,12 +1454,37 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.3.0
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v5.3.1
+        uses: codecov/codecov-action@v5.4.2
         with:
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  upload-test-results:
+    name: Upload test results to Codecov
+    # codecov/test-results-action currently doesn't support tokenless uploads
+    # therefore we can't run it on forks
+    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork) && needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
+    runs-on: ubuntu-24.04
+    needs:
+      - info
+      - pytest-partial
+      - pytest-full
+      - pytest-postgres
+      - pytest-mariadb
+    timeout-minutes: 10
+    steps:
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v4.3.0
+        with:
+          pattern: test-results-*
+      - name: Upload test results to Codecov
+        uses: codecov/test-results-action@v1
+        with:
+          fail_ci_if_error: true
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}

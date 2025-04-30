@@ -32,6 +32,7 @@
           'it',
           'ka',
           'ko',
+          'kw',
           'lb',
           'lt',
           'lv',
@@ -202,6 +203,7 @@
 # ---
 # name: test_http_api_handle_failure
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -222,6 +224,7 @@
 # ---
 # name: test_http_api_no_match
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -242,6 +245,7 @@
 # ---
 # name: test_http_api_unexpected_failure
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -262,6 +266,7 @@
 # ---
 # name: test_http_processing_intent[None]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -292,6 +297,7 @@
 # ---
 # name: test_http_processing_intent[conversation.home_assistant]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -322,6 +328,7 @@
 # ---
 # name: test_http_processing_intent[homeassistant]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -352,6 +359,7 @@
 # ---
 # name: test_ws_api[payload0]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -372,6 +380,7 @@
 # ---
 # name: test_ws_api[payload1]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -392,6 +401,7 @@
 # ---
 # name: test_ws_api[payload2]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -412,6 +422,7 @@
 # ---
 # name: test_ws_api[payload3]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -432,6 +443,7 @@
 # ---
 # name: test_ws_api[payload4]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -452,6 +464,7 @@
 # ---
 # name: test_ws_api[payload5]
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({

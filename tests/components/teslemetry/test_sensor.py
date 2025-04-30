@@ -31,9 +31,7 @@ async def test_sensors(
     freezer.move_to("2024-01-01 00:00:00+00:00")
 
     # Force the vehicle to use polling
-    with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.pre2021", return_value=True
-    ):
+    with patch("tesla_fleet_api.teslemetry.Vehicle.pre2021", return_value=True):
         entry = await setup_platform(hass, [Platform.SENSOR])
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
@@ -72,7 +70,7 @@ async def test_sensors_streaming(
                 Signal.AC_CHARGING_ENERGY_IN: 10,
                 Signal.AC_CHARGING_POWER: 2,
                 Signal.CHARGING_CABLE_TYPE: None,
-                Signal.TIME_TO_FULL_CHARGE: 10,
+                Signal.TIME_TO_FULL_CHARGE: 0.166666667,
                 Signal.MINUTES_TO_ARRIVAL: None,
             },
             "createdAt": "2024-10-04T10:45:17.537Z",
