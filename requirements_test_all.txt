@@ -898,14 +898,14 @@ google-cloud-texttospeech==2.25.1
 # homeassistant.components.google_generative_ai_conversation
 google-genai==1.7.0
 
+# homeassistant.components.google_travel_time
+google-maps-routing==0.6.14
+
 # homeassistant.components.nest
 google-nest-sdm==7.1.4
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
-
-# homeassistant.components.google_travel_time
-googlemaps==2.5.1
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local
