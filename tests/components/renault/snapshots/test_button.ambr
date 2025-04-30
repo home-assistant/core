@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_air_conditioner',
-    'unique_id': 'vf1aaaaa555777999_start_air_conditioner',
+    'unique_id': 'vf1zoe40vin_start_air_conditioner',
     'unit_of_measurement': None,
   })
 # ---
@@ -76,7 +76,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_charge',
-    'unique_id': 'vf1aaaaa555777999_start_charge',
+    'unique_id': 'vf1zoe40vin_start_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -123,7 +123,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'stop_charge',
-    'unique_id': 'vf1aaaaa555777999_stop_charge',
+    'unique_id': 'vf1zoe40vin_stop_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -170,7 +170,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_air_conditioner',
-    'unique_id': 'vf1aaaaa555777999_start_air_conditioner',
+    'unique_id': 'vf1zoe40vin_start_air_conditioner',
     'unit_of_measurement': None,
   })
 # ---
@@ -217,7 +217,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_charge',
-    'unique_id': 'vf1aaaaa555777999_start_charge',
+    'unique_id': 'vf1zoe40vin_start_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -264,7 +264,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'stop_charge',
-    'unique_id': 'vf1aaaaa555777999_stop_charge',
+    'unique_id': 'vf1zoe40vin_stop_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -311,7 +311,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_air_conditioner',
-    'unique_id': 'vf1aaaaa555777999_start_air_conditioner',
+    'unique_id': 'vf1zoe40vin_start_air_conditioner',
     'unit_of_measurement': None,
   })
 # ---
@@ -358,7 +358,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_charge',
-    'unique_id': 'vf1aaaaa555777999_start_charge',
+    'unique_id': 'vf1zoe40vin_start_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -405,7 +405,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'stop_charge',
-    'unique_id': 'vf1aaaaa555777999_stop_charge',
+    'unique_id': 'vf1zoe40vin_stop_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -452,7 +452,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_air_conditioner',
-    'unique_id': 'vf1aaaaa555777999_start_air_conditioner',
+    'unique_id': 'vf1zoe40vin_start_air_conditioner',
     'unit_of_measurement': None,
   })
 # ---
@@ -499,7 +499,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_charge',
-    'unique_id': 'vf1aaaaa555777999_start_charge',
+    'unique_id': 'vf1zoe40vin_start_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -546,7 +546,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'stop_charge',
-    'unique_id': 'vf1aaaaa555777999_stop_charge',
+    'unique_id': 'vf1zoe40vin_stop_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -593,7 +593,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_air_conditioner',
-    'unique_id': 'vf1aaaaa555777123_start_air_conditioner',
+    'unique_id': 'vf1capturfuelvin_start_air_conditioner',
     'unit_of_measurement': None,
   })
 # ---
@@ -640,7 +640,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_air_conditioner',
-    'unique_id': 'vf1aaaaa555777123_start_air_conditioner',
+    'unique_id': 'vf1capturphevvin_start_air_conditioner',
     'unit_of_measurement': None,
   })
 # ---
@@ -687,7 +687,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_charge',
-    'unique_id': 'vf1aaaaa555777123_start_charge',
+    'unique_id': 'vf1capturphevvin_start_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -734,7 +734,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'stop_charge',
-    'unique_id': 'vf1aaaaa555777123_stop_charge',
+    'unique_id': 'vf1capturphevvin_stop_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -781,7 +781,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_air_conditioner',
-    'unique_id': 'vf1aaaaa555777999_start_air_conditioner',
+    'unique_id': 'vf1twingoiiivin_start_air_conditioner',
     'unit_of_measurement': None,
   })
 # ---
@@ -828,7 +828,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_charge',
-    'unique_id': 'vf1aaaaa555777999_start_charge',
+    'unique_id': 'vf1twingoiiivin_start_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -875,7 +875,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'stop_charge',
-    'unique_id': 'vf1aaaaa555777999_stop_charge',
+    'unique_id': 'vf1twingoiiivin_stop_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -922,7 +922,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_air_conditioner',
-    'unique_id': 'vf1aaaaa555777999_start_air_conditioner',
+    'unique_id': 'vf1zoe40vin_start_air_conditioner',
     'unit_of_measurement': None,
   })
 # ---
@@ -969,7 +969,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_charge',
-    'unique_id': 'vf1aaaaa555777999_start_charge',
+    'unique_id': 'vf1zoe40vin_start_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -1016,7 +1016,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'stop_charge',
-    'unique_id': 'vf1aaaaa555777999_stop_charge',
+    'unique_id': 'vf1zoe40vin_stop_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -1063,7 +1063,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_air_conditioner',
-    'unique_id': 'vf1aaaaa555777999_start_air_conditioner',
+    'unique_id': 'vf1zoe50vin_start_air_conditioner',
     'unit_of_measurement': None,
   })
 # ---
@@ -1110,7 +1110,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_charge',
-    'unique_id': 'vf1aaaaa555777999_start_charge',
+    'unique_id': 'vf1zoe50vin_start_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -1157,7 +1157,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'stop_charge',
-    'unique_id': 'vf1aaaaa555777999_stop_charge',
+    'unique_id': 'vf1zoe50vin_stop_charge',
     'unit_of_measurement': None,
   })
 # ---

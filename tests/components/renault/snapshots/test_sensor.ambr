@@ -31,7 +31,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_battery_level',
+    'unique_id': 'vf1zoe40vin_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -83,7 +83,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
-    'unique_id': 'vf1aaaaa555777999_battery_autonomy',
+    'unique_id': 'vf1zoe40vin_battery_autonomy',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -135,7 +135,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
-    'unique_id': 'vf1aaaaa555777999_battery_available_energy',
+    'unique_id': 'vf1zoe40vin_battery_available_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -187,7 +187,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
-    'unique_id': 'vf1aaaaa555777999_battery_temperature',
+    'unique_id': 'vf1zoe40vin_battery_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -248,7 +248,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
-    'unique_id': 'vf1aaaaa555777999_charge_state',
+    'unique_id': 'vf1zoe40vin_charge_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -308,7 +308,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_power',
-    'unique_id': 'vf1aaaaa555777999_charging_power',
+    'unique_id': 'vf1zoe40vin_charging_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -360,7 +360,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
-    'unique_id': 'vf1aaaaa555777999_charging_remaining_time',
+    'unique_id': 'vf1zoe40vin_charging_remaining_time',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -410,7 +410,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_soc_threshold',
-    'unique_id': 'vf1aaaaa555777999_hvac_soc_threshold',
+    'unique_id': 'vf1zoe40vin_hvac_soc_threshold',
     'unit_of_measurement': '%',
   })
 # ---
@@ -458,7 +458,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
-    'unique_id': 'vf1aaaaa555777999_battery_last_activity',
+    'unique_id': 'vf1zoe40vin_battery_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -506,7 +506,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_last_activity',
-    'unique_id': 'vf1aaaaa555777999_hvac_last_activity',
+    'unique_id': 'vf1zoe40vin_hvac_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -556,7 +556,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
-    'unique_id': 'vf1aaaaa555777999_mileage',
+    'unique_id': 'vf1zoe40vin_mileage',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -608,7 +608,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
-    'unique_id': 'vf1aaaaa555777999_outside_temperature',
+    'unique_id': 'vf1zoe40vin_outside_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -666,7 +666,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
-    'unique_id': 'vf1aaaaa555777999_plug_state',
+    'unique_id': 'vf1zoe40vin_plug_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -723,7 +723,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_battery_level',
+    'unique_id': 'vf1zoe40vin_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -775,7 +775,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
-    'unique_id': 'vf1aaaaa555777999_battery_autonomy',
+    'unique_id': 'vf1zoe40vin_battery_autonomy',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -827,7 +827,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
-    'unique_id': 'vf1aaaaa555777999_battery_available_energy',
+    'unique_id': 'vf1zoe40vin_battery_available_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -879,7 +879,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
-    'unique_id': 'vf1aaaaa555777999_battery_temperature',
+    'unique_id': 'vf1zoe40vin_battery_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -940,7 +940,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
-    'unique_id': 'vf1aaaaa555777999_charge_state',
+    'unique_id': 'vf1zoe40vin_charge_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1000,7 +1000,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_power',
-    'unique_id': 'vf1aaaaa555777999_charging_power',
+    'unique_id': 'vf1zoe40vin_charging_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1052,7 +1052,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
-    'unique_id': 'vf1aaaaa555777999_charging_remaining_time',
+    'unique_id': 'vf1zoe40vin_charging_remaining_time',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -1102,7 +1102,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_soc_threshold',
-    'unique_id': 'vf1aaaaa555777999_hvac_soc_threshold',
+    'unique_id': 'vf1zoe40vin_hvac_soc_threshold',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1150,7 +1150,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
-    'unique_id': 'vf1aaaaa555777999_battery_last_activity',
+    'unique_id': 'vf1zoe40vin_battery_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -1198,7 +1198,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_last_activity',
-    'unique_id': 'vf1aaaaa555777999_hvac_last_activity',
+    'unique_id': 'vf1zoe40vin_hvac_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -1248,7 +1248,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
-    'unique_id': 'vf1aaaaa555777999_mileage',
+    'unique_id': 'vf1zoe40vin_mileage',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1300,7 +1300,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
-    'unique_id': 'vf1aaaaa555777999_outside_temperature',
+    'unique_id': 'vf1zoe40vin_outside_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1358,7 +1358,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
-    'unique_id': 'vf1aaaaa555777999_plug_state',
+    'unique_id': 'vf1zoe40vin_plug_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1415,7 +1415,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'fuel_autonomy',
-    'unique_id': 'vf1aaaaa555777123_fuel_autonomy',
+    'unique_id': 'vf1capturfuelvin_fuel_autonomy',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1467,7 +1467,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'fuel_quantity',
-    'unique_id': 'vf1aaaaa555777123_fuel_quantity',
+    'unique_id': 'vf1capturfuelvin_fuel_quantity',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
@@ -1517,7 +1517,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location_last_activity',
-    'unique_id': 'vf1aaaaa555777123_location_last_activity',
+    'unique_id': 'vf1capturfuelvin_location_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -1567,7 +1567,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
-    'unique_id': 'vf1aaaaa555777123_mileage',
+    'unique_id': 'vf1capturfuelvin_mileage',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1617,7 +1617,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'res_state',
-    'unique_id': 'vf1aaaaa555777123_res_state',
+    'unique_id': 'vf1capturfuelvin_res_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1664,7 +1664,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'res_state_code',
-    'unique_id': 'vf1aaaaa555777123_res_state_code',
+    'unique_id': 'vf1capturfuelvin_res_state_code',
     'unit_of_measurement': None,
   })
 # ---
@@ -1713,7 +1713,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'admissible_charging_power',
-    'unique_id': 'vf1aaaaa555777123_charging_power',
+    'unique_id': 'vf1capturphevvin_charging_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1765,7 +1765,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777123_battery_level',
+    'unique_id': 'vf1capturphevvin_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1817,7 +1817,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
-    'unique_id': 'vf1aaaaa555777123_battery_autonomy',
+    'unique_id': 'vf1capturphevvin_battery_autonomy',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1869,7 +1869,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
-    'unique_id': 'vf1aaaaa555777123_battery_available_energy',
+    'unique_id': 'vf1capturphevvin_battery_available_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1921,7 +1921,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
-    'unique_id': 'vf1aaaaa555777123_battery_temperature',
+    'unique_id': 'vf1capturphevvin_battery_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1982,7 +1982,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
-    'unique_id': 'vf1aaaaa555777123_charge_state',
+    'unique_id': 'vf1capturphevvin_charge_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2042,7 +2042,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
-    'unique_id': 'vf1aaaaa555777123_charging_remaining_time',
+    'unique_id': 'vf1capturphevvin_charging_remaining_time',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -2094,7 +2094,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'fuel_autonomy',
-    'unique_id': 'vf1aaaaa555777123_fuel_autonomy',
+    'unique_id': 'vf1capturphevvin_fuel_autonomy',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -2146,7 +2146,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'fuel_quantity',
-    'unique_id': 'vf1aaaaa555777123_fuel_quantity',
+    'unique_id': 'vf1capturphevvin_fuel_quantity',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
@@ -2196,7 +2196,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
-    'unique_id': 'vf1aaaaa555777123_battery_last_activity',
+    'unique_id': 'vf1capturphevvin_battery_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -2244,7 +2244,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location_last_activity',
-    'unique_id': 'vf1aaaaa555777123_location_last_activity',
+    'unique_id': 'vf1capturphevvin_location_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -2294,7 +2294,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
-    'unique_id': 'vf1aaaaa555777123_mileage',
+    'unique_id': 'vf1capturphevvin_mileage',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -2352,7 +2352,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
-    'unique_id': 'vf1aaaaa555777123_plug_state',
+    'unique_id': 'vf1capturphevvin_plug_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2407,7 +2407,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'res_state',
-    'unique_id': 'vf1aaaaa555777123_res_state',
+    'unique_id': 'vf1capturphevvin_res_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2454,7 +2454,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'res_state_code',
-    'unique_id': 'vf1aaaaa555777123_res_state_code',
+    'unique_id': 'vf1capturphevvin_res_state_code',
     'unit_of_measurement': None,
   })
 # ---
@@ -2503,7 +2503,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'admissible_charging_power',
-    'unique_id': 'vf1aaaaa555777999_charging_power',
+    'unique_id': 'vf1twingoiiivin_charging_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -2555,7 +2555,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_battery_level',
+    'unique_id': 'vf1twingoiiivin_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2607,7 +2607,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
-    'unique_id': 'vf1aaaaa555777999_battery_autonomy',
+    'unique_id': 'vf1twingoiiivin_battery_autonomy',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -2659,7 +2659,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
-    'unique_id': 'vf1aaaaa555777999_battery_available_energy',
+    'unique_id': 'vf1twingoiiivin_battery_available_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -2711,7 +2711,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
-    'unique_id': 'vf1aaaaa555777999_battery_temperature',
+    'unique_id': 'vf1twingoiiivin_battery_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2772,7 +2772,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
-    'unique_id': 'vf1aaaaa555777999_charge_state',
+    'unique_id': 'vf1twingoiiivin_charge_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2832,7 +2832,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
-    'unique_id': 'vf1aaaaa555777999_charging_remaining_time',
+    'unique_id': 'vf1twingoiiivin_charging_remaining_time',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -2882,7 +2882,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_soc_threshold',
-    'unique_id': 'vf1aaaaa555777999_hvac_soc_threshold',
+    'unique_id': 'vf1twingoiiivin_hvac_soc_threshold',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2930,7 +2930,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
-    'unique_id': 'vf1aaaaa555777999_battery_last_activity',
+    'unique_id': 'vf1twingoiiivin_battery_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -2978,7 +2978,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_last_activity',
-    'unique_id': 'vf1aaaaa555777999_hvac_last_activity',
+    'unique_id': 'vf1twingoiiivin_hvac_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -3026,7 +3026,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location_last_activity',
-    'unique_id': 'vf1aaaaa555777999_location_last_activity',
+    'unique_id': 'vf1twingoiiivin_location_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -3076,7 +3076,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
-    'unique_id': 'vf1aaaaa555777999_mileage',
+    'unique_id': 'vf1twingoiiivin_mileage',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -3128,7 +3128,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
-    'unique_id': 'vf1aaaaa555777999_outside_temperature',
+    'unique_id': 'vf1twingoiiivin_outside_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3186,7 +3186,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
-    'unique_id': 'vf1aaaaa555777999_plug_state',
+    'unique_id': 'vf1twingoiiivin_plug_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3241,7 +3241,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'res_state',
-    'unique_id': 'vf1aaaaa555777999_res_state',
+    'unique_id': 'vf1twingoiiivin_res_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3288,7 +3288,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'res_state_code',
-    'unique_id': 'vf1aaaaa555777999_res_state_code',
+    'unique_id': 'vf1twingoiiivin_res_state_code',
     'unit_of_measurement': None,
   })
 # ---
@@ -3337,7 +3337,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_battery_level',
+    'unique_id': 'vf1zoe40vin_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3389,7 +3389,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
-    'unique_id': 'vf1aaaaa555777999_battery_autonomy',
+    'unique_id': 'vf1zoe40vin_battery_autonomy',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -3441,7 +3441,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
-    'unique_id': 'vf1aaaaa555777999_battery_available_energy',
+    'unique_id': 'vf1zoe40vin_battery_available_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -3493,7 +3493,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
-    'unique_id': 'vf1aaaaa555777999_battery_temperature',
+    'unique_id': 'vf1zoe40vin_battery_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3554,7 +3554,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
-    'unique_id': 'vf1aaaaa555777999_charge_state',
+    'unique_id': 'vf1zoe40vin_charge_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3614,7 +3614,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_power',
-    'unique_id': 'vf1aaaaa555777999_charging_power',
+    'unique_id': 'vf1zoe40vin_charging_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -3666,7 +3666,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
-    'unique_id': 'vf1aaaaa555777999_charging_remaining_time',
+    'unique_id': 'vf1zoe40vin_charging_remaining_time',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -3716,7 +3716,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_soc_threshold',
-    'unique_id': 'vf1aaaaa555777999_hvac_soc_threshold',
+    'unique_id': 'vf1zoe40vin_hvac_soc_threshold',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3764,7 +3764,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
-    'unique_id': 'vf1aaaaa555777999_battery_last_activity',
+    'unique_id': 'vf1zoe40vin_battery_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -3812,7 +3812,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_last_activity',
-    'unique_id': 'vf1aaaaa555777999_hvac_last_activity',
+    'unique_id': 'vf1zoe40vin_hvac_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -3862,7 +3862,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
-    'unique_id': 'vf1aaaaa555777999_mileage',
+    'unique_id': 'vf1zoe40vin_mileage',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -3914,7 +3914,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
-    'unique_id': 'vf1aaaaa555777999_outside_temperature',
+    'unique_id': 'vf1zoe40vin_outside_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3972,7 +3972,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
-    'unique_id': 'vf1aaaaa555777999_plug_state',
+    'unique_id': 'vf1zoe40vin_plug_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -4029,7 +4029,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'admissible_charging_power',
-    'unique_id': 'vf1aaaaa555777999_charging_power',
+    'unique_id': 'vf1zoe50vin_charging_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -4081,7 +4081,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'vf1aaaaa555777999_battery_level',
+    'unique_id': 'vf1zoe50vin_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -4133,7 +4133,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
-    'unique_id': 'vf1aaaaa555777999_battery_autonomy',
+    'unique_id': 'vf1zoe50vin_battery_autonomy',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -4185,7 +4185,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_available_energy',
-    'unique_id': 'vf1aaaaa555777999_battery_available_energy',
+    'unique_id': 'vf1zoe50vin_battery_available_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4237,7 +4237,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
-    'unique_id': 'vf1aaaaa555777999_battery_temperature',
+    'unique_id': 'vf1zoe50vin_battery_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4298,7 +4298,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state',
-    'unique_id': 'vf1aaaaa555777999_charge_state',
+    'unique_id': 'vf1zoe50vin_charge_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -4358,7 +4358,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charging_remaining_time',
-    'unique_id': 'vf1aaaaa555777999_charging_remaining_time',
+    'unique_id': 'vf1zoe50vin_charging_remaining_time',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -4408,7 +4408,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_soc_threshold',
-    'unique_id': 'vf1aaaaa555777999_hvac_soc_threshold',
+    'unique_id': 'vf1zoe50vin_hvac_soc_threshold',
     'unit_of_measurement': '%',
   })
 # ---
@@ -4456,7 +4456,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_last_activity',
-    'unique_id': 'vf1aaaaa555777999_battery_last_activity',
+    'unique_id': 'vf1zoe50vin_battery_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -4504,7 +4504,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hvac_last_activity',
-    'unique_id': 'vf1aaaaa555777999_hvac_last_activity',
+    'unique_id': 'vf1zoe50vin_hvac_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -4552,7 +4552,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location_last_activity',
-    'unique_id': 'vf1aaaaa555777999_location_last_activity',
+    'unique_id': 'vf1zoe50vin_location_last_activity',
     'unit_of_measurement': None,
   })
 # ---
@@ -4602,7 +4602,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
-    'unique_id': 'vf1aaaaa555777999_mileage',
+    'unique_id': 'vf1zoe50vin_mileage',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -4654,7 +4654,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
-    'unique_id': 'vf1aaaaa555777999_outside_temperature',
+    'unique_id': 'vf1zoe50vin_outside_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4712,7 +4712,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'plug_state',
-    'unique_id': 'vf1aaaaa555777999_plug_state',
+    'unique_id': 'vf1zoe50vin_plug_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -4767,7 +4767,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'res_state',
-    'unique_id': 'vf1aaaaa555777999_res_state',
+    'unique_id': 'vf1zoe50vin_res_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -4814,7 +4814,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'res_state_code',
-    'unique_id': 'vf1aaaaa555777999_res_state_code',
+    'unique_id': 'vf1zoe50vin_res_state_code',
     'unit_of_measurement': None,
   })
 # ---

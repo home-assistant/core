@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777999_location',
+    'unique_id': 'vf1zoe50vin_location',
     'unit_of_measurement': None,
   })
 # ---
@@ -77,7 +77,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777999_location',
+    'unique_id': 'vf1zoe50vin_location',
     'unit_of_measurement': None,
   })
 # ---
@@ -124,7 +124,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777123_location',
+    'unique_id': 'vf1capturfuelvin_location',
     'unit_of_measurement': None,
   })
 # ---
@@ -175,7 +175,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777123_location',
+    'unique_id': 'vf1capturphevvin_location',
     'unit_of_measurement': None,
   })
 # ---
@@ -226,7 +226,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777999_location',
+    'unique_id': 'vf1twingoiiivin_location',
     'unit_of_measurement': None,
   })
 # ---
@@ -277,7 +277,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'location',
-    'unique_id': 'vf1aaaaa555777999_location',
+    'unique_id': 'vf1zoe50vin_location',
     'unit_of_measurement': None,
   })
 # ---
