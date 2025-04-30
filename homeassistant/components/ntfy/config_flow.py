@@ -331,4 +331,5 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
                 data_schema=STEP_RECONFIGURE_TOPIC_SCHEMA,
                 suggested_values=subentry_data,
             ),
+            description_placeholders={CONF_TOPIC: subentry_data[CONF_TOPIC]},
         )

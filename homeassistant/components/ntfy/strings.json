@@ -80,7 +80,7 @@
         },
         "reconfigure": {
           "title": "[%key:component::ntfy::common::topic%]",
-          "description": "Update topic configuration",
+          "description": "Update configuration for topic **{topic}**",
           "data": {
             "name": "[%key:component::ntfy::config_subentries::topic::step::add_topic::data::name%]"
           },
