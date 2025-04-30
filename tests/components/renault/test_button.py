@@ -109,7 +109,7 @@ async def test_button_start_charge(
     await hass.async_block_till_done()
 
     data = {
-        ATTR_ENTITY_ID: "button.reg_number_start_charge",
+        ATTR_ENTITY_ID: "button.reg_zoe_40_start_charge",
     }
 
     with patch(
@@ -137,7 +137,7 @@ async def test_button_stop_charge(
     await hass.async_block_till_done()
 
     data = {
-        ATTR_ENTITY_ID: "button.reg_number_stop_charge",
+        ATTR_ENTITY_ID: "button.reg_zoe_40_stop_charge",
     }
 
     with patch(
@@ -165,7 +165,7 @@ async def test_button_start_air_conditioner(
     await hass.async_block_till_done()
 
     data = {
-        ATTR_ENTITY_ID: "button.reg_number_start_air_conditioner",
+        ATTR_ENTITY_ID: "button.reg_zoe_40_start_air_conditioner",
     }
 
     with patch(

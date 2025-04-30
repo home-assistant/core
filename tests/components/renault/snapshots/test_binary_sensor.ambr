@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_number_charging-entry]
+# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_zoe_40_charging',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -33,21 +33,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_number_charging-state]
+# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery_charging',
-      'friendly_name': 'REG-NUMBER Charging',
+      'friendly_name': 'REG-ZOE-40 Charging',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_zoe_40_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_number_hvac-entry]
+# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_hvac',
+    'entity_id': 'binary_sensor.reg_zoe_40_hvac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -81,20 +81,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_number_hvac-state]
+# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER HVAC',
+      'friendly_name': 'REG-ZOE-40 HVAC',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_hvac',
+    'entity_id': 'binary_sensor.reg_zoe_40_hvac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_number_plug-entry]
+# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_plug-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -107,7 +107,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_zoe_40_plug',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -128,21 +128,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_number_plug-state]
+# name: test_binary_sensor_empty[zoe_40][binary_sensor.reg_zoe_40_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'plug',
-      'friendly_name': 'REG-NUMBER Plug',
+      'friendly_name': 'REG-ZOE-40 Plug',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_zoe_40_plug',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_number_charging-entry]
+# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -155,7 +155,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_zoe_40_charging',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -176,21 +176,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_number_charging-state]
+# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery_charging',
-      'friendly_name': 'REG-NUMBER Charging',
+      'friendly_name': 'REG-ZOE-40 Charging',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_zoe_40_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_number_hvac-entry]
+# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -203,7 +203,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_hvac',
+    'entity_id': 'binary_sensor.reg_zoe_40_hvac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -224,20 +224,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_number_hvac-state]
+# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER HVAC',
+      'friendly_name': 'REG-ZOE-40 HVAC',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_hvac',
+    'entity_id': 'binary_sensor.reg_zoe_40_hvac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_number_plug-entry]
+# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_plug-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -250,7 +250,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_zoe_40_plug',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -271,21 +271,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_number_plug-state]
+# name: test_binary_sensor_errors[zoe_40][binary_sensor.reg_zoe_40_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'plug',
-      'friendly_name': 'REG-NUMBER Plug',
+      'friendly_name': 'REG-ZOE-40 Plug',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_zoe_40_plug',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_driver_door-entry]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_driver_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -298,7 +298,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_driver_door',
+    'entity_id': 'binary_sensor.reg_captur_fuel_driver_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -319,21 +319,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_driver_door-state]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_driver_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Driver door',
+      'friendly_name': 'REG-CAPTUR-FUEL Driver door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_driver_door',
+    'entity_id': 'binary_sensor.reg_captur_fuel_driver_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_hatch-entry]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_hatch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -346,7 +346,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_hatch',
+    'entity_id': 'binary_sensor.reg_captur_fuel_hatch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -367,21 +367,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_hatch-state]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_hatch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Hatch',
+      'friendly_name': 'REG-CAPTUR-FUEL Hatch',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_hatch',
+    'entity_id': 'binary_sensor.reg_captur_fuel_hatch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_lock-entry]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -394,7 +394,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_lock',
+    'entity_id': 'binary_sensor.reg_captur_fuel_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -415,21 +415,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_lock-state]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'lock',
-      'friendly_name': 'REG-NUMBER Lock',
+      'friendly_name': 'REG-CAPTUR-FUEL Lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_lock',
+    'entity_id': 'binary_sensor.reg_captur_fuel_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_passenger_door-entry]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_passenger_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -442,7 +442,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_passenger_door',
+    'entity_id': 'binary_sensor.reg_captur_fuel_passenger_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -463,21 +463,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_passenger_door-state]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_passenger_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Passenger door',
+      'friendly_name': 'REG-CAPTUR-FUEL Passenger door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_passenger_door',
+    'entity_id': 'binary_sensor.reg_captur_fuel_passenger_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_rear_left_door-entry]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_rear_left_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -490,7 +490,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_rear_left_door',
+    'entity_id': 'binary_sensor.reg_captur_fuel_rear_left_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -511,21 +511,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_rear_left_door-state]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_rear_left_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Rear left door',
+      'friendly_name': 'REG-CAPTUR-FUEL Rear left door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_rear_left_door',
+    'entity_id': 'binary_sensor.reg_captur_fuel_rear_left_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_rear_right_door-entry]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_rear_right_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -538,7 +538,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_rear_right_door',
+    'entity_id': 'binary_sensor.reg_captur_fuel_rear_right_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -559,21 +559,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_fuel][binary_sensor.reg_number_rear_right_door-state]
+# name: test_binary_sensors[captur_fuel][binary_sensor.reg_captur_fuel_rear_right_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Rear right door',
+      'friendly_name': 'REG-CAPTUR-FUEL Rear right door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_rear_right_door',
+    'entity_id': 'binary_sensor.reg_captur_fuel_rear_right_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_charging-entry]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -586,7 +586,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_captur_phev_charging',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -607,21 +607,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_charging-state]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery_charging',
-      'friendly_name': 'REG-NUMBER Charging',
+      'friendly_name': 'REG-CAPTUR_PHEV Charging',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_captur_phev_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_driver_door-entry]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_driver_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -634,7 +634,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_driver_door',
+    'entity_id': 'binary_sensor.reg_captur_phev_driver_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -655,21 +655,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_driver_door-state]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_driver_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Driver door',
+      'friendly_name': 'REG-CAPTUR_PHEV Driver door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_driver_door',
+    'entity_id': 'binary_sensor.reg_captur_phev_driver_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_hatch-entry]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_hatch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -682,7 +682,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_hatch',
+    'entity_id': 'binary_sensor.reg_captur_phev_hatch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -703,21 +703,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_hatch-state]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_hatch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Hatch',
+      'friendly_name': 'REG-CAPTUR_PHEV Hatch',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_hatch',
+    'entity_id': 'binary_sensor.reg_captur_phev_hatch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_lock-entry]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -730,7 +730,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_lock',
+    'entity_id': 'binary_sensor.reg_captur_phev_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -751,21 +751,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_lock-state]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'lock',
-      'friendly_name': 'REG-NUMBER Lock',
+      'friendly_name': 'REG-CAPTUR_PHEV Lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_lock',
+    'entity_id': 'binary_sensor.reg_captur_phev_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_passenger_door-entry]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_passenger_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -778,7 +778,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_passenger_door',
+    'entity_id': 'binary_sensor.reg_captur_phev_passenger_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -799,21 +799,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_passenger_door-state]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_passenger_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Passenger door',
+      'friendly_name': 'REG-CAPTUR_PHEV Passenger door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_passenger_door',
+    'entity_id': 'binary_sensor.reg_captur_phev_passenger_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_plug-entry]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_plug-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -826,7 +826,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_captur_phev_plug',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -847,21 +847,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_plug-state]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'plug',
-      'friendly_name': 'REG-NUMBER Plug',
+      'friendly_name': 'REG-CAPTUR_PHEV Plug',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_captur_phev_plug',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_rear_left_door-entry]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_rear_left_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -874,7 +874,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_rear_left_door',
+    'entity_id': 'binary_sensor.reg_captur_phev_rear_left_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -895,21 +895,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_rear_left_door-state]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_rear_left_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Rear left door',
+      'friendly_name': 'REG-CAPTUR_PHEV Rear left door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_rear_left_door',
+    'entity_id': 'binary_sensor.reg_captur_phev_rear_left_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_rear_right_door-entry]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_rear_right_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -922,7 +922,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_rear_right_door',
+    'entity_id': 'binary_sensor.reg_captur_phev_rear_right_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -943,21 +943,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[captur_phev][binary_sensor.reg_number_rear_right_door-state]
+# name: test_binary_sensors[captur_phev][binary_sensor.reg_captur_phev_rear_right_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Rear right door',
+      'friendly_name': 'REG-CAPTUR_PHEV Rear right door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_rear_right_door',
+    'entity_id': 'binary_sensor.reg_captur_phev_rear_right_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_charging-entry]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -970,7 +970,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_twingo_iii_charging',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -991,21 +991,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_charging-state]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery_charging',
-      'friendly_name': 'REG-NUMBER Charging',
+      'friendly_name': 'REG-TWINGO-III Charging',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_twingo_iii_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_driver_door-entry]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_driver_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1018,7 +1018,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_driver_door',
+    'entity_id': 'binary_sensor.reg_twingo_iii_driver_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1039,21 +1039,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_driver_door-state]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_driver_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Driver door',
+      'friendly_name': 'REG-TWINGO-III Driver door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_driver_door',
+    'entity_id': 'binary_sensor.reg_twingo_iii_driver_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_hatch-entry]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_hatch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1066,7 +1066,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_hatch',
+    'entity_id': 'binary_sensor.reg_twingo_iii_hatch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1087,21 +1087,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_hatch-state]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_hatch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Hatch',
+      'friendly_name': 'REG-TWINGO-III Hatch',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_hatch',
+    'entity_id': 'binary_sensor.reg_twingo_iii_hatch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_hvac-entry]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1114,7 +1114,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_hvac',
+    'entity_id': 'binary_sensor.reg_twingo_iii_hvac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1135,20 +1135,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_hvac-state]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER HVAC',
+      'friendly_name': 'REG-TWINGO-III HVAC',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_hvac',
+    'entity_id': 'binary_sensor.reg_twingo_iii_hvac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_lock-entry]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1161,7 +1161,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_lock',
+    'entity_id': 'binary_sensor.reg_twingo_iii_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1182,21 +1182,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_lock-state]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'lock',
-      'friendly_name': 'REG-NUMBER Lock',
+      'friendly_name': 'REG-TWINGO-III Lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_lock',
+    'entity_id': 'binary_sensor.reg_twingo_iii_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_passenger_door-entry]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_passenger_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1209,7 +1209,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_passenger_door',
+    'entity_id': 'binary_sensor.reg_twingo_iii_passenger_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1230,21 +1230,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_passenger_door-state]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_passenger_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Passenger door',
+      'friendly_name': 'REG-TWINGO-III Passenger door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_passenger_door',
+    'entity_id': 'binary_sensor.reg_twingo_iii_passenger_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_plug-entry]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_plug-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1257,7 +1257,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_twingo_iii_plug',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1278,21 +1278,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_plug-state]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'plug',
-      'friendly_name': 'REG-NUMBER Plug',
+      'friendly_name': 'REG-TWINGO-III Plug',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_twingo_iii_plug',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_rear_left_door-entry]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_rear_left_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1305,7 +1305,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_rear_left_door',
+    'entity_id': 'binary_sensor.reg_twingo_iii_rear_left_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1326,21 +1326,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_rear_left_door-state]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_rear_left_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Rear left door',
+      'friendly_name': 'REG-TWINGO-III Rear left door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_rear_left_door',
+    'entity_id': 'binary_sensor.reg_twingo_iii_rear_left_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_rear_right_door-entry]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_rear_right_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1353,7 +1353,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_rear_right_door',
+    'entity_id': 'binary_sensor.reg_twingo_iii_rear_right_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1374,21 +1374,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_number_rear_right_door-state]
+# name: test_binary_sensors[twingo_3_electric][binary_sensor.reg_twingo_iii_rear_right_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Rear right door',
+      'friendly_name': 'REG-TWINGO-III Rear right door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_rear_right_door',
+    'entity_id': 'binary_sensor.reg_twingo_iii_rear_right_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensors[zoe_40][binary_sensor.reg_number_charging-entry]
+# name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1401,7 +1401,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_zoe_40_charging',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1422,21 +1422,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_40][binary_sensor.reg_number_charging-state]
+# name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery_charging',
-      'friendly_name': 'REG-NUMBER Charging',
+      'friendly_name': 'REG-ZOE-40 Charging',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_zoe_40_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[zoe_40][binary_sensor.reg_number_hvac-entry]
+# name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1449,7 +1449,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_hvac',
+    'entity_id': 'binary_sensor.reg_zoe_40_hvac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1470,20 +1470,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_40][binary_sensor.reg_number_hvac-state]
+# name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER HVAC',
+      'friendly_name': 'REG-ZOE-40 HVAC',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_hvac',
+    'entity_id': 'binary_sensor.reg_zoe_40_hvac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[zoe_40][binary_sensor.reg_number_plug-entry]
+# name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_plug-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1496,7 +1496,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_zoe_40_plug',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1517,21 +1517,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_40][binary_sensor.reg_number_plug-state]
+# name: test_binary_sensors[zoe_40][binary_sensor.reg_zoe_40_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'plug',
-      'friendly_name': 'REG-NUMBER Plug',
+      'friendly_name': 'REG-ZOE-40 Plug',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_zoe_40_plug',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_charging-entry]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1544,7 +1544,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_zoe_50_charging',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1565,21 +1565,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_charging-state]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery_charging',
-      'friendly_name': 'REG-NUMBER Charging',
+      'friendly_name': 'REG-ZOE-50 Charging',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_charging',
+    'entity_id': 'binary_sensor.reg_zoe_50_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_driver_door-entry]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_driver_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1592,7 +1592,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_driver_door',
+    'entity_id': 'binary_sensor.reg_zoe_50_driver_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1613,21 +1613,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_driver_door-state]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_driver_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Driver door',
+      'friendly_name': 'REG-ZOE-50 Driver door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_driver_door',
+    'entity_id': 'binary_sensor.reg_zoe_50_driver_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_hatch-entry]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_hatch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1640,7 +1640,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_hatch',
+    'entity_id': 'binary_sensor.reg_zoe_50_hatch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1661,21 +1661,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_hatch-state]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_hatch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Hatch',
+      'friendly_name': 'REG-ZOE-50 Hatch',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_hatch',
+    'entity_id': 'binary_sensor.reg_zoe_50_hatch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_hvac-entry]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1688,7 +1688,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_hvac',
+    'entity_id': 'binary_sensor.reg_zoe_50_hvac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1709,20 +1709,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_hvac-state]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-NUMBER HVAC',
+      'friendly_name': 'REG-ZOE-50 HVAC',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_hvac',
+    'entity_id': 'binary_sensor.reg_zoe_50_hvac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_lock-entry]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1735,7 +1735,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_lock',
+    'entity_id': 'binary_sensor.reg_zoe_50_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1756,21 +1756,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_lock-state]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'lock',
-      'friendly_name': 'REG-NUMBER Lock',
+      'friendly_name': 'REG-ZOE-50 Lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_lock',
+    'entity_id': 'binary_sensor.reg_zoe_50_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_passenger_door-entry]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_passenger_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1783,7 +1783,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_passenger_door',
+    'entity_id': 'binary_sensor.reg_zoe_50_passenger_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1804,21 +1804,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_passenger_door-state]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_passenger_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Passenger door',
+      'friendly_name': 'REG-ZOE-50 Passenger door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_passenger_door',
+    'entity_id': 'binary_sensor.reg_zoe_50_passenger_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_plug-entry]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_plug-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1831,7 +1831,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_zoe_50_plug',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1852,21 +1852,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_plug-state]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'plug',
-      'friendly_name': 'REG-NUMBER Plug',
+      'friendly_name': 'REG-ZOE-50 Plug',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_plug',
+    'entity_id': 'binary_sensor.reg_zoe_50_plug',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_rear_left_door-entry]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_rear_left_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1879,7 +1879,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_rear_left_door',
+    'entity_id': 'binary_sensor.reg_zoe_50_rear_left_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1900,21 +1900,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_rear_left_door-state]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_rear_left_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Rear left door',
+      'friendly_name': 'REG-ZOE-50 Rear left door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_rear_left_door',
+    'entity_id': 'binary_sensor.reg_zoe_50_rear_left_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_rear_right_door-entry]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_rear_right_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1927,7 +1927,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.reg_number_rear_right_door',
+    'entity_id': 'binary_sensor.reg_zoe_50_rear_right_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1948,14 +1948,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zoe_50][binary_sensor.reg_number_rear_right_door-state]
+# name: test_binary_sensors[zoe_50][binary_sensor.reg_zoe_50_rear_right_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'REG-NUMBER Rear right door',
+      'friendly_name': 'REG-ZOE-50 Rear right door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.reg_number_rear_right_door',
+    'entity_id': 'binary_sensor.reg_zoe_50_rear_right_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
