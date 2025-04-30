@@ -154,10 +154,6 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8029),
 }
 
-kNamespaceRefrigerator = 65
-kTagRefrigerator = 0
-kTagFreezer = 1
-
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
 ControlSequenceEnum = clusters.Thermostat.Enums.ControlSequenceOfOperationEnum
 ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
@@ -444,21 +440,6 @@ class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
-        # update TagList
-        self._attr_tag_list = list(
-            self.get_matter_attribute_value(clusters.Descriptor.Attributes.TagList)
-        )
-        tag_struct: clusters.Descriptor.Structs.SemanticTagStruct = self._attr_tag_list[
-            0
-        ]
-        namespace_id = tag_struct.namespaceID
-        tag = tag_struct.tag
-        if namespace_id == kNamespaceRefrigerator:
-            if tag == kTagRefrigerator:
-                self._attr_name = "Refrigerator"
-            elif tag == kTagFreezer:
-                self._attr_name = "Freezer"
-
         # update target_temperature
         self._attr_target_temperature = self._get_temperature_in_degrees(
             clusters.TemperatureControl.Attributes.TemperatureSetpoint
@@ -546,9 +527,6 @@ DISCOVERY_SCHEMAS = [
             clusters.TemperatureControl.Attributes.MinTemperature,
             clusters.TemperatureControl.Attributes.MaxTemperature,
         ),
-        optional_attributes=(
-            clusters.TemperatureControl.Attributes.Step,
-            clusters.Descriptor.Attributes.TagList,
-        ),
+        optional_attributes=(clusters.TemperatureControl.Attributes.Step,),
     ),
 ]
