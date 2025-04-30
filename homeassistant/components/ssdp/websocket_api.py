@@ -10,7 +10,10 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
-from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    SsdpServiceInfo,
+)
 
 from .const import DOMAIN, SSDP_SCANNER
 from .scanner import Scanner, SsdpChange
@@ -47,7 +50,13 @@ async def ws_subscribe_discovery(
     @callback
     def _async_on_data(info: SsdpServiceInfo, change: SsdpChange) -> None:
         if change is not SsdpChange.BYEBYE:
-            _async_event_message({"add": [asdict(info)]})
+            _async_event_message(
+                {
+                    "add": [
+                        {"name": info.upnp.get(ATTR_UPNP_FRIENDLY_NAME), **asdict(info)}
+                    ]
+                }
+            )
             return
         remove_msg = {
             FIELD_SSDP_ST: info.ssdp_st,
