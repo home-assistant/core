@@ -285,6 +285,9 @@ aiokafka==0.10.0
 # homeassistant.components.kef
 aiokef==0.2.16
 
+# homeassistant.components.rehlko
+aiokem==0.5.6
+
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
 
@@ -320,9 +323,6 @@ aiontfy==0.5.1
 
 # homeassistant.components.nut
 aionut==4.3.4
-
-# homeassistant.components.oncue
-aiooncue==0.3.9
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.6.8

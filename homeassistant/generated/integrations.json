@@ -4563,12 +4563,6 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
-    "oncue": {
-      "name": "Oncue by Kohler",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "ondilo_ico": {
       "name": "Ondilo ICO",
       "integration_type": "hub",
@@ -5374,6 +5368,12 @@
       "config_flow": true,
       "iot_class": "local_polling",
       "single_config_entry": true
+    },
+    "rehlko": {
+      "name": "Rehlko",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "rejseplanen": {
       "name": "Rejseplanen",
