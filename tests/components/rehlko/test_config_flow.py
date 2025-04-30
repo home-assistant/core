@@ -1,11 +1,11 @@
-"""Test the Rheklo config flow."""
+"""Test the Rehlko config flow."""
 
 from unittest.mock import AsyncMock
 
 from aiokem import AuthenticationCredentialsError
 import pytest
 
-from homeassistant.components.rheklo.const import DOMAIN
+from homeassistant.components.rehlko import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -24,7 +24,7 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 
 
 async def test_configure_entry(
-    hass: HomeAssistant, mock_rheklo: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_rehlko: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we can configure the entry."""
     result = await hass.config_entries.flow.async_init(
@@ -61,7 +61,7 @@ async def test_configure_entry(
 )
 async def test_configure_entry_exceptions(
     hass: HomeAssistant,
-    mock_rheklo: AsyncMock,
+    mock_rehlko: AsyncMock,
     error: Exception,
     conf_error: dict[str, str],
     mock_setup_entry: AsyncMock,
@@ -72,7 +72,7 @@ async def test_configure_entry_exceptions(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_rheklo.authenticate.side_effect = error
+    mock_rehlko.authenticate.side_effect = error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -87,7 +87,7 @@ async def test_configure_entry_exceptions(
 
     # Now try to authenticate again and succeed
     # This should create a new entry
-    mock_rheklo.authenticate.side_effect = None
+    mock_rehlko.authenticate.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -107,10 +107,10 @@ async def test_configure_entry_exceptions(
 
 
 async def test_already_configured(
-    hass: HomeAssistant, rheklo_config_entry: MockConfigEntry, mock_rheklo: AsyncMock
+    hass: HomeAssistant, rehlko_config_entry: MockConfigEntry, mock_rehlko: AsyncMock
 ) -> None:
     """Test if entry is already configured."""
-    rheklo_config_entry.add_to_hass(hass)
+    rehlko_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -130,13 +130,13 @@ async def test_already_configured(
 
 async def test_reauth(
     hass: HomeAssistant,
-    rheklo_config_entry: MockConfigEntry,
-    mock_rheklo: AsyncMock,
+    rehlko_config_entry: MockConfigEntry,
+    mock_rehlko: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth flow."""
-    rheklo_config_entry.add_to_hass(hass)
-    result = await rheklo_config_entry.start_reauth_flow(hass)
+    rehlko_config_entry.add_to_hass(hass)
+    result = await rehlko_config_entry.start_reauth_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -147,21 +147,21 @@ async def test_reauth(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert rheklo_config_entry.data[CONF_PASSWORD] == TEST_PASSWORD + "new"
+    assert rehlko_config_entry.data[CONF_PASSWORD] == TEST_PASSWORD + "new"
     assert mock_setup_entry.call_count == 1
 
 
 async def test_reauth_exception(
     hass: HomeAssistant,
-    rheklo_config_entry: MockConfigEntry,
-    mock_rheklo: AsyncMock,
+    rehlko_config_entry: MockConfigEntry,
+    mock_rehlko: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth flow."""
-    rheklo_config_entry.add_to_hass(hass)
-    result = await rheklo_config_entry.start_reauth_flow(hass)
+    rehlko_config_entry.add_to_hass(hass)
+    result = await rehlko_config_entry.start_reauth_flow(hass)
 
-    mock_rheklo.authenticate.side_effect = AuthenticationCredentialsError
+    mock_rehlko.authenticate.side_effect = AuthenticationCredentialsError
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -172,7 +172,7 @@ async def test_reauth_exception(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"password": "invalid_auth"}
 
-    mock_rheklo.authenticate.side_effect = None
+    mock_rehlko.authenticate.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -186,7 +186,7 @@ async def test_reauth_exception(
 
 
 async def test_dhcp_discovery(
-    hass: HomeAssistant, mock_rheklo: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_rehlko: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we can setup from dhcp discovery."""
     result = await hass.config_entries.flow.async_init(
@@ -207,10 +207,10 @@ async def test_dhcp_discovery(
 
 
 async def test_dhcp_discovery_already_set_up(
-    hass: HomeAssistant, rheklo_config_entry: MockConfigEntry, mock_rheklo: AsyncMock
+    hass: HomeAssistant, rehlko_config_entry: MockConfigEntry, mock_rehlko: AsyncMock
 ) -> None:
     """Test DHCP discovery aborts if already set up."""
-    rheklo_config_entry.add_to_hass(hass)
+    rehlko_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
     )

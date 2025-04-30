@@ -1,6 +1,6 @@
 {
-  "domain": "rheklo",
-  "name": "Rheklo",
+  "domain": "rehlko",
+  "name": "Rehlko",
   "codeowners": ["@bdraco", "@peterager"],
   "config_flow": true,
   "dhcp": [
@@ -9,7 +9,7 @@
       "macaddress": "00146F*"
     }
   ],
-  "documentation": "https://www.home-assistant.io/integrations/rheklo",
+  "documentation": "https://www.home-assistant.io/integrations/rehlko",
   "iot_class": "cloud_polling",
   "loggers": ["aiokem"],
   "quality_scale": "silver",

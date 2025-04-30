@@ -5367,6 +5367,12 @@
       "iot_class": "local_polling",
       "single_config_entry": true
     },
+    "rehlko": {
+      "name": "Rehlko",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "rejseplanen": {
       "name": "Rejseplanen",
       "integration_type": "hub",
@@ -5443,12 +5449,6 @@
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true
-    },
-    "rheklo": {
-      "name": "Rheklo",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "ridwell": {
       "name": "Ridwell",

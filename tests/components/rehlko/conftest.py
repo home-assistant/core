@@ -1,4 +1,4 @@
-"""Module for testing the Rheklo integration in Home Assistant."""
+"""Module for testing the Rehlko integration in Home Assistant."""
 
 from collections.abc import Generator
 from typing import Any
@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.rheklo.const import CONF_REFRESH_TOKEN, DOMAIN
+from homeassistant.components.rehlko import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
@@ -22,26 +22,26 @@ TEST_REFRESH_TOKEN = "my_refresh_token"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.rheklo.async_setup_entry",
+        "homeassistant.components.rehlko.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
 @pytest.fixture(name="homes")
-def rheklo_homes_fixture() -> list[dict[str, Any]]:
+def rehlko_homes_fixture() -> list[dict[str, Any]]:
     """Create sonos favorites fixture."""
     return load_json_value_fixture("homes.json", DOMAIN)
 
 
 @pytest.fixture(name="generator")
-def rheklo_generator_fixture() -> dict[str, Any]:
+def rehlko_generator_fixture() -> dict[str, Any]:
     """Create sonos favorites fixture."""
     return load_json_value_fixture("generator.json", DOMAIN)
 
 
-@pytest.fixture(name="rheklo_config_entry")
-def rheklo_config_entry_fixture() -> MockConfigEntry:
+@pytest.fixture(name="rehlko_config_entry")
+def rehlko_config_entry_fixture() -> MockConfigEntry:
     """Create a config entry fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -53,8 +53,8 @@ def rheklo_config_entry_fixture() -> MockConfigEntry:
     )
 
 
-@pytest.fixture(name="rheklo_config_entry_with_refresh_token")
-def rheklo_config_entry_with_refresh_token_fixture() -> MockConfigEntry:
+@pytest.fixture(name="rehlko_config_entry_with_refresh_token")
+def rehlko_config_entry_with_refresh_token_fixture() -> MockConfigEntry:
     """Create a config entry fixture with refresh token."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -68,14 +68,14 @@ def rheklo_config_entry_with_refresh_token_fixture() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def mock_rheklo(
+async def mock_rehlko(
     homes: list[dict[str, Any]],
     generator: dict[str, Any],
 ):
-    """Mock Rheklo instance."""
+    """Mock Rehlko instance."""
     with (
-        patch("homeassistant.components.rheklo.AioKem", autospec=True) as mock_kem,
-        patch("homeassistant.components.rheklo.config_flow.AioKem", new=mock_kem),
+        patch("homeassistant.components.rehlko.AioKem", autospec=True) as mock_kem,
+        patch("homeassistant.components.rehlko.config_flow.AioKem", new=mock_kem),
     ):
         client = mock_kem.return_value
         client.get_homes = AsyncMock(return_value=homes)
@@ -89,12 +89,12 @@ async def mock_rheklo(
 
 
 @pytest.fixture
-async def load_rheklo_config_entry(
+async def load_rehlko_config_entry(
     hass: HomeAssistant,
-    mock_rheklo: Mock,
-    rheklo_config_entry: MockConfigEntry,
+    mock_rehlko: Mock,
+    rehlko_config_entry: MockConfigEntry,
 ) -> None:
     """Load the config entry."""
-    rheklo_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(rheklo_config_entry.entry_id)
+    rehlko_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(rehlko_config_entry.entry_id)
     await hass.async_block_till_done()

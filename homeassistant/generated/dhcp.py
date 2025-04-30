@@ -472,6 +472,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "D8D5B9*",
     },
     {
+        "domain": "rehlko",
+        "hostname": "kohlergen*",
+        "macaddress": "00146F*",
+    },
+    {
         "domain": "reolink",
         "hostname": "reolink*",
     },
@@ -482,11 +487,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "reolink",
         "registered_devices": True,
-    },
-    {
-        "domain": "rheklo",
-        "hostname": "kohlergen*",
-        "macaddress": "00146F*",
     },
     {
         "domain": "ring",

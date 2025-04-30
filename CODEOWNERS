@@ -1260,6 +1260,8 @@ build.json @home-assistant/supervisor
 /tests/components/recovery_mode/ @home-assistant/core
 /homeassistant/components/refoss/ @ashionky
 /tests/components/refoss/ @ashionky
+/homeassistant/components/rehlko/ @bdraco @peterager
+/tests/components/rehlko/ @bdraco @peterager
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/remote_calendar/ @Thomas55555
@@ -1281,8 +1283,6 @@ build.json @home-assistant/supervisor
 /tests/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
 /homeassistant/components/rhasspy/ @balloob @synesthesiam
 /tests/components/rhasspy/ @balloob @synesthesiam
-/homeassistant/components/rheklo/ @bdraco @peterager
-/tests/components/rheklo/ @bdraco @peterager
 /homeassistant/components/ridwell/ @bachya
 /tests/components/ridwell/ @bachya
 /homeassistant/components/ring/ @sdb9696

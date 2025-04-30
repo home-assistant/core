@@ -266,7 +266,7 @@ aioimaplib==2.0.1
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
 
-# homeassistant.components.rheklo
+# homeassistant.components.rehlko
 aiokem==0.5.6
 
 # homeassistant.components.lifx

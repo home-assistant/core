@@ -1,4 +1,4 @@
-"""Config flow for Rheklo integration."""
+"""Config flow for Rehlko integration."""
 
 from __future__ import annotations
 
@@ -18,8 +18,8 @@ from .const import CONNECTION_EXCEPTIONS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class RhekloConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Rheklo."""
+class RehlkoConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Rehlko."""
 
     VERSION = 1
 
@@ -55,9 +55,9 @@ class RhekloConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the user input."""
         errors: dict[str, str] = {}
         token_subject = None
-        rheklo = AioKem(session=async_get_clientsession(self.hass))
+        rehlko = AioKem(session=async_get_clientsession(self.hass))
         try:
-            await rheklo.authenticate(config[CONF_EMAIL], config[CONF_PASSWORD])
+            await rehlko.authenticate(config[CONF_EMAIL], config[CONF_PASSWORD])
         except CONNECTION_EXCEPTIONS:
             errors["base"] = "cannot_connect"
         except AuthenticationError:
@@ -66,7 +66,7 @@ class RhekloConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            token_subject = rheklo.get_token_subject()
+            token_subject = rehlko.get_token_subject()
         return errors, token_subject
 
     async def async_step_reauth(
