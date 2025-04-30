@@ -21,7 +21,6 @@
       "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave add-on.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reset_failed": "Failed to reset controller.",
-      "restore_failed": "Failed to restore network.",
       "usb_ports_failed": "Failed to get USB devices."
     },
     "error": {
@@ -117,6 +116,11 @@
       "instruct_unplug": {
         "title": "Unplug your old controller",
         "description": "Backup saved to \"{file_path}\"\n\nYour old controller has been reset. If the hardware is no longer needed, you can now unplug it.\n\nPlease make sure your new controller is plugged in before continuing."
+      },
+      "restore_failed": {
+        "title": "Restoring unsuccessful",
+        "description": "Your Z-Wave network could not be restored to the new controller. This means that your Z-Wave devices are not connected to Home Assistant.\n\nThe backup is saved to ”{file_path}”",
+        "submit": "Try again"
       },
       "choose_serial_port": {
         "data": {

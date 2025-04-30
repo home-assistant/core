@@ -3914,8 +3914,27 @@ async def test_reconfigure_migrate_restore_failure(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "restore_failed"
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "restore_failed"
+    assert result["description_placeholders"]["file_path"]
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+
+    await hass.async_block_till_done()
+
+    assert client.driver.controller.async_restore_nvm.call_count == 2
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "restore_failed"
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
 
 
 async def test_get_driver_failure(hass: HomeAssistant, integration, client) -> None:
