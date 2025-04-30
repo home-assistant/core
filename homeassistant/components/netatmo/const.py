@@ -16,6 +16,7 @@ PLATFORMS = [
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -53,6 +54,7 @@ NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
 NETATMO_CREATE_SELECT = "netatmo_create_select"
 NETATMO_CREATE_SENSOR = "netatmo_create_sensor"
 NETATMO_CREATE_SWITCH = "netatmo_create_switch"
+NETATMO_CREATE_TEMPERATURE_SET = "netatmo_create_temperature_set"
 NETATMO_CREATE_WEATHER_SENSOR = "netatmo_create_weather_sensor"
 
 CONF_AREA_NAME = "area_name"
@@ -176,6 +178,7 @@ CAMERA_LIGHT_MODES = [MODE_LIGHT_ON, MODE_LIGHT_OFF, MODE_LIGHT_AUTO]
 
 WEBHOOK_ACTIVATION = "webhook_activation"
 WEBHOOK_DEACTIVATION = "webhook_deactivation"
+WEBHOOK_HOME_EVENT_CHANGED = "home_event_changed"
 WEBHOOK_LIGHT_MODE = "NOC-light_mode"
 WEBHOOK_NACAMERA_CONNECTION = "NACamera-connection"
 WEBHOOK_PUSH_TYPE = "push_type"

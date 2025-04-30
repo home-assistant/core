@@ -26,6 +26,23 @@ set_schedule:
       selector:
         text:
 
+sync_schedule:
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+  fields:
+    home_id:
+      example: f4c9b2d7e8a316b0dc7e41fa
+      required: true
+      selector:
+        text:
+    schedule_id:
+      example: a73b1c4e9d5f42a6b87c10d3
+      required: true
+      selector:
+        text:
+
 set_preset_mode_with_end_datetime:
   target:
     entity:
