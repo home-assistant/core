@@ -60,7 +60,7 @@ rules:
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: todo
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
     status: exempt
