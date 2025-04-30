@@ -1,7 +1,5 @@
 """Tests for the Fing integration."""
 
-from unittest.mock import patch
-
 from homeassistant.components.fing.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -16,11 +14,7 @@ async def init_integration(
     config_entry = MockConfigEntry(domain=DOMAIN, data=mocked_entry)
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.fing.coordinator.FingAgent",
-        return_value=mocked_fing_agent,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     return config_entry

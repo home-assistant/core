@@ -89,7 +89,6 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "url_error"
             except (
                 httpx.HTTPError,
-                httpx.InvalidURL,
                 httpx.CookieConflict,
                 httpx.StreamError,
                 Exception,

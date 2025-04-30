@@ -71,7 +71,6 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             raise UpdateFailed("Invalid hostname or IP address") from err
         except (
             httpx.HTTPError,
-            httpx.InvalidURL,
             httpx.CookieConflict,
             httpx.StreamError,
         ) as err:

@@ -8,10 +8,10 @@ from . import init_integration
 
 
 async def test_setup_entry_new_api(
-    hass: HomeAssistant, mocked_entry, mocked_fing_agent_new_api
+    hass: HomeAssistant, mocked_entry, mocked_fing_agent
 ) -> None:
     """Test setup Fing Agent /w New API."""
-    entry = await init_integration(hass, mocked_entry, mocked_fing_agent_new_api)
+    entry = await init_integration(hass, mocked_entry, mocked_fing_agent)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
@@ -28,10 +28,10 @@ async def test_setup_entry_old_api(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, mocked_entry, mocked_fing_agent_new_api
+    hass: HomeAssistant, mocked_entry, mocked_fing_agent
 ) -> None:
     """Test unload of entry."""
-    entry = await init_integration(hass, mocked_entry, mocked_fing_agent_new_api)
+    entry = await init_integration(hass, mocked_entry, mocked_fing_agent)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED

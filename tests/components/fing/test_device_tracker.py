@@ -17,18 +17,18 @@ from tests.common import async_fire_time_changed, load_json_object_fixture
 async def test_device_tracker_init(
     hass: HomeAssistant,
     mocked_entry,
-    mocked_fing_agent_new_api,
+    mocked_fing_agent,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test Fing device tracker setup."""
-    entry = await init_integration(hass, mocked_entry, mocked_fing_agent_new_api)
+    entry = await init_integration(hass, mocked_entry, mocked_fing_agent)
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 3
 
 
 async def test_new_device_found(
     hass: HomeAssistant,
     mocked_entry,
-    mocked_fing_agent_new_api,
+    mocked_fing_agent,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -38,12 +38,12 @@ async def test_new_device_found(
 
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
-    entry = await init_integration(hass, mocked_entry, mocked_fing_agent_new_api)
+    entry = await init_integration(hass, mocked_entry, mocked_fing_agent)
 
     # First check -> there are 3 devices in total
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 3
 
-    mocked_fing_agent_new_api.get_devices.return_value = DeviceResponse(
+    mocked_fing_agent.get_devices.return_value = DeviceResponse(
         load_json_object_fixture("device_resp_device_added.json", DOMAIN)
     )
 
@@ -54,7 +54,7 @@ async def test_new_device_found(
     # Second check -> added one device
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 4
 
-    mocked_fing_agent_new_api.get_devices.return_value = DeviceResponse(
+    mocked_fing_agent.get_devices.return_value = DeviceResponse(
         load_json_object_fixture("device_resp_device_deleted.json", DOMAIN)
     )
 
