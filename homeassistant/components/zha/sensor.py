@@ -7,10 +7,6 @@ import functools
 import logging
 from typing import Any
 
-from zha.application.platforms.sensor.const import (
-    SensorDeviceClass as ZHASensorDeviceClass,
-)
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -141,9 +137,6 @@ class Sensor(ZHAEntity, SensorEntity):
                 self._attr_device_class = SensorDeviceClass(
                     entity_description.device_class.value
                 )
-
-        if entity.device_class is ZHASensorDeviceClass.ENUM:
-            self._attr_options = entity.info_object.options
 
         if entity.info_object.suggested_display_precision is not None:
             self._attr_suggested_display_precision = (
