@@ -3152,7 +3152,7 @@ zabbix-utils==2.0.2
 zamg==0.3.6
 
 # homeassistant.components.zimi
-zcc-helper==3.5dev1
+zcc-helper==3.5
 
 # homeassistant.components.zeroconf
 zeroconf==0.146.5
