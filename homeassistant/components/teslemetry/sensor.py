@@ -554,6 +554,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="cruise_follow_distance",
         streaming_listener=lambda vehicle,
         callback: vehicle.listen_CruiseFollowDistance(callback),
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -606,6 +608,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DiAxleSpeedF(
             callback
         ),
+        native_unit_of_measurement="rad/s",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -615,6 +618,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DiAxleSpeedR(
             callback
         ),
+        native_unit_of_measurement="rad/s",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -624,6 +628,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DiAxleSpeedREL(
             callback
         ),
+        native_unit_of_measurement="rad/s",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -633,6 +638,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DiAxleSpeedRER(
             callback
         ),
+        native_unit_of_measurement="rad/s",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -774,6 +780,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DiSlaveTorqueCmd(
             callback
         ),
+        native_unit_of_measurement="Nm",  # Newton-meters
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -875,6 +882,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DiTorqueActualF(
             callback
         ),
+        native_unit_of_measurement="Nm",  # Newton-meters
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -884,6 +892,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DiTorqueActualR(
             callback
         ),
+        native_unit_of_measurement="Nm",  # Newton-meters
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -893,6 +902,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DiTorqueActualREL(
             callback
         ),
+        native_unit_of_measurement="Nm",  # Newton-meters
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -902,6 +912,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DiTorqueActualRER(
             callback
         ),
+        native_unit_of_measurement="Nm",  # Newton-meters
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -911,6 +922,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DiTorquemotor(
             callback
         ),
+        native_unit_of_measurement="Nm",  # Newton-meters
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -1022,6 +1034,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_HomelinkDeviceCount(
             callback
         ),
+        native_unit_of_measurement="devices",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -1029,18 +1042,18 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="hvac_fan_speed",
         streaming_listener=lambda vehicle, callback: vehicle.listen_HvacFanSpeed(
-            callback
+            lambda x: callback(None) if x is None else callback(x * 10)
         ),
-        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="hvac_fan_status",
         streaming_listener=lambda vehicle, callback: vehicle.listen_HvacFanStatus(
-            callback
+            lambda x: callback(None) if x is None else callback(x * 10)
         ),
-        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -1278,6 +1291,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsHardWarnings(
             callback
         ),
+        native_unit_of_measurement="warnings",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -1286,6 +1300,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsSoftWarnings(
             callback
         ),
+        native_unit_of_measurement="warnings",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

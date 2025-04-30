@@ -871,10 +871,10 @@
         "name": "Homelink devices"
       },
       "hvac_fan_speed": {
-        "name": "HVAC fan speed"
+        "name": "HVAC fan speed setting"
       },
       "hvac_fan_status": {
-        "name": "HVAC fan status"
+        "name": "HVAC fan speed"
       },
       "isolation_resistance": {
         "name": "Isolation resistance"
