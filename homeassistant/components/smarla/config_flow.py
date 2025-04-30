@@ -31,7 +31,7 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_token"
             return (errors, info)
 
-        if await conn.get_token():
+        if await conn.refresh_token():
             info["serial_number"] = conn.token.serialNumber
             info["token"] = conn.token.get_string()
         else:

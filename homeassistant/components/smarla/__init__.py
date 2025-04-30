@@ -17,7 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) -
     connection = Connection(HOST, token_str=entry.data.get(CONF_ACCESS_TOKEN, None))
 
     # Check if token still has access
-    if not await connection.get_token():
+    if not await connection.refresh_token():
         raise ConfigEntryAuthFailed("Invalid authentication")
 
     federwiege = Federwiege(hass.loop, connection)
