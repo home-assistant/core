@@ -52,10 +52,9 @@ class OAuth2FlowHandler(
             )["sub"]
         )
         if self.source == SOURCE_REAUTH:
-            reauth_entry = self._get_reauth_entry()
-            if self.unique_id == reauth_entry.unique_id:
-                return self.async_update_reload_and_abort(
-                    reauth_entry, data_updates=data
-                )
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data_updates=data
+            )
         self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)

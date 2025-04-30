@@ -242,4 +242,5 @@ async def test_reauth_flow_with_different_account(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "ABCDE")
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
