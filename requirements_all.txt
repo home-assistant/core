@@ -3162,7 +3162,7 @@ zeroconf==0.146.5
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.56
+zha==0.0.57
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
