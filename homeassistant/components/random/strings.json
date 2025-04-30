@@ -98,6 +98,7 @@
         "distance": "[%key:component::sensor::entity_component::distance::name%]",
         "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "energy": "[%key:component::sensor::entity_component::energy::name%]",
+        "energy_distance": "[%key:component::sensor::entity_component::energy_distance::name%]",
         "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
         "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
         "gas": "[%key:component::sensor::entity_component::gas::name%]",
@@ -134,6 +135,7 @@
         "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
         "water": "[%key:component::sensor::entity_component::water::name%]",
         "weight": "[%key:component::sensor::entity_component::weight::name%]",
+        "wind_direction": "[%key:component::sensor::entity_component::wind_direction::name%]"
         "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
       }
     }
