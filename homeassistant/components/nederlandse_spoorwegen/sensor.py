@@ -2,94 +2,44 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import ns_api
-from ns_api import RequestParametersError
 import requests
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorEntity,
-)
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
+
+from .const import (
+    CONF_STATION_FROM,
+    CONF_STATION_TO,
+    CONF_STATION_VIA,
+    CONF_TIME,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ROUTES = "routes"
-CONF_FROM = "from"
-CONF_TO = "to"
-CONF_VIA = "via"
-CONF_TIME = "time"
 
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
-
-ROUTE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_FROM): cv.string,
-        vol.Required(CONF_TO): cv.string,
-        vol.Optional(CONF_VIA): cv.string,
-        vol.Optional(CONF_TIME): cv.time,
-    }
-)
-
-ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
-)
-
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the departure sensor."""
+    """Set up the platform from config_entry."""
 
-    nsapi = ns_api.NSAPI(config[CONF_API_KEY])
-
-    try:
-        stations = nsapi.get_stations()
-    except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
-    ) as error:
-        _LOGGER.error("Could not connect to the internet: %s", error)
-        raise PlatformNotReady from error
-    except RequestParametersError as error:
-        _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
-        return
-
-    sensors = []
-    for departure in config.get(CONF_ROUTES, {}):
-        if not valid_stations(
-            stations,
-            [departure.get(CONF_FROM), departure.get(CONF_VIA), departure.get(CONF_TO)],
-        ):
-            continue
-        sensors.append(
-            NSDepartureSensor(
-                nsapi,
-                departure.get(CONF_NAME),
-                departure.get(CONF_FROM),
-                departure.get(CONF_TO),
-                departure.get(CONF_VIA),
-                departure.get(CONF_TIME),
-            )
+    for subentry_id, subentry in entry.subentries.items():
+        async_add_entities(
+            [NSDepartureSensor(hass, subentry, entry.runtime_data.nsapi, subentry_id)],
+            update_before_add=True,
+            config_subentry_id=subentry_id,
         )
-    add_entities(sensors, True)
 
 
 def valid_stations(stations, given_stations):
@@ -108,32 +58,41 @@ class NSDepartureSensor(SensorEntity):
 
     _attr_attribution = "Data provided by NS"
     _attr_icon = "mdi:train"
+    _attr_has_entity_name = True
 
-    def __init__(self, nsapi, name, departure, heading, via, time):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigSubentry,
+        nsapi: ns_api.NSAPI,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the sensor."""
+        self._hass = hass
         self._nsapi = nsapi
-        self._name = name
-        self._departure = departure
-        self._via = via
-        self._heading = heading
-        self._time = time
+        self._name = entry.title
+        self._departure = entry.data[CONF_STATION_FROM]
+        self._via = entry.data[CONF_STATION_VIA]
+        self._heading = entry.data[CONF_STATION_TO]
+        self._time = entry.data[CONF_TIME]
         self._state = None
         self._trips = None
         self._first_trip = None
         self._next_trip = None
+        self._attr_unique_id = unique_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the next departure time."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if not self._trips or self._first_trip is None:
             return None
@@ -215,35 +174,35 @@ class NSDepartureSensor(SensorEntity):
 
         return attributes
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self) -> None:
+    @Throttle(timedelta(seconds=MIN_TIME_BETWEEN_UPDATES))
+    async def async_update(self) -> None:
         """Get the trip information."""
-
-        # If looking for a specific trip time, update around that trip time only.
-        if self._time and (
-            (datetime.now() + timedelta(minutes=30)).time() < self._time
-            or (datetime.now() - timedelta(minutes=30)).time() > self._time
-        ):
-            self._state = None
-            self._trips = None
-            self._first_trip = None
-            return
 
         # Set the search parameter to search from a specific trip time
         # or to just search for next trip.
         if self._time:
-            trip_time = (
-                datetime.today()
-                .replace(hour=self._time.hour, minute=self._time.minute)
-                .strftime("%d-%m-%Y %H:%M")
+            time = datetime.strptime(self._time, "%H:%M:%S")
+            time = dt_util.find_next_time_expression_time(
+                dt_util.now(), [time.second], [time.minute], [time.hour]
             )
+            trip_time = time.strftime("%d-%m-%Y %H:%M")
         else:
             trip_time = dt_util.now().strftime("%d-%m-%Y %H:%M")
 
         try:
-            self._trips = self._nsapi.get_trips(
-                trip_time, self._departure, self._via, self._heading, True, 0, 2
+            loop = asyncio.get_running_loop()
+            self._trips = await loop.run_in_executor(  # type: ignore[func-returns-value] # ns_api import contains to typing and causes a mypy error here.
+                None,
+                self._nsapi.get_trips,
+                trip_time,
+                self._departure,
+                self._via,
+                self._heading,
+                True,
+                0,
+                2,
             )
+
             if self._trips:
                 all_times = []
 
