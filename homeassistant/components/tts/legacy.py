@@ -207,6 +207,7 @@ class Provider:
 
     hass: HomeAssistant | None = None
     name: str | None = None
+    has_entity: bool = False
 
     @property
     def default_language(self) -> str | None:
