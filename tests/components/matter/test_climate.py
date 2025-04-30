@@ -358,14 +358,14 @@ async def test_temperature_control(
 ) -> None:
     """Test TemperatureControl base attributes and state updates."""
     # test entity attributes
-    state = hass.states.get("climate.refrigerator_temperature_control_2")
+    state = hass.states.get("climate.refrigerator")
     assert state.state == HVACMode.HEAT_COOL
 
-    # test common state updates from device
+    # test common state updates from refrigerator device (freezer cabinet)
     set_node_attribute(matter_node, 2, 86, 1, -1700)
     set_node_attribute(matter_node, 2, 86, 2, -1600)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("climate.refrigerator_temperature_control_2")
+    state = hass.states.get("climate.refrigerator")
     assert state
     assert state.attributes["min_temp"] == -17
     assert state.attributes["max_temp"] == -16
@@ -377,7 +377,7 @@ async def test_temperature_control(
         "climate",
         "set_temperature",
         {
-            "entity_id": "climate.refrigerator_temperature_control_2",
+            "entity_id": "climate.refrigerator",
             "temperature": -17,
         },
         blocking=True,
