@@ -64,12 +64,12 @@ class RenaultBinarySensor(
 
         if self.entity_description.value_lambda is not None:
             return self.entity_description.value_lambda(self)
-        if self.entity_description.on_key is not None:
-            if (data := self._get_data_attr(self.entity_description.on_key)) is None:
-                return None
+        if self.entity_description.on_key is None:
+            raise NotImplementedError("Either value_lambda or on_key must be set")
+        if (data := self._get_data_attr(self.entity_description.on_key)) is None:
+            return None
 
-            return data == self.entity_description.on_value
-        return None
+        return data == self.entity_description.on_value
 
 
 def _plugged_in_value_lambda(self: RenaultBinarySensor) -> bool | None:
