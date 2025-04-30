@@ -498,6 +498,9 @@
       },
       "ice_maker": {
         "name": "Ice maker"
+      },
+      "sabbath_mode": {
+        "name": "Sabbath mode"
       }
     }
   },

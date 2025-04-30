@@ -104,7 +104,8 @@
     },
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner."
+      "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner.",
+      "zigbee_enabled": "Device with Zigbee enabled cannot be used as a Bluetooth scanner. Please disable it to use the device as a Bluetooth scanner."
     }
   },
   "selector": {
@@ -176,7 +177,7 @@
         "state": {
           "warmup": "Warm-up",
           "normal": "[%key:common::state::normal%]",
-          "fault": "Fault"
+          "fault": "[%key:common::state::fault%]"
         },
         "state_attributes": {
           "self_test": {
@@ -261,6 +262,21 @@
     }
   },
   "issues": {
+    "ble_scanner_firmware_unsupported": {
+      "title": "{device_name} is running unsupported firmware",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "{device_name} is running unsupported firmware",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware} and acts as BLE scanner with active mode. This firmware version is not supported for BLE scanner active mode.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
+          }
+        },
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "Device does not offer firmware update. Check internet connectivity (gateway, DNS, time) and restart the device."
+        }
+      }
+    },
     "device_not_calibrated": {
       "title": "Shelly device {device_name} is not calibrated",
       "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'."
