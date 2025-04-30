@@ -10,8 +10,6 @@ from homeassistant.components.probe_plus.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration
-
 from tests.common import MockConfigEntry
 
 
@@ -37,16 +35,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         unique_id="aa:bb:cc:dd:ee:ff",
     )
 
-
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_probe_plus: MagicMock
-) -> MockConfigEntry:
-    """Set up the Probe Plus integration for testing."""
-    await setup_integration(hass, mock_config_entry)
-    return mock_config_entry
-
-
 @pytest.fixture
 def mock_probe_plus() -> MagicMock:
     """Mock the Probe Plus device."""
@@ -68,5 +56,4 @@ def mock_probe_plus() -> MagicMock:
             relay_voltage=9.0,
         )
         device._device_state = mock_state
-        mock_device.return_value = device
-        yield mock_device
+        yield device
