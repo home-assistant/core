@@ -72,8 +72,8 @@ rules:
     comment: Buttons and selects are lacking translations.
   exception-translations: todo
   icon-translations:
-    status: todo
-    comment: Most are trivially movable to translations, but some use numeric state ranges for selection (signal, bandwidth), and state selectors seem to apply only to enum like values.
+    status: done
+    comment: Some use numeric state ranges or the like that are not available with icons.json state selectors.
   reconfiguration-flow: todo
   repair-issues:
     status: todo
