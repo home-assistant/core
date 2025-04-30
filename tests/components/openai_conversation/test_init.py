@@ -7,6 +7,7 @@ from openai import (
     APIConnectionError,
     AuthenticationError,
     BadRequestError,
+    PermissionDeniedError,
     RateLimitError,
 )
 from openai.types.image import Image
@@ -23,44 +24,115 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("service_data", "expected_args"),
+    ("service_data", "expected_args", "filename"),
     [
         (
             {"prompt": "Picture of a dog"},
             {
                 "prompt": "Picture of a dog",
+                "size": "auto",
+                "quality": "auto",
+                "background": "auto",
+                "moderation": "auto",
+            },
+            "Picture_of_a_dog_1700000000.png",
+        ),
+        (
+            {
+                "prompt": "Picture of a dog on grass with children playing on background",
+                "size": "1024x1792",
+                "quality": "hd",
+                "style": "vivid",
+                "background": "transparent",
+            },
+            {
+                "prompt": "Picture of a dog on grass with children playing on background",
+                "size": "1024x1536",
+                "quality": "high",
+                "background": "transparent",
+                "moderation": "auto",
+            },
+            "0a628e3f1e39d68196687ea03bc8d564_1700000000.png",
+        ),
+        (
+            {
+                "prompt": "Picture of a cat",
+                "size": "1792x1024",
+                "quality": "standard",
+                "style": "natural",
+                "background": "opaque",
+                "moderation": "low",
+            },
+            {
+                "prompt": "Picture of a cat",
+                "size": "1536x1024",
+                "quality": "medium",
+                "background": "opaque",
+                "moderation": "low",
+            },
+            "Picture_of_a_cat_1700000000.png",
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "size": "auto",
+                "quality": "auto",
+                "background": "auto",
+                "moderation": "auto",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "auto",
+                "quality": "auto",
+                "background": "auto",
+                "moderation": "auto",
+            },
+            "Picture_of_a_dog_1700000000.png",
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
                 "size": "1024x1024",
-                "quality": "standard",
-                "style": "vivid",
+                "quality": "low",
             },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1024",
+                "quality": "low",
+                "background": "auto",
+                "moderation": "auto",
+            },
+            "Picture_of_a_dog_1700000000.png",
         ),
         (
             {
                 "prompt": "Picture of a dog",
-                "size": "1024x1792",
-                "quality": "hd",
-                "style": "vivid",
+                "size": "1024x1536",
+                "quality": "medium",
             },
             {
                 "prompt": "Picture of a dog",
-                "size": "1024x1792",
-                "quality": "hd",
-                "style": "vivid",
+                "size": "1024x1536",
+                "quality": "medium",
+                "background": "auto",
+                "moderation": "auto",
             },
+            "Picture_of_a_dog_1700000000.png",
         ),
         (
             {
                 "prompt": "Picture of a dog",
-                "size": "1792x1024",
-                "quality": "standard",
-                "style": "natural",
+                "size": "1536x1024",
+                "quality": "high",
             },
             {
                 "prompt": "Picture of a dog",
-                "size": "1792x1024",
-                "quality": "standard",
-                "style": "natural",
+                "size": "1536x1024",
+                "quality": "high",
+                "background": "auto",
+                "moderation": "auto",
             },
+            "Picture_of_a_dog_1700000000.png",
         ),
     ],
 )
@@ -70,26 +142,34 @@ async def test_generate_image_service(
     mock_init_component,
     service_data,
     expected_args,
+    filename,
 ) -> None:
     """Test generate image service."""
     service_data["config_entry"] = mock_config_entry.entry_id
-    expected_args["model"] = "dall-e-3"
-    expected_args["response_format"] = "url"
+    expected_args["model"] = "gpt-image-1"
+    expected_args["output_format"] = "png"
     expected_args["n"] = 1
 
-    with patch(
-        "openai.resources.images.AsyncImages.generate",
-        return_value=ImagesResponse(
-            created=1700000000,
-            data=[
-                Image(
-                    b64_json=None,
-                    revised_prompt="A clear and detailed picture of an ordinary canine",
-                    url="A",
-                )
-            ],
+    with (
+        patch(
+            "openai.resources.images.AsyncImages.generate",
+            return_value=ImagesResponse(
+                created=1700000000,
+                data=[
+                    Image(
+                        b64_json="QQ==",
+                        revised_prompt="",
+                        url=None,
+                    )
+                ],
+            ),
+        ) as mock_create,
+        patch("builtins.open", mock_open()) as mock_file,
+        patch(
+            "homeassistant.components.openai_conversation.async_sign_path",
+            side_effect=lambda _, url, _2: url + "?authSig=bla",
         ),
-    ) as mock_create:
+    ):
         response = await hass.services.async_call(
             "openai_conversation",
             "generate_image",
@@ -98,12 +178,187 @@ async def test_generate_image_service(
             return_response=True,
         )
 
+    assert mock_file.call_count == 1
+    assert str(mock_file.mock_calls[0].args[0]).endswith(
+        f"media/openai_conversation/{filename}"
+    )
+    assert mock_file.mock_calls[0].args[1] == "wb"
+    mock_file().write.assert_called_once_with(b"A")
+
     assert response == {
-        "url": "A",
-        "revised_prompt": "A clear and detailed picture of an ordinary canine",
+        "url": f"http://10.10.10.10:8123/media/local/openai_conversation/{filename}?authSig=bla",
+        "revised_prompt": "",
     }
     assert len(mock_create.mock_calls) == 1
     assert mock_create.mock_calls[0][2] == expected_args
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_args", "filename"),
+    [
+        (
+            {"prompt": "Picture of a dog"},
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1024",
+                "quality": "hd",
+                "style": "vivid",
+            },
+            "Picture_of_a_dog_1700000000.png",
+        ),
+        (
+            {
+                "prompt": "Picture of a dog on grass with children playing on background",
+                "size": "1024x1792",
+                "quality": "hd",
+                "style": "vivid",
+                "background": "transparent",
+            },
+            {
+                "prompt": "Picture of a dog on grass with children playing on background",
+                "size": "1024x1792",
+                "quality": "hd",
+                "style": "vivid",
+            },
+            "0a628e3f1e39d68196687ea03bc8d564_1700000000.png",
+        ),
+        (
+            {
+                "prompt": "Picture of a cat",
+                "size": "1792x1024",
+                "quality": "standard",
+                "style": "natural",
+            },
+            {
+                "prompt": "Picture of a cat",
+                "size": "1792x1024",
+                "quality": "standard",
+                "style": "natural",
+            },
+            "Picture_of_a_cat_1700000000.png",
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "size": "auto",
+                "quality": "auto",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1024",
+                "quality": "hd",
+                "style": "vivid",
+            },
+            "Picture_of_a_dog_1700000000.png",
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1024",
+                "quality": "low",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1024",
+                "quality": "standard",
+                "style": "vivid",
+            },
+            "Picture_of_a_dog_1700000000.png",
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1536",
+                "quality": "medium",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1792",
+                "quality": "standard",
+                "style": "vivid",
+            },
+            "Picture_of_a_dog_1700000000.png",
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "size": "1536x1024",
+                "quality": "high",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1792x1024",
+                "quality": "hd",
+                "style": "vivid",
+            },
+            "Picture_of_a_dog_1700000000.png",
+        ),
+    ],
+)
+async def test_generate_image_service_fallback_dalle(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    service_data,
+    expected_args,
+    filename,
+) -> None:
+    """Test generate image service fallback to DELL-E if model not available."""
+    service_data["config_entry"] = mock_config_entry.entry_id
+    expected_args["model"] = "dall-e-3"
+    expected_args["response_format"] = "b64_json"
+    expected_args["n"] = 1
+
+    with (
+        patch(
+            "openai.resources.images.AsyncImages.generate",
+            side_effect=[
+                PermissionDeniedError(
+                    response=httpx.Response(
+                        status_code=403, request=httpx.Request(method="GET", url="")
+                    ),
+                    body=None,
+                    message="Your organization must be verified to use the model `gpt-image-1`. Please go to: https://platform.openai.com/settings/organization/general and click on Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate.",
+                ),
+                ImagesResponse(
+                    created=1700000000,
+                    data=[
+                        Image(
+                            b64_json="QQ==",
+                            revised_prompt="A clear and detailed picture of an ordinary canine",
+                            url=None,
+                        )
+                    ],
+                ),
+            ],
+        ) as mock_create,
+        patch("builtins.open", mock_open()) as mock_file,
+        patch(
+            "homeassistant.components.openai_conversation.async_sign_path",
+            side_effect=lambda _, url, _2: url + "?authSig=bla",
+        ),
+    ):
+        response = await hass.services.async_call(
+            "openai_conversation",
+            "generate_image",
+            service_data,
+            blocking=True,
+            return_response=True,
+        )
+
+    assert mock_file.call_count == 1
+    assert str(mock_file.mock_calls[0].args[0]).endswith(
+        f"media/openai_conversation/{filename}"
+    )
+    assert mock_file.mock_calls[0].args[1] == "wb"
+    mock_file().write.assert_called_once_with(b"A")
+
+    assert response == {
+        "url": f"http://10.10.10.10:8123/media/local/openai_conversation/{filename}?authSig=bla",
+        "revised_prompt": "A clear and detailed picture of an ordinary canine",
+    }
+    assert len(mock_create.mock_calls) == 2
+    assert mock_create.call_args.kwargs == expected_args
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -124,6 +379,33 @@ async def test_generate_image_service_error(
             ),
         ),
         pytest.raises(HomeAssistantError, match="Error generating image: Reason"),
+    ):
+        await hass.services.async_call(
+            "openai_conversation",
+            "generate_image",
+            {
+                "config_entry": mock_config_entry.entry_id,
+                "prompt": "Image of an epic fail",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    with (
+        patch(
+            "openai.resources.images.AsyncImages.generate",
+            return_value=ImagesResponse(
+                created=1700000000,
+                data=[
+                    Image(
+                        b64_json=None,
+                        revised_prompt=None,
+                        url=None,
+                    )
+                ],
+            ),
+        ),
+        pytest.raises(HomeAssistantError, match="No image data returned"),
     ):
         await hass.services.async_call(
             "openai_conversation",
