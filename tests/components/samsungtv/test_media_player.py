@@ -41,6 +41,7 @@ from homeassistant.components.samsungtv.const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
+    ENTRY_RELOAD_COOLDOWN,
     METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_WEBSOCKET,
     TIMEOUT_WEBSOCKET,
@@ -79,7 +80,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.setup import async_setup_component
 
-from . import async_wait_config_entry_reload, setup_samsungtv_entry
+from . import setup_samsungtv_entry
 from .const import (
     MOCK_CONFIG,
     MOCK_ENTRY_WS_WITH_MAC,
@@ -1154,7 +1155,10 @@ async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
 
 @pytest.mark.usefixtures("rest_api")
 async def test_websocket_unsupported_remote_control(
-    hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    remotews: Mock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for turn_off."""
     entry = await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
@@ -1188,7 +1192,12 @@ async def test_websocket_unsupported_remote_control(
         "'unrecognized method value : ms.remote.control'" in caplog.text
     )
 
-    await async_wait_config_entry_reload(hass)
+    # Wait config_entry reload
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     # ensure reauth triggered, and method/port updated
     assert [
         flow

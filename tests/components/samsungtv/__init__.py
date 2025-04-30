@@ -3,24 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import timedelta
 from typing import Any
 
-from homeassistant.components.samsungtv.const import DOMAIN, ENTRY_RELOAD_COOLDOWN
+from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-async def async_wait_config_entry_reload(hass: HomeAssistant) -> None:
-    """Wait for the config entry to reload."""
-    await hass.async_block_till_done()
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
-    )
-    await hass.async_block_till_done()
+from tests.common import MockConfigEntry
 
 
 async def setup_samsungtv_entry(
