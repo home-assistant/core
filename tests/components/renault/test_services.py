@@ -331,7 +331,7 @@ async def test_service_set_ac_schedule_multi(
 async def test_service_invalid_device_id(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
-    """Test that service fails with ValueError if device_id not found in registry."""
+    """Test that service fails if device_id not found in registry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -348,7 +348,7 @@ async def test_service_invalid_device_id(
 async def test_service_invalid_device_id2(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, config_entry: ConfigEntry
 ) -> None:
-    """Test that service fails with ValueError if device_id not found in vehicles."""
+    """Test that service fails if device_id not available in the hub."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
