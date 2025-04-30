@@ -86,7 +86,7 @@ dependencies = [
   "Pillow==11.2.1",
   "propcache==0.3.1",
   "pyOpenSSL==25.0.0",
-  "orjson==3.10.16",
+  "orjson==3.10.18",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   # pymicro_vad is indirectly imported from onboarding via the import chain
@@ -117,7 +117,7 @@ dependencies = [
   # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
   # https://github.com/home-assistant/core/issues/97248
   "urllib3>=1.26.5,<2",
-  "uv==0.6.10",
+  "uv==0.7.1",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.6.0",
   "voluptuous-openapi==0.0.7",

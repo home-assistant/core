@@ -13,9 +13,12 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+
+from .conftest import FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -64,8 +67,8 @@ async def test_full_flow(
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
+            "refresh_token": FAKE_REFRESH_TOKEN,
+            "access_token": FAKE_ACCESS_TOKEN,
             "type": "Bearer",
             "expires_in": 60,
         },
@@ -77,23 +80,64 @@ async def test_full_flow(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "1234567890")
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_prevent_multiple_config_entries(
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_prevent_reconfiguring_same_account(
     hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test we only allow one config entry."""
+    """Test we only allow one config entry per account."""
     config_entry.add_to_hass(hass)
+
+    assert await setup.async_setup_component(hass, "home_connect", {})
+
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
 
     result = await hass.config_entries.flow.async_init(
         "home_connect", context={"source": config_entries.SOURCE_USER}
     )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": FAKE_REFRESH_TOKEN,
+            "access_token": FAKE_ACCESS_TOKEN,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert result["type"] == "abort"
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -129,8 +173,8 @@ async def test_reauth_flow(
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
+            "refresh_token": FAKE_REFRESH_TOKEN,
+            "access_token": FAKE_ACCESS_TOKEN,
             "type": "Bearer",
             "expires_in": 60,
         },
@@ -142,9 +186,61 @@ async def test_reauth_flow(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "1234567890")
+    assert entry
+    assert entry.state is ConfigEntryState.LOADED
     assert len(mock_setup_entry.mock_calls) == 1
 
-    await hass.async_block_till_done()
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_flow_with_different_account(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reauth flow."""
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    _client = await hass_client_no_auth()
+    resp = await _client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": FAKE_REFRESH_TOKEN,
+            "access_token": (
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                ".eyJzdWIiOiJBQkNERSIsIm5hbWUiOiJKb2huIERvZSIsImFkbWluIjp0cnVlLCJpYXQiOjE1MTYyMzkwMjJ9"
+                ".Q9z9JT4qgNg9Y9ki61jzvd69j043GFWJk9HNYosAPzs"
+            ),
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"

@@ -87,6 +87,11 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
             "icemaker": "ice_maker",
         },
     ),
+    Capability.SAMSUNG_CE_SABBATH_MODE: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_SABBATH_MODE,
+        translation_key="sabbath_mode",
+        status_attribute=Attribute.STATUS,
+    ),
 }
 
 

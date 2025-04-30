@@ -91,7 +91,6 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
             location=self._location,
             candle_lighting_offset=self._candle_lighting_offset,
             havdalah_offset=self._havdalah_offset,
-            language=self._language,
         )
 
     async def async_added_to_hass(self) -> None:

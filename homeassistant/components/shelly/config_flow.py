@@ -475,6 +475,8 @@ class OptionsFlowHandler(OptionsFlow):
             return self.async_abort(reason="cannot_connect")
         if not supports_scripts:
             return self.async_abort(reason="no_scripts_support")
+        if self.config_entry.runtime_data.rpc_zigbee_enabled:
+            return self.async_abort(reason="zigbee_enabled")
 
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

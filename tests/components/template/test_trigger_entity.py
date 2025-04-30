@@ -118,3 +118,19 @@ async def test_template_state_syntax_error(
     assert entity.state is None
     assert entity.icon is None
     assert entity.entity_picture is None
+
+
+async def test_script_variables_from_coordinator(hass: HomeAssistant) -> None:
+    """Test script variables."""
+    coordinator = TriggerUpdateCoordinator(hass, {})
+    entity = TestEntity(hass, coordinator, {})
+
+    assert entity._render_script_variables() == {}
+
+    coordinator.data = {"run_variables": None}
+
+    assert entity._render_script_variables() == {}
+
+    coordinator._execute_update({"value": STATE_ON})
+
+    assert entity._render_script_variables() == {"value": STATE_ON}

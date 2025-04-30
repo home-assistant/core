@@ -1,0 +1,214 @@
+{
+  "DummyAppliance_18": {
+    "ident": {
+      "type": {
+        "key_localized": "Device type",
+        "value_raw": 18,
+        "value_localized": "Cooker Hood"
+      },
+      "deviceName": "",
+      "protocolVersion": 2,
+      "deviceIdentLabel": {
+        "fabNumber": "<fabNumber3>",
+        "fabIndex": "64",
+        "techType": "Fläkt",
+        "matNumber": "<matNumber3>",
+        "swids": ["<swid1>", "<swid2>", "<swid3>", "<...>"]
+      },
+      "xkmIdentLabel": {
+        "techType": "EK039W",
+        "releaseVersion": "02.72"
+      }
+    },
+    "state": {
+      "ProgramID": {
+        "value_raw": 1,
+        "value_localized": "Off",
+        "key_localized": "Program name"
+      },
+      "status": {
+        "value_raw": 1,
+        "value_localized": "Off",
+        "key_localized": "status"
+      },
+      "programType": {
+        "value_raw": 0,
+        "value_localized": "Program",
+        "key_localized": "Program type"
+      },
+      "programPhase": {
+        "value_raw": 4608,
+        "value_localized": "",
+        "key_localized": "Program phase"
+      },
+      "remainingTime": [0, 0],
+      "startTime": [0, 0],
+      "targetTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "temperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "signalInfo": false,
+      "signalFailure": false,
+      "signalDoor": false,
+      "remoteEnable": {
+        "fullRemoteControl": true,
+        "smartGrid": false,
+        "mobileStart": false
+      },
+      "ambientLight": 2,
+      "light": 1,
+      "elapsedTime": {},
+      "spinningSpeed": {
+        "unit": "rpm",
+        "value_raw": null,
+        "value_localized": null,
+        "key_localized": "Spin speed"
+      },
+      "dryingStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Drying level"
+      },
+      "ventilationStep": {
+        "value_raw": 0,
+        "value_localized": "0",
+        "key_localized": "Fan level"
+      },
+      "plateStep": [],
+      "ecoFeedback": null,
+      "batteryLevel": null
+    }
+  },
+  "DummyAppliance_74": {
+    "ident": {
+      "type": {
+        "key_localized": "Device type",
+        "value_raw": 74,
+        "value_localized": "Hob w extraction"
+      },
+      "deviceName": "",
+      "protocolVersion": 203,
+      "deviceIdentLabel": {
+        "fabNumber": "**REDACTED**",
+        "fabIndex": "00",
+        "techType": "KMDA7634",
+        "matNumber": "",
+        "swids": ["000"]
+      },
+      "xkmIdentLabel": {
+        "techType": "EK039W",
+        "releaseVersion": "02.72"
+      }
+    },
+    "state": {
+      "ProgramID": {
+        "value_raw": 0,
+        "value_localized": "",
+        "key_localized": "Program name"
+      },
+      "status": {
+        "value_raw": 5,
+        "value_localized": "In use",
+        "key_localized": "status"
+      },
+      "programType": {
+        "value_raw": 0,
+        "value_localized": "Program",
+        "key_localized": "Program type"
+      },
+      "programPhase": {
+        "value_raw": 0,
+        "value_localized": "",
+        "key_localized": "Program phase"
+      },
+      "remainingTime": [0, 0],
+      "startTime": [0, 0],
+      "targetTemperature": [
+        { "value_raw": -32768, "value_localized": null, "unit": "Celsius" },
+        { "value_raw": -32768, "value_localized": null, "unit": "Celsius" },
+        { "value_raw": -32768, "value_localized": null, "unit": "Celsius" }
+      ],
+      "temperature": [
+        { "value_raw": -32768, "value_localized": null, "unit": "Celsius" },
+        { "value_raw": -32768, "value_localized": null, "unit": "Celsius" },
+        { "value_raw": -32768, "value_localized": null, "unit": "Celsius" }
+      ],
+      "signalInfo": false,
+      "signalFailure": false,
+      "signalDoor": false,
+      "remoteEnable": {
+        "fullRemoteControl": true,
+        "smartGrid": false,
+        "mobileStart": false
+      },
+      "ambientLight": null,
+      "light": null,
+      "elapsedTime": [],
+      "spinningSpeed": {
+        "unit": "rpm",
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Spin speed"
+      },
+      "dryingStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Drying level"
+      },
+      "ventilationStep": {
+        "value_raw": 1,
+        "value_localized": "",
+        "key_localized": "Fan level"
+      },
+      "plateStep": [
+        {
+          "value_raw": 0,
+          "value_localized": 0,
+          "key_localized": "Power level"
+        },
+        {
+          "value_raw": 3,
+          "value_localized": 2,
+          "key_localized": "Power level"
+        },
+        {
+          "value_raw": 7,
+          "value_localized": 4,
+          "key_localized": "Power level"
+        },
+        {
+          "value_raw": 15,
+          "value_localized": 8,
+          "key_localized": "Power level"
+        },
+        {
+          "value_raw": 117,
+          "value_localized": 10,
+          "key_localized": "Power level"
+        }
+      ],
+      "ecoFeedback": null,
+      "batteryLevel": null
+    }
+  }
+}

@@ -218,9 +218,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
-        daytime_date = HDateInfo(
-            today, diaspora=self._diaspora, language=self._language
-        )
+        daytime_date = HDateInfo(today, diaspora=self._diaspora)
 
         # The Jewish day starts after darkness (called "tzais") and finishes at
         # sunset ("shkia"). The time in between is a gray area
@@ -253,7 +251,6 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             location=self._location,
             candle_lighting_offset=self._candle_lighting_offset,
             havdalah_offset=self._havdalah_offset,
-            language=self._language,
         )
 
     @property
@@ -272,7 +269,6 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         # refers to "current" or "upcoming" dates.
         if self.entity_description.key == "date":
             hdate = after_shkia_date.hdate
-            hdate.month.set_language(self._language)
             self._attrs = {
                 "hebrew_year": str(hdate.year),
                 "hebrew_month_name": str(hdate.month),
@@ -290,9 +286,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
                 dict.fromkeys(_holiday.type.name for _holiday in _holidays)
             )
             self._attrs = {"id": _id, "type": _type}
-            self._attr_options = HolidayDatabase(self._diaspora).get_all_names(
-                self._language
-            )
+            self._attr_options = HolidayDatabase(self._diaspora).get_all_names()
             return ", ".join(str(holiday) for holiday in _holidays) if _holidays else ""
         if self.entity_description.key == "omer_count":
             return after_shkia_date.omer.total_days if after_shkia_date.omer else 0

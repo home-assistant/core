@@ -33,6 +33,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .common import (
+    MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
     MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
@@ -2696,7 +2697,7 @@ async def test_migrate_of_incompatible_config_entry(
         ),
         (
             MOCK_SENSOR_SUBENTRY_DATA_SINGLE,
-            {"name": "Test sensor", "mqtt_settings": {"qos": 0}},
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Energy"},
             {"device_class": "enum", "options": ["low", "medium", "high"]},
             (
@@ -2748,11 +2749,11 @@ async def test_migrate_of_incompatible_config_entry(
                     {"state_topic": "invalid_subscribe_topic"},
                 ),
             ),
-            "Test sensor Energy",
+            "Milk notifier Energy",
         ),
         (
             MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS,
-            {"name": "Test sensor", "mqtt_settings": {"qos": 0}},
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Energy"},
             {
                 "state_class": "measurement",
@@ -2762,11 +2763,11 @@ async def test_migrate_of_incompatible_config_entry(
                 "state_topic": "test-topic",
             },
             (),
-            "Test sensor Energy",
+            "Milk notifier Energy",
         ),
         (
             MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS,
-            {"name": "Test switch", "mqtt_settings": {"qos": 0}},
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Outlet"},
             {"device_class": "outlet"},
             (),
@@ -2790,7 +2791,44 @@ async def test_migrate_of_incompatible_config_entry(
                     {"state_topic": "invalid_subscribe_topic"},
                 ),
             ),
-            "Test switch Outlet",
+            "Milk notifier Outlet",
+        ),
+        (
+            MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
+            {"name": "Basic light"},
+            {},
+            {},
+            {
+                "command_topic": "test-topic",
+                "state_topic": "test-topic",
+                "state_value_template": "{{ value_json.value }}",
+                "optimistic": True,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "advanced_settings": {"max_kelvin": 2000, "min_kelvin": 2000},
+                    },
+                    {
+                        "max_kelvin": "max_below_min_kelvin",
+                        "min_kelvin": "max_below_min_kelvin",
+                    },
+                ),
+            ),
+            "Milk notifier Basic light",
         ),
     ],
     ids=[
@@ -2799,6 +2837,7 @@ async def test_migrate_of_incompatible_config_entry(
         "sensor_options",
         "sensor_total",
         "switch",
+        "light_basic_kelvin",
     ],
 )
 async def test_subentry_configflow(
@@ -3199,6 +3238,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
         "user_input_platform_config_validation",
         "user_input_platform_config",
         "user_input_mqtt",
+        "component_data",
         "removed_options",
     ),
     [
@@ -3212,6 +3252,11 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
             ),
             (),
             None,
+            {
+                "command_topic": "test-topic1-updated",
+                "command_template": "{{ value }}",
+                "retain": True,
+            },
             {
                 "command_topic": "test-topic1-updated",
                 "command_template": "{{ value }}",
@@ -3253,10 +3298,38 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                 "state_topic": "test-topic1-updated",
                 "value_template": "{{ value_json.value }}",
             },
+            {
+                "state_topic": "test-topic1-updated",
+                "value_template": "{{ value_json.value }}",
+            },
             {"options", "expire_after", "entity_picture"},
         ),
+        (
+            (
+                ConfigSubentryData(
+                    data=MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
+                    subentry_type="device",
+                    title="Mock subentry",
+                ),
+            ),
+            None,
+            None,
+            {
+                "command_topic": "test-topic1-updated",
+                "state_topic": "test-topic1-updated",
+                "light_brightness_settings": {
+                    "brightness_command_template": "{{ value_json.value }}"
+                },
+            },
+            {
+                "command_topic": "test-topic1-updated",
+                "state_topic": "test-topic1-updated",
+                "brightness_command_template": "{{ value_json.value }}",
+            },
+            {"optimistic", "state_value_template", "entity_picture"},
+        ),
     ],
-    ids=["notify", "sensor"],
+    ids=["notify", "sensor", "light_basic"],
 )
 async def test_subentry_reconfigure_edit_entity_single_entity(
     hass: HomeAssistant,
@@ -3269,6 +3342,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     | None,
     user_input_platform_config: dict[str, Any] | None,
     user_input_mqtt: dict[str, Any],
+    component_data: dict[str, Any],
     removed_options: tuple[str, ...],
 ) -> None:
     """Test the subentry ConfigFlow reconfigure with single entity."""
@@ -3373,7 +3447,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     assert "entity_picture" not in new_components[component_id]
 
     # Check the second component was updated
-    for key, value in user_input_mqtt.items():
+    for key, value in component_data.items():
         assert new_components[component_id][key] == value
 
     assert set(component) - set(new_components[component_id]) == removed_options

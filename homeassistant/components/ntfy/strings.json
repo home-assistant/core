@@ -8,10 +8,12 @@
       "user": {
         "description": "Set up **ntfy** push notification service",
         "data": {
-          "url": "Service URL"
+          "url": "Service URL",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "url": "Address of the ntfy service. Modify this if you want to use a different server"
+          "url": "Address of the ntfy service. Modify this if you want to use a different server",
+          "verify_ssl": "Enable SSL certificate verification for secure connections. Disable only if connecting to a ntfy instance using a self-signed certificate"
         },
         "sections": {
           "auth": {

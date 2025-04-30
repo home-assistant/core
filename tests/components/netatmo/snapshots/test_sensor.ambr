@@ -5586,54 +5586,6 @@
     'state': '55',
   })
 # ---
-# name: test_entity[sensor.villa_bathroom_rf_strength-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_bathroom_rf_strength',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'RF strength',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rf_strength',
-    'unique_id': '12:34:56:80:7e:18-rf_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.villa_bathroom_rf_strength-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Bathroom RF strength',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_bathroom_rf_strength',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Full',
-  })
-# ---
 # name: test_entity[sensor.villa_bathroom_reachability-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5680,6 +5632,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
+  })
+# ---
+# name: test_entity[sensor.villa_bathroom_rf_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.villa_bathroom_rf_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'RF strength',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rf_strength',
+    'unique_id': '12:34:56:80:7e:18-rf_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.villa_bathroom_rf_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'friendly_name': 'Villa Bathroom RF strength',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.villa_bathroom_rf_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full',
   })
 # ---
 # name: test_entity[sensor.villa_bathroom_temperature-entry]
@@ -5945,54 +5945,6 @@
     'state': '53',
   })
 # ---
-# name: test_entity[sensor.villa_bedroom_rf_strength-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_bedroom_rf_strength',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'RF strength',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rf_strength',
-    'unique_id': '12:34:56:80:44:92-rf_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.villa_bedroom_rf_strength-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Bedroom RF strength',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_bedroom_rf_strength',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'High',
-  })
-# ---
 # name: test_entity[sensor.villa_bedroom_reachability-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6039,6 +5991,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
+  })
+# ---
+# name: test_entity[sensor.villa_bedroom_rf_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.villa_bedroom_rf_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'RF strength',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rf_strength',
+    'unique_id': '12:34:56:80:44:92-rf_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.villa_bedroom_rf_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'friendly_name': 'Villa Bedroom RF strength',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.villa_bedroom_rf_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'High',
   })
 # ---
 # name: test_entity[sensor.villa_bedroom_temperature-entry]
@@ -6429,54 +6429,6 @@
     'state': '9',
   })
 # ---
-# name: test_entity[sensor.villa_garden_rf_strength-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_garden_rf_strength',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'RF strength',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rf_strength',
-    'unique_id': '12:34:56:03:1b:e4-rf_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.villa_garden_rf_strength-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Garden RF strength',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_garden_rf_strength',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Full',
-  })
-# ---
 # name: test_entity[sensor.villa_garden_reachability-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6523,6 +6475,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
+  })
+# ---
+# name: test_entity[sensor.villa_garden_rf_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.villa_garden_rf_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'RF strength',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rf_strength',
+    'unique_id': '12:34:56:03:1b:e4-rf_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.villa_garden_rf_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'friendly_name': 'Villa Garden RF strength',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.villa_garden_rf_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full',
   })
 # ---
 # name: test_entity[sensor.villa_garden_wind_angle-entry]
@@ -6917,54 +6917,6 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_entity[sensor.villa_outdoor_rf_strength-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_outdoor_rf_strength',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'RF strength',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rf_strength',
-    'unique_id': '12:34:56:80:1c:42-rf_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.villa_outdoor_rf_strength-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Outdoor RF strength',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_outdoor_rf_strength',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'High',
-  })
-# ---
 # name: test_entity[sensor.villa_outdoor_reachability-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7011,6 +6963,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'False',
+  })
+# ---
+# name: test_entity[sensor.villa_outdoor_rf_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.villa_outdoor_rf_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'RF strength',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rf_strength',
+    'unique_id': '12:34:56:80:1c:42-rf_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.villa_outdoor_rf_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'friendly_name': 'Villa Outdoor RF strength',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.villa_outdoor_rf_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'High',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_temperature-entry]
@@ -7382,54 +7382,6 @@
     'state': '6.9',
   })
 # ---
-# name: test_entity[sensor.villa_rain_rf_strength-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_rain_rf_strength',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'RF strength',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'rf_strength',
-    'unique_id': '12:34:56:80:c1:ea-rf_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.villa_rain_rf_strength-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Rain RF strength',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_rain_rf_strength',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Medium',
-  })
-# ---
 # name: test_entity[sensor.villa_rain_reachability-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7476,6 +7428,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
+  })
+# ---
+# name: test_entity[sensor.villa_rain_rf_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.villa_rain_rf_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'RF strength',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rf_strength',
+    'unique_id': '12:34:56:80:c1:ea-rf_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.villa_rain_rf_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'friendly_name': 'Villa Rain RF strength',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.villa_rain_rf_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Medium',
   })
 # ---
 # name: test_entity[sensor.villa_reachability-entry]

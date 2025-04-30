@@ -10,6 +10,7 @@ from pylamarzocco.models import (
     ThingDashboardConfig,
     ThingSchedulingSettings,
     ThingSettings,
+    ThingStatistics,
 )
 import pytest
 
@@ -91,6 +92,7 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
         config = load_json_object_fixture("config_gs3.json", DOMAIN)
     schedule = load_json_object_fixture("schedule.json", DOMAIN)
     settings = load_json_object_fixture("settings.json", DOMAIN)
+    statistics = load_json_object_fixture("statistics.json", DOMAIN)
 
     with (
         patch(
@@ -104,6 +106,7 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
         machine_mock.dashboard = ThingDashboardConfig.from_dict(config)
         machine_mock.schedule = ThingSchedulingSettings.from_dict(schedule)
         machine_mock.settings = ThingSettings.from_dict(settings)
+        machine_mock.statistics = ThingStatistics.from_dict(statistics)
         machine_mock.dashboard.model_name = device_fixture
         machine_mock.to_dict.return_value = {
             "serial_number": machine_mock.serial_number,

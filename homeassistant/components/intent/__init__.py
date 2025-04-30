@@ -103,7 +103,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_ON,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_ON,
-            description="Turns on/opens a device or entity",
+            description="Turns on/opens a device or entity. For locks, this performs a 'lock' action. Use for requests like 'turn on', 'activate', 'enable', or 'lock'.",
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -113,7 +113,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_OFF,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_OFF,
-            description="Turns off/closes a device or entity",
+            description="Turns off/closes a device or entity. For locks, this performs an 'unlock' action. Use for requests like 'turn off', 'deactivate', 'disable', or 'unlock'.",
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )

@@ -65,6 +65,12 @@
       "state": {
         "name": "Status"
       },
+      "cellular": {
+        "name": "Cellular"
+      },
+      "wifi": {
+        "name": "Wi-Fi"
+      },
       "storm_mode_active": {
         "name": "Storm watch active"
       },
@@ -214,6 +220,9 @@
       },
       "hvac_auto_mode": {
         "name": "HVAC auto mode"
+      },
+      "grid_status": {
+        "name": "Grid status"
       }
     },
     "button": {
@@ -367,7 +376,7 @@
         "state": {
           "autonomous": "Autonomous",
           "backup": "Backup",
-          "self_consumption": "Self consumption"
+          "self_consumption": "Self-consumption"
         }
       }
     },
@@ -553,7 +562,7 @@
         "name": "Tire pressure rear right"
       },
       "version": {
-        "name": "version"
+        "name": "Version"
       },
       "vin": {
         "name": "Vehicle",
@@ -635,6 +644,17 @@
       },
       "total_grid_energy_exported": {
         "name": "Grid exported"
+      },
+      "sentry_mode": {
+        "name": "Sentry mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "idle": "[%key:common::state::idle%]",
+          "armed": "Armed",
+          "aware": "Aware",
+          "panic": "Panic",
+          "quiet": "Quiet"
+        }
       }
     },
     "switch": {

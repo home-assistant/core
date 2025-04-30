@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from hdate import Location
-from hdate.translator import Language
+from hdate.translator import Language, set_language
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -44,7 +44,7 @@ class JewishCalendarEntity(Entity):
         )
         data = config_entry.runtime_data
         self._location = data.location
-        self._language = data.language
         self._candle_lighting_offset = data.candle_lighting_offset
         self._havdalah_offset = data.havdalah_offset
         self._diaspora = data.diaspora
+        set_language(data.language)
