@@ -47,7 +47,7 @@
     'state': 'on',
   })
 # ---
-# name: test_setup[binary_sensor.fake_name_battery_low-entry]
+# name: test_setup[binary_sensor.fake_name_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.fake_name_battery_low',
+    'entity_id': 'binary_sensor.fake_name_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -76,19 +76,19 @@
     'platform': 'fritzbox',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_low',
+    'translation_key': None,
     'unique_id': '12345 1234567_battery_low',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[binary_sensor.fake_name_battery_low-state]
+# name: test_setup[binary_sensor.fake_name_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'fake_name Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.fake_name_battery_low',
+    'entity_id': 'binary_sensor.fake_name_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
