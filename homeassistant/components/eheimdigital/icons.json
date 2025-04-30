@@ -38,6 +38,14 @@
           "off": "mdi:pump-off"
         }
       }
+    },
+    "time": {
+      "day_start_time": {
+        "default": "mdi:weather-sunny"
+      },
+      "night_start_time": {
+        "default": "mdi:moon-waning-crescent"
+      }
     }
   }
 }

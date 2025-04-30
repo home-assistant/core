@@ -55,7 +55,10 @@
     "binary_sensor": {
       "alarm": { "name": "Alarm" },
       "device_lock": { "name": "Button lock via UI" },
-      "lock": { "name": "Button lock on device" }
+      "holiday_active": { "name": "Holiday mode" },
+      "lock": { "name": "Button lock on device" },
+      "summer_active": { "name": "Summer mode" },
+      "window_open": { "name": "Open window detected" }
     },
     "climate": {
       "thermostat": {

@@ -20,6 +20,7 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
+    HomeConnectApiError,
     HomeConnectError,
     SelectedProgramNotSetError,
     TooManyRequestsError,
@@ -138,9 +139,23 @@ async def test_paired_depaired_devices_flow(
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize(
+    ("appliance", "keys_to_check"),
+    [
+        (
+            "Hood",
+            (
+                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                SettingKey.COOKING_HOOD_COLOR_TEMPERATURE,
+            ),
+        )
+    ],
+    indirect=["appliance"],
+)
 async def test_connected_devices(
     appliance: HomeAppliance,
+    keys_to_check: tuple,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -154,13 +169,39 @@ async def test_connected_devices(
     Specifically those devices whose settings, status, etc. could
     not be obtained while disconnected and once connected, the entities are added.
     """
+    get_settings_original_mock = client.get_settings
+    get_all_programs_mock = client.get_all_programs
 
+    async def get_settings_side_effect(ha_id: str):
+        if ha_id == appliance.ha_id:
+            raise HomeConnectApiError(
+                "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
+            )
+        return await get_settings_original_mock.side_effect(ha_id)
+
+    async def get_all_programs_side_effect(ha_id: str):
+        if ha_id == appliance.ha_id:
+            raise HomeConnectApiError(
+                "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
+            )
+        return await get_all_programs_mock.side_effect(ha_id)
+
+    client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
+    client.get_all_programs = AsyncMock(side_effect=get_all_programs_side_effect)
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
+    client.get_settings = get_settings_original_mock
+    client.get_all_programs = get_all_programs_mock
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
+    for key in keys_to_check:
+        assert not entity_registry.async_get_entity_id(
+            Platform.SELECT,
+            DOMAIN,
+            f"{appliance.ha_id}-{key}",
+        )
 
     await client.add_events(
         [
@@ -173,10 +214,12 @@ async def test_connected_devices(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
-    assert device
-    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
-    assert entity_entries
+    for key in keys_to_check:
+        assert entity_registry.async_get_entity_id(
+            Platform.SELECT,
+            DOMAIN,
+            f"{appliance.ha_id}-{key}",
+        )
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
@@ -441,6 +484,59 @@ async def test_select_exception_handling(
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_programs_updated_on_connect(
+    appliance: HomeAppliance,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test that devices reconnected.
+
+    Specifically those devices whose settings, status, etc. could
+    not be obtained while disconnected and once connected, the entities are added.
+    """
+    get_all_programs_mock = client.get_all_programs
+
+    returned_programs = (
+        await get_all_programs_mock.side_effect(appliance.ha_id)
+    ).programs
+    assert len(returned_programs) > 1
+
+    async def get_all_programs_side_effect(ha_id: str):
+        if ha_id == appliance.ha_id:
+            return ArrayOfPrograms(returned_programs[:1])
+        return await get_all_programs_mock.side_effect(ha_id)
+
+    client.get_all_programs = AsyncMock(side_effect=get_all_programs_side_effect)
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+    client.get_all_programs = get_all_programs_mock
+
+    state = hass.states.get("select.washer_active_program")
+    assert state
+    programs = state.attributes[ATTR_OPTIONS]
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.CONNECTED,
+                data=ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.washer_active_program")
+    assert state
+    assert state.attributes[ATTR_OPTIONS] != programs
+    assert len(state.attributes[ATTR_OPTIONS]) > len(programs)
 
 
 @pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
