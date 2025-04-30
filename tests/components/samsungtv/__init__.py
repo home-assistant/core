@@ -25,7 +25,10 @@ async def async_wait_config_entry_reload(hass: HomeAssistant) -> None:
 async def setup_samsungtv_entry(hass: HomeAssistant, data: ConfigType) -> ConfigEntry:
     """Set up mock Samsung TV from config entry data."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, entry_id="123456", unique_id="any"
+        domain=DOMAIN,
+        data=data,
+        entry_id="123456",
+        unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
 
