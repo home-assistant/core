@@ -150,7 +150,9 @@ class SamsungTVBridge(ABC):
     ) -> SamsungTVBridge:
         """Get Bridge instance."""
         if method == METHOD_LEGACY or port == LEGACY_PORT:
-            return SamsungTVLegacyBridge(hass, method, host, port)
+            return SamsungTVLegacyBridge(
+                hass, method, host, LEGACY_PORT if port is None else port
+            )
         if method == METHOD_ENCRYPTED_WEBSOCKET or port == ENCRYPTED_WEBSOCKET_PORT:
             return SamsungTVEncryptedBridge(hass, method, host, port, entry_data)
         return SamsungTVWSBridge(hass, method, host, port, entry_data)
@@ -262,14 +264,14 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         self, hass: HomeAssistant, method: str, host: str, port: int | None
     ) -> None:
         """Initialize Bridge."""
-        super().__init__(hass, method, host, LEGACY_PORT)
+        super().__init__(hass, method, host, port)
         self.config = {
             CONF_NAME: VALUE_CONF_NAME,
             CONF_DESCRIPTION: VALUE_CONF_NAME,
             CONF_ID: VALUE_CONF_ID,
             CONF_HOST: host,
             CONF_METHOD: method,
-            CONF_PORT: None,
+            CONF_PORT: port,
             CONF_TIMEOUT: 1,
         }
         self._remote: Remote | None = None
@@ -301,7 +303,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_ID: VALUE_CONF_ID,
             CONF_HOST: self.host,
             CONF_METHOD: self.method,
-            CONF_PORT: None,
+            CONF_PORT: self.port,
             # We need this high timeout because waiting for auth popup
             # is just an open socket
             CONF_TIMEOUT: TIMEOUT_REQUEST,
