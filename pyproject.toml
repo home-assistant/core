@@ -66,7 +66,7 @@ dependencies = [
   # onboarding->cloud->assist_pipeline->conversation->home_assistant_intents. Onboarding needs
   # to be setup in stage 0, but we don't want to also promote cloud with all its
   # dependencies to stage 0.
-  "home-assistant-intents==2025.3.28",
+  "home-assistant-intents==2025.4.30",
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",
   "lru-dict==1.3.0",
