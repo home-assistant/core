@@ -96,6 +96,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     label_registry as lr,
     recorder as recorder_helper,
+    template,
     translation as translation_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -471,6 +472,10 @@ def reset_globals() -> Generator[None]:
 
     # Reset the aiohttp cache
     web_app._cached_build_middleware.cache_clear()
+
+    # Reset the template cache
+    template.CACHED_TEMPLATE_LRU.clear()
+    template.CACHED_TEMPLATE_NO_COLLECT_LRU.clear()
 
     # Reset patch_json
     if patch_json.mock_objects:
