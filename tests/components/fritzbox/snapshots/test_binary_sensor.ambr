@@ -72,7 +72,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery low',
+    'original_name': 'Battery',
     'platform': 'fritzbox',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -85,7 +85,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'fake_name Battery low',
+      'friendly_name': 'fake_name Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fake_name_battery_low',
