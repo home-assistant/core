@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -39,24 +40,24 @@ async def test_sensors(
 
 async def test_sensor_availability_device_disconnect(
     hass: HomeAssistant,
-    generator: dict[str, any],
+    generator: dict[str, Any],
     mock_rheklo: AsyncMock,
     load_rheklo_config_entry: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Rheklo sensor availability when device is disconnected."""
-    state = hass.states.get("sensor.generator_1_engine_state")
+    state = hass.states.get("sensor.generator_1_battery_voltage")
     assert state
-    assert state.state == "Standby"
+    assert state.state == "13.9"
 
     generator["device"]["isConnected"] = False
 
     # Move time to next update
     freezer.tick(SCAN_INTERVAL_MINUTES)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.generator_1_engine_state")
+    state = hass.states.get("sensor.generator_1_battery_voltage")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
@@ -68,17 +69,17 @@ async def test_sensor_availability_poll_failure(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Rheklo sensor availability when cloud poll fails."""
-    state = hass.states.get("sensor.generator_1_engine_state")
+    state = hass.states.get("sensor.generator_1_battery_voltage")
     assert state
-    assert state.state == "Standby"
+    assert state.state == "13.9"
 
     mock_rheklo.get_generator_data.side_effect = Exception("Test exception")
 
     # Move time to next update
     freezer.tick(SCAN_INTERVAL_MINUTES)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.generator_1_engine_state")
+    state = hass.states.get("sensor.generator_1_battery_voltage")
     assert state
     assert state.state == STATE_UNAVAILABLE
