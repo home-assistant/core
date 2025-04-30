@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import aiohttp
+from awesomeversion import AwesomeVersion
 from serial.tools import list_ports
 import voluptuous as vol
 from zwave_js_server.client import Client
@@ -99,6 +100,7 @@ ADDON_USER_INPUT_MAP = {
 }
 
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
+MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
@@ -428,7 +430,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
-        if self._async_in_progress():
+        if any(
+            flow
+            for flow in self._async_in_progress()
+            if flow["context"].get("source") != SOURCE_USB
+        ):
+            # Allow multiple USB discovery flows to be in progress.
+            # Migration requires more than one USB stick to be connected,
+            # which can cause more than one discovery flow to be in progress,
+            # at least for a short time.
             return self.async_abort(reason="already_in_progress")
         if current_config_entries := self._async_current_entries(include_ignore=False):
             config_entry = next(
@@ -801,6 +811,27 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         assert config_entry is not None
         if not self._usb_discovery and not config_entry.data.get(CONF_USE_ADDON):
             return self.async_abort(reason="addon_required")
+
+        try:
+            driver = self._get_driver()
+        except AbortFlow:
+            return self.async_abort(reason="config_entry_not_loaded")
+        if (
+            sdk_version := driver.controller.sdk_version
+        ) is not None and sdk_version < MIN_MIGRATION_SDK_VERSION:
+            _LOGGER.warning(
+                "Migration from this controller that has SDK version %s "
+                "is not supported. If possible, update the firmware "
+                "of the controller to a firmware built using SDK version %s or higher",
+                sdk_version,
+                MIN_MIGRATION_SDK_VERSION,
+            )
+            return self.async_abort(
+                reason="migration_low_sdk_version",
+                description_placeholders={
+                    "ok_sdk_version": str(MIN_MIGRATION_SDK_VERSION)
+                },
+            )
 
         if user_input is not None:
             self._migrating = True
