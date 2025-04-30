@@ -78,13 +78,12 @@ async def test_device_exists_abort(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN},
-    )
+    with patch.object(Connection, "get_token", new=AsyncMock(return_value=True)):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN},
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

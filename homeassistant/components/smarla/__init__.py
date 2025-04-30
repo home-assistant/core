@@ -5,26 +5,18 @@ from pysmarlaapi import Connection, Federwiege
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .const import DOMAIN, HOST, PLATFORMS
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+from .const import HOST, PLATFORMS
 
 type FederwiegeConfigEntry = ConfigEntry[Federwiege]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) -> bool:
     """Set up this integration using UI."""
-    if hass.data.get(DOMAIN) is None:
-        hass.data.setdefault(DOMAIN, {})
+    connection = Connection(HOST, token_str=entry.data.get(CONF_ACCESS_TOKEN, None))
 
-    try:
-        connection = Connection(HOST, token_str=entry.data.get(CONF_ACCESS_TOKEN, None))
-    except ValueError as e:
-        raise ConfigEntryError("Invalid token") from e
-
+    # Check if token still has access
     if not await connection.get_token():
         raise ConfigEntryAuthFailed("Invalid authentication")
 
@@ -36,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
-        list(PLATFORMS),
+        PLATFORMS,
     )
 
     return True
@@ -46,11 +38,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) 
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
-        list(PLATFORMS),
+        PLATFORMS,
     )
 
     if unload_ok:
-        federwiege: Federwiege = entry.runtime_data
+        federwiege = entry.runtime_data
         federwiege.disconnect()
 
     return unload_ok

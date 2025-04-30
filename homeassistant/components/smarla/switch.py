@@ -44,7 +44,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smarla switches from config entry."""
-    federwiege: Federwiege = config_entry.runtime_data
+    federwiege = config_entry.runtime_data
     async_add_entities(SmarlaSwitch(federwiege, desc) for desc in SWITCHES)
 
 
@@ -52,33 +52,19 @@ class SmarlaSwitch(SmarlaBaseEntity, SwitchEntity):
     """Representation of Smarla switch."""
 
     entity_description: SmarlaSwitchEntityDescription
-    _property: Property
-    _attr_should_poll = False
 
-    async def on_change(self, value: Any):
-        """Notify ha when state changes."""
-        self.async_write_ha_state()
+    _property: Property[bool]
 
     def __init__(
         self,
         federwiege: Federwiege,
-        description: SmarlaSwitchEntityDescription,
+        desc: SmarlaSwitchEntityDescription,
     ) -> None:
         """Initialize a Smarla switch."""
-        super().__init__(federwiege)
-        self._property = federwiege.get_service(description.service).get_property(
-            description.property
-        )
-        self.entity_description = description
-        self._attr_unique_id = f"{federwiege.serial_number}-{description.key}"
-
-    async def async_added_to_hass(self) -> None:
-        """Run when this Entity has been added to HA."""
-        await self._property.add_listener(self.on_change)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Entity being removed from hass."""
-        await self._property.remove_listener(self.on_change)
+        prop = federwiege.get_service(desc.service).get_property(desc.property)
+        super().__init__(federwiege, prop)
+        self.entity_description = desc
+        self._attr_unique_id = f"{federwiege.serial_number}-{desc.key}"
 
     @property
     def is_on(self) -> bool:
