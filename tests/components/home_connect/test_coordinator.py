@@ -83,10 +83,10 @@ def platforms() -> list[str]:
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_coordinator_failure_refresh_and_stream(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
-    freezer: FrozenDateTimeFactory,
     appliance: HomeAppliance,
 ) -> None:
     """Test entity available state via coordinator refresh and event stream."""
@@ -210,9 +210,9 @@ async def test_coordinator_failure_refresh_and_stream(
     indirect=True,
 )
 async def test_coordinator_not_fetching_on_disconnected_appliance(
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test that the coordinator does not fetch anything on disconnected appliance."""
@@ -231,10 +231,10 @@ async def test_coordinator_not_fetching_on_disconnected_appliance(
     INITIAL_FETCH_CLIENT_METHODS,
 )
 async def test_coordinator_update_failing(
-    mock_method: str,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
+    mock_method: str,
 ) -> None:
     """Test that although is not possible to get settings and status, the config entry is loaded.
 
@@ -274,16 +274,16 @@ async def test_coordinator_update_failing(
     ],
 )
 async def test_event_listener(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
     event_type: EventType,
     event_key: EventKey,
     event_value: str,
     entity_id: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
-    appliance: HomeAppliance,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the event listener works."""
     assert config_entry.state == ConfigEntryState.NOT_LOADED
@@ -344,9 +344,9 @@ async def test_event_listener(
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def tests_receive_setting_and_status_for_first_time_at_events(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test that the event listener is capable of receiving settings and status for the first time."""
@@ -400,9 +400,9 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
 
 async def test_event_listener_error(
     hass: HomeAssistant,
+    client_with_exception: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client_with_exception: MagicMock,
 ) -> None:
     """Test that the configuration entry is reloaded when the event stream raises an API error."""
     client_with_exception.stream_all_events = MagicMock(
@@ -446,17 +446,17 @@ async def test_event_listener_error(
     ],
 )
 async def test_event_listener_resilience(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    exception: HomeConnectError,
     entity_id: str,
     initial_state: str,
     event_key: EventKey,
     event_value: Any,
     after_event_expected_state: str,
-    exception: HomeConnectError,
-    hass: HomeAssistant,
-    appliance: HomeAppliance,
-    client: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
     """Test that the event listener is resilient to interruptions."""
     future = hass.loop.create_future()
@@ -516,10 +516,10 @@ async def test_event_listener_resilience(
 
 async def test_devices_updated_on_refresh(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test handling of devices added or deleted while event stream is down."""
     appliances: list[HomeAppliance] = (
@@ -557,9 +557,9 @@ async def test_devices_updated_on_refresh(
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_paired_disconnected_devices_not_fetching(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test that Home Connect API is not fetched after pairing a disconnected device."""
@@ -587,11 +587,11 @@ async def test_paired_disconnected_devices_not_fetching(
 
 async def test_coordinator_disabling_updates_for_appliance(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
-    issue_registry: ir.IssueRegistry,
-    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test coordinator disables appliance updates on frequent connect/paired events.
 
@@ -680,11 +680,10 @@ async def test_coordinator_disabling_updates_for_appliance(
 
 async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_reload(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
-    issue_registry: ir.IssueRegistry,
-    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test that updates are enabled again after unloading the entry.
 
