@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+import jwt
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -50,4 +51,10 @@ class OAuth2FlowHandler(
                 self._get_reauth_entry(),
                 data_updates=data,
             )
+        await self.async_set_unique_id(
+            jwt.decode(
+                data["token"]["access_token"], options={"verify_signature": False}
+            )["sub"]
+        )
+        self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)

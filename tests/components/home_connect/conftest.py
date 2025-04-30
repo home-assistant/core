@@ -85,6 +85,7 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
             "token": token_entry,
         },
         minor_version=2,
+        unique_id="1234567890",
     )
 
 
