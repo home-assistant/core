@@ -23,6 +23,16 @@ from .entity import RenaultDataEntity, RenaultDataEntityDescription
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
+_PLUG_FROM_CHARGE_STATUS: set[ChargeState] = {
+    ChargeState.CHARGE_IN_PROGRESS,
+    ChargeState.WAITING_FOR_CURRENT_CHARGE,
+    ChargeState.CHARGE_ENDED,
+    ChargeState.V2G_CHARGING_NORMAL,
+    ChargeState.V2G_CHARGING_WAITING,
+    ChargeState.V2G_DISCHARGING,
+    ChargeState.WAITING_FOR_A_PLANNED_CHARGE,
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class RenaultBinarySensorEntityDescription(
@@ -80,10 +90,10 @@ def _plugged_in_value_lambda(self: RenaultBinarySensor) -> bool | None:
 
     if plug_status is not None:
         return plug_status == PlugState.PLUGGED
+
     charging_status = data.get_charging_status() if data else None
-    return charging_status in _PLUG_FROM_CHARGE_STATUS if charging_status else None
-    else:
-        return plug_status == PlugState.PLUGGED
+    if charging_status is not None and charging_status in _PLUG_FROM_CHARGE_STATUS:
+        return True
 
     return None
 
