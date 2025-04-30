@@ -12,6 +12,12 @@
       },
       "server_ip_address": {
         "default": "mdi:server-network"
+      },
+      "generator_status": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "power_source": {
+        "default": "mdi:transmission-tower"
       }
     }
   }
