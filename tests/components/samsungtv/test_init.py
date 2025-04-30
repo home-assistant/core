@@ -72,7 +72,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         == SUPPORT_SAMSUNGTV | MediaPlayerEntityFeature.TURN_ON
     )
 
-    # test host and port
+    # Ensure service is registered
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
