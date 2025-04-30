@@ -118,7 +118,7 @@ async def test_select_charge_mode(
     await hass.async_block_till_done()
 
     data = {
-        ATTR_ENTITY_ID: "select.reg_number_charge_mode",
+        ATTR_ENTITY_ID: "select.reg_zoe_40_charge_mode",
         ATTR_OPTION: "always",
     }
 
