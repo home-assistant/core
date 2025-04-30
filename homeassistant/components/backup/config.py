@@ -202,7 +202,7 @@ class BackupConfig:
                 if agent_id not in self.data.agents:
                     old_agent_retention = None
                     self.data.agents[agent_id] = AgentConfig(
-                        protected=agent_config.get("protected", False),
+                        protected=agent_config.get("protected", True),
                         retention=new_agent_retention,
                     )
                 else:
