@@ -173,7 +173,7 @@ AUTODETECT_LEGACY = {
     "description": "HomeAssistant",
     "id": "ha.component.samsung",
     "method": "legacy",
-    "port": None,
+    "port": LEGACY_PORT,
     "host": "fake_host",
     "timeout": TIMEOUT_REQUEST,
 }
