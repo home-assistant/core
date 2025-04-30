@@ -5,7 +5,14 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
-from homeassistant.const import CONF_PATH, CONF_VARIABLES, EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    CONF_ACTIONS,
+    CONF_CONDITIONS,
+    CONF_PATH,
+    CONF_TRIGGERS,
+    CONF_VARIABLES,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
@@ -14,7 +21,7 @@ from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,17 +91,17 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
 
     async def _attach_triggers(self, start_event: Event | None = None) -> None:
         """Attach the triggers."""
-        if CONF_ACTION in self.config:
+        if CONF_ACTIONS in self.config:
             self._script = Script(
                 self.hass,
-                self.config[CONF_ACTION],
+                self.config[CONF_ACTIONS],
                 self.name,
                 DOMAIN,
             )
 
-        if CONF_CONDITION in self.config:
+        if CONF_CONDITIONS in self.config:
             self._cond_func = await condition.async_conditions_from_config(
-                self.hass, self.config[CONF_CONDITION], _LOGGER, "template entity"
+                self.hass, self.config[CONF_CONDITIONS], _LOGGER, "template entity"
             )
 
         if start_event is not None:
@@ -107,7 +114,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
 
         self._unsub_trigger = await trigger_helper.async_initialize_triggers(
             self.hass,
-            self.config[CONF_TRIGGER],
+            self.config[CONF_TRIGGERS],
             action,
             DOMAIN,
             self.name,

@@ -1,0 +1,99 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email used to log in to the Rehlko application.",
+          "password": "The password used to log in to the Rehlko application."
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::rehlko::config::step::user::data_description::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "engine_speed": {
+        "name": "Engine speed"
+      },
+      "engine_oil_pressure": {
+        "name": "Engine oil pressure"
+      },
+      "engine_coolant_temperature": {
+        "name": "Engine coolant temperature"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "lube_oil_temperature": {
+        "name": "Lube oil temperature"
+      },
+      "controller_temperature": {
+        "name": "Controller temperature"
+      },
+      "engine_compartment_temperature": {
+        "name": "Engine compartment temperature"
+      },
+      "engine_frequency": {
+        "name": "Engine frequency"
+      },
+      "total_operation": {
+        "name": "Total operation"
+      },
+      "total_runtime": {
+        "name": "Total runtime"
+      },
+      "runtime_since_last_maintenance": {
+        "name": "Runtime since last maintenance"
+      },
+      "device_ip_address": {
+        "name": "Device IP address"
+      },
+      "server_ip_address": {
+        "name": "Server IP address"
+      },
+      "utility_voltage": {
+        "name": "Utility voltage"
+      },
+      "generator_voltage_average": {
+        "name": "Average generator voltage"
+      },
+      "generator_load": {
+        "name": "Generator load"
+      },
+      "generator_load_percent": {
+        "name": "Generator load percentage"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Updating data failed after retries."
+    },
+    "invalid_auth": {
+      "message": "Authentication failed for email {email}."
+    },
+    "cannot_connect": {
+      "message": "Can not connect to Rehlko servers."
+    }
+  }
+}
