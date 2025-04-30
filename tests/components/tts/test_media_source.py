@@ -114,6 +114,13 @@ async def test_legacy_resolving(
     await mock_setup(hass, mock_provider)
     mock_get_tts_audio = mock_provider.get_tts_audio
 
+    mock_provider.has_entity = True
+    root = await media_source.async_browse_media(hass, "media-source://tts")
+    assert len(root.children) == 0
+    mock_provider.has_entity = False
+    root = await media_source.async_browse_media(hass, "media-source://tts")
+    assert len(root.children) == 1
+
     mock_get_tts_audio.reset_mock()
     media_id = "media-source://tts/test?message=Hello%20World"
     media = await media_source.async_resolve_media(hass, media_id, None)
