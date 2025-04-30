@@ -792,8 +792,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/kef/ @basnijholt
 /homeassistant/components/kegtron/ @Ernst79
 /tests/components/kegtron/ @Ernst79
-/homeassistant/components/kem/ @bdraco @peterager
-/tests/components/kem/ @bdraco @peterager
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/keymitt_ble/ @spycle
 /tests/components/keymitt_ble/ @spycle
@@ -1283,6 +1281,8 @@ build.json @home-assistant/supervisor
 /tests/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
 /homeassistant/components/rhasspy/ @balloob @synesthesiam
 /tests/components/rhasspy/ @balloob @synesthesiam
+/homeassistant/components/rheklo/ @bdraco @peterager
+/tests/components/rheklo/ @bdraco @peterager
 /homeassistant/components/ridwell/ @bachya
 /tests/components/ridwell/ @bachya
 /homeassistant/components/ring/ @sdb9696

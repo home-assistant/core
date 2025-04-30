@@ -1,4 +1,4 @@
-"""Base class for KEM entities."""
+"""Base class for RHEKLO entities."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from .const import (
     GENERATOR_DATA_DEVICE,
     KOHLER,
 )
-from .coordinator import KemUpdateCoordinator
+from .coordinator import RhekloUpdateCoordinator
 
 
 def _get_device_connections(mac_address: str) -> set[tuple[str, str]]:
@@ -32,14 +32,14 @@ def _get_device_connections(mac_address: str) -> set[tuple[str, str]]:
     return {(dr.CONNECTION_NETWORK_MAC, mac_address_hex)}
 
 
-class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
-    """Representation of an KEM entity."""
+class RhekloEntity(CoordinatorEntity[RhekloUpdateCoordinator]):
+    """Representation of an RHEKLO entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: KemUpdateCoordinator,
+        coordinator: RhekloUpdateCoordinator,
         device_id: int,
         device_data: dict,
         description: EntityDescription,
@@ -69,7 +69,7 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator]):
         return self.coordinator.data[GENERATOR_DATA_DEVICE]
 
     @property
-    def _kem_value(self) -> str:
+    def _rheklo_value(self) -> str:
         """Return the sensor value."""
         if self._use_device_key:
             return self._device_data[self.entity_description.key]

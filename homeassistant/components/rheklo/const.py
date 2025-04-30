@@ -1,8 +1,8 @@
-"""Constants for the KEM integration."""
+"""Constants for the Rheklo integration."""
 
 from aiokem import CommunicationError
 
-DOMAIN = "kem"
+DOMAIN = "rheklo"
 
 CONF_REFRESH_TOKEN = "refresh_token"
 

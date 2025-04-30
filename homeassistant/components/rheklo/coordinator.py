@@ -1,4 +1,4 @@
-"""The KEM coordinator."""
+"""The Rheklo coordinator."""
 
 from __future__ import annotations
 
@@ -17,38 +17,38 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type KemConfigEntry = ConfigEntry[KemRuntimeData]
+type RhekloConfigEntry = ConfigEntry[RhekloRuntimeData]
 
 SCAN_INTERVAL_MINUTES = timedelta(minutes=10)
 
 
 @dataclass
-class KemRuntimeData:
-    """Dataclass to hold runtime data for the KEM integration."""
+class RhekloRuntimeData:
+    """Dataclass to hold runtime data for the RHEKLO integration."""
 
-    coordinators: dict[int, KemUpdateCoordinator]
-    kem: AioKem
+    coordinators: dict[int, RhekloUpdateCoordinator]
+    rheklo: AioKem
     homes: list[dict[str, Any]]
 
 
-class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching KEM data API."""
+class RhekloUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching RHEKLO data API."""
 
-    config_entry: KemConfigEntry
+    config_entry: RhekloConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
-        config_entry: KemConfigEntry,
-        kem: AioKem,
+        config_entry: RhekloConfigEntry,
+        rheklo: AioKem,
         home_data: dict[str, Any],
         device_data: dict[str, Any],
         device_id: int,
         name: str,
     ) -> None:
         """Initialize."""
-        self.kem = kem
+        self.rheklo = rheklo
         self.device_data = device_data
         self.device_id = device_id
         self.home_data = home_data
@@ -64,7 +64,7 @@ class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update data via library."""
         result = {}
         try:
-            result = await self.kem.get_generator_data(self.device_id)
+            result = await self.rheklo.get_generator_data(self.device_id)
         except CommunicationError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

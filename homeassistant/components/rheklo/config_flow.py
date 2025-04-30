@@ -1,4 +1,4 @@
-"""Config flow for KEM integration."""
+"""Config flow for Rheklo integration."""
 
 from __future__ import annotations
 
@@ -18,8 +18,8 @@ from .const import CONNECTION_EXCEPTIONS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class KemConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Kem."""
+class RhekloConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Rheklo."""
 
     VERSION = 1
 
@@ -56,9 +56,9 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         token_subject = None
         try:
-            kem = AioKem(session=async_get_clientsession(self.hass))
-            await kem.authenticate(config[CONF_EMAIL], config[CONF_PASSWORD])
-            token_subject = kem.get_token_subject()
+            rheklo = AioKem(session=async_get_clientsession(self.hass))
+            await rheklo.authenticate(config[CONF_EMAIL], config[CONF_PASSWORD])
+            token_subject = rheklo.get_token_subject()
         except CONNECTION_EXCEPTIONS:
             errors["base"] = "cannot_connect"
         except AuthenticationError:

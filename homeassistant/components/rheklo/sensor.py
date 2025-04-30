@@ -1,4 +1,4 @@
-"""Support for KEM sensors."""
+"""Support for RHEKLO sensors."""
 
 from __future__ import annotations
 
@@ -26,50 +26,50 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DEVICE_DATA_DEVICES, DEVICE_DATA_ID
-from .coordinator import KemConfigEntry
-from .entity import KemEntity
+from .coordinator import RhekloConfigEntry
+from .entity import RhekloEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class KemSensorEntityDescription(SensorEntityDescription):
-    """Class describing Kem sensor entities."""
+class RhekloSensorEntityDescription(SensorEntityDescription):
+    """Class describing Rheklo sensor entities."""
 
     use_device_key: bool = False
 
 
-SENSORS: tuple[KemSensorEntityDescription, ...] = (
-    KemSensorEntityDescription(
+SENSORS: tuple[RhekloSensorEntityDescription, ...] = (
+    RhekloSensorEntityDescription(
         key="engineSpeedRpm",
         translation_key="engine_speed",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="engineOilPressurePsi",
         translation_key="engine_oil_pressure",
         native_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="engineCoolantTempF",
         translation_key="engine_coolant_temperature",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="batteryVoltageV",
         translation_key="battery_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="lubeOilTempF",
         translation_key="lube_oil_temperature",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
@@ -77,14 +77,14 @@ SENSORS: tuple[KemSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="controllerTempF",
         translation_key="controller_temperature",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="engineCompartmentTempF",
         translation_key="engine_compartment_temperature",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
@@ -92,28 +92,28 @@ SENSORS: tuple[KemSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="engineFrequencyHz",
         translation_key="engine_frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="status",
         translation_key="generator_status",
         use_device_key=True,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="engineState",
         translation_key="engine_state",
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="powerSource",
         icon="mdi:home-lightning-bolt",
         translation_key="power_source",
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="totalOperationHours",
         translation_key="total_operation",
         device_class=SensorDeviceClass.DURATION,
@@ -122,7 +122,7 @@ SENSORS: tuple[KemSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="totalRuntimeHours",
         translation_key="total_runtime",
         device_class=SensorDeviceClass.DURATION,
@@ -132,7 +132,7 @@ SENSORS: tuple[KemSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         use_device_key=True,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="runtimeSinceLastMaintenanceHours",
         translation_key="runtime_since_last_maintenance",
         device_class=SensorDeviceClass.DURATION,
@@ -141,7 +141,7 @@ SENSORS: tuple[KemSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="deviceIpAddress",
         icon="mdi:ip-network",
         translation_key="device_ip_address",
@@ -149,35 +149,35 @@ SENSORS: tuple[KemSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         use_device_key=True,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="serverIpAddress",
         icon="mdi:server-network",
         translation_key="server_ip_address",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="utilityVoltageV",
         translation_key="utility_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="generatorVoltageAvgV",
         translation_key="generator_voltage_avg",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="generatorLoadW",
         translation_key="generator_load",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    KemSensorEntityDescription(
+    RhekloSensorEntityDescription(
         key="generatorLoadPercent",
         translation_key="generator_load_percent",
         native_unit_of_measurement=PERCENTAGE,
@@ -189,7 +189,7 @@ SENSORS: tuple[KemSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: KemConfigEntry,
+    config_entry: RhekloConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
@@ -197,7 +197,7 @@ async def async_setup_entry(
     homes = config_entry.runtime_data.homes
     coordinators = config_entry.runtime_data.coordinators
     async_add_entities(
-        KemSensorEntity(
+        RhekloSensorEntity(
             coordinators[device_data[DEVICE_DATA_ID]],
             device_data[DEVICE_DATA_ID],
             device_data,
@@ -210,10 +210,10 @@ async def async_setup_entry(
     )
 
 
-class KemSensorEntity(KemEntity, SensorEntity):
-    """Representation of an KEM sensor."""
+class RhekloSensorEntity(RhekloEntity, SensorEntity):
+    """Representation of an RHEKLO sensor."""
 
     @property
     def native_value(self) -> StateType:
         """Return the sensors state."""
-        return self._kem_value
+        return self._rheklo_value

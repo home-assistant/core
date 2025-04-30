@@ -1,4 +1,4 @@
-"""Test the Kem config flow."""
+"""Test the Rheklo config flow."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -6,7 +6,7 @@ from aiokem import AuthenticationCredentialsError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.kem.const import DOMAIN
+from homeassistant.components.rheklo.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from .conftest import TEST_EMAIL, TEST_PASSWORD, TEST_SUBJECT
 
 
-async def test_configure_entry(hass: HomeAssistant, mock_kem: AsyncMock) -> None:
+async def test_configure_entry(hass: HomeAssistant, mock_rheklo: AsyncMock) -> None:
     """Test we can configure the entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -23,7 +23,7 @@ async def test_configure_entry(hass: HomeAssistant, mock_kem: AsyncMock) -> None
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.kem.async_setup_entry",
+        "homeassistant.components.rheklo.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -54,13 +54,13 @@ async def test_configure_entry(hass: HomeAssistant, mock_kem: AsyncMock) -> None
 )
 async def test_configure_entry_exceptions(
     hass: HomeAssistant,
-    mock_kem: AsyncMock,
+    mock_rheklo: AsyncMock,
     error: Exception,
     conf_error: dict[str, str],
 ) -> None:
     """Test we handle a variety of exceptions and recover by adding new entry."""
     with patch(
-        "homeassistant.components.kem.async_setup_entry",
+        "homeassistant.components.rheklo.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         # First try to authenticate and get an error
@@ -68,7 +68,7 @@ async def test_configure_entry_exceptions(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        mock_kem.authenticate.side_effect = error
+        mock_rheklo.authenticate.side_effect = error
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -83,7 +83,7 @@ async def test_configure_entry_exceptions(
 
         # Now try to authenticate again and succeed
         # This should create a new entry
-        mock_kem.authenticate.side_effect = None
+        mock_rheklo.authenticate.side_effect = None
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -103,10 +103,10 @@ async def test_configure_entry_exceptions(
 
 
 async def test_already_configured(
-    hass: HomeAssistant, kem_config_entry, mock_kem: AsyncMock
+    hass: HomeAssistant, rheklo_config_entry, mock_rheklo: AsyncMock
 ) -> None:
     """Test if entry is already configured."""
-    kem_config_entry.add_to_hass(hass)
+    rheklo_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -125,18 +125,18 @@ async def test_already_configured(
 
 
 async def test_reauth(
-    hass: HomeAssistant, kem_config_entry, mock_kem: AsyncMock
+    hass: HomeAssistant, rheklo_config_entry, mock_rheklo: AsyncMock
 ) -> None:
     """Test reauth flow."""
-    kem_config_entry.add_to_hass(hass)
-    kem_config_entry.async_start_reauth(hass)
+    rheklo_config_entry.add_to_hass(hass)
+    rheklo_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
     flow = flows[0]
 
     with patch(
-        "homeassistant.components.kem.async_setup_entry",
+        "homeassistant.components.rheklo.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
@@ -149,22 +149,22 @@ async def test_reauth(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert kem_config_entry.data[CONF_PASSWORD] == TEST_PASSWORD + "new"
+    assert rheklo_config_entry.data[CONF_PASSWORD] == TEST_PASSWORD + "new"
     assert mock_setup_entry.call_count == 1
 
 
 async def test_reauth_exception(
-    hass: HomeAssistant, kem_config_entry, mock_kem: AsyncMock
+    hass: HomeAssistant, rheklo_config_entry, mock_rheklo: AsyncMock
 ) -> None:
     """Test reauth flow."""
-    kem_config_entry.add_to_hass(hass)
-    kem_config_entry.async_start_reauth(hass)
+    rheklo_config_entry.add_to_hass(hass)
+    rheklo_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
     flow = flows[0]
 
-    mock_kem.authenticate.side_effect = AuthenticationCredentialsError
+    mock_rheklo.authenticate.side_effect = AuthenticationCredentialsError
     result = await hass.config_entries.flow.async_configure(
         flow["flow_id"],
         {
