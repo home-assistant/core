@@ -50,9 +50,7 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info:
-    status: exempt
-    comment: This is a cloud service and does not benefit from device updates.
+  discovery-update-info: done
   discovery: done
   docs-data-update: todo
   docs-examples: todo
