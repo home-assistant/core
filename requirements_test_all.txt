@@ -1111,7 +1111,7 @@ lacrosse-view==1.1.1
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.5
+lcn-frontend==0.2.4
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
