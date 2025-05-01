@@ -92,6 +92,7 @@ async def integration_fixture(
         "generic_switch",
         "generic_switch_multi",
         "humidity_sensor",
+        "laundry_dryer",
         "leak_sensor",
         "light_sensor",
         "microwave_oven",
