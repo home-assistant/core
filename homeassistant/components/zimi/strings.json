@@ -38,7 +38,6 @@
       "timeout": "Connection timed out",
       "invalid_host": "Invalid hostname",
       "connection_refused": "Connection refused",
-      "discovery_failure": "ZCC discovery on LAN failed - manually define host, port and MAC address."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
