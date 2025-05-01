@@ -47,6 +47,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
@@ -123,14 +124,17 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
         TemperatureHumiditySensorDisplay: lambda device: [
             HomematicipTemperatureSensor(hap, device),
             HomematicipHumiditySensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
         ],
         TemperatureHumiditySensorWithoutDisplay: lambda device: [
             HomematicipTemperatureSensor(hap, device),
             HomematicipHumiditySensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
         ],
         TemperatureHumiditySensorOutdoor: lambda device: [
             HomematicipTemperatureSensor(hap, device),
             HomematicipHumiditySensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
         ],
         RoomControlDeviceAnalog: lambda device: [
             HomematicipTemperatureSensor(hap, device),
@@ -179,6 +183,7 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
             HomematicipHumiditySensor(hap, device),
             HomematicipIlluminanceSensor(hap, device),
             HomematicipWindspeedSensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
         ],
         WeatherSensorPlus: lambda device: [
             HomematicipTemperatureSensor(hap, device),
@@ -186,6 +191,7 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
             HomematicipIlluminanceSensor(hap, device),
             HomematicipWindspeedSensor(hap, device),
             HomematicipTodayRainSensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
         ],
         WeatherSensorPro: lambda device: [
             HomematicipTemperatureSensor(hap, device),
@@ -193,6 +199,7 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
             HomematicipIlluminanceSensor(hap, device),
             HomematicipWindspeedSensor(hap, device),
             HomematicipTodayRainSensor(hap, device),
+            HomematicipAbsoluteHumiditySensor(hap, device),
         ],
         EnergySensorsInterface: lambda device: _handle_energy_sensor_interface(
             hap, device
@@ -470,6 +477,35 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
             state_attr[ATTR_TEMPERATURE_OFFSET] = temperature_offset
 
         return state_attr
+
+
+class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP absolute humidity sensor."""
+
+    _attr_native_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the thermometer device."""
+        super().__init__(hap, device, post="Absolute Humidity")
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state."""
+        if self.functional_channel is None:
+            return None
+
+        value = self.functional_channel.vaporAmount
+
+        # Handle case where value might be None
+        if (
+            self.functional_channel.vaporAmount is None
+            or self.functional_channel.vaporAmount == ""
+        ):
+            return None
+
+        # Convert from g/m³ to mg/m³
+        return int(float(value) * 1000)
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):

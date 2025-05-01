@@ -358,3 +358,20 @@ async def test_bsh_key_transformations() -> None:
     program = "Dishcare.Dishwasher.Program.Eco50"
     translation_key = bsh_key_to_translation_key(program)
     assert RE_TRANSLATION_KEY.match(translation_key)
+
+
+async def test_config_entry_unique_id_migration(
+    hass: HomeAssistant,
+    config_entry_v1_2: MockConfigEntry,
+) -> None:
+    """Test that old config entries use the unique id obtained from the JWT subject."""
+    config_entry_v1_2.add_to_hass(hass)
+
+    assert config_entry_v1_2.unique_id != "1234567890"
+    assert config_entry_v1_2.minor_version == 2
+
+    await hass.config_entries.async_setup(config_entry_v1_2.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_v1_2.unique_id == "1234567890"
+    assert config_entry_v1_2.minor_version == 3

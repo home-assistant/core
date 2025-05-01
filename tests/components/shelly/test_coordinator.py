@@ -853,17 +853,28 @@ async def test_rpc_update_entry_fw_ver(
     assert device.sw_version == "99.0.0"
 
 
-@pytest.mark.parametrize(("supports_scripts"), [True, False])
+@pytest.mark.parametrize(
+    ("supports_scripts", "zigbee_enabled", "result"),
+    [
+        (True, False, True),
+        (True, True, False),
+        (False, True, False),
+        (False, False, False),
+    ],
+)
 async def test_rpc_runs_connected_events_when_initialized(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     supports_scripts: bool,
+    zigbee_enabled: bool,
+    result: bool,
 ) -> None:
     """Test RPC runs connected events when initialized."""
     monkeypatch.setattr(
         mock_rpc_device, "supports_scripts", AsyncMock(return_value=supports_scripts)
     )
+    monkeypatch.setattr(mock_rpc_device, "zigbee_enabled", zigbee_enabled)
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
     await init_integration(hass, 2)
 
@@ -876,7 +887,8 @@ async def test_rpc_runs_connected_events_when_initialized(
 
     assert call.supports_scripts() in mock_rpc_device.mock_calls
     # BLE script list is called during connected events if device supports scripts
-    assert bool(call.script_list() in mock_rpc_device.mock_calls) == supports_scripts
+    # and Zigbee is disabled
+    assert bool(call.script_list() in mock_rpc_device.mock_calls) == result
 
 
 async def test_rpc_sleeping_device_unload_ignore_ble_scanner(
