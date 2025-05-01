@@ -53,7 +53,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: This is a cloud service and does not benefit from device updates.
-  discovery: todo
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
