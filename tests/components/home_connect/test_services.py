@@ -186,7 +186,7 @@ async def test_key_value_services(
 ) -> None:
     """Create and test services."""
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -236,7 +236,7 @@ async def test_programs_and_options_actions_deprecation(
 ) -> None:
     """Test deprecated service keys."""
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -256,7 +256,7 @@ async def test_programs_and_options_actions_deprecation(
         "/api/repairs/issues/fix",
         json={"handler": DOMAIN, "issue_id": issue.issue_id},
     )
-    assert resp.status == HTTPStatus.OK
+    assert resp.status is HTTPStatus.OK
     flow_id = (await resp.json())["flow_id"]
     resp = await _client.post(f"/api/repairs/issues/fix/{flow_id}")
 
@@ -304,7 +304,7 @@ async def test_set_program_and_options(
 ) -> None:
     """Test recognized options."""
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -345,7 +345,7 @@ async def test_set_program_and_options_exceptions(
 ) -> None:
     """Test recognized options."""
     assert await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -373,7 +373,7 @@ async def test_services_exception_device_id(
 ) -> None:
     """Raise a HomeAssistantError when there is an API error."""
     assert await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -395,7 +395,7 @@ async def test_services_appliance_not_found(
 ) -> None:
     """Raise a ServiceValidationError when device id does not match."""
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     service_call = SERVICE_KV_CALL_PARAMS[0]
 
@@ -443,7 +443,7 @@ async def test_services_exception(
 ) -> None:
     """Raise a ValueError when device id does not match."""
     assert await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
