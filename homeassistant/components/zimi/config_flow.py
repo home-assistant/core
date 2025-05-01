@@ -151,6 +151,9 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         except ControlPointTimeoutError:
             return {"base": "timeout"}
+        except Exception:
+            _LOGGER.exception("Unexpected error")
+            return {"base": "unknown"}
 
         self.data[CONF_MAC] = format_mac(result.mac)
 
