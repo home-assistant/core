@@ -79,7 +79,6 @@ def platforms() -> list[str]:
     return [Platform.SENSOR, Platform.SWITCH]
 
 
-@pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize("platforms", [("binary_sensor",)])
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_coordinator_failure_refresh_and_stream(
@@ -213,7 +212,6 @@ async def test_coordinator_failure_refresh_and_stream(
 async def test_coordinator_not_fetching_on_disconnected_appliance(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
@@ -236,7 +234,6 @@ async def test_coordinator_update_failing(
     mock_method: str,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test that although is not possible to get settings and status, the config entry is loaded.
@@ -284,7 +281,6 @@ async def test_event_listener(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     appliance: HomeAppliance,
     entity_registry: er.EntityRegistry,
@@ -350,7 +346,6 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
@@ -407,7 +402,6 @@ async def test_event_listener_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client_with_exception: MagicMock,
 ) -> None:
     """Test that the configuration entry is reloaded when the event stream raises an API error."""
@@ -427,7 +421,6 @@ async def test_event_listener_error(
     assert not config_entry._background_tasks
 
 
-@pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize("platforms", [("sensor",)])
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
@@ -525,7 +518,6 @@ async def test_devices_updated_on_refresh(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
@@ -567,7 +559,6 @@ async def test_paired_disconnected_devices_not_fetching(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
@@ -598,7 +589,6 @@ async def test_coordinator_disabling_updates_for_appliance(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     issue_registry: ir.IssueRegistry,
     hass_client: ClientSessionGenerator,
@@ -692,7 +682,6 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     issue_registry: ir.IssueRegistry,
     hass_client: ClientSessionGenerator,
