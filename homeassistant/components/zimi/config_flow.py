@@ -74,12 +74,14 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle selection of zcc to configure if multiple are discovered."""
 
-        errors: dict[str, str] = {}
+        errors: dict[str, str] | None = {}
 
         if user_input is not None:
             self.data[CONF_HOST] = user_input[SELECTED_HOST_AND_PORT].split(":")[0]
             self.data[CONF_PORT] = int(user_input[SELECTED_HOST_AND_PORT].split(":")[1])
-            errors = await self.check_connection(self.data[CONF_HOST], self.data[CONF_PORT])
+            errors = await self.check_connection(
+                self.data[CONF_HOST], self.data[CONF_PORT]
+            )
             if not errors:
                 return await self.create_entry()
 
@@ -113,7 +115,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle manual configuration step if needed."""
 
-        errors: dict[str, str] = {}
+        errors: dict[str, str] | None = {}
 
         if user_input is not None:
             self.data = {**self.data, **user_input}
