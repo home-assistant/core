@@ -5,12 +5,12 @@ from typing import Any
 
 from psnawp_api.core.psnawp_exceptions import PSNAWPAuthenticationError, PSNAWPNotFound
 from psnawp_api.models.user import User
-from psnawp_api.psn import PlaystationNetwork
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import CONF_NPSSO, DOMAIN
+from .helpers import PlaystationNetwork
 
 _LOGGER = logging.getLogger(__name__)
 

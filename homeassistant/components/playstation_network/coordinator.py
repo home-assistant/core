@@ -10,7 +10,6 @@ from psnawp_api.core.psnawp_exceptions import (
     PSNAWPServerError,
 )
 from psnawp_api.models.user import User
-from psnawp_api.psn import PlaystationNetwork, PlaystationNetworkData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,6 +17,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .helpers import PlaystationNetwork, PlaystationNetworkData
 
 _LOGGER = logging.getLogger(__name__)
 
