@@ -19,8 +19,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DOMAIN as DOMAIN_RACHIO,
+    KEY_BATTERY,
     KEY_DETECT_FLOW,
     KEY_DEVICE_ID,
+    KEY_FLOW,
+    KEY_ONLINE,
+    KEY_RAIN_SENSOR,
     KEY_RAIN_SENSOR_TRIPPED,
     KEY_STATUS,
     KEY_SUBTYPE,
@@ -40,11 +44,6 @@ from .webhooks import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-KEY_ONLINE = "online"
-KEY_RAIN_SENSOR = "rain_sensor"
-KEY_BATTERY = "battery"
-KEY_FLOW = "flow"
 
 
 @dataclass(frozen=True)
@@ -111,8 +110,10 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
     )
     for base_station in person.base_stations:
         entities.extend(
-            RachioHoseTimerBinarySensor(valve, base_station.coordinator, description)
-            for valve in base_station.coordinator.data.values()
+            RachioHoseTimerBinarySensor(
+                valve, base_station.status_coordinator, description
+            )
+            for valve in base_station.status_coordinator.data.values()
             for description in HOSE_TIMER_BINARY_SENSOR_TYPES
             if description.exists_fn(valve)
         )
