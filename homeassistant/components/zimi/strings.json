@@ -33,7 +33,6 @@
       }
     },
     "error": {
-      "already_configured": "ZCC device {error_detail} is already configured",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "timeout": "Connection timed out",
