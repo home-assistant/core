@@ -755,8 +755,7 @@ DISCOVERY_SCHEMAS = [
             suggested_display_precision=3,
             state_class=SensorStateClass.TOTAL_INCREASING,
             # id 0 of the EnergyMeasurementStruct is the cumulative energy (in mWh)
-            # negative value for exported energy
-            measurement_to_ha=lambda x: -x.energy,
+            measurement_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
         required_attributes=(
