@@ -19,6 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 
+from tests.common import MockConfigEntry
+
 INPUT_MAC = "aa:bb:cc:dd:ee:ff"
 INPUT_MAC_EXTRA = "aa:bb:cc:dd:ee:ee"
 INPUT_HOST = "192.168.1.100"
@@ -122,6 +124,38 @@ async def test_user_discovery_failure(
     assert result["type"] == "form"
     assert result["errors"] == {}
     assert result["step_id"] == "manual"
+
+
+async def test_user_discovery_duplicates(
+    hass: HomeAssistant,
+    discovery_mock: MagicMock,
+) -> None:
+    """Test that flow is aborted if duplicates are added."""
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=INPUT_MAC,
+        data={
+            CONF_HOST: INPUT_HOST,
+            CONF_PORT: INPUT_PORT,
+            "mac": format_mac(INPUT_MAC),
+        },
+    ).add_to_hass(hass)
+
+    discovery_mock.discovers.return_value = [
+        ControlPointDescription(host=INPUT_HOST, port=INPUT_PORT)
+    ]
+
+    discovery_mock.return_value.validate_connection.return_value = (
+        ControlPointDescription(host=INPUT_HOST, port=INPUT_PORT, mac=INPUT_MAC)
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_finish_manual_success(
