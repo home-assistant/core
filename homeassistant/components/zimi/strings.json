@@ -37,7 +37,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "timeout": "Connection timed out",
       "invalid_host": "Invalid hostname",
-      "connection_refused": "Connection refused",
+      "connection_refused": "Connection refused"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
