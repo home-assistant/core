@@ -328,7 +328,7 @@ async def test_event_listener(
     def event_filter(_: EventStateReportedData) -> bool:
         return True
 
-    hass.bus.async_listen(EVENT_STATE_REPORTED, listener_callback, event_filter)
+    hass.bus.async_listen_once(EVENT_STATE_REPORTED, listener_callback, event_filter)
 
     entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
     await hass.async_block_till_done()
