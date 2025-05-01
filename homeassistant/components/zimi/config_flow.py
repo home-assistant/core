@@ -30,7 +30,7 @@ from homeassistant.helpers.selector import (
 from .const import DEFAULT_PORT, DOMAIN, TITLE
 
 _LOGGER = logging.getLogger(__name__)
-
+DEFAULT_PORT = 5003
 STEP_MANUAL_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
