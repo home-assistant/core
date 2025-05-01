@@ -15,12 +15,12 @@ class BlueCurrentEntity(Entity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    has_value = False
 
     def __init__(self, connector: Connector, signal: str) -> None:
         """Initialize the entity."""
         self.connector = connector
         self.signal = signal
-        self.has_value = False
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
