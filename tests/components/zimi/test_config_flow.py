@@ -92,7 +92,7 @@ async def test_user_discovery_success_selection(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            SELECTED_HOST_AND_PORT: INPUT_HOST_EXTRA + ":" + str(INPUT_PORT_EXTRA),
+            SELECTED_HOST_AND_PORT: f"{INPUT_HOST_EXTRA}:{INPUT_PORT_EXTRA!s}",
         },
     )
 
