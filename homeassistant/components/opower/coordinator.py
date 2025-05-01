@@ -432,9 +432,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             translation_placeholders={
                 "utility_account_id": utility_account_id,
                 "energy_settings": "/config/energy",
-                "target_ids": "\n".join(
+                "new_statistics": "\n".join(
                     {
-                        v
+                        str(metadata_map[v]["name"])
                         for k, v in migration_map.items()
                         if k in need_migration_source_ids
                     }
