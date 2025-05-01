@@ -91,6 +91,11 @@
       "pause_resume": {
         "name": "Pause/resume"
       }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
     }
   }
 }
