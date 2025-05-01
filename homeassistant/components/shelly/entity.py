@@ -400,10 +400,10 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-        instances = len(
+        key_instances = len(
             get_rpc_key_instances(coordinator.device.status, key.split(":")[0])
         )
-        if instances > 1:
+        if key_instances > 1:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, f"{coordinator.mac}-{key.split(':')[-1]}")},
                 name=get_rpc_channel_name(coordinator.device, key),
