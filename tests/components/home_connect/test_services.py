@@ -185,7 +185,6 @@ async def test_key_value_services(
     service_call: dict[str, Any],
 ) -> None:
     """Create and test services."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -236,7 +235,6 @@ async def test_programs_and_options_actions_deprecation(
     issue_id: str,
 ) -> None:
     """Test deprecated service keys."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -305,7 +303,6 @@ async def test_set_program_and_options(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test recognized options."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -347,7 +344,6 @@ async def test_set_program_and_options_exceptions(
     error_regex: str,
 ) -> None:
     """Test recognized options."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -376,7 +372,6 @@ async def test_services_exception_device_id(
     service_call: dict[str, Any],
 ) -> None:
     """Raise a HomeAssistantError when there is an API error."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -399,7 +394,6 @@ async def test_services_appliance_not_found(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
     """Raise a ServiceValidationError when device id does not match."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -448,7 +442,6 @@ async def test_services_exception(
     service_call: dict[str, Any],
 ) -> None:
     """Raise a ValueError when device id does not match."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.LOADED
 

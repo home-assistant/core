@@ -218,7 +218,6 @@ async def test_coordinator_not_fetching_on_disconnected_appliance(
     """Test that the coordinator does not fetch anything on disconnected appliance."""
     appliance.connected = False
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -242,7 +241,6 @@ async def test_coordinator_update_failing(
     """
     setattr(client, mock_method, AsyncMock(side_effect=HomeConnectError()))
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -286,7 +284,6 @@ async def test_event_listener(
     entity_id: str,
 ) -> None:
     """Test that the event listener works."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -353,7 +350,6 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
     client.get_setting = AsyncMock(return_value=ArrayOfSettings([]))
     client.get_status = AsyncMock(return_value=ArrayOfStatus([]))
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -468,7 +464,6 @@ async def test_event_listener_resilience(
         side_effect=[stream_exception(), client.stream_all_events()]
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     await hass.async_block_till_done()
 
@@ -531,7 +526,6 @@ async def test_devices_updated_on_refresh(
     )
 
     await async_setup_component(hass, HA_DOMAIN, {})
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -564,7 +558,6 @@ async def test_paired_disconnected_devices_not_fetching(
 ) -> None:
     """Test that Home Connect API is not fetched after pairing a disconnected device."""
     client.get_home_appliances = AsyncMock(return_value=ArrayOfHomeAppliances([]))
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -601,7 +594,6 @@ async def test_coordinator_disabling_updates_for_appliance(
     appliance_ha_id = "SIEMENS-HCS02DWH1-6BE58C26DCC1"
     issue_id = f"home_connect_too_many_connected_paired_events_{appliance_ha_id}"
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -692,7 +684,6 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
     appliance_ha_id = "SIEMENS-HCS02DWH1-6BE58C26DCC1"
     issue_id = f"home_connect_too_many_connected_paired_events_{appliance_ha_id}"
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -718,7 +709,6 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
