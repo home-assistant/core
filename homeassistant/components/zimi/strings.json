@@ -11,7 +11,12 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "selected_host_and_port": "Selected device: {host}:{port}"
+          "selected_host_and_port": "Selected ZCC"
+        },
+        "data_description": {
+          "host": "Mandatory - ZCC IP address.",
+          "port": "Mandatory - ZCC port number (default=5003).",
+          "selected_host_and_port": "Selected ZCC IP address and port number"
         }
       },
       "manual": {

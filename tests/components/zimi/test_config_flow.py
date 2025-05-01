@@ -101,7 +101,7 @@ async def test_user_discovery_success_selection(
         "host": INPUT_HOST_EXTRA,
         "port": INPUT_PORT_EXTRA,
         "mac": format_mac(INPUT_MAC_EXTRA),
-    }
+    }  # test
 
 
 async def test_user_discovery_failure(
