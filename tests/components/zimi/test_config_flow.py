@@ -124,7 +124,7 @@ async def test_finish_manual_success(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
 ) -> None:
-    """Test finish form transitions to creation with valid data."""
+    """Test manual form transitions to creation with valid data."""
 
     discovery_mock.discovers.side_effect = ControlPointError("Discovery failed")
     discovery_mock.return_value.validate_connection.return_value = (
