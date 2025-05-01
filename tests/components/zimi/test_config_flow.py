@@ -194,7 +194,7 @@ async def test_finish_manual_success(
     }
 
 
-async def test_finish_manual_cannot_connect(
+async def test_manual_cannot_connect(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
 ) -> None:
