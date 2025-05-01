@@ -86,12 +86,16 @@ async def async_setup_entry(
     """Set up the light platform."""
     coordinator = config_entry.runtime_data
 
-    async_add_entities(
-        MieleLight(coordinator, device_id, definition.description)
-        for device_id, device in coordinator.data.devices.items()
-        for definition in LIGHT_TYPES
-        if device.device_type in definition.types
-    )
+    def _async_add_new_devices(new_devices: dict[str, MieleDevice]) -> None:
+        async_add_entities(
+            MieleLight(coordinator, device_id, definition.description)
+            for device_id, device in new_devices.items()
+            for definition in LIGHT_TYPES
+            if device.device_type in definition.types
+        )
+
+    coordinator.new_device_callbacks.append(_async_add_new_devices)
+    _async_add_new_devices(coordinator.data.devices)
 
 
 class MieleLight(MieleEntity, LightEntity):
