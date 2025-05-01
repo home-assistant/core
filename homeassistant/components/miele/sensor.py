@@ -428,34 +428,71 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data
 
-    entities: list = []
-    entity_class: type[MieleSensor]
-    for device_id, device in coordinator.data.devices.items():
-        for definition in SENSOR_TYPES:
-            if device.device_type in definition.types:
-                match definition.description.key:
-                    case "state_status":
-                        entity_class = MieleStatusSensor
-                    case "state_program_id":
-                        entity_class = MieleProgramIdSensor
-                    case "state_program_phase":
-                        entity_class = MielePhaseSensor
-                    case "state_program_type":
-                        entity_class = MieleTypeSensor
-                    case _:
-                        entity_class = MieleSensor
-                if (
-                    definition.description.device_class == SensorDeviceClass.TEMPERATURE
-                    and definition.description.value_fn(device)
-                    == DISABLED_TEMPERATURE / 100
-                ):
-                    # Don't create entity if API signals that datapoint is disabled
-                    continue
-                entities.append(
-                    entity_class(coordinator, device_id, definition.description)
-                )
+    def _async_add_new_devices(new_devices: dict[str, MieleDevice]) -> None:
+        entities: list = []
+        entity_class: type[MieleSensor]
+        for device_id, device in new_devices.items():
+            for definition in SENSOR_TYPES:
+                if device.device_type in definition.types:
+                    match definition.description.key:
+                        case "state_status":
+                            entity_class = MieleStatusSensor
+                        case "state_program_id":
+                            entity_class = MieleProgramIdSensor
+                        case "state_program_phase":
+                            entity_class = MielePhaseSensor
+                        case "state_program_type":
+                            entity_class = MieleTypeSensor
+                        case _:
+                            entity_class = MieleSensor
+                    if (
+                        definition.description.device_class
+                        == SensorDeviceClass.TEMPERATURE
+                        and definition.description.value_fn(device)
+                        == DISABLED_TEMPERATURE / 100
+                    ):
+                        # Don't create entity if API signals that datapoint is disabled
+                        continue
+                    entities.append(
+                        entity_class(coordinator, device_id, definition.description)
+                    )
+        async_add_entities(entities)
 
-    async_add_entities(entities)
+    coordinator.new_device_callbacks.append(_async_add_new_devices)
+    _async_add_new_devices(coordinator.data.devices)
+
+    def _async_add_new_devices(new_devices: dict[str, MieleDevice]) -> None:
+        entities: list = []
+        entity_class: type[MieleSensor]
+        for device_id, device in new_devices.items():
+            for definition in SENSOR_TYPES:
+                if device.device_type in definition.types:
+                    match definition.description.key:
+                        case "state_status":
+                            entity_class = MieleStatusSensor
+                        case "state_program_id":
+                            entity_class = MieleProgramIdSensor
+                        case "state_program_phase":
+                            entity_class = MielePhaseSensor
+                        case "state_program_type":
+                            entity_class = MieleTypeSensor
+                        case _:
+                            entity_class = MieleSensor
+                    if (
+                        definition.description.device_class
+                        == SensorDeviceClass.TEMPERATURE
+                        and definition.description.value_fn(device)
+                        == DISABLED_TEMPERATURE / 100
+                    ):
+                        # Don't create entity if API signals that datapoint is disabled
+                        continue
+                    entities.append(
+                        entity_class(coordinator, device_id, definition.description)
+                    )
+        async_add_entities(entities)
+
+    coordinator.new_device_callbacks.append(_async_add_new_devices)
+    _async_add_new_devices(coordinator.data.devices)
 
 
 APPLIANCE_ICONS = {
