@@ -1,5 +1,12 @@
 """Constants for Google Travel Time."""
 
+from google.maps.routing_v2 import (
+    RouteTravelMode,
+    TrafficModel,
+    TransitPreferences,
+    Units,
+)
+
 DOMAIN = "google_travel_time"
 
 ATTRIBUTION = "Powered by Google"
@@ -7,7 +14,6 @@ ATTRIBUTION = "Powered by Google"
 CONF_DESTINATION = "destination"
 CONF_OPTIONS = "options"
 CONF_ORIGIN = "origin"
-CONF_TRAVEL_MODE = "travel_mode"
 CONF_AVOID = "avoid"
 CONF_UNITS = "units"
 CONF_ARRIVAL_TIME = "arrival_time"
@@ -79,11 +85,37 @@ ALL_LANGUAGES = [
 
 AVOID_OPTIONS = ["tolls", "highways", "ferries", "indoor"]
 TRANSIT_PREFS = ["less_walking", "fewer_transfers"]
+TRANSIT_PREFS_TO_GOOGLE_SDK_ENUM = {
+    "less_walking": TransitPreferences.TransitRoutingPreference.LESS_WALKING,
+    "fewer_transfers": TransitPreferences.TransitRoutingPreference.FEWER_TRANSFERS,
+}
 TRANSPORT_TYPES = ["bus", "subway", "train", "tram", "rail"]
+TRANSPORT_TYPES_TO_GOOGLE_SDK_ENUM = {
+    "bus": TransitPreferences.TransitTravelMode.BUS,
+    "subway": TransitPreferences.TransitTravelMode.SUBWAY,
+    "train": TransitPreferences.TransitTravelMode.TRAIN,
+    "tram": TransitPreferences.TransitTravelMode.LIGHT_RAIL,
+    "rail": TransitPreferences.TransitTravelMode.RAIL,
+}
 TRAVEL_MODES = ["driving", "walking", "bicycling", "transit"]
+TRAVEL_MODES_TO_GOOGLE_SDK_ENUM = {
+    "driving": RouteTravelMode.DRIVE,
+    "walking": RouteTravelMode.WALK,
+    "bicycling": RouteTravelMode.BICYCLE,
+    "transit": RouteTravelMode.TRANSIT,
+}
 TRAFFIC_MODELS = ["best_guess", "pessimistic", "optimistic"]
+TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM = {
+    "best_guess": TrafficModel.BEST_GUESS,
+    "pessimistic": TrafficModel.PESSIMISTIC,
+    "optimistic": TrafficModel.OPTIMISTIC,
+}
 
 # googlemaps library uses "metric" or "imperial" terminology in distance_matrix
 UNITS_METRIC = "metric"
 UNITS_IMPERIAL = "imperial"
 UNITS = [UNITS_METRIC, UNITS_IMPERIAL]
+UNITS_TO_GOOGLE_SDK_ENUM = {
+    UNITS_METRIC: Units.METRIC,
+    UNITS_IMPERIAL: Units.IMPERIAL,
+}

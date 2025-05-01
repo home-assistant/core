@@ -29,7 +29,6 @@ from homeassistant.util.enum import try_parse_enum
 from .const import DOMAIN
 from .coordinator import ESPHomeDashboardCoordinator
 from .dashboard import async_get_dashboard
-from .domain_data import DomainData
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
@@ -62,7 +61,7 @@ async def async_setup_entry(
 
     if (dashboard := async_get_dashboard(hass)) is None:
         return
-    entry_data = DomainData.get(hass).get_entry_data(entry)
+    entry_data = entry.runtime_data
     assert entry_data.device_info is not None
     device_name = entry_data.device_info.name
     unsubs: list[CALLBACK_TYPE] = []
@@ -70,7 +69,6 @@ async def async_setup_entry(
     @callback
     def _async_setup_update_entity() -> None:
         """Set up the update entity."""
-        nonlocal unsubs
         assert dashboard is not None
         # Keep listening until device is available
         if not entry_data.available or not dashboard.last_update_success:
@@ -95,10 +93,12 @@ async def async_setup_entry(
         _async_setup_update_entity()
         return
 
-    unsubs = [
-        entry_data.async_subscribe_device_updated(_async_setup_update_entity),
-        dashboard.async_add_listener(_async_setup_update_entity),
-    ]
+    unsubs.extend(
+        [
+            entry_data.async_subscribe_device_updated(_async_setup_update_entity),
+            dashboard.async_add_listener(_async_setup_update_entity),
+        ]
+    )
 
 
 class ESPHomeDashboardUpdateEntity(
@@ -109,7 +109,6 @@ class ESPHomeDashboardUpdateEntity(
     _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_title = "ESPHome"
-    _attr_name = "Firmware"
     _attr_release_url = "https://esphome.io/changelog/"
     _attr_entity_registry_enabled_default = False
 
@@ -242,7 +241,7 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
 
     @property
     @esphome_state_property
-    def installed_version(self) -> str | None:
+    def installed_version(self) -> str:
         """Return the installed version."""
         return self._state.current_version
 
@@ -260,19 +259,19 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
 
     @property
     @esphome_state_property
-    def release_summary(self) -> str | None:
+    def release_summary(self) -> str:
         """Return the release summary."""
         return self._state.release_summary
 
     @property
     @esphome_state_property
-    def release_url(self) -> str | None:
+    def release_url(self) -> str:
         """Return the release URL."""
         return self._state.release_url
 
     @property
     @esphome_state_property
-    def title(self) -> str | None:
+    def title(self) -> str:
         """Return the title of the update."""
         return self._state.title
 

@@ -5,9 +5,9 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from pylamarzocco import LaMarzoccoMachine
-from pylamarzocco.const import WidgetType
+from pylamarzocco.const import ModelName, PreExtractionMode, WidgetType
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.models import CoffeeBoiler
+from pylamarzocco.models import CoffeeBoiler, PreBrewing
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -76,6 +76,123 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             )
         ),
         native_value_fn=lambda machine: machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes,
+    ),
+    LaMarzoccoNumberEntityDescription(
+        key="preinfusion_off",
+        translation_key="preinfusion_time",
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_step=PRECISION_TENTHS,
+        native_min_value=0,
+        native_max_value=10,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=(
+            lambda machine, value: machine.set_pre_extraction_times(
+                seconds_on=0,
+                seconds_off=float(value),
+            )
+        ),
+        native_value_fn=(
+            lambda machine: cast(
+                PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+            )
+            .times.pre_infusion[0]
+            .seconds.seconds_out
+        ),
+        available_fn=(
+            lambda machine: cast(
+                PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+            ).mode
+            is PreExtractionMode.PREINFUSION
+        ),
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (
+                ModelName.LINEA_MICRA,
+                ModelName.LINEA_MINI,
+                ModelName.LINEA_MINI_R,
+            )
+        ),
+    ),
+    LaMarzoccoNumberEntityDescription(
+        key="prebrew_on",
+        translation_key="prebrew_time_on",
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_step=PRECISION_TENTHS,
+        native_min_value=0,
+        native_max_value=10,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=(
+            lambda machine, value: machine.set_pre_extraction_times(
+                seconds_on=float(value),
+                seconds_off=cast(
+                    PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+                )
+                .times.pre_brewing[0]
+                .seconds.seconds_out,
+            )
+        ),
+        native_value_fn=(
+            lambda machine: cast(
+                PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+            )
+            .times.pre_brewing[0]
+            .seconds.seconds_in
+        ),
+        available_fn=lambda machine: cast(
+            PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+        ).mode
+        is PreExtractionMode.PREBREWING,
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (
+                ModelName.LINEA_MICRA,
+                ModelName.LINEA_MINI,
+                ModelName.LINEA_MINI_R,
+            )
+        ),
+    ),
+    LaMarzoccoNumberEntityDescription(
+        key="prebrew_off",
+        translation_key="prebrew_time_off",
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_step=PRECISION_TENTHS,
+        native_min_value=0,
+        native_max_value=10,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=(
+            lambda machine, value: machine.set_pre_extraction_times(
+                seconds_on=cast(
+                    PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+                )
+                .times.pre_brewing[0]
+                .seconds.seconds_in,
+                seconds_off=float(value),
+            )
+        ),
+        native_value_fn=(
+            lambda machine: cast(
+                PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+            )
+            .times.pre_brewing[0]
+            .seconds.seconds_out
+        ),
+        available_fn=(
+            lambda machine: cast(
+                PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+            ).mode
+            is PreExtractionMode.PREBREWING
+        ),
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (
+                ModelName.LINEA_MICRA,
+                ModelName.LINEA_MINI,
+                ModelName.LINEA_MINI_R,
+            )
+        ),
     ),
 )
 

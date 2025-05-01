@@ -194,13 +194,7 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=PERCENTAGE,
                 deprecated=(
                     lambda status: "media_player"
-                    if all(
-                        capability in status
-                        for capability in (
-                            Capability.AUDIO_MUTE,
-                            Capability.MEDIA_PLAYBACK,
-                        )
-                    )
+                    if Capability.AUDIO_MUTE in status
                     else None
                 ),
             )
@@ -995,6 +989,18 @@ CAPABILITY_TO_SENSORS: dict[
                 value_fn=dt_util.parse_datetime,
             )
         ],
+    },
+    Capability.SAMSUNG_CE_WATER_CONSUMPTION_REPORT: {
+        Attribute.WATER_CONSUMPTION: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WATER_CONSUMPTION,
+                translation_key="water_consumption",
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                device_class=SensorDeviceClass.WATER,
+                native_unit_of_measurement=UnitOfVolume.LITERS,
+                value_fn=lambda value: value["cumulativeAmount"] / 1000,
+            )
+        ]
     },
 }
 

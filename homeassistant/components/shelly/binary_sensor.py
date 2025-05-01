@@ -42,6 +42,8 @@ from .utils import (
     is_rpc_momentary_input,
 )
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class BlockBinarySensorDescription(
