@@ -25,10 +25,10 @@ async def async_get_config_entry_diagnostics(
     device = coordinator.device
     data = {
         "device": device.to_dict(),
-        "bluetooth_available": (
-            entry.options.get(CONF_USE_BLUETOOTH, True)
-            and CONF_MAC in entry.data
-            and CONF_TOKEN in entry.data
-        ),
+        "bluetooth_available": {
+            "options_enabled": entry.options.get(CONF_USE_BLUETOOTH, True),
+            CONF_MAC: CONF_MAC in entry.data,
+            CONF_TOKEN: CONF_TOKEN in entry.data,
+        },
     }
     return async_redact_data(data, TO_REDACT)

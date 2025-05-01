@@ -1,7 +1,11 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'bluetooth_available': False,
+    'bluetooth_available': dict({
+      'mac': False,
+      'options_enabled': True,
+      'token': True,
+    }),
     'device': dict({
       'dashboard': dict({
         'available_firmware_update': False,
