@@ -319,7 +319,7 @@ async def test_manual_gethostbyname_error(
         ),
     ],
 )
-async def test_finish_manual_socket_errors(
+async def test_manual_socket_errors(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
     side_effect: Exception,
