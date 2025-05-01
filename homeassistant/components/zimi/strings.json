@@ -41,7 +41,6 @@
       "duplicate_entry": "Duplicate configuration entry: {error_detail}",
       "invalid_host": "Invalid hostname",
       "invalid_mac": "Invalid MAC address",
-      "mismatched_mac": "Mismatched MAC address: {error_detail}",
       "connection_refused": "Connection refused",
       "discovery_failure": "ZCC discovery on LAN failed - manually define host, port and MAC address."
     },
