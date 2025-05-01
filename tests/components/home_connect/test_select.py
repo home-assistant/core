@@ -68,7 +68,6 @@ async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -147,7 +146,6 @@ async def test_connected_devices(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -215,7 +213,6 @@ async def test_select_entity_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
@@ -266,7 +263,6 @@ async def test_select_entity_availability(
 async def test_filter_programs(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -366,7 +362,6 @@ async def test_select_program_functionality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test select functionality."""
@@ -440,7 +435,6 @@ async def test_select_exception_handling(
     hass: HomeAssistant,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
-    setup_credentials: None,
     client_with_exception: MagicMock,
 ) -> None:
     """Test exception handling."""
@@ -480,7 +474,6 @@ async def test_programs_updated_on_connect(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test that devices reconnected.
@@ -570,7 +563,6 @@ async def test_select_functionality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test select functionality."""
@@ -633,7 +625,6 @@ async def test_fetch_allowed_values(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test fetch allowed values."""
@@ -690,7 +681,6 @@ async def test_fetch_allowed_values_after_rate_limit_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test fetch allowed values."""
@@ -765,7 +755,6 @@ async def test_default_values_after_fetch_allowed_values_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test fetch allowed values."""
@@ -818,7 +807,6 @@ async def test_select_entity_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client_with_exception: MagicMock,
 ) -> None:
     """Test select entity error."""
@@ -936,7 +924,6 @@ async def test_options_functionality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test options functionality."""

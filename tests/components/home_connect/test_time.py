@@ -52,7 +52,6 @@ async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -117,7 +116,6 @@ async def test_connected_devices(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -176,7 +174,6 @@ async def test_time_entity_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
@@ -242,7 +239,6 @@ async def test_time_entity_functionality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test time entity functionality."""
@@ -287,7 +283,6 @@ async def test_time_entity_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client_with_exception: MagicMock,
 ) -> None:
     """Test time entity error."""
@@ -330,7 +325,6 @@ async def test_create_alarm_clock_deprecation_issue(
     appliance: HomeAppliance,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
@@ -411,7 +405,6 @@ async def test_alarm_clock_deprecation_issue_fix(
     appliance: HomeAppliance,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     issue_registry: ir.IssueRegistry,
     hass_client: ClientSessionGenerator,

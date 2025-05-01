@@ -106,7 +106,6 @@ async def test_program_options_retrieval(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test that the options are correctly retrieved at the start and updated on program updates."""
@@ -257,7 +256,6 @@ async def test_no_options_retrieval_on_unknown_program(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test that no options are retrieved when the program is unknown."""
@@ -335,7 +333,6 @@ async def test_program_options_retrieval_after_appliance_connection(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test that the options are correctly retrieved at the start and updated on program updates."""
@@ -455,7 +452,6 @@ async def test_option_entity_functionality_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test that the option entity handles exceptions correctly."""

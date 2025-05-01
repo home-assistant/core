@@ -59,7 +59,6 @@ async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -123,7 +122,6 @@ async def test_connected_devices(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -181,7 +179,6 @@ async def test_light_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
@@ -353,7 +350,6 @@ async def test_light_functionality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test light functionality."""
@@ -406,7 +402,6 @@ async def test_light_color_different_than_custom(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test that light color attributes are not set if color is different than custom."""
@@ -574,7 +569,6 @@ async def test_light_exception_handling(
     hass: HomeAssistant,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
-    setup_credentials: None,
     client_with_exception: MagicMock,
 ) -> None:
     """Test light exception handling."""

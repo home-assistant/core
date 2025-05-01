@@ -46,7 +46,6 @@ async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -110,7 +109,6 @@ async def test_connected_devices(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -174,7 +172,6 @@ async def test_binary_sensors_entity_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
@@ -279,7 +276,6 @@ async def test_binary_sensors_functionality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Tests for Home Connect Fridge appliance door states."""
@@ -315,7 +311,6 @@ async def test_connected_sensor_functionality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:

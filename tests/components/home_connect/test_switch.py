@@ -75,7 +75,6 @@ async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -154,7 +153,6 @@ async def test_connected_devices(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -223,7 +221,6 @@ async def test_switch_entity_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
@@ -311,7 +308,6 @@ async def test_switch_functionality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     appliance: HomeAppliance,
     client: MagicMock,
 ) -> None:
@@ -355,7 +351,6 @@ async def test_program_switch_functionality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     appliance: HomeAppliance,
     client: MagicMock,
 ) -> None:
@@ -462,7 +457,6 @@ async def test_switch_exception_handling(
     hass: HomeAssistant,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
-    setup_credentials: None,
     client_with_exception: MagicMock,
 ) -> None:
     """Test exception handling."""
@@ -537,7 +531,6 @@ async def test_ent_desc_switch_functionality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     appliance: HomeAppliance,
     client: MagicMock,
 ) -> None:
@@ -590,7 +583,6 @@ async def test_ent_desc_switch_exception_handling(
     hass: HomeAssistant,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
-    setup_credentials: None,
     appliance: HomeAppliance,
     client_with_exception: MagicMock,
 ) -> None:
@@ -674,7 +666,6 @@ async def test_power_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     appliance: HomeAppliance,
     client: MagicMock,
 ) -> None:
@@ -719,7 +710,6 @@ async def test_power_switch_fetch_off_state_from_current_value(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test power switch functionality to fetch the off state from the current value."""
@@ -771,7 +761,6 @@ async def test_power_switch_service_validation_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     exception_match: str,
     client: MagicMock,
 ) -> None:
@@ -822,7 +811,6 @@ async def test_create_program_switch_deprecation_issue(
     service: str,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
@@ -904,7 +892,6 @@ async def test_program_switch_deprecation_issue_fix(
     service: str,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     issue_registry: ir.IssueRegistry,
     hass_client: ClientSessionGenerator,
@@ -1023,7 +1010,6 @@ async def test_options_functionality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test options functionality."""
