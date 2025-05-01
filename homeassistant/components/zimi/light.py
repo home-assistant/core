@@ -87,14 +87,15 @@ class ZimiDimmer(ZimiLight):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on (with optional brightness)."""
 
+        brightness = kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255
         _LOGGER.debug(
             "Sending turn_on(brightness=%d) for %s in %s",
-            kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255,
+            brightness,
             self._device.name,
             self._device.room,
         )
 
-        await self._device.set_brightness(kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255)
+        await self._device.set_brightness(brightness)
 
     @property
     def brightness(self) -> int | None:
