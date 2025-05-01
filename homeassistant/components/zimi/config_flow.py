@@ -122,7 +122,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_HOST], self.data[CONF_PORT]
             )
 
-            if not connection_errors:
+            if not errors:
                 return await self.create_entry()
 
         return self.async_show_form(
