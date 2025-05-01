@@ -27,6 +27,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
+from tests.components.tts.common import MockResultStream
+
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 _MEDIA_ID = "12345"
 
