@@ -39,7 +39,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration, snapshot_whirlpool_entities
+from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callback
 
 
 @pytest.fixture(
@@ -60,10 +60,7 @@ async def update_ac_state(
     mock_aircon_api_instance: MagicMock,
 ):
     """Simulate an update trigger from the API."""
-    for call in mock_aircon_api_instance.register_attr_callback.call_args_list:
-        update_ha_state_cb = call[0][0]
-        update_ha_state_cb()
-        await hass.async_block_till_done()
+    await trigger_attr_callback(hass, mock_aircon_api_instance)
     return hass.states.get(entity_id)
 
 

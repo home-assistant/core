@@ -291,7 +291,7 @@
           "description": "The term to search for."
         },
         "media_filter_classes": {
-          "name": "Media filter classes",
+          "name": "Media class filter",
           "description": "List of media classes to filter the search results by."
         }
       }

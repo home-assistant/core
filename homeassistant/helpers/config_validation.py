@@ -1059,6 +1059,31 @@ def removed(
     )
 
 
+def renamed(
+    old_key: str,
+    new_key: str,
+) -> Callable[[Any], Any]:
+    """Replace key with a new key.
+
+    Fails if both the new and old key are present.
+    """
+
+    def validator(value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+
+        if old_key in value:
+            if new_key in value:
+                raise vol.Invalid(
+                    f"Cannot specify both '{old_key}' and '{new_key}'. Please use '{new_key}' only."
+                )
+            value[new_key] = value.pop(old_key)
+
+        return value
+
+    return validator
+
+
 def key_value_schemas(
     key: str,
     value_schemas: dict[Hashable, VolSchemaType | Callable[[Any], dict[str, Any]]],
