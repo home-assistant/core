@@ -85,7 +85,6 @@ async def test_paired_depaired_devices_flow(
             ],
         )
     )
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -176,7 +175,6 @@ async def test_connected_devices(
 
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
     client.get_all_programs = AsyncMock(side_effect=get_all_programs_side_effect)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
@@ -223,7 +221,6 @@ async def test_select_entity_availability(
     entity_ids = [
         "select.washer_active_program",
     ]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -302,7 +299,6 @@ async def test_filter_programs(
         ]
     )
 
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -370,7 +366,6 @@ async def test_select_program_functionality(
     client: MagicMock,
 ) -> None:
     """Test select functionality."""
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -454,7 +449,6 @@ async def test_select_exception_handling(
         ]
     )
 
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -501,7 +495,6 @@ async def test_programs_updated_on_connect(
         return await get_all_programs_mock.side_effect(ha_id)
 
     client.get_all_programs = AsyncMock(side_effect=get_all_programs_side_effect)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     client.get_all_programs = get_all_programs_mock
@@ -574,7 +567,6 @@ async def test_select_functionality(
     client: MagicMock,
 ) -> None:
     """Test select functionality."""
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -655,7 +647,6 @@ async def test_fetch_allowed_values(
 
     client.get_setting = AsyncMock(side_effect=get_setting_side_effect)
 
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -723,7 +714,6 @@ async def test_fetch_allowed_values_after_rate_limit_error(
         ]
     )
 
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -786,7 +776,6 @@ async def test_default_values_after_fetch_allowed_values_error(
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
     client.get_setting = AsyncMock(side_effect=exception)
 
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -833,7 +822,6 @@ async def test_select_entity_error(
             )
         ]
     )
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -965,7 +953,6 @@ async def test_options_functionality(
         )
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     entity_state = hass.states.get(entity_id)

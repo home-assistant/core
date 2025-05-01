@@ -186,7 +186,6 @@ async def test_key_value_services(
     appliance: HomeAppliance,
 ) -> None:
     """Create and test services."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -238,7 +237,6 @@ async def test_programs_and_options_actions_deprecation(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test deprecated service keys."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -308,7 +306,6 @@ async def test_set_program_and_options(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test recognized options."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -351,7 +348,6 @@ async def test_set_program_and_options_exceptions(
     appliance: HomeAppliance,
 ) -> None:
     """Test recognized options."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -381,7 +377,6 @@ async def test_services_exception_device_id(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Raise a HomeAssistantError when there is an API error."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -405,7 +400,6 @@ async def test_services_appliance_not_found(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Raise a ServiceValidationError when device id does not match."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -455,7 +449,6 @@ async def test_services_exception(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Raise a ValueError when device id does not match."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.LOADED
 

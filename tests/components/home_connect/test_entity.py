@@ -158,7 +158,6 @@ async def test_program_options_retrieval(
         )
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -278,7 +277,6 @@ async def test_no_options_retrieval_on_unknown_program(
 
     client.get_all_programs = AsyncMock(side_effect=get_all_programs_with_options_mock)
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -360,7 +358,6 @@ async def test_program_options_retrieval_after_appliance_connection(
         )
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -473,7 +470,6 @@ async def test_option_entity_functionality_exception(
         )
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 

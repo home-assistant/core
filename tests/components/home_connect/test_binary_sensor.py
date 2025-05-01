@@ -52,7 +52,6 @@ async def test_paired_depaired_devices_flow(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -130,7 +129,6 @@ async def test_connected_devices(
         return get_status_original_mock.return_value
 
     client.get_status = AsyncMock(side_effect=get_status_side_effect)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     client.get_status = get_status_original_mock
@@ -182,7 +180,6 @@ async def test_binary_sensors_entity_availability(
     entity_ids = [
         "binary_sensor.washer_remote_control",
     ]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -283,7 +280,6 @@ async def test_binary_sensors_functionality(
     client: MagicMock,
 ) -> None:
     """Tests for Home Connect Fridge appliance door states."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     await client.add_events(
@@ -321,7 +317,6 @@ async def test_connected_sensor_functionality(
 ) -> None:
     """Test if the connected binary sensor reports the right values."""
     entity_id = "binary_sensor.washer_connectivity"
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 

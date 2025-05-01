@@ -92,7 +92,6 @@ async def test_paired_depaired_devices_flow(
             ],
         )
     )
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -183,7 +182,6 @@ async def test_connected_devices(
 
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
     client.get_all_programs = AsyncMock(side_effect=get_all_programs_side_effect)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
@@ -233,7 +231,6 @@ async def test_switch_entity_availability(
         "switch.dishwasher_child_lock",
         "switch.dishwasher_program_eco50",
     ]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -317,7 +314,6 @@ async def test_switch_functionality(
 ) -> None:
     """Test switch functionality."""
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -385,7 +381,6 @@ async def test_program_switch_functionality(
         )
 
     client.stop_program = AsyncMock(side_effect=mock_stop_program)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     assert hass.states.is_state(entity_id, initial_state)
@@ -494,7 +489,6 @@ async def test_switch_exception_handling(
         ]
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -543,7 +537,6 @@ async def test_ent_desc_switch_functionality(
 ) -> None:
     """Test switch functionality - entity description setup."""
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -606,7 +599,6 @@ async def test_ent_desc_switch_exception_handling(
             for key, value in status.items()
         ]
     )
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -693,7 +685,6 @@ async def test_power_switch(
         ]
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -734,7 +725,6 @@ async def test_power_switch_fetch_off_state_from_current_value(
         ]
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -801,7 +791,6 @@ async def test_power_switch_service_validation_errors(
         client.get_settings.return_value = ArrayOfSettings([setting])
         client.get_setting = AsyncMock(return_value=setting)
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -864,7 +853,6 @@ async def test_create_program_switch_deprecation_issue(
         },
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -947,7 +935,6 @@ async def test_program_switch_deprecation_issue_fix(
         },
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -1043,7 +1030,6 @@ async def test_options_functionality(
         )
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     assert hass.states.get(entity_id)

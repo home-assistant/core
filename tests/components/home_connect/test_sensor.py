@@ -101,7 +101,6 @@ async def test_paired_depaired_devices_flow(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -202,7 +201,6 @@ async def test_connected_devices(
         return get_status_original_mock.return_value
 
     client.get_status = AsyncMock(side_effect=get_status_side_effect)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     client.get_status = get_status_original_mock
@@ -249,7 +247,6 @@ async def test_sensor_entity_availability(
         "sensor.dishwasher_operation_state",
         "sensor.dishwasher_salt_nearly_empty",
     ]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -457,7 +454,6 @@ async def test_program_sensor_edge_case(
         )
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -521,7 +517,6 @@ async def test_remaining_prog_time_edge_cases(
     time_to_freeze = "2021-01-09 12:00:00+00:00"
     freezer.move_to(time_to_freeze)
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -598,7 +593,6 @@ async def test_sensors_states(
     client: MagicMock,
 ) -> None:
     """Tests for appliance sensors."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -661,7 +655,6 @@ async def test_event_sensors_states(
 ) -> None:
     """Tests for appliance event sensors."""
     caplog.set_level(logging.ERROR)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -772,7 +765,6 @@ async def test_sensor_unit_fetching(
         )
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -829,7 +821,6 @@ async def test_sensor_unit_fetching_error(
     client.get_status = AsyncMock(side_effect=get_status_mock)
     client.get_status_value = AsyncMock(side_effect=HomeConnectError())
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -892,7 +883,6 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
         ]
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

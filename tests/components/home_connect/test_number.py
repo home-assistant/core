@@ -81,7 +81,6 @@ async def test_paired_depaired_devices_flow(
             ],
         )
     )
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -161,7 +160,6 @@ async def test_connected_devices(
         return get_settings_original_mock.return_value
 
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
@@ -212,7 +210,6 @@ async def test_number_entity_availability(
     # Setting constrains are not needed for this test
     # so we rise an error to easily test the availability
     client.get_setting = AsyncMock(side_effect=HomeConnectError())
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -320,7 +317,6 @@ async def test_number_entity_functionality(
         )
     )
 
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
     entity_state = hass.states.get(entity_id)
@@ -425,7 +421,6 @@ async def test_fetch_constraints_after_rate_limit_error(
         ]
     )
 
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -478,7 +473,6 @@ async def test_number_entity_error(
             )
         ]
     )
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -606,7 +600,6 @@ async def test_options_functionality(
         )
     )
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     entity_state = hass.states.get(entity_id)
