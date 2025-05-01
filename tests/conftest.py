@@ -1352,7 +1352,9 @@ def translations_once() -> Generator[_patch]:
 
 
 @pytest.fixture(autouse=True, scope="module")
-def evict_faked_translations(translations_once) -> Generator[_patch]:
+def evict_faked_translations(
+    garbage_collection, translations_once
+) -> Generator[_patch]:
     """Clear translations for mocked integrations from the cache after each module."""
     real_component_strings = translation_helper._async_get_component_strings
     with patch(
