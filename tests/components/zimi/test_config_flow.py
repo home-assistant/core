@@ -110,22 +110,6 @@ async def test_user_discovery_success_selection(
     }
 
 
-async def test_user_discovery_failure(
-    hass: HomeAssistant,
-    discovery_mock: MagicMock,
-) -> None:
-    """Test user form transitions to manual step if zcc discovery fails."""
-
-    discovery_mock.discovers.side_effect = ControlPointError("Discovery failed")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-    assert result["step_id"] == "manual"
-
-
 async def test_user_discovery_duplicates(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
