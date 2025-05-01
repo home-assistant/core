@@ -25,6 +25,7 @@ from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoo
 from .utils import (
     async_remove_shelly_entity,
     get_block_entity_name,
+    get_rpc_channel_name,
     get_rpc_entity_name,
     get_rpc_key_instances,
 )
@@ -399,9 +400,20 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
+        instances = len(
+            get_rpc_key_instances(coordinator.device.status, key.split(":")[0])
         )
+        if instances > 1:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"{coordinator.mac}-{key.split(':')[-1]}")},
+                name=get_rpc_channel_name(coordinator.device, key),
+                manufacturer="Shelly",
+                via_device=(DOMAIN, coordinator.mac),
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
+            )
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
 
