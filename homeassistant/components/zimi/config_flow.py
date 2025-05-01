@@ -125,7 +125,6 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
             if not connection_errors:
                 return await self.create_entry()
 
-
         return self.async_show_form(
             step_id="manual",
             data_schema=self.add_suggested_values_to_schema(
