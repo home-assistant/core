@@ -128,7 +128,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="manual",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, self.data
+                STEP_MANUAL_DATA_SCHEMA, self.data
             ),
             errors=errors,
         )
