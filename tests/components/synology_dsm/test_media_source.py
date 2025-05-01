@@ -61,6 +61,11 @@ def dsm_with_photos() -> MagicMock:
             SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm", True, ""),
         ]
     )
+    dsm.photos.get_items_from_shared_space = AsyncMock(
+        return_value=[
+            SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm", True, ""),
+        ]
+    )
     dsm.photos.get_item_thumbnail_url = AsyncMock(
         return_value="http://my.thumbnail.url"
     )
@@ -317,6 +322,17 @@ async def test_browse_media_get_items_error(
     assert result.identifier is None
     assert len(result.children) == 0
 
+    # exception in get_items_from_shared_space()
+    dsm_with_photos.photos.get_items_from_shared_space = AsyncMock(
+        side_effect=SynologyDSMException("", None)
+    )
+    item = MediaSourceItem(hass, DOMAIN, "mocked_syno_dsm_entry/shared", None)
+    result = await source.async_browse_media(item)
+
+    assert result
+    assert result.identifier is None
+    assert len(result.children) == 0
+
 
 @pytest.mark.usefixtures("setup_media_source")
 async def test_browse_media_get_items_thumbnail_error(
@@ -406,6 +422,22 @@ async def test_browse_media_get_items(
     item = result.children[1]
     assert isinstance(item, BrowseMedia)
     assert item.identifier == "mocked_syno_dsm_entry/1_/10_1298753/filename.jpg_shared"
+    assert item.title == "filename.jpg"
+    assert item.media_class == MediaClass.IMAGE
+    assert item.media_content_type == "image/jpeg"
+    assert item.can_play
+    assert not item.can_expand
+    assert item.thumbnail == "http://my.thumbnail.url"
+
+    item = MediaSourceItem(hass, DOMAIN, "mocked_syno_dsm_entry/shared", None)
+    result = await source.async_browse_media(item)
+    assert result
+    assert len(result.children) == 1
+    item = result.children[0]
+    assert (
+        item.identifier
+        == "mocked_syno_dsm_entry/shared_/10_1298753/filename.jpg_shared"
+    )
     assert item.title == "filename.jpg"
     assert item.media_class == MediaClass.IMAGE
     assert item.media_content_type == "image/jpeg"
