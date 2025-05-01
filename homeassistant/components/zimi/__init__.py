@@ -16,7 +16,13 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from .const import DOMAIN
 from .helpers import async_connect_to_controller
 
-PLATFORMS = [Platform.LIGHT]
+PLATFORMS = [
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
