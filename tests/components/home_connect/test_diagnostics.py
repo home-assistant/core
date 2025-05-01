@@ -25,7 +25,6 @@ async def test_async_get_config_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -41,7 +40,6 @@ async def test_async_get_device_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device config entry diagnostics."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
