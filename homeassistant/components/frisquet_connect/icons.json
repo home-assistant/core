@@ -1,0 +1,56 @@
+{
+    "entity": {
+        "sensor": {
+            "boiler_last_update": {
+                "default": "mdi:update"
+            },
+            "current_boiler_datetime": {
+                "default": "mdi:clock-digital"
+            },
+            "default_alarm": {
+                "default": "mdi:crosshairs-question",
+                "state": {
+                    "no_alarm": "mdi:alarm-light-off-outline",
+                    "disconnected": "mdi:signal-off",
+                    "unknown": "mdi:alarm-light"
+                }
+            },
+            "inside_thermometer": {
+                "default": "mdi:thermometer"
+            },
+            "outside_thermometer": {
+                "default": "mdi:thermometer"
+            },
+            "heating_consumption": {
+                "default": "mdi:gas-burner"
+            },
+            "sanitary_consumption": {
+                "default": "mdi:gas-burner"
+            }
+        },
+        "water_heater": {
+            "default_water_heater": {
+                "default": "mdi:water-boiler"
+            }
+        },
+        "climate": {
+            "default_climate": {
+                "default": "mdi:home-thermometer-outline",
+                "state_attributes": {
+                    "preset_mode": {
+                        "default": "mdi:crosshairs-question",
+                        "state": {
+                            "boost": "mdi:rocket-launch",
+                            "home": "mdi:home-outline",
+                            "away": "mdi:home-off-outline",
+                            "comfort": "mdi:weather-sunny",
+                            "sleep": "mdi:moon-waxing-crescent",
+                            "eco": "mdi:snowflake",
+                            "none": "mdi:thermostat-auto"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
