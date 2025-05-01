@@ -104,12 +104,13 @@ class PsnMediaPlayerEntity(
     def state(self) -> MediaPlayerState:
         """Media Player state getter."""
         if (
-            self.key == self.coordinator.data.platform.get("platform", "")
-            and self.coordinator.data.platform.get("onlineStatus", "") == "online"
+            self.key == self.coordinator.data.platform["platform"]
+            and self.coordinator.data.platform["onlineStatus"] == "online"
         ):
             if (
                 self.coordinator.data.available
-                and self.coordinator.data.title_metadata.get("npTitleId") is not None
+                and self.coordinator.data.title_metadata.get("npTitleId", "")
+                is not None
             ):
                 return MediaPlayerState.PLAYING
             return MediaPlayerState.ON
@@ -118,27 +119,29 @@ class PsnMediaPlayerEntity(
     @property
     def media_title(self) -> str | None:
         """Media title getter."""
-        if self.coordinator.data.title_metadata.get(
-            "npTitleId"
-        ) and self.key == self.coordinator.data.platform.get("platform", ""):
-            return self.coordinator.data.title_metadata.get("titleName")
+        if (
+            self.coordinator.data.title_metadata["npTitleId"]
+            and self.key == self.coordinator.data.platform["platform"]
+        ):
+            return self.coordinator.data.title_metadata["titleName"]
         return None
 
     @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return self.coordinator.data.title_metadata.get("npTitleId")
+        return self.coordinator.data.title_metadata["npTitleId"]
 
     @property
     def media_image_url(self) -> str | None:
         """Media image url getter."""
-        if self.coordinator.data.title_metadata.get(
-            "npTitleId"
-        ) and self.key == self.coordinator.data.platform.get("platform", ""):
+        if (
+            self.coordinator.data.title_metadata["npTitleId"]
+            and self.key == self.coordinator.data.platform["platform"]
+        ):
             title = self.coordinator.data.title_metadata
-            if title.get("format", "") == PlatformType.PS5:
-                return title.get("conceptIconUrl")
+            if title["format"] == PlatformType.PS5:
+                return title["conceptIconUrl"]
 
-            if title.get("format", "") == PlatformType.PS4:
-                return title.get("npTitleIconUrl")
+            if str(title["format"]).upper() == PlatformType.PS4:
+                return title["npTitleIconUrl"]
         return None
