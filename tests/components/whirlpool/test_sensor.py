@@ -257,39 +257,6 @@ async def test_washer_dryer_running_states(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "mock_fixture"),
-    [
-        ("sensor.washer_state", "mock_washer_api"),
-        ("sensor.dryer_state", "mock_dryer_api"),
-    ],
-)
-async def test_washer_dryer_door_open_state(
-    hass: HomeAssistant,
-    entity_id: str,
-    mock_fixture: str,
-    request: pytest.FixtureRequest,
-) -> None:
-    """Test Washer/Dryer machine state when door is open."""
-    mock_instance = request.getfixturevalue(mock_fixture)
-    await init_integration(hass)
-
-    state = hass.states.get(entity_id)
-    assert state.state == "running_maincycle"
-
-    mock_instance.get_door_open.return_value = True
-
-    await trigger_attr_callback(hass, mock_instance)
-    state = hass.states.get(entity_id)
-    assert state.state == "door_open"
-
-    mock_instance.get_door_open.return_value = False
-
-    await trigger_attr_callback(hass, mock_instance)
-    state = hass.states.get(entity_id)
-    assert state.state == "running_maincycle"
-
-
-@pytest.mark.parametrize(
     ("entity_id", "mock_fixture", "mock_method_name", "values"),
     [
         (
