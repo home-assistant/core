@@ -41,9 +41,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_entry_setup(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test setup and unload."""
     assert config_entry.state == ConfigEntryState.NOT_LOADED
@@ -59,11 +59,11 @@ async def test_entry_setup(
 @pytest.mark.parametrize("token_expiration_time", [12345])
 async def test_token_refresh_success(
     hass: HomeAssistant,
-    platforms: list[Platform],
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     client: MagicMock,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    config_entry: MockConfigEntry,
+    platforms: list[Platform],
 ) -> None:
     """Test where token is expired and the refresh attempt succeeds."""
 
@@ -138,14 +138,13 @@ async def test_token_refresh_success(
     ],
 )
 async def test_token_refresh_error(
-    aioclient_mock_args: dict[str, Any],
-    expected_config_entry_state: ConfigEntryState,
     hass: HomeAssistant,
-    platforms: list[Platform],
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    aioclient_mock_args: dict[str, Any],
+    expected_config_entry_state: ConfigEntryState,
 ) -> None:
     """Test where token is expired and the refresh attempt fails."""
 
@@ -174,11 +173,11 @@ async def test_token_refresh_error(
     ],
 )
 async def test_client_error(
-    exception: HomeConnectError,
-    expected_state: ConfigEntryState,
+    client_with_exception: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client_with_exception: MagicMock,
+    exception: HomeConnectError,
+    expected_state: ConfigEntryState,
 ) -> None:
     """Test client errors during setup integration."""
     client_with_exception.get_home_appliances.return_value = None
@@ -200,11 +199,10 @@ async def test_client_error(
     ],
 )
 async def test_client_rate_limit_error(
-    raising_exception_method: str,
-    hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
+    raising_exception_method: str,
 ) -> None:
     """Test client errors during setup integration."""
     retry_after = 42
@@ -234,9 +232,9 @@ async def test_client_rate_limit_error(
 async def test_required_program_or_at_least_an_option(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     "Test that the set_program_and_options does raise an exception if no program nor options are set."
@@ -270,8 +268,8 @@ async def test_entity_migration(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_v1_1: MockConfigEntry,
-    appliance: HomeAppliance,
     platforms: list[Platform],
+    appliance: HomeAppliance,
 ) -> None:
     """Test entity migration."""
 

@@ -95,6 +95,10 @@ def platforms() -> list[str]:
     indirect=["appliance"],
 )
 async def test_program_options_retrieval(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     array_of_programs_program_arg: str,
     event_key: EventKey,
     appliance: HomeAppliance,
@@ -103,10 +107,6 @@ async def test_program_options_retrieval(
     options_availability_stage_2: list[bool],
     option_without_default: tuple[OptionKey, str],
     option_without_constraints: tuple[OptionKey, str],
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test that the options are correctly retrieved at the start and updated on program updates."""
     original_get_all_programs_mock = client.get_all_programs.side_effect
@@ -250,13 +250,13 @@ async def test_program_options_retrieval(
     ],
 )
 async def test_no_options_retrieval_on_unknown_program(
-    array_of_programs_program_arg: str,
-    event_key: EventKey,
-    appliance: HomeAppliance,
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
+    appliance: HomeAppliance,
+    array_of_programs_program_arg: str,
+    event_key: EventKey,
 ) -> None:
     """Test that no options are retrieved when the program is unknown."""
 
@@ -326,14 +326,14 @@ async def test_no_options_retrieval_on_unknown_program(
     indirect=["appliance"],
 )
 async def test_program_options_retrieval_after_appliance_connection(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     event_key: EventKey,
     appliance: HomeAppliance,
     option_key: OptionKey,
     option_entity_id: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test that the options are correctly retrieved at the start and updated on program updates."""
     array_of_home_appliances = client.get_home_appliances.return_value
@@ -447,12 +447,12 @@ async def test_program_options_retrieval_after_appliance_connection(
     ],
 )
 async def test_option_entity_functionality_exception(
-    set_active_program_option_side_effect: HomeConnectError | None,
-    set_selected_program_option_side_effect: HomeConnectError | None,
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
+    set_active_program_option_side_effect: HomeConnectError | None,
+    set_selected_program_option_side_effect: HomeConnectError | None,
 ) -> None:
     """Test that the option entity handles exceptions correctly."""
     entity_id = "switch.washer_i_dos_1_active"

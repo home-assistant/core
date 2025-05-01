@@ -60,13 +60,13 @@ def platforms() -> list[str]:
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_paired_depaired_devices_flow(
-    appliance: HomeAppliance,
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
+    appliance: HomeAppliance,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
     client.get_available_program = AsyncMock(
@@ -135,14 +135,14 @@ async def test_paired_depaired_devices_flow(
     indirect=["appliance"],
 )
 async def test_connected_devices(
-    appliance: HomeAppliance,
-    keys_to_check: tuple,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    keys_to_check: tuple,
 ) -> None:
     """Test that devices reconnected.
 
@@ -195,9 +195,9 @@ async def test_connected_devices(
 @pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
 async def test_number_entity_availability(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test if number entities availability are based on the appliance connection state."""
@@ -285,6 +285,10 @@ async def test_number_entity_availability(
     ],
 )
 async def test_number_entity_functionality(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     entity_id: str,
     setting_key: SettingKey,
@@ -294,10 +298,6 @@ async def test_number_entity_functionality(
     max_value: int,
     step_size: float,
     unit_of_measurement: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test number entity functionality."""
     client.get_setting.side_effect = None
@@ -372,6 +372,10 @@ async def test_number_entity_functionality(
 )
 @patch("homeassistant.components.home_connect.entity.API_DEFAULT_RETRY_AFTER", new=0)
 async def test_fetch_constraints_after_rate_limit_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     retry_after: int | None,
     appliance: HomeAppliance,
     entity_id: str,
@@ -381,10 +385,6 @@ async def test_fetch_constraints_after_rate_limit_error(
     max_value: int,
     step_size: int,
     unit_of_measurement: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test that, if a API rate limit error is raised, the constraints are fetched later."""
 
@@ -448,13 +448,13 @@ async def test_fetch_constraints_after_rate_limit_error(
     ],
 )
 async def test_number_entity_error(
+    hass: HomeAssistant,
+    client_with_exception: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     setting_key: SettingKey,
     mock_attr: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client_with_exception: MagicMock,
 ) -> None:
     """Test number entity error."""
     client_with_exception.get_settings.side_effect = None
@@ -529,6 +529,10 @@ async def test_number_entity_error(
     indirect=["appliance"],
 )
 async def test_options_functionality(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     option_key: OptionKey,
     appliance: HomeAppliance,
@@ -539,10 +543,6 @@ async def test_options_functionality(
     set_active_program_options_side_effect: ActiveProgramNotSetError | None,
     set_selected_program_options_side_effect: SelectedProgramNotSetError | None,
     called_mock_method: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test options functionality."""
 
