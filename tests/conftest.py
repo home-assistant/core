@@ -156,6 +156,40 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 asyncio.set_event_loop_policy = lambda policy: None
 
 
+class HackLogRecord(logging.LogRecord):
+    """Hack."""
+
+    def __init__(
+        self,
+        name,
+        level,
+        pathname,
+        lineno,
+        msg,
+        args,
+        exc_info,
+        func=None,
+        sinfo=None,
+        **kwargs,
+    ) -> None:
+        """Initialize the log record."""
+        super().__init__(
+            name, level, pathname, lineno, msg, args, exc_info, func, sinfo, **kwargs
+        )
+        msg = str(self.msg)
+        if self.args:
+            msg = msg % self.args
+        self.msg = msg
+        self.args = None
+
+    def getMessage(self):
+        """Return the message for this LogRecord."""
+        return self.msg
+
+
+logging.setLogRecordFactory(HackLogRecord)
+
+
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
     parser.addoption("--dburl", action="store", default="sqlite://")
