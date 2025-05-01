@@ -273,7 +273,7 @@ async def test_finish_manual_socket_errors(
     side_effect: Exception,
     error_expected: dict,
 ) -> None:
-    """Test finish form transitions via socket errors to creation."""
+    """Test manual form transitions via socket errors to creation."""
 
     discovery_mock.discovers.side_effect = ControlPointError("Discovery failed")
 
