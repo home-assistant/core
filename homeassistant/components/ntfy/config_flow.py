@@ -33,6 +33,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -54,6 +55,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
                 autocomplete="url",
             ),
         ),
+        vol.Required(CONF_VERIFY_SSL, default=True): bool,
         vol.Required(SECTION_AUTH): data_entry_flow.section(
             vol.Schema(
                 {
@@ -123,7 +125,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: username,
                 }
             )
-            session = async_get_clientsession(self.hass)
+            session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
             if username:
                 ntfy = Ntfy(
                     user_input[CONF_URL],
@@ -160,6 +162,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_URL: url.human_repr(),
                         CONF_USERNAME: username,
                         CONF_TOKEN: token,
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                     },
                 )
 

@@ -89,28 +89,15 @@ def platforms() -> list[str]:
     return [Platform.SENSOR]
 
 
-async def test_sensors(
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-) -> None:
-    """Test sensor entities."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
-
-
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_paired_depaired_devices_flow(
-    appliance: HomeAppliance,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
     assert config_entry.state == ConfigEntryState.NOT_LOADED
@@ -189,15 +176,14 @@ async def test_paired_depaired_devices_flow(
     indirect=["appliance"],
 )
 async def test_connected_devices(
-    appliance: HomeAppliance,
-    keys_to_check: tuple,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    keys_to_check: tuple,
 ) -> None:
     """Test that devices reconnected.
 
@@ -250,10 +236,9 @@ async def test_connected_devices(
 @pytest.mark.parametrize("appliance", [TEST_HC_APP], indirect=True)
 async def test_sensor_entity_availability(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test if sensor entities availability are based on the appliance connection state."""
@@ -370,15 +355,14 @@ ENTITY_ID_STATES = {
     ),
 )
 async def test_program_sensors(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     states: tuple,
     event_run: dict[EventType, dict[EventKey, str | int]],
-    freezer: FrozenDateTimeFactory,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
 ) -> None:
     """Test sequence for sensors that expose information about a program."""
     entity_ids = ENTITY_ID_STATES.keys()
@@ -444,16 +428,15 @@ async def test_program_sensors(
     ],
 )
 async def test_program_sensor_edge_case(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     initial_operation_state: str,
     initial_state: str,
     event_order: tuple[EventType, EventType],
     entity_states: tuple[str, str],
     appliance: HomeAppliance,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
 ) -> None:
     """Test edge case for the program related entities."""
     entity_id = "sensor.dishwasher_program_progress"
@@ -520,13 +503,12 @@ ENTITY_ID_EDGE_CASE_STATES = [
 
 @pytest.mark.parametrize("appliance", [TEST_HC_APP], indirect=True)
 async def test_remaining_prog_time_edge_cases(
-    appliance: HomeAppliance,
-    freezer: FrozenDateTimeFactory,
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
+    appliance: HomeAppliance,
 ) -> None:
     """Run program sequence to test edge cases for the remaining_prog_time entity."""
     entity_id = "sensor.dishwasher_program_finish_time"
@@ -599,15 +581,14 @@ async def test_remaining_prog_time_edge_cases(
     indirect=["appliance"],
 )
 async def test_sensors_states(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     event_key: EventKey,
     value_expected_state: list[tuple[str, str]],
     appliance: HomeAppliance,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
 ) -> None:
     """Tests for appliance sensors."""
     assert config_entry.state == ConfigEntryState.NOT_LOADED
@@ -660,16 +641,15 @@ async def test_sensors_states(
     indirect=["appliance"],
 )
 async def test_event_sensors_states(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     event_key: EventKey,
     appliance: HomeAppliance,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-    entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests for appliance event sensors."""
     caplog.set_level(logging.ERROR)
@@ -746,17 +726,16 @@ async def test_event_sensors_states(
     indirect=["appliance"],
 )
 async def test_sensor_unit_fetching(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     entity_id: str,
     status_key: StatusKey,
     unit_get_status: str | None,
     unit_get_status_value: str | None,
     get_status_value_call_count: int,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
 ) -> None:
     """Test that the sensor entities are capable of fetching units."""
 
@@ -814,14 +793,13 @@ async def test_sensor_unit_fetching(
     indirect=["appliance"],
 )
 async def test_sensor_unit_fetching_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     entity_id: str,
     status_key: StatusKey,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
 ) -> None:
     """Test that the sensor entities are capable of fetching units."""
 
@@ -866,15 +844,14 @@ async def test_sensor_unit_fetching_error(
     indirect=["appliance"],
 )
 async def test_sensor_unit_fetching_after_rate_limit_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     entity_id: str,
     status_key: StatusKey,
     unit: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
 ) -> None:
     """Test that the sensor entities are capable of fetching units."""
 
