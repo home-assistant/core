@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEFAULT_DEVICE_NAME, DEVICE_ICONS, DOMAIN
+from .const import DEFAULT_DEVICE_NAME, DEVICE_ICONS, DOMAIN, WIFI_BANDS
 from .router import FreeboxRouter
 
 
@@ -83,6 +83,8 @@ class FreeboxDevice(ScannerEntity):
                 ),
                 "last_time_activity": datetime.fromtimestamp(device["last_activity"]),
             }
+            if attributes := access_point_attributes_from_device(device):
+                self._attr_extra_state_attributes.update(attributes)
         else:
             # router
             self._attr_extra_state_attributes = device["attrs"]
@@ -123,3 +125,35 @@ class FreeboxDevice(ScannerEntity):
 def icon_for_freebox_device(device: dict[str, Any]) -> str:
     """Return a device icon from its type."""
     return DEVICE_ICONS.get(device["host_type"], "mdi:help-network")
+
+
+def access_point_attributes_from_device(device: dict[str, Any]) -> dict[str, Any]:
+    """Return access point attributes from device."""
+    access_point = device.get("access_point", {})
+    attributes = {
+        "connectivity_type": access_point.get("connectivity_type"),
+    }
+    if wifi_information := access_point.get("wifi_information"):
+        ssi = wifi_information.get("ssid")
+        band = wifi_information.get("band")
+        signal = wifi_information.get("signal")
+        attributes.update(
+            {
+                "wifi_ssid": ssi,
+                "wifi_band": WIFI_BANDS.get(band),
+                "wifi_signal_value": signal,
+                "wifi_signal_strength": signal_strength_from_value(signal),
+            }
+        )
+    return attributes
+
+
+def signal_strength_from_value(value: int) -> str:
+    """Return a signal strength from dbm value."""
+    if value > -50:
+        return "Excellent"
+    if value > -60:
+        return "Good"
+    if value > -70:
+        return "Medium"
+    return "Bad"
