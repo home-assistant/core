@@ -23,14 +23,13 @@ ENTITY_ID = "switch.freezer_superfreezing"
 async def test_switch_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
 ) -> None:
     """Test switch entity state."""
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -51,7 +50,7 @@ async def test_switch_states(
 async def test_switching(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
     service: str,
     entity: str,
 ) -> None:
@@ -81,7 +80,7 @@ async def test_switching(
 async def test_api_failure(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
     service: str,
     entity: str,
 ) -> None:
