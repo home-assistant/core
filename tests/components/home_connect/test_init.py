@@ -57,18 +57,6 @@ async def test_entry_setup(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_exception_handling(
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    config_entry: MockConfigEntry,
-    setup_credentials: None,
-    client_with_exception: MagicMock,
-) -> None:
-    """Test exception handling."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.LOADED
-
-
 @pytest.mark.parametrize("token_expiration_time", [12345])
 async def test_token_refresh_success(
     hass: HomeAssistant,

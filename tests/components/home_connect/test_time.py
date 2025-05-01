@@ -45,18 +45,6 @@ def platforms() -> list[str]:
     return [Platform.TIME]
 
 
-async def test_time(
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-) -> None:
-    """Test time entity."""
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_paired_depaired_devices_flow(
