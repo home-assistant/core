@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from zcc import ControlPoint, ControlPointDescription, ControlPointError
+from zcc import ControlPoint, ControlPointDescription
 
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -24,12 +24,7 @@ async def async_connect_to_controller(
             port=port,
         )
     )
-    try:
-        await api.connect(fast=fast)
-
-    except ControlPointError as error:
-        _LOGGER.error("Connection failed: %s", error)
-        raise ControlPointError from error
+    await api.connect(fast=fast)
 
     if api.ready:
         _LOGGER.debug("Connected")
