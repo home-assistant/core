@@ -10,6 +10,7 @@ from aiohomeconnect.model import (
     EventMessage,
     EventType,
     HomeAppliance,
+    StatusKey,
 )
 from aiohomeconnect.model.error import HomeConnectApiError
 import pytest
@@ -39,28 +40,15 @@ def platforms() -> list[str]:
     return [Platform.BINARY_SENSOR]
 
 
-async def test_binary_sensors(
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-) -> None:
-    """Test binary sensor entities."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
-
-
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_paired_depaired_devices_flow(
-    appliance: HomeAppliance,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
     assert config_entry.state == ConfigEntryState.NOT_LOADED
@@ -105,16 +93,25 @@ async def test_paired_depaired_devices_flow(
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize(
+    ("appliance", "keys_to_check"),
+    [
+        (
+            "Washer",
+            (StatusKey.BSH_COMMON_REMOTE_CONTROL_ACTIVE,),
+        )
+    ],
+    indirect=["appliance"],
+)
 async def test_connected_devices(
-    appliance: HomeAppliance,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    keys_to_check: tuple,
 ) -> None:
     """Test that devices reconnected.
 
@@ -138,7 +135,17 @@ async def test_connected_devices(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
-    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
+    assert entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{appliance.ha_id}-{EventKey.BSH_COMMON_APPLIANCE_CONNECTED}",
+    )
+    for key in keys_to_check:
+        assert not entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR,
+            DOMAIN,
+            f"{appliance.ha_id}-{key}",
+        )
 
     await client.add_events(
         [
@@ -151,20 +158,21 @@ async def test_connected_devices(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
-    assert device
-    new_entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
-    assert len(new_entity_entries) > len(entity_entries)
+    for key in (*keys_to_check, EventKey.BSH_COMMON_APPLIANCE_CONNECTED):
+        assert entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR,
+            DOMAIN,
+            f"{appliance.ha_id}-{key}",
+        )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_binary_sensors_entity_availability(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test if binary sensor entities availability are based on the appliance connection state."""
@@ -260,16 +268,15 @@ async def test_binary_sensors_entity_availability(
     indirect=["appliance"],
 )
 async def test_binary_sensors_functionality(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     event_key: EventKey,
     event_value_update: str,
     appliance: HomeAppliance,
     expected: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
 ) -> None:
     """Tests for Home Connect Fridge appliance door states."""
     assert config_entry.state == ConfigEntryState.NOT_LOADED
@@ -302,10 +309,9 @@ async def test_binary_sensors_functionality(
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_connected_sensor_functionality(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test if the connected binary sensor reports the right values."""

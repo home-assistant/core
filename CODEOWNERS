@@ -432,7 +432,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/entur_public_transport/ @hfurubotten
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
-/homeassistant/components/ephember/ @ttroy50
+/homeassistant/components/ephember/ @ttroy50 @roberty99
 /homeassistant/components/epic_games_store/ @hacf-fr @Quentame
 /tests/components/epic_games_store/ @hacf-fr @Quentame
 /homeassistant/components/epion/ @lhgravendeel
@@ -1051,6 +1051,8 @@ build.json @home-assistant/supervisor
 /tests/components/nsw_fuel_station/ @nickw444
 /homeassistant/components/nsw_rural_fire_service_feed/ @exxamalte
 /tests/components/nsw_rural_fire_service_feed/ @exxamalte
+/homeassistant/components/ntfy/ @tr4nt0r
+/tests/components/ntfy/ @tr4nt0r
 /homeassistant/components/nuheat/ @tstabrawa
 /tests/components/nuheat/ @tstabrawa
 /homeassistant/components/nuki/ @pschmitt @pvizeli @pree
@@ -1079,8 +1081,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ombi/ @larssont
 /homeassistant/components/onboarding/ @home-assistant/core
 /tests/components/onboarding/ @home-assistant/core
-/homeassistant/components/oncue/ @bdraco @peterager
-/tests/components/oncue/ @bdraco @peterager
 /homeassistant/components/ondilo_ico/ @JeromeHXP
 /tests/components/ondilo_ico/ @JeromeHXP
 /homeassistant/components/onedrive/ @zweckj
@@ -1258,6 +1258,8 @@ build.json @home-assistant/supervisor
 /tests/components/recovery_mode/ @home-assistant/core
 /homeassistant/components/refoss/ @ashionky
 /tests/components/refoss/ @ashionky
+/homeassistant/components/rehlko/ @bdraco @peterager
+/tests/components/rehlko/ @bdraco @peterager
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/remote_calendar/ @Thomas55555
@@ -1316,6 +1318,8 @@ build.json @home-assistant/supervisor
 /tests/components/ruuvitag_ble/ @akx
 /homeassistant/components/rympro/ @OnFreund @elad-bar @maorcc
 /tests/components/rympro/ @OnFreund @elad-bar @maorcc
+/homeassistant/components/s3/ @tomasbedrich
+/tests/components/s3/ @tomasbedrich
 /homeassistant/components/sabnzbd/ @shaiu @jpbede
 /tests/components/sabnzbd/ @shaiu @jpbede
 /homeassistant/components/saj/ @fredericvl
@@ -1437,8 +1441,8 @@ build.json @home-assistant/supervisor
 /tests/components/solarlog/ @Ernst79 @dontinelli
 /homeassistant/components/solax/ @squishykid @Darsstar
 /tests/components/solax/ @squishykid @Darsstar
-/homeassistant/components/soma/ @ratsept @sebfortier2288
-/tests/components/soma/ @ratsept @sebfortier2288
+/homeassistant/components/soma/ @ratsept
+/tests/components/soma/ @ratsept
 /homeassistant/components/sonarr/ @ctalkington
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn
@@ -1470,7 +1474,8 @@ build.json @home-assistant/supervisor
 /tests/components/steam_online/ @tkdrob
 /homeassistant/components/steamist/ @bdraco
 /tests/components/steamist/ @bdraco
-/homeassistant/components/stiebel_eltron/ @fucm
+/homeassistant/components/stiebel_eltron/ @fucm @ThyMYthOS
+/tests/components/stiebel_eltron/ @fucm @ThyMYthOS
 /homeassistant/components/stookwijzer/ @fwestenberg
 /tests/components/stookwijzer/ @fwestenberg
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
