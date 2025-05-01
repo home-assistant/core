@@ -9,7 +9,14 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import DOMAIN
 from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
 
-PLATFORMS = [Platform.CLIMATE, Platform.LIGHT, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
+]
 
 
 async def async_setup_entry(

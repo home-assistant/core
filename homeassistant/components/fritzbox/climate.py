@@ -214,6 +214,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     @property
     def extra_state_attributes(self) -> ClimateExtraAttributes:
         """Return the device specific state attributes."""
+        # deprecated with #143394, can be removed in 2025.11
         attrs: ClimateExtraAttributes = {
             ATTR_STATE_BATTERY_LOW: self.data.battery_low,
         }
