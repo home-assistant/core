@@ -108,7 +108,7 @@ async def test_user_discovery_failure(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
 ) -> None:
-    """Test user form transitions to finish step if zcc discovery fails."""
+    """Test user form transitions to manual step if zcc discovery fails."""
 
     discovery_mock.discovers.side_effect = ControlPointError("Discovery failed")
 
