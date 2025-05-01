@@ -80,7 +80,8 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
             self.data[CONF_HOST] = user_input[SELECTED_HOST_AND_PORT].split(":")[0]
             self.data[CONF_PORT] = int(user_input[SELECTED_HOST_AND_PORT].split(":")[1])
             errors = await self.check_connection(self.data[CONF_HOST], self.data[CONF_PORT])
-            return await self.create_entry()
+            if not errors:
+                return await self.create_entry()
 
         available_options = [
             SelectOptionDict(
