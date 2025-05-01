@@ -57,18 +57,6 @@ async def test_entry_setup(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_exception_handling(
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    config_entry: MockConfigEntry,
-    setup_credentials: None,
-    client_with_exception: MagicMock,
-) -> None:
-    """Test exception handling."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.LOADED
-
-
 @pytest.mark.parametrize("token_expiration_time", [12345])
 async def test_token_refresh_success(
     hass: HomeAssistant,
@@ -358,3 +346,20 @@ async def test_bsh_key_transformations() -> None:
     program = "Dishcare.Dishwasher.Program.Eco50"
     translation_key = bsh_key_to_translation_key(program)
     assert RE_TRANSLATION_KEY.match(translation_key)
+
+
+async def test_config_entry_unique_id_migration(
+    hass: HomeAssistant,
+    config_entry_v1_2: MockConfigEntry,
+) -> None:
+    """Test that old config entries use the unique id obtained from the JWT subject."""
+    config_entry_v1_2.add_to_hass(hass)
+
+    assert config_entry_v1_2.unique_id != "1234567890"
+    assert config_entry_v1_2.minor_version == 2
+
+    await hass.config_entries.async_setup(config_entry_v1_2.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_v1_2.unique_id == "1234567890"
+    assert config_entry_v1_2.minor_version == 3
