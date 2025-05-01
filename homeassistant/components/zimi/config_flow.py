@@ -165,6 +165,6 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.data[CONF_MAC])
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=f"{TITLE} ({self.data[CONF_HOST]}:{self.data[CONF_PORT]})",
+            title=f"ZIMI Controller ({self.data[CONF_HOST]}:{self.data[CONF_PORT]})",
             data=self.data,
         )
