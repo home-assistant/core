@@ -1726,7 +1726,7 @@ pulsectl==23.5.2
 pushbullet.py==0.11.0
 
 # homeassistant.components.pushover
-pushover_complete==1.1.1
+pushover_complete==1.2.0
 
 # homeassistant.components.pvoutput
 pvo==2.2.1
@@ -2093,7 +2093,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.0b6
+pylamarzocco==2.0.0b7
 
 # homeassistant.components.lastfm
 pylast==5.1.0

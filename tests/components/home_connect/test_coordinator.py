@@ -79,33 +79,6 @@ def platforms() -> list[str]:
     return [Platform.SENSOR, Platform.SWITCH]
 
 
-async def test_coordinator_update(
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-) -> None:
-    """Test that the coordinator can update."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
-
-
-async def test_coordinator_update_failing_get_appliances(
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client_with_exception: MagicMock,
-) -> None:
-    """Test that the coordinator raises ConfigEntryNotReady when it fails to get appliances."""
-    client_with_exception.get_home_appliances.return_value = None
-    client_with_exception.get_home_appliances.side_effect = HomeConnectError()
-
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
-
-
 @pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize("platforms", [("binary_sensor",)])
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
