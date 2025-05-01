@@ -28,7 +28,7 @@ class BitTest:
     """BitTest is used to encode the "on_value" for one bit in a bitmask.
 
     The mask is used to isolate the bit that should be
-    tested. By default 1 means "on" and 0 means "off", but setting the
+    tested. By default, 1 means "on" and 0 means "off", but setting the
     bit in xmask flips it so that 1 means "off" and 0 means "on".
     """
 
