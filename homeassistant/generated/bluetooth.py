@@ -377,6 +377,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "ITH-21-B",
     },
     {
+        "connectable": False,
+        "domain": "inkbird",
+        "local_name": "IBS-P02B",
+    },
+    {
         "connectable": True,
         "domain": "inkbird",
         "local_name": "Ink@IAM-T1",
