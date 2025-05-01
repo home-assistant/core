@@ -31,7 +31,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_platform,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -151,17 +155,20 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a media player from a config entry."""
+    device_registry = dr.async_get(hass)
 
     # register services
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_PLAY_PRESET, SERVICE_PLAY_PRESET_SCHEMA, "async_play_preset"
     )
-    platform.async_register_entity_service(
-        SERVICE_AUDIO_OUTPUT_HW_MODE_SET,
-        SERVICE_AUDIO_OUTPUT_HW_MODE_SET_SCHEMA,
-        "async_audio_output_hw_mode",
-    )
+    for dev_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if dev_entry.manufacturer == "WiiM":
+            platform.async_register_entity_service(
+                SERVICE_AUDIO_OUTPUT_HW_MODE_SET,
+                SERVICE_AUDIO_OUTPUT_HW_MODE_SET_SCHEMA,
+                "async_audio_output_hw_mode",
+            )
 
     # add entities
     async_add_entities([LinkPlayMediaPlayerEntity(entry.runtime_data.bridge)])
