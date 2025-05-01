@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
     """Generic Home Connect entity (base class)."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(

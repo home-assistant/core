@@ -312,13 +312,16 @@
     }
   },
   "exceptions": {
+    "config_invalid": {
+      "message": "Invalid configuration entries for NUT device with ID {device_id}"
+    },
     "data_fetch_error": {
       "message": "Error fetching UPS state: {err}"
     },
     "device_authentication": {
       "message": "Device authentication error: {err}"
     },
-    "device_invalid": {
+    "device_not_found": {
       "message": "Unable to find a NUT device with ID {device_id}"
     },
     "nut_command_error": {

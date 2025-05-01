@@ -19,10 +19,9 @@ from tests.common import MockConfigEntry
 
 async def test_async_get_config_entry_diagnostics(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
@@ -35,11 +34,10 @@ async def test_async_get_config_entry_diagnostics(
 
 async def test_async_get_device_diagnostics(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device config entry diagnostics."""
