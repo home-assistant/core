@@ -27,7 +27,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import DEFAULT_PORT, DOMAIN, TITLE
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 5003
