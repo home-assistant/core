@@ -5,7 +5,7 @@ from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, create_autospec, patch
 
-from aioautomower.commands import MowerCommands
+from aioautomower.commands import MowerCommands, WorkAreaSettings
 from aioautomower.model import MowerAttributes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
@@ -126,9 +126,14 @@ def mock_automower_client(
     ) as mock:
         mock_instance = mock.return_value
         mock_instance.auth = AsyncMock(side_effect=ClientWebSocketResponse)
+        mock_instance.get_status = AsyncMock(return_value=values)
+        mock_instance.start_listening = AsyncMock(side_effect=listen)
         mock_instance.commands = create_autospec(
             MowerCommands, instance=True, spec_set=True
         )
-        mock_instance.get_status = AsyncMock(return_value=values)
-        mock_instance.start_listening = AsyncMock(side_effect=listen)
+        mock_instance.commands.workarea_settings.return_value = create_autospec(
+            WorkAreaSettings,
+            instance=True,
+            spec_set=True,
+        )
         yield mock_instance
