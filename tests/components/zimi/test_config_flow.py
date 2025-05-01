@@ -250,7 +250,7 @@ async def test_manual_cannot_connect(
     }
 
 
-async def test_finish_manual_gethostbyname_error(
+async def test_manual_gethostbyname_error(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
 ) -> None:
