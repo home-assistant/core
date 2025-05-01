@@ -99,4 +99,4 @@ class ZimiDimmer(ZimiLight):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
-        return self._device.brightness * 255 / 100
+        return round(self._device.brightness * 255 / 100)
