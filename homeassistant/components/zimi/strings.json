@@ -40,7 +40,6 @@
       "timeout": "Connection timed out",
       "duplicate_entry": "Duplicate configuration entry: {error_detail}",
       "invalid_host": "Invalid hostname",
-      "invalid_mac": "Invalid MAC address",
       "connection_refused": "Connection refused",
       "discovery_failure": "ZCC discovery on LAN failed - manually define host, port and MAC address."
     },
