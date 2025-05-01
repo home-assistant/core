@@ -118,7 +118,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.data = {**self.data, **user_input}
 
-            connection_errors = await self.check_connection(
+            errors = await self.check_connection(
                 self.data[CONF_HOST], self.data[CONF_PORT]
             )
 
