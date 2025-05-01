@@ -11,8 +11,7 @@
           'armed': False,
           'arming': False,
           'disarmed': True,
-          'faults': list([
-          ]),
+          'faults': 0,
           'id': 1,
           'name': 'Area1',
           'part_armed': False,
@@ -108,8 +107,7 @@
           'armed': False,
           'arming': False,
           'disarmed': True,
-          'faults': list([
-          ]),
+          'faults': 0,
           'id': 1,
           'name': 'Area1',
           'part_armed': False,
@@ -204,8 +202,7 @@
           'armed': False,
           'arming': False,
           'disarmed': True,
-          'faults': list([
-          ]),
+          'faults': 0,
           'id': 1,
           'name': 'Area1',
           'part_armed': False,

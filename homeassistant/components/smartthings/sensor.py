@@ -194,13 +194,7 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=PERCENTAGE,
                 deprecated=(
                     lambda status: "media_player"
-                    if all(
-                        capability in status
-                        for capability in (
-                            Capability.AUDIO_MUTE,
-                            Capability.MEDIA_PLAYBACK,
-                        )
-                    )
+                    if Capability.AUDIO_MUTE in status
                     else None
                 ),
             )
@@ -413,7 +407,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # Haven't seen at devices yet
     Capability.GAS_METER: {
         Attribute.GAS_METER: [
             SmartThingsSensorEntityDescription(
@@ -421,7 +414,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="gas_meter",
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 device_class=SensorDeviceClass.ENERGY,
-                state_class=SensorStateClass.MEASUREMENT,
+                state_class=SensorStateClass.TOTAL,
             )
         ],
         Attribute.GAS_METER_CALORIFIC: [
@@ -443,7 +436,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.GAS_METER_VOLUME,
                 native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
                 device_class=SensorDeviceClass.GAS,
-                state_class=SensorStateClass.MEASUREMENT,
+                state_class=SensorStateClass.TOTAL,
             )
         ],
     },
@@ -997,12 +990,25 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.SAMSUNG_CE_WATER_CONSUMPTION_REPORT: {
+        Attribute.WATER_CONSUMPTION: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WATER_CONSUMPTION,
+                translation_key="water_consumption",
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                device_class=SensorDeviceClass.WATER,
+                native_unit_of_measurement=UnitOfVolume.LITERS,
+                value_fn=lambda value: value["cumulativeAmount"] / 1000,
+            )
+        ]
+    },
 }
 
 
 UNITS = {
     "C": UnitOfTemperature.CELSIUS,
     "F": UnitOfTemperature.FAHRENHEIT,
+    "ccf": UnitOfVolume.CENTUM_CUBIC_FEET,
     "lux": LIGHT_LUX,
     "mG": None,
     "μg/m^3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,

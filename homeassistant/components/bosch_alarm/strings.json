@@ -43,7 +43,9 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "device_mismatch": "Please ensure you reconfigure against the same device."
     }
   },
   "exceptions": {
@@ -52,6 +54,14 @@
     },
     "authentication_failed": {
       "message": "Incorrect credentials for panel."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "faulting_points": {
+        "name": "Faulting points",
+        "unit_of_measurement": "points"
+      }
     }
   }
 }

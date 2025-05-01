@@ -405,11 +405,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "9CADEF*",
     },
     {
-        "domain": "oncue",
-        "hostname": "kohlergen*",
-        "macaddress": "00146F*",
-    },
-    {
         "domain": "onvif",
         "registered_devices": True,
     },
@@ -470,6 +465,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "rainforest_eagle",
         "macaddress": "D8D5B9*",
+    },
+    {
+        "domain": "rehlko",
+        "hostname": "kohlergen*",
+        "macaddress": "00146F*",
     },
     {
         "domain": "reolink",
@@ -612,6 +612,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "sleepiq",
         "macaddress": "64DBA0*",
+    },
+    {
+        "domain": "sma",
+        "hostname": "sma*",
+        "macaddress": "0015BB*",
+    },
+    {
+        "domain": "sma",
+        "registered_devices": True,
     },
     {
         "domain": "smartthings",

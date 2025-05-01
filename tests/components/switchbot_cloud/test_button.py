@@ -19,6 +19,7 @@ async def test_pressmode_bot(
     """Test press."""
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="bot-id-1",
             deviceName="bot-1",
             deviceType="Bot",
@@ -51,6 +52,7 @@ async def test_switchmode_bot_no_button_entity(
     """Test a switchMode bot isn't added as a button."""
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="bot-id-1",
             deviceName="bot-1",
             deviceType="Bot",
