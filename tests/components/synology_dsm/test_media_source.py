@@ -257,13 +257,15 @@ async def test_browse_media_get_albums(
     result = await source.async_browse_media(item)
 
     assert result
-    assert len(result.children) == 2
+    assert len(result.children) == 3
     assert isinstance(result.children[0], BrowseMedia)
     assert result.children[0].identifier == "mocked_syno_dsm_entry/0"
     assert result.children[0].title == "All images"
+    assert result.children[1].identifier == "mocked_syno_dsm_entry/shared"
+    assert result.children[1].title == "Shared space"
     assert isinstance(result.children[1], BrowseMedia)
-    assert result.children[1].identifier == "mocked_syno_dsm_entry/1_"
-    assert result.children[1].title == "Album 1"
+    assert result.children[2].identifier == "mocked_syno_dsm_entry/1_"
+    assert result.children[2].title == "Album 1"
 
 
 @pytest.mark.usefixtures("setup_media_source")
