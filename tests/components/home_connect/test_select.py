@@ -64,13 +64,13 @@ def platforms() -> list[str]:
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_paired_depaired_devices_flow(
-    appliance: HomeAppliance,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
     client.get_available_program = AsyncMock(
@@ -141,14 +141,14 @@ async def test_paired_depaired_devices_flow(
     indirect=["appliance"],
 )
 async def test_connected_devices(
-    appliance: HomeAppliance,
-    keys_to_check: tuple,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    keys_to_check: tuple,
 ) -> None:
     """Test that devices reconnected.
 
@@ -211,9 +211,9 @@ async def test_connected_devices(
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_select_entity_availability(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test if select entities availability are based on the appliance connection state."""
@@ -261,10 +261,10 @@ async def test_select_entity_availability(
 
 
 async def test_filter_programs(
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test select that only right programs are shown."""
     client.get_all_programs.side_effect = None
@@ -352,6 +352,10 @@ async def test_filter_programs(
     indirect=["appliance"],
 )
 async def test_select_program_functionality(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     entity_id: str,
     expected_initial_state: str,
@@ -359,10 +363,6 @@ async def test_select_program_functionality(
     program_key: ProgramKey,
     program_to_set: str,
     event_key: EventKey,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test select functionality."""
     assert config_entry.state is ConfigEntryState.NOT_LOADED
@@ -428,14 +428,14 @@ async def test_select_program_functionality(
     ],
 )
 async def test_select_exception_handling(
+    hass: HomeAssistant,
+    client_with_exception: MagicMock,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    config_entry: MockConfigEntry,
     entity_id: str,
     program_to_set: str,
     mock_attr: str,
     exception_match: str,
-    hass: HomeAssistant,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    config_entry: MockConfigEntry,
-    client_with_exception: MagicMock,
 ) -> None:
     """Test exception handling."""
     client_with_exception.get_all_programs.side_effect = None
@@ -470,11 +470,11 @@ async def test_select_exception_handling(
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_programs_updated_on_connect(
-    appliance: HomeAppliance,
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
+    appliance: HomeAppliance,
 ) -> None:
     """Test that devices reconnected.
 
@@ -554,16 +554,16 @@ async def test_programs_updated_on_connect(
     ],
 )
 async def test_select_functionality(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     entity_id: str,
     setting_key: SettingKey,
     expected_options: set[str],
     value_to_set: str,
     expected_value_call_arg: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test select functionality."""
     assert config_entry.state is ConfigEntryState.NOT_LOADED
@@ -617,15 +617,15 @@ async def test_select_functionality(
     ],
 )
 async def test_fetch_allowed_values(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     entity_id: str,
     test_setting_key: SettingKey,
     allowed_values: list[str | None],
     expected_options: set[str],
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test fetch allowed values."""
     original_get_setting_side_effect = client.get_setting
@@ -673,15 +673,15 @@ async def test_fetch_allowed_values(
     ],
 )
 async def test_fetch_allowed_values_after_rate_limit_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     entity_id: str,
     setting_key: SettingKey,
     allowed_values: list[str | None],
     expected_options: set[str],
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test fetch allowed values."""
 
@@ -747,15 +747,15 @@ async def test_fetch_allowed_values_after_rate_limit_error(
     ],
 )
 async def test_default_values_after_fetch_allowed_values_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     entity_id: str,
     setting_key: SettingKey,
     exception: Exception,
     expected_options: set[str],
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test fetch allowed values."""
 
@@ -799,15 +799,15 @@ async def test_default_values_after_fetch_allowed_values_error(
     ],
 )
 async def test_select_entity_error(
+    hass: HomeAssistant,
+    client_with_exception: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     setting_key: SettingKey,
     allowed_value: str,
     value_to_set: str,
     mock_attr: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client_with_exception: MagicMock,
 ) -> None:
     """Test select entity error."""
     client_with_exception.get_settings.side_effect = None
@@ -913,6 +913,10 @@ async def test_select_entity_error(
     ],
 )
 async def test_options_functionality(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     option_key: OptionKey,
     allowed_values: list[str | None] | None,
@@ -921,10 +925,6 @@ async def test_options_functionality(
     set_active_program_options_side_effect: ActiveProgramNotSetError | None,
     set_selected_program_options_side_effect: SelectedProgramNotSetError | None,
     called_mock_method: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    client: MagicMock,
 ) -> None:
     """Test options functionality."""
     if set_active_program_options_side_effect:
