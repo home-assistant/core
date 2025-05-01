@@ -747,6 +747,25 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="ElectricalEnergyMeasurementCumulativeEnergyExported",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=3,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            # id 0 of the EnergyMeasurementStruct is the cumulative energy (in mWh)
+            # negative value for exported energy
+            measurement_to_ha=lambda x: -x.energy,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyExported,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="ElectricalMeasurementActivePower",
             device_class=SensorDeviceClass.POWER,
             entity_category=EntityCategory.DIAGNOSTIC,
