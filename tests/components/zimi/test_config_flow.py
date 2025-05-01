@@ -198,7 +198,7 @@ async def test_finish_manual_cannot_connect(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
 ) -> None:
-    """Test finish form transitions via cannot_connect to creation."""
+    """Test manual form transitions via cannot_connect to creation."""
 
     discovery_mock.discovers.side_effect = ControlPointError("Discovery failed")
 
