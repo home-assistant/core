@@ -201,9 +201,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
         """Return the maximum target temperature."""
         return cast(
             float,
-            self.coordinator.data.actions[self._device_id]
-            .target_temperature[self.entity_description.zone - 1]
-            .max,
+            self.action.target_temperature[self.entity_description.zone - 1].max,
         )
 
     @property
@@ -211,9 +209,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
         """Return the minimum target temperature."""
         return cast(
             float,
-            self.coordinator.data.actions[self._device_id]
-            .target_temperature[self.entity_description.zone - 1]
-            .min,
+            self.action.target_temperature[self.entity_description.zone - 1].min,
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
