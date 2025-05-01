@@ -43,7 +43,6 @@ async def test_entry_setup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test setup and unload."""
@@ -64,7 +63,6 @@ async def test_token_refresh_success(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test where token is expired and the refresh attempt succeeds."""
@@ -147,7 +145,6 @@ async def test_token_refresh_error(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test where token is expired and the refresh attempt fails."""
@@ -181,7 +178,6 @@ async def test_client_error(
     expected_state: ConfigEntryState,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client_with_exception: MagicMock,
 ) -> None:
     """Test client errors during setup integration."""
@@ -208,7 +204,6 @@ async def test_client_rate_limit_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
 ) -> None:
     """Test client errors during setup integration."""
@@ -241,7 +236,6 @@ async def test_required_program_or_at_least_an_option(
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:

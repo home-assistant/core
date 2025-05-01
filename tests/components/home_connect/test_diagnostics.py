@@ -21,7 +21,6 @@ async def test_async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -37,7 +36,6 @@ async def test_async_get_device_diagnostics(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
