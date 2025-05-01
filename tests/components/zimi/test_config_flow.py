@@ -83,6 +83,10 @@ async def test_user_discovery_success_selection(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "selection"
+    assert result["errors"] == {}
+
     discovery_mock.return_value.validate_connection.return_value = (
         ControlPointDescription(
             host=INPUT_HOST_EXTRA, port=INPUT_PORT_EXTRA, mac=INPUT_MAC_EXTRA
@@ -135,6 +139,10 @@ async def test_finish_manual_success(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {}
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -164,6 +172,10 @@ async def test_finish_manual_cannot_connect(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {}
+
     # First attempt fails with CANNOT_CONNECT when attempting to connect
     discovery_mock.return_value.validate_connection.side_effect = (
         ControlPointCannotConnectError
@@ -178,6 +190,7 @@ async def test_finish_manual_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Second attempt succeeds
@@ -215,6 +228,10 @@ async def test_finish_manual_gethostbyname_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {}
+
     # First attempt fails with name lookup failure when attempting to connect
     discovery_mock.return_value.validate_connection.side_effect = (
         ControlPointInvalidHostError
@@ -229,6 +246,7 @@ async def test_finish_manual_gethostbyname_error(
     )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"]
     assert result["errors"] == {"base": "invalid_host"}
 
     # Second attempt succeeds
@@ -281,6 +299,10 @@ async def test_finish_manual_socket_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {}
+
     # First attempt fails with socket errors
     discovery_mock.return_value.validate_connection.side_effect = side_effect
 
@@ -293,6 +315,7 @@ async def test_finish_manual_socket_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
     assert result["errors"] == error_expected
 
     # Second attempt succeeds
