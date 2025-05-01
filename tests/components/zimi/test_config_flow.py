@@ -254,7 +254,7 @@ async def test_manual_gethostbyname_error(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
 ) -> None:
-    """Test finish form transitions via gethostbyname failure to creation."""
+    """Test manual form transitions via gethostbyname failure to creation."""
 
     discovery_mock.discovers.side_effect = ControlPointError("Discovery failed")
 
