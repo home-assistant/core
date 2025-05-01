@@ -1,7 +1,5 @@
 """Entity representing a Blue Current charge point."""
 
-from abc import abstractmethod
-
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -43,7 +41,6 @@ class BlueCurrentEntity(Entity):
         return self.connector.connected and self.has_value
 
     @callback
-    @abstractmethod
     def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
 

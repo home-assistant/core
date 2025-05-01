@@ -13,7 +13,7 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BlueCurrentConfigEntry, Connector
@@ -69,6 +69,9 @@ async def async_setup_entry(
 class ChargePointButton(ChargepointEntity, ButtonEntity):
     """Define a charge point button."""
 
+    has_value = True
+    entity_description: ChargePointButtonEntityDescription
+
     def __init__(
         self,
         connector: Connector,
@@ -78,14 +81,9 @@ class ChargePointButton(ChargepointEntity, ButtonEntity):
         """Initialize the button."""
         super().__init__(connector, evse_id)
 
-        self.has_value = True
-        self.entity_description: ChargePointButtonEntityDescription = description
+        self.entity_description = description
         self._attr_unique_id = f"{description.key}_{evse_id}"
 
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.function(self.connector.client, self.evse_id)
-
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
