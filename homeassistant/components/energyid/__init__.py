@@ -1,204 +1,266 @@
-"""The EnergyID integration.
+"""The EnergyID integration."""
 
-Provides webhook handling and state change uploading to the EnergyID service.
-Uses locked async operations to ensure data consistency and respects upload intervals.
-"""
-
-from __future__ import annotations
-
-import asyncio
-from asyncio import timeout
 import datetime as dt
+import functools
 import logging
-from typing import TypeVar
+from typing import Any
 
-import aiohttp
-from energyid_webhooks import WebhookClientAsync, WebhookPayload
+from energyid_webhooks.client_v2 import WebhookClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
-    CONF_ENTITY_ID,
-    CONF_METRIC,
-    CONF_METRIC_KIND,
-    CONF_UNIT,
-    CONF_WEBHOOK_URL,
-    DEFAULT_DATA_INTERVAL,
-    DEFAULT_UPLOAD_INTERVAL,
+    CONF_DEVICE_ID,
+    CONF_DEVICE_NAME,
+    CONF_ENERGYID_KEY,
+    CONF_HA_ENTITY_ID,
+    CONF_PROVISIONING_KEY,
+    CONF_PROVISIONING_SECRET,
+    DATA_CLIENT,
+    DATA_LISTENERS,
+    DATA_MAPPINGS,
+    DEFAULT_UPLOAD_INTERVAL_SECONDS,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T", bound=WebhookClientAsync)
-EnergyIDConfigEntry = ConfigEntry[T]
+PLATFORMS: list[Platform] = []
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up EnergyID from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_MAPPINGS: {},
+        DATA_LISTENERS: [],
+    }
 
-    client = WebhookClientAsync(
-        webhook_url=entry.data[CONF_WEBHOOK_URL],
-        session=async_get_clientsession(hass),
+    session = async_get_clientsession(hass)
+    client = WebhookClient(
+        provisioning_key=entry.data[CONF_PROVISIONING_KEY],
+        provisioning_secret=entry.data[CONF_PROVISIONING_SECRET],
+        device_id=entry.data[CONF_DEVICE_ID],
+        device_name=entry.data[CONF_DEVICE_NAME],
+        session=session,
     )
+    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = client
+
+    is_claimed = False
     try:
-        await client.get_policy()
-    except aiohttp.ClientResponseError as error:
-        _LOGGER.error("Could not validate webhook client")
-        raise ConfigEntryError from error
+        is_claimed = await client.authenticate()
+        if not is_claimed:
+            _LOGGER.warning(
+                "EnergyID device '%s' is not claimed. Please claim it via the EnergyID website. "
+                "Data sending will not work until claimed and HA is restarted or the entry is reloaded",
+                entry.data[CONF_DEVICE_NAME],
+            )
+        else:
+            _LOGGER.info(
+                "EnergyID device '%s' authenticated and claimed",
+                entry.data[CONF_DEVICE_NAME],
+            )
 
-    entry.runtime_data = client
+    except Exception as err:
+        _LOGGER.error("Failed to authenticate with EnergyID during setup: %s", err)
+        raise ConfigEntryNotReady(f"Failed to authenticate EnergyID: {err}") from err
 
-    dispatcher = WebhookDispatcher(hass, entry)
-    hass.data[DOMAIN][entry.entry_id] = dispatcher
+    await async_update_listeners(hass, entry)
 
-    if not await dispatcher.async_check_connection():
-        _LOGGER.warning(
-            "Initial connection to EnergyID webhook service failed. Will retry on state changes"
+    update_listener_remover = entry.add_update_listener(
+        async_config_entry_update_listener
+    )
+
+    if is_claimed:
+        upload_interval = getattr(
+            client, "uploadInterval", DEFAULT_UPLOAD_INTERVAL_SECONDS
+        )
+        _LOGGER.info(
+            "Starting EnergyID auto-sync with interval: %s seconds", upload_interval
+        )
+        client.start_auto_sync(interval_seconds=upload_interval)
+    else:
+        _LOGGER.info(
+            "Auto-sync not started because device '%s' is not claimed",
+            entry.data[CONF_DEVICE_NAME],
         )
 
-    async_track_state_change_event(
-        hass=hass,
-        entity_ids=dispatcher.entity_id,
-        action=dispatcher.async_handle_state_change,
+    @callback
+    def _async_cleanup_listeners() -> None:
+        """Remove state listeners."""
+        _LOGGER.debug("Cleaning up listeners for %s", entry.entry_id)
+        if (
+            listeners := hass.data[DOMAIN]
+            .get(entry.entry_id, {})
+            .pop(DATA_LISTENERS, None)
+        ):
+            for unsub in listeners:
+                unsub()
+
+    @callback
+    async def _async_close_client(*_: Any) -> None:
+        """Close client session."""
+        _LOGGER.debug("Closing EnergyID client for %s", entry.entry_id)
+        if client := hass.data[DOMAIN].get(entry.entry_id, {}).get(DATA_CLIENT):
+            await client.close()
+
+    entry.async_on_unload(_async_cleanup_listeners)
+    entry.async_on_unload(update_listener_remover)
+    entry.async_on_unload(_async_close_client)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_client)
     )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
+async def async_config_entry_update_listener(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Handle options update."""
+    _LOGGER.debug("Options updated for %s, reloading listeners", entry.entry_id)
+    await async_update_listeners(hass, entry)
+
+
+async def async_update_listeners(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Set up or update state listeners based on current subentries (options)."""
+    if DOMAIN not in hass.data or entry.entry_id not in hass.data[DOMAIN]:
+        _LOGGER.error(
+            "Integration data missing for %s during listener update", entry.entry_id
+        )
+        return
+
+    domain_data = hass.data[DOMAIN][entry.entry_id]
+    client: WebhookClient = domain_data[DATA_CLIENT]
+    new_listeners: list[CALLBACK_TYPE] = []
+
+    if old_listeners := domain_data.get(DATA_LISTENERS):
+        _LOGGER.debug(
+            "Removing %d old listeners for %s", len(old_listeners), entry.entry_id
+        )
+        for unsub in old_listeners:
+            unsub()
+        old_listeners.clear()
+    domain_data[DATA_LISTENERS] = new_listeners
+
+    mappings: dict[str, str] = {}
+    entities_to_track: list[str] = []
+
+    for sub_entry_data in entry.options.values():
+        if not isinstance(sub_entry_data, dict):
+            _LOGGER.warning("Skipping non-dictionary options item: %s", sub_entry_data)
+            continue
+
+        ha_entity_id = sub_entry_data.get(CONF_HA_ENTITY_ID)
+        energyid_key = sub_entry_data.get(CONF_ENERGYID_KEY)
+
+        if not isinstance(ha_entity_id, str) or not isinstance(energyid_key, str):
+            _LOGGER.warning("Skipping invalid mapping data: %s", sub_entry_data)
+            continue
+
+        mappings[ha_entity_id] = energyid_key
+        entities_to_track.append(ha_entity_id)
+        client.get_or_create_sensor(energyid_key)
+        _LOGGER.debug("Tracking %s -> %s", ha_entity_id, energyid_key)
+
+    domain_data[DATA_MAPPINGS] = mappings
+
+    if not entities_to_track:
+        _LOGGER.info(
+            "No entities configured for EnergyID device '%s'",
+            entry.data[CONF_DEVICE_NAME],
+        )
+        return
+
+    unsub = async_track_state_change_event(
+        hass,
+        entities_to_track,
+        functools.partial(_async_handle_state_change, hass, entry.entry_id),
+    )
+    new_listeners.append(unsub)
+
+    _LOGGER.info(
+        "Started tracking state changes for %d entities", len(entities_to_track)
+    )
+
+
+@callback
+def _async_handle_state_change(
+    hass: HomeAssistant,
+    entry_id: str,
+    event: Event,
+) -> None:
+    """Handle state changes for tracked entities."""
+    entity_id = event.data.get("entity_id")
+    new_state = event.data.get("new_state")
+
+    if (
+        not entity_id
+        or new_state is None
+        or new_state.state in ("unknown", "unavailable")
+    ):
+        return
+
+    try:
+        domain_data = hass.data[DOMAIN][entry_id]
+        client: WebhookClient = domain_data[DATA_CLIENT]
+        mappings = domain_data.get(DATA_MAPPINGS, {})
+        energyid_key = mappings.get(entity_id)
+    except KeyError:
+        _LOGGER.debug(
+            "Integration data not found for entry %s during state change for %s (likely unloading)",
+            entry_id,
+            entity_id,
+        )
+        return
+
+    if not client or not energyid_key:
+        _LOGGER.debug(
+            "No active EnergyID client/mapping for entity %s in entry %s",
+            entity_id,
+            entry_id,
+        )
+        return
+
+    try:
+        value = float(new_state.state)
+    except (ValueError, TypeError):
+        _LOGGER.warning(
+            "Cannot convert state '%s' of %s to float", new_state.state, entity_id
+        )
+        return
+
+    timestamp = new_state.last_updated
+    if not isinstance(timestamp, dt.datetime):
+        _LOGGER.warning(
+            "Invalid timestamp type (%s) for %s, using current time",
+            type(timestamp).__name__,
+            entity_id,
+        )
+        timestamp = dt.datetime.now(dt.UTC)
+
+    hass.async_create_task(client.update_sensor(energyid_key, value, timestamp))
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
-    return True
+    _LOGGER.info("Unloading EnergyID entry for %s", entry.data[CONF_DEVICE_NAME])
 
+    if DOMAIN not in hass.data:
+        _LOGGER.error("DOMAIN '%s' not found in hass.data during unload", DOMAIN)
+        return False
 
-class WebhookDispatcher:
-    """Handles state changes and uploads data to EnergyID.
+    unload_ok = hass.data[DOMAIN].pop(entry.entry_id, None) is not None
 
-    Manages webhook communication, upload intervals, and data validation.
-    Uses asyncio.Lock to prevent concurrent uploads for data consistency.
-    """
+    if not hass.data[DOMAIN]:
+        hass.data.pop(DOMAIN, None)
 
-    def __init__(self, hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
-        """Initialize the dispatcher."""
-        self.hass = hass
-        self.client = entry.runtime_data
-        self.entity_id = entry.data[CONF_ENTITY_ID]
-        self.metric = entry.data[CONF_METRIC]
-        self.metric_kind = entry.data[CONF_METRIC_KIND]
-        self.unit = entry.data[CONF_UNIT]
-        self.data_interval = DEFAULT_DATA_INTERVAL
-        self.upload_interval = dt.timedelta(seconds=DEFAULT_UPLOAD_INTERVAL)
-
-        self.last_upload: dt.datetime | None = None
-        self._upload_lock = asyncio.Lock()
-        self._connected = False
-
-    async def async_check_connection(self) -> bool:
-        """Check connection to EnergyID and log status changes."""
-        try:
-            await self.client.get_policy()
-            if not self._connected:
-                _LOGGER.info("Successfully connected to EnergyID webhook service")
-                self._connected = True
-        except (aiohttp.ClientConnectionError, aiohttp.ClientResponseError) as err:
-            if self._connected:
-                _LOGGER.info("Lost connection to EnergyID webhook service: %s", err)
-                self._connected = False
-            return False
-        else:
-            return True
-
-    async def async_handle_state_change(
-        self, event: Event[EventStateChangedData]
-    ) -> bool:
-        """Handle a state change event."""
-        if not await self.async_check_connection():
-            return False
-
-        async with self._upload_lock:
-            return await self._async_handle_state_change(event)
-
-    async def _async_handle_state_change(
-        self, event: Event[EventStateChangedData]
-    ) -> bool:
-        """Process and upload a state change event."""
-        _LOGGER.debug("Handling state change event %s", event)
-        new_state = event.data["new_state"]
-
-        if new_state is None or not self.upload_allowed(new_state.last_changed):
-            _LOGGER.debug(
-                "Not uploading state %s due to upload interval or None state",
-                new_state,
-            )
-            return False
-
-        try:
-            value = float(new_state.state)
-        except ValueError:
-            _LOGGER.error(
-                "Error converting state %s to float for entity %s",
-                new_state.state,
-                self.entity_id,
-            )
-            return False
-
-        retries = 3
-        for attempt in range(retries):
-            try:
-                data: list[list] = [[new_state.last_changed.isoformat(), value]]
-                payload = WebhookPayload(
-                    remote_id=self.entity_id,
-                    remote_name=new_state.attributes.get(
-                        "friendly_name", self.entity_id
-                    ),
-                    metric=self.metric,
-                    metric_kind=self.metric_kind,
-                    unit=self.unit,
-                    interval=self.data_interval,
-                    data=data,
-                )
-                _LOGGER.debug(
-                    "Uploading data %s, attempt %s/%s", payload, attempt + 1, retries
-                )
-                async with timeout(10):
-                    await self.client.post_payload(payload)
-                break
-            except (
-                TimeoutError,
-                aiohttp.ClientConnectionError,
-                aiohttp.ClientResponseError,
-                aiohttp.ClientError,
-            ) as err:
-                _LOGGER.warning(
-                    "Upload to EnergyID failed (attempt %s/%s): %s",
-                    attempt + 1,
-                    retries,
-                    err,
-                )
-                if attempt < retries - 1:
-                    delay = 2**attempt
-                    _LOGGER.debug("Waiting %s seconds before retrying", delay)
-                    await asyncio.sleep(delay)
-        else:
-            _LOGGER.error(
-                "Failed to upload data to EnergyID after %s retries. Payload: %s",
-                retries,
-                payload,
-            )
-            return False
-
-        self.last_upload = new_state.last_changed
-        _LOGGER.debug("Last upload time updated to %s", self.last_upload)
-        return True
-
-    def upload_allowed(self, state_change_time: dt.datetime) -> bool:
-        """Check if upload is allowed based on the upload interval."""
-        if self.last_upload is None:
-            return True
-        return state_change_time - self.last_upload > self.upload_interval
+    _LOGGER.debug(
+        "Finished unloading process for %s. Success: %s", entry.entry_id, unload_ok
+    )
+    return unload_ok
