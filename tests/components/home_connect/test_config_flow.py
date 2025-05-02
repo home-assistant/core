@@ -60,7 +60,7 @@ async def test_full_flow(
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status is HTTPStatus.OK
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
@@ -119,7 +119,7 @@ async def test_prevent_reconfiguring_same_account(
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status is HTTPStatus.OK
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
@@ -165,7 +165,7 @@ async def test_reauth_flow(
 
     _client = await hass_client_no_auth()
     resp = await _client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status is HTTPStatus.OK
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
@@ -219,7 +219,7 @@ async def test_reauth_flow_with_different_account(
 
     _client = await hass_client_no_auth()
     resp = await _client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status is HTTPStatus.OK
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(

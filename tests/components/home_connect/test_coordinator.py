@@ -649,10 +649,10 @@ async def test_coordinator_disabling_updates_for_appliance(
         "/api/repairs/issues/fix",
         json={"handler": DOMAIN, "issue_id": issue.issue_id},
     )
-    assert resp.status is HTTPStatus.OK
+    assert resp.status == HTTPStatus.OK
     flow_id = (await resp.json())["flow_id"]
     resp = await _client.post(f"/api/repairs/issues/fix/{flow_id}")
-    assert resp.status is HTTPStatus.OK
+    assert resp.status == HTTPStatus.OK
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
