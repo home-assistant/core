@@ -189,7 +189,7 @@ async def test_reauth_flow(
     assert entry.state is ConfigEntryState.LOADED
     assert len(mock_setup_entry.mock_calls) == 1
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
@@ -239,5 +239,5 @@ async def test_reauth_flow_with_different_account(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
