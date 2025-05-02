@@ -22,11 +22,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.device_registry import (
-    CONNECTION_BLUETOOTH,
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-)
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
@@ -46,6 +42,7 @@ from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoo
 from .entity import ShellyRpcEntity, rpc_call
 from .utils import (
     async_remove_shelly_entity,
+    get_block_device_info,
     get_device_entry_gen,
     get_rpc_key_ids,
     is_rpc_thermostat_internal_actuator,
@@ -212,8 +209,8 @@ class BlockSleepingClimate(
             ]
         elif entry is not None:
             self._unique_id = entry.unique_id
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
+        self._attr_device_info = get_block_device_info(
+            coordinator.device, coordinator.mac, sensor_block
         )
 
         self._channel = cast(int, self._unique_id.split("_")[1])
