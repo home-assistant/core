@@ -76,8 +76,17 @@
       "coffee_boiler_ready_time": {
         "default": "mdi:av-timer"
       },
+      "last_cleaning_time": {
+        "default": "mdi:spray-bottle"
+      },
       "steam_boiler_ready_time": {
         "default": "mdi:av-timer"
+      },
+      "total_coffees_made": {
+        "default": "mdi:coffee"
+      },
+      "total_flushes_done": {
+        "default": "mdi:water-pump"
       }
     },
     "switch": {

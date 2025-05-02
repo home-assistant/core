@@ -69,14 +69,20 @@ class MediaSourceOptions(TypedDict):
     """Media source options."""
 
     engine: str
-    message: str
     language: str | None
     options: dict | None
     use_file_cache: bool | None
 
 
+class ParsedMediaSourceId(TypedDict):
+    """Parsed media source ID."""
+
+    options: MediaSourceOptions
+    message: str
+
+
 @callback
-def media_source_id_to_kwargs(media_source_id: str) -> MediaSourceOptions:
+def parse_media_source_id(media_source_id: str) -> ParsedMediaSourceId:
     """Turn a media source ID into options."""
     parsed = URL(media_source_id)
     if URL_QUERY_TTS_OPTIONS in parsed.query:
@@ -94,7 +100,6 @@ def media_source_id_to_kwargs(media_source_id: str) -> MediaSourceOptions:
         raise Unresolvable("No message specified.")
     kwargs: MediaSourceOptions = {
         "engine": parsed.name,
-        "message": parsed.query["message"],
         "language": parsed.query.get("language"),
         "options": options,
         "use_file_cache": None,
@@ -102,7 +107,7 @@ def media_source_id_to_kwargs(media_source_id: str) -> MediaSourceOptions:
     if "cache" in parsed.query:
         kwargs["use_file_cache"] = parsed.query["cache"] == "true"
 
-    return kwargs
+    return {"message": parsed.query["message"], "options": kwargs}
 
 
 class TTSMediaSource(MediaSource):
@@ -118,9 +123,11 @@ class TTSMediaSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         try:
+            parsed = parse_media_source_id(item.identifier)
             stream = self.hass.data[DATA_TTS_MANAGER].async_create_result_stream(
-                **media_source_id_to_kwargs(item.identifier)
+                **parsed["options"]
             )
+            stream.async_set_message(parsed["message"])
         except Unresolvable:
             raise
         except HomeAssistantError as err:
@@ -138,13 +145,20 @@ class TTSMediaSource(MediaSource):
             return self._engine_item(engine, params)
 
         # Root. List providers.
-        children = [
-            self._engine_item(engine)
-            for engine in self.hass.data[DATA_TTS_MANAGER].providers
-        ] + [
-            self._engine_item(entity.entity_id)
-            for entity in self.hass.data[DATA_COMPONENT].entities
-        ]
+        children = sorted(
+            [
+                self._engine_item(engine_id)
+                for engine_id, provider in self.hass.data[
+                    DATA_TTS_MANAGER
+                ].providers.items()
+                if not provider.has_entity
+            ]
+            + [
+                self._engine_item(entity.entity_id)
+                for entity in self.hass.data[DATA_COMPONENT].entities
+            ],
+            key=lambda x: x.title,
+        )
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
