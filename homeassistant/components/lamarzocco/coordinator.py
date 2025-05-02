@@ -97,14 +97,15 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         self.config_entry.async_create_background_task(
             hass=self.hass,
             target=self.device.connect_dashboard_websocket(
-                update_callback=lambda _: self.async_set_updated_data(None)
+                update_callback=lambda _: self.async_set_updated_data(None),
+                connect_callback=self.async_update_listeners,
+                disconnect_callback=self.async_update_listeners,
             ),
             name="lm_websocket_task",
         )
 
         async def websocket_close(_: Any | None = None) -> None:
-            if self.device.websocket.connected:
-                await self.device.websocket.disconnect()
+            await self.device.websocket.disconnect()
 
         self.config_entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, websocket_close)
