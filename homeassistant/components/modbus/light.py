@@ -105,7 +105,7 @@ class ModbusLight(BaseSwitch, LightEntity):
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             await self.async_set_color_temp(
-                kwargs.get(ATTR_COLOR_TEMP_KELVIN, self._attr_color_temp_kelvin)
+                kwargs.get(ATTR_COLOR_TEMP_KELVIN)
             )
         await self.async_turn(self.command_on)
 
