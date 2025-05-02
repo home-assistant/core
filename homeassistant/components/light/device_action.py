@@ -29,6 +29,7 @@ from . import (
     ATTR_FLASH,
     FLASH_SHORT,
     VALID_BRIGHTNESS_PCT,
+    VALID_BRIGHTNESS_STEP_PCT,
     VALID_FLASH,
     brightness_supported,
     get_supported_color_modes,
@@ -54,6 +55,7 @@ _ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
             ]
         ),
         vol.Optional(ATTR_BRIGHTNESS_PCT): VALID_BRIGHTNESS_PCT,
+        vol.Optional(ATTR_BRIGHTNESS_STEP_PCT): VALID_BRIGHTNESS_STEP_PCT,
         vol.Optional(ATTR_FLASH): VALID_FLASH,
     }
 )
@@ -85,9 +87,9 @@ async def async_call_action_from_config(
     data = {ATTR_ENTITY_ID: config[ATTR_ENTITY_ID]}
 
     if config[CONF_TYPE] == TYPE_BRIGHTNESS_INCREASE:
-        data[ATTR_BRIGHTNESS_STEP_PCT] = 10
+        data[ATTR_BRIGHTNESS_STEP_PCT] = config.get(ATTR_BRIGHTNESS_STEP_PCT, 10)
     elif config[CONF_TYPE] == TYPE_BRIGHTNESS_DECREASE:
-        data[ATTR_BRIGHTNESS_STEP_PCT] = -10
+        data[ATTR_BRIGHTNESS_STEP_PCT] = config.get(ATTR_BRIGHTNESS_STEP_PCT, -10)
     elif ATTR_BRIGHTNESS_PCT in config:
         data[ATTR_BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
 
