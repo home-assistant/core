@@ -1678,7 +1678,7 @@ pyiskra==0.1.15
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.4.0
+pyisy==3.4.1
 
 # homeassistant.components.ituran
 pyituran==0.1.4
