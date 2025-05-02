@@ -58,7 +58,7 @@ async def test_paired_depaired_devices_flow(
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
@@ -135,7 +135,7 @@ async def test_connected_devices(
 
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
@@ -180,7 +180,7 @@ async def test_time_entity_availability(
         "time.oven_alarm_clock",
     ]
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
@@ -363,7 +363,7 @@ async def test_create_alarm_clock_deprecation_issue(
     )
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         TIME_DOMAIN,
@@ -442,7 +442,7 @@ async def test_alarm_clock_deprecation_issue_fix(
     )
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         TIME_DOMAIN,

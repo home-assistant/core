@@ -81,7 +81,7 @@ async def test_paired_depaired_devices_flow(
         )
     )
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
@@ -159,7 +159,7 @@ async def test_connected_devices(
 
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
@@ -208,7 +208,7 @@ async def test_number_entity_availability(
     # so we rise an error to easily test the availability
     client.get_setting = AsyncMock(side_effect=HomeConnectError())
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
@@ -594,7 +594,7 @@ async def test_options_functionality(
     )
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.attributes["unit_of_measurement"] == unit
