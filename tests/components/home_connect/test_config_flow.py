@@ -157,7 +157,7 @@ async def test_prevent_reconfiguring_same_account(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -332,7 +332,7 @@ async def test_zeroconf_flow_already_setup(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=DHCP_DISCOVERY[0],
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -401,5 +401,5 @@ async def test_dhcp_flow_already_setup(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY[0]
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
