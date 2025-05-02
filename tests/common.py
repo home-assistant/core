@@ -595,14 +595,14 @@ def load_json_object_fixture(
 
 def _parse_ssdp_string(data: str, key: str, target: dict[str, Any]) -> None:
     if match := regex.search(f"{key}='([^']+)'", data):
-        value = match.group(1)
-        target[key] = None if value == "None" else value
+        if (value := match.group(1)) != "None":
+            target[key] = value
 
 
 def _parse_ssdp_set(data: str, key: str, target: dict[str, Any]) -> None:
     if match := regex.search(f"{key}=\\{{'([^\\{{\\}}]+)'\\}}", data):
-        value = match.group(1)
-        target[key] = set() if value == "set()" else set(value.split(","))
+        if (value := match.group(1)) != "set()":
+            target[key] = set(value.split(","))
 
 
 def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServiceInfo:
