@@ -2,7 +2,6 @@
 
 from homeassistant.components.samsungtv.const import (
     CONF_SESSION_ID,
-    DOMAIN,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
 )
@@ -16,8 +15,13 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TOKEN,
 )
-
-from tests.common import load_ssdp_fixture
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 MOCK_CONFIG = {
     CONF_HOST: "fake_host",
@@ -55,6 +59,28 @@ MOCK_ENTRY_WS_WITH_MAC = {
     CONF_TOKEN: "123456789",
 }
 
+MOCK_SSDP_DATA_RENDERING_CONTROL_ST = SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="urn:schemas-upnp-org:service:RenderingControl:1",
+    ssdp_location="https://fake_host:12345/test",
+    upnp={
+        ATTR_UPNP_FRIENDLY_NAME: "[TV] fake_name",
+        ATTR_UPNP_MANUFACTURER: "Samsung fake_manufacturer",
+        ATTR_UPNP_MODEL_NAME: "fake_model",
+        ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
+    },
+)
+MOCK_SSDP_DATA_MAIN_TV_AGENT_ST = SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="urn:samsung.com:service:MainTVAgent2:1",
+    ssdp_location="https://fake_host:12345/tv_agent",
+    upnp={
+        ATTR_UPNP_FRIENDLY_NAME: "[TV] fake_name",
+        ATTR_UPNP_MANUFACTURER: "Samsung fake_manufacturer",
+        ATTR_UPNP_MODEL_NAME: "fake_model",
+        ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
+    },
+)
 
 SAMPLE_DEVICE_INFO_WIFI = {
     "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
@@ -66,12 +92,3 @@ SAMPLE_DEVICE_INFO_WIFI = {
         "networkType": "wireless",
     },
 }
-
-
-MOCK_SSDP_DATA_RENDERING_CONTROL_ST = load_ssdp_fixture(
-    "ssdp_service_rendering_control.txt", DOMAIN
-)
-
-MOCK_SSDP_DATA_MAIN_TV_AGENT_ST = load_ssdp_fixture(
-    "ssdp_device_main_tv_agent.txt", DOMAIN
-)
