@@ -40,7 +40,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     singleton,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.dt import utcnow
 
@@ -377,9 +377,9 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
         channel = key.split(":")[0]
         channel_id = key.split(":")[-1]
         if key.startswith(("cover:", "input:", "light:", "switch:", "thermostat:")):
-            return f"{device_name} {channel.title()} {channel_id}"
+            return f"{channel.title()} {channel_id}"
         if key.startswith(("cct", "rgb:", "rgbw:")):
-            return f"{device_name} {channel.upper()} light {channel_id}"
+            return f"{channel.upper()} light {channel_id}"
         if key.startswith("em1"):
             return f"{device_name} EM{channel_id}"
         if key.startswith(("boolean:", "enum:", "number:", "text:")):
@@ -691,3 +691,32 @@ async def get_rpc_scripts_event_types(
         script_events[script_id] = await get_rpc_script_event_types(device, script_id)
 
     return script_events
+
+
+def get_rpc_device_info(
+    device: RpcDevice,
+    mac: str,
+    key: str,
+) -> DeviceInfo:
+    """Return device info for RPC device."""
+    key_parts = key.split(":")
+    component = key_parts[0]
+    idx = key_parts[1] if len(key_parts) > 1 else None
+
+    if (
+        component not in ("cct", "cover", "light", "rgb", "rgbw", "switch")
+        or idx is None
+    ):
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    key_instances = len(get_rpc_key_instances(device.status, component))
+
+    if key_instances < 2:
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{idx}")},
+        name=get_rpc_channel_name(device, key),
+        manufacturer="Shelly",
+        via_device=(DOMAIN, mac),
+    )
