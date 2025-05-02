@@ -85,12 +85,14 @@ from .const import (
     MOCK_CONFIG,
     MOCK_ENTRY_WS_WITH_MAC,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
-    SAMPLE_DEVICE_INFO_FRAME,
     SAMPLE_DEVICE_INFO_WIFI,
-    SAMPLE_EVENT_ED_INSTALLED_APP,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 
 ENTITY_ID = f"{MP_DOMAIN}.fake"
 MOCK_CONFIGWS = {
@@ -689,7 +691,9 @@ async def test_turn_off_websocket(
     hass: HomeAssistant, remotews: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    remotews.app_list_data = SAMPLE_EVENT_ED_INSTALLED_APP
+    remotews.app_list_data = load_json_object_fixture(
+        "ws_installed_app_event.json", DOMAIN
+    )
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
@@ -728,7 +732,9 @@ async def test_turn_off_websocket_frame(
     hass: HomeAssistant, remotews: Mock, rest_api: Mock
 ) -> None:
     """Test for turn_off."""
-    rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_FRAME
+    rest_api.rest_device_info.return_value = load_json_object_fixture(
+        "device_info_UE43LS003.json", DOMAIN
+    )
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
@@ -1136,7 +1142,9 @@ async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
 @pytest.mark.usefixtures("rest_api")
 async def test_select_source_app(hass: HomeAssistant, remotews: Mock) -> None:
     """Test for select_source."""
-    remotews.app_list_data = SAMPLE_EVENT_ED_INSTALLED_APP
+    remotews.app_list_data = load_json_object_fixture(
+        "ws_installed_app_event.json", DOMAIN
+    )
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
     remotews.send_commands.reset_mock()
 
