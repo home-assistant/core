@@ -35,7 +35,6 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
-from .util import find_state_attributes
 
 DEFAULT_NAME = "Siren Group"
 CONF_ALL = "all"
