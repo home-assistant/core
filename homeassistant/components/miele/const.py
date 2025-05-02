@@ -2,6 +2,8 @@
 
 from enum import IntEnum
 
+from pymiele import MieleEnum
+
 DOMAIN = "miele"
 MANUFACTURER = "Miele"
 
@@ -325,13 +327,17 @@ STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
     MieleAppliance.ROBOT_VACUUM_CLEANER: STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER,
 }
 
-STATE_PROGRAM_TYPE = {
-    0: "normal_operation_mode",
-    1: "own_program",
-    2: "automatic_program",
-    3: "cleaning_care_program",
-    4: "maintenance_program",
-}
+
+class STATE_PROGRAM_TYPE(MieleEnum):
+    """Defines program types."""
+
+    normal_operation_mode = 0
+    own_program = 1
+    automatic_program = 2
+    cleaning_care_program = 3
+    maintenance_program = 4
+    unknown = -9999
+
 
 WASHING_MACHINE_PROGRAM_ID: dict[int, str] = {
     -1: "no_program",  # Extrapolated from other device types.
