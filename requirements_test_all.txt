@@ -1461,7 +1461,7 @@ py-madvr2==1.6.32
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==2.0.5
+py-nextbusnext==2.1.2
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
