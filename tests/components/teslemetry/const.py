@@ -45,6 +45,7 @@ METADATA = {
         "vehicle_device_data",
         "vehicle_cmds",
         "vehicle_charging_cmds",
+        "vehicle_location",
         "energy_device_data",
         "energy_cmds",
     ],

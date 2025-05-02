@@ -1,15 +1,38 @@
 """ESPHome test common code."""
 
+from datetime import datetime
+
 from homeassistant.components import assist_satellite
 from homeassistant.components.assist_satellite import AssistSatelliteEntity
 
 # pylint: disable-next=hass-component-root-import
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.components.esphome.assist_satellite import EsphomeAssistSatellite
+from homeassistant.components.esphome.coordinator import REFRESH_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util import dt as dt_util
+
+from tests.common import async_fire_time_changed
+
+
+class MockDashboardRefresh:
+    """Mock dashboard refresh."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the mock dashboard refresh."""
+        self.hass = hass
+        self.last_time: datetime | None = None
+
+    async def async_refresh(self) -> None:
+        """Refresh the dashboard."""
+        if self.last_time is None:
+            self.last_time = dt_util.utcnow()
+        self.last_time += REFRESH_INTERVAL
+        async_fire_time_changed(self.hass, self.last_time)
+        await self.hass.async_block_till_done()
 
 
 def get_satellite_entity(
