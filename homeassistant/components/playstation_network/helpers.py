@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import json
 from typing import Any
 
 from psnawp_api import PSNAWP
@@ -66,25 +65,14 @@ class PlaystationNetwork:
         data.platform = data.presence.get("basicPresence", {}).get(
             "primaryPlatformInfo"
         )
+
         game_title_info_list = data.presence.get("basicPresence", {}).get(
             "gameTitleInfoList"
         )
 
         if game_title_info_list:
             data.title_metadata = game_title_info_list[0]
+            data.title_metadata["format"] = data.title_metadata["format"].upper()
 
         self.data = data
         return self.data
-
-    @staticmethod
-    def parse_npsso_token(user_input: str = "") -> str:
-        """Accept a string from the user that may contain either a valid npsso token or a json string with key "npsso" and value of the npsso token.
-
-        This function either succeeds at extracting the npsso token from the provided input
-        (meaning a valid npsso json string was provided) or it returns the original input.
-        """
-        try:
-            npsso_input = json.loads(user_input)
-            return npsso_input["npsso"]
-        except Exception:  # noqa: BLE001
-            return user_input

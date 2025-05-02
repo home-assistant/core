@@ -25,7 +25,7 @@ HATasmota==0.10.0
 Mastodon.py==2.0.1
 
 # homeassistant.components.playstation_network
-PSNAWP-HA==2.3.2
+PSNAWP-HA==2.4.2
 
 # homeassistant.components.doods
 # homeassistant.components.generic
