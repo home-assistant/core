@@ -77,7 +77,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotSupported
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
@@ -563,9 +563,11 @@ async def test_send_key_unhandled_response(hass: HomeAssistant, remote: Mock) ->
     """Testing unhandled response exception."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
     remote.control = Mock(side_effect=exceptions.UnhandledResponse("Boom"))
-    await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+    assert err.value.translation_key == "error_sending_command"
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
@@ -1219,9 +1221,7 @@ async def test_websocket_unsupported_remote_control(
 
 
 @pytest.mark.usefixtures("remotews", "rest_api", "upnp_notify_server")
-async def test_volume_control_upnp(
-    hass: HomeAssistant, dmr_device: Mock, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_volume_control_upnp(hass: HomeAssistant, dmr_device: Mock) -> None:
     """Test for Upnp volume control."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
 
@@ -1237,21 +1237,21 @@ async def test_volume_control_upnp(
         True,
     )
     dmr_device.async_set_volume_level.assert_called_once_with(0.5)
-    assert "Unable to set volume level on" not in caplog.text
 
     # Upnp action failed
     dmr_device.async_set_volume_level.reset_mock()
     dmr_device.async_set_volume_level.side_effect = UpnpActionResponseError(
         status=500, error_code=501, error_desc="Action Failed"
     )
-    await hass.services.async_call(
-        MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
-        True,
-    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_VOLUME_SET,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
+            True,
+        )
+    assert err.value.translation_key == "error_set_volume"
     dmr_device.async_set_volume_level.assert_called_once_with(0.6)
-    assert "Unable to set volume level on" in caplog.text
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
