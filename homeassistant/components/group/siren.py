@@ -16,6 +16,7 @@ from homeassistant.components.siren import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -34,9 +35,18 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
+from .util import find_state_attributes
 
 DEFAULT_NAME = "Siren Group"
 CONF_ALL = "all"
+
+SUPPORT_GROUP_SIREN = (
+    SirenEntityFeature.TURN_ON
+    | SirenEntityFeature.TURN_OFF
+    | SirenEntityFeature.TONES
+    | SirenEntityFeature.DURATION
+    | SirenEntityFeature.VOLUME_SET
+)
 
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
@@ -112,7 +122,6 @@ class SirenGroup(GroupEntity, SirenEntity):
 
     _attr_available = False
     _attr_should_poll = False
-    _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
 
     def __init__(
         self,
@@ -132,9 +141,8 @@ class SirenGroup(GroupEntity, SirenEntity):
             self.mode = all
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Forward the turn_on command to all sirens in the group."""
-        data = {ATTR_ENTITY_ID: list(self._entity_ids)}
-        _LOGGER.debug("Forwarded turn_on command: %s", data)
+        """Forward the turn_on command with kwargs to all sirens in the group."""
+        data = {ATTR_ENTITY_ID: list(self._entity_ids), **kwargs}
 
         await self.hass.services.async_call(
             SIREN_DOMAIN,
@@ -177,3 +185,15 @@ class SirenGroup(GroupEntity, SirenEntity):
 
         # Set group as unavailable if all members are unavailable or missing
         self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
+
+        self._attr_supported_features = SirenEntityFeature(0)
+        entities = [
+            state
+            for eid in self._entity_ids
+            if (state := self.hass.states.get(eid)) is not None
+        ]
+
+        for support in find_state_attributes(entities, ATTR_SUPPORTED_FEATURES):
+            self._attr_supported_features |= support
+
+        self._attr_supported_features &= SUPPORT_GROUP_SIREN
