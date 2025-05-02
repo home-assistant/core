@@ -91,7 +91,7 @@ async def test_form_failures(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_psnawpapi.get_user.side_effect = raise_error
+    mock_psnawpapi.user.side_effect = raise_error
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -106,7 +106,7 @@ async def test_form_failures(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_psnawpapi.get_user.side_effect = None
+    mock_psnawpapi.user.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_NPSSO: NPSSO_TOKEN},
@@ -118,27 +118,19 @@ async def test_form_failures(
     }
 
 
-@pytest.mark.parametrize(
-    ("raise_error", "text_error"),
-    [
-        (PSNAWPInvalidTokenError(), "invalid_account"),
-    ],
-)
+@pytest.mark.usefixtures("mock_psnawpapi")
 async def test_parse_npsso_token_failures(
     hass: HomeAssistant,
     mock_psnawp_npsso: MagicMock,
-    mock_psnawpapi: MagicMock,
-    raise_error: Exception,
-    text_error: str,
 ) -> None:
     """Test parse_npsso_token raises the correct exceptions during config flow."""
-    mock_psnawp_npsso.parse_npsso_token.side_effect = raise_error
+    mock_psnawp_npsso.parse_npsso_token.side_effect = PSNAWPInvalidTokenError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={CONF_NPSSO: NPSSO_TOKEN_INVALID_JSON},
     )
-    assert result["errors"] == {"base": text_error}
+    assert result["errors"] == {"base": "invalid_account"}
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -146,7 +138,7 @@ async def test_parse_npsso_token_failures(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_psnawpapi.get_user.side_effect = None
+    mock_psnawp_npsso.parse_npsso_token.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_NPSSO: NPSSO_TOKEN},

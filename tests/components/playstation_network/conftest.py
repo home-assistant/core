@@ -42,12 +42,29 @@ def mock_user() -> Generator[MagicMock]:
     """Mock psnawp_api User object."""
 
     with patch(
-        "homeassistant.components.playstation_network.config_flow.User", autospec=True
+        "homeassistant.components.playstation_network.helpers.User",
+        autospec=True,
     ) as mock_client:
         client = mock_client.return_value
 
         client.account_id = PSN_ID
         client.online_id = "testuser"
+
+        client.get_presence.return_value = {
+            "basicPresence": {
+                "availability": "availableToPlay",
+                "primaryPlatformInfo": {"onlineStatus": "online", "platform": "PS5"},
+                "gameTitleInfoList": [
+                    {
+                        "npTitleId": "PPSA07784_00",
+                        "titleName": "STAR WARS Jedi: Survivor™",
+                        "format": "PS5",
+                        "launchPlatform": "PS5",
+                        "conceptIconUrl": "https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png",
+                    }
+                ],
+            }
+        }
 
         yield client
 
@@ -56,20 +73,22 @@ def mock_user() -> Generator[MagicMock]:
 def mock_psnawpapi(mock_user: MagicMock) -> Generator[MagicMock]:
     """Mock psnawp_api."""
 
-    with (
-        patch(
-            "homeassistant.components.playstation_network.PlaystationNetwork",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.playstation_network.config_flow.PlaystationNetwork",
-            new=mock_client,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.playstation_network.helpers.PSNAWP",
+        autospec=True,
+    ) as mock_client:
         client = mock_client.return_value
 
-        client.get_user.return_value = mock_user
-
+        client.user.return_value = mock_user
+        client.me.return_value.get_account_devices.return_value = [
+            {
+                "deviceId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234",
+                "deviceType": "PS5",
+                "activationType": "PRIMARY",
+                "activationDate": "2021-01-14T18:00:00.000Z",
+                "accountDeviceVector": "abcdefghijklmnopqrstuv",
+            }
+        ]
         yield client
 
 
@@ -85,3 +104,10 @@ def mock_psnawp_npsso(mock_user: MagicMock) -> Generator[MagicMock]:
         npsso.parse_npsso_token.return_value = NPSSO_TOKEN
 
         yield npsso
+
+
+@pytest.fixture
+def mock_token() -> Generator[MagicMock]:
+    """Mock token generator."""
+    with patch("secrets.token_hex", return_value="123456789") as token:
+        yield token
