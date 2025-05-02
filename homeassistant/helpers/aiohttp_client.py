@@ -394,6 +394,7 @@ def _async_get_connector(
 
 
 @singleton(DATA_RESOLVER)
+@callback
 def _async_get_or_create_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
     """Return the HassAsyncDNSResolver."""
     resolver = _async_make_resolver(hass)
