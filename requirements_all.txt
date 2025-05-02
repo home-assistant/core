@@ -762,7 +762,7 @@ debugpy==1.8.13
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==12.5.0
+deebot-client==13.0.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1047,14 +1047,14 @@ google-cloud-texttospeech==2.25.1
 # homeassistant.components.google_generative_ai_conversation
 google-genai==1.7.0
 
+# homeassistant.components.google_travel_time
+google-maps-routing==0.6.14
+
 # homeassistant.components.nest
 google-nest-sdm==7.1.4
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
-
-# homeassistant.components.google_travel_time
-googlemaps==2.5.1
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local
@@ -1161,10 +1161,10 @@ hole==0.8.0
 holidays==0.70
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250411.0
+home-assistant-frontend==20250430.2
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.3.28
+home-assistant-intents==2025.4.30
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.0.1
@@ -1239,7 +1239,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.15.0
+inkbird-ble==0.16.1
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1590,7 +1590,7 @@ open-garage==0.2.0
 open-meteo==0.3.2
 
 # homeassistant.components.openai_conversation
-openai==1.68.2
+openai==1.76.2
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1726,7 +1726,7 @@ pulsectl==23.5.2
 pushbullet.py==0.11.0
 
 # homeassistant.components.pushover
-pushover_complete==1.1.1
+pushover_complete==1.2.0
 
 # homeassistant.components.pvoutput
 pvo==2.2.1
@@ -2093,7 +2093,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.0b6
+pylamarzocco==2.0.0b7
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -3147,7 +3147,7 @@ youless-api==2.2.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.03.26
+yt-dlp[default]==2025.03.31
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.2
@@ -3162,7 +3162,7 @@ zeroconf==0.146.5
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.56
+zha==0.0.57
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

@@ -121,6 +121,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_wm_dw_000001",
         "da_wm_wd_000001",
         "da_wm_wd_000001_1",
+        "da_wm_wm_01011",
         "da_wm_wm_000001",
         "da_wm_wm_000001_1",
         "da_wm_sc_000001",

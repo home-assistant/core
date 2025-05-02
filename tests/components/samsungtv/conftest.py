@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Generator
-from datetime import datetime
 from socket import AddressFamily  # pylint: disable=no-name-in-module
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -21,7 +20,6 @@ from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
 
 from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
-from homeassistant.util import dt as dt_util
 
 from .const import SAMPLE_DEVICE_INFO_UE48JU6400, SAMPLE_DEVICE_INFO_WIFI
 
@@ -92,13 +90,13 @@ def upnp_factory_fixture() -> Generator[Mock]:
 
 
 @pytest.fixture(name="upnp_device")
-def upnp_device_fixture(upnp_factory: Mock) -> Generator[Mock]:
+def upnp_device_fixture(upnp_factory: Mock) -> Mock:
     """Patch async_upnp_client."""
     upnp_device = Mock(UpnpDevice)
     upnp_device.services = {}
 
-    with patch.object(upnp_factory, "async_create_device", side_effect=[upnp_device]):
-        yield upnp_device
+    upnp_factory.async_create_device.side_effect = [upnp_device]
+    return upnp_device
 
 
 @pytest.fixture(name="dmr_device")
@@ -283,12 +281,6 @@ def remoteencws_fixture() -> Generator[Mock]:
     ) as remotews_class:
         remotews_class.return_value = remoteencws
         yield remoteencws
-
-
-@pytest.fixture
-def mock_now() -> datetime:
-    """Fixture for dtutil.now."""
-    return dt_util.utcnow()
 
 
 @pytest.fixture(name="mac_address", autouse=True)
