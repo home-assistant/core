@@ -55,19 +55,6 @@ async def test_percentage(
     assert hass.states.get("fan.test_fan").attributes["percentage"] == expected
 
 
-async def test_percentage_none(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_homee: MagicMock,
-) -> None:
-    """Test percentage."""
-    mock_homee.nodes = [build_mock_node("fan.json")]
-    mock_homee.nodes[0].attributes.pop(0)  # Remove the speed attribute.
-    await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get("fan.test_fan").attributes["percentage"] is None
-
-
 @pytest.mark.parametrize(
     ("mode_value", "expected"),
     [
@@ -89,19 +76,6 @@ async def test_preset_mode(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("fan.test_fan").attributes["preset_mode"] == expected
-
-
-async def test_preset_mode_none(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_homee: MagicMock,
-) -> None:
-    """Test preset mode."""
-    mock_homee.nodes = [build_mock_node("fan.json")]
-    mock_homee.nodes[0].attributes.pop(1)  # Remove the mode attribute.
-    await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get("fan.test_fan").attributes["preset_mode"] is None
 
 
 @pytest.mark.parametrize(

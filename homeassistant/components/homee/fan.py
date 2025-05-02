@@ -1,17 +1,12 @@
 """The Homee fan platform."""
 
-from dataclasses import dataclass
 import math
 from typing import Any
 
 from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute, HomeeNode
 
-from homeassistant.components.fan import (
-    FanEntity,
-    FanEntityDescription,
-    FanEntityFeature,
-)
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
@@ -25,14 +20,6 @@ from .const import DOMAIN
 from .entity import HomeeNodeEntity
 
 PARALLEL_UPDATES = 0
-
-
-@dataclass(frozen=True, kw_only=True)
-class HomeeFanEntityDescription(FanEntityDescription):
-    """Describes a Homee fan entity."""
-
-    preset_modes: list[str]
-    speed_range: tuple[int, int]
 
 
 async def async_setup_entry(
@@ -52,14 +39,12 @@ async def async_setup_entry(
 class HomeeFan(HomeeNodeEntity, FanEntity):
     """Representation of a Homee fan entity."""
 
-    entity_description: HomeeFanEntityDescription = HomeeFanEntityDescription(
-        key="fan",
-        translation_key=DOMAIN,
-        preset_modes=["manual", "auto", "summer"],
-        speed_range=(1, 8),
-    )
     _attr_translation_key = DOMAIN
     _attr_name = None
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_preset_modes = ["manual", "auto", "summer"]
+    speed_range = (1, 8)
+    _attr_speed_count = int_states_in_range(speed_range)
 
     def __init__(self, node: HomeeNode, entry: HomeeConfigEntry) -> None:
         """Initialize a Homee fan entity."""
@@ -69,13 +54,6 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
         )
         self._mode_attribute: HomeeAttribute | None = node.get_attribute_by_type(
             AttributeType.VENTILATION_MODE
-        )
-        self._attr_supported_features = (
-            FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
-        )
-        self._attr_preset_modes = self.entity_description.preset_modes
-        self._attr_speed_count = int_states_in_range(
-            self.entity_description.speed_range
         )
 
     @property
@@ -93,53 +71,44 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
         return features
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the entity is on."""
-        if self.percentage is not None:
-            return self.percentage > 0
-
-        return None
+        return self.percentage > 0
 
     @property
-    def percentage(self) -> int | None:
+    def percentage(self) -> int:
         """Return the current speed percentage."""
-        if self._speed_attribute is not None:
-            return ranged_value_to_percentage(
-                self.entity_description.speed_range, self._speed_attribute.current_value
-            )
-
-        return None
+        assert self._speed_attribute is not None
+        return ranged_value_to_percentage(
+            self.speed_range, self._speed_attribute.current_value
+        )
 
     @property
     def preset_mode(self) -> str | None:
         """Return the mode from the float state."""
-        if self._mode_attribute is not None and self.preset_modes is not None:
-            return self.preset_modes[int(self._mode_attribute.current_value)]
-
-        return None
+        assert self._mode_attribute is not None
+        return self._attr_preset_modes[int(self._mode_attribute.current_value)]
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        if self._speed_attribute is not None and self._speed_attribute.editable:
+        assert self._speed_attribute is not None
+        if self._speed_attribute.editable:
             await self.async_set_homee_value(
                 self._speed_attribute,
-                math.ceil(
-                    percentage_to_ranged_value(
-                        self.entity_description.speed_range, percentage
-                    )
-                ),
+                math.ceil(percentage_to_ranged_value(self.speed_range, percentage)),
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if self._mode_attribute is not None and self.preset_modes is not None:
-            await self.async_set_homee_value(
-                self._mode_attribute, self.preset_modes.index(preset_mode)
-            )
+        assert self._mode_attribute is not None
+        await self.async_set_homee_value(
+            self._mode_attribute, self._attr_preset_modes.index(preset_mode)
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        if self._speed_attribute is not None and self._speed_attribute.editable:
+        assert self._speed_attribute is not None
+        if self._speed_attribute.editable:
             await self.async_set_homee_value(self._speed_attribute, 0)
 
     async def async_turn_on(
@@ -155,14 +124,14 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
             await self.async_set_preset_mode("manual")
 
         # If no percentage is given, use the last known value.
-        if self._speed_attribute is not None:
-            if percentage is None:
-                percentage = ranged_value_to_percentage(
-                    self.entity_description.speed_range,
-                    self._speed_attribute.last_value,
-                )
-                # If the last known value is 0, set 100%.
-                if percentage == 0:
-                    percentage = 100
+        assert self._speed_attribute is not None
+        if percentage is None:
+            percentage = ranged_value_to_percentage(
+                self.speed_range,
+                self._speed_attribute.last_value,
+            )
+            # If the last known value is 0, set 100%.
+            if percentage == 0:
+                percentage = 100
 
-            await self.async_set_percentage(percentage)
+        await self.async_set_percentage(percentage)
