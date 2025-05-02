@@ -167,33 +167,25 @@ class SirenGroup(GroupEntity, SirenEntity):
     def async_update_group_state(self) -> None:
         """Query all members and determine the siren group state."""
         states = [
-            state.state
+            state
             for entity_id in self._entity_ids
             if (state := self.hass.states.get(entity_id)) is not None
         ]
 
         valid_state = self.mode(
-            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
+            state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
         )
 
         if not valid_state:
-            # Set as unknown if any / all member is unknown or unavailable
             self._attr_is_on = None
         else:
-            # Set as ON if any / all member is ON
-            self._attr_is_on = self.mode(state == STATE_ON for state in states)
+            self._attr_is_on = self.mode(state.state == STATE_ON for state in states)
 
-        # Set group as unavailable if all members are unavailable or missing
-        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
+        self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
 
         self._attr_supported_features = SirenEntityFeature(0)
-        entities = [
-            state
-            for eid in self._entity_ids
-            if (state := self.hass.states.get(eid)) is not None
-        ]
-
-        for support in find_state_attributes(entities, ATTR_SUPPORTED_FEATURES):
-            self._attr_supported_features |= support
+        for state in states:
+            if (features := state.attributes.get(ATTR_SUPPORTED_FEATURES)) is not None:
+                self._attr_supported_features |= features
 
         self._attr_supported_features &= SUPPORT_GROUP_SIREN
