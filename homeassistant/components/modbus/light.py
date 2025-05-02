@@ -100,7 +100,7 @@ class ModbusLight(BaseSwitch, LightEntity):
         """Turn light on and set brightness if provided."""
         if ATTR_BRIGHTNESS in kwargs:
             await self.async_set_brightness(
-                kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness)
+                kwargs.get(ATTR_BRIGHTNESS)
             )
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
