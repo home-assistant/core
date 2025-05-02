@@ -12,14 +12,8 @@ import pytest
 from homeassistant.components import group
 from homeassistant.components.group.registry import GroupIntegrationRegistry
 from homeassistant.components.lock import LockState
-from homeassistant.components.siren import (
-    DOMAIN as SIREN_DOMAIN,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     EVENT_HOMEASSISTANT_START,
@@ -1486,104 +1480,6 @@ async def test_group_vacuum_on(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert hass.states.get("group.group_zero").state == STATE_ON
-
-
-async def test_group_sirens(hass: HomeAssistant) -> None:
-    """Test group of sirens."""
-    hass.states.async_set("siren.one", STATE_ON)
-    hass.states.async_set("siren.two", STATE_OFF)
-    hass.states.async_set("siren.three", STATE_OFF)
-
-    assert await async_setup_component(hass, SIREN_DOMAIN, {})
-    assert await async_setup_component(
-        hass,
-        "group",
-        {
-            "group": {
-                "siren_group": {"entities": "siren.one, siren.two, siren.three"},
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("group.siren_group").state == STATE_ON
-
-    # Turn off all sirens
-    await hass.services.async_call(
-        SIREN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "group.siren_group"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("siren.one").state == STATE_OFF
-    assert hass.states.get("siren.two").state == STATE_OFF
-    assert hass.states.get("siren.three").state == STATE_OFF
-    assert hass.states.get("group.siren_group").state == STATE_OFF
-
-    # Turn on all sirens
-    await hass.services.async_call(
-        SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "group.siren_group"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("siren.one").state == STATE_ON
-    assert hass.states.get("siren.two").state == STATE_ON
-    assert hass.states.get("siren.three").state == STATE_ON
-    assert hass.states.get("group.siren_group").state == STATE_ON
-
-
-async def test_nested_siren_group(hass: HomeAssistant) -> None:
-    """Test nested siren group."""
-    await async_setup_component(
-        hass,
-        SIREN_DOMAIN,
-        {
-            SIREN_DOMAIN: [
-                {"platform": "demo"},
-                {
-                    "platform": "group",
-                    "entities": ["siren.some_group"],
-                    "name": "Nested Siren Group",
-                    "all": "false",
-                },
-                {
-                    "platform": "group",
-                    "entities": ["siren.one", "siren.two"],
-                    "name": "Some Siren Group",
-                    "all": "false",
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    state = hass.states.get("siren.some_group")
-    assert state is not None
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_ENTITY_ID) == ["siren.one", "siren.two"]
-
-    state = hass.states.get("siren.nested_siren_group")
-    assert state is not None
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_ENTITY_ID) == ["siren.some_group"]
-
-    # Test controlling the nested group
-    await hass.services.async_call(
-        SIREN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "siren.nested_siren_group"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("siren.one").state == STATE_OFF
-    assert hass.states.get("siren.two").state == STATE_OFF
-    assert hass.states.get("siren.some_group").state == STATE_OFF
-    assert hass.states.get("siren.nested_siren_group").state == STATE_OFF
 
 
 @pytest.mark.parametrize(

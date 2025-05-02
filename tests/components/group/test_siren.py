@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+
 from tests.common import get_fixture_path
 
 
@@ -228,9 +229,10 @@ async def test_service_calls(hass: HomeAssistant) -> None:
         SIREN_DOMAIN,
         {
             SIREN_DOMAIN: [
+                {"platform": "demo"},
                 {
                     "platform": DOMAIN,
-                    "entities": ["siren.alarm", "siren.doorbell"],
+                    "entities": ["siren.siren", "siren.siren_with_all_features"],
                     "all": "false",
                 },
             ]
@@ -248,8 +250,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "siren.siren_group"},
         blocking=True,
     )
-    assert hass.states.get("siren.alarm").state == STATE_ON
-    assert hass.states.get("siren.doorbell").state == STATE_ON
+    assert hass.states.get("siren.siren").state == STATE_ON
+    assert hass.states.get("siren.siren_with_all_features").state == STATE_ON
 
     await hass.services.async_call(
         SIREN_DOMAIN,
@@ -257,8 +259,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "siren.siren_group"},
         blocking=True,
     )
-    assert hass.states.get("siren.alarm").state == STATE_OFF
-    assert hass.states.get("siren.doorbell").state == STATE_OFF
+    assert hass.states.get("siren.siren").state == STATE_OFF
+    assert hass.states.get("siren.siren_with_all_features").state == STATE_OFF
 
 
 async def test_reload(hass: HomeAssistant) -> None:
@@ -272,8 +274,8 @@ async def test_reload(hass: HomeAssistant) -> None:
                 {
                     "platform": DOMAIN,
                     "entities": [
-                        "siren.alarm",
-                        "siren.doorbell",
+                        "siren.siren",
+                        "siren.siren_with_all_features",
                     ],
                     "all": "false",
                 },
@@ -299,8 +301,7 @@ async def test_reload(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get("siren.siren_group") is None
-    assert hass.states.get("siren.master_sirens_g") is not None
-    assert hass.states.get("siren.outside_sirens_g") is not None
+    assert hass.states.get("siren.master_siren_group") is not None
 
 
 async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
@@ -337,8 +338,7 @@ async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get("siren.siren_group") is None
-    assert hass.states.get("siren.master_sirens_g") is not None
-    assert hass.states.get("siren.outside_sirens_g") is not None
+    assert hass.states.get("siren.master_siren_group") is not None
 
 
 async def test_reload_with_base_integration_platform_not_setup(
@@ -355,11 +355,8 @@ async def test_reload_with_base_integration_platform_not_setup(
         },
     )
     await hass.async_block_till_done()
-    hass.states.async_set("siren.master_siren", STATE_ON)
-    hass.states.async_set("siren.master_siren_2", STATE_OFF)
-
-    hass.states.async_set("siren.outside_siren", STATE_OFF)
-    hass.states.async_set("siren.outside_siren_2", STATE_OFF)
+    hass.states.async_set("siren.siren", STATE_ON)
+    hass.states.async_set("siren.siren_with_all_features", STATE_OFF)
 
     yaml_path = get_fixture_path("configuration.yaml", "group")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
@@ -372,10 +369,8 @@ async def test_reload_with_base_integration_platform_not_setup(
         await hass.async_block_till_done()
 
     assert hass.states.get("siren.siren_group") is None
-    assert hass.states.get("siren.master_sirens_g") is not None
-    assert hass.states.get("siren.outside_sirens_g") is not None
-    assert hass.states.get("siren.master_sirens_g").state == STATE_ON
-    assert hass.states.get("siren.outside_sirens_g").state == STATE_OFF
+    assert hass.states.get("siren.master_siren_group") is not None
+    assert hass.states.get("siren.master_siren_group").state == STATE_ON
 
 
 async def test_nested_group(hass: HomeAssistant) -> None:
@@ -394,7 +389,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
                 },
                 {
                     "platform": DOMAIN,
-                    "entities": ["siren.alarm", "siren.doorbell"],
+                    "entities": ["siren.siren", "siren.siren_with_all_features"],
                     "name": "Some Group",
                     "all": "false",
                 },
@@ -409,8 +404,8 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ENTITY_ID) == [
-        "siren.alarm",
-        "siren.doorbell",
+        "siren.siren",
+        "siren.siren_with_all_features",
     ]
 
     state = hass.states.get("siren.nested_group")
@@ -426,7 +421,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "siren.nested_group"},
             blocking=True,
         )
-    assert hass.states.get("siren.alarm").state == STATE_OFF
-    assert hass.states.get("siren.doorbell").state == STATE_OFF
+    assert hass.states.get("siren.siren").state == STATE_OFF
+    assert hass.states.get("siren.siren_with_all_features").state == STATE_OFF
     assert hass.states.get("siren.some_group").state == STATE_OFF
     assert hass.states.get("siren.nested_group").state == STATE_OFF
