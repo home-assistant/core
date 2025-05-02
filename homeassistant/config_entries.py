@@ -2913,6 +2913,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         reload_on_update: bool = True,
         *,
         error: str = "already_configured",
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Abort if the unique ID is already configured.
 
@@ -2953,7 +2954,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             return
         if should_reload:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
-        raise data_entry_flow.AbortFlow(error)
+        raise data_entry_flow.AbortFlow(error, description_placeholders)
 
     async def async_set_unique_id(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True

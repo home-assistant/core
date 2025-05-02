@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[binary_sensor.my_printer-entry]
+# name: test_all_entities[binary_sensor.sec84251907c415_connectivity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,8 +12,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.my_printer',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.sec84251907c415_connectivity',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'My Printer',
+    'original_name': 'Connectivity',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -33,21 +33,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.my_printer-state]
+# name: test_all_entities[binary_sensor.sec84251907c415_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'My Printer',
+      'friendly_name': 'SEC84251907C415 Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_printer',
+    'entity_id': 'binary_sensor.sec84251907c415_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[binary_sensor.my_printer_2-entry]
+# name: test_all_entities[binary_sensor.sec84251907c415_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,8 +60,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.my_printer_2',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.sec84251907c415_problem',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -72,7 +72,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'My Printer',
+    'original_name': 'Problem',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -81,14 +81,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.my_printer_2-state]
+# name: test_all_entities[binary_sensor.sec84251907c415_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'My Printer',
+      'friendly_name': 'SEC84251907C415 Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.my_printer_2',
+    'entity_id': 'binary_sensor.sec84251907c415_problem',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

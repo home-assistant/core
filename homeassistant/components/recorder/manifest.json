@@ -8,7 +8,7 @@
   "quality_scale": "internal",
   "requirements": [
     "SQLAlchemy==2.0.40",
-    "fnv-hash-fast==1.4.0",
+    "fnv-hash-fast==1.5.0",
     "psutil-home-assistant==0.0.1"
   ]
 }

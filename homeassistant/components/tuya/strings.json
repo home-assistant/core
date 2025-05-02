@@ -288,9 +288,9 @@
       "motion_sensitivity": {
         "name": "Motion detection sensitivity",
         "state": {
-          "0": "Low sensitivity",
-          "1": "Medium sensitivity",
-          "2": "High sensitivity"
+          "0": "[%key:common::state::low%]",
+          "1": "[%key:common::state::medium%]",
+          "2": "[%key:common::state::high%]"
         }
       },
       "record_mode": {
@@ -404,7 +404,7 @@
       "humidifier_spray_mode": {
         "name": "Spray mode",
         "state": {
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "health": "Health",
           "sleep": "Sleep",
           "humidity": "Humidity",
