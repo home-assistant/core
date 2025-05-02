@@ -34,8 +34,8 @@ from .lock import async_create_preview_lock
 from .media_player import MediaPlayerGroup, async_create_preview_media_player
 from .notify import async_create_preview_notify
 from .sensor import async_create_preview_sensor
-from .switch import async_create_preview_switch
 from .siren import async_create_preview_siren
+from .switch import async_create_preview_switch
 
 _STATISTIC_MEASURES = [
     "last",
