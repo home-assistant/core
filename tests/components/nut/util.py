@@ -43,7 +43,7 @@ async def async_init_integration(
     hass: HomeAssistant,
     ups_fixture: str | None = None,
     host: str = "mock",
-    port: str = "mock",
+    port: int = 1234,
     username: str = "mock",
     password: str = "mock",
     alias: str | None = None,
@@ -104,7 +104,6 @@ async def async_init_integration(
 def _test_sensor_and_attributes(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    model: str,
     unique_id: str,
     device_id: str,
     state_value: str,

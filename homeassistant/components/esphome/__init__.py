@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aioesphomeapi import APIClient
 
-from homeassistant.components import ffmpeg, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.const import (
     CONF_HOST,
@@ -17,13 +17,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DATA_FFMPEG_PROXY, DOMAIN
-from .dashboard import async_setup as async_setup_dashboard
+from . import dashboard, ffmpeg_proxy
+from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
 from .domain_data import DomainData
-
-# Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
-from .ffmpeg_proxy import FFmpegProxyData, FFmpegProxyView
 from .manager import DEVICE_CONFLICT_ISSUE_FORMAT, ESPHomeManager, cleanup_instance
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -33,12 +30,8 @@ CLIENT_INFO = f"Home Assistant {ha_version}"
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the esphome component."""
-    proxy_data = hass.data[DATA_FFMPEG_PROXY] = FFmpegProxyData()
-
-    await async_setup_dashboard(hass)
-    hass.http.register_view(
-        FFmpegProxyView(ffmpeg.get_ffmpeg_manager(hass), proxy_data)
-    )
+    ffmpeg_proxy.async_setup(hass)
+    await dashboard.async_setup(hass)
     return True
 
 
@@ -80,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
     """Unload an esphome config entry."""
-    entry_data = await cleanup_instance(hass, entry)
+    entry_data = await cleanup_instance(entry)
     return await hass.config_entries.async_unload_platforms(
         entry, entry_data.loaded_platforms
     )

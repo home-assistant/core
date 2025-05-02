@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pylitterbot import Account, FeederRobot, LitterRobot3, LitterRobot4, Pet, Robot
 from pylitterbot.exceptions import InvalidCommandException
+from pylitterbot.robot.litterrobot4 import HopperStatus
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -82,6 +83,15 @@ def mock_account() -> MagicMock:
 def mock_account_with_litterrobot_4() -> MagicMock:
     """Mock account with Litter-Robot 4."""
     return create_mock_account(v4=True)
+
+
+@pytest.fixture
+def mock_account_with_litterhopper() -> MagicMock:
+    """Mock account with LitterHopper attached to Litter-Robot 4."""
+    return create_mock_account(
+        robot_data={"hopperStatus": HopperStatus.ENABLED, "isHopperRemoved": False},
+        v4=True,
+    )
 
 
 @pytest.fixture
