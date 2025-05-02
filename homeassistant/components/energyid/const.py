@@ -1,19 +1,19 @@
-"""Constants for the EnergyID integration.
-
-Defines configuration keys, defaults, and valid metric kinds.
-Used across the integration for consistent configuration handling.
-"""
+"""Constants for the EnergyID integration."""
 
 from typing import Final
 
-DOMAIN: Final[str] = "energyid"
+DOMAIN: Final = "energyid"
 
-CONF_WEBHOOK_URL: Final["str"] = "webhook_url"
-CONF_ENTITY_ID: Final["str"] = "entity_id"
-CONF_METRIC: Final["str"] = "metric"
-CONF_METRIC_KIND: Final["str"] = "metric_kind"
-CONF_UNIT: Final["str"] = "unit"
-DEFAULT_DATA_INTERVAL: Final["str"] = "P1D"
-DEFAULT_UPLOAD_INTERVAL: Final[int] = 300
+CONF_PROVISIONING_KEY: Final = "provisioning_key"
+CONF_PROVISIONING_SECRET: Final = "provisioning_secret"
+CONF_DEVICE_ID: Final = "device_id"
+CONF_DEVICE_NAME: Final = "device_name"
 
-ENERGYID_METRIC_KINDS = ["cumulative", "total", "delta", "gauge"]
+CONF_HA_ENTITY_ID: Final = "ha_entity_id"
+CONF_ENERGYID_KEY: Final = "energyid_key"
+
+DATA_CLIENT: Final = "client"
+DATA_LISTENERS: Final = "listeners"
+DATA_MAPPINGS: Final = "mappings"
+
+DEFAULT_UPLOAD_INTERVAL_SECONDS: Final = 60
