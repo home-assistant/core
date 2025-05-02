@@ -10,6 +10,7 @@ from homeassistant.components.playstation_network.const import CONF_NPSSO, DOMAI
 from tests.common import MockConfigEntry
 
 NPSSO_TOKEN: str = "npsso-token"
+NPSSO_TOKEN_INVALID_JSON: str = "{'npsso': 'npsso-token'"
 PSN_ID: str = "my-psn-id"
 
 
@@ -65,7 +66,6 @@ def mock_psnawpapi(mock_user: MagicMock) -> Generator[MagicMock]:
             new=mock_client,
         ),
     ):
-        mock_client.parse_npsso_token.side_effect = lambda x: x
         client = mock_client.return_value
 
         client.get_user.return_value = mock_user

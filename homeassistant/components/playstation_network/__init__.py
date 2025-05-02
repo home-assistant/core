@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from psnawp_api.psn import PlaystationNetwork
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_NPSSO
 from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
+from .helpers import PlaystationNetwork
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 

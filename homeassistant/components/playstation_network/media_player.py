@@ -120,7 +120,7 @@ class PsnMediaPlayerEntity(
     def media_title(self) -> str | None:
         """Media title getter."""
         if (
-            self.coordinator.data.title_metadata["npTitleId"]
+            self.coordinator.data.title_metadata.get("npTitleId", "")
             and self.key == self.coordinator.data.platform["platform"]
         ):
             return self.coordinator.data.title_metadata["titleName"]
@@ -129,19 +129,19 @@ class PsnMediaPlayerEntity(
     @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return self.coordinator.data.title_metadata["npTitleId"]
+        return self.coordinator.data.title_metadata.get("npTitleId", "")
 
     @property
     def media_image_url(self) -> str | None:
         """Media image url getter."""
         if (
-            self.coordinator.data.title_metadata["npTitleId"]
+            self.coordinator.data.title_metadata.get("npTitleId", "")
             and self.key == self.coordinator.data.platform["platform"]
         ):
             title = self.coordinator.data.title_metadata
             if title["format"] == PlatformType.PS5:
                 return title["conceptIconUrl"]
 
-            if str(title["format"]).upper() == PlatformType.PS4:
+            if title["format"] == PlatformType.PS4:
                 return title["npTitleIconUrl"]
         return None
