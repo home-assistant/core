@@ -619,9 +619,21 @@ def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServ
     if match := regex.search(r"ssdp_st='([^']+)'", data):
         ssdp_st = match.group(1)
 
-    if match := regex.search(r"upnp=(.*), ssdp_location=", data):
-        upnp_string = match.group(1).replace("'", '"')
-        upnp = json_loads(upnp_string)
+    if (start_index := data.find("upnp={")) != -1:
+        # upnp data many contain nested objects, so we take the string until
+        # the end and bail out after the correct number of brackets
+        nested = 0
+        upnp_string = ""
+        for char in data[start_index + 5 :]:
+            upnp_string += char
+            if char == "{":
+                nested += 1
+            elif char == "}":
+                nested -= 1
+                if nested == 0:
+                    break
+
+        upnp = json_loads(upnp_string.replace("'", '"'))
 
     if match := regex.search(r"ssdp_location='([^']+)'", data):
         ssdp_location = match.group(1)
