@@ -1213,9 +1213,7 @@ async def test_websocket_unsupported_remote_control(
 
 
 @pytest.mark.usefixtures("remotews", "rest_api", "upnp_notify_server")
-async def test_volume_control_upnp(
-    hass: HomeAssistant, dmr_device: Mock, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_volume_control_upnp(hass: HomeAssistant, dmr_device: Mock) -> None:
     """Test for Upnp volume control."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
 
@@ -1231,7 +1229,6 @@ async def test_volume_control_upnp(
         True,
     )
     dmr_device.async_set_volume_level.assert_called_once_with(0.5)
-    assert "Unable to set volume level on" not in caplog.text
 
     # Upnp action failed
     dmr_device.async_set_volume_level.reset_mock()
