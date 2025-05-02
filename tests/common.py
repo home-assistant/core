@@ -32,6 +32,7 @@ from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F4
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
 import pytest
+import regex
 from syrupy import SnapshotAssertion
 import voluptuous as vol
 
@@ -98,6 +99,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, ulid as ulid_util, uuid as uuid_util
 from homeassistant.util.async_ import (
@@ -589,6 +591,124 @@ def load_json_object_fixture(
 ) -> JsonObjectType:
     """Load a JSON object from a fixture."""
     return json_loads_object(load_fixture(filename, integration))
+
+
+def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServiceInfo:
+    """Load a SsdpServiceInfo object from a fixture."""
+    data = load_fixture(filename, integration)
+
+    if not data.startswith("SsdpServiceInfo("):
+        raise ValueError(f"Invalid fixture data for {filename}: {data[:20]}...")
+    data = data[len("SsdpServiceInfo(") : -1]
+
+    ssdp_usn = None
+    ssdp_st = None
+    upnp = None
+    ssdp_location = None
+    ssdp_nt = None
+    ssdp_udn = None
+    ssdp_ext = None
+    ssdp_server = None
+    ssdp_headers = None
+    ssdp_all_locations = None
+    x_homeassistant_matching_domains = None
+
+    if match := regex.search(r"ssdp_usn='([^']+)'", data):
+        ssdp_usn = match.group(1)
+
+    if match := regex.search(r"ssdp_st='([^']+)'", data):
+        ssdp_st = match.group(1)
+
+    if match := regex.search(r"upnp=(.*), ssdp_location=", data):
+        upnp_string = match.group(1).replace("'", '"')
+        upnp = json_loads(upnp_string)
+
+    if match := regex.search(r"ssdp_location='([^']+)'", data):
+        ssdp_location = match.group(1)
+
+    if match := regex.search(r"ssdp_nt='([^']+)'", data):
+        ssdp_nt = match.group(1)
+
+    if match := regex.search(r"ssdp_udn='([^']+)'", data):
+        ssdp_udn = match.group(1)
+
+    if match := regex.search(r"ssdp_ext='([^']+)'", data):
+        ssdp_ext = match.group(1)
+
+    if match := regex.search(r"ssdp_server='([^']+)'", data):
+        ssdp_server = match.group(1)
+
+    if match := regex.search(r"ssdp_headers=(\{[^\{\}]+\})", data):
+        ssdp_headers_string = match.group(1).replace("'", '"')
+
+        _timestamp = None
+        _remote_addr = None
+        _local_addr = None
+        _source = None
+
+        if match := regex.search(
+            r'"_timestamp": datetime.datetime\((\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+)\), ',
+            ssdp_headers_string,
+        ):
+            _timestamp = datetime(
+                int(match.group(1)),
+                int(match.group(2)),
+                int(match.group(3)),
+                int(match.group(4)),
+                int(match.group(5)),
+                int(match.group(6)),
+                int(match.group(7)),
+            )
+            ssdp_headers_string = ssdp_headers_string.replace(match.group(0), "")
+
+        if match := regex.search(
+            r', "_remote_addr": \(("[^"]+"), (\d+)\)', ssdp_headers_string
+        ):
+            _remote_addr = match.group(1)
+            ssdp_headers_string = ssdp_headers_string.replace(match.group(0), "")
+
+        if match := regex.search(
+            r', "_local_addr": \(("[^"]+"), (\d+)\)', ssdp_headers_string
+        ):
+            _local_addr = match.group(1)
+            ssdp_headers_string = ssdp_headers_string.replace(match.group(0), "")
+
+        if match := regex.search(
+            r', "_source": <SsdpSource.(\w+): "(\w+)">', ssdp_headers_string
+        ):
+            # pylint: disable-next=import-outside-toplevel
+            from async_upnp_client.const import SsdpSource
+
+            _source = SsdpSource(match.group(2))
+            ssdp_headers_string = ssdp_headers_string.replace(match.group(0), "")
+
+        ssdp_headers = json_loads(ssdp_headers_string)
+        ssdp_headers["_timestamp"] = _timestamp
+        ssdp_headers["_remote_addr"] = _remote_addr
+        ssdp_headers["_local_addr"] = _local_addr
+        ssdp_headers["_source"] = _source
+
+    if match := regex.search(r", ssdp_all_locations=\{'([^\{\}]+)'\}", data):
+        ssdp_all_locations = set(match.group(1).split(","))
+
+    if match := regex.search(
+        r", x_homeassistant_matching_domains=\{'([^\{\}]+)'\}", data
+    ):
+        x_homeassistant_matching_domains = set(match.group(1).split(","))
+
+    return SsdpServiceInfo(
+        ssdp_usn,
+        ssdp_st,
+        upnp,
+        ssdp_location,
+        ssdp_nt,
+        ssdp_udn,
+        ssdp_ext,
+        ssdp_server,
+        ssdp_headers,
+        ssdp_all_locations,
+        x_homeassistant_matching_domains,
+    )
 
 
 def json_round_trip(obj: Any) -> Any:
