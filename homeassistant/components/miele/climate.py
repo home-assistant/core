@@ -197,12 +197,9 @@ class MieleClimate(MieleEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        not_none_val = self.entity_description.target_fn(self.device) is not None
-        return (
-            cast(float | None, self.entity_description.target_fn(self.device))
-            if not_none_val
-            else None
-        )
+
+        ret_val = cast(float | None, self.entity_description.target_fn(self.device))
+        return ret_val if ret_val is not None else None
 
     @property
     def max_temp(self) -> float:
