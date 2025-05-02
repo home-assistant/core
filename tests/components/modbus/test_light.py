@@ -354,7 +354,7 @@ async def test_light_service_turn(
         }
     ],
 )
-async def test_color_temp_light(
+async def test_color_temp_brightness_light(
     hass: HomeAssistant, mock_modbus_ha, modbus_light_entity
 ) -> None:
     """Test Modbus Light color temperature amd brightness."""
