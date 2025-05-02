@@ -328,7 +328,7 @@ STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
 }
 
 
-class STATE_PROGRAM_TYPE(MieleEnum):
+class StateProgramType(MieleEnum):
     """Defines program types."""
 
     normal_operation_mode = 0

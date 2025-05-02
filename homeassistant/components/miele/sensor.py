@@ -30,9 +30,9 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     STATE_PROGRAM_ID,
     STATE_PROGRAM_PHASE,
-    STATE_PROGRAM_TYPE,
     STATE_STATUS_TAGS,
     MieleAppliance,
+    StateProgramType,
     StateStatus,
 )
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
@@ -181,10 +181,10 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_program_type",
             translation_key="program_type",
-            value_fn=lambda value: STATE_PROGRAM_TYPE(value.state_program_type).name,
+            value_fn=lambda value: StateProgramType(value.state_program_type).name,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_class=SensorDeviceClass.ENUM,
-            options=sorted(set(STATE_PROGRAM_TYPE.keys())),
+            options=sorted(set(StateProgramType.keys())),
         ),
     ),
     MieleSensorDefinition(
