@@ -32,8 +32,7 @@ from .util import async_find_existing_service_info, bluetooth_callback_matcher
 type YALEXSBLEConfigEntry = ConfigEntry[YaleXSBLEData]
 
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
-
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR, Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) -> bool:
     """Set up Yale Access Bluetooth from a config entry."""

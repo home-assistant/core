@@ -44,6 +44,8 @@ class YaleXSBLELock(YALEXSBLEEntity, LockEntity):
             self._attr_is_locking = True
         elif lock_state is LockStatus.UNLOCKING:
             self._attr_is_unlocking = True
+        elif lock_state is LockStatus.SECUREMODE:
+            self._attr_is_locked = True
         elif lock_state in (
             LockStatus.UNKNOWN_01,
             LockStatus.UNKNOWN_06,
