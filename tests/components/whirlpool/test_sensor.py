@@ -1,7 +1,6 @@
 """Test the Whirlpool Sensor domain."""
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -14,23 +13,12 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import as_timestamp, utc_from_timestamp, utcnow
 
-from . import init_integration, snapshot_whirlpool_entities
+from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callback
 
 from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
 
 WASHER_ENTITY_ID_BASE = "sensor.washer"
 DRYER_ENTITY_ID_BASE = "sensor.dryer"
-
-
-async def trigger_attr_callback(
-    hass: HomeAssistant, mock_api_instance: MagicMock
-) -> None:
-    """Simulate an update trigger from the API."""
-
-    for call in mock_api_instance.register_attr_callback.call_args_list:
-        update_ha_state_cb = call[0][0]
-        update_ha_state_cb()
-    await hass.async_block_till_done()
 
 
 # Freeze time for WasherDryerTimeSensor
@@ -299,3 +287,44 @@ async def test_washer_dryer_door_open_state(
     await trigger_attr_callback(hass, mock_instance)
     state = hass.states.get(entity_id)
     assert state.state == "running_maincycle"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "mock_fixture", "mock_method_name", "values"),
+    [
+        (
+            "sensor.washer_detergent_level",
+            "mock_washer_api",
+            "get_dispense_1_level",
+            [
+                (0, STATE_UNKNOWN),
+                (1, "empty"),
+                (2, "25"),
+                (3, "50"),
+                (4, "100"),
+                (5, "active"),
+            ],
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_simple_enum_sensors(
+    hass: HomeAssistant,
+    entity_id: str,
+    mock_fixture: str,
+    mock_method_name: str,
+    values: list[tuple[int, str]],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test simple enum sensors where state maps directly from a single API value."""
+    await init_integration(hass)
+
+    mock_instance = request.getfixturevalue(mock_fixture)
+    mock_method = getattr(mock_instance, mock_method_name)
+    for raw_value, expected_state in values:
+        mock_method.return_value = raw_value
+
+        await trigger_attr_callback(hass, mock_instance)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected_state
