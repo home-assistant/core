@@ -35,6 +35,7 @@ from .media_player import MediaPlayerGroup, async_create_preview_media_player
 from .notify import async_create_preview_notify
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
+from .siren import async_create_preview_siren
 
 _STATISTIC_MEASURES = [
     "last",
@@ -157,6 +158,7 @@ GROUP_TYPES = [
     "media_player",
     "notify",
     "sensor",
+    "siren",
     "switch",
 ]
 
@@ -234,6 +236,11 @@ CONFIG_FLOW = {
         preview="group",
         validate_user_input=set_group_type("sensor"),
     ),
+    "siren": SchemaFlowFormStep(
+        basic_group_config_schema("siren"),
+        preview="group",
+        validate_user_input=set_group_type("siren"),
+    ),
     "switch": SchemaFlowFormStep(
         basic_group_config_schema("switch"),
         preview="group",
@@ -306,6 +313,7 @@ CREATE_PREVIEW_ENTITY: dict[
     "media_player": async_create_preview_media_player,
     "notify": async_create_preview_notify,
     "sensor": async_create_preview_sensor,
+    "siren": async_create_preview_siren,
     "switch": async_create_preview_switch,
 }
 
