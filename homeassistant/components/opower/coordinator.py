@@ -349,7 +349,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 1,
                 target_id,
                 True,
-                {},
+                set(),
             )
             if not last_target_stat:
                 need_migration_source_ids.add(source_id)
