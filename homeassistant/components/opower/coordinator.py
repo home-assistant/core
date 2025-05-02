@@ -421,6 +421,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         for stat_id, stats in processed_stats.items():
             _LOGGER.debug("Applying %d migrated stats for %s", len(stats), stat_id)
             async_add_external_statistics(self.hass, metadata_map[stat_id], stats)
+        # Wait for the migration to finish before continuing
+        # to avoid appending new values to the old statistics.
+        await get_instance(self.hass).async_block_till_done()
 
         ir.async_create_issue(
             self.hass,
