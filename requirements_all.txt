@@ -286,7 +286,7 @@ aiokafka==0.10.0
 aiokef==0.2.16
 
 # homeassistant.components.rehlko
-aiokem==0.5.6
+aiokem==0.5.9
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
@@ -1759,7 +1759,7 @@ py-madvr2==1.6.32
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==2.0.5
+py-nextbusnext==2.1.2
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -2897,7 +2897,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.5
+teslemetry-stream==0.7.7
 
 # homeassistant.components.tessie
 tessie-api==0.1.1

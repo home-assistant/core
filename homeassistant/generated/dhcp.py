@@ -312,6 +312,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "000DB9*",
     },
     {
+        "domain": "knocki",
+        "hostname": "knc*",
+    },
+    {
         "domain": "lamarzocco",
         "registered_devices": True,
     },
