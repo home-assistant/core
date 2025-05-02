@@ -696,9 +696,12 @@ async def get_rpc_scripts_event_types(
 def get_rpc_device_info(
     device: RpcDevice,
     mac: str,
-    key: str,
+    key: str | None = None,
 ) -> DeviceInfo:
     """Return device info for RPC device."""
+    if key is None:
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
     key_parts = key.split(":")
     component = key_parts[0]
     idx = key_parts[1] if len(key_parts) > 1 else None
