@@ -692,11 +692,11 @@ def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServ
 
         kwargs["ssdp_headers"] = ssdp_headers
 
-    if match := regex.search(r", ssdp_all_locations=\{'([^\{\}]+)'\}", data):
+    if match := regex.search(r"ssdp_all_locations=\{'([^\{\}]+)'\}", data):
         kwargs["ssdp_all_locations"] = set(match.group(1).split(","))
 
     if match := regex.search(
-        r", x_homeassistant_matching_domains=\{'([^\{\}]+)'\}", data
+        r"x_homeassistant_matching_domains=\{'([^\{\}]+)'\}", data
     ):
         kwargs["x_homeassistant_matching_domains"] = set(match.group(1).split(","))
 
