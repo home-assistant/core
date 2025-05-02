@@ -111,16 +111,17 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         """Connect to the websocket."""
 
         _LOGGER.debug("Init WebSocket in background task")
-        self.websocket_terminated = False
 
+        self.websocket_terminated = False
         self.async_update_listeners()
+
         await self.device.connect_dashboard_websocket(
             update_callback=lambda _: self.async_set_updated_data(None),
             connect_callback=self.async_update_listeners,
             disconnect_callback=self.async_update_listeners,
         )
-        self.websocket_terminated = True
 
+        self.websocket_terminated = True
         self.async_update_listeners()
 
 
