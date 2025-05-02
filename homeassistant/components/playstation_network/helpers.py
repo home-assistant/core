@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from psnawp_api import PSNAWP
@@ -13,13 +13,13 @@ from psnawp_api.models.user import User
 class PlaystationNetworkData:
     """Dataclass representing data retrieved from the Playstation Network api."""
 
-    presence: dict[str, Any]
-    username: str
-    account_id: str
-    available: bool
-    title_metadata: dict[str, Any]
-    platform: dict[str, Any]
-    registered_platforms: list[str]
+    presence: dict[str, Any] = field(default_factory=dict)
+    username: str = ""
+    account_id: str = ""
+    available: bool = False
+    title_metadata: dict[str, Any] = field(default_factory=dict)
+    platform: dict[str, Any] = field(default_factory=dict)
+    registered_platforms: set[str] = field(default_factory=set)
 
 
 class PlaystationNetwork:
@@ -30,7 +30,6 @@ class PlaystationNetwork:
         self.psn = PSNAWP(npsso)
         self.client = self.psn.me()
         self.user: User | None = None
-        self.data: PlaystationNetworkData | None = None
 
     def get_user(self) -> User:
         """Get the user object from the PlayStation Network."""
@@ -39,20 +38,14 @@ class PlaystationNetwork:
 
     def get_data(self) -> PlaystationNetworkData:
         """Get title data from the PlayStation Network."""
-        data: PlaystationNetworkData = PlaystationNetworkData(
-            {}, "", "", False, {}, {}, []
-        )
+        data = PlaystationNetworkData()
 
         if not self.user:
             self.user = self.get_user()
 
-        devices = self.client.get_account_devices()
-        for device in devices:
-            if (
-                device.get("deviceType") in ["PS5", "PS4"]
-                and device.get("deviceType") not in data.registered_platforms
-            ):
-                data.registered_platforms.append(device.get("deviceType", ""))
+        data.registered_platforms = {
+            device["deviceType"] for device in self.client.get_account_devices()
+        } & {"PS4", "PS5"}
 
         data.username = self.user.online_id
         data.account_id = self.user.account_id
@@ -74,5 +67,4 @@ class PlaystationNetwork:
             data.title_metadata = game_title_info_list[0]
             data.title_metadata["format"] = data.title_metadata["format"].upper()
 
-        self.data = data
-        return self.data
+        return data
