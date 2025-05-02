@@ -27,6 +27,12 @@ import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.light import (
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
+    VALID_COLOR_MODES,
+    valid_supported_color_modes,
+)
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_UNITS,
@@ -50,18 +56,23 @@ from homeassistant.const import (
     ATTR_MODEL_ID,
     ATTR_NAME,
     ATTR_SW_VERSION,
+    CONF_BRIGHTNESS,
     CONF_CLIENT_ID,
     CONF_DEVICE,
     CONF_DEVICE_CLASS,
     CONF_DISCOVERY,
+    CONF_EFFECT,
     CONF_HOST,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PASSWORD,
     CONF_PAYLOAD,
+    CONF_PAYLOAD_OFF,
+    CONF_PAYLOAD_ON,
     CONF_PLATFORM,
     CONF_PORT,
     CONF_PROTOCOL,
+    CONF_STATE_TEMPLATE,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -102,37 +113,97 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_AVAILABILITY_TOPIC,
     CONF_BIRTH_MESSAGE,
+    CONF_BLUE_TEMPLATE,
+    CONF_BRIGHTNESS_COMMAND_TEMPLATE,
+    CONF_BRIGHTNESS_COMMAND_TOPIC,
+    CONF_BRIGHTNESS_SCALE,
+    CONF_BRIGHTNESS_STATE_TOPIC,
+    CONF_BRIGHTNESS_TEMPLATE,
+    CONF_BRIGHTNESS_VALUE_TEMPLATE,
     CONF_BROKER,
     CONF_CERTIFICATE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
+    CONF_COLOR_MODE_STATE_TOPIC,
+    CONF_COLOR_MODE_VALUE_TEMPLATE,
+    CONF_COLOR_TEMP_COMMAND_TEMPLATE,
+    CONF_COLOR_TEMP_COMMAND_TOPIC,
+    CONF_COLOR_TEMP_KELVIN,
+    CONF_COLOR_TEMP_STATE_TOPIC,
+    CONF_COLOR_TEMP_TEMPLATE,
+    CONF_COLOR_TEMP_VALUE_TEMPLATE,
+    CONF_COMMAND_OFF_TEMPLATE,
+    CONF_COMMAND_ON_TEMPLATE,
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_DISCOVERY_PREFIX,
+    CONF_EFFECT_COMMAND_TEMPLATE,
+    CONF_EFFECT_COMMAND_TOPIC,
+    CONF_EFFECT_LIST,
+    CONF_EFFECT_STATE_TOPIC,
+    CONF_EFFECT_TEMPLATE,
+    CONF_EFFECT_VALUE_TEMPLATE,
     CONF_ENTITY_PICTURE,
     CONF_EXPIRE_AFTER,
+    CONF_FLASH,
+    CONF_FLASH_TIME_LONG,
+    CONF_FLASH_TIME_SHORT,
+    CONF_GREEN_TEMPLATE,
+    CONF_HS_COMMAND_TEMPLATE,
+    CONF_HS_COMMAND_TOPIC,
+    CONF_HS_STATE_TOPIC,
+    CONF_HS_VALUE_TEMPLATE,
     CONF_KEEPALIVE,
     CONF_LAST_RESET_VALUE_TEMPLATE,
+    CONF_MAX_KELVIN,
+    CONF_MIN_KELVIN,
+    CONF_ON_COMMAND_TYPE,
     CONF_OPTIONS,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
+    CONF_RED_TEMPLATE,
     CONF_RETAIN,
+    CONF_RGB_COMMAND_TEMPLATE,
+    CONF_RGB_COMMAND_TOPIC,
+    CONF_RGB_STATE_TOPIC,
+    CONF_RGB_VALUE_TEMPLATE,
+    CONF_RGBW_COMMAND_TEMPLATE,
+    CONF_RGBW_COMMAND_TOPIC,
+    CONF_RGBW_STATE_TOPIC,
+    CONF_RGBW_VALUE_TEMPLATE,
+    CONF_RGBWW_COMMAND_TEMPLATE,
+    CONF_RGBWW_COMMAND_TOPIC,
+    CONF_RGBWW_STATE_TOPIC,
+    CONF_RGBWW_VALUE_TEMPLATE,
+    CONF_SCHEMA,
     CONF_STATE_TOPIC,
+    CONF_STATE_VALUE_TEMPLATE,
     CONF_SUGGESTED_DISPLAY_PRECISION,
+    CONF_SUPPORTED_COLOR_MODES,
     CONF_TLS_INSECURE,
+    CONF_TRANSITION,
     CONF_TRANSPORT,
+    CONF_WHITE_COMMAND_TOPIC,
+    CONF_WHITE_SCALE,
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
     CONF_WS_PATH,
+    CONF_XY_COMMAND_TEMPLATE,
+    CONF_XY_COMMAND_TOPIC,
+    CONF_XY_STATE_TOPIC,
+    CONF_XY_VALUE_TEMPLATE,
     CONFIG_ENTRY_MINOR_VERSION,
     CONFIG_ENTRY_VERSION,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_KEEPALIVE,
+    DEFAULT_ON_COMMAND_TYPE,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
+    DEFAULT_PAYLOAD_OFF,
+    DEFAULT_PAYLOAD_ON,
     DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
@@ -144,6 +215,7 @@ from .const import (
     SUPPORTED_PROTOCOLS,
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
+    VALUES_ON_COMMAND_TYPE,
     Platform,
 )
 from .models import MqttAvailabilityData, MqttDeviceData, MqttSubentryData
@@ -233,7 +305,7 @@ KEY_UPLOAD_SELECTOR = FileSelector(
 )
 
 # Subentry selectors
-SUBENTRY_PLATFORMS = [Platform.NOTIFY, Platform.SENSOR, Platform.SWITCH]
+SUBENTRY_PLATFORMS = [Platform.LIGHT, Platform.NOTIFY, Platform.SENSOR, Platform.SWITCH]
 SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[platform.value for platform in SUBENTRY_PLATFORMS],
@@ -295,6 +367,54 @@ SWITCH_DEVICE_CLASS_SELECTOR = SelectSelector(
     )
 )
 
+# Light specific selectors
+LIGHT_SCHEMA_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=["basic", "json", "template"],
+        translation_key="light_schema",
+    )
+)
+KELVIN_SELECTOR = NumberSelector(
+    NumberSelectorConfig(
+        mode=NumberSelectorMode.BOX,
+        min=1000,
+        max=10000,
+        step="any",
+        unit_of_measurement="K",
+    )
+)
+SCALE_SELECTOR = NumberSelector(
+    NumberSelectorConfig(
+        mode=NumberSelectorMode.BOX,
+        min=1,
+        max=255,
+        step=1,
+    )
+)
+FLASH_TIME_SELECTOR = NumberSelector(
+    NumberSelectorConfig(
+        mode=NumberSelectorMode.BOX,
+        min=1,
+    )
+)
+ON_COMMAND_TYPE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=VALUES_ON_COMMAND_TYPE,
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_ON_COMMAND_TYPE,
+        sort=True,
+    )
+)
+SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[platform.value for platform in VALID_COLOR_MODES],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_SUPPORTED_COLOR_MODES,
+        multiple=True,
+        sort=True,
+    )
+)
+
 
 @callback
 def validate_sensor_platform_config(
@@ -345,7 +465,8 @@ class PlatformField:
     required: bool
     validator: Callable[..., Any]
     error: str | None = None
-    default: str | int | vol.Undefined = vol.UNDEFINED
+    default: str | int | bool | vol.Undefined = vol.UNDEFINED
+    is_schema_default: bool = False
     exclude_from_reconfig: bool = False
     conditions: tuple[dict[str, Any], ...] | None = None
     custom_filtering: bool = False
@@ -368,6 +489,18 @@ def unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
             custom_value=True,
         )
     )
+
+
+@callback
+def validate_light_platform_config(user_data: dict[str, Any]) -> dict[str, str]:
+    """Validate MQTT light configuration."""
+    errors: dict[str, Any] = {}
+    if user_data.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN) >= user_data.get(
+        CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN
+    ):
+        errors[CONF_MAX_KELVIN] = "max_below_min_kelvin"
+        errors[CONF_MIN_KELVIN] = "max_below_min_kelvin"
+    return errors
 
 
 COMMON_ENTITY_FIELDS = {
@@ -419,6 +552,22 @@ PLATFORM_ENTITY_FIELDS = {
     Platform.SWITCH.value: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=SWITCH_DEVICE_CLASS_SELECTOR, required=False, validator=str
+        ),
+    },
+    Platform.LIGHT.value: {
+        CONF_SCHEMA: PlatformField(
+            selector=LIGHT_SCHEMA_SELECTOR,
+            required=True,
+            validator=str,
+            default="basic",
+            exclude_from_reconfig=True,
+        ),
+        CONF_COLOR_TEMP_KELVIN: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=True,
+            validator=bool,
+            default=True,
+            is_schema_default=True,
         ),
     },
 }
@@ -499,11 +648,502 @@ PLATFORM_MQTT_FIELDS = {
             selector=BOOLEAN_SELECTOR, required=False, validator=bool
         ),
     },
+    Platform.LIGHT.value: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_ON_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=True,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "template"},),
+        ),
+        CONF_COMMAND_OFF_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=True,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "template"},),
+        ),
+        CONF_ON_COMMAND_TYPE: PlatformField(
+            selector=ON_COMMAND_TYPE_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_ON_COMMAND_TYPE,
+            conditions=({CONF_SCHEMA: "basic"},),
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_STATE_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+        ),
+        CONF_STATE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "template"},),
+        ),
+        CONF_SUPPORTED_COLOR_MODES: PlatformField(
+            selector=SUPPORTED_COLOR_MODES_SELECTOR,
+            required=False,
+            validator=valid_supported_color_modes,
+            error="invalid_supported_color_modes",
+            conditions=({CONF_SCHEMA: "json"},),
+        ),
+        CONF_OPTIMISTIC: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=bool
+        ),
+        CONF_RETAIN: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            validator=bool,
+            conditions=({CONF_SCHEMA: "basic"},),
+        ),
+        CONF_BRIGHTNESS: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            validator=bool,
+            conditions=({CONF_SCHEMA: "json"},),
+            section="light_brightness_settings",
+        ),
+        CONF_BRIGHTNESS_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_brightness_settings",
+        ),
+        CONF_BRIGHTNESS_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_brightness_settings",
+        ),
+        CONF_BRIGHTNESS_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_brightness_settings",
+        ),
+        CONF_PAYLOAD_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_OFF,
+            conditions=({CONF_SCHEMA: "basic"},),
+        ),
+        CONF_PAYLOAD_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_ON,
+            conditions=({CONF_SCHEMA: "basic"},),
+        ),
+        CONF_BRIGHTNESS_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_brightness_settings",
+        ),
+        CONF_BRIGHTNESS_SCALE: PlatformField(
+            selector=SCALE_SELECTOR,
+            required=False,
+            validator=cv.positive_int,
+            default=255,
+            conditions=(
+                {CONF_SCHEMA: "basic"},
+                {CONF_SCHEMA: "json"},
+            ),
+            section="light_brightness_settings",
+        ),
+        CONF_COLOR_MODE_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_color_mode_settings",
+        ),
+        CONF_COLOR_MODE_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_color_mode_settings",
+        ),
+        CONF_COLOR_TEMP_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_color_temp_settings",
+        ),
+        CONF_COLOR_TEMP_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_color_temp_settings",
+        ),
+        CONF_COLOR_TEMP_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_color_temp_settings",
+        ),
+        CONF_COLOR_TEMP_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_color_temp_settings",
+        ),
+        CONF_BRIGHTNESS_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "template"},),
+        ),
+        CONF_RED_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "template"},),
+        ),
+        CONF_GREEN_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "template"},),
+        ),
+        CONF_BLUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "template"},),
+        ),
+        CONF_COLOR_TEMP_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "template"},),
+        ),
+        CONF_HS_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_hs_settings",
+        ),
+        CONF_HS_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_hs_settings",
+        ),
+        CONF_HS_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_hs_settings",
+        ),
+        CONF_HS_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_hs_settings",
+        ),
+        CONF_RGB_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgb_settings",
+        ),
+        CONF_RGB_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgb_settings",
+        ),
+        CONF_RGB_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgb_settings",
+        ),
+        CONF_RGB_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgb_settings",
+        ),
+        CONF_RGBW_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgbw_settings",
+        ),
+        CONF_RGBW_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgbw_settings",
+        ),
+        CONF_RGBW_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgbw_settings",
+        ),
+        CONF_RGBW_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgbw_settings",
+        ),
+        CONF_RGBWW_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgbww_settings",
+        ),
+        CONF_RGBWW_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgbww_settings",
+        ),
+        CONF_RGBWW_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgbww_settings",
+        ),
+        CONF_RGBWW_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_rgbww_settings",
+        ),
+        CONF_XY_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_xy_settings",
+        ),
+        CONF_XY_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_xy_settings",
+        ),
+        CONF_XY_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_xy_settings",
+        ),
+        CONF_XY_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_xy_settings",
+        ),
+        CONF_WHITE_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_white_settings",
+        ),
+        CONF_WHITE_SCALE: PlatformField(
+            selector=SCALE_SELECTOR,
+            required=False,
+            validator=cv.positive_int,
+            default=255,
+            conditions=(
+                {CONF_SCHEMA: "basic"},
+                {CONF_SCHEMA: "json"},
+            ),
+            section="light_white_settings",
+        ),
+        CONF_EFFECT: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            validator=bool,
+            conditions=({CONF_SCHEMA: "json"},),
+            section="light_effect_settings",
+        ),
+        CONF_EFFECT_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_effect_settings",
+        ),
+        CONF_EFFECT_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_effect_settings",
+        ),
+        CONF_EFFECT_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_effect_settings",
+        ),
+        CONF_EFFECT_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "template"},),
+            section="light_effect_settings",
+        ),
+        CONF_EFFECT_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+            conditions=({CONF_SCHEMA: "basic"},),
+            section="light_effect_settings",
+        ),
+        CONF_EFFECT_LIST: PlatformField(
+            selector=OPTIONS_SELECTOR,
+            required=False,
+            validator=cv.ensure_list,
+            section="light_effect_settings",
+        ),
+        CONF_FLASH: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            default=False,
+            validator=cv.boolean,
+            conditions=({CONF_SCHEMA: "json"},),
+            section="advanced_settings",
+        ),
+        CONF_FLASH_TIME_SHORT: PlatformField(
+            selector=FLASH_TIME_SELECTOR,
+            required=False,
+            validator=cv.positive_int,
+            default=2,
+            conditions=({CONF_SCHEMA: "json"},),
+            section="advanced_settings",
+        ),
+        CONF_FLASH_TIME_LONG: PlatformField(
+            selector=FLASH_TIME_SELECTOR,
+            required=False,
+            validator=cv.positive_int,
+            default=10,
+            conditions=({CONF_SCHEMA: "json"},),
+            section="advanced_settings",
+        ),
+        CONF_TRANSITION: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            default=False,
+            validator=cv.boolean,
+            conditions=({CONF_SCHEMA: "json"},),
+            section="advanced_settings",
+        ),
+        CONF_MAX_KELVIN: PlatformField(
+            selector=KELVIN_SELECTOR,
+            required=False,
+            validator=cv.positive_int,
+            default=DEFAULT_MAX_KELVIN,
+            section="advanced_settings",
+        ),
+        CONF_MIN_KELVIN: PlatformField(
+            selector=KELVIN_SELECTOR,
+            required=False,
+            validator=cv.positive_int,
+            default=DEFAULT_MIN_KELVIN,
+            section="advanced_settings",
+        ),
+    },
 }
 ENTITY_CONFIG_VALIDATOR: dict[
     str,
     Callable[[dict[str, Any]], dict[str, str]] | None,
 ] = {
+    Platform.LIGHT.value: validate_light_platform_config,
     Platform.NOTIFY.value: None,
     Platform.SENSOR.value: validate_sensor_platform_config,
     Platform.SWITCH.value: None,
@@ -576,7 +1216,7 @@ def validate_field(
         return
     try:
         validator(user_input[field])
-    except (ValueError, vol.Invalid):
+    except (ValueError, vol.Error, vol.Invalid):
         errors[field] = error
 
 
@@ -634,7 +1274,7 @@ def validate_user_input(
         validator = data_schema_fields[field].validator
         try:
             validator(value)
-        except (ValueError, vol.Invalid):
+        except (ValueError, vol.Error, vol.Invalid):
             errors[field] = data_schema_fields[field].error or "invalid_input"
 
     if config_validator is not None:
@@ -672,7 +1312,9 @@ def data_schema_from_fields(
         component_data_with_user_input |= user_input
 
     sections: dict[str | None, None] = {
-        field_details.section: None for field_details in data_schema_fields.values()
+        field_details.section: None
+        for field_details in data_schema_fields.values()
+        if not field_details.is_schema_default
     }
     data_schema: dict[Any, Any] = {}
     all_data_element_options: set[Any] = set()
@@ -687,7 +1329,8 @@ def data_schema_from_fields(
             if field_details.custom_filtering
             else field_details.selector
             for field_name, field_details in data_schema_fields.items()
-            if field_details.section == schema_section
+            if not field_details.is_schema_default
+            and field_details.section == schema_section
             and (not field_details.exclude_from_reconfig or not reconfig)
             and _check_conditions(field_details, component_data_with_user_input)
         }
@@ -699,6 +1342,8 @@ def data_schema_from_fields(
             if field_details.section == schema_section
             and field_details.exclude_from_reconfig
         }
+        if not data_element_options:
+            continue
         if schema_section is None:
             data_schema.update(data_schema_element)
             continue
@@ -725,6 +1370,18 @@ def data_schema_from_fields(
             if field in component_data:
                 del component_data[field]
     return vol.Schema(data_schema)
+
+
+@callback
+def subentry_schema_default_data_from_fields(
+    data_schema_fields: dict[str, PlatformField],
+) -> dict[str, Any]:
+    """Generate custom data schema from platform fields or device data."""
+    return {
+        key: field.default
+        for key, field in data_schema_fields.items()
+        if field.is_schema_default
+    }
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -1544,6 +2201,16 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         )
 
     @callback
+    def _async_update_component_data_defaults(self) -> None:
+        """Update component data defaults."""
+        for component_data in self._subentry_data["components"].values():
+            platform = component_data[CONF_PLATFORM]
+            subentry_default_data = subentry_schema_default_data_from_fields(
+                PLATFORM_ENTITY_FIELDS[platform]
+            )
+            component_data.update(subentry_default_data)
+
+    @callback
     def _async_create_subentry(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -1559,6 +2226,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         else:
             full_entity_name = device_name
 
+        self._async_update_component_data_defaults()
         return self.async_create_entry(
             data=self._subentry_data,
             title=self._subentry_data[CONF_DEVICE][CONF_NAME],
@@ -1623,6 +2291,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if len(self._subentry_data["components"]) > 1:
             menu_options.append("delete_entity")
         menu_options.extend(["device", "availability"])
+        self._async_update_component_data_defaults()
         if self._subentry_data != self._get_reconfigure_subentry().data:
             menu_options.append("save_changes")
         return self.async_show_menu(
@@ -1673,6 +2342,7 @@ def async_is_pem_data(data: bytes) -> bool:
     return (
         b"-----BEGIN CERTIFICATE-----" in data
         or b"-----BEGIN PRIVATE KEY-----" in data
+        or b"-----BEGIN EC PRIVATE KEY-----" in data
         or b"-----BEGIN RSA PRIVATE KEY-----" in data
         or b"-----BEGIN ENCRYPTED PRIVATE KEY-----" in data
     )

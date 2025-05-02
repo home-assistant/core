@@ -123,7 +123,7 @@
               "mid": "[%key:common::state::medium%]",
               "high": "[%key:common::state::high%]",
               "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
-              "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]"
+              "auto": "[%key:common::state::auto%]"
             }
           },
           "preset_mode": {
@@ -303,7 +303,7 @@
         "state": {
           "invalid": "Invalid",
           "weak": "Weak",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "strong": "Strong",
           "very_strong": "Very strong"
         }
@@ -343,7 +343,7 @@
       "growth_mode": {
         "name": "Mode",
         "state": {
-          "standard": "Auto",
+          "standard": "[%key:common::state::auto%]",
           "ext_leaf": "Vegetables",
           "ext_herb": "Herbs",
           "ext_flower": "Flowers",
@@ -353,7 +353,7 @@
       "growth_mode_for_location": {
         "name": "{location} mode",
         "state": {
-          "standard": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "standard": "[%key:common::state::auto%]",
           "ext_leaf": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_leaf%]",
           "ext_herb": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_herb%]",
           "ext_flower": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_flower%]",
@@ -581,7 +581,7 @@
         "name": "[%key:component::lg_thinq::entity::binary_sensor::one_touch_filter::name%]",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "replace": "Replace filter",
           "smart_power": "Smart safe storage",
@@ -599,7 +599,7 @@
         "name": "Operating mode",
         "state": {
           "air_clean": "Purify",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "clothes_dry": "Laundry",
           "edge": "Edge cleaning",
           "heat_pump": "Heat pump",
@@ -607,7 +607,7 @@
           "intensive_dry": "Spot",
           "macro": "Custom mode",
           "mop": "Mop",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "off": "[%key:common::state::off%]",
           "quiet_humidity": "Silent",
           "rapid_humidity": "Jet",
@@ -626,7 +626,7 @@
           "auto": "Low power",
           "high": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "mop": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::mop%]",
-          "normal": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::normal%]",
+          "normal": "[%key:common::state::normal%]",
           "off": "[%key:common::state::off%]",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]"
         }
@@ -649,11 +649,11 @@
       "current_dish_washing_course": {
         "name": "Current cycle",
         "state": {
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "heavy": "Intensive",
           "delicate": "Delicate",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "rinse": "Rinse",
           "refresh": "Refresh",
           "express": "Express",
@@ -881,7 +881,7 @@
           "high": "[%key:common::state::high%]",
           "power": "Turbo",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "wind_1": "Step 1",
           "wind_2": "Step 2",
           "wind_3": "Step 3",
@@ -905,7 +905,7 @@
         "name": "Operating mode",
         "state": {
           "air_clean": "Purifying",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "baby_care": "[%key:component::lg_thinq::entity::sensor::personalization_mode::state::baby%]",
           "circulator": "Booster",
           "clean": "Single",
@@ -1016,7 +1016,7 @@
         "name": "[%key:component::lg_thinq::entity::binary_sensor::one_touch_filter::name%]",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "replace": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::replace%]",
           "smart_power": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::smart_power%]",
@@ -1033,6 +1033,11 @@
           "normal": "[%key:component::lg_thinq::entity::sensor::current_dish_washing_course::state::delicate%]"
         }
       }
+    }
+  },
+  "exceptions": {
+    "failed_to_connect_mqtt": {
+      "message": "Failed to connect MQTT: {error}"
     }
   }
 }

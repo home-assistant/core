@@ -3,6 +3,13 @@
   "name": "SMA Solar",
   "codeowners": ["@kellerza", "@rklomp", "@erwindouna"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "sma*",
+      "macaddress": "0015BB*"
+    },
+    { "registered_devices": true }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/sma",
   "iot_class": "local_polling",
   "loggers": ["pysma"],

@@ -2361,6 +2361,12 @@
           "iot_class": "cloud_polling",
           "name": "Google Drive"
         },
+        "google_gemini": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "google_generative_ai_conversation",
+          "name": "Google Gemini"
+        },
         "google_generative_ai_conversation": {
           "integration_type": "service",
           "config_flow": true,
@@ -2935,6 +2941,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "imeon_inverter": {
+      "name": "Imeon Inverter",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "imgw_pib": {
       "name": "IMGW-PIB",
       "integration_type": "hub",
@@ -3323,7 +3335,7 @@
       "name": "La Marzocco",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "lametric": {
       "name": "LaMetric",
@@ -3716,6 +3728,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "maytag": {
+      "name": "Maytag",
+      "integration_type": "virtual",
+      "supported_by": "whirlpool"
+    },
     "mcp": {
       "name": "Model Context Protocol",
       "integration_type": "hub",
@@ -3930,6 +3947,13 @@
           "name": "Xbox"
         }
       }
+    },
+    "miele": {
+      "name": "Miele",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push",
+      "single_config_entry": true
     },
     "mijndomein_energie": {
       "name": "Mijndomein Energie",
@@ -4210,6 +4234,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "national_grid_us": {
+      "name": "National Grid US",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "neato": {
       "name": "Neato Botvac",
       "integration_type": "hub",
@@ -4417,6 +4446,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "ntfy": {
+      "name": "ntfy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "nuheat": {
       "name": "NuHeat",
       "integration_type": "hub",
@@ -4425,9 +4460,17 @@
     },
     "nuki": {
       "name": "Nuki",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "integrations": {
+        "nuki": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Nuki Bridge"
+        }
+      },
+      "iot_standards": [
+        "matter"
+      ]
     },
     "numato": {
       "name": "Numato USB GPIO Expander",
@@ -4530,12 +4573,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
-    },
-    "oncue": {
-      "name": "Oncue by Kohler",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "ondilo_ico": {
       "name": "Ondilo ICO",
@@ -5343,6 +5380,12 @@
       "iot_class": "local_polling",
       "single_config_entry": true
     },
+    "rehlko": {
+      "name": "Rehlko",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "rejseplanen": {
       "name": "Rejseplanen",
       "integration_type": "hub",
@@ -5578,6 +5621,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "s3": {
+      "name": "S3",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "sabnzbd": {
       "name": "SABnzbd",
@@ -6239,7 +6288,7 @@
     "stiebel_eltron": {
       "name": "STIEBEL ELTRON",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "stookwijzer": {

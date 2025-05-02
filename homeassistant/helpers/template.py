@@ -1072,7 +1072,7 @@ class TemplateStateBase(State):
         raise KeyError
 
     @under_cached_property
-    def entity_id(self) -> str:  # type: ignore[override]
+    def entity_id(self) -> str:
         """Wrap State.entity_id.
 
         Intentionally does not collect state
@@ -1128,7 +1128,7 @@ class TemplateStateBase(State):
         return self._state.object_id
 
     @property
-    def name(self) -> str:  # type: ignore[override]
+    def name(self) -> str:
         """Wrap State.name."""
         self._collect_state()
         return self._state.name
@@ -1411,6 +1411,28 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
         ),
         None,
     )
+
+
+def device_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the device name from an device id, or entity id."""
+    device_reg = device_registry.async_get(hass)
+    if device := device_reg.async_get(lookup_value):
+        return device.name_by_user or device.name
+
+    ent_reg = entity_registry.async_get(hass)
+    # Import here, not at top-level to avoid circular import
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+
+    try:
+        cv.entity_id(lookup_value)
+    except vol.Invalid:
+        pass
+    else:
+        if entity := ent_reg.async_get(lookup_value):
+            if entity.device_id and (device := device_reg.async_get(entity.device_id)):
+                return device.name_by_user or device.name
+
+    return None
 
 
 def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
@@ -3229,6 +3251,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["config_entry_id"] = self.globals["config_entry_id"]
 
         # Device extensions
+
+        self.globals["device_name"] = hassfunction(device_name)
+        self.filters["device_name"] = self.globals["device_name"]
 
         self.globals["device_attr"] = hassfunction(device_attr)
         self.filters["device_attr"] = self.globals["device_attr"]
