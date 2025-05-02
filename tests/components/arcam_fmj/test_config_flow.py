@@ -36,7 +36,7 @@ MOCK_UPNP_DEVICE = f"""
 
 MOCK_UPNP_LOCATION = f"http://{MOCK_HOST}:8080/dd.xml"
 
-MOCK_DISCOVER = load_ssdp_fixture("ssdp_discovery.txt", DOMAIN)
+MOCK_DISCOVER = load_ssdp_fixture("ssdp_discovery.json", DOMAIN)
 
 
 @pytest.fixture(name="dummy_client", autouse=True)

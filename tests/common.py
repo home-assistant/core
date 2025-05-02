@@ -32,7 +32,6 @@ from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F4
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
 import pytest
-import regex
 from syrupy import SnapshotAssertion
 import voluptuous as vol
 
@@ -593,117 +592,9 @@ def load_json_object_fixture(
     return json_loads_object(load_fixture(filename, integration))
 
 
-def _parse_ssdp_string(data: str, key: str, target: dict[str, Any]) -> None:
-    if match := regex.search(f"{key}='([^']+)'", data):
-        if (value := match.group(1)) != "None":
-            target[key] = value
-
-
-def _parse_ssdp_set(data: str, key: str, target: dict[str, Any]) -> None:
-    if match := regex.search(f"{key}=\\{{'([^\\{{\\}}]+)'\\}}", data):
-        if (value := match.group(1)) != "set()":
-            target[key] = set(value.split(","))
-
-
 def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServiceInfo:
     """Load a SsdpServiceInfo object from a fixture."""
-    data = load_fixture(filename, integration)
-
-    if not data.startswith("SsdpServiceInfo("):
-        raise ValueError(f"Invalid fixture data for {filename}: {data[:20]}...")
-    data = data[len("SsdpServiceInfo(") : -1]
-
-    kwargs = {}
-
-    for key in (
-        "ssdp_usn",
-        "ssdp_st",
-        "ssdp_location",
-        "ssdp_nt",
-        "ssdp_udn",
-        "ssdp_ext",
-        "ssdp_server",
-    ):
-        _parse_ssdp_string(data, key, kwargs)
-
-    for key in (
-        "ssdp_all_locations",
-        "x_homeassistant_matching_domains",
-    ):
-        _parse_ssdp_set(data, key, kwargs)
-
-    if (start_index := data.find("upnp={")) != -1:
-        # upnp data many contain nested objects, so we take the string until
-        # the end and bail out after the correct number of brackets
-        nested = 0
-        upnp_string = ""
-        for char in data[start_index + 5 :]:
-            upnp_string += char
-            if char == "{":
-                nested += 1
-            elif char == "}":
-                nested -= 1
-                if nested == 0:
-                    break
-
-        kwargs["upnp"] = json_loads(upnp_string.replace("'", '"'))
-
-    if match := regex.search(r"ssdp_headers=(\{[^\{\}]+\})", data):
-        ssdp_headers_string = match.group(1).replace("'", '"')
-
-        _timestamp = None
-        _remote_addr = None
-        _local_addr = None
-        _source = None
-
-        if match := regex.search(
-            r'"_timestamp": datetime.datetime\((\d+), (\d+), (\d+), (\d+), (\d+), (\d+), (\d+)\), ',
-            ssdp_headers_string,
-        ):
-            _timestamp = datetime(
-                int(match.group(1)),
-                int(match.group(2)),
-                int(match.group(3)),
-                int(match.group(4)),
-                int(match.group(5)),
-                int(match.group(6)),
-                int(match.group(7)),
-            )
-            ssdp_headers_string = ssdp_headers_string.replace(match.group(0), "")
-
-        if match := regex.search(
-            r', "_remote_addr": \(("[^"]+"), (\d+)\)', ssdp_headers_string
-        ):
-            _remote_addr = match.group(1)
-            ssdp_headers_string = ssdp_headers_string.replace(match.group(0), "")
-
-        if match := regex.search(
-            r', "_local_addr": \(("[^"]+"), (\d+)\)', ssdp_headers_string
-        ):
-            _local_addr = match.group(1)
-            ssdp_headers_string = ssdp_headers_string.replace(match.group(0), "")
-
-        if match := regex.search(
-            r', "_source": <SsdpSource.(\w+): "(\w+)">', ssdp_headers_string
-        ):
-            # pylint: disable-next=import-outside-toplevel
-            from async_upnp_client.const import SsdpSource
-
-            _source = SsdpSource(match.group(2))
-            ssdp_headers_string = ssdp_headers_string.replace(match.group(0), "")
-
-        ssdp_headers = json_loads(ssdp_headers_string)
-        if _timestamp is not None:
-            ssdp_headers["_timestamp"] = _timestamp
-        if _remote_addr is not None:
-            ssdp_headers["_remote_addr"] = _remote_addr
-        if _local_addr is not None:
-            ssdp_headers["_local_addr"] = _local_addr
-        if _source is not None:
-            ssdp_headers["_source"] = _source
-
-        kwargs["ssdp_headers"] = ssdp_headers
-
+    kwargs = load_json_object_fixture(filename, integration)
     return SsdpServiceInfo(**kwargs)
 
 

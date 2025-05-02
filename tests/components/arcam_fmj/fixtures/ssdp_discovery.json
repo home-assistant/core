@@ -1,0 +1,21 @@
+{
+  "ssdp_usn": "mock_usn",
+  "ssdp_st": "mock_st",
+  "upnp": {
+    "manufacturer": "ARCAM",
+    "modelName": " ",
+    "modelNumber": "AVR450, AVR750",
+    "friendlyName": "Arcam media client 456789abcdef",
+    "serialNumber": "12343",
+    "UDN": "uuid:01234567-89ab-cdef-0123-456789abcdef",
+    "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+  },
+  "ssdp_location": "http://127.0.0.1:8080/dd.xml",
+  "ssdp_nt": null,
+  "ssdp_udn": null,
+  "ssdp_ext": null,
+  "ssdp_server": null,
+  "ssdp_headers": {},
+  "ssdp_all_locations": [],
+  "x_homeassistant_matching_domains": []
+}

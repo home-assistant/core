@@ -43,7 +43,7 @@ TEST_LOCATION6 = "http://[fe80::1%2]/desc.xml"
 TEST_HOST = urlparse(TEST_LOCATION).hostname
 TEST_FRIENDLY_NAME = "mock-name"
 TEST_MAC_ADDRESS = "00:11:22:33:44:55"
-TEST_DISCOVERY = load_ssdp_fixture("ssdp_discovery.txt", DOMAIN)
+TEST_DISCOVERY = load_ssdp_fixture("ssdp_discovery.json", DOMAIN)
 
 
 @pytest.fixture

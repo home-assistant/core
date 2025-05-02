@@ -69,9 +69,9 @@ SAMPLE_DEVICE_INFO_WIFI = {
 
 
 MOCK_SSDP_DATA_RENDERING_CONTROL_ST = load_ssdp_fixture(
-    "ssdp_service_rendering_control.txt", DOMAIN
+    "ssdp_service_rendering_control.json", DOMAIN
 )
 
 MOCK_SSDP_DATA_MAIN_TV_AGENT_ST = load_ssdp_fixture(
-    "ssdp_device_main_tv_agent.txt", DOMAIN
+    "ssdp_device_main_tv_agent.json", DOMAIN
 )
