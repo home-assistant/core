@@ -162,7 +162,9 @@ async def async_get_action_capabilities(
     if config[CONF_TYPE] in (TYPE_BRIGHTNESS_INCREASE, TYPE_BRIGHTNESS_DECREASE):
         extra_fields: VolDictType = {}
         if brightness_supported(supported_color_modes):
-            extra_fields[vol.Optional(ATTR_BRIGHTNESS_STEP_PCT)] = VALID_BRIGHTNESS_STEP_PCT
+            extra_fields[vol.Optional(ATTR_BRIGHTNESS_STEP_PCT)] = (
+                VALID_BRIGHTNESS_STEP_PCT
+            )
 
         return {"extra_fields": vol.Schema(extra_fields)} if extra_fields else {}
 
