@@ -91,7 +91,7 @@ async def test_form_failures(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_psnawpapi.get_user.side_effect = raise_error
+    mock_psnawpapi.user.side_effect = raise_error
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -106,7 +106,7 @@ async def test_form_failures(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_psnawpapi.get_user.side_effect = None
+    mock_psnawpapi.user.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_NPSSO: NPSSO_TOKEN},

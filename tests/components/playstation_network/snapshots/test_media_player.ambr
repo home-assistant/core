@@ -1,0 +1,56 @@
+# serializer version: 1
+# name: test_platform[media_player.playstation_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.playstation_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'playstation',
+    'unique_id': 'my-psn-id_PS5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform[media_player.playstation_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'entity_picture': 'https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png',
+      'entity_picture_local': '/api/media_player_proxy/media_player.playstation_5?token=123456789&cache=50dfb7140be0060b',
+      'friendly_name': 'PlayStation 5',
+      'media_content_id': 'PPSA07784_00',
+      'media_content_type': <MediaType.GAME: 'game'>,
+      'media_title': 'STAR WARS Jedi: Survivor™',
+      'supported_features': <MediaPlayerEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.playstation_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
