@@ -13,11 +13,7 @@
     "UDN": "uuid:device"
   },
   "ssdp_location": "http://192.168.1.1/desc.xml",
-  "ssdp_nt": null,
   "ssdp_udn": "uuid:device",
-  "ssdp_ext": null,
-  "ssdp_server": null,
   "ssdp_headers": { "_host": "192.168.1.1" },
-  "ssdp_all_locations": ["http://192.168.1.1/desc.xml"],
-  "x_homeassistant_matching_domains": []
+  "ssdp_all_locations": ["http://192.168.1.1/desc.xml"]
 }
