@@ -20,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for passed config_entry in HA."""
     coordinator = config_entry.runtime_data
-    tracked_devices: list[FingTrackedDevice] = []
+    tracked_devices: set[FingTrackedDevice] = set()
 
     entity_registry = er.async_get(hass)
 
@@ -31,29 +31,17 @@ async def async_setup_entry(
             for device in coordinator.data.devices.values()
         ]
 
-        new_ent_unique_ids = {entity.unique_id for entity in new_entities}
-        prev_ent_unique_ids = {entity.unique_id for entity in tracked_devices}
-
-        entities_to_remove = [
-            entity
-            for entity in tracked_devices
-            if entity.unique_id not in new_ent_unique_ids
-        ]
-
-        entities_to_add = [
-            entity
-            for entity in new_entities
-            if entity.unique_id not in prev_ent_unique_ids
-        ]
+        entities_to_remove = tracked_devices - set(new_entities)
+        entities_to_add = set(new_entities) - tracked_devices
 
         # Removes all the entities that are no more tracked by the agent
         for entity in entities_to_remove:
             entity_registry.async_remove(entity.entity_id)
-            tracked_devices.remove(entity)
+            tracked_devices.discard(entity)
 
         # Adds all the new entities tracked by the agent
         async_add_entities(entities_to_add)
-        tracked_devices.extend(entities_to_add)
+        tracked_devices.update(entities_to_add)
 
     add_entities()
     config_entry.async_on_unload(coordinator.async_add_listener(add_entities))
@@ -70,20 +58,24 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         self._mac = device.mac
         self._device = coordinator.data.devices[device.mac]
 
-        self._agent_id = coordinator.data.network_id
+        agent_id = coordinator.data.network_id
         if coordinator.data.agent_info is not None:
-            self._agent_id = coordinator.data.agent_info.agent_id
+            agent_id = coordinator.data.agent_info.agent_id
 
-        self._attr_name = self._device.name
         self._attr_mac_address = self._mac
-        self._attr_unique_id = f"{self._agent_id}-{self.mac_address}"
+        self._attr_unique_id = f"{agent_id}-{self.mac_address}"
+        self._attr_name = self._device.name
         self._attr_icon = get_icon_from_type(self._device.type)
-        self._attr_entity_registry_enabled_default = True
 
     @property
-    def unique_id(self) -> str | None:
-        """Return unique ID of the entity."""
-        return f"{self._agent_id}-{self.mac_address}"
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if entity is enabled by default."""
+        return True
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the network."""
+        return self._device.active
 
     @property
     def ip_address(self) -> str | None:
@@ -102,15 +94,39 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
             attrs["model"] = self._device.model
         return attrs
 
-    @property
-    def is_connected(self) -> bool:
-        """Return true if the device is connected to the network."""
-        return self._device.active
+    def check_for_updates(self, new_device: Device) -> bool:
+        """Return true if the device has updates."""
+        new_device_ip = new_device.ip[0] if new_device.ip else None
+        current_device_ip = self._device.ip[0] if self._device.ip else None
+
+        return (
+            current_device_ip != new_device_ip
+            or self._device.active != new_device.active
+            or self._device.type != new_device.type
+            or self._device.make != new_device.make
+            or self._device.model != new_device.model
+            or self._attr_name != new_device.name
+            or self._attr_icon != get_icon_from_type(new_device.type)
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         updated_device_data = self.coordinator.data.devices.get(self._mac)
-        if updated_device_data is not None:
+        if updated_device_data is not None and self.check_for_updates(
+            updated_device_data
+        ):
             self._device = updated_device_data
+            self._attr_name = updated_device_data.name
+            self._attr_icon = get_icon_from_type(updated_device_data.type)
             self.async_write_ha_state()
+
+    def __eq__(self, other):
+        """Return true if both entities are equal."""
+        return (
+            isinstance(other, FingTrackedDevice) and self.unique_id == other.unique_id
+        )
+
+    def __hash__(self):
+        """Return hash of the entity."""
+        return hash(self.unique_id)
