@@ -2,45 +2,58 @@
   "config": {
     "step": {
       "user": {
+        "title": "Connect to EnergyID",
         "data": {
-          "webhook_url": "EnergyID webhook URL",
-          "entity_id": "Home Assistant entity ID",
-          "metric": "EnergyID metric",
-          "metric_kind": "EnergyID metric kind",
-          "unit": "Unit of measurement"
+          "provisioning_key": "EnergyID Provisioning Key",
+          "provisioning_secret": "EnergyID Provisioning Secret",
+          "device_id": "EnergyID Device ID",
+          "device_name": "Device Name in EnergyID"
         },
         "data_description": {
-          "webhook_url": "The unique URL provided by EnergyID to receive webhook data. You'll find this in your EnergyID account settings under 'Webhooks' or 'Integrations'. **Important:** Ensure this URL is correctly copied.",
-          "entity_id": "The ID of the Home Assistant entity (e.g., sensor.power_meter) that you want to send data from to EnergyID. Select an entity that provides numerical state values.",
-          "metric": "The EnergyID metric name that best describes the data you are sending (e.g., 'electricity_consumption', 'gas_consumption'). Choose from the dropdown list provided.",
-          "metric_kind": "The kind of metric. Select the option that matches your data: 'cumulative' (total increasing value), 'delta' (change in value), 'gauge' (instantaneous value), or 'total' (total value).",
-          "unit": "The unit of measurement for the chosen metric (e.g., 'kWh', 'm³'). Select a unit that is compatible with the selected EnergyID metric and matches the unit of your Home Assistant entity."
+          "provisioning_key": "Your unique provisioning key obtained from EnergyID.",
+          "provisioning_secret": "Your unique provisioning secret obtained from EnergyID.",
+          "device_id": "A unique identifier for this Home Assistant instance within EnergyID (e.g., 'home-assistant-livingroom').",
+          "device_name": "A human-readable name for this device shown in EnergyID (e.g., 'Home Assistant Living Room')."
         }
+      },
+      "claim": {
+        "title": "Claim EnergyID Device",
+        "description": "Your device needs to be claimed in EnergyID before it can send data.\n\n1. Go to: {claim_url}\n2. Enter Code: **{claim_code}**\n3. (Code expires around: {valid_until})\n\nAfter claiming the device on the EnergyID website, click **Submit** below to continue setup.",
+        "data": {}
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to EnergyID",
-      "invalid_url": "Invalid webhook URL",
-      "unknown": "Unexpected error occurred"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "claim_failed": "Device is still not claimed. Please complete the claiming process on the EnergyID website and try again."
     },
     "abort": {
-      "already_configured_entity": "This entity is already configured",
-      "already_configured_webhook": "This webhook URL is already configured",
-      "already_configured": "This webhook URL or entity is already configured",
-      "already_configured_service": "This exact combination of webhook URL, entity, and metric is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
     "step": {
       "init": {
+        "title": "Map Home Assistant Entity to EnergyID",
         "data": {
-          "data_interval": "EnergyID data interval",
-          "upload_interval": "Upload interval (seconds)"
+          "ha_entity_id": "Home Assistant Entity",
+          "energyid_key": "EnergyID Metric Key"
+        },
+        "data_description": {
+          "ha_entity_id": "Select the Home Assistant sensor entity you want to send to EnergyID.",
+          "energyid_key": "Enter the target metric key in EnergyID (e.g., 'el', 'pv', 'gas', 'temperature.livingroom'). Refer to EnergyID documentation for standard keys or use custom ones."
+        },
+        "description_placeholders": {
+          "entity_count": "Number of entities currently mapped to EnergyID."
         }
       }
     },
     "error": {
-      "invalid_interval": "Invalid interval for this webhook policy."
+      "invalid_key": "Invalid EnergyID key format (e.g. contains spaces)."
+    },
+    "abort": {
+      "entity_already_mapped": "This Home Assistant entity is already mapped."
     }
   }
 }
