@@ -593,6 +593,18 @@ def load_json_object_fixture(
     return json_loads_object(load_fixture(filename, integration))
 
 
+def _parse_ssdp_string(data: str, key: str, target: dict[str, Any]) -> None:
+    if match := regex.search(f"{key}='([^']+)'", data):
+        value = match.group(1)
+        target[key] = None if value == "None" else value
+
+
+def _parse_ssdp_set(data: str, key: str, target: dict[str, Any]) -> None:
+    if match := regex.search(f"{key}=\\{{'([^\\{{\\}}]+)'\\}}", data):
+        value = match.group(1)
+        target[key] = set() if value == "set()" else set(value.split(","))
+
+
 def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServiceInfo:
     """Load a SsdpServiceInfo object from a fixture."""
     data = load_fixture(filename, integration)
@@ -603,11 +615,22 @@ def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServ
 
     kwargs = {}
 
-    if match := regex.search(r"ssdp_usn='([^']+)'", data):
-        kwargs["ssdp_usn"] = match.group(1)
+    for key in (
+        "ssdp_usn",
+        "ssdp_st",
+        "ssdp_location",
+        "ssdp_nt",
+        "ssdp_udn",
+        "ssdp_ext",
+        "ssdp_server",
+    ):
+        _parse_ssdp_string(data, key, kwargs)
 
-    if match := regex.search(r"ssdp_st='([^']+)'", data):
-        kwargs["ssdp_st"] = match.group(1)
+    for key in (
+        "ssdp_all_locations",
+        "x_homeassistant_matching_domains",
+    ):
+        _parse_ssdp_set(data, key, kwargs)
 
     if (start_index := data.find("upnp={")) != -1:
         # upnp data many contain nested objects, so we take the string until
@@ -624,21 +647,6 @@ def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServ
                     break
 
         kwargs["upnp"] = json_loads(upnp_string.replace("'", '"'))
-
-    if match := regex.search(r"ssdp_location='([^']+)'", data):
-        kwargs["ssdp_location"] = match.group(1)
-
-    if match := regex.search(r"ssdp_nt='([^']+)'", data):
-        kwargs["ssdp_nt"] = match.group(1)
-
-    if match := regex.search(r"ssdp_udn='([^']+)'", data):
-        kwargs["ssdp_udn"] = match.group(1)
-
-    if match := regex.search(r"ssdp_ext='([^']+)'", data):
-        kwargs["ssdp_ext"] = match.group(1)
-
-    if match := regex.search(r"ssdp_server='([^']+)'", data):
-        kwargs["ssdp_server"] = match.group(1)
 
     if match := regex.search(r"ssdp_headers=(\{[^\{\}]+\})", data):
         ssdp_headers_string = match.group(1).replace("'", '"')
@@ -685,20 +693,16 @@ def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServ
             ssdp_headers_string = ssdp_headers_string.replace(match.group(0), "")
 
         ssdp_headers = json_loads(ssdp_headers_string)
-        ssdp_headers["_timestamp"] = _timestamp
-        ssdp_headers["_remote_addr"] = _remote_addr
-        ssdp_headers["_local_addr"] = _local_addr
-        ssdp_headers["_source"] = _source
+        if _timestamp is not None:
+            ssdp_headers["_timestamp"] = _timestamp
+        if _remote_addr is not None:
+            ssdp_headers["_remote_addr"] = _remote_addr
+        if _local_addr is not None:
+            ssdp_headers["_local_addr"] = _local_addr
+        if _source is not None:
+            ssdp_headers["_source"] = _source
 
         kwargs["ssdp_headers"] = ssdp_headers
-
-    if match := regex.search(r"ssdp_all_locations=\{'([^\{\}]+)'\}", data):
-        kwargs["ssdp_all_locations"] = set(match.group(1).split(","))
-
-    if match := regex.search(
-        r"x_homeassistant_matching_domains=\{'([^\{\}]+)'\}", data
-    ):
-        kwargs["x_homeassistant_matching_domains"] = set(match.group(1).split(","))
 
     return SsdpServiceInfo(**kwargs)
 

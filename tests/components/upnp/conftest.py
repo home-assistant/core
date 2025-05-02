@@ -26,16 +26,14 @@ from homeassistant.components.upnp.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.ssdp import (
-    ATTR_UPNP_DEVICE_TYPE,
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MANUFACTURER,
     ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_SERIAL,
-    ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_ssdp_fixture
 
 TEST_UDN = "uuid:device"
 TEST_ST = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
@@ -45,29 +43,7 @@ TEST_LOCATION6 = "http://[fe80::1%2]/desc.xml"
 TEST_HOST = urlparse(TEST_LOCATION).hostname
 TEST_FRIENDLY_NAME = "mock-name"
 TEST_MAC_ADDRESS = "00:11:22:33:44:55"
-TEST_DISCOVERY = SsdpServiceInfo(
-    ssdp_st=TEST_ST,
-    ssdp_udn=TEST_UDN,
-    ssdp_usn=TEST_USN,
-    ssdp_location=TEST_LOCATION,
-    upnp={
-        "_udn": TEST_UDN,
-        "location": TEST_LOCATION,
-        "usn": TEST_USN,
-        ATTR_UPNP_DEVICE_TYPE: TEST_ST,
-        ATTR_UPNP_FRIENDLY_NAME: TEST_FRIENDLY_NAME,
-        ATTR_UPNP_MANUFACTURER: "mock-manufacturer",
-        ATTR_UPNP_MODEL_NAME: "mock-model-name",
-        ATTR_UPNP_SERIAL: "mock-serial",
-        ATTR_UPNP_UDN: TEST_UDN,
-    },
-    ssdp_headers={
-        "_host": TEST_HOST,
-    },
-    ssdp_all_locations={
-        TEST_LOCATION,
-    },
-)
+TEST_DISCOVERY = load_ssdp_fixture("ssdp_discovery.txt", DOMAIN)
 
 
 @pytest.fixture
