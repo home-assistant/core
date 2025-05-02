@@ -140,9 +140,6 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""
-    if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
-        return {}
-
     try:
         entry = async_get_entity_registry_entry_or_raise(hass, config[CONF_ENTITY_ID])
         supported_color_modes = get_supported_color_modes(hass, entry.entity_id)
@@ -153,10 +150,20 @@ async def async_get_action_capabilities(
 
     extra_fields: VolDictType = {}
 
-    if brightness_supported(supported_color_modes):
-        extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
+    if config[CONF_TYPE] == toggle_entity.CONF_TURN_ON:
+        if brightness_supported(supported_color_modes):
+            extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
 
-    if supported_features & LightEntityFeature.FLASH:
-        extra_fields[vol.Optional(ATTR_FLASH)] = VALID_FLASH
+        if supported_features & LightEntityFeature.FLASH:
+            extra_fields[vol.Optional(ATTR_FLASH)] = VALID_FLASH
 
-    return {"extra_fields": vol.Schema(extra_fields)} if extra_fields else {}
+        return {"extra_fields": vol.Schema(extra_fields)} if extra_fields else {}
+
+    if config[CONF_TYPE] in (TYPE_BRIGHTNESS_INCREASE, TYPE_BRIGHTNESS_DECREASE):
+        extra_fields: VolDictType = {}
+        if brightness_supported(supported_color_modes):
+            extra_fields[vol.Optional(ATTR_BRIGHTNESS_STEP_PCT)] = VALID_BRIGHTNESS_STEP_PCT
+
+        return {"extra_fields": vol.Schema(extra_fields)} if extra_fields else {}
+
+    return {}
