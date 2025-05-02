@@ -286,7 +286,7 @@ aiokafka==0.10.0
 aiokef==0.2.16
 
 # homeassistant.components.rehlko
-aiokem==0.5.6
+aiokem==0.5.9
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
