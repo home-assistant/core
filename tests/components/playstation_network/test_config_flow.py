@@ -1,6 +1,6 @@
 """Test the Playstation Network config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -126,38 +126,33 @@ async def test_form_failures(
 )
 async def test_parse_npsso_token_failures(
     hass: HomeAssistant,
+    mock_psnawp_npsso: MagicMock,
     mock_psnawpapi: MagicMock,
     raise_error: Exception,
     text_error: str,
 ) -> None:
     """Test parse_npsso_token raises the correct exceptions during config flow."""
-    with patch(
-        "psnawp_api.utils.misc.parse_npsso_token",
-        side_effect=raise_error,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            "playstation_network", context={"source": "user"}
-        )
+    mock_psnawp_npsso.parse_npsso_token.side_effect = raise_error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_NPSSO: NPSSO_TOKEN_INVALID_JSON},
+    )
+    assert result["errors"] == {"base": text_error}
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_NPSSO: NPSSO_TOKEN_INVALID_JSON}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": text_error}
+    mock_psnawpapi.get_user.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_NPSSO: NPSSO_TOKEN},
+    )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {}
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_NPSSO: NPSSO_TOKEN},
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == {
-            CONF_NPSSO: NPSSO_TOKEN,
-        }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_NPSSO: NPSSO_TOKEN,
+    }

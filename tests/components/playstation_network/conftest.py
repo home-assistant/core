@@ -71,3 +71,17 @@ def mock_psnawpapi(mock_user: MagicMock) -> Generator[MagicMock]:
         client.get_user.return_value = mock_user
 
         yield client
+
+
+@pytest.fixture
+def mock_psnawp_npsso(mock_user: MagicMock) -> Generator[MagicMock]:
+    """Mock psnawp_api."""
+
+    with patch(
+        "psnawp_api.utils.misc.parse_npsso_token",
+        autospec=True,
+    ) as mock_parse_npsso_token:
+        npsso = mock_parse_npsso_token.return_value
+        npsso.parse_npsso_token.return_value = NPSSO_TOKEN
+
+        yield npsso
