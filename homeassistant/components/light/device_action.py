@@ -89,7 +89,7 @@ async def async_call_action_from_config(
     if config[CONF_TYPE] == TYPE_BRIGHTNESS_INCREASE:
         data[ATTR_BRIGHTNESS_STEP_PCT] = config.get(ATTR_BRIGHTNESS_STEP_PCT, 10)
     elif config[CONF_TYPE] == TYPE_BRIGHTNESS_DECREASE:
-        data[ATTR_BRIGHTNESS_STEP_PCT] = config.get(ATTR_BRIGHTNESS_STEP_PCT, -10)
+        data[ATTR_BRIGHTNESS_STEP_PCT] = -config.get(ATTR_BRIGHTNESS_STEP_PCT, 10)
     elif ATTR_BRIGHTNESS_PCT in config:
         data[ATTR_BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
 
