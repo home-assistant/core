@@ -145,7 +145,7 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     else:
         base = ord("1")
 
-    return f"{entity_name} channel {chr(int(block.channel) + base)}"
+    return f"Channel {chr(int(block.channel) + base)}"
 
 
 def is_block_momentary_input(
@@ -728,6 +728,7 @@ def get_block_device_info(
     if (
         block is None
         or block.type not in ("light", "relay")
+        or device.settings.get("mode") == "roller"
         or get_number_of_channels(device, block) < 2
     ):
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
