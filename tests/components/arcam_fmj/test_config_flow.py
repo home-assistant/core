@@ -12,16 +12,7 @@ from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.ssdp import (
-    ATTR_UPNP_DEVICE_TYPE,
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_MANUFACTURER,
-    ATTR_UPNP_MODEL_NAME,
-    ATTR_UPNP_MODEL_NUMBER,
-    ATTR_UPNP_SERIAL,
-    ATTR_UPNP_UDN,
-    SsdpServiceInfo,
-)
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN
 
 from .conftest import (
     MOCK_CONFIG_ENTRY,
@@ -32,7 +23,7 @@ from .conftest import (
     MOCK_UUID,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_ssdp_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_UPNP_DEVICE = f"""
@@ -45,20 +36,7 @@ MOCK_UPNP_DEVICE = f"""
 
 MOCK_UPNP_LOCATION = f"http://{MOCK_HOST}:8080/dd.xml"
 
-MOCK_DISCOVER = SsdpServiceInfo(
-    ssdp_usn="mock_usn",
-    ssdp_st="mock_st",
-    ssdp_location=f"http://{MOCK_HOST}:8080/dd.xml",
-    upnp={
-        ATTR_UPNP_MANUFACTURER: "ARCAM",
-        ATTR_UPNP_MODEL_NAME: " ",
-        ATTR_UPNP_MODEL_NUMBER: "AVR450, AVR750",
-        ATTR_UPNP_FRIENDLY_NAME: f"Arcam media client {MOCK_UUID}",
-        ATTR_UPNP_SERIAL: "12343",
-        ATTR_UPNP_UDN: MOCK_UDN,
-        ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:MediaRenderer:1",
-    },
-)
+MOCK_DISCOVER = load_ssdp_fixture("ssdp_discovery.txt", DOMAIN)
 
 
 @pytest.fixture(name="dummy_client", autouse=True)
