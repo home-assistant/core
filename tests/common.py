@@ -601,23 +601,13 @@ def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServ
         raise ValueError(f"Invalid fixture data for {filename}: {data[:20]}...")
     data = data[len("SsdpServiceInfo(") : -1]
 
-    ssdp_usn = None
-    ssdp_st = None
-    upnp = None
-    ssdp_location = None
-    ssdp_nt = None
-    ssdp_udn = None
-    ssdp_ext = None
-    ssdp_server = None
-    ssdp_headers = None
-    ssdp_all_locations = None
-    x_homeassistant_matching_domains = None
+    kwargs = {}
 
     if match := regex.search(r"ssdp_usn='([^']+)'", data):
-        ssdp_usn = match.group(1)
+        kwargs["ssdp_usn"] = match.group(1)
 
     if match := regex.search(r"ssdp_st='([^']+)'", data):
-        ssdp_st = match.group(1)
+        kwargs["ssdp_st"] = match.group(1)
 
     if (start_index := data.find("upnp={")) != -1:
         # upnp data many contain nested objects, so we take the string until
@@ -633,22 +623,22 @@ def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServ
                 if nested == 0:
                     break
 
-        upnp = json_loads(upnp_string.replace("'", '"'))
+        kwargs["upnp"] = json_loads(upnp_string.replace("'", '"'))
 
     if match := regex.search(r"ssdp_location='([^']+)'", data):
-        ssdp_location = match.group(1)
+        kwargs["ssdp_location"] = match.group(1)
 
     if match := regex.search(r"ssdp_nt='([^']+)'", data):
-        ssdp_nt = match.group(1)
+        kwargs["ssdp_nt"] = match.group(1)
 
     if match := regex.search(r"ssdp_udn='([^']+)'", data):
-        ssdp_udn = match.group(1)
+        kwargs["ssdp_udn"] = match.group(1)
 
     if match := regex.search(r"ssdp_ext='([^']+)'", data):
-        ssdp_ext = match.group(1)
+        kwargs["ssdp_ext"] = match.group(1)
 
     if match := regex.search(r"ssdp_server='([^']+)'", data):
-        ssdp_server = match.group(1)
+        kwargs["ssdp_server"] = match.group(1)
 
     if match := regex.search(r"ssdp_headers=(\{[^\{\}]+\})", data):
         ssdp_headers_string = match.group(1).replace("'", '"')
@@ -700,27 +690,17 @@ def load_ssdp_fixture(filename: str, integration: str | None = None) -> SsdpServ
         ssdp_headers["_local_addr"] = _local_addr
         ssdp_headers["_source"] = _source
 
+        kwargs["ssdp_headers"] = ssdp_headers
+
     if match := regex.search(r", ssdp_all_locations=\{'([^\{\}]+)'\}", data):
-        ssdp_all_locations = set(match.group(1).split(","))
+        kwargs["ssdp_all_locations"] = set(match.group(1).split(","))
 
     if match := regex.search(
         r", x_homeassistant_matching_domains=\{'([^\{\}]+)'\}", data
     ):
-        x_homeassistant_matching_domains = set(match.group(1).split(","))
+        kwargs["x_homeassistant_matching_domains"] = set(match.group(1).split(","))
 
-    return SsdpServiceInfo(
-        ssdp_usn,
-        ssdp_st,
-        upnp,
-        ssdp_location,
-        ssdp_nt,
-        ssdp_udn,
-        ssdp_ext,
-        ssdp_server,
-        ssdp_headers,
-        ssdp_all_locations,
-        x_homeassistant_matching_domains,
-    )
+    return SsdpServiceInfo(**kwargs)
 
 
 def json_round_trip(obj: Any) -> Any:
