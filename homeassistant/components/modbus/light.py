@@ -154,24 +154,22 @@ class ModbusLight(BaseSwitch, LightEntity):
         if not self._verify_active:
             return
 
-        if not self._brightness_address:
-            return
-
-        brightness_result = await self._hub.async_pb_call(
-            unit=self._slave,
-            value=1,
-            address=self._brightness_address,
-            use_call=CALL_TYPE_REGISTER_HOLDING,
-        )
-
-        if (
-            brightness_result
-            and brightness_result.registers
-            and brightness_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
-        ):
-            self._attr_brightness = self._convert_modbus_percent_to_brightness(
-                brightness_result.registers[0]
+        if self._brightness_address:
+            brightness_result = await self._hub.async_pb_call(
+                unit=self._slave,
+                value=1,
+                address=self._brightness_address,
+                use_call=CALL_TYPE_REGISTER_HOLDING,
             )
+
+            if (
+                brightness_result
+                and brightness_result.registers
+                and brightness_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
+            ):
+                self._attr_brightness = self._convert_modbus_percent_to_brightness(
+                    brightness_result.registers[0]
+                )
 
         if not self._color_temp_address:
             return
