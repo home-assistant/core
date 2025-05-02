@@ -28,6 +28,7 @@ from homeassistant.util.json import json_loads
 
 from .frame import warn_use
 from .json import json_dumps
+from .singleton import singleton
 
 if TYPE_CHECKING:
     from aiohttp.typedefs import JSONDecoder
@@ -392,18 +393,15 @@ def _async_get_connector(
     return connector
 
 
+@singleton(DATA_RESOLVER)
 def _async_get_or_create_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
     """Return the HassAsyncDNSResolver."""
-    if DATA_RESOLVER in hass.data:
-        return hass.data[DATA_RESOLVER]
-
     resolver = _async_make_resolver(hass)
 
     async def _async_close_resolver(event: Event) -> None:
         await resolver.real_close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_resolver)
-    hass.data[DATA_RESOLVER] = resolver
     return resolver
 
 
