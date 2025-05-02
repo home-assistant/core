@@ -109,7 +109,7 @@ class PsnMediaPlayerEntity(
         ):
             if (
                 self.coordinator.data.available
-                and self.coordinator.data.title_metadata.get("npTitleId", "")
+                and self.coordinator.data.title_metadata.get("npTitleId", None)
                 is not None
             ):
                 return MediaPlayerState.PLAYING
@@ -120,7 +120,7 @@ class PsnMediaPlayerEntity(
     def media_title(self) -> str | None:
         """Media title getter."""
         if (
-            self.coordinator.data.title_metadata.get("npTitleId", "")
+            self.coordinator.data.title_metadata.get("npTitleId", None)
             and self.key == self.coordinator.data.platform["platform"]
         ):
             return self.coordinator.data.title_metadata["titleName"]
@@ -129,13 +129,13 @@ class PsnMediaPlayerEntity(
     @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return self.coordinator.data.title_metadata.get("npTitleId", "")
+        return self.coordinator.data.title_metadata.get("npTitleId", None)
 
     @property
     def media_image_url(self) -> str | None:
         """Media image url getter."""
         if (
-            self.coordinator.data.title_metadata.get("npTitleId", "")
+            self.coordinator.data.title_metadata.get("npTitleId", None)
             and self.key == self.coordinator.data.platform["platform"]
         ):
             title = self.coordinator.data.title_metadata
