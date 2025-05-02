@@ -79,7 +79,7 @@ async def test_fan_set_speed(
     percentage: int,
     expected_argument: dict[str, Any],
 ) -> None:
-    """Test the fan can be turned on/off."""
+    """Test the fan can set percentage."""
 
     await hass.services.async_call(
         TEST_PLATFORM,
@@ -89,6 +89,24 @@ async def test_fan_set_speed(
     )
     mock_miele_client.send_action.assert_called_once_with(
         "DummyAppliance_18", expected_argument
+    )
+
+
+async def test_fan_turn_on_w_percentage(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: None,
+) -> None:
+    """Test the fan can turn on with percentage."""
+
+    await hass.services.async_call(
+        TEST_PLATFORM,
+        "turn_on",
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        blocking=True,
+    )
+    mock_miele_client.send_action.assert_called_with(
+        "DummyAppliance_18", {"ventilationStep": 2}
     )
 
 
@@ -111,5 +129,23 @@ async def test_api_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    mock_miele_client.send_action.assert_called_once()
+
+
+async def test_set_percentage(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: None,
+) -> None:
+    """Test handling of exception at set_percentage."""
+    mock_miele_client.send_action.side_effect = ClientResponseError("test", "Test")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            TEST_PLATFORM,
+            "set_percentage",
+            {ATTR_ENTITY_ID: ENTITY_ID, "percentage": 50},
+            blocking=True,
         )
     mock_miele_client.send_action.assert_called_once()
