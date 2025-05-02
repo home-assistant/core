@@ -142,8 +142,9 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
 
     if device.settings["device"]["type"] == MODEL_EM3:
         base = ord("A")
-    else:
-        base = ord("1")
+        return f"{entity_name} channel {chr(int(block.channel) + base)}"
+
+    base = ord("1")
 
     return f"Channel {chr(int(block.channel) + base)}"
 
