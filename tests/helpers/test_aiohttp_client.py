@@ -407,6 +407,9 @@ async def test_resolver_is_singleton(hass: HomeAssistant) -> None:
     """Test that the resolver is a singleton."""
     session = client.async_get_clientsession(hass)
     session2 = client.async_get_clientsession(hass)
+    session3 = client.async_create_clientsession(hass)
     assert isinstance(session._connector, aiohttp.TCPConnector)
     assert isinstance(session2._connector, aiohttp.TCPConnector)
+    assert isinstance(session3._connector, aiohttp.TCPConnector)
     assert session._connector._resolver is session2._connector._resolver
+    assert session._connector._resolver is session3._connector._resolver
