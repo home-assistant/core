@@ -243,6 +243,7 @@ class TeslemetryStreamingNumberEntity(
                 self._attr_native_value = last_number_data.native_value
             if last_number_data.native_max_value:
                 self._attr_native_max_value = last_number_data.native_max_value
+            self.async_write_ha_state()
 
         # Add listeners
         self.async_on_remove(

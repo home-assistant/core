@@ -28,7 +28,9 @@ async def test_get_triggers(
     """Test we get the expected triggers."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "any")})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "be9554b9-c9fb-41f4-8920-22da015376a4")}
+    )
 
     turn_on_trigger = {
         "platform": "device",
@@ -54,7 +56,9 @@ async def test_if_fires_on_turn_on_request(
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
     entity_id = "media_player.fake"
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "any")})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "be9554b9-c9fb-41f4-8920-22da015376a4")}
+    )
 
     assert await async_setup_component(
         hass,

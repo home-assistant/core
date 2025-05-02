@@ -48,6 +48,9 @@
       "cooler_door": {
         "name": "Cooler door"
       },
+      "cool_select_plus_door": {
+        "name": "CoolSelect+ door"
+      },
       "remote_control": {
         "name": "Remote control"
       },
@@ -122,6 +125,26 @@
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "pause": "[%key:common::state::paused%]",
           "stop": "[%key:common::state::stopped%]"
+        }
+      },
+      "detergent_amount": {
+        "name": "Detergent dispense amount",
+        "state": {
+          "none": "[%key:common::state::off%]",
+          "less": "Less",
+          "standard": "Standard",
+          "extra": "Extra",
+          "custom": "Custom"
+        }
+      },
+      "flexible_detergent_amount": {
+        "name": "Flexible compartment dispense amount",
+        "state": {
+          "none": "[%key:common::state::off%]",
+          "less": "[%key:component::smartthings::entity::select::detergent_amount::state::less%]",
+          "standard": "[%key:component::smartthings::entity::select::detergent_amount::state::standard%]",
+          "extra": "[%key:component::smartthings::entity::select::detergent_amount::state::extra%]",
+          "custom": "[%key:component::smartthings::entity::select::detergent_amount::state::custom%]"
         }
       }
     },
@@ -366,11 +389,11 @@
       "robot_cleaner_cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
-          "auto": "Auto",
+          "stop": "[%key:common::action::stop%]",
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
           "part": "Partial",
           "repeat": "Repeat",
-          "manual": "Manual",
-          "stop": "[%key:common::action::stop%]",
           "map": "Map"
         }
       },
@@ -476,6 +499,9 @@
           "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]",
           "freeze_protection": "Freeze protection"
         }
+      },
+      "water_consumption": {
+        "name": "Water consumption"
       }
     },
     "switch": {
@@ -487,6 +513,9 @@
       },
       "ice_maker": {
         "name": "Ice maker"
+      },
+      "sabbath_mode": {
+        "name": "Sabbath mode"
       }
     }
   },
