@@ -11,12 +11,10 @@ from homematicip.base.functionalChannels import (
     FunctionalChannel,
 )
 from homematicip.device import (
-    BrandSwitchMeasuring,
     EnergySensorsInterface,
     FloorTerminalBlock6,
     FloorTerminalBlock10,
     FloorTerminalBlock12,
-    FullFlushSwitchMeasuring,
     HeatingThermostat,
     HeatingThermostatCompact,
     HeatingThermostatEvo,
@@ -26,9 +24,9 @@ from homematicip.device import (
     MotionDetectorOutdoor,
     MotionDetectorPushButton,
     PassageDetector,
-    PlugableSwitchMeasuring,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
+    SwitchMeasuring,
     TemperatureDifferenceSensor2,
     TemperatureHumiditySensorDisplay,
     TemperatureHumiditySensorOutdoor,
@@ -145,14 +143,7 @@ async def async_setup_entry(
             ),
         ):
             entities.append(HomematicipIlluminanceSensor(hap, device))
-        if isinstance(
-            device,
-            (
-                PlugableSwitchMeasuring,
-                BrandSwitchMeasuring,
-                FullFlushSwitchMeasuring,
-            ),
-        ):
+        if isinstance(device, SwitchMeasuring):
             entities.append(HomematicipPowerSensor(hap, device))
             entities.append(HomematicipEnergySensor(hap, device))
         if isinstance(device, (WeatherSensor, WeatherSensorPlus, WeatherSensorPro)):

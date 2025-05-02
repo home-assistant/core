@@ -8,7 +8,6 @@ from homematicip.base.enums import OpticalSignalBehaviour, RGBColorState
 from homematicip.base.functionalChannels import NotificationLightChannel
 from homematicip.device import (
     BrandDimmer,
-    BrandSwitchMeasuring,
     BrandSwitchNotificationLight,
     Dimmer,
     DinRailDimmer3,
@@ -46,9 +45,7 @@ async def async_setup_entry(
     hap = hass.data[DOMAIN][config_entry.unique_id]
     entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
-        if isinstance(device, BrandSwitchMeasuring):
-            entities.append(HomematicipLightMeasuring(hap, device))
-        elif isinstance(device, BrandSwitchNotificationLight):
+        if isinstance(device, BrandSwitchNotificationLight):
             device_version = Version(device.firmwareVersion)
             entities.append(HomematicipLight(hap, device))
 
@@ -101,10 +98,6 @@ class HomematicipLight(HomematicipGenericEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._device.turn_off_async()
-
-
-class HomematicipLightMeasuring(HomematicipLight):
-    """Representation of the HomematicIP measuring light."""
 
 
 class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):

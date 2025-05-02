@@ -136,6 +136,10 @@ def _async_remove_obsolete_entities(
             entity_registry.async_remove(er_entry.entity_id)
             continue
 
+        if er_entry.unique_id.startswith("HomematicipLightMeasuring"):
+            entity_registry.async_remove(er_entry.entity_id)
+            continue
+
         for hapid in hap.home.accessPointUpdateStates:
             if er_entry.unique_id == f"HomematicipBatterySensor_{hapid}":
                 entity_registry.async_remove(er_entry.entity_id)
