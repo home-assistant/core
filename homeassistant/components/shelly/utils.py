@@ -706,17 +706,32 @@ def get_rpc_device_info(
     if (
         component not in ("cct", "cover", "light", "rgb", "rgbw", "switch")
         or idx is None
+        or len(get_rpc_key_instances(device.status, component)) < 2
     ):
-        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
-
-    key_instances = len(get_rpc_key_instances(device.status, component))
-
-    if key_instances < 2:
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
 
     return DeviceInfo(
         identifiers={(DOMAIN, f"{mac}-{idx}")},
         name=get_rpc_channel_name(device, key),
+        manufacturer="Shelly",
+        via_device=(DOMAIN, mac),
+    )
+
+
+def get_block_device_info(
+    device: BlockDevice, mac: str, block: Block | None = None
+) -> DeviceInfo:
+    """Return device info for Block device."""
+    if (
+        block is None
+        or block.type not in ("light", "relay")
+        or get_number_of_channels(device, block) < 2
+    ):
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{block.description}")},
+        name=get_block_channel_name(device, block),
         manufacturer="Shelly",
         via_device=(DOMAIN, mac),
     )
