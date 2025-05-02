@@ -11,13 +11,12 @@ from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import Execution
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
 from .const import (
-    APPLIANCES_WITH_PROGRAMS,
     AVAILABLE_MAPS_ENUM,
     BEAN_AMOUNT_OPTIONS,
     BEAN_CONTAINER_OPTIONS,
@@ -313,7 +312,7 @@ def _get_entities_for_appliance(
                 HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
                 for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
             ]
-            if appliance.info.type in APPLIANCES_WITH_PROGRAMS
+            if appliance.programs
             else []
         ),
         *[
@@ -367,15 +366,36 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             appliance,
             desc,
         )
+        self.set_options()
+
+    def set_options(self) -> None:
+        """Set the options for the entity."""
         self._attr_options = [
             PROGRAMS_TRANSLATION_KEYS_MAP[program.key]
-            for program in appliance.programs
+            for program in self.appliance.programs
             if program.key != ProgramKey.UNKNOWN
             and (
                 program.constraints is None
-                or program.constraints.execution in desc.allowed_executions
+                or program.constraints.execution
+                in self.entity_description.allowed_executions
             )
         ]
+
+    @callback
+    def refresh_options(self) -> None:
+        """Refresh the options for the entity."""
+        self.set_options()
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self.refresh_options,
+                (self.appliance.info.ha_id, EventKey.BSH_COMMON_APPLIANCE_CONNECTED),
+            )
+        )
 
     def update_native_value(self) -> None:
         """Set the program value."""
