@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.home_connect.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_ZEROCONF, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -275,7 +275,7 @@ async def test_zeroconf_flow(
     assert await setup.async_setup_component(hass, "home_connect", {})
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -328,7 +328,9 @@ async def test_zeroconf_flow_already_setup(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DHCP_DISCOVERY[0]
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=DHCP_DISCOVERY[0],
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -345,7 +347,7 @@ async def test_dhcp_flow(
     """Test DHCP discovery."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=dchp_discovery
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dchp_discovery
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -397,7 +399,7 @@ async def test_dhcp_flow_already_setup(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY[0]
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY[0]
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
