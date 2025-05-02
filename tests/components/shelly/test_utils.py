@@ -86,7 +86,7 @@ async def test_block_get_block_channel_name(
             mock_block_device,
             mock_block_device.blocks[DEVICE_BLOCK_ID],
         )
-        == "Test name channel 1"
+        == "Channel 1"
     )
 
     monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_EM3)
