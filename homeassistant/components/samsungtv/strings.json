@@ -68,6 +68,12 @@
     "service_unsupported": {
       "message": "Entity {entity} does not support this action."
     },
+    "error_set_volume": {
+      "message": "Unable to set volume level on {host}: {error}"
+    },
+    "error_sending_command": {
+      "message": "Unable to send command to {host}: {error}"
+    },
     "encrypted_mode_auth_failed": {
       "message": "Token and session ID are required in encrypted mode."
     },
