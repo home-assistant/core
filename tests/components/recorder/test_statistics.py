@@ -3421,3 +3421,206 @@ async def test_recorder_platform_with_partial_statistics_support(
 
     for meth in supported_methods:
         getattr(recorder_platform, meth).assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("service_args", "expected_result"),
+    [
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "period": "hour",
+                "statistic_ids": ["sensor.i_dont_exist"],
+            },
+            {"statistics": {}},
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "period": "hour",
+            },
+            {
+                "statistics": {
+                    "sensor.total_energy_import1": [
+                        {
+                            "change": 2.0,
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": 0.0,
+                            "sum": 2.0,
+                        },
+                        {
+                            "change": 1.0,
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": 1.0,
+                            "sum": 3.0,
+                        },
+                        {
+                            "change": 2.0,
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": 2.0,
+                            "sum": 5.0,
+                        },
+                        {
+                            "change": 3.0,
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": 3.0,
+                            "sum": 8.0,
+                        },
+                    ],
+                    "sensor.total_energy_import2": [
+                        {
+                            "change": 2.0,
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": 0.0,
+                            "sum": 2.0,
+                        },
+                        {
+                            "change": 1.0,
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": 1.0,
+                            "sum": 3.0,
+                        },
+                        {
+                            "change": 2.0,
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": 2.0,
+                            "sum": 5.0,
+                        },
+                        {
+                            "change": 3.0,
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": 3.0,
+                            "sum": 8.0,
+                        },
+                    ],
+                }
+            },
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "period": "day",
+                "statistic_ids": [
+                    "sensor.total_energy_import1",
+                    "sensor.total_energy_import2",
+                ],
+            },
+            {
+                "statistics": {
+                    "sensor.total_energy_import1": [
+                        {
+                            "change": 8.0,
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "end": "2023-05-09T07:00:00+00:00",
+                            "state": 3.0,
+                            "sum": 8.0,
+                        }
+                    ],
+                    "sensor.total_energy_import2": [
+                        {
+                            "change": 8.0,
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "end": "2023-05-09T07:00:00+00:00",
+                            "state": 3.0,
+                            "sum": 8.0,
+                        }
+                    ],
+                }
+            },
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "end_time": "2023-05-08 08:00:00Z",
+                "period": "hour",
+                "types": ["change", "sum"],
+                "statistic_ids": ["sensor.total_energy_import1"],
+                "units": {"energy": "Wh"},
+            },
+            {
+                "statistics": {
+                    "sensor.total_energy_import1": [
+                        {
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "change": 2000.0,
+                            "sum": 2000.0,
+                        },
+                    ],
+                }
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_statistics_service(
+    hass: HomeAssistant,
+    service_args: dict[str, Any],
+    expected_result: dict[str, Any],
+) -> None:
+    """Test the get_statistics service."""
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
+
+    external_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 5,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 8,
+        },
+    )
+    external_metadata1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": "sensor.total_energy_import1",
+        "unit_of_measurement": "kWh",
+    }
+    external_metadata2 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": "sensor.total_energy_import2",
+        "unit_of_measurement": "kWh",
+    }
+    async_import_statistics(hass, external_metadata1, external_statistics)
+    async_import_statistics(hass, external_metadata2, external_statistics)
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    result = await hass.services.async_call(
+        "recorder", "get_statistics", service_args, return_response=True, blocking=True
+    )
+    assert result == expected_result
