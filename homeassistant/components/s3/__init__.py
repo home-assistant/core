@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import cast
 
 from aiobotocore.client import AioBaseClient as S3Client
@@ -17,26 +16,26 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
+    CONF_CHECKSUM_MODE,
     CONF_ENDPOINT_URL,
     CONF_SECRET_ACCESS_KEY,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
+    ChecksumMode,
 )
 
 type S3ConfigEntry = ConfigEntry[S3Client]
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     """Set up S3 from a config entry."""
 
     data = cast(dict, entry.data)
-    # due to https://github.com/home-assistant/core/issues/143995
+    # defaults to more compatible option
+    checksum_mode = data.get(CONF_CHECKSUM_MODE, ChecksumMode.WHEN_REQUIRED)
     config = Config(
-        request_checksum_calculation="when_required",
-        response_checksum_validation="when_required",
+        request_checksum_calculation=checksum_mode,
+        response_checksum_validation=checksum_mode,
     )
     try:
         session = AioSession()

@@ -10,11 +10,17 @@ from botocore.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.s3.const import CONF_BUCKET, CONF_ENDPOINT_URL, DOMAIN
+from homeassistant.components.s3.config_flow import _detect_checksum_mode
+from homeassistant.components.s3.const import (
+    CONF_BUCKET,
+    CONF_ENDPOINT_URL,
+    DOMAIN,
+    ChecksumMode,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import USER_INPUT
+from .const import EXPECTED_CONFIG_FLOW_DATA, USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -39,7 +45,7 @@ async def test_flow(hass: HomeAssistant) -> None:
     result = await _async_start_flow(hass)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == EXPECTED_CONFIG_FLOW_DATA
 
 
 @pytest.mark.parametrize(
@@ -79,7 +85,7 @@ async def test_flow_create_client_errors(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == EXPECTED_CONFIG_FLOW_DATA
 
 
 async def test_flow_head_bucket_error(
@@ -104,7 +110,7 @@ async def test_flow_head_bucket_error(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == EXPECTED_CONFIG_FLOW_DATA
 
 
 async def test_abort_if_already_configured(
@@ -116,3 +122,53 @@ async def test_abort_if_already_configured(
     result = await _async_start_flow(hass)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("error_response", "expected_checksum_mode"),
+    [
+        (
+            {
+                "Error": {
+                    "Message": "Unsupported header 'x-amz-sdk-checksum-algorithm'",
+                    "Code": "",
+                }
+            },
+            ChecksumMode.WHEN_REQUIRED,
+        ),
+        (
+            {
+                "Error": {
+                    "Message": "",
+                    "Code": "XAmzContentSHA256Mismatch",
+                }
+            },
+            ChecksumMode.WHEN_REQUIRED,
+        ),
+        (None, ChecksumMode.WHEN_SUPPORTED),
+    ],
+)
+async def test_detect_checksum_mode(
+    mock_client: AsyncMock, error_response, expected_checksum_mode
+) -> None:
+    """Test detection of checksum modes."""
+
+    if error_response:
+        mock_client.put_object.side_effect = ClientError(
+            error_response=error_response,
+            operation_name="put_object",
+        )
+
+    checksum_mode = await _detect_checksum_mode(mock_client, "test-bucket")
+    assert checksum_mode == expected_checksum_mode
+
+
+async def test_detect_checksum_mode_raises(mock_client: AsyncMock) -> None:
+    """Test other failure during detection of checksum modes."""
+    mock_client.put_object.side_effect = ClientError(
+        error_response={"Error": {"Message": "Unknown error", "Code": ""}},
+        operation_name="put_object",
+    )
+
+    with pytest.raises(ClientError):
+        await _detect_checksum_mode(mock_client, "test-bucket")
