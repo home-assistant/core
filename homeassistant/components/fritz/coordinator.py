@@ -521,7 +521,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         return {}
 
     def manage_device_info(
-        self, dev_info: Device, dev_mac: str, consider_home: bool
+        self, dev_info: Device, dev_mac: str, consider_home: float
     ) -> bool:
         """Update device lists and return if device is new."""
         _LOGGER.debug("Client dev_info: %s", dev_info)
