@@ -37,7 +37,7 @@ from .typing import VolSchemaType
 
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
-type _IntentSlotsType = dict[
+type IntentSlotsType = dict[
     str | tuple[str, str], IntentSlotInfo | VolSchemaType | Callable[[Any], Any]
 ]
 
@@ -916,8 +916,8 @@ class DynamicServiceIntentHandler(IntentHandler):
         self,
         intent_type: str,
         speech: str | None = None,
-        required_slots: _IntentSlotsType | None = None,
-        optional_slots: _IntentSlotsType | None = None,
+        required_slots: IntentSlotsType | None = None,
+        optional_slots: IntentSlotsType | None = None,
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
@@ -1232,8 +1232,8 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         domain: str,
         service: str,
         speech: str | None = None,
-        required_slots: _IntentSlotsType | None = None,
-        optional_slots: _IntentSlotsType | None = None,
+        required_slots: IntentSlotsType | None = None,
+        optional_slots: IntentSlotsType | None = None,
         required_domains: set[str] | None = None,
         required_features: int | None = None,
         required_states: set[str] | None = None,
