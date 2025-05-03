@@ -1,6 +1,5 @@
 """Media player entity for the PlayStation Network Integration."""
 
-from enum import StrEnum
 import logging
 
 from homeassistant.components.media_player import (
@@ -16,21 +15,15 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
-from .const import DOMAIN
+from .const import DOMAIN, PlatformType
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class PlatformType(StrEnum):
-    """PlayStation Platform Enum."""
-
-    PS5 = "PS5"
-    PS4 = "PS4"
 
 
 PLATFORM_MAP = {
     PlatformType.PS5: "PlayStation 5",
     PlatformType.PS4: "PlayStation 4",
+    PlatformType.PS3: "PlayStation 3",
 }
 PARALLEL_UPDATES = 0
 
@@ -104,7 +97,7 @@ class PsnMediaPlayerEntity(
     def state(self) -> MediaPlayerState:
         """Media Player state getter."""
         if (
-            self.key == self.coordinator.data.platform["platform"]
+            self.key == self.coordinator.data.platform.get("platform", "")
             and self.coordinator.data.platform["onlineStatus"] == "online"
         ):
             if (
@@ -119,10 +112,9 @@ class PsnMediaPlayerEntity(
     @property
     def media_title(self) -> str | None:
         """Media title getter."""
-        if (
-            self.coordinator.data.title_metadata.get("npTitleId", None)
-            and self.key == self.coordinator.data.platform["platform"]
-        ):
+        if self.coordinator.data.title_metadata.get(
+            "npTitleId", None
+        ) and self.key == self.coordinator.data.platform.get("platform", ""):
             return self.coordinator.data.title_metadata["titleName"]
         return None
 
@@ -134,14 +126,13 @@ class PsnMediaPlayerEntity(
     @property
     def media_image_url(self) -> str | None:
         """Media image url getter."""
-        if (
-            self.coordinator.data.title_metadata.get("npTitleId", None)
-            and self.key == self.coordinator.data.platform["platform"]
-        ):
+        if self.coordinator.data.title_metadata.get(
+            "npTitleId", None
+        ) and self.key == self.coordinator.data.platform.get("platform", ""):
             title = self.coordinator.data.title_metadata
             if title["format"] == PlatformType.PS5:
                 return title["conceptIconUrl"]
 
-            if title["format"] == PlatformType.PS4:
+            if title["format"] in [PlatformType.PS4, PlatformType.PS3]:
                 return title["npTitleIconUrl"]
         return None
