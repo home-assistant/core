@@ -294,22 +294,34 @@ async def test_manual_gethostbyname_error(
     ("side_effect", "error_expected"),
     [
         (
+            ControlPointInvalidHostError,
+            {"base": "invalid_host"},
+        ),
+        (
             ControlPointConnectionRefusedError,
             {"base": "connection_refused"},
+        ),
+        (
+            ControlPointCannotConnectError,
+            {"base": "cannot_connect"},
         ),
         (
             ControlPointTimeoutError,
             {"base": "timeout"},
         ),
+        (
+            Exception,
+            {"base": "unknown"},
+        ),
     ],
 )
-async def test_manual_socket_errors(
+async def test_manual_connection_errors(
     hass: HomeAssistant,
     discovery_mock: MagicMock,
     side_effect: Exception,
     error_expected: dict,
 ) -> None:
-    """Test manual form transitions via socket errors to creation."""
+    """Test manual form connection errors."""
 
     discovery_mock.discovers.side_effect = ControlPointError("Discovery failed")
 
@@ -321,7 +333,7 @@ async def test_manual_socket_errors(
     assert result["step_id"] == "manual"
     assert result["errors"] == {}
 
-    # First attempt fails with socket errors
+    # First attempt fails with connection errors
     discovery_mock.return_value.validate_connection.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
