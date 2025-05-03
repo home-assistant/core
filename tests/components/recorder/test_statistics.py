@@ -3573,30 +3573,10 @@ async def test_get_statistics_service(
     period4 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
 
     external_statistics = (
-        {
-            "start": period1,
-            "last_reset": None,
-            "state": 0,
-            "sum": 2,
-        },
-        {
-            "start": period2,
-            "last_reset": None,
-            "state": 1,
-            "sum": 3,
-        },
-        {
-            "start": period3,
-            "last_reset": None,
-            "state": 2,
-            "sum": 5,
-        },
-        {
-            "start": period4,
-            "last_reset": None,
-            "state": 3,
-            "sum": 8,
-        },
+        {"start": period1, "last_reset": None, "state": 0, "sum": 2},
+        {"start": period2, "last_reset": None, "state": 1, "sum": 3},
+        {"start": period3, "last_reset": None, "state": 2, "sum": 5},
+        {"start": period4, "last_reset": None, "state": 3, "sum": 8},
     )
     external_metadata1 = {
         "has_mean": False,
