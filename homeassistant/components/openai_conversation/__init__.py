@@ -182,7 +182,15 @@ async def _render_image(call: ServiceCall) -> ServiceResponse:
     if not response.data or not response.data[0].b64_json:
         raise HomeAssistantError("No image data returned")
 
-    base_path = call.hass.config.media_dirs["local"]
+    if DOMAIN in call.hass.config.media_dirs:
+        source_dir_id = DOMAIN
+    else:
+        source_dir_id = list(call.hass.config.media_dirs)[0]
+        for dir_id in call.hass.config.media_dirs:
+            if any(s in dir_id.lower() for s in ("image", "photo", "picture")):
+                source_dir_id = dir_id
+                break
+    base_path = call.hass.config.media_dirs[source_dir_id]
     directory = Path(base_path, DOMAIN)
     directory.mkdir(parents=True, exist_ok=True)
     if len(call.data[CONF_PROMPT]) <= 32:
@@ -206,7 +214,7 @@ async def _render_image(call: ServiceCall) -> ServiceResponse:
 
     response.data[0].url = get_url(call.hass) + async_sign_path(
         call.hass,
-        f"/media/local/{DOMAIN}/{filename}",
+        f"/media/{source_dir_id}/{DOMAIN}/{filename}",
         timedelta(seconds=IMAGE_AUTH_EXPIRY_TIME),
     )
 
