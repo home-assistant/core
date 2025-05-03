@@ -17,8 +17,10 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.components.homee.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import build_mock_node, setup_integration
@@ -81,23 +83,23 @@ async def test_preset_mode(
 @pytest.mark.parametrize(
     ("service", "options", "expected"),
     [
-        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 100}, [call(77, 2, 0), call(77, 1, 8)]),
-        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 86}, [call(77, 2, 0), call(77, 1, 7)]),
-        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 63}, [call(77, 2, 0), call(77, 1, 6)]),
-        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 60}, [call(77, 2, 0), call(77, 1, 5)]),
-        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 50}, [call(77, 2, 0), call(77, 1, 4)]),
-        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 34}, [call(77, 2, 0), call(77, 1, 3)]),
-        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 17}, [call(77, 2, 0), call(77, 1, 2)]),
-        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 8}, [call(77, 2, 0), call(77, 1, 1)]),
-        (SERVICE_TURN_ON, {}, [call(77, 2, 0), call(77, 1, 6)]),
-        (SERVICE_TURN_OFF, {}, [call(77, 1, 0)]),
-        (SERVICE_INCREASE_SPEED, {}, [call(77, 1, 4)]),
-        (SERVICE_DECREASE_SPEED, {}, [call(77, 1, 2)]),
-        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 42}, [call(77, 1, 4)]),
-        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "manual"}, [call(77, 2, 0)]),
-        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "auto"}, [call(77, 2, 1)]),
-        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "summer"}, [call(77, 2, 2)]),
-        (SERVICE_TOGGLE, {}, [call(77, 1, 0)]),
+        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 100}, (77, 1, 8)),
+        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 86}, (77, 1, 7)),
+        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 63}, (77, 1, 6)),
+        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 60}, (77, 1, 5)),
+        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 50}, (77, 1, 4)),
+        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 34}, (77, 1, 3)),
+        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 17}, (77, 1, 2)),
+        (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 8}, (77, 1, 1)),
+        (SERVICE_TURN_ON, {}, (77, 1, 6)),
+        (SERVICE_TURN_OFF, {}, (77, 1, 0)),
+        (SERVICE_INCREASE_SPEED, {}, (77, 1, 4)),
+        (SERVICE_DECREASE_SPEED, {}, (77, 1, 2)),
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 42}, (77, 1, 4)),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "manual"}, (77, 2, 0)),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "auto"}, (77, 2, 1)),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "summer"}, (77, 2, 2)),
+        (SERVICE_TOGGLE, {}, (77, 1, 0)),
     ],
 )
 async def test_fan_services(
@@ -122,7 +124,7 @@ async def test_fan_services(
         blocking=True,
     )
 
-    assert mock_homee.set_value.call_args_list == expected
+    mock_homee.set_value.assert_called_once_with(*expected)
 
 
 async def test_turn_on_preset_last_value_zero(
@@ -146,6 +148,27 @@ async def test_turn_on_preset_last_value_zero(
         call(77, 2, 0),
         call(77, 1, 8),
     ]
+
+
+async def test_turn_on_invalid_preset(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+) -> None:
+    """Test turn on with invalid preset."""
+    mock_homee.nodes = [build_mock_node("fan.json")]
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "fan.test_fan", ATTR_PRESET_MODE: "auto"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_preset_mode"
 
 
 async def test_fan_snapshot(

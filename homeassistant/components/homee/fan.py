@@ -8,6 +8,7 @@ from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -89,11 +90,10 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        if self._speed_attribute.editable:
-            await self.async_set_homee_value(
-                self._speed_attribute,
-                math.ceil(percentage_to_ranged_value(self.speed_range, percentage)),
-            )
+        await self.async_set_homee_value(
+            self._speed_attribute,
+            math.ceil(percentage_to_ranged_value(self.speed_range, percentage)),
+        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
@@ -114,9 +114,14 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
     ) -> None:
         """Turn the fan on."""
         if preset_mode is not None:
+            if preset_mode != "manual":
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_preset_mode",
+                    translation_placeholders={"preset_mode": preset_mode},
+                )
+
             await self.async_set_preset_mode(preset_mode)
-        else:
-            await self.async_set_preset_mode("manual")
 
         # If no percentage is given, use the last known value.
         if percentage is None:
