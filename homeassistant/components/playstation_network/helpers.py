@@ -90,7 +90,7 @@ class PlaystationNetwork:
                         "format": data.platform["platform"],
                         "npTitleIconUrl": self.user.trophy_groups_summary(
                             np_communication_id=data.platform["npTitleId"],
-                            platform=PlatformType.PS3,
+                            platform=PSNAWPPlatformType.PS3,
                         ).trophy_title_icon_url,
                     }
         return data
