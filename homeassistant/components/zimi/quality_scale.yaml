@@ -64,7 +64,9 @@ rules:
   discovery:
     status: exempt
     comment: >
-      Discovery is not supported as confirmation of ZCC settings is required.
+      Discovery is supported for the case where the Zimi Cloud Controller(s) are
+      connected to a local LAN network.   Discover is not supported if the Zimi
+      Cloud Controller(s) are not connected to the local LAN network.
   stale-devices: todo
   diagnostics: todo
   exception-translations: todo
