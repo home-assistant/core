@@ -34,7 +34,7 @@
       },
       "wifi": {
         "data": {
-          "use_wifi": "Use Wi-Fi (un-tick and submit to use bluetooth)",
+          "use_wifi": "Use Wi-Fi (un-tick and submit to use Bluetooth)",
           "account_name": "Mammotion email or account number",
           "password": "Mammotion account password"
         },
