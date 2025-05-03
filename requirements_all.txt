@@ -3156,7 +3156,7 @@ zabbix-utils==2.0.2
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.146.5
+zeroconf==0.147.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
