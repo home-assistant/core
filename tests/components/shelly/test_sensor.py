@@ -62,7 +62,8 @@ async def test_block_sensor(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block sensor."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_channel_1_power"
+    # num_outputs is 2, channel name is used
+    entity_id = f"{SENSOR_DOMAIN}.channel_1_power"
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))
@@ -82,7 +83,8 @@ async def test_energy_sensor(
     hass: HomeAssistant, mock_block_device: Mock, entity_registry: EntityRegistry
 ) -> None:
     """Test energy sensor."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_channel_1_energy"
+    # num_outputs is 2, channel name is used
+    entity_id = f"{SENSOR_DOMAIN}.channel_1_energy"
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))
@@ -430,7 +432,9 @@ async def test_block_shelly_air_lamp_life(
     percentage: float,
 ) -> None:
     """Test block Shelly Air lamp life percentage sensor."""
-    entity_id = f"{SENSOR_DOMAIN}.{'test_name_channel_1_lamp_life'}"
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    # num_outputs is 1, device name is used
+    entity_id = f"{SENSOR_DOMAIN}.{'test_name_lamp_life'}"
     monkeypatch.setattr(
         mock_block_device.blocks[RELAY_BLOCK_ID], "totalWorkTime", lamp_life_seconds
     )
@@ -1371,7 +1375,7 @@ async def test_rpc_rgbw_sensors(
 
     await init_integration(hass, 2)
 
-    entity_id = f"sensor.test_name_{light_type}_light_0_power"
+    entity_id = f"sensor.{light_type}_light_0_power"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "12.2"
@@ -1380,7 +1384,7 @@ async def test_rpc_rgbw_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-power_{light_type}"
 
-    entity_id = f"sensor.test_name_{light_type}_light_0_energy"
+    entity_id = f"sensor.{light_type}_light_0_energy"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "0.045141"
@@ -1389,7 +1393,7 @@ async def test_rpc_rgbw_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-energy_{light_type}"
 
-    entity_id = f"sensor.test_name_{light_type}_light_0_current"
+    entity_id = f"sensor.{light_type}_light_0_current"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "0.23"
@@ -1400,7 +1404,7 @@ async def test_rpc_rgbw_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-current_{light_type}"
 
-    entity_id = f"sensor.test_name_{light_type}_light_0_voltage"
+    entity_id = f"sensor.{light_type}_light_0_voltage"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "12.4"
@@ -1411,7 +1415,7 @@ async def test_rpc_rgbw_sensors(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-voltage_{light_type}"
 
-    entity_id = f"sensor.test_name_{light_type}_light_0_device_temperature"
+    entity_id = f"sensor.{light_type}_light_0_device_temperature"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "54.3"
