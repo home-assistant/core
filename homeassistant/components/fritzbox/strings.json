@@ -92,7 +92,7 @@
       "message": "Can't change settings while manual access for telephone, app, or user interface is disabled on the device"
     },
     "change_settings_while_active_mode": {
-      "message": "Can't change setting while holiday or summer mode is active on the device."
+      "message": "Can't change settings while holiday or summer mode is active on the device."
     }
   }
 }
