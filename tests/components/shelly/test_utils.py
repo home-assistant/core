@@ -250,12 +250,12 @@ async def test_get_rpc_channel_name(mock_rpc_device: Mock) -> None:
     ("component", "expected"),
     [
         ("cover", "Cover"),
-        ("input", "Input"),
+        ("input", "Test name Input"),
         ("light", "Light"),
         ("rgb", "RGB light"),
         ("rgbw", "RGBW light"),
         ("switch", "Switch"),
-        ("thermostat", "Thermostat"),
+        ("thermostat", "Test name Thermostat"),
     ],
 )
 async def test_get_rpc_channel_name_multiple_components(
@@ -271,14 +271,8 @@ async def test_get_rpc_channel_name_multiple_components(
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
-    assert (
-        get_rpc_channel_name(mock_rpc_device, f"{component}:0")
-        == f"Test name {expected} 0"
-    )
-    assert (
-        get_rpc_channel_name(mock_rpc_device, f"{component}:1")
-        == f"Test name {expected} 1"
-    )
+    assert get_rpc_channel_name(mock_rpc_device, f"{component}:0") == f"{expected} 0"
+    assert get_rpc_channel_name(mock_rpc_device, f"{component}:1") == f"{expected} 1"
 
 
 async def test_get_rpc_input_triggers(
