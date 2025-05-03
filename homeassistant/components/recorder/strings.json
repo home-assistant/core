@@ -81,7 +81,7 @@
         },
         "statistic_ids": {
           "name": "Statistic IDs",
-          "description": "The entity IDs to return statistics for. If omitted, returns all available statistics."
+          "description": "The entity IDs or statistic IDs to return statistics for. If omitted, returns all available statistics."
         },
         "period": {
           "name": "Period",
