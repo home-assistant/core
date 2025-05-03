@@ -83,7 +83,7 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
         )
 
     @property
-    def preset_mode(self) -> str | None:
+    def preset_mode(self) -> str:
         """Return the mode from the float state."""
         return self._attr_preset_modes[int(self._mode_attribute.current_value)]
 
