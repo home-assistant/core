@@ -133,7 +133,10 @@ class SirenGroup(GroupEntity, SirenEntity):
         self._entity_ids = entity_ids
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            ATTR_ENTITY_ID: entity_ids,
+            "available_tones": [],
+        }
         self._attr_unique_id = unique_id
         self.mode = any
         if mode:
@@ -183,8 +186,12 @@ class SirenGroup(GroupEntity, SirenEntity):
         self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
 
         self._attr_supported_features = SirenEntityFeature(0)
+        available_tones = set()  # Collect available tones from all entities
         for state in states:
             if (features := state.attributes.get(ATTR_SUPPORTED_FEATURES)) is not None:
                 self._attr_supported_features |= features
+            if tones := state.attributes.get("available_tones"):
+                available_tones.update(tones)
 
         self._attr_supported_features &= SUPPORT_GROUP_SIREN
+        self._attr_extra_state_attributes["available_tones"] = list(available_tones)
