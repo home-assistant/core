@@ -560,7 +560,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             async_dispatcher_send(self.hass, self.signal_device_new)
 
     async def async_update_device_info(self, now: datetime | None = None) -> None:
-        """Scan for new devices and return a list of found device ids."""
+        """Update own device information."""
 
         _LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
         (
@@ -570,7 +570,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         ) = await self._async_update_device_info()
 
     async def async_scan_devices(self, now: datetime | None = None) -> None:
-        """Scan for new devices."""
+        """Scan for new network devices."""
 
         if self.hass.is_stopping:
             _ha_is_stopping("scan devices")
