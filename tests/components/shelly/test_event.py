@@ -176,7 +176,8 @@ async def test_block_event(
 ) -> None:
     """Test block device event."""
     await init_integration(hass, 1)
-    entity_id = "event.test_name_channel_1"
+    # num_outputs is 2, channel name is used
+    entity_id = "event.channel_1"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
@@ -201,11 +202,12 @@ async def test_block_event(
 
 
 async def test_block_event_shix3_1(
-    hass: HomeAssistant, mock_block_device: Mock
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device event for SHIX3-1."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
     await init_integration(hass, 1, model=MODEL_I3)
-    entity_id = "event.test_name_channel_1"
+    entity_id = "event.test_name"
 
     assert (state := hass.states.get(entity_id))
     assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
