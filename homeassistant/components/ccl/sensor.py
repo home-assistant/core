@@ -186,9 +186,10 @@ async def async_setup_entry(
     coordinator.device.register_new_sensor_cb(_new_sensor)
     entry.async_on_unload(lambda: coordinator.device.remove_new_sensor_cb(_new_sensor))
 
-    if "sensors" in coordinator.data:
-        for sensor in coordinator.data["sensors"].values():
-            _new_sensor(sensor)
+    if coordinator.data is not None:
+        if "sensors" in coordinator.data:
+            for sensor in coordinator.data["sensors"].values():
+                _new_sensor(sensor)
 
 
 class CCLSensorEntity(CCLEntity, SensorEntity):
