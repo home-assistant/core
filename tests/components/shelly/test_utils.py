@@ -79,37 +79,38 @@ async def test_block_get_block_channel_name(
     mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block get block channel name."""
-    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "relay")
-
-    assert (
-        get_block_channel_name(
-            mock_block_device,
-            mock_block_device.blocks[DEVICE_BLOCK_ID],
-        )
-        == "Test name channel 1"
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
     )
+    # "device" block type, the device name should be used
+    assert result == "Test name"
+
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "relay")
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
+    )
+    # there are two "relay" blocks, name should not contain the device name
+    assert result == "Channel 1"
 
     monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_EM3)
-
-    assert (
-        get_block_channel_name(
-            mock_block_device,
-            mock_block_device.blocks[DEVICE_BLOCK_ID],
-        )
-        == "Test name channel A"
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
     )
+    # for EM3 the name should contain the device name
+    assert result == "Test name channel A"
 
     monkeypatch.setitem(
         mock_block_device.settings, "relays", [{"name": "test-channel"}]
     )
-
-    assert (
-        get_block_channel_name(
-            mock_block_device,
-            mock_block_device.blocks[DEVICE_BLOCK_ID],
-        )
-        == "test-channel"
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
     )
+    # there is a "relay" block with a name, so the name should be used
+    assert result == "test-channel"
 
 
 async def test_is_block_momentary_input(
