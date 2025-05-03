@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
+from google.genai.types import File, FileState
 import pytest
 from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
@@ -89,6 +90,117 @@ async def test_generate_content_service_with_image(
         "text": stubbed_generated_content,
     }
     assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_content_file_processing_succeeds(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test generate content service."""
+    stubbed_generated_content = (
+        "A mail carrier is at your front door delivering a package"
+    )
+
+    with (
+        patch(
+            "google.genai.models.AsyncModels.generate_content",
+            return_value=Mock(
+                text=stubbed_generated_content,
+                prompt_feedback=None,
+                candidates=[Mock()],
+            ),
+        ) as mock_generate,
+        patch("pathlib.Path.exists", return_value=True),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch("builtins.open", mock_open(read_data="this is an image")),
+        patch("mimetypes.guess_type", return_value=["image/jpeg"]),
+        patch(
+            "google.genai.files.Files.upload",
+            side_effect=[
+                File(name="doorbell_snapshot.jpg", state=FileState.ACTIVE),
+                File(name="context.txt", state=FileState.PROCESSING),
+            ],
+        ),
+        patch(
+            "google.genai.files.Files.get",
+            side_effect=[
+                File(name="context.txt", state=FileState.PROCESSING),
+                File(name="context.txt", state=FileState.ACTIVE),
+            ],
+        ),
+    ):
+        response = await hass.services.async_call(
+            "google_generative_ai_conversation",
+            "generate_content",
+            {
+                "prompt": "Describe this image from my doorbell camera",
+                "filenames": ["doorbell_snapshot.jpg", "context.txt", "context.txt"],
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == {
+        "text": stubbed_generated_content,
+    }
+    assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_content_file_processing_fails(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test generate content service."""
+    stubbed_generated_content = (
+        "A mail carrier is at your front door delivering a package"
+    )
+
+    with (
+        patch(
+            "google.genai.models.AsyncModels.generate_content",
+            return_value=Mock(
+                text=stubbed_generated_content,
+                prompt_feedback=None,
+                candidates=[Mock()],
+            ),
+        ),
+        patch("pathlib.Path.exists", return_value=True),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch("builtins.open", mock_open(read_data="this is an image")),
+        patch("mimetypes.guess_type", return_value=["image/jpeg"]),
+        patch(
+            "google.genai.files.Files.upload",
+            side_effect=[
+                File(name="doorbell_snapshot.jpg", state=FileState.ACTIVE),
+                File(name="context.txt", state=FileState.PROCESSING),
+            ],
+        ),
+        patch(
+            "google.genai.files.Files.get",
+            side_effect=[
+                File(name="context.txt", state=FileState.PROCESSING),
+                File(
+                    name="context.txt",
+                    state=FileState.FAILED,
+                    error={"message": "File processing failed"},
+                ),
+            ],
+        ),
+        pytest.raises(
+            HomeAssistantError,
+            match="File `context.txt` processing failed, reason: File processing failed",
+        ),
+    ):
+        await hass.services.async_call(
+            "google_generative_ai_conversation",
+            "generate_content",
+            {
+                "prompt": "Describe this image from my doorbell camera",
+                "filenames": ["doorbell_snapshot.jpg", "context.txt", "context.txt"],
+            },
+            blocking=True,
+            return_response=True,
+        )
 
 
 @pytest.mark.usefixtures("mock_init_component")
