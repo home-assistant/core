@@ -35,8 +35,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "timeout": "Connection timed out",
-      "invalid_host": "Invalid hostname",
+      "timeout": "[%key:common::config_flow::error::timeout_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "connection_refused": "Connection refused"
     },
     "abort": {
