@@ -352,10 +352,10 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             speed=operation_settings.speed,
             ultra_wave=operation_settings.ultra_wave,  # touch no touch etc
             toward=operation_settings.toward,  # is just angle (route angle)
-            toward_included_angle=operation_settings.toward_included_angle  # demond_angle
+            toward_included_angle=operation_settings.toward_included_angle
             if operation_settings.channel_mode == 1
             else 0,  # crossing angle relative to grid
-            toward_mode=operation_settings.toward_mode,
+            toward_mode=operation_settings.toward_mode, #
             blade_height=operation_settings.blade_height,
             channel_mode=operation_settings.channel_mode,  # single, double, segment or none (route mode)
             channel_width=operation_settings.channel_width,  # path space
@@ -498,8 +498,6 @@ class MammotionReportUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevi
         """Get data from the device."""
         if data := await super()._async_update_data():
             return data
-
-        device = self.manager.get_device_by_name(self.device_name)
 
         try:
             await self.async_send_command("get_report_cfg")
