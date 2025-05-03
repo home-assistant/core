@@ -141,7 +141,7 @@ class SirenGroup(GroupEntity, SirenEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command with kwargs to all sirens in the group."""
-        data = {ATTR_ENTITY_ID: list(self._entity_ids), **kwargs}
+        data = {ATTR_ENTITY_ID: self._entity_ids, **kwargs}
 
         await self.hass.services.async_call(
             SIREN_DOMAIN,
@@ -153,7 +153,7 @@ class SirenGroup(GroupEntity, SirenEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to all sirens in the group."""
-        data = {ATTR_ENTITY_ID: list(self._entity_ids)}
+        data = {ATTR_ENTITY_ID: self._entity_ids}
         await self.hass.services.async_call(
             SIREN_DOMAIN,
             SERVICE_TURN_OFF,

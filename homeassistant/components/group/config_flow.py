@@ -147,6 +147,19 @@ async def light_switch_options_schema(
     )
 
 
+async def siren_options_schema(
+    domain: str, handler: SchemaCommonFlowHandler | None
+) -> vol.Schema:
+    """Generate options schema."""
+    return (await basic_group_options_schema(domain, handler)).extend(
+        {
+            vol.Required(
+                CONF_ALL, default=False, description={"advanced": True}
+            ): selector.BooleanSelector(),
+        }
+    )
+
+
 GROUP_TYPES = [
     "binary_sensor",
     "button",
@@ -289,6 +302,10 @@ OPTIONS_FLOW = {
     ),
     "sensor": SchemaFlowFormStep(
         partial(sensor_options_schema, "sensor"),
+        preview="group",
+    ),
+    "siren": SchemaFlowFormStep(
+        partial(siren_options_schema, "siren"),
         preview="group",
     ),
     "switch": SchemaFlowFormStep(

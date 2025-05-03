@@ -282,7 +282,6 @@ async def test_reload(hass: HomeAssistant) -> None:
             ]
         },
     )
-    await hass.async_block_till_done()
 
     await hass.async_block_till_done()
     await hass.async_start()
