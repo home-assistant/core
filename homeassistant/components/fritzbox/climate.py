@@ -202,11 +202,6 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         self.check_active_or_lock_mode()
-        if self.data.holiday_active or self.data.summer_active:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="change_settings_while_lock_enabled",
-            )
         await self.async_set_hkr_state(PRESET_API_HKR_STATE_MAPPING[preset_mode])
 
     @property
