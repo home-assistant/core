@@ -42,6 +42,7 @@ class WebControlProLight(WebControlProGenericEntity, LightEntity):
     """Representation of a WMS based light."""
 
     _attr_color_mode = ColorMode.ONOFF
+    _attr_name = None
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
