@@ -8,6 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.siren import (
+    ATTR_AVAILABLE_TONES,
     DOMAIN as SIREN_DOMAIN,
     PLATFORM_SCHEMA as SIREN_PLATFORM_SCHEMA,
     SirenEntity,
@@ -35,6 +36,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
+from .util import find_state_attributes
 
 DEFAULT_NAME = "Siren Group"
 CONF_ALL = "all"
@@ -186,12 +188,17 @@ class SirenGroup(GroupEntity, SirenEntity):
         self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
 
         self._attr_supported_features = SirenEntityFeature(0)
-        available_tones = set()
         for state in states:
             if (features := state.attributes.get(ATTR_SUPPORTED_FEATURES)) is not None:
                 self._attr_supported_features |= features
-            if tones := state.attributes.get("available_tones"):
-                available_tones.update(tones)
 
         self._attr_supported_features &= SUPPORT_GROUP_SIREN
-        self._attr_extra_state_attributes["available_tones"] = list(available_tones)
+
+        self._attr_available_tones = None
+        all_tone_lists = list(find_state_attributes(states, ATTR_AVAILABLE_TONES))
+        if all_tone_lists:
+            self._attr_available_tones = list(set().union(*all_tone_lists))
+            self._attr_available_tones.sort()
+            if "None" in self._attr_available_tones:
+                self._attr_available_tones.remove("None")
+                self._attr_available_tones.insert(0, "None")
