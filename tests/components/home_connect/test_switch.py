@@ -92,7 +92,7 @@ async def test_paired_depaired_devices_flow(
         )
     )
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
@@ -181,7 +181,7 @@ async def test_connected_devices(
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
     client.get_all_programs = AsyncMock(side_effect=get_all_programs_side_effect)
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
     client.get_all_programs = get_all_programs_mock
 
@@ -229,7 +229,7 @@ async def test_switch_entity_availability(
         "switch.dishwasher_program_eco50",
     ]
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
@@ -311,7 +311,7 @@ async def test_switch_functionality(
     """Test switch functionality."""
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id})
     await hass.async_block_till_done()
@@ -377,7 +377,7 @@ async def test_program_switch_functionality(
 
     client.stop_program = AsyncMock(side_effect=mock_stop_program)
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.is_state(entity_id, initial_state)
 
     await hass.services.async_call(
@@ -484,7 +484,7 @@ async def test_switch_exception_handling(
     )
 
     assert await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Assert that an exception is called.
     with pytest.raises(HomeConnectError):
@@ -527,7 +527,7 @@ async def test_ent_desc_switch_functionality(
     """Test switch functionality - entity description setup."""
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id})
     await hass.async_block_till_done()
@@ -583,7 +583,7 @@ async def test_ent_desc_switch_exception_handling(
         ]
     )
     assert await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Assert that an exception is called.
     with pytest.raises(HomeConnectError):
@@ -668,7 +668,7 @@ async def test_power_switch(
     )
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id})
     await hass.async_block_till_done()
@@ -707,7 +707,7 @@ async def test_power_switch_fetch_off_state_from_current_value(
     )
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.is_state("switch.dishwasher_power", STATE_OFF)
 
@@ -772,7 +772,7 @@ async def test_power_switch_service_validation_errors(
         client.get_setting = AsyncMock(return_value=setting)
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
@@ -832,7 +832,7 @@ async def test_create_program_switch_deprecation_issue(
     )
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -912,7 +912,7 @@ async def test_program_switch_deprecation_issue_fix(
     )
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -1006,7 +1006,7 @@ async def test_options_functionality(
     )
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(entity_id)
 
     await hass.services.async_call(

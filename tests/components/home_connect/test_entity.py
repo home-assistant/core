@@ -158,7 +158,7 @@ async def test_program_options_retrieval(
     )
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for entity_id, (state, _) in zip(
         option_entity_id.values(), options_state_stage_1, strict=True
@@ -276,7 +276,7 @@ async def test_no_options_retrieval_on_unknown_program(
     client.get_all_programs = AsyncMock(side_effect=get_all_programs_with_options_mock)
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert client.get_available_program.call_count == 0
 
@@ -356,7 +356,7 @@ async def test_program_options_retrieval_after_appliance_connection(
     )
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert not hass.states.get(option_entity_id)
 
@@ -467,7 +467,7 @@ async def test_option_entity_functionality_exception(
     )
 
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.get(entity_id)
 
