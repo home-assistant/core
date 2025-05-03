@@ -122,7 +122,7 @@ async def test_generate_content_file_processing_succeeds(
             ],
         ),
         patch(
-            "google.genai.files.Files.get",
+            "google.genai.files.AsyncFiles.get",
             side_effect=[
                 File(name="context.txt", state=FileState.PROCESSING),
                 File(name="context.txt", state=FileState.ACTIVE),
@@ -176,7 +176,7 @@ async def test_generate_content_file_processing_fails(
             ],
         ),
         patch(
-            "google.genai.files.Files.get",
+            "google.genai.files.AsyncFiles.get",
             side_effect=[
                 File(name="context.txt", state=FileState.PROCESSING),
                 File(
