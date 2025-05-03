@@ -198,7 +198,7 @@
       "message": "Error during OTA (Over-The-Air) of {configuration}; Try again in ESPHome dashboard for more information."
     },
     "ota_in_progress": {
-      "message": "An OTA (Over-The-Air) update is already progress for {configuration}."
+      "message": "An OTA (Over-The-Air) update is already in progress for {configuration}."
     }
   }
 }
