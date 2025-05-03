@@ -88,6 +88,8 @@ class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
 ):
     """Representation of a devolo device tracker."""
 
+    _attr_translation_key = "device_tracker"
+
     def __init__(
         self,
         coordinator: DevoloDataUpdateCoordinator[list[ConnectedStationInfo]],
@@ -122,13 +124,6 @@ class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
                 else STATE_UNKNOWN
             )
         return attrs
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        if self.is_connected:
-            return "mdi:lan-connect"
-        return "mdi:lan-disconnect"
 
     @property
     def is_connected(self) -> bool:

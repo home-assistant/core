@@ -87,6 +87,7 @@ CONF_EFFECT_TEMPLATE = "effect_template"
 CONF_EFFECT_VALUE_TEMPLATE = "effect_value_template"
 CONF_ENTITY_PICTURE = "entity_picture"
 CONF_EXPIRE_AFTER = "expire_after"
+CONF_FLASH = "flash"
 CONF_FLASH_TIME_LONG = "flash_time_long"
 CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_GREEN_TEMPLATE = "green_template"
@@ -139,6 +140,7 @@ CONF_TEMP_STATE_TOPIC = "temperature_state_topic"
 CONF_TEMP_INITIAL = "initial"
 CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_MIN = "min_temp"
+CONF_TRANSITION = "transition"
 CONF_XY_COMMAND_TEMPLATE = "xy_command_template"
 CONF_XY_COMMAND_TOPIC = "xy_command_topic"
 CONF_XY_STATE_TOPIC = "xy_state_topic"
@@ -193,6 +195,8 @@ DEFAULT_POSITION_CLOSED = 0
 DEFAULT_POSITION_OPEN = 100
 DEFAULT_RETAIN = False
 DEFAULT_WHITE_SCALE = 255
+
+VALUES_ON_COMMAND_TYPE = ["first", "last", "brightness"]
 
 PROTOCOL_31 = "3.1"
 PROTOCOL_311 = "3.1.1"

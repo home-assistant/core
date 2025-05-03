@@ -74,7 +74,7 @@ def build_rrule(task: TaskData) -> rrule:
 
     bysetpos = None
     if rrule_frequency == MONTHLY and task.weeksOfMonth:
-        bysetpos = task.weeksOfMonth
+        bysetpos = [i + 1 for i in task.weeksOfMonth]
         weekdays = weekdays if weekdays else [MO]
 
     return rrule(

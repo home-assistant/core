@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/homematicip_cloud",
   "iot_class": "cloud_push",
   "loggers": ["homematicip"],
-  "requirements": ["homematicip==1.1.7"]
+  "requirements": ["homematicip==2.0.1"]
 }

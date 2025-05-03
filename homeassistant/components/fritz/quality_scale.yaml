@@ -4,9 +4,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: one coverage miss in line 110
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions: done
