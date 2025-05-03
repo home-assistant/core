@@ -56,6 +56,8 @@ async def test_block_reload_on_cfg_change(
 ) -> None:
     """Test block reload on config change."""
     await init_integration(hass, 1)
+    # num_outputs is 2, channel name is used
+    entity_id = "switch.channel_1"
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
     mock_block_device.mock_update()
@@ -71,7 +73,7 @@ async def test_block_reload_on_cfg_change(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
     # Generate config change from switch to light
     monkeypatch.setitem(
@@ -81,14 +83,14 @@ async def test_block_reload_on_cfg_change(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1") is None
+    assert hass.states.get(entity_id) is None
 
 
 async def test_block_no_reload_on_bulb_changes(
@@ -98,6 +100,9 @@ async def test_block_no_reload_on_bulb_changes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block no reload on bulb mode/effect change."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    # num_outputs is 1, device name is used
+    entity_id = "switch.test_name"
     await init_integration(hass, 1, model=MODEL_BULB)
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
@@ -113,14 +118,14 @@ async def test_block_no_reload_on_bulb_changes(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
     # Test no reload  on effect change
     monkeypatch.setattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "effect", 1)
@@ -128,14 +133,14 @@ async def test_block_no_reload_on_bulb_changes(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1")
+    assert hass.states.get(entity_id)
 
 
 async def test_block_polling_auth_error(
@@ -242,9 +247,11 @@ async def test_block_polling_connection_error(
         "update",
         AsyncMock(side_effect=DeviceConnectionError),
     )
+    # num_outputs is 2, channel name is used
+    entity_id = "switch.channel_1"
     await init_integration(hass, 1)
 
-    assert (state := hass.states.get("switch.test_name_channel_1"))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     # Move time to generate polling
@@ -252,7 +259,7 @@ async def test_block_polling_connection_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("switch.test_name_channel_1"))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
