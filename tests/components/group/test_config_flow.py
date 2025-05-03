@@ -57,6 +57,7 @@ from tests.typing import WebSocketGenerator
             {"type": "sum"},
             {},
         ),
+        ("siren", "on", "on", {}, {}, {}, {}),
         ("switch", "on", "on", {}, {}, {}, {}),
     ],
 )
@@ -145,6 +146,7 @@ async def test_config_flow(
         ("lock", {}),
         ("notify", {}),
         ("media_player", {}),
+        ("siren", {}),
         ("switch", {}),
     ],
 )
@@ -219,6 +221,7 @@ async def test_config_flow_hides_members(
             {"ignore_non_numeric": False, "type": "sum"},
             {"ignore_non_numeric": False, "type": "sum"},
         ),
+        ("siren", "on", {"all": False}, {}),
         ("switch", "on", {"all": False}, {}),
     ],
 )
@@ -318,6 +321,10 @@ async def test_options(
         ("light", {"all": True}, {"all": True}, False),
         ("light", {"all": False}, {"all": False}, True),
         ("light", {"all": True}, {"all": False}, True),
+        ("siren", {"all": False}, {"all": False}, False),
+        ("siren", {"all": True}, {"all": True}, False),
+        ("siren", {"all": False}, {"all": False}, True),
+        ("siren", {"all": True}, {"all": False}, True),
         ("switch", {"all": False}, {"all": False}, False),
         ("switch", {"all": True}, {"all": True}, False),
         ("switch", {"all": False}, {"all": False}, True),
@@ -401,6 +408,7 @@ async def test_all_options(
         ("lock", {}),
         ("notify", {}),
         ("media_player", {}),
+        ("siren", {}),
         ("switch", {}),
     ],
 )
@@ -485,6 +493,7 @@ LOCK_ATTRS = [{"supported_features": 1}, {}]
 NOTIFY_ATTRS = [{"supported_features": 0}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
 SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
+SIREN_ATTRS = [{"supported_features": 0}, {}]
 
 
 @pytest.mark.parametrize(
@@ -500,6 +509,7 @@ SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"
         ("notify", {}, ["", ""], "unknown", NOTIFY_ATTRS),
         ("media_player", {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
         ("sensor", {"type": "max"}, ["10", "20"], "20.0", SENSOR_ATTRS),
+        ("siren", {}, ["on", "off"], "on", SIREN_ATTRS),
         ("switch", {}, ["on", "off"], "on", [{}, {}]),
     ],
 )
@@ -618,6 +628,7 @@ async def test_config_flow_preview(
             "20.0",
             SENSOR_ATTRS,
         ),
+        ("siren", {}, {}, ["on", "off"], "on", SIREN_ATTRS),
         ("switch", {}, {}, ["on", "off"], "on", [{}, {}]),
     ],
 )
