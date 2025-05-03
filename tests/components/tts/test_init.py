@@ -1523,6 +1523,45 @@ async def test_fetching_in_async(
 
 
 @pytest.mark.parametrize(
+    ("setup", "engine_id"),
+    [
+        ("mock_setup", "test"),
+    ],
+    indirect=["setup"],
+)
+async def test_ws_list_engines_filter_deprecated(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup: str,
+    engine_id: str,
+) -> None:
+    """Test listing tts engines and supported languages."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [
+            {
+                "name": "Test",
+                "engine_id": engine_id,
+                "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
+            }
+        ]
+    }
+
+    hass.data[tts.DATA_TTS_MANAGER].providers[engine_id].has_entity = True
+
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"providers": []}
+
+
+@pytest.mark.parametrize(
     ("setup", "engine_id", "extra_data"),
     [
         ("mock_setup", "test", {"name": "Test"}),
@@ -1842,6 +1881,7 @@ async def test_default_engine_prefer_cloud_entity(
 async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> None:
     """Test creating streams."""
     await mock_config_entry_setup(hass, mock_tts_entity)
+
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
     assert stream.language == mock_tts_entity.default_language
     assert stream.options == (mock_tts_entity.default_options or {})
@@ -1849,6 +1889,33 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     stream.async_set_message("beer")
     result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
     assert result_data == MOCK_DATA
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        """Mock stream TTS audio."""
+
+        async def gen_data():
+            async for msg in request.message_gen:
+                yield msg.encode()
+
+        return tts.TTSAudioResponse(
+            extension="mp3",
+            data_gen=gen_data(),
+        )
+
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+
+    async def stream_message():
+        """Mock stream message."""
+        yield "he"
+        yield "ll"
+        yield "o"
+
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream.async_set_message_stream(stream_message())
+    result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+    assert result_data == b"hello"
 
     data = b"beer"
     stream2 = MockResultStream(hass, "wav", data)

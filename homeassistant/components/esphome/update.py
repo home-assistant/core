@@ -29,7 +29,6 @@ from homeassistant.util.enum import try_parse_enum
 from .const import DOMAIN
 from .coordinator import ESPHomeDashboardCoordinator
 from .dashboard import async_get_dashboard
-from .domain_data import DomainData
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
@@ -62,7 +61,7 @@ async def async_setup_entry(
 
     if (dashboard := async_get_dashboard(hass)) is None:
         return
-    entry_data = DomainData.get(hass).get_entry_data(entry)
+    entry_data = entry.runtime_data
     assert entry_data.device_info is not None
     device_name = entry_data.device_info.name
     unsubs: list[CALLBACK_TYPE] = []

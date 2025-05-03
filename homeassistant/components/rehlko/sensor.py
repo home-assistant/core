@@ -168,6 +168,19 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    RehlkoSensorEntityDescription(
+        key="status",
+        translation_key="generator_status",
+        use_device_key=True,
+    ),
+    RehlkoSensorEntityDescription(
+        key="engineState",
+        translation_key="engine_state",
+    ),
+    RehlkoSensorEntityDescription(
+        key="powerSource",
+        translation_key="power_source",
+    ),
 )
 
 

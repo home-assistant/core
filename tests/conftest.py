@@ -286,6 +286,7 @@ def garbage_collection() -> None:
     to run per test case if needed.
     """
     gc.collect()
+    gc.freeze()
 
 
 @pytest.fixture(autouse=True)
@@ -1318,9 +1319,11 @@ def disable_translations_once(
 @pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
 async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
     """Mock out the zeroconf resolver."""
+    resolver = AsyncResolver()
+    resolver.real_close = resolver.close
     patcher = patch(
         "homeassistant.helpers.aiohttp_client._async_make_resolver",
-        return_value=AsyncResolver(),
+        return_value=resolver,
     )
     patcher.start()
     try:
@@ -1941,7 +1944,7 @@ async def hassio_stubs(
             return_value={"result": "ok"},
         ) as hass_api,
         patch(
-            "homeassistant.components.hassio.HassIO.update_hass_timezone",
+            "homeassistant.components.hassio.HassIO.update_hass_config",
             return_value={"result": "ok"},
         ),
         patch(

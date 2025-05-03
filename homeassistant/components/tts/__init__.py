@@ -42,7 +42,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
-from homeassistant.util import language as language_util
+from homeassistant.util import language as language_util, ulid as ulid_util
 
 from .const import (
     ATTR_CACHE,
@@ -495,6 +495,18 @@ class ResultStream:
             )
         )
 
+    @callback
+    def async_set_message_stream(self, message_stream: AsyncGenerator[str]) -> None:
+        """Set a stream that will generate the message."""
+        self._result_cache.set_result(
+            self._manager.async_cache_message_stream_in_memory(
+                engine=self.engine,
+                message_stream=message_stream,
+                language=self.language,
+                options=self.options,
+            )
+        )
+
     async def async_stream_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
         cache = await self._result_cache
@@ -734,6 +746,42 @@ class SpeechManager:
         self.token_to_stream[token] = result_stream
         self.token_to_stream_cleanup.schedule()
         return result_stream
+
+    @callback
+    def async_cache_message_stream_in_memory(
+        self,
+        engine: str,
+        message_stream: AsyncGenerator[str],
+        language: str,
+        options: dict,
+    ) -> TTSCache:
+        """Make sure a message stream will be cached in memory and returns cache object.
+
+        Requires options, language to be processed.
+        """
+        if (engine_instance := get_engine_instance(self.hass, engine)) is None:
+            raise HomeAssistantError(f"Provider {engine} not found")
+
+        cache_key = ulid_util.ulid_now()
+        extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        data_gen = self._async_generate_tts_audio(
+            engine_instance, message_stream, language, options
+        )
+
+        cache = TTSCache(
+            cache_key=cache_key,
+            extension=extension,
+            data_gen=data_gen,
+        )
+        self.mem_cache[cache_key] = cache
+        self.hass.async_create_background_task(
+            self._load_data_into_cache(
+                cache, engine_instance, "[Streaming TTS]", False, language, options
+            ),
+            f"tts_load_data_into_cache_{engine_instance.name}",
+        )
+        self.memcache_cleanup.schedule()
+        return cache
 
     @callback
     def async_cache_message_in_memory(
@@ -1164,6 +1212,9 @@ def websocket_list_engines(
         if entity.platform:
             entity_domains.add(entity.platform.platform_name)
     for engine_id, provider in hass.data[DATA_TTS_MANAGER].providers.items():
+        if provider.has_entity:
+            continue
+
         provider_info = {
             "engine_id": engine_id,
             "name": provider.name,
