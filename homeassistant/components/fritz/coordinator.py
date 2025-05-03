@@ -694,7 +694,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     async def async_trigger_cleanup(self) -> None:
         """Trigger device trackers cleanup."""
-        _LOGGER.debug("Deviec tracker cleanup triggered")
+        _LOGGER.debug("Device tracker cleanup triggered")
         device_hosts = {self.mac: Device(True, "", "", "", "", None)}
         if self.device_discovery_enabled:
             device_hosts = await self._async_update_hosts_info()
