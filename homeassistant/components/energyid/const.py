@@ -16,4 +16,6 @@ DATA_CLIENT: Final = "client"
 DATA_LISTENERS: Final = "listeners"
 DATA_MAPPINGS: Final = "mappings"
 
+SIGNAL_CONFIG_ENTRY_CHANGED = f"{DOMAIN}_config_entry_changed"
+
 DEFAULT_UPLOAD_INTERVAL_SECONDS: Final = 60

@@ -4,28 +4,28 @@
       "user": {
         "title": "Connect to EnergyID",
         "data": {
-          "provisioning_key": "EnergyID Provisioning Key",
-          "provisioning_secret": "EnergyID Provisioning Secret",
-          "device_id": "EnergyID Device ID",
-          "device_name": "Device Name in EnergyID"
+          "provisioning_key": "Provisioning Key",
+          "provisioning_secret": "Provisioning Secret",
+          "device_id": "Device ID",
+          "device_name": "Device Name"
         },
         "data_description": {
-          "provisioning_key": "Your unique provisioning key obtained from EnergyID.",
-          "provisioning_secret": "Your unique provisioning secret obtained from EnergyID.",
-          "device_id": "A unique identifier for this Home Assistant instance within EnergyID (e.g., 'home-assistant-livingroom').",
-          "device_name": "A human-readable name for this device shown in EnergyID (e.g., 'Home Assistant Living Room')."
+          "provisioning_key": "Your EnergyID provisioning key.",
+          "provisioning_secret": "Your EnergyID provisioning secret.",
+          "device_id": "Unique identifier for this Home Assistant instance (e.g., 'home-assistant-main').",
+          "device_name": "Friendly name shown in EnergyID (e.g., 'Home Assistant Main')."
         }
       },
       "claim": {
-        "title": "Claim EnergyID Device",
-        "description": "Your device needs to be claimed in EnergyID before it can send data.\n\n1. Go to: {claim_url}\n2. Enter Code: **{claim_code}**\n3. (Code expires around: {valid_until})\n\nAfter claiming the device on the EnergyID website, click **Submit** below to continue setup.",
+        "title": "Claim Your Device in EnergyID",
+        "description": "This device needs to be claimed before it can send data.\n\n1. Go to: {claim_url}\n2. Enter Code: **{claim_code}**\n3. (Code expires: {valid_until})\n\nAfter claiming in EnergyID, click **Submit** to continue.",
         "data": {}
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "claim_failed": "Device is still not claimed. Please complete the claiming process on the EnergyID website and try again."
+      "claim_failed": "Device is not claimed yet. Please complete the claiming process in EnergyID and try again."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -35,25 +35,77 @@
   "options": {
     "step": {
       "init": {
-        "title": "Map Home Assistant Entity to EnergyID",
+        "title": "Manage EnergyID Mappings",
         "data": {
-          "ha_entity_id": "Home Assistant Entity",
+          "next_step": "Select Action"
+        },
+        "description_placeholders": {
+          "device_name": "Configure mappings for EnergyID device: {device_name}",
+          "entity_count": "Currently mapping {entity_count} entities. Select an action below."
+        }
+      },
+      "add_mapping": {
+        "title": "Add Sensor to EnergyID",
+        "data": {
+          "ha_entity_id": "Home Assistant Sensor",
           "energyid_key": "EnergyID Metric Key"
         },
         "data_description": {
-          "ha_entity_id": "Select the Home Assistant sensor entity you want to send to EnergyID.",
-          "energyid_key": "Enter the target metric key in EnergyID (e.g., 'el', 'pv', 'gas', 'temperature.livingroom'). Refer to EnergyID documentation for standard keys or use custom ones."
+          "ha_entity_id": "Select the sensor from Home Assistant ({suggestion_count} suggested).",
+          "energyid_key": "Enter the corresponding metric key for EnergyID (e.g., 'el', 'pv', 'temp.living'). No spaces."
         },
         "description_placeholders": {
-          "entity_count": "Number of entities currently mapped to EnergyID."
+          "suggestion_count": "{suggestion_count}"
+        }
+      },
+      "manage_mappings": {
+        "title": "Select Mapping to Modify/Delete",
+        "data": {
+          "selected_mapping": "Select Mapping"
+        },
+        "description_placeholders": {
+          "mapping_count": "Choose one of the {mapping_count} existing mappings:"
+        }
+      },
+      "mapping_action": {
+        "title": "Modify or Delete Mapping",
+        "menu_options": {
+          "edit_mapping": "Update EnergyID Key",
+          "delete_mapping": "Delete This Mapping"
+        },
+        "description_placeholders": {
+          "ha_entity_id": "Selected mapping: {ha_entity_id}",
+          "energyid_key": "Current EnergyID key: {energyid_key}"
+        }
+      },
+      "edit_mapping": {
+        "title": "Update EnergyID Key",
+        "data": {
+          "energyid_key": "New EnergyID Metric Key"
+        },
+        "description_placeholders": {
+          "ha_entity_id": "Updating EnergyID key for HA entity: {ha_entity_id}"
+        }
+      },
+      "delete_mapping": {
+        "title": "Confirm Delete Mapping",
+        "description_placeholders": {
+          "ha_entity_id": "Are you sure you want to stop sending data from **{ha_entity_id}**?",
+          "energyid_key": "(The EnergyID key **{energyid_key}** will no longer be updated by this entity)."
         }
       }
     },
     "error": {
-      "invalid_key": "Invalid EnergyID key format (e.g. contains spaces)."
+      "invalid_key_empty": "EnergyID key cannot be empty.",
+      "invalid_key_spaces": "EnergyID key cannot contain spaces.",
+      "entity_already_mapped": "This Home Assistant entity is already mapped.",
+      "entity_required": "You must select a sensor entity."
     },
     "abort": {
-      "entity_already_mapped": "This Home Assistant entity is already mapped."
+      "no_mappings_to_manage": "There are no mappings configured yet. Please add one first.",
+      "no_mapping_selected": "No mapping was selected.",
+      "mapping_not_found": "The selected mapping could not be found or was removed.",
+      "menu_render_error": "Failed to display the management menu. Please try again."
     }
   }
 }
