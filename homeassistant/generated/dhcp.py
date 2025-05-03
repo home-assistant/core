@@ -259,6 +259,21 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "30AEA4*",
     },
     {
+        "domain": "home_connect",
+        "hostname": "balay-*",
+        "macaddress": "C8D778*",
+    },
+    {
+        "domain": "home_connect",
+        "hostname": "(bosch|siemens)-*",
+        "macaddress": "68A40E*",
+    },
+    {
+        "domain": "home_connect",
+        "hostname": "siemens-*",
+        "macaddress": "38B4D3*",
+    },
+    {
         "domain": "homewizard",
         "registered_devices": True,
     },
