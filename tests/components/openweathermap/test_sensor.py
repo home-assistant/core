@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import setup_platform
+from . import setup_platform
 
 from tests.common import MockConfigEntry, snapshot_platform
 
