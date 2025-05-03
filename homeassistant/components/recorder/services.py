@@ -22,6 +22,7 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
 )
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ATTR_APPLY_FILTER, ATTR_KEEP_DAYS, ATTR_REPACK, DOMAIN
 from .core import Recorder
@@ -194,27 +195,39 @@ def _async_register_get_statistics_service(
             types,
         )
 
-        formatted_result = {}
+        formatted_result: JsonObjectType = {}
         for statistic_id, statistic_rows in result.items():
-            formatted_statistic_rows = []
+            formatted_statistic_rows: JsonArrayType = []
 
             for row in statistic_rows:
-                formatted_row = {
-                    **row,
+                formatted_row: JsonObjectType = {
                     "start": dt_util.utc_from_timestamp(row["start"]).isoformat(),
                     "end": dt_util.utc_from_timestamp(row["end"]).isoformat(),
                 }
-
                 if last_reset := row.get("last_reset") is not None:
                     formatted_row["last_reset"] = dt_util.utc_from_timestamp(
                         last_reset
                     ).isoformat()
+                if state := row.get("state") is not None:
+                    formatted_row["state"] = state
+                if sum_value := row.get("sum") is not None:
+                    formatted_row["sum"] = sum_value
+                if min_value := row.get("min") is not None:
+                    formatted_row["min"] = min_value
+                if max_value := row.get("max") is not None:
+                    formatted_row["max"] = max_value
+                if mean := row.get("mean") is not None:
+                    formatted_row["mean"] = mean
+                if mean_weight := row.get("mean_weight") is not None:
+                    formatted_row["mean_weight"] = mean_weight
+                if change := row.get("change") is not None:
+                    formatted_row["change"] = change
 
                 formatted_statistic_rows.append(formatted_row)
 
             formatted_result[statistic_id] = formatted_statistic_rows
 
-        return cast(ServiceResponse, formatted_result)
+        return {"statistics": formatted_result}
 
     hass.services.async_register(
         DOMAIN,
