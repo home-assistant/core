@@ -75,7 +75,8 @@
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "Moderate",
-              "very_high": "[%key:common::state::very_high%]"
+              "very_high": "[%key:common::state::very_high%]",
+              "extreme": "Extreme"
             }
           }
         }
@@ -92,7 +93,8 @@
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
-              "very_high": "[%key:common::state::very_high%]"
+              "very_high": "[%key:common::state::very_high%]",
+              "extreme": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::extreme%]"
             }
           }
         }
@@ -126,7 +128,8 @@
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
-              "very_high": "[%key:common::state::very_high%]"
+              "very_high": "[%key:common::state::very_high%]",
+              "extreme": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::extreme%]"
             }
           }
         }
@@ -170,7 +173,8 @@
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
-              "very_high": "[%key:common::state::very_high%]"
+              "very_high": "[%key:common::state::very_high%]",
+              "extreme": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::extreme%]"
             }
           }
         }
@@ -184,7 +188,8 @@
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
-              "very_high": "[%key:common::state::very_high%]"
+              "very_high": "[%key:common::state::very_high%]",
+              "extreme": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::extreme%]"
             }
           }
         }
@@ -198,7 +203,8 @@
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
-              "very_high": "[%key:common::state::very_high%]"
+              "very_high": "[%key:common::state::very_high%]",
+              "extreme": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::extreme%]"
             }
           }
         }
