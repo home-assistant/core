@@ -125,21 +125,17 @@ class ESPHomeDashboardUpdateEntity(
                 (dr.CONNECTION_NETWORK_MAC, entry_data.device_info.mac_address)
             }
         )
+        self._install_lock = asyncio.Lock()
+        self._available_future: asyncio.Future[None] | None = None
         self._update_attrs()
 
     @callback
     def _update_attrs(self) -> None:
         """Update the supported features."""
-        # If the device has deep sleep, we can't assume we can install updates
-        # as the ESP will not be connectable (by design).
         coordinator = self.coordinator
         device_info = self._device_info
         # Install support can change at run time
-        if (
-            coordinator.last_update_success
-            and coordinator.supports_update
-            and not device_info.has_deep_sleep
-        ):
+        if coordinator.last_update_success and coordinator.supports_update:
             self._attr_supported_features = UpdateEntityFeature.INSTALL
         else:
             self._attr_supported_features = NO_FEATURES
@@ -178,6 +174,13 @@ class ESPHomeDashboardUpdateEntity(
         self, static_info: list[EntityInfo] | None = None
     ) -> None:
         """Handle updated data from the device."""
+        if (
+            self._entry_data.available
+            and self._available_future
+            and not self._available_future.done()
+        ):
+            self._available_future.set_result(None)
+            self._available_future = None
         self._update_attrs()
         self.async_write_ha_state()
 
@@ -192,17 +195,45 @@ class ESPHomeDashboardUpdateEntity(
             entry_data.async_subscribe_device_updated(self._handle_device_update)
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle entity about to be removed from Home Assistant."""
+        if self._available_future and not self._available_future.done():
+            self._available_future.cancel()
+            self._available_future = None
+
+    async def _async_wait_available(self) -> None:
+        """Wait until the device is available."""
+        # If the device has deep sleep, we need to wait for it to wake up
+        # and connect to the network to be able to install the update.
+        if self._entry_data.available:
+            return
+        self._available_future = self.hass.loop.create_future()
+        try:
+            await self._available_future
+        finally:
+            self._available_future = None
+
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        async with self.hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock()):
-            coordinator = self.coordinator
-            api = coordinator.api
-            device = coordinator.data.get(self._device_info.name)
-            assert device is not None
-            configuration = device["configuration"]
-            try:
+        if self._install_lock.locked():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="ota_in_progress",
+                translation_placeholders={
+                    "configuration": self._device_info.name,
+                },
+            )
+        # Ensure only one OTA per device at a time
+        async with self._install_lock:
+            # Ensure only one compile at a time for ALL devices
+            async with self.hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock()):
+                coordinator = self.coordinator
+                api = coordinator.api
+                device = coordinator.data.get(self._device_info.name)
+                assert device is not None
+                configuration = device["configuration"]
                 if not await api.compile(configuration):
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
@@ -211,6 +242,9 @@ class ESPHomeDashboardUpdateEntity(
                             "configuration": configuration,
                         },
                     )
+
+            try:
+                await self._async_wait_available()
                 if not await api.upload(configuration, "OTA"):
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,

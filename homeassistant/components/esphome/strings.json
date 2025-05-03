@@ -196,6 +196,9 @@
     },
     "error_uploading": {
       "message": "Error during OTA of {configuration}; Try again in ESPHome dashboard for more information."
+    },
+    "ota_in_progress": {
+      "message": "An over the air update is already progress for {configuration}."
     }
   }
 }
