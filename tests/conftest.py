@@ -286,6 +286,7 @@ def garbage_collection() -> None:
     to run per test case if needed.
     """
     gc.collect()
+    gc.freeze()
 
 
 @pytest.fixture(autouse=True)
@@ -1318,9 +1319,11 @@ def disable_translations_once(
 @pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
 async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
     """Mock out the zeroconf resolver."""
+    resolver = AsyncResolver()
+    resolver.real_close = resolver.close
     patcher = patch(
         "homeassistant.helpers.aiohttp_client._async_make_resolver",
-        return_value=AsyncResolver(),
+        return_value=resolver,
     )
     patcher.start()
     try:
@@ -1345,9 +1348,13 @@ def mock_zeroconf() -> Generator[MagicMock]:
     from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
 
     with (
-        patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True) as mock_zc,
-        patch("homeassistant.components.zeroconf.AsyncServiceBrowser", autospec=True),
+        patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc,
+        patch(
+            "homeassistant.components.zeroconf.discovery.AsyncServiceBrowser",
+        ) as mock_browser,
     ):
+        asb = mock_browser.return_value
+        asb.async_cancel = AsyncMock()
         zc = mock_zc.return_value
         # DNSCache has strong Cython type checks, and MagicMock does not work
         # so we must mock the class directly
@@ -1937,7 +1944,7 @@ async def hassio_stubs(
             return_value={"result": "ok"},
         ) as hass_api,
         patch(
-            "homeassistant.components.hassio.HassIO.update_hass_timezone",
+            "homeassistant.components.hassio.HassIO.update_hass_config",
             return_value={"result": "ok"},
         ),
         patch(

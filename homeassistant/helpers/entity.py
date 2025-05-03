@@ -49,11 +49,7 @@ from homeassistant.core import (
     get_release_channel,
 )
 from homeassistant.core_config import DATA_CUSTOMIZE
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    InvalidStateError,
-    NoEntitySpecifiedError,
-)
+from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
@@ -1127,9 +1123,6 @@ class Entity(
             # Polling returned after the entity has already been removed
             return
 
-        hass = self.hass
-        entity_id = self.entity_id
-
         if (entry := self.registry_entry) and entry.disabled_by:
             if not self._disabled_reported:
                 self._disabled_reported = True
@@ -1138,7 +1131,7 @@ class Entity(
                         "Entity %s is incorrectly being triggered for updates while it"
                         " is disabled. This is a bug in the %s integration"
                     ),
-                    entity_id,
+                    self.entity_id,
                     self.platform.platform_name,
                 )
             return
@@ -1180,7 +1173,7 @@ class Entity(
                                 "Entity %s (%s) is updating its capabilities too often,"
                                 " please %s"
                             ),
-                            entity_id,
+                            self.entity_id,
                             type(self),
                             report_issue,
                         )
@@ -1197,7 +1190,7 @@ class Entity(
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
                 "Updating state for %s (%s) took %.3f seconds. Please %s",
-                entity_id,
+                self.entity_id,
                 type(self),
                 time_now - state_calculate_start,
                 report_issue,
@@ -1208,12 +1201,12 @@ class Entity(
             # set and since try is near zero cost
             # on py3.11+ its faster to assume it is
             # set and catch the exception if it is not.
-            customize = hass.data[DATA_CUSTOMIZE]
+            custom = self.hass.data[DATA_CUSTOMIZE].get(self.entity_id)
         except KeyError:
             pass
         else:
             # Overwrite properties that have been set in the config file.
-            if custom := customize.get(entity_id):
+            if custom:
                 attr |= custom
 
         if (
@@ -1223,23 +1216,16 @@ class Entity(
             self._context = None
             self._context_set = None
 
-        try:
-            hass.states.async_set_internal(
-                entity_id,
-                state,
-                attr,
-                self.force_update,
-                self._context,
-                self._state_info,
-                time_now,
-            )
-        except InvalidStateError:
-            _LOGGER.exception(
-                "Failed to set state for %s, fall back to %s", entity_id, STATE_UNKNOWN
-            )
-            hass.states.async_set(
-                entity_id, STATE_UNKNOWN, {}, self.force_update, self._context
-            )
+        # Intentionally called with positional args for performance reasons
+        self.hass.states.async_set_internal(
+            self.entity_id,
+            state,
+            attr,
+            self.force_update,
+            self._context,
+            self._state_info,
+            time_now,
+        )
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.

@@ -202,6 +202,9 @@
       },
       "wake_up_interval": {
         "name": "Wake-up interval"
+      },
+      "wind_monitoring_state": {
+        "name": "Threshold for wind trigger"
       }
     },
     "select": {
