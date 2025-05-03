@@ -204,23 +204,23 @@ def _async_register_get_statistics_service(
                     "start": dt_util.utc_from_timestamp(row["start"]).isoformat(),
                     "end": dt_util.utc_from_timestamp(row["end"]).isoformat(),
                 }
-                if last_reset := row.get("last_reset") is not None:
+                if (last_reset := row.get("last_reset")) is not None:
                     formatted_row["last_reset"] = dt_util.utc_from_timestamp(
                         last_reset
                     ).isoformat()
-                if state := row.get("state") is not None:
+                if (state := row.get("state")) is not None:
                     formatted_row["state"] = state
-                if sum_value := row.get("sum") is not None:
+                if (sum_value := row.get("sum")) is not None:
                     formatted_row["sum"] = sum_value
-                if min_value := row.get("min") is not None:
+                if (min_value := row.get("min")) is not None:
                     formatted_row["min"] = min_value
-                if max_value := row.get("max") is not None:
+                if (max_value := row.get("max")) is not None:
                     formatted_row["max"] = max_value
-                if mean := row.get("mean") is not None:
+                if (mean := row.get("mean")) is not None:
                     formatted_row["mean"] = mean
-                if mean_weight := row.get("mean_weight") is not None:
+                if (mean_weight := row.get("mean_weight")) is not None:
                     formatted_row["mean_weight"] = mean_weight
-                if change := row.get("change") is not None:
+                if (change := row.get("change")) is not None:
                     formatted_row["change"] = change
 
                 formatted_statistic_rows.append(formatted_row)
