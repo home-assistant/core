@@ -26,11 +26,12 @@ from .const import (
     DATA_MAPPINGS,
     DEFAULT_UPLOAD_INTERVAL_SECONDS,
     DOMAIN,
+    SIGNAL_CONFIG_ENTRY_CHANGED,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = []
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -102,7 +103,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for unsub in listeners:
                 unsub()
 
-    @callback
     async def _async_close_client(*_: Any) -> None:
         """Close client session."""
         _LOGGER.debug("Closing EnergyID client for %s", entry.entry_id)
@@ -115,6 +115,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_client)
     )
+
+    # Forward setup to sensor platform
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -251,14 +254,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.info("Unloading EnergyID entry for %s", entry.data[CONF_DEVICE_NAME])
 
-    if DOMAIN not in hass.data:
-        _LOGGER.error("DOMAIN '%s' not found in hass.data during unload", DOMAIN)
-        return False
+    # Unload platforms first
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    unload_ok = hass.data[DOMAIN].pop(entry.entry_id, None) is not None
+    if unload_ok:
+        # Clean up the domain data
+        if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
+            hass.data[DOMAIN].pop(entry.entry_id, None)
 
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN, None)
+        # Clean up domain if last entry
+        if DOMAIN in hass.data and not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN, None)
 
     _LOGGER.debug(
         "Finished unloading process for %s. Success: %s", entry.entry_id, unload_ok
