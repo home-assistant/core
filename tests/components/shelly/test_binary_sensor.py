@@ -36,7 +36,8 @@ async def test_block_binary_sensor(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test block binary sensor."""
-    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_channel_1_overpowering"
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_overpowering"
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))
