@@ -186,7 +186,7 @@ class SirenGroup(GroupEntity, SirenEntity):
         self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
 
         self._attr_supported_features = SirenEntityFeature(0)
-        available_tones = set()  # Collect available tones from all entities
+        available_tones = set()
         for state in states:
             if (features := state.attributes.get(ATTR_SUPPORTED_FEATURES)) is not None:
                 self._attr_supported_features |= features
