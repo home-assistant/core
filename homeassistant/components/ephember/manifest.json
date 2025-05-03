@@ -6,5 +6,6 @@
   "iot_class": "local_polling",
   "loggers": ["pyephember2"],
   "quality_scale": "legacy",
+  "version": "2.0.0",
   "requirements": ["pyephember2==0.4.12"]
 }
