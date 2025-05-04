@@ -30,9 +30,9 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     STATE_PROGRAM_ID,
     STATE_PROGRAM_PHASE,
-    STATE_PROGRAM_TYPE,
     STATE_STATUS_TAGS,
     MieleAppliance,
+    StateProgramType,
     StateStatus,
 )
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
@@ -181,10 +181,10 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_program_type",
             translation_key="program_type",
-            value_fn=lambda value: value.state_program_type,
+            value_fn=lambda value: StateProgramType(value.state_program_type).name,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_class=SensorDeviceClass.ENUM,
-            options=sorted(set(STATE_PROGRAM_TYPE.values())),
+            options=sorted(set(StateProgramType.keys())),
         ),
     ),
     MieleSensorDefinition(
@@ -440,8 +440,6 @@ async def async_setup_entry(
                         entity_class = MieleProgramIdSensor
                     case "state_program_phase":
                         entity_class = MielePhaseSensor
-                    case "state_program_type":
-                        entity_class = MieleTypeSensor
                     case _:
                         entity_class = MieleSensor
                 if (
@@ -496,7 +494,7 @@ class MieleSensor(MieleEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return cast(StateType, self.entity_description.value_fn(self.device))
+        return self.entity_description.value_fn(self.device)
 
 
 class MieleStatusSensor(MieleSensor):
@@ -551,22 +549,6 @@ class MielePhaseSensor(MieleSensor):
         return sorted(
             set(STATE_PROGRAM_PHASE.get(self.device.device_type, {}).values())
         )
-
-
-class MieleTypeSensor(MieleSensor):
-    """Representation of the program type sensor."""
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        ret_val = STATE_PROGRAM_TYPE.get(int(self.device.state_program_type))
-        if ret_val is None:
-            _LOGGER.debug(
-                "Unknown program type: %s on device type: %s",
-                self.device.state_program_type,
-                self.device.device_type,
-            )
-        return ret_val
 
 
 class MieleProgramIdSensor(MieleSensor):

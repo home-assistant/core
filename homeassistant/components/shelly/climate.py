@@ -51,6 +51,8 @@ from .utils import (
     is_rpc_thermostat_internal_actuator,
 )
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
