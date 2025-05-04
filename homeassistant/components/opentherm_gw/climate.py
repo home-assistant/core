@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from pyotgw import vars as gw_vars
@@ -94,7 +94,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         self,
         gw_hub: OpenThermGatewayHub,
         description: OpenThermClimateEntityDescription,
-        options: MappingProxyType[str, Any],
+        options: Mapping[str, Any],
     ) -> None:
         """Initialize the entity."""
         super().__init__(gw_hub, description)

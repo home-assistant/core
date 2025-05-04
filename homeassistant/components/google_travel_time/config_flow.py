@@ -19,6 +19,7 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TimeSelector,
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -106,7 +107,7 @@ OPTIONS_SCHEMA = vol.Schema(
                 translation_key=CONF_TIME_TYPE,
             )
         ),
-        vol.Optional(CONF_TIME, default=""): cv.string,
+        vol.Optional(CONF_TIME): TimeSelector(),
         vol.Optional(CONF_TRAFFIC_MODEL): SelectSelector(
             SelectSelectorConfig(
                 options=TRAFFIC_MODELS,
@@ -181,8 +182,7 @@ async def validate_input(
 ) -> dict[str, str] | None:
     """Validate the user input allows us to connect."""
     try:
-        await hass.async_add_executor_job(
-            validate_config_entry,
+        await validate_config_entry(
             hass,
             user_input[CONF_API_KEY],
             user_input[CONF_ORIGIN],
@@ -201,7 +201,7 @@ async def validate_input(
 class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Maps Travel Time."""
 
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     @callback

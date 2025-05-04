@@ -157,8 +157,8 @@ async def create_climate_entity(
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_SMART_SCHEDULE],
     ]
-    supported_fan_modes = None
-    supported_swing_modes = None
+    supported_fan_modes: list[str] | None = None
+    supported_swing_modes: list[str] | None = None
     heat_temperatures = None
     cool_temperatures = None
 
@@ -477,11 +477,9 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        # If the target temperature will be None
-        # if the device is performing an action
-        # that does not affect the temperature or
-        # the device is switching states
-        return self._tado_zone_data.target_temp or self._tado_zone_data.current_temp
+        if self._current_tado_hvac_mode == CONST_MODE_OFF:
+            return TADO_DEFAULT_MIN_TEMP
+        return self._tado_zone_data.target_temp
 
     async def set_timer(
         self,

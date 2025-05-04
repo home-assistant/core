@@ -39,8 +39,8 @@
           "description": "The OpenThread Border Router (OTBR) add-on is now starting."
         },
         "otbr_failed": {
-          "title": "Failed to setup OpenThread Border Router",
-          "description": "The OpenThread Border Router add-on installation was unsuccessful. Ensure no other software is trying to communicate with the {model}, you have access to the internet and can install other add-ons, and try again. Check the Supervisor logs if the problem persists."
+          "title": "Failed to set up OpenThread Border Router",
+          "description": "The OpenThread Border Router add-on installation was unsuccessful. Ensure no other software is trying to communicate with the {model}, you have access to the Internet and can install other add-ons, and try again. Check the Supervisor logs if the problem persists."
         },
         "confirm_otbr": {
           "title": "OpenThread Border Router setup complete",
@@ -48,16 +48,16 @@
         }
       },
       "abort": {
-        "not_hassio_thread": "The OpenThread Border Router addon can only be installed with Home Assistant OS. If you would like to use the {model} as an Thread border router, please flash the firmware manually using the [web flasher]({docs_web_flasher_url}) and set up OpenThread Border Router to communicate with it.",
+        "not_hassio_thread": "The OpenThread Border Router add-on can only be installed with Home Assistant OS. If you would like to use the {model} as a Thread border router, please flash the firmware manually using the [web flasher]({docs_web_flasher_url}) and set up OpenThread Border Router to communicate with it.",
         "otbr_addon_already_running": "The OpenThread Border Router add-on is already running, it cannot be installed again.",
         "zha_still_using_stick": "This {model} is in use by the Zigbee Home Automation integration. Please migrate your Zigbee network to another adapter or delete the integration and try again.",
         "otbr_still_using_stick": "This {model} is in use by the OpenThread Border Router add-on. If you use the Thread network, make sure you have alternative border routers. Uninstall the add-on and try again.",
-        "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or addon is currently trying to communicate with the device. If you are running Home Assistant OS in a virtual machine or in Docker, please make sure that permissions are set correctly for the device."
+        "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or add-on is currently trying to communicate with the device. If you are running Home Assistant OS in a virtual machine or in Docker, please make sure that permissions are set correctly for the device."
       },
       "progress": {
-        "install_zigbee_flasher_addon": "The Silicon Labs Flasher addon is installed, this may take a few minutes.",
+        "install_zigbee_flasher_addon": "The Silicon Labs Flasher add-on is installed, this may take a few minutes.",
         "run_zigbee_flasher_addon": "Please wait while Zigbee firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes.",
-        "uninstall_zigbee_flasher_addon": "The Silicon Labs Flasher addon is being removed."
+        "uninstall_zigbee_flasher_addon": "The Silicon Labs Flasher add-on is being removed."
       }
     }
   },

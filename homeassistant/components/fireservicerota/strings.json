@@ -9,7 +9,7 @@
         }
       },
       "reauth_confirm": {
-        "description": "Authentication tokens became invalid, login to recreate them.",
+        "description": "Authentication tokens became invalid, log in to recreate them.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }

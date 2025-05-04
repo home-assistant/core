@@ -148,4 +148,11 @@ USB = [
         "pid": "8A2A",
         "vid": "10C4",
     },
+    {
+        "description": "*nabu casa zwa-2*",
+        "domain": "zwave_js",
+        "manufacturer": "nabu casa",
+        "pid": "4001",
+        "vid": "303A",
+    },
 ]

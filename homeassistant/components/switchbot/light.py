@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from switchbot import ColorMode as SwitchBotColorMode, SwitchbotBaseLight
 
@@ -68,7 +68,9 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        brightness = round(kwargs.get(ATTR_BRIGHTNESS, self.brightness) / 255 * 100)
+        brightness = round(
+            cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness)) / 255 * 100
+        )
 
         if (
             self.supported_color_modes

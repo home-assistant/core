@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from types import MappingProxyType
+from collections.abc import Mapping
 from typing import Any
 
 from motioneye_client.client import MotionEyeClient
@@ -37,7 +37,7 @@ class MotionEyeEntity(CoordinatorEntity):
         camera: dict[str, Any],
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
-        options: MappingProxyType[str, Any],
+        options: Mapping[str, Any],
         entity_description: EntityDescription | None = None,
     ) -> None:
         """Initialize a motionEye entity."""

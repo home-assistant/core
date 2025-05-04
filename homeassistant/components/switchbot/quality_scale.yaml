@@ -7,7 +7,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -16,7 +16,7 @@ rules:
       No custom actions
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -28,16 +28,17 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates:
-    status: todo
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
     comment: |
-      set `PARALLEL_UPDATES` in lock.py
-  reauthentication-flow: todo
+      Once a cryptographic key is successfully obtained for SwitchBot devices,
+      it will be granted perpetual validity with no expiration constraints.
   test-coverage:
     status: todo
     comment: |
@@ -54,13 +55,13 @@ rules:
     status: done
     comment: |
       Can be improved: Device type scan filtering is applied to only show devices that are actually supported.
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices: done
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
@@ -68,10 +69,7 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations:
-    status: todo
-    comment: |
-      Needs to provide translations for hub2 temperature entity
+  entity-translations: done
   exception-translations: todo
   icon-translations:
     status: exempt

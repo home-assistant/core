@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from igloohome_api import GetDeviceInfoResponse, GetDevicesResponse
+from igloohome_api import GetDeviceInfoResponse, GetDevicesResponse, LinkedDevice
 import pytest
 
 from homeassistant.components.igloohome.const import DOMAIN
@@ -21,6 +21,28 @@ GET_DEVICE_INFO_RESPONSE_LOCK = GetDeviceInfoResponse(
     homeId=[],
     linkedDevices=[],
     batteryLevel=100,
+)
+
+GET_DEVICE_INFO_RESPONSE_BRIDGE_LINKED_LOCK = GetDeviceInfoResponse(
+    id="001",
+    type="Bridge",
+    deviceId="EB1X04eeeeee",
+    deviceName="Home Bridge",
+    pairedAt="2024-11-09T12:19:25+00:00",
+    homeId=[],
+    linkedDevices=[LinkedDevice(type="Lock", deviceId="OE1X123cbb11")],
+    batteryLevel=None,
+)
+
+GET_DEVICE_INFO_RESPONSE_BRIDGE_NO_LINKED_DEVICE = GetDeviceInfoResponse(
+    id="001",
+    type="Bridge",
+    deviceId="EB1X04eeeeee",
+    deviceName="Home Bridge",
+    pairedAt="2024-11-09T12:19:25+00:00",
+    homeId=[],
+    linkedDevices=[],
+    batteryLevel=None,
 )
 
 
@@ -66,7 +88,10 @@ def mock_api() -> Generator[AsyncMock]:
         api = api_mock.return_value
         api.get_devices.return_value = GetDevicesResponse(
             nextCursor="",
-            payload=[GET_DEVICE_INFO_RESPONSE_LOCK],
+            payload=[
+                GET_DEVICE_INFO_RESPONSE_LOCK,
+                GET_DEVICE_INFO_RESPONSE_BRIDGE_LINKED_LOCK,
+            ],
         )
         api.get_device_info.return_value = GET_DEVICE_INFO_RESPONSE_LOCK
         yield api

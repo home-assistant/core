@@ -1,0 +1,137 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'device_info': dict({
+      'device': dict({
+        'modelName': '82GXARRS',
+        'name': '[TV] Living Room',
+        'networkType': 'wireless',
+        'type': 'Samsung SmartTV',
+        'wifiMac': 'aa:bb:aa:aa:aa:aa',
+      }),
+      'id': 'uuid:be9554b9-c9fb-41f4-8920-22da015376a4',
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': 'fake_host',
+        'ip_address': 'test',
+        'mac': 'aa:bb:cc:dd:ee:ff',
+        'method': 'websocket',
+        'model': '82GXARRS',
+        'name': 'fake',
+        'port': 8002,
+        'token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'samsungtv',
+      'entry_id': '123456',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': 'be9554b9-c9fb-41f4-8920-22da015376a4',
+      'version': 2,
+    }),
+  })
+# ---
+# name: test_entry_diagnostics_encrypte_offline
+  dict({
+    'device_info': None,
+    'entry': dict({
+      'data': dict({
+        'host': 'fake_host',
+        'ip_address': 'test',
+        'mac': 'aa:bb:cc:dd:ee:ff',
+        'method': 'encrypted',
+        'name': 'fake',
+        'port': 8000,
+        'session_id': '**REDACTED**',
+        'token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'samsungtv',
+      'entry_id': '123456',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': 'be9554b9-c9fb-41f4-8920-22da015376a4',
+      'version': 2,
+    }),
+  })
+# ---
+# name: test_entry_diagnostics_encrypted
+  dict({
+    'device_info': dict({
+      'device': dict({
+        'countryCode': 'AT',
+        'description': 'Samsung DTV RCR',
+        'developerIP': '',
+        'developerMode': '0',
+        'duid': 'uuid:223da676-497a-4e06-9507-5e27ec4f0fb3',
+        'firmwareVersion': 'Unknown',
+        'id': 'uuid:223da676-497a-4e06-9507-5e27ec4f0fb3',
+        'ip': '1.2.3.4',
+        'model': '15_HAWKM_UHD_2D',
+        'modelName': 'UE48JU6400',
+        'msfVersion': '2.0.25',
+        'name': '[TV] TV-UE48JU6470',
+        'networkType': 'wired',
+        'resolution': '1920x1080',
+        'smartHubAgreement': 'true',
+        'ssid': '',
+        'type': 'Samsung SmartTV',
+        'udn': 'uuid:223da676-497a-4e06-9507-5e27ec4f0fb3',
+        'wifiMac': 'aa:bb:aa:aa:aa:aa',
+      }),
+      'id': 'uuid:223da676-497a-4e06-9507-5e27ec4f0fb3',
+      'name': '[TV] TV-UE48JU6470',
+      'type': 'Samsung SmartTV',
+      'uri': 'https://1.2.3.4:8002/api/v2/',
+      'version': '2.0.25',
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': 'fake_host',
+        'ip_address': 'test',
+        'mac': 'aa:bb:cc:dd:ee:ff',
+        'method': 'encrypted',
+        'model': 'UE48JU6400',
+        'name': 'fake',
+        'port': 8000,
+        'session_id': '**REDACTED**',
+        'token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'samsungtv',
+      'entry_id': '123456',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': 'be9554b9-c9fb-41f4-8920-22da015376a4',
+      'version': 2,
+    }),
+  })
+# ---

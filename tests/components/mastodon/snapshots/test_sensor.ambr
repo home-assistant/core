@@ -47,7 +47,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '821',
+    'state': '3169',
   })
 # ---
 # name: test_sensors[sensor.mastodon_trwnh_mastodon_social_following-entry]
@@ -98,7 +98,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '178',
+    'state': '328',
   })
 # ---
 # name: test_sensors[sensor.mastodon_trwnh_mastodon_social_posts-entry]
@@ -149,6 +149,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '33120',
+    'state': '69523',
   })
 # ---

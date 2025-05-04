@@ -3179,7 +3179,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Relative self consumption',
+    'original_name': 'Relative self-consumption',
     'platform': 'fronius',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3191,7 +3191,7 @@
 # name: test_gen24[sensor.solarnet_relative_self_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative self consumption',
+      'friendly_name': 'SolarNet Relative self-consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -7163,7 +7163,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Relative self consumption',
+    'original_name': 'Relative self-consumption',
     'platform': 'fronius',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -7175,7 +7175,7 @@
 # name: test_gen24_storage[sensor.solarnet_relative_self_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative self consumption',
+      'friendly_name': 'SolarNet Relative self-consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -10087,7 +10087,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Relative self consumption',
+    'original_name': 'Relative self-consumption',
     'platform': 'fronius',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -10099,7 +10099,7 @@
 # name: test_primo_s0[sensor.solarnet_relative_self_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative self consumption',
+      'friendly_name': 'SolarNet Relative self-consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),

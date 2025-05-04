@@ -240,6 +240,7 @@ SENSOR_DESCRIPTIONS = (
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTMPH,

@@ -125,7 +125,7 @@ SAVE_DELAY = 10
 @callback
 def _async_local_fallback_intent_filter(result: RecognizeResult) -> bool:
     """Filter out intents that are not local fallback."""
-    return result.intent.name in (intent.INTENT_GET_STATE, intent.INTENT_NEVERMIND)
+    return result.intent.name in (intent.INTENT_GET_STATE)
 
 
 @callback
@@ -649,6 +649,7 @@ class PipelineRun:
             data["runner_data"] = self.runner_data
         if self.tts_stream:
             data["tts_output"] = {
+                "token": self.tts_stream.token,
                 "url": self.tts_stream.url,
                 "mime_type": self.tts_stream.content_type,
             }
@@ -1295,6 +1296,7 @@ class PipelineRun:
 
         tts_output = {
             "media_id": tts_media_id,
+            "token": self.tts_stream.token,
             "url": self.tts_stream.url,
             "mime_type": self.tts_stream.content_type,
         }

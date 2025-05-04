@@ -3,9 +3,9 @@
     "sensor": {
       "hebrew_date": {
         "state_attributes": {
-          "hebrew_year": { "name": "Hebrew Year" },
-          "hebrew_month_name": { "name": "Hebrew Month Name" },
-          "hebrew_day": { "name": "Hebrew Day" }
+          "hebrew_year": { "name": "Hebrew year" },
+          "hebrew_month_name": { "name": "Hebrew month name" },
+          "hebrew_day": { "name": "Hebrew day" }
         }
       }
     }
@@ -16,10 +16,10 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "diaspora": "Outside of Israel?",
-          "language": "Language for Holidays and Dates",
+          "language": "Language for holidays and dates",
           "location": "[%key:common::config_flow::data::location%]",
           "elevation": "[%key:common::config_flow::data::elevation%]",
-          "time_zone": "Time Zone"
+          "time_zone": "Time zone"
         },
         "data_description": {
           "time_zone": "If you specify a location, make sure to specify the time zone for correct calendar times calculations"
@@ -36,12 +36,46 @@
       "init": {
         "title": "Configure options for Jewish Calendar",
         "data": {
-          "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighthing",
+          "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighting",
           "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah"
         },
         "data_description": {
           "candle_lighting_minutes_before_sunset": "Defaults to 18 minutes. In Israel you probably want to use 20/30/40 depending on your location. Outside of Israel you probably want to use 18/24.",
           "havdalah_minutes_after_sunset": "Setting this to 0 means 36 minutes as fixed degrees (8.5°) will be used instead"
+        }
+      }
+    }
+  },
+  "selector": {
+    "nusach": {
+      "options": {
+        "sfarad": "Sfarad",
+        "ashkenaz": "Ashkenaz",
+        "adot_mizrah": "Adot Mizrah",
+        "italian": "Italian"
+      }
+    }
+  },
+  "services": {
+    "count_omer": {
+      "name": "Count the Omer",
+      "description": "Returns the phrase for counting the Omer on a given date.",
+      "fields": {
+        "date": {
+          "name": "Date",
+          "description": "Date to count the Omer for."
+        },
+        "after_sunset": {
+          "name": "After sunset",
+          "description": "Uses the next Hebrew day (starting at sunset) for a given date. This indicator is ignored if the Date field is empty."
+        },
+        "nusach": {
+          "name": "Nusach",
+          "description": "Nusach to count the Omer in."
+        },
+        "language": {
+          "name": "[%key:common::config_flow::data::language%]",
+          "description": "Language to count the Omer in."
         }
       }
     }

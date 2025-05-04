@@ -34,6 +34,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "hopper_connected": {
+        "name": "Hopper connected"
+      },
       "sleeping": {
         "name": "Sleeping"
       },
@@ -59,6 +62,17 @@
       "food_level": {
         "name": "Food level"
       },
+      "hopper_status": {
+        "name": "Hopper status",
+        "state": {
+          "enabled": "[%key:common::state::enabled%]",
+          "disabled": "[%key:common::state::disabled%]",
+          "motor_fault_short": "Motor shorted",
+          "motor_ot_amps": "Motor overtorqued",
+          "motor_disconnected": "Motor disconnected",
+          "empty": "Empty"
+        }
+      },
       "last_seen": {
         "name": "Last seen"
       },
@@ -77,31 +91,31 @@
       "status_code": {
         "name": "Status code",
         "state": {
-          "br": "Bonnet Removed",
-          "ccc": "Clean Cycle Complete",
-          "ccp": "Clean Cycle In Progress",
-          "cd": "Cat Detected",
-          "csf": "Cat Sensor Fault",
-          "csi": "Cat Sensor Interrupted",
-          "cst": "Cat Sensor Timing",
-          "df1": "Drawer Almost Full - 2 Cycles Left",
-          "df2": "Drawer Almost Full - 1 Cycle Left",
-          "dfs": "Drawer Full",
-          "dhf": "Dump + Home Position Fault",
-          "dpf": "Dump Position Fault",
-          "ec": "Empty Cycle",
-          "hpf": "Home Position Fault",
+          "br": "Bonnet removed",
+          "ccc": "Clean cycle complete",
+          "ccp": "Clean cycle in progress",
+          "cd": "Cat detected",
+          "csf": "Cat sensor fault",
+          "csi": "Cat sensor interrupted",
+          "cst": "Cat sensor timing",
+          "df1": "Drawer almost full - 2 cycles left",
+          "df2": "Drawer almost full - 1 cycle left",
+          "dfs": "Drawer full",
+          "dhf": "Dump + home position fault",
+          "dpf": "Dump position fault",
+          "ec": "Empty cycle",
+          "hpf": "Home position fault",
           "off": "[%key:common::state::off%]",
           "offline": "Offline",
-          "otf": "Over Torque Fault",
+          "otf": "Overtorque fault",
           "p": "[%key:common::state::paused%]",
-          "pd": "Pinch Detect",
-          "pwrd": "Powering Down",
-          "pwru": "Powering Up",
+          "pd": "Pinch detect",
+          "pwrd": "Powering down",
+          "pwru": "Powering up",
           "rdy": "Ready",
-          "scf": "Cat Sensor Fault At Startup",
-          "sdf": "Drawer Full At Startup",
-          "spf": "Pinch Detect At Startup"
+          "scf": "Cat sensor fault at startup",
+          "sdf": "Drawer full at startup",
+          "spf": "Pinch detect at startup"
         }
       },
       "waste_drawer": {
@@ -118,9 +132,9 @@
       "brightness_level": {
         "name": "Panel brightness",
         "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       }
     },

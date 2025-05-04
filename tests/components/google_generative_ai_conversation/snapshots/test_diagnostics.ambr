@@ -9,7 +9,7 @@
       'dangerous_block_threshold': 'BLOCK_MEDIUM_AND_ABOVE',
       'harassment_block_threshold': 'BLOCK_MEDIUM_AND_ABOVE',
       'hate_block_threshold': 'BLOCK_MEDIUM_AND_ABOVE',
-      'max_tokens': 150,
+      'max_tokens': 1500,
       'prompt': 'Speak like a pirate',
       'recommended': False,
       'sexual_block_threshold': 'BLOCK_MEDIUM_AND_ABOVE',

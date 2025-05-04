@@ -117,7 +117,6 @@ async def test_get_tts_audio_different_formats(
         assert wav_file.getframerate() == 48000
         assert wav_file.getsampwidth() == 2
         assert wav_file.getnchannels() == 2
-        assert wav_file.getnframes() == wav_file.getframerate()  # one second
 
     assert mock_client.written == snapshot
 
@@ -150,17 +149,15 @@ async def test_get_tts_audio_connection_lost(
     hass: HomeAssistant, init_wyoming_tts
 ) -> None:
     """Test streaming audio and losing connection."""
-    with (
-        patch(
-            "homeassistant.components.wyoming.tts.AsyncTcpClient",
-            MockAsyncTcpClient([None]),
-        ),
-        pytest.raises(HomeAssistantError),
+    stream = tts.async_create_stream(hass, "tts.test_tts", "en-US")
+    with patch(
+        "homeassistant.components.wyoming.tts.AsyncTcpClient",
+        MockAsyncTcpClient([None]),
     ):
-        await tts.async_get_media_source_audio(
-            hass,
-            tts.generate_media_source_id(hass, "Hello world", "tts.test_tts", "en-US"),
-        )
+        stream.async_set_message("Hello world")
+        with pytest.raises(HomeAssistantError):
+            async for _chunk in stream.async_stream_result():
+                pass
 
 
 async def test_get_tts_audio_audio_oserror(

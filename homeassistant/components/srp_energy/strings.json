@@ -3,10 +3,10 @@
     "step": {
       "user": {
         "data": {
-          "id": "Account Id",
+          "id": "Account ID",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "is_tou": "Is Time of Use Plan"
+          "is_tou": "Is Time-of-Use Price Plan"
         }
       }
     },
@@ -18,7 +18,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {

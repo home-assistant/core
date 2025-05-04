@@ -3,63 +3,15 @@
 from unittest.mock import AsyncMock
 
 from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
-from .conftest import EMONCMS_FAILURE, FLOW_RESULT_SINGLE_FEED, SENSOR_NAME, YAML
+from .conftest import EMONCMS_FAILURE, SENSOR_NAME
 
 from tests.common import MockConfigEntry
-
-
-async def test_flow_import_include_feeds(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    emoncms_client: AsyncMock,
-) -> None:
-    """YAML import with included feed - success test."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=YAML,
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == SENSOR_NAME
-    assert result["data"] == FLOW_RESULT_SINGLE_FEED
-
-
-async def test_flow_import_failure(
-    hass: HomeAssistant,
-    emoncms_client: AsyncMock,
-) -> None:
-    """YAML import - failure test."""
-    emoncms_client.async_request.return_value = EMONCMS_FAILURE
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=YAML,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "api_error"
-
-
-async def test_flow_import_already_configured(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    emoncms_client: AsyncMock,
-) -> None:
-    """Test we abort import data set when entry is already configured."""
-    config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=YAML,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
 
 USER_INPUT = {
     CONF_URL: "http://1.1.1.1",

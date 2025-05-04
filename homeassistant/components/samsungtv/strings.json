@@ -9,7 +9,8 @@
           "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your TV."
+          "host": "The hostname or IP address of your TV.",
+          "name": "The name of your TV. This will be used to identify the device in Home Assistant."
         }
       },
       "confirm": {
@@ -22,10 +23,22 @@
         "description": "After submitting, accept the popup on {device} requesting authorization within 30 seconds or input PIN."
       },
       "encrypted_pairing": {
-        "description": "Please enter the PIN displayed on {device}."
+        "description": "Please enter the PIN displayed on {device}.",
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "data_description": {
+          "pin": "The PIN displayed on your TV."
+        }
       },
       "reauth_confirm_encrypted": {
-        "description": "[%key:component::samsungtv::config::step::encrypted_pairing::description%]"
+        "description": "[%key:component::samsungtv::config::step::encrypted_pairing::description%]",
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "data_description": {
+          "pin": "[%key:component::samsungtv::config::step::encrypted_pairing::data_description::pin%]"
+        }
       }
     },
     "error": {
@@ -46,6 +59,26 @@
   "device_automation": {
     "trigger_type": {
       "samsungtv.turn_on": "Device is requested to turn on"
+    }
+  },
+  "exceptions": {
+    "unhandled_trigger_type": {
+      "message": "Unhandled trigger type {trigger_type}."
+    },
+    "service_unsupported": {
+      "message": "Entity {entity} does not support this action."
+    },
+    "error_set_volume": {
+      "message": "Unable to set volume level on {host}: {error}"
+    },
+    "error_sending_command": {
+      "message": "Unable to send command to {host}: {error}"
+    },
+    "encrypted_mode_auth_failed": {
+      "message": "Token and session ID are required in encrypted mode."
+    },
+    "failed_to_determine_connection_method": {
+      "message": "Failed to determine connection method, make sure the device is on."
     }
   }
 }

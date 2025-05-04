@@ -11,7 +11,7 @@
       "mfa": {
         "description": "The TOTP secret below is not one of the 6 digit time-based numeric codes. It is a string of around 16 characters containing the shared secret that enables your authenticator app to generate the correct time-based code at the appropriate time. See the documentation.",
         "data": {
-          "totp_secret": "TOTP Secret"
+          "totp_secret": "TOTP secret"
         }
       },
       "reauth_confirm": {
@@ -19,7 +19,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "totp_secret": "TOTP Secret"
+          "totp_secret": "[%key:component::opower::config::step::mfa::data::totp_secret%]"
         }
       }
     },
@@ -30,6 +30,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "issues": {
+    "return_to_grid_migration": {
+      "title": "Return to grid statistics for account: {utility_account_id}",
+      "description": "We found negative values in your existing consumption statistics, likely because you have solar. We split those in separate return statistics for a better experience in the Energy dashboard.\n\nPlease visit the [Energy configuration page]({energy_settings}) to add the following statistics in the **Return to grid** section:\n\n{target_ids}"
     }
   }
 }

@@ -9,7 +9,6 @@ import pyotgw.vars as gw_vars
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DATE,
@@ -25,11 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -86,35 +81,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     gateway = OpenThermGatewayHub(hass, config_entry)
     hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]] = gateway
-
-    # Migration can be removed in 2025.4.0
-    dev_reg = dr.async_get(hass)
-    if (
-        migrate_device := dev_reg.async_get_device(
-            {(DOMAIN, config_entry.data[CONF_ID])}
-        )
-    ) is not None:
-        dev_reg.async_update_device(
-            migrate_device.id,
-            new_identifiers={
-                (
-                    DOMAIN,
-                    f"{config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}",
-                )
-            },
-        )
-
-    # Migration can be removed in 2025.4.0
-    ent_reg = er.async_get(hass)
-    if (
-        entity_id := ent_reg.async_get_entity_id(
-            CLIMATE_DOMAIN, DOMAIN, config_entry.data[CONF_ID]
-        )
-    ) is not None:
-        ent_reg.async_update_entity(
-            entity_id,
-            new_unique_id=f"{config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.THERMOSTAT}-thermostat_entity",
-        )
 
     config_entry.add_update_listener(options_updated)
 

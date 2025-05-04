@@ -36,7 +36,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-var1.r1varsetpoint',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-r1varsetpoint',
     'unit_of_measurement': None,
   })
 # ---

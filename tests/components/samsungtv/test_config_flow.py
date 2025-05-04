@@ -41,6 +41,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_MODEL,
     CONF_NAME,
+    CONF_PIN,
     CONF_PORT,
     CONF_TOKEN,
 )
@@ -62,10 +63,9 @@ from .const import (
     MOCK_ENTRYDATA_WS,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
-    SAMPLE_DEVICE_INFO_FRAME,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 RESULT_ALREADY_CONFIGURED = "already_configured"
 RESULT_ALREADY_IN_PROGRESS = "already_in_progress"
@@ -172,7 +172,7 @@ AUTODETECT_LEGACY = {
     "description": "HomeAssistant",
     "id": "ha.component.samsung",
     "method": "legacy",
-    "port": None,
+    "port": LEGACY_PORT,
     "host": "fake_host",
     "timeout": TIMEOUT_REQUEST,
 }
@@ -324,13 +324,13 @@ async def test_user_encrypted_websocket(
         assert result2["step_id"] == "encrypted_pairing"
 
         result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"], user_input={"pin": "invalid"}
+            result2["flow_id"], user_input={CONF_PIN: "invalid"}
         )
         assert result3["step_id"] == "encrypted_pairing"
         assert result3["errors"] == {"base": "invalid_pin"}
 
         result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"], user_input={"pin": "1234"}
+            result3["flow_id"], user_input={CONF_PIN: "1234"}
         )
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
@@ -728,13 +728,13 @@ async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_l
         assert result2["step_id"] == "encrypted_pairing"
 
         result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"], user_input={"pin": "invalid"}
+            result2["flow_id"], user_input={CONF_PIN: "invalid"}
         )
         assert result3["step_id"] == "encrypted_pairing"
         assert result3["errors"] == {"base": "invalid_pin"}
 
         result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"], user_input={"pin": "1234"}
+            result3["flow_id"], user_input={CONF_PIN: "1234"}
         )
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
@@ -955,7 +955,9 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
 async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from dhcp."""
     # Even though it is named "wifiMac", it matches the mac of the wired connection
-    rest_api.rest_device_info.return_value = SAMPLE_DEVICE_INFO_FRAME
+    rest_api.rest_device_info.return_value = load_json_object_fixture(
+        "device_info_UE43LS003.json", DOMAIN
+    )
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1947,14 +1949,14 @@ async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
 
         # Invalid PIN
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"pin": "invalid"}
+            result["flow_id"], user_input={CONF_PIN: "invalid"}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm_encrypted"
 
         # Valid PIN
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"pin": "1234"}
+            result["flow_id"], user_input={CONF_PIN: "1234"}
         )
         await hass.async_block_till_done()
         assert result["type"] is FlowResultType.ABORT

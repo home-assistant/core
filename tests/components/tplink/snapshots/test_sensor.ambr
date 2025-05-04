@@ -95,7 +95,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Auto off at',
+    'original_name': 'Auto-off at',
     'platform': 'tplink',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -108,7 +108,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'my_device Auto off at',
+      'friendly_name': 'my_device Auto-off at',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_auto_off_at',

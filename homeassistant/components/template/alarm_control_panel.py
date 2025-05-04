@@ -36,7 +36,6 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
@@ -199,70 +198,32 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
         name = self._attr_name
         assert name is not None
         self._template = config.get(CONF_VALUE_TEMPLATE)
-        self._disarm_script = None
         self._attr_code_arm_required: bool = config[CONF_CODE_ARM_REQUIRED]
         self._attr_code_format = config[CONF_CODE_FORMAT].value
-        if (disarm_action := config.get(CONF_DISARM_ACTION)) is not None:
-            self._disarm_script = Script(hass, disarm_action, name, DOMAIN)
-        self._arm_away_script = None
-        if (arm_away_action := config.get(CONF_ARM_AWAY_ACTION)) is not None:
-            self._arm_away_script = Script(hass, arm_away_action, name, DOMAIN)
-        self._arm_home_script = None
-        if (arm_home_action := config.get(CONF_ARM_HOME_ACTION)) is not None:
-            self._arm_home_script = Script(hass, arm_home_action, name, DOMAIN)
-        self._arm_night_script = None
-        if (arm_night_action := config.get(CONF_ARM_NIGHT_ACTION)) is not None:
-            self._arm_night_script = Script(hass, arm_night_action, name, DOMAIN)
-        self._arm_vacation_script = None
-        if (arm_vacation_action := config.get(CONF_ARM_VACATION_ACTION)) is not None:
-            self._arm_vacation_script = Script(hass, arm_vacation_action, name, DOMAIN)
-        self._arm_custom_bypass_script = None
-        if (
-            arm_custom_bypass_action := config.get(CONF_ARM_CUSTOM_BYPASS_ACTION)
-        ) is not None:
-            self._arm_custom_bypass_script = Script(
-                hass, arm_custom_bypass_action, name, DOMAIN
-            )
-        self._trigger_script = None
-        if (trigger_action := config.get(CONF_TRIGGER_ACTION)) is not None:
-            self._trigger_script = Script(hass, trigger_action, name, DOMAIN)
+
+        self._attr_supported_features = AlarmControlPanelEntityFeature(0)
+        for action_id, supported_feature in (
+            (CONF_DISARM_ACTION, 0),
+            (CONF_ARM_AWAY_ACTION, AlarmControlPanelEntityFeature.ARM_AWAY),
+            (CONF_ARM_HOME_ACTION, AlarmControlPanelEntityFeature.ARM_HOME),
+            (CONF_ARM_NIGHT_ACTION, AlarmControlPanelEntityFeature.ARM_NIGHT),
+            (CONF_ARM_VACATION_ACTION, AlarmControlPanelEntityFeature.ARM_VACATION),
+            (
+                CONF_ARM_CUSTOM_BYPASS_ACTION,
+                AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+            ),
+            (CONF_TRIGGER_ACTION, AlarmControlPanelEntityFeature.TRIGGER),
+        ):
+            # Scripts can be an empty list, therefore we need to check for None
+            if (action_config := config.get(action_id)) is not None:
+                self.add_script(action_id, action_config, name, DOMAIN)
+                self._attr_supported_features |= supported_feature
 
         self._state: AlarmControlPanelState | None = None
         self._attr_device_info = async_device_info_to_link_from_device_id(
             hass,
             config.get(CONF_DEVICE_ID),
         )
-        supported_features = AlarmControlPanelEntityFeature(0)
-        if self._arm_night_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.ARM_NIGHT
-            )
-
-        if self._arm_home_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.ARM_HOME
-            )
-
-        if self._arm_away_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.ARM_AWAY
-            )
-
-        if self._arm_vacation_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.ARM_VACATION
-            )
-
-        if self._arm_custom_bypass_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
-            )
-
-        if self._trigger_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.TRIGGER
-            )
-        self._attr_supported_features = supported_features
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -330,7 +291,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
         """Arm the panel to Away."""
         await self._async_alarm_arm(
             AlarmControlPanelState.ARMED_AWAY,
-            script=self._arm_away_script,
+            script=self._action_scripts.get(CONF_ARM_AWAY_ACTION),
             code=code,
         )
 
@@ -338,7 +299,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
         """Arm the panel to Home."""
         await self._async_alarm_arm(
             AlarmControlPanelState.ARMED_HOME,
-            script=self._arm_home_script,
+            script=self._action_scripts.get(CONF_ARM_HOME_ACTION),
             code=code,
         )
 
@@ -346,7 +307,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
         """Arm the panel to Night."""
         await self._async_alarm_arm(
             AlarmControlPanelState.ARMED_NIGHT,
-            script=self._arm_night_script,
+            script=self._action_scripts.get(CONF_ARM_NIGHT_ACTION),
             code=code,
         )
 
@@ -354,7 +315,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
         """Arm the panel to Vacation."""
         await self._async_alarm_arm(
             AlarmControlPanelState.ARMED_VACATION,
-            script=self._arm_vacation_script,
+            script=self._action_scripts.get(CONF_ARM_VACATION_ACTION),
             code=code,
         )
 
@@ -362,20 +323,22 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
         """Arm the panel to Custom Bypass."""
         await self._async_alarm_arm(
             AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
-            script=self._arm_custom_bypass_script,
+            script=self._action_scripts.get(CONF_ARM_CUSTOM_BYPASS_ACTION),
             code=code,
         )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the panel."""
         await self._async_alarm_arm(
-            AlarmControlPanelState.DISARMED, script=self._disarm_script, code=code
+            AlarmControlPanelState.DISARMED,
+            script=self._action_scripts.get(CONF_DISARM_ACTION),
+            code=code,
         )
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Trigger the panel."""
         await self._async_alarm_arm(
             AlarmControlPanelState.TRIGGERED,
-            script=self._trigger_script,
+            script=self._action_scripts.get(CONF_TRIGGER_ACTION),
             code=code,
         )

@@ -8,17 +8,9 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.habitica.const import (
-    ATTR_ARGS,
-    ATTR_DATA,
-    ATTR_PATH,
-    DOMAIN,
-    EVENT_API_CALL_SUCCESS,
-    SERVICE_API_CALL,
-)
+from homeassistant.components.habitica.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_NAME
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import HomeAssistant
 
 from .conftest import (
     ERROR_BAD_REQUEST,
@@ -27,13 +19,7 @@ from .conftest import (
     ERROR_TOO_MANY_REQUESTS,
 )
 
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
-
-
-@pytest.fixture
-def capture_api_call_success(hass: HomeAssistant) -> list[Event]:
-    """Capture api_call events."""
-    return async_capture_events(hass, EVENT_API_CALL_SUCCESS)
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("habitica")
@@ -51,37 +37,6 @@ async def test_entry_setup_unload(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-@pytest.mark.usefixtures("habitica")
-async def test_service_call(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    capture_api_call_success: list[Event],
-) -> None:
-    """Test integration setup, service call and unload."""
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    assert len(capture_api_call_success) == 0
-
-    TEST_SERVICE_DATA = {
-        ATTR_NAME: "test-user",
-        ATTR_PATH: ["tasks", "user", "post"],
-        ATTR_ARGS: {"text": "Use API from Home Assistant", "type": "todo"},
-    }
-    await hass.services.async_call(
-        DOMAIN, SERVICE_API_CALL, TEST_SERVICE_DATA, blocking=True
-    )
-
-    assert len(capture_api_call_success) == 1
-    captured_data = capture_api_call_success[0].data
-    captured_data[ATTR_ARGS] = captured_data[ATTR_DATA]
-    del captured_data[ATTR_DATA]
-    assert captured_data == TEST_SERVICE_DATA
 
 
 @pytest.mark.parametrize(

@@ -573,6 +573,194 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[laundry_dryer][button.mock_laundrydryer_pause-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_laundrydryer_pause',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pause',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pause',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStatePauseButton-96-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[laundry_dryer][button.mock_laundrydryer_pause-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Laundrydryer Pause',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_laundrydryer_pause',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[laundry_dryer][button.mock_laundrydryer_resume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_laundrydryer_resume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Resume',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'resume',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateResumeButton-96-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[laundry_dryer][button.mock_laundrydryer_resume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Laundrydryer Resume',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_laundrydryer_resume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[laundry_dryer][button.mock_laundrydryer_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_laundrydryer_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateStartButton-96-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[laundry_dryer][button.mock_laundrydryer_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Laundrydryer Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_laundrydryer_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[laundry_dryer][button.mock_laundrydryer_stop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_laundrydryer_stop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stop',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'stop',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateStopButton-96-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[laundry_dryer][button.mock_laundrydryer_stop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Laundrydryer Stop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_laundrydryer_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[microwave_oven][button.microwave_oven_pause-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

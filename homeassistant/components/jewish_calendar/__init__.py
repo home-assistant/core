@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
+import logging
 
 from hdate import Location
 
@@ -14,7 +15,9 @@ from homeassistant.const import (
     CONF_TIME_ZONE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
@@ -24,10 +27,21 @@ from .const import (
     DEFAULT_DIASPORA,
     DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_LANGUAGE,
+    DOMAIN,
 )
 from .entity import JewishCalendarConfigEntry, JewishCalendarData
+from .service import async_setup_services
 
+_LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Jewish Calendar service."""
+    async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(
@@ -80,3 +94,54 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
+) -> bool:
+    """Migrate old entry."""
+
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    @callback
+    def update_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        key_translations = {
+            "first_light": "alot_hashachar",
+            "talit": "talit_and_tefillin",
+            "sunrise": "netz_hachama",
+            "gra_end_shma": "sof_zman_shema_gra",
+            "mga_end_shma": "sof_zman_shema_mga",
+            "gra_end_tfila": "sof_zman_tfilla_gra",
+            "mga_end_tfila": "sof_zman_tfilla_mga",
+            "midday": "chatzot_hayom",
+            "big_mincha": "mincha_gedola",
+            "small_mincha": "mincha_ketana",
+            "plag_mincha": "plag_hamincha",
+            "sunset": "shkia",
+            "first_stars": "tset_hakohavim_tsom",
+            "three_stars": "tset_hakohavim_shabbat",
+        }
+        old_keys = tuple(key_translations.keys())
+        if entity_entry.unique_id.endswith(old_keys):
+            old_key = entity_entry.unique_id.split("-")[1]
+            new_unique_id = f"{config_entry.entry_id}-{key_translations[old_key]}"
+            return {"new_unique_id": new_unique_id}
+        return None
+
+    if config_entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+        hass.config_entries.async_update_entry(config_entry, version=2)
+
+    if config_entry.version == 2:
+        new_data = {**config_entry.data}
+        new_data[CONF_LANGUAGE] = config_entry.data[CONF_LANGUAGE][:2]
+        hass.config_entries.async_update_entry(config_entry, data=new_data, version=3)
+
+    return True

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 from enum import IntFlag
 from functools import partial
 import io
@@ -16,7 +17,7 @@ import wave
 from voip_utils import SIP_PORT, RtpDatagramProtocol
 from voip_utils.sip import SipDatagramProtocol, SipEndpoint, get_sip_endpoint
 
-from homeassistant.components import tts
+from homeassistant.components import intent, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_satellite import (
     AssistSatelliteAnnouncement,
@@ -25,9 +26,11 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntityDescription,
     AssistSatelliteEntityFeature,
 )
+from homeassistant.components.intent import TimerEventType, TimerInfo
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -98,6 +101,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     entity_description = AssistSatelliteEntityDescription(key="assist_satellite")
     _attr_translation_key = "assist_satellite"
     _attr_name = None
+    _attr_icon = "mdi:phone-classic"
     _attr_supported_features = (
         AssistSatelliteEntityFeature.ANNOUNCE
         | AssistSatelliteEntityFeature.START_CONVERSATION
@@ -160,6 +164,13 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         await super().async_added_to_hass()
         self.voip_device.protocol = self
 
+        assert self.device_entry is not None
+        self.async_on_remove(
+            intent.async_register_timer_handler(
+                self.hass, self.device_entry.id, self.async_handle_timer_event
+            )
+        )
+
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -172,6 +183,29 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     ) -> AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
         raise NotImplementedError
+
+    @callback
+    def async_handle_timer_event(
+        self,
+        event_type: TimerEventType,
+        timer_info: TimerInfo,
+    ) -> None:
+        """Handle timer event."""
+        if event_type != TimerEventType.FINISHED:
+            return
+
+        if timer_info.name:
+            message = f"{timer_info.name} finished"
+        else:
+            message = f"{timedelta(seconds=timer_info.created_seconds)} timer finished"
+
+        async def announce_message():
+            announcement = await self._resolve_announcement_media_id(message, None)
+            await self.async_announce(announcement)
+
+        self.config_entry.async_create_background_task(
+            self.hass, announce_message(), "voip_announce_timer"
+        )
 
     async def async_set_configuration(
         self, config: AssistSatelliteConfiguration
@@ -193,6 +227,12 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
         Optionally run a voice pipeline after the announcement has finished.
         """
+        if announcement.media_id_source != "tts":
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="non_tts_announcement",
+            )
+
         self._announcement_future = asyncio.Future()
         self._run_pipeline_after_announce = run_pipeline_after
 
@@ -369,10 +409,18 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Play an announcement once."""
         _LOGGER.debug("Playing announcement")
 
-        try:
-            await asyncio.sleep(_ANNOUNCEMENT_BEFORE_DELAY)
-            await self._send_tts(announcement.original_media_id, wait_for_tone=False)
+        if announcement.tts_token is None:
+            _LOGGER.error("Only TTS announcements are supported")
+            return
 
+        await asyncio.sleep(_ANNOUNCEMENT_BEFORE_DELAY)
+        stream = tts.async_get_stream(self.hass, announcement.tts_token)
+        if stream is None:
+            _LOGGER.error("TTS stream no longer available")
+            return
+
+        try:
+            await self._send_tts(stream, wait_for_tone=False)
             if not self._run_pipeline_after_announce:
                 # Delay before looping announcement
                 await asyncio.sleep(_ANNOUNCEMENT_AFTER_DELAY)
@@ -403,11 +451,14 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 )
         elif event.type == PipelineEventType.TTS_END:
             # Send TTS audio to caller over RTP
-            if event.data and (tts_output := event.data["tts_output"]):
-                media_id = tts_output["media_id"]
+            if (
+                event.data
+                and (tts_output := event.data["tts_output"])
+                and (stream := tts.async_get_stream(self.hass, tts_output["token"]))
+            ):
                 self.config_entry.async_create_background_task(
                     self.hass,
-                    self._send_tts(media_id),
+                    self._send_tts(tts_stream=stream),
                     "voip_pipeline_tts",
                 )
             else:
@@ -418,19 +469,22 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self._pipeline_had_error = True
             _LOGGER.warning(event)
 
-    async def _send_tts(self, media_id: str, wait_for_tone: bool = True) -> None:
+    async def _send_tts(
+        self,
+        tts_stream: tts.ResultStream,
+        wait_for_tone: bool = True,
+    ) -> None:
         """Send TTS audio to caller via RTP."""
         try:
             if self.transport is None:
                 return  # not connected
 
-            extension, data = await tts.async_get_media_source_audio(
-                self.hass,
-                media_id,
-            )
+            data = b"".join([chunk async for chunk in tts_stream.async_stream_result()])
 
-            if extension != "wav":
-                raise ValueError(f"Only WAV audio can be streamed, got {extension}")
+            if tts_stream.extension != "wav":
+                raise ValueError(
+                    f"Only TTS WAV audio can be streamed, got {tts_stream.extension}"
+                )
 
             if wait_for_tone and ((self._tones & Tones.PROCESSING) == Tones.PROCESSING):
                 # Don't overlap TTS and processing beep

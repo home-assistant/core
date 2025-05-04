@@ -1,6 +1,6 @@
 """Tests for Ecovacs binary sensors."""
 
-from deebot_client.events import WaterAmount, WaterInfoEvent
+from deebot_client.events.water_info import MopAttachedEvent
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -43,16 +43,12 @@ async def test_mop_attached(
     assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
 
     event_bus = device.events
-    await notify_and_wait(
-        hass, event_bus, WaterInfoEvent(WaterAmount.HIGH, mop_attached=True)
-    )
+    await notify_and_wait(hass, event_bus, MopAttachedEvent(True))
 
     assert (state := hass.states.get(state.entity_id))
     assert state == snapshot(name=f"{entity_id}-state")
 
-    await notify_and_wait(
-        hass, event_bus, WaterInfoEvent(WaterAmount.HIGH, mop_attached=False)
-    )
+    await notify_and_wait(hass, event_bus, MopAttachedEvent(False))
 
     assert (state := hass.states.get(state.entity_id))
     assert state.state == STATE_OFF
