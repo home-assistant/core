@@ -62,7 +62,7 @@ rules:
   entity-category: todo
   entity-disabled-by-default: todo
   discovery:
-    status: exempt
+    status: todo
     comment: >
       Discovery is supported for the case where the Zimi Cloud Controller(s) are
       connected to a local LAN network.   Discover is not supported if the Zimi
