@@ -225,6 +225,7 @@ class ESPHomeDashboardUpdateEntity(
                     "configuration": self._device_info.name,
                 },
             )
+
         # Ensure only one OTA per device at a time
         async with self._install_lock:
             # Ensure only one compile at a time for ALL devices
@@ -243,10 +244,10 @@ class ESPHomeDashboardUpdateEntity(
                         },
                     )
 
-            # If its deep sleep we need to try twice since
-            # we may start the update just as the device goes to sleep
-            # and it won't be able to receive the update, so we need
-            # to wait for a second wakeup.
+            # If the device uses deep sleep, there's a small chance it goes
+            # to sleep right after the dashboard connects but before the OTA
+            # starts. In that case, the update won't go through, so we try
+            # again to catch it on its next wakeup.
             attempts = 2 if self._device_info.has_deep_sleep else 1
             try:
                 for attempt in range(1, attempts + 1):
