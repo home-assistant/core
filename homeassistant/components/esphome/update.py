@@ -243,16 +243,25 @@ class ESPHomeDashboardUpdateEntity(
                         },
                     )
 
+            # If its deep sleep we need to try twice since
+            # we may start the update just as the device goes to sleep
+            # and it won't be able to receive the update, so we need
+            # to wait for a second wakeup.
+            attempts = 2 if self._device_info.has_deep_sleep else 1
             try:
-                await self._async_wait_available()
-                if not await api.upload(configuration, "OTA"):
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="error_uploading",
-                        translation_placeholders={
-                            "configuration": configuration,
-                        },
-                    )
+                for attempt in range(1, attempts + 1):
+                    await self._async_wait_available()
+                    if (
+                        not await api.upload(configuration, "OTA")
+                        and attempt == attempts
+                    ):
+                        raise HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="error_uploading",
+                            translation_placeholders={
+                                "configuration": configuration,
+                            },
+                        )
             finally:
                 await self.coordinator.async_request_refresh()
 
