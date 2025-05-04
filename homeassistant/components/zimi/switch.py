@@ -1,11 +1,9 @@
-"""Platform for switch integration."""
+"""Switch platform for zcc integration."""
 
 from __future__ import annotations
 
 import logging
 from typing import Any
-
-from zcc import ControlPoint
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -24,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Zimi Switch platform."""
 
-    api: ControlPoint = config_entry.runtime_data
+    api = config_entry.runtime_data
 
     outlets: list[ZimiSwitch] = [ZimiSwitch(device, api) for device in api.outlets]
 
