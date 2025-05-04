@@ -1,6 +1,8 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
+import asyncio
 from datetime import timedelta
+from functools import partial
 import logging
 
 from freebox_api.exceptions import HttpRequestError
@@ -19,11 +21,20 @@ SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
+def blocking_api_open(api, host, port):
+    """Run the asynchronous api.open in a blocking way."""
+    asyncio.run(api.open(host, port))
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Freebox entry."""
     api = await get_api(hass, entry.data[CONF_HOST])
     try:
-        await api.open(entry.data[CONF_HOST], entry.data[CONF_PORT])
+        await hass.async_add_executor_job(
+            partial(
+                blocking_api_open, api, entry.data[CONF_HOST], entry.data[CONF_PORT]
+            )
+        )
     except HttpRequestError as err:
         raise ConfigEntryNotReady from err
 
