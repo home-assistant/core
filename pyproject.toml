@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.13.2"
 dependencies = [
-  "aiodns==3.2.0",
+  "aiodns==3.3.0",
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
@@ -123,7 +123,7 @@ dependencies = [
   "voluptuous-openapi==0.0.7",
   "yarl==1.20.0",
   "webrtc-models==0.3.0",
-  "zeroconf==0.146.5",
+  "zeroconf==0.147.0",
 ]
 
 [project.urls]

@@ -201,7 +201,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2025.4.4
+aioautomower==2025.5.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -223,7 +223,7 @@ aiodhcpwatcher==1.1.1
 aiodiscover==2.6.1
 
 # homeassistant.components.dnsip
-aiodns==3.2.0
+aiodns==3.3.0
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -607,7 +607,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.14.0
+bleak-esphome==2.15.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.9.0
@@ -637,7 +637,7 @@ bluemaestro-ble==0.4.0
 bluetooth-adapters==0.21.4
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.4.5
+bluetooth-auto-recovery==1.5.1
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -1118,7 +1118,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.45.0
+habluetooth==3.48.2
 
 # homeassistant.components.cloud
 hass-nabucasa==0.96.0
@@ -1161,13 +1161,13 @@ hole==0.8.0
 holidays==0.70
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250430.2
+home-assistant-frontend==20250502.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.4.30
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.1
+homematicip==2.0.1.1
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -2054,7 +2054,7 @@ pyiskra==0.1.15
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.4.0
+pyisy==3.4.1
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2577,7 +2577,7 @@ pywilight==0.0.74
 pywizlight==0.6.2
 
 # homeassistant.components.wmspro
-pywmspro==0.2.1
+pywmspro==0.2.2
 
 # homeassistant.components.ws66i
 pyws66i==1.1
@@ -3156,7 +3156,7 @@ zabbix-utils==2.0.2
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.146.5
+zeroconf==0.147.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
