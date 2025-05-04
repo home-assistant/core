@@ -717,7 +717,7 @@ def get_rpc_device_info(
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
 
     return DeviceInfo(
-        identifiers={(DOMAIN, f"{mac}-{idx}")},
+        identifiers={(DOMAIN, f"{mac}-{key}")},
         name=get_rpc_channel_name(device, key),
         manufacturer="Shelly",
         via_device=(DOMAIN, mac),
