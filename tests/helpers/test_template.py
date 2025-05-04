@@ -772,20 +772,6 @@ def test_add(hass: HomeAssistant) -> None:
     assert render(hass, "{{ 'no_number' | add(10, default=1) }}") == 1
 
 
-def test_as_function(hass: HomeAssistant) -> None:
-    """Test as_function."""
-    assert template.Template(
-        """
-        {%- macro macro_double(num, returns) -%}
-        {%- do returns(num * 2) -%}
-        {%- endmacro -%}
-        {%- set double = macro_double | as_function -%}
-        {{ [1, 2, 3] | map('apply', double) | list }}
-        """,
-        hass,
-    ).async_render() == [2, 4, 6]
-
-
 def test_apply(hass: HomeAssistant) -> None:
     """Test apply."""
     assert template.Template(
@@ -800,14 +786,10 @@ def test_apply(hass: HomeAssistant) -> None:
 
     assert template.Template(
         """
-        {%- macro macro_is_five(arg, returns) -%}
-            {%- do returns(arg == 5) -%}
-        {%- endmacro -%}
-        {%- set is_five = macro_is_five | as_function -%}
-        {{ [5, 1, 2, 3, 4, 5, 5] | select('apply', is_five) | list }}
+        {{ ['1', '2', '3', '4', '5'] | select('apply', int) | list }}
         """,
         hass,
-    ).async_render() == [5, 5, 5]
+    ).async_render() == [1, 2, 3, 4, 5]
 
 
 def test_apply_macro_with_arguments(hass: HomeAssistant) -> None:
