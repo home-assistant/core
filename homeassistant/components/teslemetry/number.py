@@ -33,7 +33,7 @@ from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_command, handle_vehicle_command
@@ -140,7 +140,7 @@ async def async_setup_entry(
     async_add_entities(
         chain(
             (
-                TeslemetryPollingNumberEntity(
+                TeslemetryVehiclePollingNumberEntity(
                     vehicle,
                     description,
                     entry.runtime_data.scopes,
@@ -183,8 +183,8 @@ class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingNumberEntity(
-    TeslemetryVehicleEntity, TeslemetryVehicleNumberEntity
+class TeslemetryVehiclePollingNumberEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryVehicleNumberEntity
 ):
     """Vehicle polling number entity."""
 

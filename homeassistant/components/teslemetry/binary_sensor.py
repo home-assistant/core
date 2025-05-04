@@ -24,7 +24,7 @@ from .const import TeslemetryState
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
@@ -569,7 +569,7 @@ async def async_setup_entry(
 
 
 class TeslemetryVehiclePollingBinarySensorEntity(
-    TeslemetryVehicleEntity, BinarySensorEntity
+    TeslemetryVehiclePollingEntity, BinarySensorEntity
 ):
     """Base class for Teslemetry vehicle binary sensors."""
 
