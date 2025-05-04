@@ -833,7 +833,7 @@ async def test_configuration_legacy_template_is_removed(hass: HomeAssistant) -> 
         },
     )
 
-    assert not getattr(hass.config, "legacy_templates")
+    assert not hass.config.legacy_templates
 
 
 async def test_config_defaults() -> None:

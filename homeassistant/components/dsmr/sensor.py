@@ -572,7 +572,7 @@ def device_class_and_uom(
 ) -> tuple[SensorDeviceClass | None, str | None]:
     """Get native unit of measurement from telegram,."""
     dsmr_object = getattr(data, entity_description.obis_reference)
-    uom: str | None = getattr(dsmr_object, "unit") or None
+    uom: str | None = dsmr_object.unit or None
     with suppress(ValueError):
         if entity_description.device_class == SensorDeviceClass.GAS and (
             enery_uom := UnitOfEnergy(str(uom))

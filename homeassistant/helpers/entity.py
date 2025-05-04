@@ -381,7 +381,7 @@ class CachedProperties(type):
         for parent in cls.__mro__[:0:-1]:
             if "_CachedProperties__cached_properties" not in parent.__dict__:
                 continue
-            cached_properties = getattr(parent, "_CachedProperties__cached_properties")
+            cached_properties = getattr(parent, "_CachedProperties__cached_properties")  # noqa: B009
             for property_name in cached_properties:
                 if property_name in seen_props:
                     continue
