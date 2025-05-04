@@ -2,11 +2,13 @@
 
 from collections.abc import Generator
 from datetime import timedelta
+import re
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
 from sqlalchemy import select
+import voluptuous as vol
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, history, statistics
@@ -3607,3 +3609,63 @@ async def test_get_statistics_service(
         "recorder", "get_statistics", service_args, return_response=True, blocking=True
     )
     assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    ("service_args", "missing_key"),
+    [
+        (
+            {
+                "period": "hour",
+                "statistic_ids": ["sensor.sensor"],
+                "types": ["change", "last_reset", "max", "mean", "min", "state", "sum"],
+            },
+            "start_time",
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "period": "hour",
+                "types": ["change", "last_reset", "max", "mean", "min", "state", "sum"],
+            },
+            "statistic_ids",
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "statistic_ids": ["sensor.sensor"],
+                "types": ["change", "last_reset", "max", "mean", "min", "state", "sum"],
+            },
+            "period",
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "period": "hour",
+                "statistic_ids": ["sensor.sensor"],
+            },
+            "types",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_statistics_service_missing_mandatory_keys(
+    hass: HomeAssistant,
+    service_args: dict[str, Any],
+    missing_key: str,
+) -> None:
+    """Test the get_statistics service with missing mandatory keys."""
+
+    await async_recorder_block_till_done(hass)
+
+    with pytest.raises(
+        vol.error.MultipleInvalid,
+        match=re.escape(f"required key not provided @ data['{missing_key}']"),
+    ):
+        await hass.services.async_call(
+            "recorder",
+            "get_statistics",
+            service_args,
+            return_response=True,
+            blocking=True,
+        )
