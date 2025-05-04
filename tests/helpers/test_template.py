@@ -786,7 +786,7 @@ def test_apply(hass: HomeAssistant) -> None:
 
     assert template.Template(
         """
-        {{ ['1', '2', '3', '4', '5'] | select('apply', int) | list }}
+        {{ ['1', '2', '3', '4', '5'] | map('apply', int) | list }}
         """,
         hass,
     ).async_render() == [1, 2, 3, 4, 5]
