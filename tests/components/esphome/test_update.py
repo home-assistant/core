@@ -737,6 +737,7 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
 
     upload_attempt = 0
     upload_attempt_2_future = hass.loop.create_future()
+    disconnect_future = hass.loop.create_future()
 
     async def upload_takes_a_while(*args: Any, **kwargs: Any) -> None:
         """Delay the update."""
@@ -744,6 +745,7 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
         upload_attempt += 1
         if upload_attempt == 1:
             # First attempt fails
+            await disconnect_future
             return False
         upload_attempt_2_future.set_result(None)
         return True
@@ -773,6 +775,7 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
         # Mock device being at the end of its sleep cycle
         # and going to sleep right as the upload starts
         await device.mock_disconnect(True)
+        disconnect_future.set_result(None)
         assert not upload_attempt_2_future.done()
         # Now the device wakes up and the upload is attempted
         await device.mock_connect()
