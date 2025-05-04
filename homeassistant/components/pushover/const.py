@@ -16,5 +16,8 @@ ATTR_HTML: Final = "html"
 ATTR_CALLBACK_URL: Final = "callback_url"
 ATTR_EXPIRE: Final = "expire"
 ATTR_TIMESTAMP: Final = "timestamp"
+ATTR_TAGS: Final = "tags"
+
+CLEAR_NOTIFICATIONS_BY_TAGS: Final = "clear_notifications_by_tags"
 
 CONF_USER_KEY: Final = "user_key"
