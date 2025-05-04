@@ -787,3 +787,56 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
         await device.mock_connect()
         await upload_attempt_2_future
         await hass.async_block_till_done()
+
+
+async def test_update_deep_sleep_offline_cancelled_unload(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_dashboard: dict[str, Any],
+) -> None:
+    """Test deep sleep update attempt is cancelled on unload."""
+    mock_dashboard["configured"] = [
+        {
+            "name": "test",
+            "current_version": "2023.2.0-dev",
+            "configuration": "test.yaml",
+        }
+    ]
+    await async_get_dashboard(hass).async_refresh()
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={"has_deep_sleep": True},
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("update.test_firmware")
+    assert state is not None
+    await device.mock_disconnect(True)
+
+    # Compile success, upload fails
+    with (
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.upload",
+            return_value=True,
+        ),
+    ):
+        update_task = hass.async_create_task(
+            hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {ATTR_ENTITY_ID: "update.test_firmware"},
+                blocking=True,
+            )
+        )
+        await asyncio.sleep(0)
+        assert not update_task.done()
+        await hass.config_entries.async_unload(device.entry.entry_id)
+        await hass.async_block_till_done()
+        assert update_task.cancelled()
