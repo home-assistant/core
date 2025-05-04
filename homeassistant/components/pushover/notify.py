@@ -81,7 +81,10 @@ class PushoverNotificationService(BaseNotificationService):
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
-        tags = data.get(ATTR_TAGS, "")
+        tags = data.get(ATTR_TAGS, [])
+
+        if isinstance(tags, str):
+            tags = [tags]
 
         if message == CLEAR_NOTIFICATIONS_BY_TAGS and tags != "":
             return self.clear_notification(tags)
@@ -124,25 +127,33 @@ class PushoverNotificationService(BaseNotificationService):
                 ttl=ttl,
             )
             if "receipt" in result and tags:
-                self.receipt_tags[result["receipt"]] = tags.split(",")
+                receipt = result["receipt"]
+                self.receipt_tags[receipt] = tags
+                _LOGGER.debug("Receipt id is %s, tagged with: %s", receipt, tags)
 
         except BadAPIRequestError as err:
             raise HomeAssistantError(str(err)) from err
 
-    def clear_notification(self, tags: str):
+    def clear_notification(self, tags: list[str]):
         """Cancel any priority 2 message formerly tagged with any of the given tags.
 
         The tags may contain multiple comma-separated entries in which case all
         notification that are tagged with at least one of the items are cleared.
         """
-        _LOGGER.debug("Attempting to clear all notifications tagged with: %s", tags)
+        _LOGGER.debug(
+            "Attempting to clear all notifications tagged with one of: %s", tags
+        )
         receipts: list[str] = []
-        for tag in tags.split(","):
+        for tag in tags:
             for receipt, msg_tags in self.receipt_tags.items():
                 if tag in msg_tags:
+                    _LOGGER.debug(
+                        "Tag '%s' matches receipt %s with tags %s", tag, receipt, tags
+                    )
                     receipts.append(receipt)
         for receipt in receipts:
             try:
+                _LOGGER.debug("Canceling receipt %s", receipt)
                 self.pushover.cancel_receipt(receipt)
             except BadAPIRequestError:
                 _LOGGER.exception("Error while trying to cancel receipt %s", receipt)
