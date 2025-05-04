@@ -285,3 +285,5 @@ ROLE_TO_DEVICE_CLASS_MAP = {
 # We want to check only the first 5 KB of the script if it contains emitEvent()
 # so that the integration startup remains fast.
 MAX_SCRIPT_SIZE = 5120
+
+All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")
