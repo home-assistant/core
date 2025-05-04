@@ -54,7 +54,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     TeslemetrySwitchEntityDescription(
         key="vehicle_state_sentry_mode",
         streaming_listener=lambda vehicle, callback: vehicle.listen_SentryMode(
-            lambda value: callback(None) if value is None else callback(value != "Off")
+            lambda value: callback(None if value is None else value != "Off")
         ),
         on_func=lambda api: api.set_sentry_mode(on=True),
         off_func=lambda api: api.set_sentry_mode(on=False),
@@ -100,7 +100,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     TeslemetrySwitchEntityDescription(
         key="climate_state_defrost_mode",
         streaming_listener=lambda vehicle, callback: vehicle.listen_DefrostMode(
-            lambda value: callback(value) if value is None else callback(value != "Off")
+            lambda value: callback(None if value is None else value != "Off")
         ),
         on_func=lambda api: api.set_preconditioning_max(on=True, manual_override=False),
         off_func=lambda api: api.set_preconditioning_max(
@@ -113,9 +113,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         unique_id="charge_state_user_charge_enable_request",
         value_func=lambda state: state in {"Starting", "Charging"},
         streaming_listener=lambda vehicle, callback: vehicle.listen_DetailedChargeState(
-            lambda value: callback(value)
-            if value is None
-            else callback(value in {"Starting", "Charging"})
+            lambda value: callback(
+                None if value is None else value in {"Starting", "Charging"}
+            )
         ),
         on_func=lambda api: api.charge_start(),
         off_func=lambda api: api.charge_stop(),
