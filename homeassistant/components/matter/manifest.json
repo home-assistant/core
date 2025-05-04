@@ -1,6 +1,6 @@
 {
   "domain": "matter",
-  "name": "Matter (BETA)",
+  "name": "Matter",
   "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/matter"],
   "config_flow": true,

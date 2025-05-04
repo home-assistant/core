@@ -1,0 +1,157 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The OneDrive integration needs to re-authenticate your account"
+      },
+      "folder_name": {
+        "title": "Pick a folder name",
+        "description": "This name will be used to create a folder that is specific for this Home Assistant instance. This folder will be created inside `{apps_folder}/{approot}`",
+        "data": {
+          "folder_name": "Folder name"
+        },
+        "data_description": {
+          "folder_name": "Name of the folder"
+        }
+      },
+      "reconfigure_folder": {
+        "title": "Change the folder name",
+        "description": "Rename the instance specific folder inside `{apps_folder}/{approot}`. This will only rename the folder (and does not select another folder), so make sure the new name is not already in use.",
+        "data": {
+          "folder_name": "[%key:component::onedrive::config::step::folder_name::data::folder_name%]"
+        },
+        "data_description": {
+          "folder_name": "[%key:component::onedrive::config::step::folder_name::data_description::folder_name%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "connection_error": "Failed to connect to OneDrive.",
+      "wrong_drive": "New account does not contain previously configured OneDrive.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "folder_rename_error": "Failed to rename folder",
+      "folder_creation_error": "Failed to create folder",
+      "folder_already_in_use": "Folder already used for backups from another Home Assistant instance"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "By default, files are put into the Recycle Bin when deleted, where they remain available for another 30 days. If you enable this option, files will be deleted immediately when they are cleaned up by the backup system.",
+        "data": {
+          "delete_permanently": "Delete files permanently"
+        },
+        "data_description": {
+          "delete_permanently": "Delete files without moving them to the Recycle Bin"
+        }
+      }
+    }
+  },
+  "issues": {
+    "drive_full": {
+      "title": "OneDrive data cap exceeded",
+      "description": "Your OneDrive has exceeded your quota limit. This means your next backup will fail. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB."
+    },
+    "drive_almost_full": {
+      "title": "OneDrive near data cap",
+      "description": "Your OneDrive is near your quota limit. If you go over this limit your drive will be temporarily frozen and your backups will start failing. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB."
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
+    "failed_to_get_folder": {
+      "message": "Failed to get {folder} folder"
+    },
+    "failed_to_migrate_files": {
+      "message": "Failed to migrate metadata to separate files"
+    },
+    "update_failed": {
+      "message": "Failed to update drive state"
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "no_access_to_path": {
+      "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+    },
+    "filename_does_not_exist": {
+      "message": "`{filename}` does not exist"
+    },
+    "file_too_large": {
+      "message": "`{filename}` is too large ({size} > {limit})"
+    },
+    "upload_error": {
+      "message": "Failed to upload content: {message}"
+    },
+    "create_folder_error": {
+      "message": "Failed to create folder: {message}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_size": {
+        "name": "Total available storage"
+      },
+      "used_size": {
+        "name": "Used storage"
+      },
+      "remaining_size": {
+        "name": "Remaining storage"
+      },
+      "drive_state": {
+        "name": "Drive state",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "nearing": "Nearing limit",
+          "critical": "Critical",
+          "exceeded": "Exceeded"
+        }
+      }
+    }
+  },
+  "services": {
+    "upload": {
+      "name": "Upload file",
+      "description": "Uploads files to OneDrive.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry ID",
+          "description": "The config entry representing the OneDrive you want to upload to."
+        },
+        "filename": {
+          "name": "Filename",
+          "description": "Path to the file to upload.",
+          "example": "/config/www/image.jpg"
+        },
+        "destination_folder": {
+          "name": "Destination folder",
+          "description": "Folder inside the Home Assistant app folder (Apps/Home Assistant) you want to upload the file to. Will be created if it does not exist.",
+          "example": "photos/snapshots"
+        }
+      }
+    }
+  }
+}

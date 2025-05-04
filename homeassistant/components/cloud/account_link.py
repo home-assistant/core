@@ -65,7 +65,7 @@ async def _get_services(hass: HomeAssistant) -> list[dict[str, Any]]:
     services: list[dict[str, Any]]
     if DATA_SERVICES in hass.data:
         services = hass.data[DATA_SERVICES]
-        return services  # noqa: RET504
+        return services
 
     try:
         services = await account_link.async_fetch_available_services(
@@ -127,7 +127,11 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
                     flow_id=flow_id, user_input=tokens
                 )
 
-        self.hass.async_create_task(await_tokens())
+        # It's a background task because it should be cancelled on shutdown and there's nothing else
+        # we can do in such case. There's also no need to wait for this during setup.
+        self.hass.async_create_background_task(
+            await_tokens(), name="Awaiting OAuth tokens"
+        )
 
         return authorize_url
 

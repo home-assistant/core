@@ -3,9 +3,9 @@
     "step": {
       "connection_type": {
         "title": "KNX connection",
-        "description": "'Automatic' performs a gateway scan on start, to find a KNX IP interface. It will connect via a tunnel. (Not available if a gateway scan was not successful.) \n\n 'Tunneling' will connect to a specific KNX IP interface over a tunnel. \n\n 'Routing' will use Multicast to communicate with KNX IP routers.",
+        "description": "'Automatic' performs a gateway scan on start, to find a KNX IP interface. It will connect via a tunnel. (Not available if a gateway scan was not successful.)\n\n'Tunneling' will connect to a specific KNX IP interface over a tunnel.\n\n'Routing' will use Multicast to communicate with KNX IP routers.",
         "data": {
-          "connection_type": "KNX Connection Type"
+          "connection_type": "KNX connection type"
         },
         "data_description": {
           "connection_type": "Please select the connection type you want to use for your KNX connection."
@@ -33,7 +33,7 @@
         "title": "Tunnel settings",
         "description": "Please enter the connection information of your tunneling device.",
         "data": {
-          "tunneling_type": "KNX Tunneling Type",
+          "tunneling_type": "KNX tunneling type",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "route_back": "Route back / NAT mode",
@@ -48,11 +48,11 @@
         }
       },
       "secure_key_source_menu_tunnel": {
-        "title": "KNX IP-Secure",
+        "title": "KNX IP Secure",
         "description": "How do you want to configure KNX/IP Secure?",
         "menu_options": {
-          "secure_knxkeys": "Use a `.knxkeys` file providing IP secure keys",
-          "secure_tunnel_manual": "Configure IP secure credentials manually"
+          "secure_knxkeys": "Use a `.knxkeys` file providing IP Secure keys",
+          "secure_tunnel_manual": "Configure IP Secure credentials manually"
         }
       },
       "secure_key_source_menu_routing": {
@@ -60,7 +60,7 @@
         "description": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::description%]",
         "menu_options": {
           "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_knxkeys%]",
-          "secure_routing_manual": "Configure IP secure backbone key manually"
+          "secure_routing_manual": "Configure IP Secure backbone key manually"
         }
       },
       "secure_knxkeys": {
@@ -86,7 +86,7 @@
       },
       "secure_tunnel_manual": {
         "title": "Secure tunnelling",
-        "description": "Please enter your IP secure information.",
+        "description": "Please enter your IP Secure information.",
         "data": {
           "user_id": "User ID",
           "user_password": "User password",
@@ -161,7 +161,7 @@
           "telegram_log_size": "Telegram history limit"
         },
         "data_description": {
-          "state_updater": "Set default for reading states from the KNX Bus. When disabled, Home Assistant will not actively retrieve entity states from the KNX Bus. Can be overridden by `sync_state` entity options.",
+          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option.",
           "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: `0` or between `20` and `40`",
           "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
         }
@@ -315,11 +315,11 @@
           "preset_mode": {
             "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
             "state": {
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
+              "building_protection": "Building protection",
               "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
-              "standby": "Standby",
               "economy": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
-              "building_protection": "Building protection"
+              "standby": "[%key:common::state::standby%]"
             }
           }
         }
@@ -397,7 +397,7 @@
         },
         "response": {
           "name": "Send as Response",
-          "description": "If set to `True`, the telegram will be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
+          "description": "Whether the telegram should be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
         }
       }
     },
@@ -425,7 +425,7 @@
         },
         "remove": {
           "name": "Remove event registration",
-          "description": "If `True` the group address(es) will be removed."
+          "description": "Whether the group address(es) will be removed."
         }
       }
     },
@@ -443,7 +443,7 @@
         },
         "entity_id": {
           "name": "Entity",
-          "description": "Entity id whose state or attribute shall be exposed."
+          "description": "Entity ID whose state or attribute shall be exposed."
         },
         "attribute": {
           "name": "Entity attribute",
@@ -455,7 +455,7 @@
         },
         "remove": {
           "name": "Remove exposure",
-          "description": "If `True` the exposure will be removed. Only `address` is required for removal."
+          "description": "Whether the exposure should be removed. Only the 'Address' field is required for removal."
         }
       }
     },

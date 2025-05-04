@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
@@ -21,6 +20,12 @@ from homeassistant.components.denonavr.config_flow import (
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 
@@ -313,14 +318,14 @@ async def test_config_flow_ssdp(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location=TEST_SSDP_LOCATION,
             upnp={
-                ssdp.ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
-                ssdp.ATTR_UPNP_MODEL_NAME: TEST_MODEL,
-                ssdp.ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
+                ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
+                ATTR_UPNP_MODEL_NAME: TEST_MODEL,
+                ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
             },
         ),
     )
@@ -353,14 +358,14 @@ async def test_config_flow_ssdp_not_denon(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location=TEST_SSDP_LOCATION,
             upnp={
-                ssdp.ATTR_UPNP_MANUFACTURER: "NotSupported",
-                ssdp.ATTR_UPNP_MODEL_NAME: TEST_MODEL,
-                ssdp.ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
+                ATTR_UPNP_MANUFACTURER: "NotSupported",
+                ATTR_UPNP_MODEL_NAME: TEST_MODEL,
+                ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
             },
         ),
     )
@@ -377,12 +382,12 @@ async def test_config_flow_ssdp_missing_info(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location=TEST_SSDP_LOCATION,
             upnp={
-                ssdp.ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
+                ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
             },
         ),
     )
@@ -399,14 +404,14 @@ async def test_config_flow_ssdp_ignored_model(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location=TEST_SSDP_LOCATION,
             upnp={
-                ssdp.ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
-                ssdp.ATTR_UPNP_MODEL_NAME: TEST_IGNORED_MODEL,
-                ssdp.ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
+                ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
+                ATTR_UPNP_MODEL_NAME: TEST_IGNORED_MODEL,
+                ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
             },
         ),
     )

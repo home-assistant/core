@@ -8,11 +8,14 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aioshelly"],
-  "requirements": ["aioshelly==12.2.0"],
+  "requirements": ["aioshelly==13.6.0"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
       "name": "shelly*"
+    },
+    {
+      "type": "_shelly._tcp.local."
     }
   ]
 }

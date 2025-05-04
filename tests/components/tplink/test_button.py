@@ -4,7 +4,6 @@ from kasa import Feature
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import tplink
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.tplink.button import BUTTON_DESCRIPTIONS
 from homeassistant.components.tplink.const import DOMAIN
@@ -16,11 +15,8 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.setup import async_setup_component
 
 from . import (
-    DEVICE_ID,
-    MAC_ADDRESS,
     _mocked_device,
     _mocked_feature,
     _mocked_strip_children,
@@ -30,6 +26,7 @@ from . import (
     setup_platform_for_device,
     snapshot_platform,
 )
+from .const import DEVICE_ID, MAC_ADDRESS
 
 from tests.common import MockConfigEntry
 
@@ -83,7 +80,7 @@ def create_deprecated_child_button_entities(
 
 @pytest.fixture
 def mocked_feature_button() -> Feature:
-    """Return mocked tplink binary sensor feature."""
+    """Return mocked tplink button feature."""
     return _mocked_feature(
         "test_alarm",
         value="<Action>",
@@ -101,7 +98,7 @@ async def test_states(
     snapshot: SnapshotAssertion,
     create_deprecated_button_entities,
 ) -> None:
-    """Test a sensor unique ids."""
+    """Test button states."""
     features = {description.key for description in BUTTON_DESCRIPTIONS}
     features.update(EXCLUDED_FEATURES)
     device = _mocked_device(alias="my_device", features=features)
@@ -118,14 +115,15 @@ async def test_states(
 async def test_button(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
     mocked_feature_button: Feature,
     create_deprecated_button_entities,
 ) -> None:
-    """Test a sensor unique ids."""
+    """Test button unique ids."""
     mocked_feature = mocked_feature_button
     plug = _mocked_device(alias="my_device", features=[mocked_feature])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     # The entity_id is based on standard name from core.
@@ -139,11 +137,12 @@ async def test_button_children(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     mocked_feature_button: Feature,
     create_deprecated_button_entities,
     create_deprecated_child_button_entities,
 ) -> None:
-    """Test a sensor unique ids."""
+    """Test button children."""
     mocked_feature = mocked_feature_button
     plug = _mocked_device(
         alias="my_device",
@@ -151,7 +150,7 @@ async def test_button_children(
         children=_mocked_strip_children(features=[mocked_feature]),
     )
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "button.my_device_test_alarm"
@@ -173,6 +172,7 @@ async def test_button_children(
 async def test_button_press(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
     mocked_feature_button: Feature,
     create_deprecated_button_entities,
 ) -> None:
@@ -180,7 +180,7 @@ async def test_button_press(
     mocked_feature = mocked_feature_button
     plug = _mocked_device(alias="my_device", features=[mocked_feature])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "button.my_device_test_alarm"
@@ -213,7 +213,7 @@ async def test_button_not_exists_with_deprecation(
     mocked_feature = mocked_feature_button
     dev = _mocked_device(alias="my_device", features=[mocked_feature])
     with _patch_discovery(device=dev), _patch_connect(device=dev):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert not entity_registry.async_get(entity_id)
@@ -265,7 +265,7 @@ async def test_button_exists_with_deprecation(
     mocked_feature = mocked_feature_button
     dev = _mocked_device(alias="my_device", features=[mocked_feature])
     with _patch_discovery(device=dev), _patch_connect(device=dev):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity = entity_registry.async_get(entity_id)

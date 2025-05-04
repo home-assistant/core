@@ -13,27 +13,20 @@ from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 import time
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 import wave
 
 import hass_nabucasa
 import voluptuous as vol
 
-from homeassistant.components import (
-    conversation,
-    media_source,
-    stt,
-    tts,
-    wake_word,
-    websocket_api,
-)
+from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
 from homeassistant.components.tts import (
     generate_media_source_id as tts_generate_media_source_id,
 )
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent
+from homeassistant.helpers import chat_session, intent
 from homeassistant.helpers.collection import (
     CHANGE_UPDATED,
     CollectionError,
@@ -50,6 +43,7 @@ from homeassistant.util import (
     language as language_util,
     ulid as ulid_util,
 )
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
 from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadSpeexEnhancer
@@ -80,6 +74,9 @@ from .error import (
 )
 from .vad import AudioBuffer, VoiceActivityTimeout, VoiceCommandSegmenter, chunk_samples
 
+if TYPE_CHECKING:
+    from hassil.recognize import RecognizeResult
+
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = f"{DOMAIN}.pipelines"
@@ -89,6 +86,11 @@ STORAGE_VERSION_MINOR = 2
 ENGINE_LANGUAGE_PAIRS = (
     ("stt_engine", "stt_language"),
     ("tts_engine", "tts_language"),
+)
+
+KEY_ASSIST_PIPELINE: HassKey[PipelineData] = HassKey(DOMAIN)
+KEY_PIPELINE_CONVERSATION_DATA: HassKey[dict[str, PipelineConversationData]] = HassKey(
+    "pipeline_conversation_data"
 )
 
 
@@ -118,6 +120,12 @@ PIPELINE_FIELDS: VolDictType = {
 STORED_PIPELINE_RUNS = 10
 
 SAVE_DELAY = 10
+
+
+@callback
+def _async_local_fallback_intent_filter(result: RecognizeResult) -> bool:
+    """Filter out intents that are not local fallback."""
+    return result.intent.name in (intent.INTENT_GET_STATE)
 
 
 @callback
@@ -248,7 +256,7 @@ async def async_create_default_pipeline(
     The default pipeline will use the homeassistant conversation agent and the
     specified stt / tts engines.
     """
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     pipeline_store = pipeline_data.pipeline_store
     pipeline_settings = _async_resolve_default_pipeline_settings(
         hass,
@@ -283,7 +291,7 @@ def _async_get_pipeline_from_conversation_entity(
 @callback
 def async_get_pipeline(hass: HomeAssistant, pipeline_id: str | None = None) -> Pipeline:
     """Get a pipeline by id or the preferred pipeline."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
 
     if pipeline_id is None:
         # A pipeline was not specified, use the preferred one
@@ -306,7 +314,7 @@ def async_get_pipeline(hass: HomeAssistant, pipeline_id: str | None = None) -> P
 @callback
 def async_get_pipelines(hass: HomeAssistant) -> list[Pipeline]:
     """Get all pipelines."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
 
     return list(pipeline_data.pipeline_store.data.values())
 
@@ -329,7 +337,7 @@ async def async_update_pipeline(
     prefer_local_intents: bool | UndefinedType = UNDEFINED,
 ) -> None:
     """Update a pipeline."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
 
     updates: dict[str, Any] = pipeline.to_json()
     updates.pop("id")
@@ -371,6 +379,7 @@ class PipelineEventType(StrEnum):
     STT_VAD_END = "stt-vad-end"
     STT_END = "stt-end"
     INTENT_START = "intent-start"
+    INTENT_PROGRESS = "intent-progress"
     INTENT_END = "intent-end"
     TTS_START = "tts-start"
     TTS_END = "tts-end"
@@ -553,8 +562,7 @@ class PipelineRun:
 
     id: str = field(default_factory=ulid_util.ulid_now)
     stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False, repr=False)
-    tts_engine: str = field(init=False, repr=False)
-    tts_options: dict | None = field(init=False, default=None)
+    tts_stream: tts.ResultStream | None = field(init=False, default=None)
     wake_word_entity_id: str | None = field(init=False, default=None, repr=False)
     wake_word_entity: wake_word.WakeWordDetectionEntity = field(init=False, repr=False)
 
@@ -577,6 +585,12 @@ class PipelineRun:
     _device_id: str | None = None
     """Optional device id set during run start."""
 
+    _conversation_data: PipelineConversationData | None = None
+    """Data tied to the conversation ID."""
+
+    _intent_agent_only = False
+    """If request should only be handled by agent, ignoring sentence triggers and local processing."""
+
     def __post_init__(self) -> None:
         """Set language for pipeline."""
         self.language = self.pipeline.language or self.hass.config.language
@@ -587,7 +601,7 @@ class PipelineRun:
         ):
             raise InvalidPipelineStagesError(self.start_stage, self.end_stage)
 
-        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_data = self.hass.data[KEY_ASSIST_PIPELINE]
         if self.pipeline.id not in pipeline_data.pipeline_debug:
             pipeline_data.pipeline_debug[self.pipeline.id] = LimitedSizeDict(
                 size_limit=STORED_PIPELINE_RUNS
@@ -615,23 +629,30 @@ class PipelineRun:
     def process_event(self, event: PipelineEvent) -> None:
         """Log an event and call listener."""
         self.event_callback(event)
-        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_data = self.hass.data[KEY_ASSIST_PIPELINE]
         if self.id not in pipeline_data.pipeline_debug[self.pipeline.id]:
             # This run has been evicted from the logged pipeline runs already
             return
         pipeline_data.pipeline_debug[self.pipeline.id][self.id].events.append(event)
 
-    def start(self, device_id: str | None) -> None:
+    def start(self, conversation_id: str, device_id: str | None) -> None:
         """Emit run start event."""
         self._device_id = device_id
         self._start_debug_recording_thread()
 
-        data = {
+        data: dict[str, Any] = {
             "pipeline": self.pipeline.id,
             "language": self.language,
+            "conversation_id": conversation_id,
         }
         if self.runner_data is not None:
             data["runner_data"] = self.runner_data
+        if self.tts_stream:
+            data["tts_output"] = {
+                "token": self.tts_stream.token,
+                "url": self.tts_stream.url,
+                "mime_type": self.tts_stream.content_type,
+            }
 
         self.process_event(PipelineEvent(PipelineEventType.RUN_START, data))
 
@@ -650,7 +671,7 @@ class PipelineRun:
             )
         )
 
-        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_data = self.hass.data[KEY_ASSIST_PIPELINE]
         pipeline_data.pipeline_runs.remove_run(self)
 
     async def prepare_wake_word_detection(self) -> None:
@@ -993,33 +1014,63 @@ class PipelineRun:
 
             yield chunk.audio
 
-    async def prepare_recognize_intent(self) -> None:
+    async def prepare_recognize_intent(self, session: chat_session.ChatSession) -> None:
         """Prepare recognizing an intent."""
-        agent_info = conversation.async_get_agent_info(
-            self.hass,
-            self.pipeline.conversation_engine or conversation.HOME_ASSISTANT_AGENT,
+        self._conversation_data = async_get_pipeline_conversation_data(
+            self.hass, session
         )
 
-        if agent_info is None:
-            engine = self.pipeline.conversation_engine or "default"
-            raise IntentRecognitionError(
-                code="intent-not-supported",
-                message=f"Intent recognition engine {engine} is not found",
+        if self._conversation_data.continue_conversation_agent is not None:
+            agent_info = conversation.async_get_agent_info(
+                self.hass, self._conversation_data.continue_conversation_agent
             )
+            self._conversation_data.continue_conversation_agent = None
+            if agent_info is None:
+                raise IntentRecognitionError(
+                    code="intent-agent-not-found",
+                    message=f"Intent recognition engine {self._conversation_data.continue_conversation_agent} asked for follow-up but is no longer found",
+                )
+            self._intent_agent_only = True
+
+        else:
+            agent_info = conversation.async_get_agent_info(
+                self.hass,
+                self.pipeline.conversation_engine or conversation.HOME_ASSISTANT_AGENT,
+            )
+
+            if agent_info is None:
+                engine = self.pipeline.conversation_engine or "default"
+                raise IntentRecognitionError(
+                    code="intent-not-supported",
+                    message=f"Intent recognition engine {engine} is not found",
+                )
 
         self.intent_agent = agent_info.id
 
     async def recognize_intent(
-        self, intent_input: str, conversation_id: str | None, device_id: str | None
+        self,
+        intent_input: str,
+        conversation_id: str,
+        device_id: str | None,
+        conversation_extra_system_prompt: str | None,
     ) -> str:
         """Run intent recognition portion of pipeline. Returns text to speak."""
-        if self.intent_agent is None:
+        if self.intent_agent is None or self._conversation_data is None:
             raise RuntimeError("Recognize intent was not prepared")
 
         if self.pipeline.conversation_language == MATCH_ALL:
-            # LLMs support all languages ('*') so use pipeline language for
-            # intent fallback.
-            input_language = self.pipeline.language
+            # LLMs support all languages ('*') so use languages from the
+            # pipeline for intent fallback.
+            #
+            # We prioritize the STT and TTS languages because they may be more
+            # specific, such as "zh-CN" instead of just "zh". This is necessary
+            # for languages whose intents are split out by region when
+            # preferring local intent matching.
+            input_language = (
+                self.pipeline.stt_language
+                or self.pipeline.tts_language
+                or self.pipeline.language
+            )
         else:
             input_language = self.pipeline.conversation_language
 
@@ -1045,11 +1096,13 @@ class PipelineRun:
                 device_id=device_id,
                 language=input_language,
                 agent_id=self.intent_agent,
+                extra_system_prompt=conversation_extra_system_prompt,
             )
-            processed_locally = self.intent_agent == conversation.HOME_ASSISTANT_AGENT
 
-            conversation_result: conversation.ConversationResult | None = None
-            if user_input.agent_id != conversation.HOME_ASSISTANT_AGENT:
+            agent_id = self.intent_agent
+            processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
+            intent_response: intent.IntentResponse | None = None
+            if not processed_locally and not self._intent_agent_only:
                 # Sentence triggers override conversation agent
                 if (
                     trigger_response_text
@@ -1058,38 +1111,95 @@ class PipelineRun:
                     )
                 ) is not None:
                     # Sentence trigger matched
-                    trigger_response = intent.IntentResponse(
+                    agent_id = "sentence_trigger"
+                    intent_response = intent.IntentResponse(
                         self.pipeline.conversation_language
                     )
-                    trigger_response.async_set_speech(trigger_response_text)
-                    conversation_result = conversation.ConversationResult(
-                        response=trigger_response,
-                        conversation_id=user_input.conversation_id,
-                    )
-                # Try local intents first, if preferred.
-                elif self.pipeline.prefer_local_intents and (
-                    intent_response := await conversation.async_handle_intents(
-                        self.hass, user_input
+                    intent_response.async_set_speech(trigger_response_text)
+
+                intent_filter: Callable[[RecognizeResult], bool] | None = None
+                # If the LLM has API access, we filter out some sentences that are
+                # interfering with LLM operation.
+                if (
+                    intent_agent_state := self.hass.states.get(self.intent_agent)
+                ) and intent_agent_state.attributes.get(
+                    ATTR_SUPPORTED_FEATURES, 0
+                ) & conversation.ConversationEntityFeature.CONTROL:
+                    intent_filter = _async_local_fallback_intent_filter
+
+                # Try local intents
+                if (
+                    intent_response is None
+                    and self.pipeline.prefer_local_intents
+                    and (
+                        intent_response := await conversation.async_handle_intents(
+                            self.hass,
+                            user_input,
+                            intent_filter=intent_filter,
+                        )
                     )
                 ):
                     # Local intent matched
-                    conversation_result = conversation.ConversationResult(
-                        response=intent_response,
-                        conversation_id=user_input.conversation_id,
-                    )
+                    agent_id = conversation.HOME_ASSISTANT_AGENT
                     processed_locally = True
 
-            if conversation_result is None:
-                # Fall back to pipeline conversation agent
-                conversation_result = await conversation.async_converse(
-                    hass=self.hass,
-                    text=user_input.text,
-                    conversation_id=user_input.conversation_id,
-                    device_id=user_input.device_id,
-                    context=user_input.context,
-                    language=user_input.language,
-                    agent_id=user_input.agent_id,
+            @callback
+            def chat_log_delta_listener(
+                chat_log: conversation.ChatLog, delta: dict
+            ) -> None:
+                """Handle chat log delta."""
+                self.process_event(
+                    PipelineEvent(
+                        PipelineEventType.INTENT_PROGRESS,
+                        {
+                            "chat_log_delta": delta,
+                        },
+                    )
                 )
+
+            with (
+                chat_session.async_get_chat_session(
+                    self.hass, user_input.conversation_id
+                ) as session,
+                conversation.async_get_chat_log(
+                    self.hass,
+                    session,
+                    user_input,
+                    chat_log_delta_listener=chat_log_delta_listener,
+                ) as chat_log,
+            ):
+                # It was already handled, create response and add to chat history
+                if intent_response is not None:
+                    speech: str = intent_response.speech.get("plain", {}).get(
+                        "speech", ""
+                    )
+                    chat_log.async_add_assistant_content_without_tools(
+                        conversation.AssistantContent(
+                            agent_id=agent_id,
+                            content=speech,
+                        )
+                    )
+                    conversation_result = conversation.ConversationResult(
+                        response=intent_response,
+                        conversation_id=session.conversation_id,
+                    )
+
+                else:
+                    # Fall back to pipeline conversation agent
+                    conversation_result = await conversation.async_converse(
+                        hass=self.hass,
+                        text=user_input.text,
+                        conversation_id=user_input.conversation_id,
+                        device_id=user_input.device_id,
+                        context=user_input.context,
+                        language=user_input.language,
+                        agent_id=user_input.agent_id,
+                        extra_system_prompt=user_input.extra_system_prompt,
+                    )
+                    speech = conversation_result.response.speech.get("plain", {}).get(
+                        "speech", ""
+                    )
+
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
             raise IntentRecognitionError(
@@ -1109,9 +1219,8 @@ class PipelineRun:
             )
         )
 
-        speech: str = conversation_result.response.speech.get("plain", {}).get(
-            "speech", ""
-        )
+        if conversation_result.continue_conversation:
+            self._conversation_data.continue_conversation_agent = agent_id
 
         return speech
 
@@ -1135,36 +1244,31 @@ class PipelineRun:
                 tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = SAMPLE_WIDTH
 
         try:
-            options_supported = await tts.async_support_options(
-                self.hass,
-                engine,
-                self.pipeline.tts_language,
-                tts_options,
+            self.tts_stream = tts.async_create_stream(
+                hass=self.hass,
+                engine=engine,
+                language=self.pipeline.tts_language,
+                options=tts_options,
             )
         except HomeAssistantError as err:
             raise TextToSpeechError(
                 code="tts-not-supported",
-                message=f"Text-to-speech engine '{engine}' not found",
-            ) from err
-        if not options_supported:
-            raise TextToSpeechError(
-                code="tts-not-supported",
                 message=(
                     f"Text-to-speech engine {engine} "
-                    f"does not support language {self.pipeline.tts_language} or options {tts_options}"
+                    f"does not support language {self.pipeline.tts_language} or options {tts_options}:"
+                    f" {err}"
                 ),
-            )
-
-        self.tts_engine = engine
-        self.tts_options = tts_options
+            ) from err
 
     async def text_to_speech(self, tts_input: str) -> None:
         """Run text-to-speech portion of pipeline."""
+        assert self.tts_stream is not None
+
         self.process_event(
             PipelineEvent(
                 PipelineEventType.TTS_START,
                 {
-                    "engine": self.tts_engine,
+                    "engine": self.tts_stream.engine,
                     "language": self.pipeline.tts_language,
                     "voice": self.pipeline.tts_voice,
                     "tts_input": tts_input,
@@ -1177,14 +1281,9 @@ class PipelineRun:
             tts_media_id = tts_generate_media_source_id(
                 self.hass,
                 tts_input,
-                engine=self.tts_engine,
-                language=self.pipeline.tts_language,
-                options=self.tts_options,
-            )
-            tts_media = await media_source.async_resolve_media(
-                self.hass,
-                tts_media_id,
-                None,
+                engine=self.tts_stream.engine,
+                language=self.tts_stream.language,
+                options=self.tts_stream.options,
             )
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during text-to-speech")
@@ -1193,10 +1292,13 @@ class PipelineRun:
                 message="Unexpected error during text-to-speech",
             ) from src_error
 
-        _LOGGER.debug("TTS result %s", tts_media)
+        self.tts_stream.async_set_message(tts_input)
+
         tts_output = {
             "media_id": tts_media_id,
-            **asdict(tts_media),
+            "token": self.tts_stream.token,
+            "url": self.tts_stream.url,
+            "mime_type": self.tts_stream.content_type,
         }
 
         self.process_event(
@@ -1213,7 +1315,7 @@ class PipelineRun:
             return
 
         # Forward to device audio capture
-        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_data = self.hass.data[KEY_ASSIST_PIPELINE]
         audio_queue = pipeline_data.device_audio_queues.get(self._device_id)
         if audio_queue is None:
             return
@@ -1370,11 +1472,14 @@ def _pipeline_debug_recording_thread_proc(
             wav_writer.close()
 
 
-@dataclass
+@dataclass(kw_only=True)
 class PipelineInput:
     """Input to a pipeline run."""
 
     run: PipelineRun
+
+    session: chat_session.ChatSession
+    """Session for the conversation."""
 
     stt_metadata: stt.SpeechMetadata | None = None
     """Metadata of stt input audio. Required when start_stage = stt."""
@@ -1391,13 +1496,17 @@ class PipelineInput:
     tts_input: str | None = None
     """Input for text-to-speech. Required when start_stage = tts."""
 
-    conversation_id: str | None = None
+    conversation_extra_system_prompt: str | None = None
+    """Extra prompt information for the conversation agent."""
 
     device_id: str | None = None
+    """Identifier of the device that is processing the input/output of the pipeline."""
 
     async def execute(self) -> None:
         """Run pipeline."""
-        self.run.start(device_id=self.device_id)
+        self.run.start(
+            conversation_id=self.session.conversation_id, device_id=self.device_id
+        )
         current_stage: PipelineStage | None = self.run.start_stage
         stt_audio_buffer: list[EnhancedAudioChunk] = []
         stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
@@ -1453,9 +1562,9 @@ class PipelineInput:
                 if stt_audio_buffer:
                     # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
                     # This is basically an async itertools.chain.
-                    async def buffer_then_audio_stream() -> (
-                        AsyncGenerator[EnhancedAudioChunk]
-                    ):
+                    async def buffer_then_audio_stream() -> AsyncGenerator[
+                        EnhancedAudioChunk
+                    ]:
                         # Buffered audio
                         for chunk in stt_audio_buffer:
                             yield chunk
@@ -1481,8 +1590,9 @@ class PipelineInput:
                     assert intent_input is not None
                     tts_input = await self.run.recognize_intent(
                         intent_input,
-                        self.conversation_id,
+                        self.session.conversation_id,
                         self.device_id,
+                        self.conversation_extra_system_prompt,
                     )
                     if tts_input.strip():
                         current_stage = PipelineStage.TTS
@@ -1564,7 +1674,7 @@ class PipelineInput:
             <= PIPELINE_STAGE_ORDER.index(PipelineStage.INTENT)
             <= end_stage_index
         ):
-            prepare_tasks.append(self.run.prepare_recognize_intent())
+            prepare_tasks.append(self.run.prepare_recognize_intent(self.session))
 
         if (
             start_stage_index
@@ -1843,7 +1953,7 @@ class PipelineRunDebug:
 
 
 class PipelineStore(Store[SerializedPipelineStorageCollection]):
-    """Store entity registry data."""
+    """Store pipeline data."""
 
     async def _async_migrate_func(
         self,
@@ -1864,7 +1974,7 @@ class PipelineStore(Store[SerializedPipelineStorageCollection]):
         return old_data
 
 
-@singleton(DOMAIN)
+@singleton(KEY_ASSIST_PIPELINE, async_=True)
 async def async_setup_pipeline_store(hass: HomeAssistant) -> PipelineData:
     """Set up the pipeline storage collection."""
     pipeline_store = PipelineStorageCollection(
@@ -1925,3 +2035,37 @@ async def async_run_migrations(hass: HomeAssistant) -> None:
 
     for pipeline, attr_updates in updates:
         await async_update_pipeline(hass, pipeline, **attr_updates)
+
+
+@dataclass
+class PipelineConversationData:
+    """Hold data for the duration of a conversation."""
+
+    continue_conversation_agent: str | None = None
+    """The agent that requested the conversation to be continued."""
+
+
+@callback
+def async_get_pipeline_conversation_data(
+    hass: HomeAssistant, session: chat_session.ChatSession
+) -> PipelineConversationData:
+    """Get the pipeline data for a specific conversation."""
+    all_conversation_data = hass.data.get(KEY_PIPELINE_CONVERSATION_DATA)
+    if all_conversation_data is None:
+        all_conversation_data = {}
+        hass.data[KEY_PIPELINE_CONVERSATION_DATA] = all_conversation_data
+
+    data = all_conversation_data.get(session.conversation_id)
+
+    if data is not None:
+        return data
+
+    @callback
+    def do_cleanup() -> None:
+        """Handle cleanup."""
+        all_conversation_data.pop(session.conversation_id)
+
+    session.async_on_cleanup(do_cleanup)
+
+    data = all_conversation_data[session.conversation_id] = PipelineConversationData()
+    return data

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from attr import asdict
@@ -63,19 +64,23 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
         "/ivp/ensemble/generator",
         "/ivp/meters",
         "/ivp/meters/readings",
+        "/home,",
     ]
 
     for end_point in end_points:
-        response = await envoy.request(end_point)
-        fixture_data[end_point] = response.text.replace("\n", "").replace(
-            serial, CLEAN_TEXT
-        )
-        fixture_data[f"{end_point}_log"] = json_dumps(
-            {
-                "headers": dict(response.headers.items()),
-                "code": response.status_code,
-            }
-        )
+        try:
+            response = await envoy.request(end_point)
+            fixture_data[end_point] = response.text.replace("\n", "").replace(
+                serial, CLEAN_TEXT
+            )
+            fixture_data[f"{end_point}_log"] = json_dumps(
+                {
+                    "headers": dict(response.headers.items()),
+                    "code": response.status_code,
+                }
+            )
+        except EnvoyError as err:
+            fixture_data[f"{end_point}_log"] = {"Error": repr(err)}
     return fixture_data
 
 
@@ -143,11 +148,25 @@ async def async_get_config_entry_diagnostics(
         "inverters": envoy_data.inverters,
         "tariff": envoy_data.tariff,
     }
+    # Add Envoy active interface information to report
+    active_interface: dict[str, Any] = {}
+    if coordinator.interface:
+        active_interface = {
+            "name": (interface := coordinator.interface).primary_interface,
+            "interface type": interface.interface_type,
+            "mac": interface.mac,
+            "uses dhcp": interface.dhcp,
+            "firmware build date": datetime.fromtimestamp(
+                interface.software_build_epoch
+            ).strftime("%Y-%m-%d %H:%M:%S"),
+            "envoy timezone": interface.timezone,
+        }
 
     envoy_properties: dict[str, Any] = {
         "envoy_firmware": envoy.firmware,
         "part_number": envoy.part_number,
         "envoy_model": envoy.envoy_model,
+        "active interface": active_interface,
         "supported_features": [feature.name for feature in envoy.supported_features],
         "phase_mode": envoy.phase_mode,
         "phase_count": envoy.phase_count,
@@ -160,10 +179,7 @@ async def async_get_config_entry_diagnostics(
 
     fixture_data: dict[str, Any] = {}
     if entry.options.get(OPTION_DIAGNOSTICS_INCLUDE_FIXTURES, False):
-        try:
-            fixture_data = await _get_fixture_collection(envoy=envoy, serial=old_serial)
-        except EnvoyError as err:
-            fixture_data["Error"] = repr(err)
+        fixture_data = await _get_fixture_collection(envoy=envoy, serial=old_serial)
 
     diagnostic_data: dict[str, Any] = {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),

@@ -3,10 +3,16 @@
   "name": "SMLIGHT SLZB",
   "codeowners": ["@tl-sl"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "registered_devices": true
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/smlight",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["pysmlight==0.1.4"],
+  "quality_scale": "silver",
+  "requirements": ["pysmlight==0.2.4"],
   "zeroconf": [
     {
       "type": "_slzb-06._tcp.local."

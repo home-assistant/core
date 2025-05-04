@@ -107,7 +107,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     TEST_ENTITY_NAME,
@@ -846,6 +846,13 @@ async def test_pb_service_write(
         CALL_TYPE_WRITE_REGISTERS: mock_modbus_with_pymodbus.write_registers,
     }
 
+    value_arg_name = {
+        CALL_TYPE_WRITE_COIL: "value",
+        CALL_TYPE_WRITE_COILS: "values",
+        CALL_TYPE_WRITE_REGISTER: "value",
+        CALL_TYPE_WRITE_REGISTERS: "values",
+    }
+
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
         do_slave: 17,
@@ -858,10 +865,12 @@ async def test_pb_service_write(
     func_name[do_write[FUNC]].return_value = do_return[VALUE]
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
-    assert func_name[do_write[FUNC]].call_args[0] == (
-        data[ATTR_ADDRESS],
-        data[do_write[DATA]],
-    )
+    assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
+    assert func_name[do_write[FUNC]].call_args.kwargs == {
+        "slave": 17,
+        value_arg_name[do_write[FUNC]]: data[do_write[DATA]],
+    }
+
     if do_return[DATA]:
         assert any(message.startswith("Pymodbus:") for message in caplog.messages)
 
@@ -1265,3 +1274,56 @@ async def test_no_entities(hass: HomeAssistant) -> None:
         ]
     }
     assert await async_setup_component(hass, DOMAIN, config) is False
+
+
+@pytest.mark.parametrize(
+    ("do_config", "expected_slave_value"),
+    [
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 1234,
+                    },
+                ],
+            },
+            1,
+        ),
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 1234,
+                        CONF_SLAVE: 0,
+                    },
+                ],
+            },
+            0,
+        ),
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 1234,
+                        CONF_DEVICE_ADDRESS: 6,
+                    },
+                ],
+            },
+            6,
+        ),
+    ],
+)
+async def test_check_default_slave(
+    hass: HomeAssistant,
+    mock_modbus,
+    do_config,
+    mock_do_cycle,
+    expected_slave_value: int,
+) -> None:
+    """Test default slave."""
+    assert mock_modbus.read_holding_registers.mock_calls
+    first_call = mock_modbus.read_holding_registers.mock_calls[0]
+    assert first_call.kwargs["slave"] == expected_slave_value

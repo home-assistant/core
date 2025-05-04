@@ -1,8 +1,8 @@
 """The met_eireann component."""
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from types import MappingProxyType
 from typing import Any, Self
 
 import meteireann
@@ -12,7 +12,7 @@ from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, P
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -74,7 +74,7 @@ class MetEireannWeatherData:
     """Keep data for Met Éireann weather entities."""
 
     def __init__(
-        self, config: MappingProxyType[str, Any], weather_data: meteireann.WeatherData
+        self, config: Mapping[str, Any], weather_data: meteireann.WeatherData
     ) -> None:
         """Initialise the weather entity data."""
         self._config = config

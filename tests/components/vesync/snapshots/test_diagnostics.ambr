@@ -128,7 +128,7 @@
             'sleep',
             'manual',
           ]),
-          'mode': None,
+          'mode': 'humidity',
           'night_light': True,
           'pid': None,
           'speed': None,
@@ -160,6 +160,31 @@
 # ---
 # name: test_async_get_device_diagnostics__single_fan
   dict({
+    '_config_dict': dict({
+      'features': list([
+        'air_quality',
+      ]),
+      'levels': list([
+        1,
+        2,
+      ]),
+      'models': list([
+        'LV-PUR131S',
+        'LV-RH131S',
+        'LV-RH131S-WM',
+      ]),
+      'modes': list([
+        'manual',
+        'auto',
+        'sleep',
+        'off',
+      ]),
+      'module': 'VeSyncAir131',
+    }),
+    '_features': list([
+      'air_quality',
+    ]),
+    'air_quality_feature': True,
     'cid': 'abcdefghabcdefghabcdefghabcdefgh',
     'config': dict({
     }),
@@ -180,6 +205,7 @@
     'device_region': 'US',
     'device_status': 'unknown',
     'device_type': 'LV-PUR131S',
+    'enabled': True,
     'extension': None,
     'home_assistant': dict({
       'disabled': False,
@@ -264,6 +290,30 @@
           }),
           'unit_of_measurement': '%',
         }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'domain': 'switch',
+          'entity_category': None,
+          'entity_id': 'switch.fan_display',
+          'icon': None,
+          'name': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'original_name': 'Display',
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Fan Display',
+            }),
+            'entity_id': 'switch.fan_display',
+            'last_changed': str,
+            'last_reported': str,
+            'last_updated': str,
+            'state': 'unavailable',
+          }),
+          'unit_of_measurement': None,
+        }),
       ]),
       'name': 'Fan',
       'name_by_user': None,
@@ -271,6 +321,12 @@
     'mac_id': '**REDACTED**',
     'manager': '**REDACTED**',
     'mode': None,
+    'modes': list([
+      'manual',
+      'auto',
+      'sleep',
+      'off',
+    ]),
     'pid': None,
     'speed': None,
     'sub_device_no': None,

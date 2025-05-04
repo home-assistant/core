@@ -11,7 +11,7 @@ from homeassistant import config as hass_config
 from homeassistant.components.command_line.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_ON, STATE_OPEN
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, get_fixture_path
 

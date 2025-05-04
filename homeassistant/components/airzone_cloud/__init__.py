@@ -5,12 +5,11 @@ from __future__ import annotations
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
 from aioairzone_cloud.common import ConnectionOptions
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneCloudConfigEntry, AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -20,8 +19,6 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
     Platform.WATER_HEATER,
 ]
-
-type AirzoneCloudConfigEntry = ConfigEntry[AirzoneUpdateCoordinator]
 
 
 async def async_setup_entry(
@@ -42,7 +39,7 @@ async def async_setup_entry(
             airzone.select_installation(inst)
             await airzone.update_installation(inst)
 
-    coordinator = AirzoneUpdateCoordinator(hass, airzone)
+    coordinator = AirzoneUpdateCoordinator(hass, entry, airzone)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

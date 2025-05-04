@@ -271,6 +271,7 @@ async def test_async_handle_sentence_triggers(
             text="my trigger",
             context=Context(),
             conversation_id=None,
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
             device_id=device_id,
             language=hass.config.language,
         ),
@@ -306,6 +307,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
         ConversationInput(
             text="I'd like to order a stout",
             context=Context(),
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
             conversation_id=None,
             device_id=None,
             language=hass.config.language,
@@ -321,6 +323,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
         hass,
         ConversationInput(
             text="this sentence does not exist",
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
             context=Context(),
             conversation_id=None,
             device_id=None,

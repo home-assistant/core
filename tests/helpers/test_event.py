@@ -13,8 +13,8 @@ from freezegun.api import FrozenDateTimeFactory
 import jinja2
 import pytest
 
+from homeassistant import core as ha
 from homeassistant.const import MATCH_ALL
-import homeassistant.core as ha
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -30,6 +30,7 @@ from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
     async_call_later,
+    async_has_entity_registry_updated_listeners,
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
     async_track_point_in_time,
@@ -52,7 +53,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, async_fire_time_changed_exact
 
@@ -4682,12 +4683,17 @@ async def test_async_track_entity_registry_updated_event(hass: HomeAssistant) ->
     def run_callback(event):
         event_data.append(event.data)
 
+    assert async_has_entity_registry_updated_listeners(hass) is False
+
     unsub1 = async_track_entity_registry_updated_event(
         hass, entity_id, run_callback, job_type=ha.HassJobType.Callback
     )
     unsub2 = async_track_entity_registry_updated_event(
         hass, new_entity_id, run_callback
     )
+
+    assert async_has_entity_registry_updated_listeners(hass) is True
+
     hass.bus.async_fire(
         EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
     )

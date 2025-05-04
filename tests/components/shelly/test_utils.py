@@ -17,7 +17,12 @@ from aioshelly.const import (
 )
 import pytest
 
-from homeassistant.components.shelly.const import GEN1_RELEASE_URL, GEN2_RELEASE_URL
+from homeassistant.components.shelly.const import (
+    GEN1_RELEASE_URL,
+    GEN2_BETA_RELEASE_URL,
+    GEN2_RELEASE_URL,
+    UPTIME_DEVIATION,
+)
 from homeassistant.components.shelly.utils import (
     get_block_channel_name,
     get_block_device_sleep_period,
@@ -184,8 +189,9 @@ async def test_get_device_uptime() -> None:
     ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
 
     assert get_device_uptime(
-        50, dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
-    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:10+00:00"))
+        55 - UPTIME_DEVIATION,
+        dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00")),
+    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:43:05+00:00"))
 
 
 async def test_get_block_input_triggers(
@@ -300,7 +306,7 @@ async def test_get_rpc_input_triggers(
         (1, MODEL_1, True, None),
         (2, MODEL_WALL_DISPLAY, False, None),
         (2, MODEL_PLUS_2PM_V2, False, GEN2_RELEASE_URL),
-        (2, MODEL_PLUS_2PM_V2, True, None),
+        (2, MODEL_PLUS_2PM_V2, True, GEN2_BETA_RELEASE_URL),
     ],
 )
 def test_get_release_url(

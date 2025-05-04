@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 from pyegps.exceptions import UsbError
 
-from homeassistant.components.energenie_power_sockets.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -24,13 +23,11 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.entry_id in hass.data[DOMAIN]
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    assert DOMAIN not in hass.data
 
 
 async def test_device_not_found_on_load_entry(

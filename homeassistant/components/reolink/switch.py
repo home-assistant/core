@@ -12,7 +12,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import (
@@ -162,6 +162,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="manual_record",
         cmd_key="GetManualRec",
+        cmd_id=588,
         translation_key="manual_record",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "manual_record"),
@@ -205,6 +206,15 @@ SWITCH_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "PIR"),
         value=lambda api, ch: api.pir_reduce_alarm(ch) is True,
         method=lambda api, ch, value: api.set_pir(ch, reduce_alarm=value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="privacy_mode",
+        always_available=True,
+        translation_key="privacy_mode",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "privacy_mode"),
+        value=lambda api, ch: api.baichuan.privacy_mode(ch),
+        method=lambda api, ch, value: api.baichuan.set_privacy_mode(ch, value),
     ),
 )
 
@@ -267,18 +277,6 @@ CHIME_SWITCH_ENTITIES = (
     ),
 )
 
-# Can be removed in HA 2025.2.0
-DEPRECATED_HDR = ReolinkSwitchEntityDescription(
-    key="hdr",
-    cmd_key="GetIsp",
-    translation_key="hdr",
-    entity_category=EntityCategory.CONFIG,
-    entity_registry_enabled_default=False,
-    supported=lambda api, ch: api.supported(ch, "HDR"),
-    value=lambda api, ch: api.HDR_on(ch) is True,
-    method=lambda api, ch, value: api.set_HDR(ch, value),
-)
-
 # Can be removed in HA 2025.4.0
 DEPRECATED_NVR_SWITCHES = [
     ReolinkNVRSwitchEntityDescription(
@@ -333,7 +331,7 @@ DEPRECATED_NVR_SWITCHES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink switch entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
@@ -367,26 +365,6 @@ async def async_setup_entry(
     entity_reg = er.async_get(hass)
     reg_entities = er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)
     for entity in reg_entities:
-        # Can be removed in HA 2025.2.0
-        if entity.domain == "switch" and entity.unique_id.endswith("_hdr"):
-            if entity.disabled:
-                entity_reg.async_remove(entity.entity_id)
-                continue
-
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "hdr_switch_deprecated",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="hdr_switch_deprecated",
-            )
-            entities.extend(
-                ReolinkSwitchEntity(reolink_data, channel, DEPRECATED_HDR)
-                for channel in reolink_data.host.api.channels
-                if DEPRECATED_HDR.supported(reolink_data.host.api, channel)
-            )
-
         # Can be removed in HA 2025.4.0
         if entity.domain == "switch" and entity.unique_id in depricated_dict:
             if entity.disabled:

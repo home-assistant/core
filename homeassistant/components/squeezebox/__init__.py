@@ -53,6 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.MEDIA_PLAYER,
     Platform.SENSOR,
 ]
@@ -105,9 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     lms.name = (
         (STATUS_QUERY_LIBRARYNAME in status and status[STATUS_QUERY_LIBRARYNAME])
         and status[STATUS_QUERY_LIBRARYNAME]
-        or host
-    )
-    version = STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION] or None
+    ) or host
+    version = (STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION]) or None
     # mac can be missing
     mac_connect = (
         {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
@@ -128,12 +128,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     )
     _LOGGER.debug("LMS Device %s", device)
 
-    server_coordinator = LMSStatusDataUpdateCoordinator(hass, lms)
+    server_coordinator = LMSStatusDataUpdateCoordinator(hass, entry, lms)
 
-    entry.runtime_data = SqueezeboxData(
-        coordinator=server_coordinator,
-        server=lms,
-    )
+    entry.runtime_data = SqueezeboxData(coordinator=server_coordinator, server=lms)
 
     # set up player discovery
     known_servers = hass.data.setdefault(DOMAIN, {}).setdefault(KNOWN_SERVERS, {})
@@ -152,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
             else:
                 _LOGGER.debug("Adding new entity: %s", player)
                 player_coordinator = SqueezeBoxPlayerUpdateCoordinator(
-                    hass, player, lms.uuid
+                    hass, entry, player, lms.uuid
                 )
                 known_players.append(player.player_id)
                 async_dispatcher_send(

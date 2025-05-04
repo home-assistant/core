@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 from weheat.abstractions.discovery import HeatPumpDiscovery
@@ -34,14 +33,13 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(("has_dhw", "nr_of_entities"), [(False, 15), (True, 17)])
+@pytest.mark.parametrize(("has_dhw", "nr_of_entities"), [(False, 16), (True, 19)])
 async def test_create_entities(
     hass: HomeAssistant,
     mock_weheat_discover: AsyncMock,
     mock_weheat_heat_pump: AsyncMock,
     mock_heat_pump_info: HeatPumpDiscovery.HeatPumpInfo,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
     has_dhw: bool,
     nr_of_entities: int,
 ) -> None:

@@ -7,7 +7,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.flux_led.config_flow import FluxLedConfigFlow
 from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_COLORS,
@@ -27,6 +26,7 @@ from homeassistant.components.flux_led.const import (
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import (
     DEFAULT_ENTRY_TITLE,
@@ -356,6 +356,60 @@ async def test_manual_working_discovery(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
+async def test_user_flow_can_replace_ignored(hass: HomeAssistant) -> None:
+    """Test a user flow can replace an ignored entry."""
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS},
+        unique_id=MAC_ADDRESS,
+        title=DEFAULT_ENTRY_TITLE,
+        source=config_entries.SOURCE_IGNORE,
+    )
+    ignored_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    # Cannot connect (timeout)
+    with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+    # Success
+    with (
+        _patch_discovery(),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=True),
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == DEFAULT_ENTRY_TITLE
+    assert result4["data"] == {
+        CONF_MINOR_VERSION: 4,
+        CONF_HOST: IP_ADDRESS,
+        CONF_MODEL: MODEL,
+        CONF_MODEL_NUM: MODEL_NUM,
+        CONF_MODEL_INFO: MODEL,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
+        CONF_REMOTE_ACCESS_ENABLED: True,
+        CONF_REMOTE_ACCESS_HOST: "the.cloud",
+        CONF_REMOTE_ACCESS_PORT: 8816,
+    }
+
+
 async def test_manual_no_discovery_data(hass: HomeAssistant) -> None:
     """Test manually setup without discovery data."""
     result = await hass.config_entries.flow.async_init(
@@ -424,7 +478,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="any",
                 ip=IP_ADDRESS,
                 macaddress="000000000000",

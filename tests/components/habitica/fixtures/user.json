@@ -2,8 +2,18 @@
   "success": true,
   "data": {
     "api_user": "test-api-user",
-    "profile": { "name": "test-user" },
-    "auth": { "local": { "username": "test-username" } },
+    "profile": {
+      "name": "test-user",
+      "blurb": "My mind is a swirling miasma of scintillating thoughts and turgid ideas.",
+      "imageUrl": "https://pbs.twimg.com/profile_images/378800000771780608/a32e71fe6a64eba6773c20d289eddc8e.png"
+    },
+    "auth": {
+      "local": { "username": "test-username" },
+      "timestamps": {
+        "created": "2013-12-02T22:23:29.249Z",
+        "loggedin": "2025-02-02T03:14:33.864Z"
+      }
+    },
     "stats": {
       "buffs": {
         "str": 26,
@@ -56,7 +66,8 @@
         "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
         "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
         "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1",
-        "6e53f1f5-a315-4edd-984d-8d762e4a08ef"
+        "6e53f1f5-a315-4edd-984d-8d762e4a08ef",
+        "369afeed-61e3-4bf7-9747-66e05807134c"
       ],
       "habits": ["1d147de6-5c02-4740-8e2f-71d3015a37f4"]
     },
@@ -112,8 +123,57 @@
           "eyewear": "eyewear_armoire_plagueDoctorMask",
           "body": "body_special_aetherAmulet"
         }
+      },
+      "quests": {
+        "atom1": 1,
+        "goldenknight1": 0,
+        "dustbunnies": 1,
+        "basilist": 0
+      },
+      "food": {
+        "Saddle": 2,
+        "Meat": 0,
+        "Milk": 1,
+        "Potatoe": 2
+      },
+      "hatchingPotions": {
+        "Base": 2,
+        "White": 0,
+        "Desert": 1
+      },
+      "eggs": {
+        "Wolf": 1,
+        "TigerCub": 0,
+        "PandaCub": 2
       }
     },
-    "balance": 10
+    "balance": 10,
+    "purchased": {
+      "plan": {
+        "consecutive": {
+          "trinkets": 0
+        }
+      }
+    },
+    "webhooks": [
+      {
+        "id": "43a67e37-1bae-4b11-8d3d-6c4b1b480231",
+        "type": "taskActivity",
+        "label": "My Webhook",
+        "url": "https://some-webhook-url.com",
+        "enabled": true,
+        "failures": 0,
+        "options": {
+          "created": false,
+          "updated": false,
+          "deleted": false,
+          "checklistScored": false,
+          "scored": true
+        },
+        "createdAt": "2025-02-08T22:06:08.894Z",
+        "updatedAt": "2025-02-08T22:06:17.195Z"
+      }
+    ],
+    "loginIncentives": 241
   }
 }

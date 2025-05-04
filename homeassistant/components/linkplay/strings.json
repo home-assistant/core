@@ -11,7 +11,7 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {name}?"
+        "description": "Do you want to set up {name}?"
       }
     },
     "abort": {
@@ -26,11 +26,11 @@
   "services": {
     "play_preset": {
       "name": "Play preset",
-      "description": "Play the preset number on the device.",
+      "description": "Plays a preset on the device.",
       "fields": {
         "preset_number": {
           "name": "Preset number",
-          "description": "The preset number on the device to play."
+          "description": "The number of the preset to play."
         }
       }
     }
@@ -44,7 +44,7 @@
   },
   "exceptions": {
     "invalid_grouping_entity": {
-      "message": "Entity with id {entity_id} can't be added to the LinkPlay multiroom. Is the entity a LinkPlay mediaplayer?"
+      "message": "Entity with ID {entity_id} can't be added to the LinkPlay multiroom. Is the entity a LinkPlay media player?"
     }
   }
 }

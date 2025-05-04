@@ -1,5 +1,7 @@
 """Tests for the diagnostics data provided by the KNX integration."""
 
+from typing import Any
+
 import pytest
 from syrupy import SnapshotAssertion
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
@@ -40,7 +42,7 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     # Overwrite the version for this test since we don't want to change this with every library bump
     knx.xknx.version = "0.0.0"
@@ -60,7 +62,7 @@ async def test_diagnostic_config_error(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     # Overwrite the version for this test since we don't want to change this with every library bump
     knx.xknx.version = "0.0.0"
@@ -76,6 +78,7 @@ async def test_diagnostic_config_error(
 async def test_diagnostic_redact(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics redacting data."""
@@ -95,8 +98,8 @@ async def test_diagnostic_redact(
             CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44bbaacc44bbaacc44",
         },
     )
-    knx: KNXTestKit = KNXTestKit(hass, mock_config_entry)
-    await knx.setup_integration({})
+    knx: KNXTestKit = KNXTestKit(hass, mock_config_entry, hass_storage)
+    await knx.setup_integration()
 
     # Overwrite the version for this test since we don't want to change this with every library bump
     knx.xknx.version = "0.0.0"
@@ -117,7 +120,7 @@ async def test_diagnostics_project(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     knx.xknx.version = "0.0.0"
     # snapshot will contain project specific fields in `project_info`
     assert (

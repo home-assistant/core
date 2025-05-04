@@ -1,5 +1,7 @@
 """Constants for the ElevenLabs text-to-speech integration."""
 
+ATTR_MODEL = "model"
+
 CONF_VOICE = "voice"
 CONF_MODEL = "model"
 CONF_CONFIGURE_VOICE = "configure_voice"

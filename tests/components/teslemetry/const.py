@@ -11,6 +11,8 @@ WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
 WAKE_UP_ASLEEP = {"response": {"state": TeslemetryState.ASLEEP}, "error": None}
 
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
+PRODUCTS_MODERN = load_json_object_fixture("products.json", DOMAIN)
+PRODUCTS_MODERN["response"][0]["command_signing"] = "required"
 VEHICLE_DATA = load_json_object_fixture("vehicle_data.json", DOMAIN)
 VEHICLE_DATA_ASLEEP = load_json_object_fixture("vehicle_data.json", DOMAIN)
 VEHICLE_DATA_ASLEEP["response"]["state"] = TeslemetryState.OFFLINE
@@ -43,6 +45,7 @@ METADATA = {
         "vehicle_device_data",
         "vehicle_cmds",
         "vehicle_charging_cmds",
+        "vehicle_location",
         "energy_device_data",
         "energy_cmds",
     ],
@@ -51,7 +54,7 @@ METADATA = {
             "proxy": False,
             "access": True,
             "polling": True,
-            "firmware": "2024.44.25",
+            "firmware": "2026.0.0",
         }
     },
 }

@@ -65,6 +65,14 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.RELAY_SWITCH_1PM.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_1.value: [Platform.SWITCH],
     SupportedModels.LEAK.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.REMOTE.value: [Platform.SENSOR],
+    SupportedModels.ROLLER_SHADE.value: [
+        Platform.COVER,
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    SupportedModels.HUBMINI_MATTER.value: [Platform.SENSOR],
+    SupportedModels.CIRCULATOR_FAN.value: [Platform.FAN, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -79,6 +87,8 @@ CLASS_BY_DEVICE = {
     SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
     SupportedModels.RELAY_SWITCH_1PM.value: switchbot.SwitchbotRelaySwitch,
     SupportedModels.RELAY_SWITCH_1.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.ROLLER_SHADE.value: switchbot.SwitchbotRollerShade,
+    SupportedModels.CIRCULATOR_FAN.value: switchbot.SwitchbotFan,
 }
 
 

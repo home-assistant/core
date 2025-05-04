@@ -52,7 +52,7 @@ async def test_event_button_press(hass: HomeAssistant) -> None:
         hass,
         make_advertisement(
             mac,
-            b'XY\x97\td\xbc\x9c\xe3D\xefT" `' b"\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3",
+            b'XY\x97\td\xbc\x9c\xe3D\xefT" `\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3',
         ),
     )
 
@@ -78,7 +78,7 @@ async def test_event_unlock_outside_the_door(hass: HomeAssistant) -> None:
         hass,
         make_advertisement(
             mac,
-            b"PD\x9e\x06C\x91\x8a\xebD\x1f\xd7\x0b\x00\t" b" \x02\x00\x01\x80|D/a",
+            b"PD\x9e\x06C\x91\x8a\xebD\x1f\xd7\x0b\x00\t \x02\x00\x01\x80|D/a",
         ),
     )
 
@@ -104,7 +104,7 @@ async def test_event_successful_fingerprint_match_the_door(hass: HomeAssistant) 
         hass,
         make_advertisement(
             mac,
-            b"PD\x9e\x06B\x91\x8a\xebD\x1f\xd7" b"\x06\x00\x05\xff\xff\xff\xff\x00",
+            b"PD\x9e\x06B\x91\x8a\xebD\x1f\xd7\x06\x00\x05\xff\xff\xff\xff\x00",
         ),
     )
 
@@ -153,7 +153,7 @@ async def test_event_dimmer_rotate(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(
         hass,
         make_advertisement(
-            mac, b"X0\xb6\x036\x8b\x98\xc5A$\xf8\x8b\xb8\xf2f" b"\x13Q\x00\x00\x00\xd6"
+            mac, b"X0\xb6\x036\x8b\x98\xc5A$\xf8\x8b\xb8\xf2f\x13Q\x00\x00\x00\xd6"
         ),
     )
 
@@ -182,7 +182,7 @@ async def test_get_triggers_button(
         hass,
         make_advertisement(
             mac,
-            b'XY\x97\td\xbc\x9c\xe3D\xefT" `' b"\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3",
+            b'XY\x97\td\xbc\x9c\xe3D\xefT" `\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3',
         ),
     )
 
@@ -406,7 +406,7 @@ async def test_if_fires_on_button_press(
         hass,
         make_advertisement(
             mac,
-            b"XY\x97\tf\xbc\x9c\xe3D\xefT\x01" b"\x08\x12\x05\x00\x00\x00q^\xbe\x90",
+            b"XY\x97\tf\xbc\x9c\xe3D\xefT\x01\x08\x12\x05\x00\x00\x00q^\xbe\x90",
         ),
     )
 
@@ -442,7 +442,7 @@ async def test_if_fires_on_button_press(
         hass,
         make_advertisement(
             mac,
-            b'XY\x97\td\xbc\x9c\xe3D\xefT" `' b"\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3",
+            b'XY\x97\td\xbc\x9c\xe3D\xefT" `\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3',
         ),
     )
     await hass.async_block_till_done()

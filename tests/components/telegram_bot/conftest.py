@@ -105,6 +105,14 @@ def mock_external_calls() -> Generator[None]:
         patch.object(BotMock, "get_me", return_value=test_user),
         patch.object(BotMock, "bot", test_user),
         patch.object(BotMock, "send_message", return_value=message),
+        patch.object(BotMock, "send_photo", return_value=message),
+        patch.object(BotMock, "send_sticker", return_value=message),
+        patch.object(BotMock, "send_video", return_value=message),
+        patch.object(BotMock, "send_document", return_value=message),
+        patch.object(BotMock, "send_voice", return_value=message),
+        patch.object(BotMock, "send_animation", return_value=message),
+        patch.object(BotMock, "send_location", return_value=message),
+        patch.object(BotMock, "send_poll", return_value=message),
         patch("telegram.ext.Updater._bootstrap"),
     ):
         yield

@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/google_translate",
   "iot_class": "cloud_push",
   "loggers": ["gtts"],
-  "requirements": ["gTTS==2.2.4"]
+  "requirements": ["gTTS==2.5.3"]
 }

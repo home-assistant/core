@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import YALEXSBLEConfigEntry
 from .entity import YALEXSBLEEntity
@@ -75,7 +75,7 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: YALEXSBLEConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YALE XS Bluetooth sensors."""
     data = entry.runtime_data

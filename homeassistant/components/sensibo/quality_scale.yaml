@@ -19,9 +19,9 @@ rules:
     comment: |
       No integrations services.
   common-modules: done
-  docs-high-level-description: todo
+  docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   docs-actions: done
   brands: done
   # Silver
@@ -39,9 +39,7 @@ rules:
     comment: |
       Tests are very complex and needs a rewrite for future additions
   integration-owner: done
-  docs-installation-parameters:
-    status: todo
-    comment: configuration_basic
+  docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
     comment: |
@@ -54,7 +52,7 @@ rules:
   entity-category: done
   entity-disabled-by-default: done
   discovery: done
-  stale-devices: todo
+  stale-devices: done
   diagnostics:
     status: done
     comment: |
@@ -62,7 +60,7 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  dynamic-devices: todo
+  dynamic-devices: done
   discovery-update-info:
     status: exempt
     comment: |
@@ -71,13 +69,13 @@ rules:
     status: exempt
     comment: |
       This integration doesn't have any cases where raising an issue is needed.
-  docs-use-cases: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-data-update: todo
-  docs-known-limitations: todo
-  docs-troubleshooting: todo
-  docs-examples: todo
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
 
   # Platinum
   async-dependency: done

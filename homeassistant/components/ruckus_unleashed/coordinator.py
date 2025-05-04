@@ -6,6 +6,7 @@ import logging
 from aioruckus import AjaxSession
 from aioruckus.exceptions import AuthenticationError, SchemaError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -18,17 +19,20 @@ _LOGGER = logging.getLogger(__package__)
 class RuckusDataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator to manage data from Ruckus client."""
 
-    def __init__(self, hass: HomeAssistant, *, ruckus: AjaxSession) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, ruckus: AjaxSession
+    ) -> None:
         """Initialize global Ruckus data updater."""
         self.ruckus = ruckus
-
-        update_interval = timedelta(seconds=SCAN_INTERVAL)
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
     async def _fetch_clients(self) -> dict:

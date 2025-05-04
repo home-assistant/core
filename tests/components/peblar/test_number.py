@@ -14,18 +14,19 @@ from homeassistant.components.number import (
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 
-pytestmark = [
-    pytest.mark.parametrize("init_integration", [Platform.NUMBER], indirect=True),
-    pytest.mark.usefixtures("init_integration"),
-]
 
-
+@pytest.mark.parametrize("init_integration", [Platform.NUMBER], indirect=True)
+@pytest.mark.usefixtures("init_integration")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -48,7 +49,8 @@ async def test_entities(
         assert entity_entry.device_id == device_entry.id
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("init_integration", [Platform.NUMBER], indirect=True)
+@pytest.mark.usefixtures("init_integration", "entity_registry_enabled_by_default")
 async def test_number_set_value(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
@@ -71,6 +73,43 @@ async def test_number_set_value(
 
     assert len(mocked_method.mock_calls) == 2
     mocked_method.mock_calls[0].assert_called_with({"charge_current_limit": 10})
+
+
+async def test_number_set_value_when_charging_is_suspended(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test handling of setting the charging limit while charging is suspended."""
+    entity_id = "number.peblar_ev_charger_charge_limit"
+
+    # Suspend charging
+    mock_peblar.rest_api.return_value.ev_interface.return_value.charge_current_limit = 0
+
+    # Setup the config entry
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mocked_method = mock_peblar.rest_api.return_value.ev_interface
+    mocked_method.reset_mock()
+
+    # Test normal happy path number value change
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_VALUE: 10,
+        },
+        blocking=True,
+    )
+
+    assert len(mocked_method.mock_calls) == 0
+
+    # Check the state is reflected
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "10"
 
 
 @pytest.mark.parametrize(
@@ -96,7 +135,8 @@ async def test_number_set_value(
         ),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("init_integration", [Platform.NUMBER], indirect=True)
+@pytest.mark.usefixtures("init_integration", "entity_registry_enabled_by_default")
 async def test_number_set_value_communication_error(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
@@ -128,6 +168,8 @@ async def test_number_set_value_communication_error(
     assert excinfo.value.translation_placeholders == translation_placeholders
 
 
+@pytest.mark.parametrize("init_integration", [Platform.NUMBER], indirect=True)
+@pytest.mark.usefixtures("init_integration")
 async def test_number_set_value_authentication_error(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
@@ -175,3 +217,51 @@ async def test_number_set_value_authentication_error(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize(
+    ("restore_state", "restore_native_value", "expected_state"),
+    [
+        ("10", 10, "10"),
+        ("unknown", 10, "unknown"),
+        ("unavailable", 10, "unknown"),
+        ("10", None, "unknown"),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    restore_state: str,
+    restore_native_value: int,
+    expected_state: str,
+) -> None:
+    """Test restoring the number state."""
+    EXTRA_STORED_DATA = {
+        "native_max_value": 16,
+        "native_min_value": 6,
+        "native_step": 1,
+        "native_unit_of_measurement": "A",
+        "native_value": restore_native_value,
+    }
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State("number.peblar_ev_charger_charge_limit", restore_state),
+                EXTRA_STORED_DATA,
+            ),
+        ),
+    )
+
+    # Adjust Peblar client to have an ignored value for the charging limit
+    mock_peblar.rest_api.return_value.ev_interface.return_value.charge_current_limit = 0
+
+    # Setup the config entry
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check if state is restored and value is set correctly
+    assert (state := hass.states.get("number.peblar_ev_charger_charge_limit"))
+    assert state.state == expected_state

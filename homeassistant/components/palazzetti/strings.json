@@ -27,6 +27,9 @@
     "invalid_fan_mode": {
       "message": "Fan mode {value} is invalid."
     },
+    "invalid_fan_speed": {
+      "message": "Fan {name} speed {value} is invalid."
+    },
     "invalid_target_temperature": {
       "message": "Target temperature {value} is invalid."
     },
@@ -38,14 +41,19 @@
     }
   },
   "entity": {
+    "button": {
+      "silent": {
+        "name": "Silent"
+      }
+    },
     "climate": {
       "palazzetti": {
         "state_attributes": {
           "fan_mode": {
             "state": {
               "silent": "Silent",
-              "auto": "Auto",
-              "high": "High"
+              "auto": "[%key:common::state::auto%]",
+              "high": "[%key:common::state::high%]"
             }
           }
         }
@@ -54,13 +62,19 @@
     "number": {
       "combustion_power": {
         "name": "Combustion power"
+      },
+      "fan_left_speed": {
+        "name": "Left fan speed"
+      },
+      "fan_right_speed": {
+        "name": "Right fan speed"
       }
     },
     "sensor": {
       "status": {
         "name": "Status",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "off_timer": "Timer-regulated switch off",
           "test_fire": "Ignition test",
           "heatup": "Pellet feed",
@@ -69,7 +83,7 @@
           "burning": "Operating",
           "burning_mod": "Operating - Modulating",
           "unknown": "Unknown",
-          "cool_fluid": "Stand-by",
+          "cool_fluid": "[%key:common::state::standby%]",
           "fire_stop": "Switch off",
           "clean_fire": "Burn pot cleaning",
           "cooling": "Cooling in progress",

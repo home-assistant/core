@@ -96,11 +96,16 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_states={MediaPlayerState.PLAYING},
             required_features=MediaPlayerEntityFeature.VOLUME_SET,
             required_slots={
-                ATTR_MEDIA_VOLUME_LEVEL: vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=100), lambda val: val / 100
-                )
+                ATTR_MEDIA_VOLUME_LEVEL: intent.IntentSlotInfo(
+                    description="The volume percentage of the media player",
+                    value_schema=vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=0, max=100),
+                        lambda val: val / 100,
+                    ),
+                ),
             },
-            description="Sets the volume of a media player",
+            description="Sets the volume percentage of a media player",
             platforms={DOMAIN},
             device_classes={MediaPlayerDeviceClass},
         ),

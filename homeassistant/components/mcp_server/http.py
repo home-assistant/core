@@ -1,4 +1,4 @@
-"""Model Context Protocol transport portocol for Server Sent Events (SSE).
+"""Model Context Protocol transport protocol for Server Sent Events (SSE).
 
 This registers HTTP endpoints that supports SSE as a transport layer
 for the Model Context Protocol. There are two HTTP endpoints:
@@ -25,7 +25,6 @@ from mcp import types
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -56,15 +55,13 @@ def async_get_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
 
     Will raise an HTTP error if the expected configuration is not present.
     """
-    config_entries: list[MCPServerConfigEntry] = [
-        config_entry
-        for config_entry in hass.config_entries.async_entries(DOMAIN)
-        if config_entry.state == ConfigEntryState.LOADED
-    ]
+    config_entries: list[MCPServerConfigEntry] = (
+        hass.config_entries.async_loaded_entries(DOMAIN)
+    )
     if not config_entries:
-        raise HTTPNotFound(body="Model Context Protocol server is not configured")
+        raise HTTPNotFound(text="Model Context Protocol server is not configured")
     if len(config_entries) > 1:
-        raise HTTPNotFound(body="Found multiple Model Context Protocol configurations")
+        raise HTTPNotFound(text="Found multiple Model Context Protocol configurations")
     return config_entries[0]
 
 
@@ -147,7 +144,7 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
         """Process incoming messages for the Model Context Protocol.
 
         The request passes a session ID which is used to identify the original
-        SSE connection. This view parses incoming messagess from the transport
+        SSE connection. This view parses incoming messages from the transport
         layer then writes them to the MCP server stream for the session.
         """
         hass = request.app[KEY_HASS]
@@ -156,14 +153,14 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
         session_manager = config_entry.runtime_data
         if (session := session_manager.get(session_id)) is None:
             _LOGGER.info("Could not find session ID: '%s'", session_id)
-            raise HTTPNotFound(body=f"Could not find session ID '{session_id}'")
+            raise HTTPNotFound(text=f"Could not find session ID '{session_id}'")
 
         json_data = await request.json()
         try:
             message = types.JSONRPCMessage.model_validate(json_data)
         except ValueError as err:
             _LOGGER.info("Failed to parse message: %s", err)
-            raise HTTPBadRequest(body="Could not parse message") from err
+            raise HTTPBadRequest(text="Could not parse message") from err
 
         _LOGGER.debug("Received client message: %s", message)
         await session.read_stream_writer.send(message)

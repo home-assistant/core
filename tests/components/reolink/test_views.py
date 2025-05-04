@@ -22,7 +22,7 @@ TEST_DAY = 14
 TEST_DAY2 = 15
 TEST_HOUR = 13
 TEST_MINUTE = 12
-TEST_FILE_NAME_MP4 = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00.mp4"
+TEST_FILE_NAME_MP4 = f"Mp4Record/{TEST_YEAR}-{TEST_MONTH}-{TEST_DAY}/RecS04_{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00_123456_AB123C.mp4"
 TEST_STREAM = "sub"
 TEST_CHANNEL = "0"
 TEST_VOD_TYPE = VodRequestType.PLAYBACK.value
@@ -46,8 +46,12 @@ def get_mock_session(
 
     mock_response = Mock()
     mock_response.content_length = content_length
+    mock_response.headers = {}
+    mock_response.status = 200
+    mock_response.reason = "OK"
     mock_response.content_type = content_type
     mock_response.content.iter_chunked = Mock(return_value=content)
+    mock_response.text = AsyncMock(return_value="test")
 
     mock_session = Mock()
     mock_session.get = AsyncMock(return_value=mock_response)
@@ -178,16 +182,18 @@ async def test_playback_proxy_timeout(
     assert response.status == 200
 
 
+@pytest.mark.parametrize(("content_type"), [("video/x-flv"), ("text/html")])
 async def test_playback_wrong_content(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
+    content_type: str,
 ) -> None:
     """Test playback proxy URL with a wrong content type in the response."""
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
 
-    mock_session = get_mock_session(content_type="video/x-flv")
+    mock_session = get_mock_session(content_type=content_type)
 
     with patch(
         "homeassistant.components.reolink.views.async_get_clientsession",

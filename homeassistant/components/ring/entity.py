@@ -2,7 +2,8 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Concatenate, Generic, cast
+import logging
+from typing import Any, Concatenate, Generic, TypeVar, cast
 
 from ring_doorbell import (
     AuthenticationError,
@@ -11,7 +12,6 @@ from ring_doorbell import (
     RingGeneric,
     RingTimeout,
 )
-from typing_extensions import TypeVar
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -36,6 +36,8 @@ _RingCoordinatorT = TypeVar(
     "_RingCoordinatorT",
     bound=(RingDataCoordinator | RingListenCoordinator),
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -63,14 +65,22 @@ def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
             return await async_func(self, *args, **kwargs)
         except AuthenticationError as err:
             self.coordinator.config_entry.async_start_reauth(self.hass)
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_authentication",
+            ) from err
         except RingTimeout as err:
             raise HomeAssistantError(
-                f"Timeout communicating with API {async_func}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="api_timeout",
             ) from err
         except RingError as err:
+            _LOGGER.debug(
+                "Error calling %s in platform %s: ", async_func.__name__, self.platform
+            )
             raise HomeAssistantError(
-                f"Error communicating with API{async_func}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="api_error",
             ) from err
 
     return _wrap

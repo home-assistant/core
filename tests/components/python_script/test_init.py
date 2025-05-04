@@ -711,4 +711,4 @@ async def test_no_other_imports_allowed(
     source = "import sys"
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert "Error executing script: Not allowed to import sys" in caplog.text
+    assert "ImportError: Not allowed to import sys" in caplog.text

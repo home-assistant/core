@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 from http import HTTPStatus
 import logging
-from urllib import parse
 
 from aiohttp import ClientError, ClientTimeout, web
 from reolink_aio.enums import VodRequestType
@@ -31,7 +31,7 @@ def async_generate_playback_proxy_url(
     return url_format.format(
         config_entry_id=config_entry_id,
         channel=channel,
-        filename=parse.quote(filename, safe=""),
+        filename=urlsafe_b64encode(filename.encode("utf-8")).decode("utf-8"),
         stream_res=stream_res,
         vod_type=vod_type,
     )
@@ -66,7 +66,7 @@ class PlaybackProxyView(HomeAssistantView):
         """Get playback proxy video response."""
         retry = retry - 1
 
-        filename = parse.unquote(filename)
+        filename_decoded = urlsafe_b64decode(filename.encode("utf-8")).decode("utf-8")
         ch = int(channel)
         try:
             host = get_host(self.hass, config_entry_id)
@@ -77,13 +77,22 @@ class PlaybackProxyView(HomeAssistantView):
 
         try:
             mime_type, reolink_url = await host.api.get_vod_source(
-                ch, filename, stream_res, VodRequestType(vod_type)
+                ch, filename_decoded, stream_res, VodRequestType(vod_type)
             )
         except ReolinkError as err:
             _LOGGER.warning("Reolink playback proxy error: %s", str(err))
             return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
 
+        headers = dict(request.headers)
+        headers.pop("Host", None)
+        headers.pop("Referer", None)
+
         if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Requested Playback Proxy Method %s, Headers: %s",
+                request.method,
+                headers,
+            )
             _LOGGER.debug(
                 "Opening VOD stream from %s: %s",
                 host.api.camera_name(ch),
@@ -93,6 +102,7 @@ class PlaybackProxyView(HomeAssistantView):
         try:
             reolink_response = await self.session.get(
                 reolink_url,
+                headers=headers,
                 timeout=ClientTimeout(
                     connect=15, sock_connect=15, sock_read=5, total=None
                 ),
@@ -118,18 +128,25 @@ class PlaybackProxyView(HomeAssistantView):
         ]:
             err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
             _LOGGER.error(err_str)
+            if reolink_response.content_type == "text/html":
+                text = await reolink_response.text()
+                _LOGGER.debug(text)
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
 
-        response = web.StreamResponse(
-            status=200,
-            reason="OK",
-            headers={
-                "Content-Type": "video/mp4",
-            },
+        response_headers = dict(reolink_response.headers)
+        _LOGGER.debug(
+            "Response Playback Proxy Status %s:%s, Headers: %s",
+            reolink_response.status,
+            reolink_response.reason,
+            response_headers,
         )
+        response_headers["Content-Type"] = "video/mp4"
 
-        if reolink_response.content_length is not None:
-            response.content_length = reolink_response.content_length
+        response = web.StreamResponse(
+            status=reolink_response.status,
+            reason=reolink_response.reason,
+            headers=response_headers,
+        )
 
         await response.prepare(request)
 
@@ -141,7 +158,8 @@ class PlaybackProxyView(HomeAssistantView):
                 "Timeout while reading Reolink playback from %s, writing EOF",
                 host.api.nvr_name,
             )
+        finally:
+            reolink_response.release()
 
-        reolink_response.release()
         await response.write_eof()
         return response

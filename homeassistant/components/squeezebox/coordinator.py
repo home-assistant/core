@@ -1,11 +1,13 @@
 """DataUpdateCoordinator for the Squeezebox integration."""
 
+from __future__ import annotations
+
 from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta
 import logging
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pysqueezebox import Player, Server
 
@@ -13,6 +15,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from . import SqueezeboxConfigEntry
 
 from .const import (
     PLAYER_UPDATE_INTERVAL,
@@ -30,11 +35,16 @@ _LOGGER = logging.getLogger(__name__)
 class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
     """LMS Status custom coordinator."""
 
-    def __init__(self, hass: HomeAssistant, lms: Server) -> None:
+    config_entry: SqueezeboxConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: SqueezeboxConfigEntry, lms: Server
+    ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=lms.name,
             update_interval=timedelta(seconds=SENSOR_UPDATE_INTERVAL),
             always_update=False,
@@ -80,11 +90,20 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
 class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for Squeezebox players."""
 
-    def __init__(self, hass: HomeAssistant, player: Player, server_uuid: str) -> None:
+    config_entry: SqueezeboxConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SqueezeboxConfigEntry,
+        player: Player,
+        server_uuid: str,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=player.name,
             update_interval=timedelta(seconds=PLAYER_UPDATE_INTERVAL),
             always_update=True,

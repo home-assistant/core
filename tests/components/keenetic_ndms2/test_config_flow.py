@@ -8,11 +8,15 @@ from ndms2_client.client import InterfaceInfo, RouterInfo
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import keenetic_ndms2 as keenetic, ssdp
+from homeassistant.components import keenetic_ndms2 as keenetic
 from homeassistant.components.keenetic_ndms2 import const
 from homeassistant.const import CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+)
 
 from . import MOCK_DATA, MOCK_NAME, MOCK_OPTIONS, MOCK_SSDP_DISCOVERY_INFO
 
@@ -200,7 +204,7 @@ async def test_ssdp_ignored(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=keenetic.DOMAIN,
         source=config_entries.SOURCE_IGNORE,
-        unique_id=MOCK_SSDP_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN],
+        unique_id=MOCK_SSDP_DISCOVERY_INFO.upnp[ATTR_UPNP_UDN],
     )
     entry.add_to_hass(hass)
 
@@ -222,7 +226,7 @@ async def test_ssdp_update_host(hass: HomeAssistant) -> None:
         domain=keenetic.DOMAIN,
         data=MOCK_DATA,
         options=MOCK_OPTIONS,
-        unique_id=MOCK_SSDP_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN],
+        unique_id=MOCK_SSDP_DISCOVERY_INFO.upnp[ATTR_UPNP_UDN],
     )
     entry.add_to_hass(hass)
 
@@ -247,7 +251,7 @@ async def test_ssdp_reject_no_udn(hass: HomeAssistant) -> None:
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     discovery_info.upnp = {**discovery_info.upnp}
-    discovery_info.upnp.pop(ssdp.ATTR_UPNP_UDN)
+    discovery_info.upnp.pop(ATTR_UPNP_UDN)
 
     result = await hass.config_entries.flow.async_init(
         keenetic.DOMAIN,
@@ -264,7 +268,7 @@ async def test_ssdp_reject_non_keenetic(hass: HomeAssistant) -> None:
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     discovery_info.upnp = {**discovery_info.upnp}
-    discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME] = "Suspicious device"
+    discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME] = "Suspicious device"
     result = await hass.config_entries.flow.async_init(
         keenetic.DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_SSDP},

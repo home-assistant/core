@@ -9,7 +9,6 @@ from urllib.parse import urlparse
 from rokuecp import Roku, RokuError
 import voluptuous as vol
 
-from homeassistant.components import ssdp, zeroconf
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
@@ -19,9 +18,15 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import RokuConfigEntry
 from .const import CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID, DOMAIN
+from .coordinator import RokuConfigEntry
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -117,7 +122,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=info["title"], data=user_input)
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by homekit discovery."""
 
@@ -147,12 +152,12 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_discovery_confirm()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info.ssdp_location).hostname
-        name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
-        serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
+        serial_number = discovery_info.upnp[ATTR_UPNP_SERIAL]
 
         await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})

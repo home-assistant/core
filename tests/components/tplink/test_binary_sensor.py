@@ -4,18 +4,14 @@ from kasa import Feature
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import tplink
 from homeassistant.components.tplink.binary_sensor import BINARY_SENSOR_DESCRIPTIONS
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from . import (
-    DEVICE_ID,
-    MAC_ADDRESS,
     _mocked_device,
     _mocked_feature,
     _mocked_strip_children,
@@ -24,6 +20,7 @@ from . import (
     setup_platform_for_device,
     snapshot_platform,
 )
+from .const import DEVICE_ID, MAC_ADDRESS
 
 from tests.common import MockConfigEntry
 
@@ -47,7 +44,7 @@ async def test_states(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test a sensor unique ids."""
+    """Test binary sensor states."""
     features = {description.key for description in BINARY_SENSOR_DESCRIPTIONS}
     features.update(EXCLUDED_FEATURES)
     device = _mocked_device(alias="my_device", features=features)
@@ -68,7 +65,7 @@ async def test_binary_sensor(
     entity_registry: er.EntityRegistry,
     mocked_feature_binary_sensor: Feature,
 ) -> None:
-    """Test a sensor unique ids."""
+    """Test binary sensor unique ids."""
     mocked_feature = mocked_feature_binary_sensor
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
@@ -77,7 +74,7 @@ async def test_binary_sensor(
 
     plug = _mocked_device(alias="my_plug", features=[mocked_feature])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     # The entity_id is based on standard name from core.
@@ -93,7 +90,7 @@ async def test_binary_sensor_children(
     device_registry: dr.DeviceRegistry,
     mocked_feature_binary_sensor: Feature,
 ) -> None:
-    """Test a sensor unique ids."""
+    """Test binary sensor children."""
     mocked_feature = mocked_feature_binary_sensor
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
@@ -105,7 +102,7 @@ async def test_binary_sensor_children(
         children=_mocked_strip_children(features=[mocked_feature]),
     )
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "binary_sensor.my_plug_overheated"

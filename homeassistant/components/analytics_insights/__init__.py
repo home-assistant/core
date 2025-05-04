@@ -48,7 +48,7 @@ async def async_setup_entry(
             continue
         names[integration] = integrations[integration].title
 
-    coordinator = HomeassistantAnalyticsDataUpdateCoordinator(hass, client)
+    coordinator = HomeassistantAnalyticsDataUpdateCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
 

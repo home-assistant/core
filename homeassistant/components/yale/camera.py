@@ -12,7 +12,7 @@ from yalexs.util import update_doorbell_image_from_activity
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import YaleConfigEntry, YaleData
 from .const import DEFAULT_NAME, DEFAULT_TIMEOUT
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: YaleConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yale cameras."""
     data = config_entry.runtime_data

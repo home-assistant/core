@@ -116,6 +116,6 @@ async def test_all_entities_loaded(
     entities: int,
 ) -> None:
     """Test that all entities are loaded together."""
-    assert (
-        hass.states.async_entity_ids_count() == entities
-    ), f"loaded entities for {device_fixture}: {hass.states.async_entity_ids()}"
+    assert hass.states.async_entity_ids_count() == entities, (
+        f"loaded entities for {device_fixture}: {hass.states.async_entity_ids()}"
+    )

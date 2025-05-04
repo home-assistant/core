@@ -18,7 +18,7 @@ from typing import Any, Final, final
 
 from aiohttp import hdrs, web
 import attr
-from propcache import cached_property, under_cached_property
+from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
 from webrtc_models import RTCIceCandidateInit, RTCIceServer
 
@@ -516,6 +516,19 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Flag supported features."""
         return self._attr_supported_features
 
+    @property
+    def supported_features_compat(self) -> CameraEntityFeature:
+        """Return the supported features as CameraEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:
+            new_features = CameraEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
+
     @cached_property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
@@ -569,7 +582,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
                 self._deprecate_attr_frontend_stream_type_logged = True
             return self._attr_frontend_stream_type
-        if CameraEntityFeature.STREAM not in self.supported_features:
+        if CameraEntityFeature.STREAM not in self.supported_features_compat:
             return None
         if (
             self._webrtc_provider
@@ -798,7 +811,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
-        self.__supports_stream = self.supported_features & CameraEntityFeature.STREAM
+        self.__supports_stream = (
+            self.supported_features_compat & CameraEntityFeature.STREAM
+        )
         await self.async_refresh_providers(write_state=False)
 
     async def async_refresh_providers(self, *, write_state: bool = True) -> None:
@@ -838,7 +853,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self, fn: Callable[[HomeAssistant, Camera], Coroutine[None, None, _T | None]]
     ) -> _T | None:
         """Get first provider that supports this camera."""
-        if CameraEntityFeature.STREAM not in self.supported_features:
+        if CameraEntityFeature.STREAM not in self.supported_features_compat:
             return None
 
         return await fn(self.hass, self)
@@ -896,7 +911,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def camera_capabilities(self) -> CameraCapabilities:
         """Return the camera capabilities."""
         frontend_stream_types = set()
-        if CameraEntityFeature.STREAM in self.supported_features:
+        if CameraEntityFeature.STREAM in self.supported_features_compat:
             if self._supports_native_sync_webrtc or self._supports_native_async_webrtc:
                 # The camera has a native WebRTC implementation
                 frontend_stream_types.add(StreamType.WEB_RTC)
@@ -916,7 +931,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         super().async_write_ha_state()
         if self.__supports_stream != (
-            supports_stream := self.supported_features & CameraEntityFeature.STREAM
+            supports_stream := self.supported_features_compat
+            & CameraEntityFeature.STREAM
         ):
             self.__supports_stream = supports_stream
             self._invalidate_camera_capabilities_cache()
@@ -1159,12 +1175,17 @@ async def async_handle_snapshot_service(
             f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
         )
 
-    async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
-        image = (
-            await _async_get_stream_image(camera, wait_for_next_keyframe=True)
-            if camera.use_stream_for_stills
-            else await camera.async_camera_image()
-        )
+    try:
+        async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
+            image = (
+                await _async_get_stream_image(camera, wait_for_next_keyframe=True)
+                if camera.use_stream_for_stills
+                else await camera.async_camera_image()
+            )
+    except TimeoutError as err:
+        raise HomeAssistantError(
+            f"Unable to get snapshot: Timed out after {CAMERA_IMAGE_TIMEOUT} seconds"
+        ) from err
 
     if image is None:
         return
@@ -1178,7 +1199,7 @@ async def async_handle_snapshot_service(
     try:
         await hass.async_add_executor_job(_write_image, snapshot_file, image)
     except OSError as err:
-        _LOGGER.error("Can't write image to file: %s", err)
+        raise HomeAssistantError(f"Can't write image to file: {err}") from err
 
 
 async def async_handle_play_stream_service(

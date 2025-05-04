@@ -76,6 +76,7 @@ async def integration_fixture(
         "air_purifier",
         "air_quality_sensor",
         "color_temperature_light",
+        "cooktop",
         "dimmable_light",
         "dimmable_plugin_unit",
         "door_lock",
@@ -91,6 +92,7 @@ async def integration_fixture(
         "generic_switch",
         "generic_switch_multi",
         "humidity_sensor",
+        "laundry_dryer",
         "leak_sensor",
         "light_sensor",
         "microwave_oven",
@@ -104,7 +106,11 @@ async def integration_fixture(
         "pressure_sensor",
         "room_airconditioner",
         "silabs_dishwasher",
+        "silabs_evse_charging",
+        "silabs_laundrywasher",
+        "silabs_water_heater",
         "smoke_detector",
+        "solar_power",
         "switch_unit",
         "temperature_sensor",
         "thermostat",
@@ -115,6 +121,7 @@ async def integration_fixture(
         "window_covering_pa_lift",
         "window_covering_pa_tilt",
         "window_covering_tilt",
+        "yandex_smart_socket",
     ]
 )
 async def matter_devices(

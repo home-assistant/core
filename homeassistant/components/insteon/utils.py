@@ -43,7 +43,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_CAT,
@@ -415,7 +415,7 @@ def async_add_insteon_entities(
     hass: HomeAssistant,
     platform: Platform,
     entity_type: type[InsteonEntity],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_info: dict[str, Any],
 ) -> None:
     """Add an Insteon group to a platform."""
@@ -432,7 +432,7 @@ def async_add_insteon_devices(
     hass: HomeAssistant,
     platform: Platform,
     entity_type: type[InsteonEntity],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add all entities to a platform."""
     for address in devices:

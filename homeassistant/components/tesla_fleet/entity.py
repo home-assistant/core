@@ -3,8 +3,9 @@
 from abc import abstractmethod
 from typing import Any
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla.energysite import EnergySite
+from tesla_fleet_api.tesla.vehicle.fleet import VehicleFleet
 
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -12,6 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
+    TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
@@ -24,6 +26,7 @@ class TeslaFleetEntity(
     CoordinatorEntity[
         TeslaFleetVehicleDataCoordinator
         | TeslaFleetEnergySiteLiveCoordinator
+        | TeslaFleetEnergySiteHistoryCoordinator
         | TeslaFleetEnergySiteInfoCoordinator
     ]
 ):
@@ -37,8 +40,9 @@ class TeslaFleetEntity(
         self,
         coordinator: TeslaFleetVehicleDataCoordinator
         | TeslaFleetEnergySiteLiveCoordinator
+        | TeslaFleetEnergySiteHistoryCoordinator
         | TeslaFleetEnergySiteInfoCoordinator,
-        api: VehicleSpecific | EnergySpecific,
+        api: VehicleFleet | EnergySite,
         key: str,
     ) -> None:
         """Initialize common aspects of a TeslaFleet entity."""
@@ -137,6 +141,21 @@ class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):
         self._attr_device_info = data.device
 
         super().__init__(data.live_coordinator, data.api, key)
+
+
+class TeslaFleetEnergyHistoryEntity(TeslaFleetEntity):
+    """Parent class for TeslaFleet Energy Site History entities."""
+
+    def __init__(
+        self,
+        data: TeslaFleetEnergyData,
+        key: str,
+    ) -> None:
+        """Initialize common aspects of a Tesla Fleet Energy Site History entity."""
+        self._attr_unique_id = f"{data.id}-{key}"
+        self._attr_device_info = data.device
+
+        super().__init__(data.history_coordinator, data.api, key)
 
 
 class TeslaFleetEnergyInfoEntity(TeslaFleetEntity):

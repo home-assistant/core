@@ -7,7 +7,7 @@ from typing import Final
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 DOMAIN: Final = "aftership"
 

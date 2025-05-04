@@ -6,7 +6,7 @@ import time
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.model import MowerAttributes
-from aioautomower.session import AutomowerSession, _MowerCommands
+from aioautomower.session import AutomowerSession, MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
@@ -54,6 +54,15 @@ def mock_values(mower_time_zone) -> dict[str, MowerAttributes]:
     """Fixture to set correct scope for the token."""
     return mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN),
+        mower_time_zone,
+    )
+
+
+@pytest.fixture(name="values_one_mower")
+def mock_values_one_mower(mower_time_zone) -> dict[str, MowerAttributes]:
+    """Fixture to set correct scope for the token."""
+    return mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower1.json", DOMAIN),
         mower_time_zone,
     )
 
@@ -110,7 +119,30 @@ def mock_automower_client(values) -> Generator[AsyncMock]:
 
     mock = AsyncMock(spec=AutomowerSession)
     mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
-    mock.commands = AsyncMock(spec_set=_MowerCommands)
+    mock.commands = AsyncMock(spec_set=MowerCommands)
+    mock.get_status.return_value = values
+    mock.start_listening = AsyncMock(side_effect=listen)
+
+    with patch(
+        "homeassistant.components.husqvarna_automower.AutomowerSession",
+        return_value=mock,
+    ):
+        yield mock
+
+
+@pytest.fixture
+def mock_automower_client_one_mower(values) -> Generator[AsyncMock]:
+    """Mock a Husqvarna Automower client."""
+
+    async def listen() -> None:
+        """Mock listen."""
+        listen_block = asyncio.Event()
+        await listen_block.wait()
+        pytest.fail("Listen was not cancelled!")
+
+    mock = AsyncMock(spec=AutomowerSession)
+    mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
+    mock.commands = AsyncMock(spec_set=MowerCommands)
     mock.get_status.return_value = values
     mock.start_listening = AsyncMock(side_effect=listen)
 

@@ -10,17 +10,22 @@ from awesomeversion import AwesomeVersion
 from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -41,14 +46,37 @@ CONF_SERIAL = "serial"
 
 INSTALLER_AUTH_USERNAME = "installer"
 
+AVOID_REFLECT_KEYS = {CONF_PASSWORD, CONF_TOKEN}
+
+
+def without_avoid_reflect_keys(dictionary: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a dictionary without AVOID_REFLECT_KEYS."""
+    return {k: v for k, v in dictionary.items() if k not in AVOID_REFLECT_KEYS}
+
 
 async def validate_input(
-    hass: HomeAssistant, host: str, username: str, password: str
+    hass: HomeAssistant,
+    host: str,
+    username: str,
+    password: str,
+    errors: dict[str, str],
+    description_placeholders: dict[str, str],
 ) -> Envoy:
     """Validate the user input allows us to connect."""
     envoy = Envoy(host, get_async_client(hass, verify_ssl=False))
-    await envoy.setup()
-    await envoy.authenticate(username=username, password=password)
+    try:
+        await envoy.setup()
+        await envoy.authenticate(username=username, password=password)
+    except INVALID_AUTH_ERRORS as e:
+        errors["base"] = "invalid_auth"
+        description_placeholders["reason"] = str(e)
+    except EnvoyError as e:
+        errors["base"] = "cannot_connect"
+        description_placeholders["reason"] = str(e)
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+
     return envoy
 
 
@@ -56,8 +84,6 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Enphase Envoy."""
 
     VERSION = 1
-
-    _reauth_entry: ConfigEntry
 
     def __init__(self) -> None:
         """Initialize an envoy flow."""
@@ -110,7 +136,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -159,10 +185,46 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self._get_reauth_entry()
-        if unique_id := self._reauth_entry.unique_id:
-            await self.async_set_unique_id(unique_id, raise_on_progress=False)
-        return await self.async_step_user()
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+
+        if user_input is not None:
+            await validate_input(
+                self.hass,
+                reauth_entry.data[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                errors,
+                description_placeholders,
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates=user_input,
+                )
+
+        serial = reauth_entry.unique_id or "-"
+        self.context["title_placeholders"] = {
+            CONF_SERIAL: serial,
+            CONF_HOST: reauth_entry.data[CONF_HOST],
+        }
+        description_placeholders["serial"] = serial
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                self._async_generate_schema(),
+                without_avoid_reflect_keys(user_input or reauth_entry.data),
+            ),
+            description_placeholders=description_placeholders,
+            errors=errors,
+        )
 
     def _async_envoy_name(self) -> str:
         """Return the name of the envoy."""
@@ -174,37 +236,19 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
-
-        if self.source == SOURCE_REAUTH:
-            host = self._reauth_entry.data[CONF_HOST]
-        else:
-            host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
+        host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
 
         if user_input is not None:
-            try:
-                envoy = await validate_input(
-                    self.hass,
-                    host,
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                )
-            except INVALID_AUTH_ERRORS as e:
-                errors["base"] = "invalid_auth"
-                description_placeholders = {"reason": str(e)}
-            except EnvoyError as e:
-                errors["base"] = "cannot_connect"
-                description_placeholders = {"reason": str(e)}
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            envoy = await validate_input(
+                self.hass,
+                host,
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                errors,
+                description_placeholders,
+            )
+            if not errors:
                 name = self._async_envoy_name()
-
-                if self.source == SOURCE_REAUTH:
-                    return self.async_update_reload_and_abort(
-                        self._reauth_entry,
-                        data=self._reauth_entry.data | user_input,
-                    )
 
                 if not self.unique_id:
                     await self.async_set_unique_id(envoy.serial_number)
@@ -231,10 +275,12 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SERIAL: self.unique_id,
                 CONF_HOST: host,
             }
-
         return self.async_show_form(
             step_id="user",
-            data_schema=self._async_generate_schema(),
+            data_schema=self.add_suggested_values_to_schema(
+                self._async_generate_schema(),
+                without_avoid_reflect_keys(user_input or {}),
+            ),
             description_placeholders=description_placeholders,
             errors=errors,
         )
@@ -251,23 +297,15 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             host: str = user_input[CONF_HOST]
             username: str = user_input[CONF_USERNAME]
             password: str = user_input[CONF_PASSWORD]
-            try:
-                envoy = await validate_input(
-                    self.hass,
-                    host,
-                    username,
-                    password,
-                )
-            except INVALID_AUTH_ERRORS as e:
-                errors["base"] = "invalid_auth"
-                description_placeholders = {"reason": str(e)}
-            except EnvoyError as e:
-                errors["base"] = "cannot_connect"
-                description_placeholders = {"reason": str(e)}
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            envoy = await validate_input(
+                self.hass,
+                host,
+                username,
+                password,
+                errors,
+                description_placeholders,
+            )
+            if not errors:
                 await self.async_set_unique_id(envoy.serial_number)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
@@ -279,16 +317,18 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        serial = reconfigure_entry.unique_id or "-"
         self.context["title_placeholders"] = {
-            CONF_SERIAL: reconfigure_entry.unique_id or "-",
+            CONF_SERIAL: serial,
             CONF_HOST: reconfigure_entry.data[CONF_HOST],
         }
+        description_placeholders["serial"] = serial
 
-        suggested_values: Mapping[str, Any] = user_input or reconfigure_entry.data
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                self._async_generate_schema(), suggested_values
+                self._async_generate_schema(),
+                without_avoid_reflect_keys(user_input or reconfigure_entry.data),
             ),
             description_placeholders=description_placeholders,
             errors=errors,

@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from bisect import bisect_left
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
+    ATTR_HVAC_MODE,
     ATTR_SWING_MODE,
     ClimateEntity,
     ClimateEntityFeature,
@@ -21,10 +22,10 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import SensiboConfigEntry
@@ -39,6 +40,7 @@ SERVICE_ENABLE_PURE_BOOST = "enable_pure_boost"
 SERVICE_DISABLE_PURE_BOOST = "disable_pure_boost"
 SERVICE_FULL_STATE = "full_state"
 SERVICE_ENABLE_CLIMATE_REACT = "enable_climate_react"
+SERVICE_GET_DEVICE_CAPABILITIES = "get_device_capabilities"
 ATTR_HIGH_TEMPERATURE_THRESHOLD = "high_temperature_threshold"
 ATTR_HIGH_TEMPERATURE_STATE = "high_temperature_state"
 ATTR_LOW_TEMPERATURE_THRESHOLD = "low_temperature_threshold"
@@ -79,12 +81,28 @@ AVAILABLE_SWING_MODES = {
     "horizontal",
     "both",
 }
+AVAILABLE_HORIZONTAL_SWING_MODES = {
+    "stopped",
+    "fixedleft",
+    "fixedcenterleft",
+    "fixedcenter",
+    "fixedcenterright",
+    "fixedright",
+    "fixedleftright",
+    "rangecenter",
+    "rangefull",
+    "rangeleft",
+    "rangeright",
+    "horizontal",
+    "both",
+}
 
 PARALLEL_UPDATES = 0
 
 FIELD_TO_FLAG = {
     "fanLevel": ClimateEntityFeature.FAN_MODE,
     "swing": ClimateEntityFeature.SWING_MODE,
+    "horizontalSwing": ClimateEntityFeature.SWING_HORIZONTAL_MODE,
     "targetTemperature": ClimateEntityFeature.TARGET_TEMPERATURE,
 }
 
@@ -105,6 +123,7 @@ AC_STATE_TO_DATA = {
     "on": "device_on",
     "mode": "hvac_mode",
     "swing": "swing_mode",
+    "horizontalSwing": "horizontal_swing_mode",
 }
 
 
@@ -119,18 +138,29 @@ def _find_valid_target_temp(target: float, valid_targets: list[int]) -> int:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SensiboConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sensibo climate entry."""
 
     coordinator = entry.runtime_data
 
-    entities = [
-        SensiboClimate(coordinator, device_id)
-        for device_id, device_data in coordinator.data.parsed.items()
-    ]
+    added_devices: set[str] = set()
 
-    async_add_entities(entities)
+    def _add_remove_devices() -> None:
+        """Handle additions of devices and sensors."""
+        nonlocal added_devices
+        new_devices, _, new_added_devices = coordinator.get_devices(added_devices)
+        added_devices = new_added_devices
+
+        if new_devices:
+            async_add_entities(
+                SensiboClimate(coordinator, device_id)
+                for device_id in coordinator.data.parsed
+                if device_id in new_devices
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -172,7 +202,6 @@ async def async_setup_entry(
         },
         "async_full_ac_state",
     )
-
     platform.async_register_entity_service(
         SERVICE_ENABLE_CLIMATE_REACT,
         {
@@ -181,10 +210,16 @@ async def async_setup_entry(
             vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): vol.Coerce(float),
             vol.Required(ATTR_LOW_TEMPERATURE_STATE): dict,
             vol.Required(ATTR_SMART_TYPE): vol.In(
-                ["temperature", "feelsLike", "humidity"]
+                ["temperature", "feelslike", "humidity"]
             ),
         },
         "async_enable_climate_react",
+    )
+    platform.async_register_entity_service(
+        SERVICE_GET_DEVICE_CAPABILITIES,
+        {vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
+        "async_get_device_capabilities",
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -231,8 +266,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
-        if not self.device_data.hvac_modes:
-            return [HVACMode.OFF]
+        if TYPE_CHECKING:
+            assert self.device_data.hvac_modes
         return [SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes]
 
     @property
@@ -284,6 +319,16 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     def swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes."""
         return self.device_data.swing_modes
+
+    @property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return the horizontal swing setting."""
+        return self.device_data.horizontal_swing_mode
+
+    @property
+    def swing_horizontal_modes(self) -> list[str] | None:
+        """Return the list of available horizontal swing modes."""
+        return self.device_data.horizontal_swing_modes
 
     @property
     def min_temp(self) -> float:
@@ -372,6 +417,26 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             transformation=transformation,
         )
 
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set new target horizontal swing operation."""
+        if swing_horizontal_mode not in AVAILABLE_HORIZONTAL_SWING_MODES:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="horizontal_swing_not_supported",
+                translation_placeholders={
+                    "horizontal_swing_mode": swing_horizontal_mode
+                },
+            )
+
+        transformation = self.device_data.horizontal_swing_modes_translated
+        await self.async_send_api_call(
+            key=AC_STATE_TO_DATA["horizontalSwing"],
+            value=swing_horizontal_mode,
+            name="horizontalSwing",
+            assumed_state=False,
+            transformation=transformation,
+        )
+
     async def async_turn_on(self) -> None:
         """Turn Sensibo unit on."""
         await self.async_send_api_call(
@@ -389,6 +454,26 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             name="on",
             assumed_state=False,
         )
+
+    async def async_get_device_capabilities(
+        self, hvac_mode: HVACMode
+    ) -> dict[str, Any]:
+        """Get capabilities from device."""
+        active_features = self.device_data.active_features
+        mode_capabilities: dict[str, Any] | None = self.device_data.full_capabilities[
+            "modes"
+        ].get(hvac_mode.value)
+        if not mode_capabilities:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="mode_not_exist"
+            )
+        remote_capabilities: dict[str, Any] = {}
+        for active_feature in active_features:
+            if active_feature in mode_capabilities:
+                remote_capabilities[active_feature.lower()] = mode_capabilities[
+                    active_feature
+                ]
+        return remote_capabilities
 
     async def async_assume_state(self, state: str) -> None:
         """Sync state with api."""

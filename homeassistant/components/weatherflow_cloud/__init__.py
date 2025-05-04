@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_TOKEN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -15,10 +15,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WEATHER]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WeatherFlowCloud from a config entry."""
 
-    data_coordinator = WeatherFlowCloudDataUpdateCoordinator(
-        hass=hass,
-        api_token=entry.data[CONF_API_TOKEN],
-    )
+    data_coordinator = WeatherFlowCloudDataUpdateCoordinator(hass, entry)
     await data_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_coordinator

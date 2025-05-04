@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -28,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-g000005-relay1',
+    'unique_id': 'lcn/config_entry_pchk_json-g000005-relay1',
     'unit_of_measurement': None,
   })
 # ---
@@ -52,6 +53,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -74,7 +76,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-a1',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-a1',
     'unit_of_measurement': None,
   })
 # ---
@@ -98,6 +100,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -120,7 +123,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-output1',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-output1',
     'unit_of_measurement': None,
   })
 # ---
@@ -144,6 +147,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -166,7 +170,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-output2',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-output2',
     'unit_of_measurement': None,
   })
 # ---
@@ -190,6 +194,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -212,7 +217,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-r1varsetpoint',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-r1varsetpoint',
     'unit_of_measurement': None,
   })
 # ---
@@ -236,6 +241,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -258,7 +264,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-relay1',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-relay1',
     'unit_of_measurement': None,
   })
 # ---
@@ -282,6 +288,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -304,7 +311,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'lcn/config_entry_pchk.json-m000007-relay2',
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-relay2',
     'unit_of_measurement': None,
   })
 # ---

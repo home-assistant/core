@@ -8,7 +8,7 @@ from homeassistant.components.homeassistant_sky_connect.util import (
     get_hardware_variant,
     get_usb_service_info,
 )
-from homeassistant.components.usb import UsbServiceInfo
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
 

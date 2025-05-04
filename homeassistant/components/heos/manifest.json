@@ -4,10 +4,11 @@
   "codeowners": ["@andrewsayre"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/heos",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pyheos"],
-  "requirements": ["pyheos==0.8.0"],
-  "single_config_entry": true,
+  "quality_scale": "platinum",
+  "requirements": ["pyheos==1.0.5"],
   "ssdp": [
     {
       "st": "urn:schemas-denon-com:device:ACT-Denon:1"
