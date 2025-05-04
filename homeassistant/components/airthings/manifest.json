@@ -5,11 +5,9 @@
   "config_flow": true,
   "dhcp": [
     {
-      "hostname": "airthings-view",
-      "macaddress": "6C79B8*"
+      "hostname": "airthings-view"
     },
     {
-      "hostname": "airthings-hub",
       "macaddress": "D0141190*"
     }
   ],
