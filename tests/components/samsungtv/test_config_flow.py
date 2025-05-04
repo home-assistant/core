@@ -83,7 +83,7 @@ MOCK_IMPORT_WSDATA = {
     CONF_NAME: "fake",
     CONF_PORT: 8002,
 }
-MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
+MOCK_USER_DATA = {CONF_HOST: "fake_host"}
 MOCK_SSDP_DATA = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
@@ -222,9 +222,9 @@ async def test_user_legacy(hass: HomeAssistant) -> None:
     )
     # legacy tv entry created
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "fake_name"
+    assert result["title"] == "fake_host"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "fake_name"
+    assert result["data"][CONF_NAME] is None
     assert result["data"][CONF_METHOD] == "legacy"
     assert result["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result["data"][CONF_MODEL] is None
@@ -257,9 +257,9 @@ async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
 
     # legacy tv entry created
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "fake_name"
+    assert result3["title"] == "fake_host"
     assert result3["data"][CONF_HOST] == "fake_host"
-    assert result3["data"][CONF_NAME] == "fake_name"
+    assert result3["data"][CONF_NAME] is None
     assert result3["data"][CONF_METHOD] == "legacy"
     assert result3["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result3["data"][CONF_MODEL] is None
@@ -1292,7 +1292,7 @@ async def test_autodetect_legacy(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_METHOD] == "legacy"
-    assert result["data"][CONF_NAME] == "fake_name"
+    assert result["data"][CONF_NAME] is None
     assert result["data"][CONF_MAC] is None
     assert result["data"][CONF_PORT] == LEGACY_PORT
 

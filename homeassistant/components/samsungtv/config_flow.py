@@ -63,7 +63,7 @@ from .const import (
     UPNP_SVC_RENDERING_CONTROL,
 )
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 def _strip_uuid(udn: str) -> str:
@@ -261,8 +261,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except socket.gaierror as err:
             raise AbortFlow(RESULT_UNKNOWN_HOST) from err
-        self._name = user_input.get(CONF_NAME, self._host) or ""
-        self._title = self._name
+        self._title = self._host
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
