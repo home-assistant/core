@@ -375,7 +375,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Required(CONF_DEVICE_ID): cv.string,
                 vol.Required(ATTR_DAYS_OF_WEEK): cv.string,
                 vol.Required(ATTR_ENABLE): cv.boolean,
-                vol.Optional(ATTR_GPS): {
+                vol.Optional(ATTR_LOCATION): {
                     vol.Required(CONF_LATITUDE): cv.latitude,
                     vol.Required(CONF_LONGITUDE): cv.longitude,
                 },

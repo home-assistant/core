@@ -6,18 +6,29 @@ import pytest
 
 from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.components.teslemetry.services import (
+    ATTR_DAYS_OF_WEEK,
     ATTR_DEPARTURE_TIME,
     ATTR_ENABLE,
+    ATTR_END_ENABLED,
     ATTR_END_OFF_PEAK_TIME,
+    ATTR_END_TIME,
     ATTR_GPS,
+    ATTR_ID,
+    ATTR_LOCATION,
+    ATTR_NAME,
     ATTR_OFF_PEAK_CHARGING_ENABLED,
     ATTR_OFF_PEAK_CHARGING_WEEKDAYS,
+    ATTR_ONE_TIME,
     ATTR_PIN,
     ATTR_PRECONDITIONING_ENABLED,
     ATTR_PRECONDITIONING_WEEKDAYS,
+    ATTR_START_ENABLED,
+    ATTR_START_TIME,
     ATTR_TIME,
     ATTR_TOU_SETTINGS,
+    SERVICE_ADD_CHARGE_SCHEDULE,
     SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+    SERVICE_REMOVE_CHARGE_SCHEDULE,
     SERVICE_SET_SCHEDULED_CHARGING,
     SERVICE_SET_SCHEDULED_DEPARTURE,
     SERVICE_SPEED_LIMIT,
@@ -199,6 +210,63 @@ async def test_services(
             blocking=True,
         )
         set_time_of_use.assert_called_once()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.add_charge_schedule",
+        return_value=COMMAND_OK,
+    ) as add_charge_schedule:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CHARGE_SCHEDULE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_DAYS_OF_WEEK: "All",
+                ATTR_ENABLE: True,
+                ATTR_LOCATION: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+                ATTR_START_ENABLED: True,
+                ATTR_END_ENABLED: True,
+                ATTR_START_TIME: 420,  # 7:00 AM
+                ATTR_END_TIME: 1080,  # 6:00 PM
+                ATTR_ONE_TIME: False,
+                ATTR_NAME: "Test Schedule",
+            },
+            blocking=True,
+        )
+        add_charge_schedule.assert_called_once()
+
+    # Test add_charge_schedule with minimal required parameters
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.add_charge_schedule",
+        return_value=COMMAND_OK,
+    ) as add_charge_schedule_minimal:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CHARGE_SCHEDULE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_DAYS_OF_WEEK: "Weekdays",
+                ATTR_ENABLE: True,
+                ATTR_START_ENABLED: False,
+                ATTR_END_ENABLED: False,
+            },
+            blocking=True,
+        )
+        add_charge_schedule_minimal.assert_called_once()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.remove_charge_schedule",
+        return_value=COMMAND_OK,
+    ) as remove_charge_schedule:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REMOVE_CHARGE_SCHEDULE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ID: 123,
+            },
+            blocking=True,
+        )
+        remove_charge_schedule.assert_called_once()
 
     with (
         patch(
