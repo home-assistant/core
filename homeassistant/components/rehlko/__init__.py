@@ -40,7 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bo
         )
 
     rehlko.set_refresh_token_callback(async_refresh_token_update)
-    rehlko.set_retry_policy(retry_count=3, retry_delays=[5, 10, 20])
 
     try:
         await rehlko.authenticate(
@@ -48,6 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bo
             entry.data[CONF_PASSWORD],
             entry.data.get(CONF_REFRESH_TOKEN),
         )
+        homes = await rehlko.get_homes()
+        # Retrys enabled after successful connection to prevent blocking startup
+        rehlko.set_retry_policy(retry_count=3, retry_delays=[5, 10, 20])
     except AuthenticationError as ex:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
@@ -60,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bo
             translation_key="cannot_connect",
         ) from ex
     coordinators: dict[int, RehlkoUpdateCoordinator] = {}
-    homes = await rehlko.get_homes()
 
     entry.runtime_data = RehlkoRuntimeData(
         coordinators=coordinators,
