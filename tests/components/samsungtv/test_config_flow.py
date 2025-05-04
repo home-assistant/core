@@ -224,7 +224,6 @@ async def test_user_legacy(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "fake_host"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] is None
     assert result["data"][CONF_METHOD] == "legacy"
     assert result["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result["data"][CONF_MODEL] is None
@@ -259,7 +258,6 @@ async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "fake_host"
     assert result3["data"][CONF_HOST] == "fake_host"
-    assert result3["data"][CONF_NAME] is None
     assert result3["data"][CONF_METHOD] == "legacy"
     assert result3["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result3["data"][CONF_MODEL] is None
@@ -1292,7 +1290,6 @@ async def test_autodetect_legacy(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_METHOD] == "legacy"
-    assert result["data"][CONF_NAME] is None
     assert result["data"][CONF_MAC] is None
     assert result["data"][CONF_PORT] == LEGACY_PORT
 
