@@ -392,6 +392,12 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         streaming_firmware="2024.44.25",
     ),
     TeslemetryBinarySensorEntityDescription(
+        key="lights_hazards_active",
+        streaming_listener=lambda x, y: x.listen_LightsHazardsActive(y),
+        entity_registry_enabled_default=False,
+        streaming_firmware="2025.2.6",
+    ),
+    TeslemetryBinarySensorEntityDescription(
         key="lights_high_beams",
         streaming_listener=lambda x, y: x.listen_LightsHighBeams(y),
         entity_registry_enabled_default=False,
