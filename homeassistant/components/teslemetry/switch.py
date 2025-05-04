@@ -25,7 +25,7 @@ from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_command, handle_vehicle_command
@@ -134,7 +134,7 @@ async def async_setup_entry(
     async_add_entities(
         chain(
             (
-                TeslemetryPollingVehicleSwitchEntity(
+                TeslemetryVehiclePollingVehicleSwitchEntity(
                     vehicle, description, entry.runtime_data.scopes
                 )
                 if vehicle.api.pre2021
@@ -184,8 +184,8 @@ class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingVehicleSwitchEntity(
-    TeslemetryVehicleEntity, TeslemetryVehicleSwitchEntity
+class TeslemetryVehiclePollingVehicleSwitchEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryVehicleSwitchEntity
 ):
     """Base class for Teslemetry polling vehicle switch entities."""
 

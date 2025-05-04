@@ -7630,6 +7630,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "zimi": {
+      "name": "zimi",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "zodiac": {
       "integration_type": "hub",
       "config_flow": true,
