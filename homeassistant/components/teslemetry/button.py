@@ -50,8 +50,8 @@ DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
         key="homelink",
         func=lambda self: handle_vehicle_command(
             self.api.trigger_homelink(
-                lat=self.coordinator.data["drive_state_latitude"],
-                lon=self.coordinator.data["drive_state_longitude"],
+                lat=self.hass.config.latitude,
+                lon=self.hass.config.longitude,
             )
         ),
     ),
