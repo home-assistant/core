@@ -1312,6 +1312,58 @@
         }
       },
       "name": "Remove charge schedule"
+    },
+    "add_precondition_schedule": {
+      "description": "Adds or modifies a preconditioning schedule for a vehicle.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to schedule.",
+          "name": "Vehicle"
+        },
+        "days_of_week": {
+          "description": "A comma separated list of days this schedule should be enabled. Example: \"Thursday,Saturday\". Also supports \"All\" and \"Weekdays\".",
+          "name": "Days of week"
+        },
+        "enable": {
+          "description": "If this schedule should be considered for execution.",
+          "name": "[%key:common::action::enable%]"
+        },
+        "location": {
+          "description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location.",
+          "name": "Location"
+        },
+        "precondition_time": {
+          "description": "The number of minutes into the day the vehicle should complete preconditioning. 1:05 AM is represented as 65.",
+          "name": "Precondition time"
+        },
+        "id": {
+          "description": "The ID of an existing schedule to modify. Omit if creating a new schedule.",
+          "name": "Schedule ID"
+        },
+        "one_time": {
+          "description": "If this is a one-time schedule.",
+          "name": "One time"
+        },
+        "name": {
+          "description": "The name of this schedule.",
+          "name": "Name"
+        }
+      },
+      "name": "Add precondition schedule"
+    },
+    "remove_precondition_schedule": {
+      "description": "Removes a preconditioning schedule for a vehicle.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to remove schedule from.",
+          "name": "Vehicle"
+        },
+        "id": {
+          "description": "The ID of the schedule to remove.",
+          "name": "Schedule ID"
+        }
+      },
+      "name": "Remove precondition schedule"
     }
   }
 }
