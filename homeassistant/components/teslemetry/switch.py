@@ -38,8 +38,8 @@ PARALLEL_UPDATES = 0
 class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
     """Describes Teslemetry Switch entity."""
 
-    on_func: Callable[[TeslemetryVehicle], Awaitable[dict[str, Any]]]
-    off_func: Callable[[TeslemetryVehicle], Awaitable[dict[str, Any]]]
+    on_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
+    off_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
     scopes: list[Scope]
     value_func: Callable[[StateType], bool] = bool
     streaming_listener: Callable[
