@@ -21,7 +21,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
@@ -43,13 +43,15 @@ async def async_setup_entry(
     async_add_entities(
         chain(
             (
-                TeslemetryPollingWindowEntity(vehicle, entry.runtime_data.scopes)
+                TeslemetryVehiclePollingWindowEntity(vehicle, entry.runtime_data.scopes)
                 if vehicle.api.pre2021 or vehicle.firmware < "2024.26"
                 else TeslemetryStreamingWindowEntity(vehicle, entry.runtime_data.scopes)
                 for vehicle in entry.runtime_data.vehicles
             ),
             (
-                TeslemetryPollingChargePortEntity(vehicle, entry.runtime_data.scopes)
+                TeslemetryVehiclePollingChargePortEntity(
+                    vehicle, entry.runtime_data.scopes
+                )
                 if vehicle.api.pre2021 or vehicle.firmware < "2024.44.25"
                 else TeslemetryStreamingChargePortEntity(
                     vehicle, entry.runtime_data.scopes
@@ -57,7 +59,9 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
             ),
             (
-                TeslemetryPollingFrontTrunkEntity(vehicle, entry.runtime_data.scopes)
+                TeslemetryVehiclePollingFrontTrunkEntity(
+                    vehicle, entry.runtime_data.scopes
+                )
                 if vehicle.api.pre2021 or vehicle.firmware < "2024.26"
                 else TeslemetryStreamingFrontTrunkEntity(
                     vehicle, entry.runtime_data.scopes
@@ -65,7 +69,9 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
             ),
             (
-                TeslemetryPollingRearTrunkEntity(vehicle, entry.runtime_data.scopes)
+                TeslemetryVehiclePollingRearTrunkEntity(
+                    vehicle, entry.runtime_data.scopes
+                )
                 if vehicle.api.pre2021 or vehicle.firmware < "2024.26"
                 else TeslemetryStreamingRearTrunkEntity(
                     vehicle, entry.runtime_data.scopes
@@ -121,8 +127,8 @@ class TeslemetryWindowEntity(TeslemetryRootEntity, CoverEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingWindowEntity(
-    TeslemetryVehicleEntity, TeslemetryWindowEntity, CoverEntity
+class TeslemetryVehiclePollingWindowEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryWindowEntity, CoverEntity
 ):
     """Polling cover entity for windows."""
 
@@ -238,8 +244,8 @@ class TeslemetryChargePortEntity(
         self.async_write_ha_state()
 
 
-class TeslemetryPollingChargePortEntity(
-    TeslemetryVehicleEntity, TeslemetryChargePortEntity
+class TeslemetryVehiclePollingChargePortEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryChargePortEntity
 ):
     """Polling cover entity for the charge port."""
 
@@ -312,8 +318,8 @@ class TeslemetryFrontTrunkEntity(TeslemetryRootEntity, CoverEntity):
     # In the future this could be extended to add aftermarket close support through a option flow
 
 
-class TeslemetryPollingFrontTrunkEntity(
-    TeslemetryVehicleEntity, TeslemetryFrontTrunkEntity
+class TeslemetryVehiclePollingFrontTrunkEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryFrontTrunkEntity
 ):
     """Polling cover entity for the front trunk."""
 
@@ -381,8 +387,8 @@ class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
             self.async_write_ha_state()
 
 
-class TeslemetryPollingRearTrunkEntity(
-    TeslemetryVehicleEntity, TeslemetryRearTrunkEntity
+class TeslemetryVehiclePollingRearTrunkEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryRearTrunkEntity
 ):
     """Base class for the rear trunk cover entities."""
 
@@ -424,7 +430,7 @@ class TeslemetryStreamingRearTrunkEntity(
         self._attr_is_closed = None if value is None else not value
 
 
-class TeslemetrySunroofEntity(TeslemetryVehicleEntity, CoverEntity):
+class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):
     """Cover entity for the sunroof."""
 
     _attr_device_class = CoverDeviceClass.WINDOW

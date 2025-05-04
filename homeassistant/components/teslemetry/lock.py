@@ -17,7 +17,7 @@ from . import TeslemetryConfigEntry
 from .const import DOMAIN
 from .entity import (
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
@@ -38,7 +38,7 @@ async def async_setup_entry(
     async_add_entities(
         chain(
             (
-                TeslemetryPollingVehicleLockEntity(
+                TeslemetryVehiclePollingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
                 if vehicle.api.pre2021 or vehicle.firmware < "2024.26"
@@ -48,7 +48,7 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
             ),
             (
-                TeslemetryPollingCableLockEntity(
+                TeslemetryVehiclePollingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
                 if vehicle.api.pre2021 or vehicle.firmware < "2024.26"
@@ -81,8 +81,8 @@ class TeslemetryVehicleLockEntity(TeslemetryRootEntity, LockEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingVehicleLockEntity(
-    TeslemetryVehicleEntity, TeslemetryVehicleLockEntity
+class TeslemetryVehiclePollingVehicleLockEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryVehicleLockEntity
 ):
     """Polling vehicle lock entity for Teslemetry."""
 
@@ -152,8 +152,8 @@ class TeslemetryCableLockEntity(TeslemetryRootEntity, LockEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingCableLockEntity(
-    TeslemetryVehicleEntity, TeslemetryCableLockEntity
+class TeslemetryVehiclePollingCableLockEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryCableLockEntity
 ):
     """Polling cable lock entity for Teslemetry."""
 
