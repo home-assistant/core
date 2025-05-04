@@ -997,7 +997,7 @@ home-assistant-frontend==20250502.0
 home-assistant-intents==2025.4.30
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.1
+homematicip==2.0.1.1
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
