@@ -76,13 +76,13 @@ SERVICE_GET_STATISTICS_SCHEMA = vol.Schema(
     {
         vol.Required("start_time"): cv.datetime,
         vol.Optional("end_time"): cv.datetime,
-        vol.Optional("statistic_ids"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required("statistic_ids"): vol.All(cv.ensure_list, [cv.string]),
         vol.Required("period"): vol.In(["5minute", "hour", "day", "week", "month"]),
-        vol.Optional("units"): vol.Schema({cv.string: cv.string}),
-        vol.Optional("types"): vol.All(
+        vol.Required("types"): vol.All(
             cv.ensure_list,
             [vol.In(["change", "last_reset", "max", "mean", "min", "state", "sum"])],
         ),
+        vol.Optional("units"): vol.Schema({cv.string: cv.string}),
     }
 )
 
@@ -173,23 +173,17 @@ def _async_register_get_statistics_service(
             else None
         )
 
-        statistic_ids = service.data.get("statistic_ids")
-        statistic_ids_set = set(statistic_ids) if statistic_ids else None
-
+        statistic_ids = service.data["statistic_ids"]
+        types = service.data["types"]
         period = service.data["period"]
         units = service.data.get("units")
-
-        if (types := service.data.get("types")) is None:
-            types = {"change", "last_reset", "max", "mean", "min", "state", "sum"}
-        else:
-            types = set(types)
 
         result = await instance.async_add_executor_job(
             statistics_during_period,
             hass,
             start_time,
             end_time,
-            statistic_ids_set,
+            statistic_ids,
             period,
             units,
             types,

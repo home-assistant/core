@@ -64,13 +64,14 @@ get_statistics:
         datetime:
 
     statistic_ids:
-      required: false
+      required: true
       example:
         - sensor.energy_consumption
         - sensor.temperature
       selector:
         entity:
           multiple: true
+
     period:
       required: true
       example: "hour"
@@ -83,16 +84,8 @@ get_statistics:
             - "week"
             - "month"
 
-    units:
-      required: false
-      example:
-        energy: "kWh"
-        temperature: "°C"
-      selector:
-        object:
-
     types:
-      required: false
+      required: true
       example:
         - "mean"
         - "sum"
@@ -107,3 +100,11 @@ get_statistics:
             - "state"
             - "sum"
           multiple: true
+
+    units:
+      required: false
+      example:
+        energy: "kWh"
+        temperature: "°C"
+      selector:
+        object:
