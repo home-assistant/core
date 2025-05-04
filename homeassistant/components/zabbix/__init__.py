@@ -84,7 +84,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     password = conf.get(CONF_PASSWORD)
 
     publish_states_host = conf.get(CONF_PUBLISH_STATES_HOST)
-    include_strings = conf.get(CONF_INCLUDE_STRINGS, False)
+    include_strings = conf.get(CONF_INCLUDE_STRINGS)
 
     entities_filter = convert_include_exclude_filter(conf)
 
