@@ -47,8 +47,8 @@
         "name": "Last automatic backup state",
         "state": {
           "no_backup": "No automatic backups yet",
-          "last_backup_failed_locations": "Last automatic backup wasn't stored in all locations",
-          "last_backup_failed": "Last automatic backup failed",
+          "last_backup_failed_locations": "Not stored in all locations",
+          "last_backup_failed": "Failed",
           "last_backup_successful": "Backed up"
         }
       }
