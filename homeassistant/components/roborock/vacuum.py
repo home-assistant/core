@@ -221,13 +221,18 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
         map_data = await self.coordinator.cloud_api.get_map_v1()
         if not isinstance(map_data, bytes):
-            raise HomeAssistantError("Failed to retrieve map data.")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            )
         parser = RoborockMapDataParser(ColorsPalette(), Sizes(), [], ImageConfig(), [])
         parsed_map = parser.parse(map_data)
         robot_position = parsed_map.vacuum_position
 
         if robot_position is None:
-            raise HomeAssistantError("Robot position not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="position_not_found"
+            )
 
         return {
             "x": robot_position.x,

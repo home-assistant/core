@@ -15,6 +15,11 @@
     }
   },
   "entity": {
+    "cover": {
+      "shutter": {
+        "name": "Shutter {shutter_id}"
+      }
+    },
     "switch": {
       "relay": {
         "name": "Relay {relay_id}"

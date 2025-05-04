@@ -4,14 +4,24 @@
       "addon_get_discovery_info_failed": "Failed to get Z-Wave add-on discovery info.",
       "addon_info_failed": "Failed to get Z-Wave add-on info.",
       "addon_install_failed": "Failed to install the Z-Wave add-on.",
+      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor add-on. You can still use the Backup and Restore buttons to migrate your network manually.",
       "addon_set_config_failed": "Failed to set Z-Wave configuration.",
       "addon_start_failed": "Failed to start the Z-Wave add-on.",
+      "addon_stop_failed": "Failed to stop the Z-Wave add-on.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "backup_failed": "Failed to back up network.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "config_entry_not_loaded": "The Z-Wave configuration entry is not loaded. Please try again when the configuration entry is loaded.",
+      "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device.",
       "discovery_requires_supervisor": "Discovery requires the supervisor.",
+      "migration_low_sdk_version": "The SDK version of the old controller is lower than {ok_sdk_version}. This means it's not possible to migrate the Non Volatile Memory (NVM) of the old controller to another controller.\n\nCheck the documentation on the manufacturer support pages of the old controller, if it's possible to upgrade the firmware of the old controller to a version that is build with SDK version {ok_sdk_version} or higher.",
+      "migration_successful": "Migration successful.",
       "not_zwave_device": "Discovered device is not a Z-Wave device.",
-      "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave add-on."
+      "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave add-on.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "reset_failed": "Failed to reset controller.",
+      "usb_ports_failed": "Failed to get USB devices."
     },
     "error": {
       "addon_start_failed": "Failed to start the Z-Wave add-on. Check the configuration.",
@@ -22,7 +32,9 @@
     "flow_title": "{name}",
     "progress": {
       "install_addon": "Please wait while the Z-Wave add-on installation finishes. This can take several minutes.",
-      "start_addon": "Please wait while the Z-Wave add-on start completes. This may take some seconds."
+      "start_addon": "Please wait while the Z-Wave add-on start completes. This may take some seconds.",
+      "backup_nvm": "Please wait while the network backup completes.",
+      "restore_nvm": "Please wait while the network restore completes."
     },
     "step": {
       "configure_addon": {
@@ -36,13 +48,31 @@
         "description": "The add-on will generate security keys if those fields are left empty.",
         "title": "Enter the Z-Wave add-on configuration"
       },
+      "configure_addon_reconfigure": {
+        "data": {
+          "emulate_hardware": "Emulate Hardware",
+          "log_level": "Log level",
+          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon::data::s0_legacy_key%]",
+          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_access_control_key%]",
+          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_authenticated_key%]",
+          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_unauthenticated_key%]",
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "description": "[%key:component::zwave_js::config::step::configure_addon::description%]",
+        "title": "[%key:component::zwave_js::config::step::configure_addon::title%]"
+      },
       "hassio_confirm": {
-        "title": "Set up Z-Wave integration with the Z-Wave add-on"
+        "description": "Do you want to set up the Z-Wave integration with the Z-Wave add-on?"
       },
       "install_addon": {
         "title": "The Z-Wave add-on installation has started"
       },
       "manual": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "manual_reconfigure": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
         }
@@ -54,6 +84,13 @@
         "description": "Do you want to use the Z-Wave Supervisor add-on?",
         "title": "Select connection method"
       },
+      "on_supervisor_reconfigure": {
+        "data": {
+          "use_addon": "[%key:component::zwave_js::config::step::on_supervisor::data::use_addon%]"
+        },
+        "description": "[%key:component::zwave_js::config::step::on_supervisor::description%]",
+        "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]"
+      },
       "start_addon": {
         "title": "The Z-Wave add-on is starting."
       },
@@ -63,6 +100,33 @@
       "zeroconf_confirm": {
         "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
         "title": "Discovered Z-Wave Server"
+      },
+      "reconfigure": {
+        "title": "Migrate or re-configure",
+        "description": "Are you migrating to a new controller or re-configuring the current controller?",
+        "menu_options": {
+          "intent_migrate": "Migrate to a new controller",
+          "intent_reconfigure": "Re-configure the current controller"
+        }
+      },
+      "intent_migrate": {
+        "title": "[%key:component::zwave_js::config::step::reconfigure::menu_options::intent_migrate%]",
+        "description": "Before setting up your new controller, your old controller needs to be reset. A backup will be performed first.\n\nDo you wish to continue?"
+      },
+      "instruct_unplug": {
+        "title": "Unplug your old controller",
+        "description": "Backup saved to \"{file_path}\"\n\nYour old controller has been reset. If the hardware is no longer needed, you can now unplug it.\n\nPlease make sure your new controller is plugged in before continuing."
+      },
+      "restore_failed": {
+        "title": "Restoring unsuccessful",
+        "description": "Your Z-Wave network could not be restored to the new controller. This means that your Z-Wave devices are not connected to Home Assistant.\n\nThe backup is saved to ”{file_path}”",
+        "submit": "Try again"
+      },
+      "choose_serial_port": {
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "title": "Select your Z-Wave device"
       }
     }
   },
@@ -205,60 +269,6 @@
     "invalid_server_version": {
       "description": "The version of Z-Wave Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave Server to the latest version to fix this issue.",
       "title": "Newer version of Z-Wave Server needed"
-    }
-  },
-  "options": {
-    "abort": {
-      "addon_get_discovery_info_failed": "[%key:component::zwave_js::config::abort::addon_get_discovery_info_failed%]",
-      "addon_info_failed": "[%key:component::zwave_js::config::abort::addon_info_failed%]",
-      "addon_install_failed": "[%key:component::zwave_js::config::abort::addon_install_failed%]",
-      "addon_set_config_failed": "[%key:component::zwave_js::config::abort::addon_set_config_failed%]",
-      "addon_start_failed": "[%key:component::zwave_js::config::abort::addon_start_failed%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device."
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_ws_url": "[%key:component::zwave_js::config::error::invalid_ws_url%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "progress": {
-      "install_addon": "[%key:component::zwave_js::config::progress::install_addon%]",
-      "start_addon": "[%key:component::zwave_js::config::progress::start_addon%]"
-    },
-    "step": {
-      "configure_addon": {
-        "data": {
-          "emulate_hardware": "Emulate Hardware",
-          "log_level": "Log level",
-          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon::data::s0_legacy_key%]",
-          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_access_control_key%]",
-          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_authenticated_key%]",
-          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_unauthenticated_key%]",
-          "usb_path": "[%key:common::config_flow::data::usb_path%]"
-        },
-        "description": "[%key:component::zwave_js::config::step::configure_addon::description%]",
-        "title": "[%key:component::zwave_js::config::step::configure_addon::title%]"
-      },
-      "install_addon": {
-        "title": "[%key:component::zwave_js::config::step::install_addon::title%]"
-      },
-      "manual": {
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]"
-        }
-      },
-      "on_supervisor": {
-        "data": {
-          "use_addon": "[%key:component::zwave_js::config::step::on_supervisor::data::use_addon%]"
-        },
-        "description": "[%key:component::zwave_js::config::step::on_supervisor::description%]",
-        "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]"
-      },
-      "start_addon": {
-        "title": "[%key:component::zwave_js::config::step::start_addon::title%]"
-      }
     }
   },
   "services": {

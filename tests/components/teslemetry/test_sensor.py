@@ -31,9 +31,7 @@ async def test_sensors(
     freezer.move_to("2024-01-01 00:00:00+00:00")
 
     # Force the vehicle to use polling
-    with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.pre2021", return_value=True
-    ):
+    with patch("tesla_fleet_api.teslemetry.Vehicle.pre2021", return_value=True):
         entry = await setup_platform(hass, [Platform.SENSOR])
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)

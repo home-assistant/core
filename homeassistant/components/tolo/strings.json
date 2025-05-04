@@ -60,7 +60,7 @@
         "name": "Lamp mode",
         "state": {
           "automatic": "Automatic",
-          "manual": "Manual"
+          "manual": "[%key:common::state::manual%]"
         }
       },
       "aroma_therapy_slot": {
