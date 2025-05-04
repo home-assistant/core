@@ -2017,7 +2017,7 @@ python-picnic-api2==1.2.4
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.16.1
+python-roborock==2.18.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
