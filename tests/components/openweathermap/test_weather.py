@@ -1,5 +1,7 @@
 """Test the OpenWeatherMap weather entity."""
 
+from unittest.mock import MagicMock
+
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -28,11 +30,12 @@ async def test_get_minute_forecast(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
+    owm_client_mock: MagicMock,
     mode: str,
 ) -> None:
     """Test the get_minute_forecast Service call."""
 
-    await setup_platform(hass, mock_config_entry, [Platform.WEATHER])
+    await setup_platform(hass, mock_config_entry, owm_client_mock, [Platform.WEATHER])
     result = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_MINUTE_FORECAST,
@@ -50,11 +53,12 @@ async def test_get_minute_forecast_unavailable(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
+    owm_client_mock: MagicMock,
     mode: str,
 ) -> None:
     """Test that Minute forecasting fails when mode is not v3.0."""
 
-    await setup_platform(hass, mock_config_entry, [Platform.WEATHER])
+    await setup_platform(hass, mock_config_entry, owm_client_mock, [Platform.WEATHER])
     with pytest.raises(
         ServiceValidationError,
         match="Minute forecast is available only when OpenWeatherMap mode is set to v3.0",
@@ -74,8 +78,9 @@ async def test_weather_states(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    owm_client_mock: MagicMock,
 ) -> None:
     """Test weather states are correctly collected from library with different modes and mocked function responses."""
 
-    await setup_platform(hass, mock_config_entry, [Platform.WEATHER])
+    await setup_platform(hass, mock_config_entry, owm_client_mock, [Platform.WEATHER])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

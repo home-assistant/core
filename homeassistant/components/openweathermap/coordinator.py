@@ -91,18 +91,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Update the data."""
-        weather_report = await self._get_weather_report()
-        return self._convert_weather_response(weather_report)
-
-    async def _get_weather_report(self) -> WeatherReport:
-        """Get the weather report from the OWM client."""
         try:
             weather_report = await self._owm_client.get_weather(
                 self._latitude, self._longitude
             )
         except RequestError as error:
             raise UpdateFailed(error) from error
-        return weather_report
+        return self._convert_weather_response(weather_report)
 
     def _convert_weather_response(self, weather_report: WeatherReport):
         """Format the weather response correctly."""

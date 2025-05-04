@@ -1,6 +1,6 @@
 """Shared utilities for OpenWeatherMap tests."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -8,21 +8,31 @@ from homeassistant.core import HomeAssistant
 
 from .test_config_flow import _create_static_weather_report
 
-from tests.common import AsyncMock
+from tests.common import AsyncMock, MockConfigEntry
 
 static_weather_report = _create_static_weather_report()
 
 
-async def setup_platform(hass: HomeAssistant, config_entry, platforms: list[Platform]):
+def _create_mocked_owm_factory() -> MagicMock:
+    """Create a mocked OWM client."""
+    mocked_owm_client = MagicMock()
+    mocked_owm_client.get_weather = AsyncMock(return_value=static_weather_report)
+    return mocked_owm_client
+
+
+async def setup_platform(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owm_client_mock: MagicMock,
+    platforms: list[Platform],
+):
     """Set up the OpenWeatherMap platform."""
+    mock = _create_mocked_owm_factory()
+    owm_client_mock.return_value = mock
+
     config_entry.add_to_hass(hass)
     with (
         patch("homeassistant.components.openweathermap.PLATFORMS", platforms),
-        patch(
-            "homeassistant.components.openweathermap.coordinator.WeatherUpdateCoordinator._get_weather_report",
-            new_callable=AsyncMock,
-            return_value=static_weather_report,
-        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

@@ -1,5 +1,7 @@
 """Configure tests for the OpenWeatherMap integration."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from homeassistant.components.openweathermap.const import DEFAULT_LANGUAGE, DOMAIN
@@ -12,7 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, patch
 
 API_KEY = "test_api_key"
 LATITUDE = 12.34
@@ -44,3 +46,12 @@ def mock_config_entry(mode: str) -> MockConfigEntry:
         entry_id="test",
         version=5,
     )
+
+
+@pytest.fixture
+def owm_client_mock() -> MagicMock:
+    """Mock OWMClient."""
+    with patch(
+        "homeassistant.components.openweathermap.create_owm_client",
+    ) as mock:
+        yield mock

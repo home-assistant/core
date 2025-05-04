@@ -1,5 +1,7 @@
 """Tests for OpenWeatherMap sensors."""
 
+from unittest.mock import MagicMock
+
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -23,11 +25,12 @@ async def test_sensor_states(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    owm_client_mock: MagicMock,
     mode: str,
 ) -> None:
     """Test sensor states are correctly collected from library with different modes and mocked function responses."""
 
-    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await setup_platform(hass, mock_config_entry, owm_client_mock, [Platform.SENSOR])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -37,9 +40,10 @@ async def test_mode_no_sensor(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    owm_client_mock: MagicMock,
     mode: str,
 ) -> None:
     """Test modes that do not provide any sensor."""
 
-    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await setup_platform(hass, mock_config_entry, owm_client_mock, [Platform.SENSOR])
     assert len(entity_registry.entities) == 0
