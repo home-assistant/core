@@ -58,7 +58,7 @@ async def test_user_show_locations(
         assert result["step_id"] == "locations"
 
         # user enters an invalid usercode
-        mock_location.return_value.set_usercode.return_value = False
+        mock_location.set_usercode.return_value = False
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_USERCODES: "bad"},
@@ -67,7 +67,7 @@ async def test_user_show_locations(
         assert result2["step_id"] == "locations"
 
         # user enters a valid usercode
-        mock_location.return_value.set_usercode.return_value = True
+        mock_location.set_usercode.return_value = True
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             user_input={CONF_USERCODES: "7890"},
