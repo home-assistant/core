@@ -66,6 +66,7 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
     VIRTUAL_COMPONENTS_MAP,
+    All_LIGHT_TYPES,
 )
 
 
@@ -409,13 +410,18 @@ def get_device_entry_gen(entry: ConfigEntry) -> int:
     return entry.data.get(CONF_GEN, 1)
 
 
-def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
+def get_rpc_key_instances(
+    keys_dict: dict[str, Any], key: str, all_lights: bool = False
+) -> list[str]:
     """Return list of key instances for RPC device from a dict."""
     if key in keys_dict:
         return [key]
 
     if key == "switch" and "cover:0" in keys_dict:
         key = "cover"
+
+    if key in All_LIGHT_TYPES and all_lights:
+        return [k for k in keys_dict if k.startswith(All_LIGHT_TYPES)]
 
     return [k for k in keys_dict if k.startswith(f"{key}:")]
 
@@ -710,9 +716,9 @@ def get_rpc_device_info(
     idx = key_parts[1] if len(key_parts) > 1 else None
 
     if (
-        component not in ("cct", "cover", "light", "rgb", "rgbw", "switch")
+        component not in (*All_LIGHT_TYPES, "cover", "switch")
         or idx is None
-        or len(get_rpc_key_instances(device.status, component)) < 2
+        or len(get_rpc_key_instances(device.status, component, all_lights=True)) < 2
     ):
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
 
