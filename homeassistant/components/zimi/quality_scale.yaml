@@ -77,7 +77,7 @@ rules:
     comment: |
       New devices will be automatically added - but only when the zcc connection is re-established.
   discovery-update-info:
-    status: exempt
+    status: todo
     comment: >
       Discovery is not supported.
   repair-issues: todo
