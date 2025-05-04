@@ -11,7 +11,6 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
-from tesla_fleet_api.tesla.vehicle.vehicle import MODELS
 from tesla_fleet_api.teslemetry import Teslemetry
 from teslemetry_stream import TeslemetryStream
 
@@ -120,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product["display_name"],
-                model=MODELS.get(vin[3]),
+                model=api.model,
                 serial_number=vin,
             )
 
