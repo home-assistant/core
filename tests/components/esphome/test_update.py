@@ -744,7 +744,8 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
         nonlocal upload_attempt
         upload_attempt += 1
         if upload_attempt == 1:
-            # First attempt fails
+            # Wait for the device to disconnect
+            # before returning false
             await disconnect_future
             return False
         upload_attempt_2_future.set_result(None)
