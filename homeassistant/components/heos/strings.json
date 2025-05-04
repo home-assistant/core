@@ -56,8 +56,8 @@
   "options": {
     "step": {
       "init": {
-        "title": "HEOS Options",
-        "description": "You can sign-in to your HEOS Account to access favorites, streaming services, and other features. Clearing the credentials will sign-out of your account.",
+        "title": "HEOS options",
+        "description": "You can sign in to your HEOS Account to access favorites, streaming services, and other features. Clearing the credentials will sign out of your account.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -102,7 +102,7 @@
     },
     "move_queue_item": {
       "name": "Move queue item",
-      "description": "Move one or more items within the play queue.",
+      "description": "Moves one or more items within the play queue.",
       "fields": {
         "queue_ids": {
           "name": "Queue IDs",
