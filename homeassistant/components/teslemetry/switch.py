@@ -8,7 +8,7 @@ from itertools import chain
 from typing import Any
 
 from tesla_fleet_api.const import AutoSeat, Scope
-from tesla_fleet_api.teslemetry.vehicles import TeslemetryVehicle
+from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.switch import (
@@ -166,6 +166,7 @@ async def async_setup_entry(
 class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
     """Base class for all Teslemetry switch entities."""
 
+    api: Vehicle
     _attr_device_class = SwitchDeviceClass.SWITCH
     entity_description: TeslemetrySwitchEntityDescription
 
