@@ -39,7 +39,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -470,20 +474,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 (router for router in routers.values() if router.url == url), None
             )
         elif not routers:
-            _LOGGER.error("%s: no routers configured", service.service)
-            return
+            raise ServiceValidationError("No routers configured")
         elif len(routers) == 1:
             router = next(iter(routers.values()))
         else:
-            _LOGGER.error(
-                "%s: more than one router configured, must specify one of URLs %s",
-                service.service,
-                sorted(router.url for router in routers.values()),
+            raise ServiceValidationError(
+                f"More than one router configured, must specify one of URLs {sorted(router.url for router in routers.values())}"
             )
-            return
         if not router:
-            _LOGGER.error("%s: router %s unavailable", service.service, url)
-            return
+            raise ServiceValidationError(f"Router {url} not available")
 
         if service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
@@ -494,7 +493,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             router.suspended = True
             _LOGGER.debug("%s: %s", service.service, "done")
         else:
-            _LOGGER.error("%s: unsupported service", service.service)
+            raise ServiceValidationError(f"Unsupported service {service.service}")
 
     for service in ADMIN_SERVICES:
         async_register_admin_service(
