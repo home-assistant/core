@@ -1,6 +1,7 @@
 """Constants for the Miele integration."""
 
 from enum import IntEnum
+import logging
 
 from pymiele import MieleEnum
 
@@ -22,6 +23,10 @@ DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
 )
+
+_LOGGER = logging.getLogger(__name__)
+
+completed_warnings: set[str] = set()
 
 
 class MieleAppliance(IntEnum):
@@ -166,165 +171,174 @@ PROCESS_ACTIONS = {
     "stop_supercooling": MieleActions.STOP_SUPERCOOL,
 }
 
-STATE_PROGRAM_PHASE_WASHING_MACHINE = {
-    0: "not_running",  # Returned by the API when the machine is switched off entirely.
-    256: "not_running",
-    257: "pre_wash",
-    258: "soak",
-    259: "pre_wash",
-    260: "main_wash",
-    261: "rinse",
-    262: "rinse_hold",
-    263: "cleaning",
-    264: "cooling_down",
-    265: "drain",
-    266: "spin",
-    267: "anti_crease",
-    268: "finished",
-    269: "venting",
-    270: "starch_stop",
-    271: "freshen_up_and_moisten",
-    272: "steam_smoothing",
-    279: "hygiene",
-    280: "drying",
-    285: "disinfecting",
-    295: "steam_smoothing",
-    65535: "not_running",  # Seems to be default for some devices.
-}
 
-STATE_PROGRAM_PHASE_TUMBLE_DRYER = {
-    0: "not_running",
-    512: "not_running",
-    513: "program_running",
-    514: "drying",
-    515: "machine_iron",
-    516: "hand_iron_2",
-    517: "normal",
-    518: "normal_plus",
-    519: "cooling_down",
-    520: "hand_iron_1",
-    521: "anti_crease",
-    522: "finished",
-    523: "extra_dry",
-    524: "hand_iron",
-    526: "moisten",
-    527: "thermo_spin",
-    528: "timed_drying",
-    529: "warm_air",
-    530: "steam_smoothing",
-    531: "comfort_cooling",
-    532: "rinse_out_lint",
-    533: "rinses",
-    535: "not_running",
-    534: "smoothing",
-    536: "not_running",
-    537: "not_running",
-    538: "slightly_dry",
-    539: "safety_cooling",
-    65535: "not_running",
-}
+class ProgramPhaseWashingMachine(MieleEnum):
+    """Program phase codes for washing machines."""
 
-STATE_PROGRAM_PHASE_DISHWASHER = {
-    1792: "not_running",
-    1793: "reactivating",
-    1794: "pre_dishwash",
-    1795: "main_dishwash",
-    1796: "rinse",
-    1797: "interim_rinse",
-    1798: "final_rinse",
-    1799: "drying",
-    1800: "finished",
-    1801: "pre_dishwash",
-    65535: "not_running",
-}
+    not_running = 0, 256, 65535
+    pre_wash = 257, 259
+    soak = 258
+    main_wash = 260
+    rinse = 261
+    rinse_hold = 262
+    cleaning = 263
+    cooling_down = 264
+    drain = 265
+    spin = 266
+    anti_crease = 267
+    finished = 268
+    venting = 269
+    starch_stop = 270
+    freshen_up_and_moisten = 271
+    steam_smoothing = 272, 295
+    hygiene = 279
+    drying = 280
+    disinfecting = 285
+    unknown = -9999
 
-STATE_PROGRAM_PHASE_OVEN = {
-    0: "not_running",
-    3073: "heating_up",
-    3074: "process_running",
-    3078: "process_finished",
-    3084: "energy_save",
-    65535: "not_running",
-}
-STATE_PROGRAM_PHASE_WARMING_DRAWER = {
-    0: "not_running",
-    3073: "heating_up",
-    3075: "door_open",
-    3094: "keeping_warm",
-    3088: "cooling_down",
-    65535: "not_running",
-}
-STATE_PROGRAM_PHASE_MICROWAVE = {
-    0: "not_running",
-    3329: "heating",
-    3330: "process_running",
-    3334: "process_finished",
-    3340: "energy_save",
-    65535: "not_running",
-}
-STATE_PROGRAM_PHASE_COFFEE_SYSTEM = {
-    # Coffee system
-    3073: "heating_up",
-    4352: "not_running",
-    4353: "espresso",
-    4355: "milk_foam",
-    4361: "dispensing",
-    4369: "pre_brewing",
-    4377: "grinding",
-    4401: "2nd_grinding",
-    4354: "hot_milk",
-    4393: "2nd_pre_brewing",
-    4385: "2nd_espresso",
-    4404: "dispensing",
-    4405: "rinse",
-    65535: "not_running",
-}
-STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER = {
-    0: "not_running",
-    5889: "vacuum_cleaning",
-    5890: "returning",
-    5891: "vacuum_cleaning_paused",
-    5892: "going_to_target_area",
-    5893: "wheel_lifted",  # F1
-    5894: "dirty_sensors",  # F2
-    5895: "dust_box_missing",  # F3
-    5896: "blocked_drive_wheels",  # F4
-    5897: "blocked_brushes",  # F5
-    5898: "motor_overload",  # F6
-    5899: "internal_fault",  # F7
-    5900: "blocked_front_wheel",  # F8
-    5903: "docked",
-    5904: "docked",
-    5910: "remote_controlled",
-    65535: "not_running",
-}
-STATE_PROGRAM_PHASE_MICROWAVE_OVEN_COMBO = {
-    0: "not_running",
-    3863: "steam_reduction",
-    7938: "process_running",
-    7939: "waiting_for_start",
-    7940: "heating_up_phase",
-    7942: "process_finished",
-    65535: "not_running",
-}
 
-STATE_PROGRAM_PHASE: dict[int, dict[int, str]] = {
-    MieleAppliance.WASHING_MACHINE: STATE_PROGRAM_PHASE_WASHING_MACHINE,
-    MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_WASHING_MACHINE,
-    MieleAppliance.WASHING_MACHINE_PROFESSIONAL: STATE_PROGRAM_PHASE_WASHING_MACHINE,
-    MieleAppliance.TUMBLE_DRYER: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
-    MieleAppliance.DRYER_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
-    MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_TUMBLE_DRYER,
-    MieleAppliance.DISHWASHER: STATE_PROGRAM_PHASE_DISHWASHER,
-    MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
-    MieleAppliance.DISHWASHER_PROFESSIONAL: STATE_PROGRAM_PHASE_DISHWASHER,
-    MieleAppliance.OVEN: STATE_PROGRAM_PHASE_OVEN,
-    MieleAppliance.OVEN_MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE_OVEN_COMBO,
-    MieleAppliance.STEAM_OVEN: STATE_PROGRAM_PHASE_OVEN,
-    MieleAppliance.DIALOG_OVEN: STATE_PROGRAM_PHASE_OVEN,
-    MieleAppliance.MICROWAVE: STATE_PROGRAM_PHASE_MICROWAVE,
-    MieleAppliance.COFFEE_SYSTEM: STATE_PROGRAM_PHASE_COFFEE_SYSTEM,
-    MieleAppliance.ROBOT_VACUUM_CLEANER: STATE_PROGRAM_PHASE_ROBOT_VACUUM_CLEANER,
+class ProgramPhaseTumbleDryer(MieleEnum):
+    """Program phase codes for tumble dryers."""
+
+    not_running = 0, 512, 535, 536, 537, 65535
+    program_running = 513
+    drying = 514
+    machine_iron = 515
+    hand_iron_2 = 516
+    normal = 517
+    normal_plus = 518
+    cooling_down = 519
+    hand_iron_1 = 520
+    anti_crease = 521
+    finished = 522
+    extra_dry = 523
+    hand_iron = 524
+    moisten = 526
+    thermo_spin = 527
+    timed_drying = 528
+    warm_air = 529
+    steam_smoothing = 530
+    comfort_cooling = 531
+    rinse_out_lint = 532
+    rinses = 533
+    smoothing = 534
+    slightly_dry = 538
+    safety_cooling = 539
+    unknown = -9999
+
+
+class ProgramPhaseDishwasher(MieleEnum):
+    """Program phase codes for dishwashers."""
+
+    not_running = 1792, 65535
+    reactivating = 1793
+    pre_dishwash = 1794, 1801
+    main_dishwash = 1795
+    rinse = 1796
+    interim_rinse = 1797
+    final_rinse = 1798
+    drying = 1799
+    finished = 1800
+    unknown = -9999
+
+
+class ProgramPhaseOven(MieleEnum):
+    """Program phase codes for ovens."""
+
+    not_running = 0, 65535
+    heating_up = 3073
+    process_running = 3074
+    process_finished = 3078
+    energy_save = 3084
+    unknown = -9999
+
+
+class ProgramPhaseWarmingDrawer(MieleEnum):
+    """Program phase codes for warming drawers."""
+
+    not_running = 0, 65535
+    heating_up = 3073
+    door_open = 3075
+    keeping_warm = 3094
+    cooling_down = 3088
+
+
+class ProgramPhaseMicrowave(MieleEnum):
+    """Program phase for microwave units."""
+
+    not_running = 0, 65535
+    heating = 3329
+    process_running = 3330
+    process_finished = 3334
+    energy_save = 3340
+    unknown = -9999
+
+
+class ProgramPhaseCoffeeSystem(MieleEnum):
+    """Program phase codes for coffee systems."""
+
+    not_running = 0, 4352, 65535
+    heating_up = 3073
+    espresso = 4353
+    hot_milk = 4354
+    milk_foam = 4355
+    dispensing = 4361, 4404
+    pre_brewing = 4369
+    grinding = 4377
+    z_2nd_espresso = 4385
+    z_2nd_pre_brewing = 4393
+    z_2nd_grinding = 4401
+    rinse = 4405
+
+
+class ProgramPhaseRobotVacuumCleaner(MieleEnum):
+    """Program phase codes for robot vacuum cleaner."""
+
+    not_running = 0, 65535
+    vacuum_cleaning = 5889
+    returning = 5890
+    vacuum_cleaning_paused = 5891
+    going_to_target_area = 5892
+    wheel_lifted = 5893  # F1
+    dirty_sensors = 5894  # F2
+    dust_box_missing = 5895  # F3
+    blocked_drive_wheels = 5896  # F4
+    blocked_brushes = 5897  # F5
+    motor_overload = 5898  # F6
+    internal_fault = 5899  # F7
+    blocked_front_wheel = 5900  # F8
+    docked = 5903, 5904
+    remote_controlled = 5910
+
+
+class ProgramPhaseMicrowaveOvenCombo(MieleEnum):
+    """Program phase codes for microwave oven combo."""
+
+    not_running = 0, 65535
+    steam_reduction = 3863
+    process_running = 7938
+    waiting_for_start = 7939
+    heating_up_phase = 7940
+    process_finished = 7942
+
+
+PROGRAM_PHASE: dict[int, type[MieleEnum]] = {
+    MieleAppliance.WASHING_MACHINE: ProgramPhaseWashingMachine,
+    MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL: ProgramPhaseWashingMachine,
+    MieleAppliance.WASHING_MACHINE_PROFESSIONAL: ProgramPhaseWashingMachine,
+    MieleAppliance.TUMBLE_DRYER: ProgramPhaseTumbleDryer,
+    MieleAppliance.DRYER_PROFESSIONAL: ProgramPhaseTumbleDryer,
+    MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: ProgramPhaseTumbleDryer,
+    MieleAppliance.DISHWASHER: ProgramPhaseDishwasher,
+    MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: ProgramPhaseDishwasher,
+    MieleAppliance.DISHWASHER_PROFESSIONAL: ProgramPhaseDishwasher,
+    MieleAppliance.OVEN: ProgramPhaseOven,
+    MieleAppliance.OVEN_MICROWAVE: ProgramPhaseMicrowaveOvenCombo,
+    MieleAppliance.STEAM_OVEN: ProgramPhaseOven,
+    MieleAppliance.DIALOG_OVEN: ProgramPhaseOven,
+    MieleAppliance.MICROWAVE: ProgramPhaseMicrowave,
+    MieleAppliance.COFFEE_SYSTEM: ProgramPhaseCoffeeSystem,
+    MieleAppliance.ROBOT_VACUUM_CLEANER: ProgramPhaseRobotVacuumCleaner,
 }
 
 
