@@ -20,6 +20,7 @@ from huawei_lte_api.exceptions import (
     ResponseErrorNotSupportedException,
 )
 from requests.exceptions import Timeout
+from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -94,7 +95,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
+SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.string})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -469,7 +470,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         because the latter is not available anywhere in the UI.
         """
         routers = hass.data[DOMAIN].routers
-        if url := service.data.get(CONF_URL):
+        if url := url_normalize(service.data.get(CONF_URL), default_scheme="http"):
             router = next(
                 (router for router in routers.values() if router.url == url), None
             )
