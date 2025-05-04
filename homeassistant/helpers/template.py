@@ -2019,11 +2019,6 @@ def add(value, amount, default=_SENTINEL):
         return default
 
 
-def apply(value, fn, *args, **kwargs):
-    """Call the given callable with the provided arguments and keyword arguments."""
-    return fn(value, *args, **kwargs)
-
-
 def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
     """Turn a macro with a 'returns' keyword argument into a function that returns what that argument is called with."""
 
@@ -3140,7 +3135,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.filters["acos"] = arc_cosine
         self.filters["add"] = add
-        self.filters["apply"] = apply
         self.filters["as_datetime"] = as_datetime
         self.filters["as_function"] = as_function
         self.filters["as_local"] = dt_util.as_local
@@ -3201,7 +3195,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
-        self.tests["apply"] = apply
         self.tests["contains"] = contains
         self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number

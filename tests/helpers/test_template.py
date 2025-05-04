@@ -786,66 +786,6 @@ def test_as_function(hass: HomeAssistant) -> None:
     ).async_render() == [2, 4, 6]
 
 
-def test_apply(hass: HomeAssistant) -> None:
-    """Test apply."""
-    assert template.Template(
-        """
-        {%- macro add_foo(arg) -%}
-        {{arg}}foo
-        {%- endmacro -%}
-        {{ ["a", "b", "c"] | map('apply', add_foo) | list }}
-        """,
-        hass,
-    ).async_render() == ["afoo", "bfoo", "cfoo"]
-
-    assert template.Template(
-        """
-        {%- macro macro_is_five(arg, returns) -%}
-            {%- do returns(arg == 5) -%}
-        {%- endmacro -%}
-        {%- set is_five = macro_is_five | as_function -%}
-        {{ [5, 1, 2, 3, 4, 5, 5] | select('apply', is_five) | list }}
-        """,
-        hass,
-    ).async_render() == [5, 5, 5]
-
-
-def test_apply_macro_with_arguments(hass: HomeAssistant) -> None:
-    """Test apply macro with positional, named, and mixed arguments."""
-    # Test macro with positional arguments
-    assert template.Template(
-        """
-        {%- macro greet(name, greeting) -%}
-        {{ greeting }}, {{ name }}!
-        {%- endmacro %}
-        {{ ["Alice", "Bob"] | map('apply', greet, "Hello") | list }}
-        """,
-        hass,
-    ).async_render() == ["Hello, Alice!", "Hello, Bob!"]
-
-    # Test macro with named arguments
-    assert template.Template(
-        """
-        {%- macro greet(name, greeting="Hi") -%}
-        {{ greeting }}, {{ name }}!
-        {%- endmacro %}
-        {{ ["Alice", "Bob"] | map('apply', greet, greeting="Hello") | list }}
-        """,
-        hass,
-    ).async_render() == ["Hello, Alice!", "Hello, Bob!"]
-
-    # Test macro with mixed positional and named arguments
-    assert template.Template(
-        """
-        {%- macro greet(name, separator, greeting="Hi") -%}
-        {{ greeting }}{{separator}} {{ name }}!
-        {%- endmacro %}
-        {{ ["Alice", "Bob"] | map('apply', greet, "," , greeting="Hey") | list }}
-        """,
-        hass,
-    ).async_render() == ["Hey, Alice!", "Hey, Bob!"]
-
-
 def test_logarithm(hass: HomeAssistant) -> None:
     """Test logarithm."""
     tests = [
