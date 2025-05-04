@@ -131,14 +131,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up the climate platform."""
     coordinator = config_entry.runtime_data
+    added_devices: set[str] = set()
 
-    def _async_add_new_devices(new_devices: dict[str, MieleDevice]) -> None:
+    def _async_add_new_devices() -> None:
+        nonlocal added_devices
+
+        new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
+        added_devices = current_devices
+
         async_add_entities(
             MieleClimate(coordinator, device_id, definition.description)
-            for device_id, device in new_devices.items()
+            for device_id, device in coordinator.data.devices.items()
             for definition in CLIMATE_TYPES
             if (
-                device.device_type in definition.types
+                device_id in new_devices_set
+                and device.device_type in definition.types
                 and (
                     definition.description.value_fn(device)
                     not in DISABLED_TEMP_ENTITIES
@@ -146,8 +153,8 @@ async def async_setup_entry(
             )
         )
 
-    coordinator.new_device_callbacks.append(_async_add_new_devices)
-    _async_add_new_devices(coordinator.data.devices)
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
 
 
 class MieleClimate(MieleEntity, ClimateEntity):

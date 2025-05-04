@@ -34,6 +34,7 @@ class MieleCoordinatorData:
 class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
     """Coordinator for Miele data."""
 
+    config_entry: MieleConfigEntry
     new_device_callbacks: list[Callable[[dict[str, MieleDevice]], None]] = []
     known_devices: set[str] = set()
     devices: dict[str, MieleDevice] = {}
@@ -52,10 +53,6 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
         )
         self.api = api
 
-        self.config_entry.async_on_unload(
-            self.async_add_listener(self._async_add_devices)
-        )
-
     async def _async_update_data(self) -> MieleCoordinatorData:
         """Fetch data from the Miele API."""
         async with asyncio.timeout(10):
@@ -65,25 +62,19 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
                 device_id: MieleDevice(device)
                 for device_id, device in devices_json.items()
             }
+            self.devices = devices
             actions = {}
             for device_id in devices:
                 actions_json = await self.api.get_actions(device_id)
                 actions[device_id] = MieleAction(actions_json)
             return MieleCoordinatorData(devices=devices, actions=actions)
 
-    def _async_add_devices(self) -> None:
-        """Add new devices."""
+    def async_add_devices(self, added_devices: set[str]) -> tuple[set[str], set[str]]:
+        """Add devices."""
         current_devices = set(self.devices)
-        new_devices = current_devices - self.known_devices
-        if new_devices:
-            self.known_devices.update(new_devices)
-            for callback in self.new_device_callbacks:
-                callback(
-                    {
-                        device_id: self.data.devices[device_id]
-                        for device_id in new_devices
-                    }
-                )
+        new_devices: set[str] = current_devices - added_devices
+
+        return (new_devices, current_devices)
 
     async def callback_update_data(self, devices_json: dict[str, dict]) -> None:
         """Handle data update from the API."""

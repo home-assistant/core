@@ -8,7 +8,6 @@ import math
 from typing import Any, Final
 
 from aiohttp import ClientResponseError
-from pymiele import MieleDevice
 
 from homeassistant.components.fan import (
     FanEntity,
@@ -66,17 +65,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the fan platform."""
     coordinator = config_entry.runtime_data
+    added_devices: set[str] = set()
 
-    def _async_add_new_devices(new_devices: dict[str, MieleDevice]) -> None:
+    def _async_add_new_devices() -> None:
+        nonlocal added_devices
+        new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
+        added_devices = current_devices
+
         async_add_entities(
             MieleFan(coordinator, device_id, definition.description)
-            for device_id, device in new_devices.items()
+            for device_id, device in coordinator.data.devices.items()
             for definition in FAN_TYPES
-            if device.device_type in definition.types
+            if device_id in new_devices_set and device.device_type in definition.types
         )
 
-    coordinator.new_device_callbacks.append(_async_add_new_devices)
-    _async_add_new_devices(coordinator.data.devices)
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
 
 
 class MieleFan(MieleEntity, FanEntity):

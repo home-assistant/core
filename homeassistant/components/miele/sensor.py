@@ -427,11 +427,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data
+    added_devices: set[str] = set()
 
-    def _async_add_new_devices(new_devices: dict[str, MieleDevice]) -> None:
+    def _async_add_new_devices() -> None:
+        nonlocal added_devices
         entities: list = []
         entity_class: type[MieleSensor]
-        for device_id, device in new_devices.items():
+        new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
+        added_devices = current_devices
+
+        for device_id, device in coordinator.data.devices.items():
             for definition in SENSOR_TYPES:
                 if device.device_type in definition.types:
                     match definition.description.key:
@@ -444,7 +449,8 @@ async def async_setup_entry(
                         case _:
                             entity_class = MieleSensor
                     if (
-                        definition.description.device_class
+                        device_id in new_devices_set
+                        and definition.description.device_class
                         == SensorDeviceClass.TEMPERATURE
                         and definition.description.value_fn(device)
                         == DISABLED_TEMPERATURE / 100
@@ -456,8 +462,8 @@ async def async_setup_entry(
                     )
         async_add_entities(entities)
 
-    coordinator.new_device_callbacks.append(_async_add_new_devices)
-    _async_add_new_devices(coordinator.data.devices)
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
 
 
 APPLIANCE_ICONS = {
