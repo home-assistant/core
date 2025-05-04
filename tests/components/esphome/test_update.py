@@ -637,7 +637,7 @@ async def test_update_deep_sleep_already_online(
     state = hass.states.get("update.test_firmware")
     assert state is not None
 
-    # Compile success, upload fails
+    # Compile success, upload success
     with (
         patch(
             "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
@@ -683,7 +683,7 @@ async def test_update_deep_sleep_offline(
     assert state is not None
     await device.mock_disconnect(True)
 
-    # Compile success, upload fails
+    # Compile success, upload success
     with (
         patch(
             "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
@@ -753,7 +753,7 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
         upload_attempt_2_future.set_result(None)
         return True
 
-    # Compile success, upload fails
+    # Compile success, upload fails first time, success second time
     with (
         patch(
             "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
@@ -816,7 +816,7 @@ async def test_update_deep_sleep_offline_cancelled_unload(
     assert state is not None
     await device.mock_disconnect(True)
 
-    # Compile success, upload fails
+    # Compile success, upload success, but we cancel the update
     with (
         patch(
             "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
