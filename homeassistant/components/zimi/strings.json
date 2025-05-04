@@ -27,8 +27,8 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "host": "Mandatory - ZCC IP address.",
-          "port": "Mandatory - ZCC port number (default=5003)."
+          "host": "[%key:component::zimi::config::step::selection::data_description::host%]",
+          "port": "[%key:component::zimi::config::step::selection::data_description::port%]"
         }
       }
     },
