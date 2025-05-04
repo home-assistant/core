@@ -385,7 +385,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
         if key.startswith(("cct", "rgb:", "rgbw:")):
             return f"{channel.upper()} light {channel_id}"
         if key.startswith("em1"):
-            return f"{device_name} EM{channel_id}"
+            return f"EM{channel_id}"
         if key.startswith(("boolean:", "enum:", "number:", "text:")):
             return f"{channel.title()} {channel_id}"
         return device_name
@@ -711,12 +711,15 @@ def get_rpc_device_info(
     if key is None:
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
 
+    # workaround for Pro EM50
+    key = key.replace("em1data", "em1")
+
     key_parts = key.split(":")
     component = key_parts[0]
     idx = key_parts[1] if len(key_parts) > 1 else None
 
     if (
-        component not in (*All_LIGHT_TYPES, "cover", "switch")
+        component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
         or idx is None
         or len(get_rpc_key_instances(device.status, component, all_lights=True)) < 2
     ):
