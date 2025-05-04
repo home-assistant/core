@@ -773,6 +773,12 @@
     },
     "time_of_use": {
       "service": "mdi:clock-time-eight-outline"
+    },
+    "add_charge_schedule": {
+      "service": "mdi:calendar-plus"
+    },
+    "remove_charge_schedule": {
+      "service": "mdi:calendar-minus"
     }
   }
 }

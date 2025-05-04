@@ -1248,6 +1248,70 @@
         }
       },
       "name": "Set valet mode"
+    },
+    "add_charge_schedule": {
+      "description": "Adds or modifies a charging schedule for a vehicle.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to schedule.",
+          "name": "Vehicle"
+        },
+        "days_of_week": {
+          "description": "A comma separated list of days this schedule should be enabled. Example: \"Thursday,Saturday\". Also supports \"All\" and \"Weekdays\".",
+          "name": "Days of week"
+        },
+        "enable": {
+          "description": "If this schedule should be considered for execution.",
+          "name": "[%key:common::action::enable%]"
+        },
+        "location": {
+          "description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location.",
+          "name": "Location"
+        },
+        "start_enabled": {
+          "description": "If the vehicle should begin charging at the given start_time.",
+          "name": "Start enabled"
+        },
+        "end_enabled": {
+          "description": "If the vehicle should stop charging after the given end_time.",
+          "name": "End enabled"
+        },
+        "start_time": {
+          "description": "The number of minutes into the day this schedule begins. 1:05 AM is represented as 65. Omit if start_enabled set to false.",
+          "name": "Start time"
+        },
+        "end_time": {
+          "description": "The number of minutes into the day this schedule ends. 1:05 AM is represented as 65. Omit if end_enabled set to false.",
+          "name": "End time"
+        },
+        "one_time": {
+          "description": "If this is a one-time schedule.",
+          "name": "One time"
+        },
+        "id": {
+          "description": "The ID of an existing schedule to modify. Omit if creating a new schedule.",
+          "name": "Schedule ID"
+        },
+        "name": {
+          "description": "The name of the schedule.",
+          "name": "Name"
+        }
+      },
+      "name": "Add charge schedule"
+    },
+    "remove_charge_schedule": {
+      "description": "Removes a charging schedule for a vehicle.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to remove schedule from.",
+          "name": "Vehicle"
+        },
+        "id": {
+          "description": "The ID of the schedule to remove.",
+          "name": "Schedule ID"
+        }
+      },
+      "name": "Remove charge schedule"
     }
   }
 }
