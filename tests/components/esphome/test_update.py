@@ -744,7 +744,6 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
         upload_attempt += 1
         if upload_attempt == 1:
             # First attempt fails
-            await asyncio.sleep(0)
             return False
         upload_attempt_2_future.set_result(None)
         return True
