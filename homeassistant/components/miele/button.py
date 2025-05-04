@@ -136,8 +136,7 @@ class MieleButton(MieleEntity, ButtonEntity):
 
         return (
             super().available
-            and self.entity_description.press_data
-            in self.coordinator.data.actions[self._device_id].process_actions
+            and self.entity_description.press_data in self.action.process_actions
         )
 
     async def async_press(self) -> None:

@@ -100,8 +100,9 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             .seconds.seconds_out
         ),
         available_fn=(
-            lambda machine: cast(
-                PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+            lambda coordinator: cast(
+                PreBrewing,
+                coordinator.device.dashboard.config[WidgetType.CM_PRE_BREWING],
             ).mode
             is PreExtractionMode.PREINFUSION
         ),
@@ -140,8 +141,8 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             .times.pre_brewing[0]
             .seconds.seconds_in
         ),
-        available_fn=lambda machine: cast(
-            PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+        available_fn=lambda coordinator: cast(
+            PreBrewing, coordinator.device.dashboard.config[WidgetType.CM_PRE_BREWING]
         ).mode
         is PreExtractionMode.PREBREWING,
         supported_fn=(
@@ -180,8 +181,9 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             .seconds.seconds_out
         ),
         available_fn=(
-            lambda machine: cast(
-                PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]
+            lambda coordinator: cast(
+                PreBrewing,
+                coordinator.device.dashboard.config[WidgetType.CM_PRE_BREWING],
             ).mode
             is PreExtractionMode.PREBREWING
         ),
