@@ -1,7 +1,6 @@
 """Constants for the Miele integration."""
 
 from enum import IntEnum
-import logging
 
 from pymiele import MieleEnum
 
@@ -23,10 +22,6 @@ DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-completed_warnings: set[str] = set()
 
 
 class MieleAppliance(IntEnum):
