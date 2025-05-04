@@ -55,6 +55,7 @@ async def handle_info(
             "backups": list(backups.values()),
             "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
             "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
+            "last_completed_automatic_backup_id": manager.config.data.last_completed_automatic_backup_id,
             "last_action_event": manager.last_action_event,
             "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
             "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,

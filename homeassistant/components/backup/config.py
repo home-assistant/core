@@ -46,6 +46,7 @@ class StoredBackupConfig(TypedDict):
     automatic_backups_configured: bool
     create_backup: StoredCreateBackupConfig
     last_attempted_automatic_backup: str | None
+    last_completed_automatic_backup_id: str | None
     last_completed_automatic_backup: str | None
     retention: StoredRetentionConfig
     schedule: StoredBackupSchedule
@@ -59,6 +60,7 @@ class BackupConfigData:
     automatic_backups_configured: bool  # only used by frontend
     create_backup: CreateBackupConfig
     last_attempted_automatic_backup: datetime | None = None
+    last_completed_automatic_backup_id: str | None = None
     last_completed_automatic_backup: datetime | None = None
     retention: RetentionConfig
     schedule: BackupSchedule
@@ -78,8 +80,8 @@ class BackupConfigData:
         else:
             last_attempted = None
 
-        if last_attempted_str := data["last_completed_automatic_backup"]:
-            last_completed = dt_util.parse_datetime(last_attempted_str)
+        if last_completed_str := data["last_completed_automatic_backup"]:
+            last_completed = dt_util.parse_datetime(last_completed_str)
         else:
             last_completed = None
 
@@ -119,6 +121,9 @@ class BackupConfigData:
                 password=data["create_backup"]["password"],
             ),
             last_attempted_automatic_backup=last_attempted,
+            last_completed_automatic_backup_id=data[
+                "last_completed_automatic_backup_id"
+            ],
             last_completed_automatic_backup=last_completed,
             retention=RetentionConfig(
                 copies=retention["copies"],
@@ -151,6 +156,7 @@ class BackupConfigData:
             automatic_backups_configured=self.automatic_backups_configured,
             create_backup=self.create_backup.to_dict(),
             last_attempted_automatic_backup=last_attempted,
+            last_completed_automatic_backup_id=self.last_completed_automatic_backup_id,
             last_completed_automatic_backup=last_completed,
             retention=self.retention.to_dict(),
             schedule=self.schedule.to_dict(),

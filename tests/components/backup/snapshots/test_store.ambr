@@ -26,6 +26,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -40,7 +41,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -72,6 +73,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -86,7 +88,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -117,6 +119,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -131,7 +134,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -163,6 +166,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -177,7 +181,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -212,6 +216,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -226,7 +231,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -262,6 +267,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -276,7 +282,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -311,6 +317,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -325,7 +332,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -361,6 +368,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -375,7 +383,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -410,6 +418,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -424,7 +433,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -460,6 +469,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -474,7 +484,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -512,6 +522,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -526,7 +537,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---
@@ -565,6 +576,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'last_completed_automatic_backup_id': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -579,7 +591,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 6,
+    'minor_version': 7,
     'version': 1,
   })
 # ---

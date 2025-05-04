@@ -74,6 +74,7 @@ DEFAULT_STORAGE_DATA: dict[str, Any] = {
         },
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_completed_automatic_backup_id": None,
         "retention": {
             "copies": None,
             "days": None,
@@ -998,6 +999,7 @@ async def test_agents_info(
                         "retention": {"copies": 3, "days": 7},
                         "last_attempted_automatic_backup": "2024-10-26T04:45:00+01:00",
                         "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
+                        "last_completed_automatic_backup_id": None,
                         "schedule": {
                             "days": DAILY,
                             "recurrence": "custom_days",
@@ -1030,6 +1032,7 @@ async def test_agents_info(
                         "retention": {"copies": 3, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_id": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -1062,6 +1065,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": 7},
                         "last_attempted_automatic_backup": "2024-10-27T04:45:00+01:00",
                         "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
+                        "last_completed_automatic_backup_id": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -1094,6 +1098,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_id": None,
                         "schedule": {
                             "days": ["mon"],
                             "recurrence": "custom_days",
@@ -1126,6 +1131,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_id": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -1158,6 +1164,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_id": None,
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
@@ -1193,6 +1200,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_id": None,
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
@@ -1225,6 +1233,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_id": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -1257,6 +1266,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_id": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -1298,6 +1308,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_id": None,
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
@@ -1949,6 +1960,7 @@ async def test_config_schedule_logic(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": last_completed_automatic_backup,
             "last_completed_automatic_backup": last_completed_automatic_backup,
+            "last_completed_automatic_backup_id": None,
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
@@ -2859,6 +2871,7 @@ async def test_config_retention_copies_logic(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": last_backup_time,
+            "last_completed_automatic_backup_id": None,
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
@@ -3138,6 +3151,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": None,
+            "last_completed_automatic_backup_id": None,
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
@@ -3803,6 +3817,7 @@ async def test_config_retention_days_logic(
             "retention": {"copies": None, "days": stored_retained_days},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": last_backup_time,
+            "last_completed_automatic_backup_id": None,
             "schedule": {
                 "days": [],
                 "recurrence": "never",
@@ -3875,6 +3890,7 @@ async def test_configured_agents_unavailable_repair(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_id": None,
                         "schedule": {
                             "days": ["mon"],
                             "recurrence": "custom_days",

@@ -6,5 +6,18 @@
     "create_automatic": {
       "service": "mdi:cloud-upload"
     }
+  },
+  "entity": {
+    "sensor": {
+      "last_backup_state": {
+        "default": "mdi:window-open",
+        "state": {
+          "no_backup": "mdi:content-save-off-outline",
+          "last_backup_failed_locations": "mdi:content-save-alert-outline",
+          "last_backup_failed": "mdi:content-save-alert-outline",
+          "last_backup_successful": "mdi:content-save-check-outline"
+        }
+      }
+    }
   }
 }

@@ -67,7 +67,7 @@ async def test_sensor_updates(
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-12T12:00:00+01:00")
     storage_data = {
-        "backups": [],
+        "backups": [{"backup_id": "52b49b7b", "failed_agent_ids": ["test.remote"]}],
         "config": {
             "agents": {},
             "automatic_backups_configured": True,
@@ -83,6 +83,7 @@ async def test_sensor_updates(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": "2024-11-11T04:45:00+01:00",
             "last_completed_automatic_backup": "2024-11-11T04:45:00+01:00",
+            "last_completed_automatic_backup_id": "52b49b7b",
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
@@ -108,12 +109,18 @@ async def test_sensor_updates(
     assert state.state == "2024-11-11T03:45:00+00:00"
     state = hass.states.get("sensor.backup_next_scheduled_automatic_backup")
     assert state.state == "2024-11-13T05:00:00+00:00"
+    state = hass.states.get("sensor.backup_last_automatic_backup_state")
+    assert state.state == "last_backup_failed_locations"
 
     freezer.move_to("2024-11-13T12:00:00+01:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    state = hass.states.get("sensor.backup_last_attempted_automatic_backup")
+    assert state.state == "2024-11-13T11:00:00+00:00"
     state = hass.states.get("sensor.backup_last_successful_automatic_backup")
     assert state.state == "2024-11-13T11:00:00+00:00"
     state = hass.states.get("sensor.backup_next_scheduled_automatic_backup")
     assert state.state == "2024-11-14T05:00:00+00:00"
+    state = hass.states.get("sensor.backup_last_automatic_backup_state")
+    assert state.state == "last_backup_successful"

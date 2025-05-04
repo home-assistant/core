@@ -37,8 +37,20 @@
       "next_scheduled_automatic_backup": {
         "name": "Next scheduled automatic backup"
       },
+      "last_attempted_automatic_backup": {
+        "name": "Last attempted automatic backup"
+      },
       "last_successful_automatic_backup": {
         "name": "Last successful automatic backup"
+      },
+      "last_backup_state": {
+        "name": "Last automatic backup state",
+        "state": {
+          "no_backup": "No automatic backups yet",
+          "last_backup_failed_locations": "Last automatic backup wasn't stored in all locations",
+          "last_backup_failed": "Last automatic backup failed",
+          "last_backup_successful": "Backed up"
+        }
       }
     }
   }

@@ -14,7 +14,7 @@ from homeassistant.helpers.backup import (
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, LastBackupState
 from .manager import (
     BackupManager,
     BackupManagerState,
@@ -30,7 +30,9 @@ class BackupCoordinatorData:
     """Class to hold backup data."""
 
     backup_manager_state: BackupManagerState
+    last_attempted_automatic_backup: datetime | None
     last_successful_automatic_backup: datetime | None
+    last_backup_state: LastBackupState
     next_scheduled_automatic_backup: datetime | None
 
 
@@ -66,11 +68,49 @@ class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
         LOGGER.debug("Received backup event: %s", event)
         self.config_entry.async_create_task(self.hass, self.async_refresh())
 
+    async def _calculate_last_backup_state(self) -> LastBackupState:
+        """Calculate the last backup state."""
+        if (
+            (
+                last_attempted
+                := self.backup_manager.config.data.last_attempted_automatic_backup
+            )
+            and (
+                last_completed
+                := self.backup_manager.config.data.last_completed_automatic_backup
+            )
+            and (last_attempted > last_completed)
+        ):
+            # If last attempt is after last completed backup, show error
+            return LastBackupState.BACKUP_FAILED
+
+        backups = self.backup_manager.known_backups.to_list()
+        if not backups:
+            # No automatic backups, yet
+            return LastBackupState.NO_BACKUP
+
+        if (
+            (
+                last_completed_id
+                := self.backup_manager.config.data.last_completed_automatic_backup_id
+            )
+            and (
+                last_backup := self.backup_manager.known_backups.get(last_completed_id)
+            )
+            and last_backup.failed_agent_ids
+        ):
+            # Last backup has failed locations
+            return LastBackupState.BACKUP_FAILED_LOCATIONS
+
+        return LastBackupState.BACKUP_SUCCESSFUL
+
     async def _async_update_data(self) -> BackupCoordinatorData:
         """Update backup manager data."""
         return BackupCoordinatorData(
             self.backup_manager.state,
+            self.backup_manager.config.data.last_attempted_automatic_backup,
             self.backup_manager.config.data.last_completed_automatic_backup,
+            await self._calculate_last_backup_state(),
             self.backup_manager.config.data.schedule.next_automatic_backup,
         )
 

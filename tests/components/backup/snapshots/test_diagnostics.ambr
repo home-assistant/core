@@ -23,6 +23,7 @@
       }),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_completed_automatic_backup_id': None,
       'retention': dict({
         'copies': None,
         'days': None,

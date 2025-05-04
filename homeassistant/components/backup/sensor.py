@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import LastBackupState
 from .coordinator import BackupConfigEntry, BackupCoordinatorData
 from .entity import BackupManagerEntity
 from .manager import BackupManagerState
@@ -45,6 +46,19 @@ BACKUP_MANAGER_DESCRIPTIONS = (
         translation_key="last_successful_automatic_backup",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.last_successful_automatic_backup,
+    ),
+    BackupSensorEntityDescription(
+        key="last_attempted_automatic_backup",
+        translation_key="last_attempted_automatic_backup",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.last_attempted_automatic_backup,
+    ),
+    BackupSensorEntityDescription(
+        key="last_backup_state",
+        translation_key="last_backup_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[state.value for state in LastBackupState],
+        value_fn=lambda data: data.last_backup_state,
     ),
 )
 
