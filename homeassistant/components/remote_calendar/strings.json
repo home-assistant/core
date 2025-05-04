@@ -30,5 +30,18 @@
     "unable_to_parse": {
       "message": "Unable to parse calendar data: {err}"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Configure calendar",
+        "data": {
+          "midnight_as_all_day": "Treat events that start and end at midnight as all day events"
+        },
+        "data_description": {
+          "midnight_as_all_day": "Events that start and end at midnight in the same time zone as Home Assistant are treated as all day events."
+        }
+      }
+    }
   }
 }

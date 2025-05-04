@@ -4,7 +4,11 @@ from httpx import ConnectError, Response, UnsupportedProtocol
 import pytest
 import respx
 
-from homeassistant.components.remote_calendar.const import CONF_CALENDAR_NAME, DOMAIN
+from homeassistant.components.remote_calendar.const import (
+    CONF_CALENDAR_NAME,
+    CONF_MIDNIGHT_AS_ALL_DAY,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
@@ -312,3 +316,24 @@ async def test_duplicate_url(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the options flow form."""
+
+    await setup_integration(hass, config_entry)
+
+    # Test show Options form
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Test option is set
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, data={CONF_MIDNIGHT_AS_ALL_DAY: True}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_MIDNIGHT_AS_ALL_DAY: True}

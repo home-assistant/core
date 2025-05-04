@@ -9,11 +9,13 @@ from ical.calendar_stream import IcsCalendarStream
 from ical.exceptions import CalendarParseError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_URL
+from homeassistant.core import callback
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_CALENDAR_NAME, DOMAIN
+from .const import CONF_CALENDAR_NAME, CONF_MIDNIGHT_AS_ALL_DAY, DOMAIN
+from .coordinator import RemoteCalendarConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +23,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CALENDAR_NAME): str,
         vol.Required(CONF_URL): str,
+    }
+)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_MIDNIGHT_AS_ALL_DAY): bool,
     }
 )
 
@@ -82,4 +90,30 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: RemoteCalendarConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return RemoteCalendarOptionsFlow()
+
+
+class RemoteCalendarOptionsFlow(OptionsFlow):
+    """Handles options flow for the component."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.config_entry.title, data=user_input
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
         )
