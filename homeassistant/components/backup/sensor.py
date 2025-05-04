@@ -48,12 +48,6 @@ BACKUP_MANAGER_DESCRIPTIONS = (
         value_fn=lambda data: data.last_successful_automatic_backup,
     ),
     BackupSensorEntityDescription(
-        key="last_attempted_automatic_backup",
-        translation_key="last_attempted_automatic_backup",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.last_attempted_automatic_backup,
-    ),
-    BackupSensorEntityDescription(
         key="last_backup_state",
         translation_key="last_backup_state",
         device_class=SensorDeviceClass.ENUM,

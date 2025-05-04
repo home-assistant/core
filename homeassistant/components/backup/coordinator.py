@@ -30,7 +30,6 @@ class BackupCoordinatorData:
     """Class to hold backup data."""
 
     backup_manager_state: BackupManagerState
-    last_attempted_automatic_backup: datetime | None
     last_successful_automatic_backup: datetime | None
     last_backup_state: LastBackupState
     next_scheduled_automatic_backup: datetime | None
@@ -108,7 +107,6 @@ class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
         """Update backup manager data."""
         return BackupCoordinatorData(
             self.backup_manager.state,
-            self.backup_manager.config.data.last_attempted_automatic_backup,
             self.backup_manager.config.data.last_completed_automatic_backup,
             await self._calculate_last_backup_state(),
             self.backup_manager.config.data.schedule.next_automatic_backup,
