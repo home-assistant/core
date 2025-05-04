@@ -14,6 +14,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform
 
 from .const import DOMAIN
@@ -50,10 +51,7 @@ class BaseButton(HuaweiLteBaseInteractiveEntity, ButtonEntity):
     def press(self) -> None:
         """Press button."""
         if self.router.suspended:
-            _LOGGER.debug(
-                "%s: ignored, integration suspended", self.entity_description.key
-            )
-            return
+            raise ServiceValidationError("Integration is suspended")
         result = self._press()
         _LOGGER.debug("%s: %s", self.entity_description.key, result)
 

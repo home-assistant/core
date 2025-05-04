@@ -17,6 +17,7 @@ from homeassistant.components.select import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -95,6 +96,8 @@ class HuaweiLteSelectEntity(HuaweiLteBaseInteractiveEntity, SelectEntity):
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
+        if self.router.suspended:
+            raise ServiceValidationError("Integration is suspended")
         self.entity_description.setter_fn(option)
 
     @property

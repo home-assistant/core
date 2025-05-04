@@ -12,6 +12,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -57,10 +58,14 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseInteractiveEntity, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
+        if self.router.suspended:
+            raise ServiceValidationError("Integration is suspended")
         self._turn(state=True)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
+        if self.router.suspended:
+            raise ServiceValidationError("Integration is suspended")
         self._turn(state=False)
 
     async def async_added_to_hass(self) -> None:
