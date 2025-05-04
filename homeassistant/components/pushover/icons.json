@@ -1,0 +1,7 @@
+{
+  "services": {
+    "cancel": {
+      "service": "mdi:cancel"
+    }
+  }
+}
