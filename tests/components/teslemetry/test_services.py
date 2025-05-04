@@ -20,6 +20,7 @@ from homeassistant.components.teslemetry.services import (
     ATTR_OFF_PEAK_CHARGING_WEEKDAYS,
     ATTR_ONE_TIME,
     ATTR_PIN,
+    ATTR_PRECONDITION_TIME,
     ATTR_PRECONDITIONING_ENABLED,
     ATTR_PRECONDITIONING_WEEKDAYS,
     ATTR_START_ENABLED,
@@ -27,8 +28,10 @@ from homeassistant.components.teslemetry.services import (
     ATTR_TIME,
     ATTR_TOU_SETTINGS,
     SERVICE_ADD_CHARGE_SCHEDULE,
+    SERVICE_ADD_PRECONDITION_SCHEDULE,
     SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
     SERVICE_REMOVE_CHARGE_SCHEDULE,
+    SERVICE_REMOVE_PRECONDITION_SCHEDULE,
     SERVICE_SET_SCHEDULED_CHARGING,
     SERVICE_SET_SCHEDULED_DEPARTURE,
     SERVICE_SPEED_LIMIT,
@@ -267,6 +270,59 @@ async def test_services(
             blocking=True,
         )
         remove_charge_schedule.assert_called_once()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.add_precondition_schedule",
+        return_value=COMMAND_OK,
+    ) as add_precondition_schedule:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_PRECONDITION_SCHEDULE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_DAYS_OF_WEEK: "All",
+                ATTR_ENABLE: True,
+                ATTR_LOCATION: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+                ATTR_PRECONDITION_TIME: 420,  # 7:00 AM
+                ATTR_ONE_TIME: False,
+                ATTR_NAME: "Test Precondition Schedule",
+            },
+            blocking=True,
+        )
+        add_precondition_schedule.assert_called_once()
+
+    # Test add_precondition_schedule with minimal required parameters
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.add_precondition_schedule",
+        return_value=COMMAND_OK,
+    ) as add_precondition_schedule_minimal:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_PRECONDITION_SCHEDULE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_DAYS_OF_WEEK: "Weekdays",
+                ATTR_ENABLE: True,
+                ATTR_PRECONDITION_TIME: 480,  # 8:00 AM
+            },
+            blocking=True,
+        )
+        add_precondition_schedule_minimal.assert_called_once()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.remove_precondition_schedule",
+        return_value=COMMAND_OK,
+    ) as remove_precondition_schedule:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REMOVE_PRECONDITION_SCHEDULE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ID: 123,
+            },
+            blocking=True,
+        )
+        remove_precondition_schedule.assert_called_once()
 
     with (
         patch(
