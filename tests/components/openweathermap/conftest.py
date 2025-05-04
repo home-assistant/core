@@ -1,14 +1,8 @@
 """Configure tests for the OpenWeatherMap integration."""
 
-from collections.abc import Generator
-
 import pytest
 
-from homeassistant.components.openweathermap.const import (
-    DEFAULT_LANGUAGE,
-    DOMAIN,
-    OWM_MODES,
-)
+from homeassistant.components.openweathermap.const import DEFAULT_LANGUAGE, DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
@@ -26,9 +20,9 @@ LONGITUDE = 56.78
 NAME = "openweathermap"
 
 
-@pytest.fixture(params=OWM_MODES)
-def mode(request: pytest.FixtureRequest) -> Generator[str]:
-    """Return every mode."""
+@pytest.fixture
+def mode(request: pytest.FixtureRequest) -> str:
+    """Return mode passed in parameter."""
     return request.param
 
 
