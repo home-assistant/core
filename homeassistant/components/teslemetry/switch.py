@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
 from tesla_fleet_api.const import AutoSeat, Scope
+from tesla_fleet_api.teslemetry.vehicles import TeslemetryVehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.switch import (
@@ -37,8 +38,8 @@ PARALLEL_UPDATES = 0
 class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
     """Describes Teslemetry Switch entity."""
 
-    on_func: Callable
-    off_func: Callable
+    on_func: Callable[[TeslemetryVehicle], Awaitable[dict[str, Any]]]
+    off_func: Callable[[TeslemetryVehicle], Awaitable[dict[str, Any]]]
     scopes: list[Scope]
     value_func: Callable[[StateType], bool] = bool
     streaming_listener: Callable[
