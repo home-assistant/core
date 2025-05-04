@@ -777,6 +777,9 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
         await device.mock_connect()
         # Mock device being at the end of its sleep cycle
         # and going to sleep right as the upload starts
+        # This can happen because there is non zero time
+        # between when we tell the dashboard to upload and
+        # when the upload actually starts
         await device.mock_disconnect(True)
         disconnect_future.set_result(None)
         assert not upload_attempt_2_future.done()
