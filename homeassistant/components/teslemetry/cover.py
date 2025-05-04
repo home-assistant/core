@@ -105,7 +105,6 @@ class TeslemetryWindowEntity(TeslemetryRootEntity, CoverEntity):
     """Base class for window cover entities."""
 
     api: Vehicle
-
     _attr_device_class = CoverDeviceClass.WINDOW
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
@@ -228,7 +227,6 @@ class TeslemetryChargePortEntity(
     """Base class for for charge port cover entities."""
 
     api: Vehicle
-
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
@@ -310,7 +308,6 @@ class TeslemetryFrontTrunkEntity(TeslemetryRootEntity, CoverEntity):
     """Base class for the front trunk cover entities."""
 
     api: Vehicle
-
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN
 
@@ -373,7 +370,6 @@ class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
     """Cover entity for the rear trunk."""
 
     api: Vehicle
-
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
@@ -443,7 +439,6 @@ class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):
     """Cover entity for the sunroof."""
 
     api: Vehicle
-
     _attr_device_class = CoverDeviceClass.WINDOW
     _attr_supported_features = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
