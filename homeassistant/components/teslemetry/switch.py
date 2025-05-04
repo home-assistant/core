@@ -43,10 +43,9 @@ class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
     scopes: list[Scope]
     value_func: Callable[[StateType], bool] = bool
     streaming_listener: Callable[
-        [TeslemetryStreamVehicle, Callable[[StateType], None]],
+        [TeslemetryStreamVehicle, Callable[[bool | None], None]],
         Callable[[], None],
     ]
-    streaming_value_fn: Callable[[StateType], bool] = bool
     streaming_firmware: str = "2024.26"
     unique_id: str | None = None
 
@@ -54,15 +53,18 @@ class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
 VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     TeslemetrySwitchEntityDescription(
         key="vehicle_state_sentry_mode",
-        streaming_listener=lambda x, y: x.listen_SentryMode(y),
-        streaming_value_fn=lambda x: x != "Off",
+        streaming_listener=lambda vehicle, callback: vehicle.listen_SentryMode(
+            lambda value: callback(None) if value is None else callback(value != "Off")
+        ),
         on_func=lambda api: api.set_sentry_mode(on=True),
         off_func=lambda api: api.set_sentry_mode(on=False),
         scopes=[Scope.VEHICLE_CMDS],
     ),
     TeslemetrySwitchEntityDescription(
         key="climate_state_auto_seat_climate_left",
-        streaming_listener=lambda x, y: x.listen_AutoSeatClimateLeft(y),
+        streaming_listener=lambda vehicle, callback: vehicle.listen_AutoSeatClimateLeft(
+            callback
+        ),
         on_func=lambda api: api.remote_auto_seat_climate_request(
             AutoSeat.FRONT_LEFT, True
         ),
@@ -73,7 +75,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="climate_state_auto_seat_climate_right",
-        streaming_listener=lambda x, y: x.listen_AutoSeatClimateRight(y),
+        streaming_listener=lambda vehicle,
+        callback: vehicle.listen_AutoSeatClimateRight(callback),
         on_func=lambda api: api.remote_auto_seat_climate_request(
             AutoSeat.FRONT_RIGHT, True
         ),
@@ -84,7 +87,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="climate_state_auto_steering_wheel_heat",
-        streaming_listener=lambda x, y: x.listen_HvacSteeringWheelHeatAuto(y),
+        streaming_listener=lambda vehicle,
+        callback: vehicle.listen_HvacSteeringWheelHeatAuto(callback),
         on_func=lambda api: api.remote_auto_steering_wheel_heat_climate_request(
             on=True
         ),
@@ -95,8 +99,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="climate_state_defrost_mode",
-        streaming_listener=lambda x, y: x.listen_DefrostMode(y),
-        streaming_value_fn=lambda x: x != "Off",
+        streaming_listener=lambda vehicle, callback: vehicle.listen_DefrostMode(
+            lambda value: callback(value) if value is None else callback(value != "Off")
+        ),
         on_func=lambda api: api.set_preconditioning_max(on=True, manual_override=False),
         off_func=lambda api: api.set_preconditioning_max(
             on=False, manual_override=False
@@ -107,8 +112,11 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         key="charge_state_charging_state",
         unique_id="charge_state_user_charge_enable_request",
         value_func=lambda state: state in {"Starting", "Charging"},
-        streaming_listener=lambda x, y: x.listen_DetailedChargeState(y),
-        streaming_value_fn=lambda x: x in {"Starting", "Charging"},
+        streaming_listener=lambda vehicle, callback: vehicle.listen_DetailedChargeState(
+            lambda value: callback(value)
+            if value is None
+            else callback(value in {"Starting", "Charging"})
+        ),
         on_func=lambda api: api.charge_start(),
         off_func=lambda api: api.charge_stop(),
         scopes=[Scope.VEHICLE_CMDS, Scope.VEHICLE_CHARGING_CMDS],
@@ -240,11 +248,9 @@ class TeslemetryStreamingVehicleSwitchEntity(
             )
         )
 
-    def _value_callback(self, value: StateType) -> None:
+    def _value_callback(self, value: bool | None) -> None:
         """Update the value of the entity."""
-        self._attr_is_on = (
-            None if value is None else self.entity_description.streaming_value_fn(value)
-        )
+        self._attr_is_on = value
         self.async_write_ha_state()
 
 
