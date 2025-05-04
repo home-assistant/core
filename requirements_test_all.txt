@@ -960,7 +960,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.47.1
+habluetooth==3.48.2
 
 # homeassistant.components.cloud
 hass-nabucasa==0.96.0
@@ -1747,7 +1747,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.4.1
+pymiele==0.4.3
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -2555,7 +2555,7 @@ yt-dlp[default]==2025.03.31
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.146.5
+zeroconf==0.147.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
