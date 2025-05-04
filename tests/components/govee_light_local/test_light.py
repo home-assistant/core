@@ -283,15 +283,18 @@ async def test_turn_on_call_order(
     mock_call_kwargs: dict[str, any],
 ) -> None:
     """Test that turn_on is called after set_brightness/set_color/set_preset."""
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=SCENE_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=SCENE_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
