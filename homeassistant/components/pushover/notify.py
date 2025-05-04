@@ -26,10 +26,12 @@ from .const import (
     ATTR_PRIORITY,
     ATTR_RETRY,
     ATTR_SOUND,
+    ATTR_TAGS,
     ATTR_TIMESTAMP,
     ATTR_TTL,
     ATTR_URL,
     ATTR_URL_TITLE,
+    CLEAR_NOTIFICATIONS_BY_TAGS,
     CONF_USER_KEY,
     DOMAIN,
 )
@@ -61,6 +63,7 @@ class PushoverNotificationService(BaseNotificationService):
         self._hass = hass
         self._user_key = user_key
         self.pushover = pushover
+        self.receipt_tags: dict[str, list[str]] = {}
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
@@ -78,6 +81,10 @@ class PushoverNotificationService(BaseNotificationService):
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
+        tags = data.get(ATTR_TAGS, "")
+
+        if message == CLEAR_NOTIFICATIONS_BY_TAGS and tags != "":
+            return self.clear_notification(tags)
 
         # Check for attachment
         if (image := data.get(ATTR_ATTACHMENT)) is not None:
@@ -99,7 +106,7 @@ class PushoverNotificationService(BaseNotificationService):
                 image = None
 
         try:
-            self.pushover.send_message(
+            result = self.pushover.send_message(
                 user=self._user_key,
                 message=message,
                 device=",".join(kwargs.get(ATTR_TARGET, [])),
@@ -116,5 +123,27 @@ class PushoverNotificationService(BaseNotificationService):
                 html=html,
                 ttl=ttl,
             )
+            if "receipt" in result and tags:
+                self.receipt_tags[result["receipt"]] = tags.split(",")
+
         except BadAPIRequestError as err:
             raise HomeAssistantError(str(err)) from err
+
+    def clear_notification(self, tags: str):
+        """Cancel any priority 2 message formerly tagged with any of the given tags.
+
+        The tags may contain multiple comma-separated entries in which case all
+        notification that are tagged with at least one of the items are cleared.
+        """
+        _LOGGER.debug("Attempting to clear all notifications tagged with: %s", tags)
+        receipts: list[str] = []
+        for tag in tags.split(","):
+            for receipt, msg_tags in self.receipt_tags.items():
+                if tag in msg_tags:
+                    receipts.append(receipt)
+        for receipt in receipts:
+            try:
+                self.pushover.cancel_receipt(receipt)
+            except BadAPIRequestError:
+                _LOGGER.exception("Error while trying to cancel receipt %s", receipt)
+            del self.receipt_tags[receipt]
