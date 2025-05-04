@@ -80,6 +80,18 @@ MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT = {
         "entity_picture": "https://example.com/5b06357ef8654e8d9c54cee5bb0e939b",
     },
 }
+MOCK_SUBENTRY_BUTTON_COMPONENT = {
+    "365d05e6607c4dfb8ae915cff71a954b": {
+        "platform": "button",
+        "name": "Restart",
+        "device_class": "restart",
+        "command_topic": "test-topic",
+        "payload_press": "PRESS",
+        "command_template": "{{ value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/365d05e6607c4dfb8ae915cff71a954b",
+    },
+}
 MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
@@ -204,6 +216,10 @@ MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
 MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT,
+}
+MOCK_BUTTON_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_BUTTON_COMPONENT,
 }
 MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},

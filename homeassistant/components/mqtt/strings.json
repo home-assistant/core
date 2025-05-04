@@ -258,6 +258,7 @@
             "optimistic": "Optimistic",
             "payload_off": "Payload \"off\"",
             "payload_on": "Payload \"on\"",
+            "payload_press": "Payload \"press\"",
             "qos": "QoS",
             "red_template": "Red template",
             "retain": "Retain",
@@ -282,6 +283,7 @@
             "optimistic": "Flag that defines if the {platform} entity works in optimistic mode. [Learn more.]({url}#optimistic)",
             "payload_off": "The payload that represents the \"off\" state.",
             "payload_on": "The payload that represents the \"on\" state.",
+            "payload_press": "The payload to send when the button is triggered.",
             "qos": "The QoS value a {platform} entity should use.",
             "red_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract red color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
@@ -634,6 +636,13 @@
         "window": "[%key:component::binary_sensor::entity_component::window::name%]"
       }
     },
+    "device_class_button": {
+      "options": {
+        "identify": "[%key:component::button::entity_component::identify::name%]",
+        "restart": "[%key:common::action::restart%]",
+        "update": "[%key:component::button::entity_component::update::name%]"
+      }
+    },
     "device_class_sensor": {
       "options": {
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
@@ -717,6 +726,7 @@
     "platform": {
       "options": {
         "binary_sensor": "[%key:component::binary_sensor::title%]",
+        "button": "[%key:component::button::title%]",
         "light": "[%key:component::light::title%]",
         "notify": "[%key:component::notify::title%]",
         "sensor": "[%key:component::sensor::title%]",
