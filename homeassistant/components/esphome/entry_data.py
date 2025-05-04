@@ -8,6 +8,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
 import logging
+from operator import delitem
 from typing import TYPE_CHECKING, Any, Final, TypedDict, cast
 
 from aioesphomeapi import (
@@ -324,11 +325,11 @@ class RuntimeEntryData:
         state_type: type[EntityState],
         state_key: int,
         entity_callback: CALLBACK_TYPE,
-    ) -> Callable[[], CALLBACK_TYPE]:
+    ) -> CALLBACK_TYPE:
         """Subscribe to state updates."""
         subscription_key = (state_type, state_key)
         self.state_subscriptions[subscription_key] = entity_callback
-        return partial(self.state_subscriptions.pop, subscription_key)
+        return partial(delitem, self.state_subscriptions, subscription_key)
 
     @callback
     def async_update_state(self, state: EntityState) -> None:
