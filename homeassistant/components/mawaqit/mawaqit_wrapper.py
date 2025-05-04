@@ -33,6 +33,7 @@ async def test_credentials(username=None, password=None, client_instance=None):
 
 async def get_mawaqit_api_token(username=None, password=None, client_instance=None):
     """Return the MAWAQIT API token."""
+    token = None
     try:
         client = client_instance
         if client is None:
@@ -58,6 +59,7 @@ async def all_mosques_neighborhood(
     client_instance=None,
 ):
     """Return mosques in the neighborhood if any. Returns a list of dicts."""
+    nearest_mosques = None
     try:
         client = client_instance
         if client is None:
@@ -84,6 +86,7 @@ async def all_mosques_by_keyword(
     search_keyword, username=None, password=None, token=None, client_instance=None
 ):
     """Return mosques in the neighborhood if any. Returns a list of dicts."""
+    search_mosques = []
     try:
         client = client_instance
         if client is None:
@@ -94,8 +97,6 @@ async def all_mosques_by_keyword(
             # would be better to set pos in client
             pass
         await client.get_api_token()
-
-        search_mosques = []
 
         if search_keyword is not None:
             search_mosques = await client.fetch_mosques_by_keyword(search_keyword)
@@ -121,7 +122,7 @@ async def fetch_prayer_times(
     client_instance=None,
 ):
     """Get prayer times from the MAWAQIT API. Returns a dict."""
-
+    dict_calendar = None
     try:
         client = client_instance
         if client is None:
