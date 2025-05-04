@@ -493,7 +493,7 @@ LOCK_ATTRS = [{"supported_features": 1}, {}]
 NOTIFY_ATTRS = [{"supported_features": 0}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
 SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
-SIREN_ATTRS = [{"supported_features": 0}, {}]
+SIREN_ATTRS = [{"supported_features": 0}, {"available_tones": []}]
 
 
 @pytest.mark.parametrize(
