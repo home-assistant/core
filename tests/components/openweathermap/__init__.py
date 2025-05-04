@@ -27,8 +27,7 @@ async def setup_platform(
     platforms: list[Platform],
 ):
     """Set up the OpenWeatherMap platform."""
-    mock = _create_mocked_owm_factory()
-    owm_client_mock.return_value = mock
+    owm_client_mock.return_value = _create_mocked_owm_factory()
 
     config_entry.add_to_hass(hass)
     with (
