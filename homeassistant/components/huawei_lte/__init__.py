@@ -485,6 +485,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not router:
             raise ServiceValidationError(f"Router {url} not available")
 
+        was_suspended = router.suspended
         if service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
             router.suspended = False
@@ -495,6 +496,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.debug("%s: %s", service.service, "done")
         else:
             raise ServiceValidationError(f"Unsupported service {service.service}")
+        if was_suspended != router.suspended:
+            # Make interactive entities' availability update
+            dispatcher_send(hass, UPDATE_SIGNAL, router.config_entry.unique_id)
 
     for service in ADMIN_SERVICES:
         async_register_admin_service(

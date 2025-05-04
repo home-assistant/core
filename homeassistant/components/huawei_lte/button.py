@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 
 from .const import DOMAIN
-from .entity import HuaweiLteBaseEntityWithDevice
+from .entity import HuaweiLteBaseInteractiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ async def async_setup_entry(
     async_add_entities(buttons)
 
 
-class BaseButton(HuaweiLteBaseEntityWithDevice, ButtonEntity):
+class BaseButton(HuaweiLteBaseInteractiveEntity, ButtonEntity):
     """Huawei LTE button base class."""
 
     @property

@@ -20,7 +20,7 @@ from .const import (
     KEY_DIALUP_MOBILE_DATASWITCH,
     KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
 )
-from .entity import HuaweiLteBaseEntityWithDevice
+from .entity import HuaweiLteBaseInteractiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities(switches, True)
 
 
-class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
+class HuaweiLteBaseSwitch(HuaweiLteBaseInteractiveEntity, SwitchEntity):
     """Huawei LTE switch device base class."""
 
     key: str
