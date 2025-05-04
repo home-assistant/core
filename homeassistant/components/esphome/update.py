@@ -251,10 +251,9 @@ class ESPHomeDashboardUpdateEntity(
             try:
                 for attempt in range(1, attempts + 1):
                     await self._async_wait_available()
-                    if (
-                        not await api.upload(configuration, "OTA")
-                        and attempt == attempts
-                    ):
+                    if await api.upload(configuration, "OTA"):
+                        break
+                    if attempt == attempts:
                         raise HomeAssistantError(
                             translation_domain=DOMAIN,
                             translation_key="error_uploading",
