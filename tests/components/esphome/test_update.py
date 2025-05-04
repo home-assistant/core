@@ -714,7 +714,7 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
     mock_esphome_device: MockESPHomeDeviceType,
     mock_dashboard: dict[str, Any],
 ) -> None:
-    """Test device comes online too late during update."""
+    """Test device goes to sleep right as we start the OTA."""
     mock_dashboard["configured"] = [
         {
             "name": "test",
