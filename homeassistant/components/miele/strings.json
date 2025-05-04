@@ -288,8 +288,8 @@
       "program_id": {
         "name": "Program",
         "state": {
-          "1_tray": "1 tray",
-          "2_trays": "2 trays",
+          "one_tray": "1 tray",
+          "two_trays": "2 trays",
           "amaranth": "Amaranth",
           "apples_diced": "Apples (diced)",
           "apples_halved": "Apples (halved)",
