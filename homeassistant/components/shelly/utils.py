@@ -385,7 +385,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
         if key.startswith(("cct", "rgb:", "rgbw:")):
             return f"{channel.upper()} light {channel_id}"
         if key.startswith("em1"):
-            return f"EM{channel_id}"
+            return f"Energy Meter {channel_id}"
         if key.startswith(("boolean:", "enum:", "number:", "text:")):
             return f"{channel.title()} {channel_id}"
         return device_name
