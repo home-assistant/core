@@ -49,6 +49,10 @@
           "name": "Section",
           "description": "The name of a section within the project to add the task to."
         },
+        "create_section": {
+          "name": "Create section",
+          "description": "If the section does not exist, create it."
+        },
         "labels": {
           "name": "Labels",
           "description": "Any labels that you want to apply to this task, separated by a comma."

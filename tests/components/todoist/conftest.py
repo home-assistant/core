@@ -19,6 +19,7 @@ from tests.common import MockConfigEntry
 
 PROJECT_ID = "project-id-1"
 SECTION_ID = "section-id-1"
+NEW_SECTION_ID = "new-section-id"
 SUMMARY = "A task"
 TOKEN = "some-token"
 TODAY = dt_util.now().strftime("%Y-%m-%d")
@@ -105,10 +106,16 @@ def mock_api(tasks: list[Task]) -> AsyncMock:
         Section(
             id=SECTION_ID,
             project_id=PROJECT_ID,
-            name="Section Name",
+            name="Existing Section",
             order=1,
         )
     ]
+    api.add_section.return_value = Section(
+        id=NEW_SECTION_ID,
+        project_id=PROJECT_ID,
+        name="New Section",
+        order=1,
+    )
     api.get_labels.return_value = [
         Label(id="1", name="Label1", color="1", order=1, is_favorite=False)
     ]

@@ -80,6 +80,8 @@ PROJECT_NAME: Final = "project"
 PROJECTS: Final = "projects"
 # Section Name: What Section of the Project do you want to add the Task to?
 SECTION_NAME: Final = "section"
+# Service Call: Should the section be created if it doesn't exist?
+CREATE_SECTION: Final = "create_section"
 # Calendar Platform: When does a calendar event start?
 START: Final = "start"
 # Calendar Platform: What is the next calendar event about?

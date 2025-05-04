@@ -17,6 +17,12 @@ new_task:
       example: Deliveries
       selector:
         text:
+    create_section:
+      required: false
+      example: true
+      default: true
+      selector:
+        boolean:
     labels:
       example: Chores,Delivieries
       selector:

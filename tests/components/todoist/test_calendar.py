@@ -15,6 +15,7 @@ from homeassistant import setup
 from homeassistant.components.todoist.const import (
     ASSIGNEE,
     CONTENT,
+    CREATE_SECTION,
     DOMAIN,
     LABELS,
     PROJECT_NAME,
@@ -28,7 +29,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from .conftest import PROJECT_ID, SECTION_ID, SUMMARY
+from .conftest import NEW_SECTION_ID, PROJECT_ID, SECTION_ID, SUMMARY
 
 from tests.typing import ClientSessionGenerator
 
@@ -290,10 +291,10 @@ async def test_create_task_service_call_raises(
         )
 
 
-async def test_create_task_service_call_with_section(
+async def test_create_task_service_call_with_existing_section(
     hass: HomeAssistant, api: AsyncMock
 ) -> None:
-    """Test api is called correctly when section is included."""
+    """Test api is called correctly when existing section is included."""
     await hass.services.async_call(
         DOMAIN,
         SERVICE_NEW_TASK,
@@ -302,18 +303,67 @@ async def test_create_task_service_call_with_section(
             CONTENT: "task",
             LABELS: ["Label1"],
             PROJECT_NAME: "Name",
-            SECTION_NAME: "Section Name",
+            SECTION_NAME: "Existing Section",
         },
     )
     await hass.async_block_till_done()
 
-    api.add_task.assert_called_with(
+    api.add_section.assert_not_called()
+    api.add_task.assert_called_once_with(
         "task",
         project_id=PROJECT_ID,
         section_id=SECTION_ID,
         labels=["Label1"],
         assignee_id="1",
     )
+
+
+async def test_create_task_service_call_with_new_section(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test apis are called correctly when non-existing section is included and create_section is True."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            ASSIGNEE: "user",
+            CONTENT: "task",
+            LABELS: ["Label1"],
+            PROJECT_NAME: "Name",
+            SECTION_NAME: "New Section",
+            CREATE_SECTION: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    api.add_section.assert_called_once_with("New Section", PROJECT_ID)
+    api.add_task.assert_called_once_with(
+        "task",
+        project_id=PROJECT_ID,
+        section_id=NEW_SECTION_ID,
+        labels=["Label1"],
+        assignee_id="1",
+    )
+
+
+async def test_create_task_service_call_with_missing_section_and_no_create(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test non-existing section and create_section is False raises an error."""
+    with pytest.raises(ServiceValidationError, match="section_invalid"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NEW_TASK,
+            {
+                ASSIGNEE: "user",
+                CONTENT: "task",
+                LABELS: ["Label1"],
+                PROJECT_NAME: "Name",
+                SECTION_NAME: "Missing Section",
+                CREATE_SECTION: False,
+            },
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
