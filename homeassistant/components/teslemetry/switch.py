@@ -61,6 +61,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         scopes=[Scope.VEHICLE_CMDS],
     ),
     TeslemetrySwitchEntityDescription(
+        key="vehicle_state_valet_mode",
+        streaming_listener=lambda vehicle, value: vehicle.listen_ValetModeEnabled(
+            value
+        ),
+        streaming_firmware="2024.44.25",
+        on_func=lambda api: api.set_valet_mode(on=True, password=""),
+        off_func=lambda api: api.set_valet_mode(on=False, password=""),
+        scopes=[Scope.VEHICLE_CMDS],
+    ),
+    TeslemetrySwitchEntityDescription(
         key="climate_state_auto_seat_climate_left",
         streaming_listener=lambda vehicle, callback: vehicle.listen_AutoSeatClimateLeft(
             callback
