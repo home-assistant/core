@@ -65,7 +65,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(CONF_PUBLISH_STATES_HOST): cv.string,
-                vol.Optional(CONF_INCLUDE_STRINGS): cv.boolean,
+                vol.Optional(CONF_INCLUDE_STRINGS, default=False): cv.boolean,
             }
         )
     },
