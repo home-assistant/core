@@ -1,6 +1,6 @@
 """Constants used by the SmartThings component and platforms."""
 
-from pysmartthings import Attribute, Capability
+from pysmartthings import Attribute, Capability, Category
 
 DOMAIN = "smartthings"
 
@@ -108,4 +108,13 @@ SENSOR_ATTRIBUTES_TO_CAPABILITIES: dict[str, str] = {
     Attribute.VOLTAGE: Capability.VOLTAGE_MEASUREMENT,
     Attribute.WASHER_MODE: Capability.WASHER_MODE,
     Attribute.WASHER_JOB_STATE: Capability.WASHER_OPERATING_STATE,
+}
+
+INVALID_SWITCH_CATEGORIES = {
+    Category.CLOTHING_CARE_MACHINE,
+    Category.COOKTOP,
+    Category.DRYER,
+    Category.WASHER,
+    Category.MICROWAVE,
+    Category.DISHWASHER,
 }

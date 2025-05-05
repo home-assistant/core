@@ -22,6 +22,18 @@
           "installer_code": "The installer code from your panel",
           "user_code": "The user code from your panel"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "installer_code": "[%key:component::bosch_alarm::config::step::auth::data::installer_code%]",
+          "user_code": "[%key:component::bosch_alarm::config::step::auth::data::user_code%]"
+        },
+        "data_description": {
+          "password": "[%key:component::bosch_alarm::config::step::auth::data_description::password%]",
+          "installer_code": "[%key:component::bosch_alarm::config::step::auth::data_description::installer_code%]",
+          "user_code": "[%key:component::bosch_alarm::config::step::auth::data_description::user_code%]"
+        }
       }
     },
     "error": {
@@ -30,7 +42,26 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "device_mismatch": "Please ensure you reconfigure against the same device."
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to panel."
+    },
+    "authentication_failed": {
+      "message": "Incorrect credentials for panel."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "faulting_points": {
+        "name": "Faulting points",
+        "unit_of_measurement": "points"
+      }
     }
   }
 }
