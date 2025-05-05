@@ -438,44 +438,6 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
-            key="LocalConfigDisabled",
-            entity_category=EntityCategory.CONFIG,
-            translation_key="local_config_disabled",
-            options=["enable", "disable"],
-            measurement_to_ha={
-                False: "Enable Local Configuration",
-                True: "Disable Local Configuration",
-            }.get,
-            ha_to_native_value={
-                "Enable Local Configuration": False,
-                "Disable Local Configuration": True,
-            }.get,
-        ),
-        entity_class=MatterAttributeSelectEntity,
-        required_attributes=(clusters.BasicInformation.Attributes.LocalConfigDisabled,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
-            key="EnableOneTouchLocking",
-            entity_category=EntityCategory.CONFIG,
-            translation_key="enable_one_touch_locking",
-            options=["Enabled", "Disabled"],
-            measurement_to_ha={
-                False: "Disabled",
-                True: "Enabled",
-            }.get,
-            ha_to_native_value={
-                "Disabled": False,
-                "Enabled": True,
-            }.get,
-        ),
-        entity_class=MatterAttributeSelectEntity,
-        required_attributes=(clusters.DoorLock.Attributes.EnableOneTouchLocking,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
             key="DoorLockSoundVolume",
             entity_category=EntityCategory.CONFIG,
             translation_key="door_lock_sound_volume",
