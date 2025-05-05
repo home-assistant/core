@@ -1204,6 +1204,9 @@ class BackupManager:
                 if with_automatic_settings:
                     # create backup was successful, update last_completed_automatic_backup
                     self.config.data.last_completed_automatic_backup = dt_util.now()
+                    self.config.data.last_completed_automatic_backup_id = (
+                        written_backup.backup.backup_id
+                    )
                     self.store.save()
                 backup_success = True
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -9,6 +10,16 @@ from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from .manager import BackupManager
+
+
+class LastBackupState(StrEnum):
+    """Last backup state type."""
+
+    NO_BACKUP = "no_backup"
+    BACKUP_FAILED_LOCATIONS = "last_backup_failed_locations"
+    BACKUP_FAILED = "last_backup_failed"
+    BACKUP_SUCCESSFUL = "last_backup_successful"
+
 
 BUF_SIZE = 2**20 * 4  # 4MB
 DOMAIN = "backup"

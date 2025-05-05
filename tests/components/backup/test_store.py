@@ -45,6 +45,7 @@ def mock_delay_save() -> Generator[None]:
                     },
                     "last_attempted_automatic_backup": None,
                     "last_completed_automatic_backup": None,
+                    "last_completed_automatic_backup_id": None,
                     "retention": {
                         "copies": None,
                         "days": None,
@@ -77,6 +78,7 @@ def mock_delay_save() -> Generator[None]:
                     },
                     "last_attempted_automatic_backup": None,
                     "last_completed_automatic_backup": None,
+                    "last_completed_automatic_backup_id": None,
                     "retention": {
                         "copies": 0,
                         "days": 0,
@@ -111,6 +113,7 @@ def mock_delay_save() -> Generator[None]:
                     },
                     "last_attempted_automatic_backup": None,
                     "last_completed_automatic_backup": None,
+                    "last_completed_automatic_backup_id": None,
                     "retention": {
                         "copies": None,
                         "days": None,
@@ -147,6 +150,7 @@ def mock_delay_save() -> Generator[None]:
                     },
                     "last_attempted_automatic_backup": None,
                     "last_completed_automatic_backup": None,
+                    "last_completed_automatic_backup_id": None,
                     "retention": {
                         "copies": None,
                         "days": None,
@@ -184,6 +188,7 @@ def mock_delay_save() -> Generator[None]:
                     },
                     "last_attempted_automatic_backup": None,
                     "last_completed_automatic_backup": None,
+                    "last_completed_automatic_backup_id": None,
                     "retention": {
                         "copies": None,
                         "days": None,
@@ -227,6 +232,7 @@ def mock_delay_save() -> Generator[None]:
                     },
                     "last_attempted_automatic_backup": None,
                     "last_completed_automatic_backup": None,
+                    "last_completed_automatic_backup_id": None,
                     "retention": {
                         "copies": None,
                         "days": None,

@@ -39,6 +39,15 @@
       },
       "last_successful_automatic_backup": {
         "name": "Last successful automatic backup"
+      },
+      "last_backup_state": {
+        "name": "Last automatic backup state",
+        "state": {
+          "no_backup": "No automatic backups yet",
+          "last_backup_failed_locations": "Not stored in all locations",
+          "last_backup_failed": "Failed",
+          "last_backup_successful": "Backed up"
+        }
       }
     }
   }
