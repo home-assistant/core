@@ -201,7 +201,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2025.4.4
+aioautomower==2025.5.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -223,7 +223,7 @@ aiodhcpwatcher==1.1.1
 aiodiscover==2.6.1
 
 # homeassistant.components.dnsip
-aiodns==3.2.0
+aiodns==3.3.0
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -286,7 +286,7 @@ aiokafka==0.10.0
 aiokef==0.2.16
 
 # homeassistant.components.rehlko
-aiokem==0.5.6
+aiokem==0.5.10
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
@@ -607,7 +607,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.14.0
+bleak-esphome==2.15.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.9.0
@@ -637,7 +637,7 @@ bluemaestro-ble==0.4.0
 bluetooth-adapters==0.21.4
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.4.5
+bluetooth-auto-recovery==1.5.1
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -776,7 +776,7 @@ deluge-client==1.10.2
 demetriek==1.2.0
 
 # homeassistant.components.denonavr
-denonavr==1.0.1
+denonavr==1.1.0
 
 # homeassistant.components.devialet
 devialet==1.5.7
@@ -1118,7 +1118,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.45.0
+habluetooth==3.48.2
 
 # homeassistant.components.cloud
 hass-nabucasa==0.96.0
@@ -1161,13 +1161,13 @@ hole==0.8.0
 holidays==0.70
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250430.2
+home-assistant-frontend==20250502.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.4.30
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.1
+homematicip==2.0.1.1
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1200,7 +1200,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.1.0
+ical==9.2.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1239,7 +1239,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.15.0
+inkbird-ble==0.16.1
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1496,7 +1496,7 @@ nettigo-air-monitor==4.1.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.7.0
+nexia==2.9.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1759,7 +1759,7 @@ py-madvr2==1.6.32
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==2.0.5
+py-nextbusnext==2.1.2
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -2054,7 +2054,7 @@ pyiskra==0.1.15
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.4.0
+pyisy==3.4.1
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2093,7 +2093,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.0b7
+pylamarzocco==2.0.0
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2135,7 +2135,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.4.1
+pymiele==0.4.3
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -2480,7 +2480,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.16.1
+python-roborock==2.18.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
@@ -2577,7 +2577,7 @@ pywilight==0.0.74
 pywizlight==0.6.2
 
 # homeassistant.components.wmspro
-pywmspro==0.2.1
+pywmspro==0.2.2
 
 # homeassistant.components.ws66i
 pyws66i==1.1
@@ -2897,7 +2897,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.5
+teslemetry-stream==0.7.7
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
@@ -3007,7 +3007,7 @@ url-normalize==2.2.1
 uvcclient==0.12.1
 
 # homeassistant.components.roborock
-vacuum-map-parser-roborock==0.1.2
+vacuum-map-parser-roborock==0.1.4
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.3.0
@@ -3155,8 +3155,11 @@ zabbix-utils==2.0.2
 # homeassistant.components.zamg
 zamg==0.3.6
 
+# homeassistant.components.zimi
+zcc-helper==3.5
+
 # homeassistant.components.zeroconf
-zeroconf==0.146.5
+zeroconf==0.147.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2

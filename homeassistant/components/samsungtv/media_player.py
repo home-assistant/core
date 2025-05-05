@@ -29,13 +29,14 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.async_ import create_eager_task
 
 from .bridge import SamsungTVWSBridge
-from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, LOGGER
+from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, DOMAIN, LOGGER
 from .coordinator import SamsungTVConfigEntry, SamsungTVDataUpdateCoordinator
 from .entity import SamsungTVEntity
 
@@ -308,7 +309,12 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         try:
             await dmr_device.async_set_volume_level(volume)
         except UpnpActionResponseError as err:
-            LOGGER.warning("Unable to set volume level on %s: %r", self._host, err)
+            assert self._host
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_set_volume",
+                translation_placeholders={"error": repr(err), "host": self._host},
+            ) from err
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""

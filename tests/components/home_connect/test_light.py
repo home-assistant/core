@@ -64,9 +64,8 @@ async def test_paired_depaired_devices_flow(
     appliance: HomeAppliance,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
@@ -141,9 +140,8 @@ async def test_connected_devices(
         return await get_settings_original_mock.side_effect(ha_id)
 
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
@@ -186,9 +184,8 @@ async def test_light_availability(
     entity_ids = [
         "light.hood_functional_light",
     ]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
@@ -353,9 +350,8 @@ async def test_light_functionality(
     appliance: HomeAppliance,
 ) -> None:
     """Test light functionality."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     service_data = exprected_attributes.copy()
     service_data[ATTR_ENTITY_ID] = entity_id
@@ -405,9 +401,8 @@ async def test_light_color_different_than_custom(
     appliance: HomeAppliance,
 ) -> None:
     """Test that light color attributes are not set if color is different than custom."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -586,9 +581,8 @@ async def test_light_exception_handling(
     client_with_exception.set_setting.side_effect = [
         exception() if exception else None for exception in attr_side_effect
     ]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Assert that an exception is called.
     with pytest.raises(HomeConnectError):

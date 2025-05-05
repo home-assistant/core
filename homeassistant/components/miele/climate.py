@@ -174,6 +174,11 @@ class MieleClimate(MieleEntity, ClimateEntity):
             t_key = ZONE1_DEVICES.get(
                 cast(MieleAppliance, self.device.device_type), "zone_1"
             )
+            if self.device.device_type in (
+                MieleAppliance.FRIDGE,
+                MieleAppliance.FREEZER,
+            ):
+                self._attr_name = None
 
         if description.zone == 2:
             if self.device.device_type in (
@@ -192,8 +197,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        if self.entity_description.target_fn(self.device) is None:
-            return None
+
         return cast(float | None, self.entity_description.target_fn(self.device))
 
     @property
