@@ -167,10 +167,7 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
 
     @property
     def activity(self) -> VacuumActivity | None:
-        """Map state."""
-        if self.device.state_status == 6:
-            return VacuumActivity.PAUSED
-
+        """Return activity."""
         return VACUUM_PHASE_TO_ACTIVITY.get(
             MieleVacuumStateCode(self.device.state_program_phase)
         )
