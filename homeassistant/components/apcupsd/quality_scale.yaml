@@ -59,7 +59,7 @@ rules:
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
