@@ -42,10 +42,7 @@ class YaleXSBLESecuremodeSwitch(YALEXSBLEEntity, SwitchEntity):
     ) -> None:
         """Update the state."""
         lock_state = new_state.lock
-        if lock_state is LockStatus.SECUREMODE:
-            self._attr_is_on = True
-        else:
-            self._attr_is_on = False
+        self._attr_is_on = lock_state is LockStatus.SECUREMODE
         super()._async_update_state(new_state, lock_info, connection_info)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
