@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from homematicip.base.base_connection import HmipConnectionError
 from homematicip.connection.connection_context import ConnectionContext
+from homematicip.exceptions.connection_exceptions import HmipConnectionError
 
 from homeassistant.components.homematicip_cloud.const import (
     CONF_ACCESSPOINT,
