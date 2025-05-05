@@ -1260,7 +1260,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==4.1.0
 
 # homeassistant.components.nexia
-nexia==2.7.0
+nexia==2.9.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -2430,7 +2430,7 @@ url-normalize==2.2.1
 uvcclient==0.12.1
 
 # homeassistant.components.roborock
-vacuum-map-parser-roborock==0.1.2
+vacuum-map-parser-roborock==0.1.4
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.3.0
