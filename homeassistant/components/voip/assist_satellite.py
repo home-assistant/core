@@ -361,6 +361,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Server disconnected."""
         super().disconnect()
         if self._check_hangup_task is not None:
+            self._check_hangup_task.cancel()
             self._check_hangup_task = None
 
     def connection_made(self, transport):
