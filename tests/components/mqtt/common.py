@@ -101,6 +101,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
 MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
     "5269352dd9534c908d22812ea5d714cd": {
         "platform": "notify",
+        "name": None,
         "command_topic": "test-topic",
         "command_template": "{{ value }}",
         "entity_picture": "https://example.com/5269352dd9534c908d22812ea5d714cd",

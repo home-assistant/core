@@ -481,7 +481,7 @@ class PlatformField:
     required: bool
     validator: Callable[..., Any]
     error: str | None = None
-    default: str | int | bool | vol.Undefined = vol.UNDEFINED
+    default: str | int | bool | None | vol.Undefined = vol.UNDEFINED
     is_schema_default: bool = False
     exclude_from_reconfig: bool = False
     conditions: tuple[dict[str, Any], ...] | None = None
@@ -531,6 +531,7 @@ COMMON_ENTITY_FIELDS = {
         required=False,
         validator=str,
         exclude_from_reconfig=True,
+        default=None,
     ),
     CONF_ENTITY_PICTURE: PlatformField(
         selector=TEXT_SELECTOR, required=False, validator=cv.url, error="invalid_url"
@@ -1386,7 +1387,10 @@ def data_schema_from_fields(
             vol.Required(field_name, default=field_details.default)
             if field_details.required
             else vol.Optional(
-                field_name, default=field_details.default
+                field_name,
+                default=field_details.default
+                if field_details.default is not None
+                else vol.UNDEFINED,
             ): field_details.selector(component_data_with_user_input)  # type: ignore[operator]
             if field_details.custom_filtering
             else field_details.selector
@@ -1437,12 +1441,14 @@ def data_schema_from_fields(
 @callback
 def subentry_schema_default_data_from_fields(
     data_schema_fields: dict[str, PlatformField],
+    component_data: dict[str, Any],
 ) -> dict[str, Any]:
     """Generate custom data schema from platform fields or device data."""
     return {
         key: field.default
         for key, field in data_schema_fields.items()
         if field.is_schema_default
+        or (field.default is not vol.UNDEFINED and key not in component_data)
     }
 
 
@@ -2268,7 +2274,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         for component_data in self._subentry_data["components"].values():
             platform = component_data[CONF_PLATFORM]
             subentry_default_data = subentry_schema_default_data_from_fields(
-                PLATFORM_ENTITY_FIELDS[platform]
+                PLATFORM_ENTITY_FIELDS[platform] | COMMON_ENTITY_FIELDS, component_data
             )
             component_data.update(subentry_default_data)
 
