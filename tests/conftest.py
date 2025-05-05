@@ -21,6 +21,7 @@ import threading
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
+import _pytest.python_api
 from aiohttp import client, web_app
 from aiohttp.resolver import AsyncResolver
 from aiohttp.test_utils import (
@@ -355,22 +356,33 @@ def caplog_fixture(caplog: pytest.LogCaptureFixture) -> pytest.LogCaptureFixture
 @pytest.fixture(autouse=True)
 def clear_exception_traceback(request: pytest.FixtureRequest) -> Generator[None]:
     """Clear exception traceback after each test."""
-    exceptions = []
+    exceptions: list[BaseException] = []
+    raises_ctx: list[_pytest.python_api.RaisesContext] = []
     for fixture_name in request.fixturenames:
         if fixture_name not in (
+            "doorbell_state_side_effect",
             "error",
             "exc",
             "exception",
+            "expected_result",
+            "raises",
+            "side_eff",
             "side_effect",
             "sideeffect",
         ):
             continue
         if isinstance(request.getfixturevalue(fixture_name), BaseException):
             exceptions.append(request.getfixturevalue(fixture_name))
+        if isinstance(
+            request.getfixturevalue(fixture_name), _pytest.python_api.RaisesContext
+        ):
+            raises_ctx.append(request.getfixturevalue(fixture_name))
 
     yield
     for ex in exceptions:
         ex.__traceback__ = None
+    for ctx in raises_ctx:
+        ctx.excinfo = None
 
 
 @pytest.fixture(autouse=True, scope="module")
