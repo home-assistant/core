@@ -228,7 +228,13 @@
         "name": "Spin speed"
       },
       "door_lock_sound_volume": {
-        "name": "Sound volume"
+        "name": "Sound volume",
+        "state": {
+          "silent": "Silent"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
       }
     },
     "sensor": {
