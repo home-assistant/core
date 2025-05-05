@@ -42,7 +42,6 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
 
     _attr_translation_key = DOMAIN
     _attr_name = None
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
     _attr_preset_modes = [PRESET_MANUAL, PRESET_AUTO, PRESET_SUMMER]
     speed_range = (1, 8)
     _attr_speed_count = int_states_in_range(speed_range)
@@ -62,7 +61,7 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
         """Return the supported features based on preset_mode."""
         features = FanEntityFeature.PRESET_MODE
 
-        if self.preset_mode != "auto":
+        if self.preset_mode == PRESET_MANUAL:
             features |= (
                 FanEntityFeature.SET_SPEED
                 | FanEntityFeature.TURN_ON
@@ -103,8 +102,7 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        if self._speed_attribute.editable:
-            await self.async_set_homee_value(self._speed_attribute, 0)
+        await self.async_set_homee_value(self._speed_attribute, 0)
 
     async def async_turn_on(
         self,

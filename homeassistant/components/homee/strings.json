@@ -371,7 +371,7 @@
       "message": "Could not connect to homee while setting attribute."
     },
     "invalid_preset_mode": {
-      "message": "Invalid preset mode: {preset_mode}. turn_on only supports 'Manual'."
+      "message": "Invalid preset mode: {preset_mode}. Turning on is only supported with preset mode 'Manual'."
     }
   }
 }
