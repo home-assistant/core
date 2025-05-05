@@ -117,9 +117,13 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             # Other utilities like ngny-gas have "-" in their subdomain.
             # Replace it with "_" to avoid "Invalid statistic_id"
             id_prefix = (
-                f"{self.api.utility.subdomain()}_{account.meter_type.name}_"
-                f"{account.utility_account_id}"
-            ).replace("-", "_").lower()
+                (
+                    f"{self.api.utility.subdomain()}_{account.meter_type.name}_"
+                    f"{account.utility_account_id}"
+                )
+                .replace("-", "_")
+                .lower()
+            )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"
             compensation_statistic_id = f"{DOMAIN}:{id_prefix}_energy_compensation"
             consumption_statistic_id = f"{DOMAIN}:{id_prefix}_energy_consumption"
