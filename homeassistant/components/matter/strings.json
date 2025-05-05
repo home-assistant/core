@@ -227,12 +227,6 @@
       "laundry_washer_spin_speed": {
         "name": "Spin speed"
       },
-      "local_config_disabled": {
-        "name": "Local configuration"
-      },
-      "enable_one_touch_locking": {
-        "name": "One-touch locking"
-      },
       "door_lock_sound_volume": {
         "name": "Sound volume"
       }
