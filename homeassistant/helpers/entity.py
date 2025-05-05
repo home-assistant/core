@@ -18,7 +18,6 @@ import time
 from types import FunctionType
 from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
 
-from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -62,6 +61,8 @@ from .event import (
 )
 from .frame import report_non_thread_safe_operation
 from .typing import UNDEFINED, StateType, UndefinedType
+
+cached_property = property
 
 timer = time.time
 
