@@ -2,21 +2,21 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter either a claim token or an access URL.",
+        "description": "Please enter either a setup token or an access URL.",
         "data": {
-          "api_token": "Claim token or access URL"
+          "api_token": "Setup token or access URL"
         }
       }
     },
     "error": {
       "invalid_auth": "Authentication failed: This could be due to revoked access or incorrect credentials",
-      "claim_error": "The claim token either does not exist or has already been used by someone else. Receiving this could mean that the user\u2019s transaction information has been compromised",
-      "invalid_claim_token": "The claim token is invalid and could not be decoded",
+      "claim_error": "The setup token either does not exist or has already been used by someone else. Receiving this could mean that the user\u2019s transaction information has been compromised",
+      "invalid_claim_token": "The setup token is invalid and could not be decoded",
       "payment_required": "You presented a valid access URL, however payment is required before you can obtain data",
       "url_error": "There was an issue parsing the access URL"
     },
     "abort": {
-      "missing_access_url": "Access URL or claim token missing",
+      "missing_access_url": "Access URL or setup token missing",
       "already_configured": "This access URL is already configured."
     }
   },
