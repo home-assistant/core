@@ -85,7 +85,6 @@ class AiohttpClientMocker:
                 closing=closing,
             )
         )
-    
 
     def get(self, *args, **kwargs):
         """Register a mock get request."""
