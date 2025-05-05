@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.const import FirmwareType
 
 from homeassistant.const import CONF_ADDRESS, CONF_MAC
@@ -23,7 +22,7 @@ from .coordinator import LaMarzoccoUpdateCoordinator
 class LaMarzoccoEntityDescription(EntityDescription):
     """Description for all LM entities."""
 
-    available_fn: Callable[[LaMarzoccoMachine], bool] = lambda _: True
+    available_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
     supported_fn: Callable[[LaMarzoccoUpdateCoordinator], bool] = lambda _: True
 
 
@@ -74,7 +73,7 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         if super().available:
-            return self.entity_description.available_fn(self.coordinator.device)
+            return self.entity_description.available_fn(self.coordinator)
         return False
 
     def __init__(

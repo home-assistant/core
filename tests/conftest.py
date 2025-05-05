@@ -1319,9 +1319,11 @@ def disable_translations_once(
 @pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
 async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
     """Mock out the zeroconf resolver."""
+    resolver = AsyncResolver()
+    resolver.real_close = resolver.close
     patcher = patch(
         "homeassistant.helpers.aiohttp_client._async_make_resolver",
-        return_value=AsyncResolver(),
+        return_value=resolver,
     )
     patcher.start()
     try:
