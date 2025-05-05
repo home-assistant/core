@@ -85,6 +85,9 @@ PRAYER_TIME_SENSOR_DESCRIPTIONS = [
         icon="mdi:weather-night",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
+]
+
+JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
     SensorEntityDescription(
         key="Jumua",
         translation_key="prayer_jumua",
@@ -182,6 +185,14 @@ async def async_setup_entry(
         ]
     )
 
+    # Register Jumua Prayer Time Sensors
+    entities.extend(
+        [
+            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc)
+            for desc in JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS
+        ]
+    )
+
     # Register Iqama Prayer Time Sensors
     entities.extend(
         [
@@ -240,11 +251,12 @@ class MyMosqueSensor(SensorEntity, CoordinatorEntity[MosqueCoordinator]):
                 "ablutions",
                 "parking",
             ]
+            and (v is not None)
         }
         announcements = self.coordinator.data.get("announcements")
         if announcements:
             filtered_data["announcements"] = [
-                f"{elem['Title']} - {elem['content']}" for elem in announcements
+                f"{elem['title']} - {elem['content']}" for elem in announcements
             ]
         return filtered_data
 
@@ -303,9 +315,13 @@ class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordina
             if prayer_name.lower() == "shuruq":
                 prayer_time = prayer_data.get("shuruq")
             elif prayer_name.lower() == "jumua":
+                if not (prayer_data.get("jumua")):
+                    return None
                 prayer_time = prayer_data.get("jumua")
                 day = utils.get_next_friday()
             elif prayer_name.lower() == "jumua 2":
+                if not (prayer_data.get("jumua2")):
+                    return None
                 prayer_time = prayer_data.get("jumua2")
                 day = utils.get_next_friday()
             else:

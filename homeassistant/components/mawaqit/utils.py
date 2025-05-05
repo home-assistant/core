@@ -12,89 +12,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
 
-from . import mawaqit_wrapper
-from .const import (
-    CONF_UUID,
-    MAWAQIT_ALL_MOSQUES_NN,
-    MAWAQIT_API_KEY_TOKEN,
-    MAWAQIT_MOSQ_LIST_DATA,
-    MAWAQIT_MY_MOSQUE_NN,
-    MAWAQIT_PRAY_TIME,
-    PRAYER_NAMES,
-    PRAYER_NAMES_IQAMA,
-)
+from .const import CONF_UUID, MAWAQIT_PRAY_TIME, PRAYER_NAMES, PRAYER_NAMES_IQAMA
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def read_my_mosque_NN_file(store: Store | None):
-    """Read the mosque data from the store.
+def parse_mosque_data(dict_mosques):
+    """Parse mosque data and return names, UUIDs, and calculation methods.
 
     Args:
-        store (Store | None): The storage object to read from.
+        dict_mosques (dict): The mosque data to parse.
 
     Returns:
-        The mosque data read from the store.
+        tuple: Parsed mosque data as a tuple of names, UUIDs, and calculation methods,
+                        or raw data if raw is True.
 
     """
-    return await read_one_element(store, MAWAQIT_MY_MOSQUE_NN)
-
-
-async def write_my_mosque_NN_file(mosque, store: Store | None) -> None:
-    """Write the mosque data to the store.
-
-    Args:
-        mosque (dict): The mosque data to write.
-        store (Store | None): The storage object to write to.
-
-    """
-    await write_one_element(store, MAWAQIT_MY_MOSQUE_NN, mosque)
-
-
-async def write_all_mosques_NN_file(mosques, store: Store | None) -> None:
-    """Write all mosques data to the store.
-
-    Args:
-        mosques (dict): The mosques data to write.
-        store (Store | None): The storage object to write to.
-
-    """
-    await write_one_element(store, MAWAQIT_ALL_MOSQUES_NN, mosques)
-
-
-async def read_raw_all_mosques_NN_file(store: Store | None):
-    """Read the raw mosque data from the store.
-
-    This function acts as a wrapper to read_all_mosques_NN_file,
-    ensuring that the data is read in its raw form.
-
-    Args:
-        store (Store | None): The storage object to read from.
-
-    Returns:
-        The raw mosque data read from the store.
-
-    """
-    return await read_all_mosques_NN_file(store, raw=True)
-
-
-async def read_all_mosques_NN_file(store: Store | None, raw=False):
-    """Read all mosques from the store and return their names, UUIDs, and calculation methods.
-
-    Args:
-        store (Store | None): The storage object to read from.
-        raw (bool): If True, return the raw data from the store.
-
-    Returns:
-        tuple: A tuple containing three lists: names of mosques, UUIDs of mosques, and calculation methods.
-
-    """
-    dict_mosques = await read_one_element(store, MAWAQIT_ALL_MOSQUES_NN)
-
-    if raw:
-        return dict_mosques
 
     name_servers = []
     uuid_servers = []
@@ -137,86 +72,6 @@ async def write_pray_time(pray_time, store: Store | None) -> None:
 
     """
     await write_one_element(store, MAWAQIT_PRAY_TIME, pray_time)
-
-
-async def read_mosq_list_data(store: Store | None):
-    """Read the mosque list data from the store.
-
-    Args:
-        store (Store | None): The storage object to read from.
-
-    Returns:
-        The mosque list data read from the store.
-
-    """
-    return await read_one_element(store, MAWAQIT_MOSQ_LIST_DATA)
-
-
-async def write_mosq_list_data(mosq_list_data, store: Store | None) -> None:
-    """Write the mosque list data to the store.
-
-    Args:
-        mosq_list_data (dict): The mosque list data to write.
-        store (Store | None): The storage object to write to.
-
-    """
-    await write_one_element(store, MAWAQIT_MOSQ_LIST_DATA, mosq_list_data)
-
-
-async def read_mawaqit_token(hass: HomeAssistant | None, store: Store | None) -> str:
-    """Read the Mawaqit API token from an environment variable."""
-
-    _LOGGER.debug("Reading Mawaqit token from store")
-
-    if store is None:
-        _LOGGER.error("Store is None !")
-        raise ValueError("Store is None !")
-
-    return await read_one_element(store, MAWAQIT_API_KEY_TOKEN)
-
-
-async def write_mawaqit_token(
-    hass: HomeAssistant, store: Store, mawaqit_token: str
-) -> None:
-    """Write the Mawaqit API token to an environment variable."""
-
-    _LOGGER.debug("Writing Mawaqit token to store")
-
-    await write_one_element(store, MAWAQIT_API_KEY_TOKEN, mawaqit_token)
-
-
-async def update_my_mosque_data_files(
-    hass: HomeAssistant, dir, store, mosque_id=None, token=None
-):
-    """Update the mosque data files with the latest prayer times.
-
-    Args:
-        hass (HomeAssistant): The Home Assistant instance.
-        dir (str): The directory where the data folder is located.
-        mosque_id (str, optional): The ID of the mosque. Defaults to None.
-        token (str, optional): The Mawaqit API token. Defaults to None.
-        store (Store, optional): The storage object to read the token from. Defaults to None.
-
-    """
-    _LOGGER.debug("Updating my mosque data files")
-    if mosque_id is None:
-        my_mosque = await read_my_mosque_NN_file(store)
-        mosque_id = my_mosque["uuid"]
-
-    if token is None:
-        if store is None:
-            _LOGGER.error("Update Failed : token and store cannot be both None !")
-            raise ValueError("token and store cannot be both None !")
-        token = await read_mawaqit_token(hass, store)
-        if token == "" or token is None:
-            _LOGGER.error("Update Failed : Mawaqit API token not found !")
-            return
-
-    dict_calendar = await mawaqit_wrapper.fetch_prayer_times(
-        mosque=mosque_id, token=token
-    )
-
-    await write_pray_time(dict_calendar, store)
 
 
 async def read_one_element(store, key):
@@ -336,20 +191,9 @@ async def async_clear_data(hass: HomeAssistant, store: Store | None, domain: str
     await store.async_remove()  # Remove the existing data in the store
 
 
-async def is_already_configured(hass: HomeAssistant, store: Store) -> bool:
-    """Check if the mosque configuration file already exists."""
-    return await read_my_mosque_NN_file(store) is not None
-
-
-async def is_another_instance(hass: HomeAssistant, store: Store) -> bool:
-    """Check if another instance of the mosque configuration exists."""
-    return await is_already_configured(hass, store)
-
-
 async def async_save_mosque(
-    hass: HomeAssistant,
-    store: Store | None,
     UUID,
+    mosques,
     mawaqit_token=None,
     lat=None,
     longi=None,
@@ -361,9 +205,8 @@ async def async_save_mosque(
     and prepares the entry data.
 
     Args:
-        hass (HomeAssistant): The HomeAssistant instance.
-        store (Store): The storage instance to read/write data.
         UUID (str): The unique identifier for the mosque.
+        mosques (list) : The list of mosque data dictionaries.
         mawaqit_token (str, optional): The token for Mawaqit API. Defaults to None.
         lat (float, optional): The latitude of the mosque. Defaults to None.
         longi (float, optional): The longitude of the mosque. Defaults to None.
@@ -372,29 +215,16 @@ async def async_save_mosque(
         tuple: A tuple containing the title and data entry dictionary.
 
     """
-    if store is None:
-        _LOGGER.error("Store should not be None !")
-        raise ValueError("Store should not be None !")
-
     if mawaqit_token is None:
-        mawaqit_token = await read_mawaqit_token(hass, store)
+        _LOGGER.error("Token should not be None !")
+        raise ValueError("Token should not be None !")
 
-    name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(store)
-    raw_all_mosques_data = await read_raw_all_mosques_NN_file(store)
+    name_servers, uuid_servers, CALC_METHODS = parse_mosque_data(mosques)
+    raw_all_mosques_data = mosques
 
     mosque = UUID
     index = name_servers.index(mosque)
     mosque_id = uuid_servers[index]
-
-    await write_my_mosque_NN_file(raw_all_mosques_data[index], store)
-
-    await update_my_mosque_data_files(
-        hass,
-        CURRENT_DIR,
-        store,
-        mosque_id=mosque_id,
-        token=mawaqit_token,
-    )
 
     title = "MAWAQIT" + " - " + raw_all_mosques_data[index]["name"]
     data_entry = {
@@ -404,7 +234,6 @@ async def async_save_mosque(
     if lat is not None and longi is not None:
         data_entry[CONF_LATITUDE] = lat
         data_entry[CONF_LONGITUDE] = longi
-    await clear_storage_entry(store, MAWAQIT_ALL_MOSQUES_NN)
 
     return title, data_entry
 

@@ -3,13 +3,14 @@
 from datetime import datetime, timedelta
 import logging
 
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from . import mawaqit_wrapper, utils
-from .const import MAWAQIT_STORAGE_KEY, MAWAQIT_STORAGE_VERSION
+from .const import CONF_UUID, MAWAQIT_STORAGE_KEY, MAWAQIT_STORAGE_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,25 +18,26 @@ _LOGGER = logging.getLogger(__name__)
 class MosqueCoordinator(DataUpdateCoordinator):
     """Coordinator to fetch mosque information."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry) -> None:
         """Initialize the mosque coordinator."""
         self.hass = hass
-        self.store: Store = Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
+        self.mosque_uuid = config_entry.data.get(CONF_UUID)
+        self.token = config_entry.data.get(CONF_API_KEY)
 
         super().__init__(
             hass,
             _LOGGER,
             name="Mosque Data",
             update_method=self._async_update_data,
-            update_interval=timedelta(days=1),  # Static data, updated every day
+            update_interval=timedelta(days=1),  # Updated every day
         )
 
     async def _async_update_data(self):
         """Fetch mosque details from local storage."""
         try:
-            mosque_data = await utils.read_my_mosque_NN_file(
-                self.store
-            )  # would be better to fetch directly from the API
+            mosque_data = await mawaqit_wrapper.fetch_mosque_by_id(
+                self.mosque_uuid, token=self.token
+            )
 
         except Exception as err:
             raise UpdateFailed(f"Failed to update mosque data: {err}") from err
@@ -49,13 +51,15 @@ class MosqueCoordinator(DataUpdateCoordinator):
 class PrayerTimeCoordinator(DataUpdateCoordinator):
     """Coordinator to fetch prayer times from the Mawaqit API."""
 
-    def __init__(self, hass: HomeAssistant, mosque_uuid) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry) -> None:
         """Initialize the prayer time coordinator."""
+
         self.hass = hass
-        self.mosque_uuid = mosque_uuid
         self.store: Store = Store(
             hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY
         )  # Store prayer times locally
+        self.mosque_uuid = config_entry.data.get(CONF_UUID)
+        self.token = config_entry.data.get(CONF_API_KEY)
         self.last_fetch: datetime | None = None
 
         super().__init__(
@@ -76,9 +80,8 @@ class PrayerTimeCoordinator(DataUpdateCoordinator):
 
             try:
                 # Fetch new data from API
-                user_token = await utils.read_mawaqit_token(None, self.store)
                 prayer_times = await mawaqit_wrapper.fetch_prayer_times(
-                    mosque=self.mosque_uuid, token=user_token
+                    mosque=self.mosque_uuid, token=self.token
                 )
 
                 if not prayer_times:
@@ -100,11 +103,6 @@ class PrayerTimeCoordinator(DataUpdateCoordinator):
                 _LOGGER.error("No mosque found: %s", err)
             except (ConnectionError, TimeoutError) as err:
                 _LOGGER.error("Network-related error: %s", err)
-
-                # # raise UpdateFailed(f"Failed to update prayer times: {err}") from err
-                # _LOGGER.error("Failed to update prayer times: %s", err)
-
-        # _LOGGER.info("Fetched new prayer times from API: %s", prayer_times)
 
         return await utils.read_pray_time(
             self.store

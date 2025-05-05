@@ -1,4 +1,4 @@
-"""Constants for the Islamic Prayer component."""
+"""Constants for the Mawaqit Integration."""
 
 DOMAIN = "mawaqit"
 NAME = "Mawaqit Prayer Times"
@@ -45,7 +45,12 @@ USERNAME = "user"
 PASSWORD = "password"
 
 API = "api"
+
+# Config Entry
+
 CONF_UUID: str = "uuid"
+
+# Config Flow
 
 CONF_SEARCH: str = "Keyword"
 
@@ -60,15 +65,13 @@ CONF_KEEP: str = "keep"
 CONF_RESET: str = "reset"
 
 
+# Store
+
 MAWAQIT_STORAGE_VERSION = 1
 MAWAQIT_STORAGE_KEY = "mawaqit_storage"
 MAWAQIT_TEST_STORAGE_KEY = "mawaqit_test_storage"
 
-MAWAQIT_API_KEY_TOKEN = "MAWAQIT_API_KEY"
-MAWAQIT_ALL_MOSQUES_NN = "all_mosques_NN"
-MAWAQIT_MY_MOSQUE_NN = "my_mosque_NN"
 MAWAQIT_PRAY_TIME = "pray_time"
-MAWAQIT_MOSQ_LIST_DATA = "mosq_list_data"
 
 # Error messages
 

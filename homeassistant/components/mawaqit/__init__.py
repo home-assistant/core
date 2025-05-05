@@ -13,8 +13,6 @@ from homeassistant.helpers.storage import Store
 from . import utils
 from .const import (
     DOMAIN,
-    MAWAQIT_ALL_MOSQUES_NN,
-    MAWAQIT_MY_MOSQUE_NN,
     MAWAQIT_PRAY_TIME,
     MAWAQIT_STORAGE_KEY,
     MAWAQIT_STORAGE_VERSION,
@@ -41,17 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up the Mawaqit Prayer Component."""
 
     # Initialize MosqueCoordinator
-    mosque_coordinator = MosqueCoordinator(hass)
+    mosque_coordinator = MosqueCoordinator(hass, config_entry)
     await mosque_coordinator.async_config_entry_first_refresh()
 
-    # Ensure mosque UUID exists before initializing prayer time coordinator
-    mosque_uuid = mosque_coordinator.data.get("uuid")
-    if not mosque_uuid:
-        _LOGGER.error("Mosque UUID is missing, cannot initialize prayer times")
-        return False
-
     # Initialize PrayerTimeCoordinator (API Data)
-    prayer_time_coordinator = PrayerTimeCoordinator(hass, mosque_uuid)
+    prayer_time_coordinator = PrayerTimeCoordinator(hass, config_entry)
     await prayer_time_coordinator.async_config_entry_first_refresh()
 
     # Ensure prayer data exists before initializing sensors
@@ -88,9 +80,6 @@ async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     _LOGGER.debug("Started clearing data")
 
     store: Store = Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
-    await utils.clear_storage_entry(store, MAWAQIT_MY_MOSQUE_NN)
-    await utils.clear_storage_entry(store, MAWAQIT_ALL_MOSQUES_NN)
     await utils.clear_storage_entry(store, MAWAQIT_PRAY_TIME)
-    # after adding MAWAQIT_MOSQ_LIST_DATA to storage we need to clear it here
 
     _LOGGER.debug("Finished clearing data")

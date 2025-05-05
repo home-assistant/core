@@ -144,3 +144,28 @@ async def fetch_prayer_times(
             await client.close()
 
     return dict_calendar
+
+
+async def fetch_mosque_by_id(
+    mosque,
+    token=None,
+    client_instance=None,
+):
+    """Get Mosque data by ID from the MAWAQIT API. Returns a dict."""
+    dict_calendar = None
+    try:
+        client = client_instance
+        if client is None:
+            client = AsyncMawaqitClient(token=token)
+        await client.get_api_token()
+        dict_calendar = await client.fetch_mosque_by_id(mosque)
+
+    except BadCredentialsException as e:
+        _LOGGER.error("Error while retrieving mosque data: %s", e)
+    except (ConnectionError, TimeoutError) as e:
+        _LOGGER.error("Network-related error: %s", e)
+    finally:
+        if client is not None:
+            await client.close()
+
+    return dict_calendar
