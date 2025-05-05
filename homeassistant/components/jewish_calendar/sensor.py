@@ -207,7 +207,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         if description.key == "weekly_portion":
             self._attr_options = list(Parasha)
         elif description.key == "holiday":
-            self._attr_options = HolidayDatabase(self._diaspora).get_all_names()
+            self._attr_options = HolidayDatabase(self.data.diaspora).get_all_names()
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -217,7 +217,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
     async def async_update(self) -> None:
         """Update the state of the sensor."""
         now = dt_util.now()
-        _LOGGER.debug("Now: %s Location: %r", now, self._location)
+        _LOGGER.debug("Now: %s Location: %r", now, self.data.location)
 
         today = now.date()
         event_date = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, today)
@@ -230,7 +230,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
-        daytime_date = HDateInfo(today, diaspora=self._diaspora)
+        daytime_date = HDateInfo(today, diaspora=self.data.diaspora)
 
         # The Jewish day starts after darkness (called "tzais") and finishes at
         # sunset ("shkia"). The time in between is a gray area

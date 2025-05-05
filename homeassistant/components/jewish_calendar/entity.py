@@ -43,18 +43,14 @@ class JewishCalendarEntity(Entity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, config_entry.entry_id)},
         )
-        data = config_entry.runtime_data
-        self._location = data.location
-        self._candle_lighting_offset = data.candle_lighting_offset
-        self._havdalah_offset = data.havdalah_offset
-        self._diaspora = data.diaspora
-        set_language(data.language)
+        self.data = config_entry.runtime_data
+        set_language(self.data.language)
 
     def make_zmanim(self, date: dt.date) -> Zmanim:
         """Create a Zmanim object."""
         return Zmanim(
             date=date,
-            location=self._location,
-            candle_lighting_offset=self._candle_lighting_offset,
-            havdalah_offset=self._havdalah_offset,
+            location=self.data.location,
+            candle_lighting_offset=self.data.candle_lighting_offset,
+            havdalah_offset=self.data.havdalah_offset,
         )
