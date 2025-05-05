@@ -1,5 +1,5 @@
 {
-  "ssdp_usn": "mock_usn",
+  "ssdp_usn": "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de::urn:samsung.com:service:MainTVAgent2:1",
   "ssdp_st": "urn:samsung.com:service:MainTVAgent2:1",
   "upnp": {
     "friendlyName": "[TV] fake_name",
