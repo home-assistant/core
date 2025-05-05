@@ -443,7 +443,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 "energy_settings": "/config/energy",
                 "target_ids": "\n".join(
                     {
-                        v
+                        str(metadata_map[v]["name"])
                         for k, v in migration_map.items()
                         if k in need_migration_source_ids
                     }
