@@ -1,0 +1,99 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      There are no service actions.
+  appropriate-polling:
+    status: done
+    comment: |
+      There is no polling of the entities.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: done
+    comment: |
+      https://mark_hannon@bitbucket.org/mark_hannon/zcc.git
+  docs-actions:
+    status: exempt
+    comment: |
+      There are no service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: todo
+  entity-unavailable: done
+  action-exceptions: todo
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      There is no user authentication needed.
+  parallel-updates:
+    status: todo
+    comment: |
+      Test of parallel updates will be done before setting.
+  test-coverage: todo
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration has no options flow
+
+  # Gold
+  entity-translations: todo
+  entity-device-class:
+    status: todo
+    comment: |
+      Will set device classes for subsequent entities - not relevant for light.
+  devices: done
+  entity-category: todo
+  entity-disabled-by-default: todo
+  discovery:
+    status: todo
+    comment: >
+      Discovery is supported for the case where the Zimi Cloud Controller(s) are
+      connected to a local LAN network.   Discover is not supported if the Zimi
+      Cloud Controller(s) are not connected to the local LAN network.
+  stale-devices: todo
+  diagnostics: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  dynamic-devices:
+    status: todo
+    comment: |
+      New devices will be automatically added - but only when the zcc connection is re-established.
+  discovery-update-info:
+    status: todo
+    comment: >
+      Discovery is not supported.
+  repair-issues: todo
+  docs-use-cases: todo
+  docs-supported-devices: done
+  docs-supported-functions: todo
+  docs-troubleshooting: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-examples: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration does not use web sessions.
+  strict-typing:
+    status: todo
