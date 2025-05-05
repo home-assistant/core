@@ -1253,6 +1253,8 @@ async def test_autodetect_legacy(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_METHOD] == "legacy"
+    # friendly name cannot be detected for legacy TV
+    assert result["data"][CONF_NAME] is None
     assert result["data"][CONF_MAC] is None
     assert result["data"][CONF_PORT] == LEGACY_PORT
 
