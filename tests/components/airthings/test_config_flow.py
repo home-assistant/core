@@ -57,15 +57,15 @@ async def test_form(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_DATA,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Airthings"
-    assert result2["data"] == TEST_DATA
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Airthings"
+    assert result["data"] == TEST_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -79,13 +79,13 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         "airthings.get_token",
         side_effect=airthings.AirthingsAuthError,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_DATA,
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -98,13 +98,13 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         "airthings.get_token",
         side_effect=airthings.AirthingsConnectionError,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_DATA,
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_unknown_error(hass: HomeAssistant) -> None:
@@ -117,13 +117,13 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         "airthings.get_token",
         side_effect=Exception,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_DATA,
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
