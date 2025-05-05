@@ -8,7 +8,12 @@
       "hostname": "airthings-view"
     },
     {
+      "hostname": "airthings-hub",
       "macaddress": "D0141190*"
+    },
+    {
+      "hostname": "airthings-hub",
+      "macaddress": "70B3D52A0*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/airthings",
