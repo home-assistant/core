@@ -110,7 +110,6 @@ class HassIOIngress(HomeAssistantView):
     patch = _handle
     options = _handle
     head = _handle
-    trace = _handle
 
     async def _handle_websocket(
         self, request: web.Request, token: str, path: str

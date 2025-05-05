@@ -114,10 +114,6 @@ class AiohttpClientMocker:
         """Register a mock head request."""
         self.request("head", *args, **kwargs)
 
-    def trace(self, *args, **kwargs):
-        """Register a mock trace request."""
-        self.request("trace", *args, **kwargs)
-
     @property
     def call_count(self):
         """Return the number of requests made."""
