@@ -196,6 +196,12 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         super().__init__(config_entry, description)
         self._attrs: dict[str, str] = {}
 
+        # Set the options for enumeration sensors
+        if description.key == "weekly_portion":
+            self._attr_options = list(Parasha)
+        elif description.key == "holiday":
+            self._attr_options = HolidayDatabase(self._diaspora).get_all_names()
+
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
@@ -266,7 +272,6 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             }
             return after_shkia_date.hdate
         if self.entity_description.key == "weekly_portion":
-            self._attr_options = list(Parasha)
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
         if self.entity_description.key == "holiday":
@@ -276,7 +281,6 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
                 dict.fromkeys(_holiday.type.name for _holiday in _holidays)
             )
             self._attrs = {"id": _id, "type": _type}
-            self._attr_options = HolidayDatabase(self._diaspora).get_all_names()
             return ", ".join(str(holiday) for holiday in _holidays) if _holidays else ""
         if self.entity_description.key == "omer_count":
             return after_shkia_date.omer.total_days if after_shkia_date.omer else 0
