@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import airthings
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.airthings.const import CONF_SECRET, DOMAIN
@@ -18,13 +19,12 @@ TEST_DATA = {
     CONF_SECRET: "secret",
 }
 
-DHCP_SERVICE_INFO_VIEW_SERIES = DhcpServiceInfo(
-    hostname="airthings-view",
-    ip="192.168.1.100",
-    macaddress="00:00:00:00:00:00",
-)
-
-DHCP_SERVICE_INFO_HUBS = [
+DHCP_SERVICE_INFO = [
+    DhcpServiceInfo(
+        hostname="airthings-view",
+        ip="192.168.1.100",
+        macaddress="00:00:00:00:00:00",
+    ),
     DhcpServiceInfo(
         hostname="airthings-hub",
         ip="192.168.1.101",
@@ -145,41 +145,12 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_flow_view_series(hass: HomeAssistant) -> None:
-    """Test that DHCP discovery works for Airthings View series."""
-
-    _test_dhcp_flow(hass, DHCP_SERVICE_INFO_VIEW_SERIES)
-
-
-async def test_dhcp_flow_hub(hass: HomeAssistant) -> None:
-    """Test that DHCP discovery works for Airthings Hub."""
-
-    _test_dhcp_flow(hass, DHCP_SERVICE_INFO_HUBS[0])
-
-
-async def test_dhcp_flow_hub_already_configured(hass: HomeAssistant) -> None:
-    """Test that DHCP discovery fails when already configured."""
-
-    first_entry = MockConfigEntry(
-        domain="airthings",
-        data=TEST_DATA,
-        unique_id=TEST_DATA[CONF_ID],
-    )
-    first_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data=DHCP_SERVICE_INFO_HUBS[1],
-        context={"source": config_entries.SOURCE_DHCP},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def _test_dhcp_flow(
+@pytest.mark.parametrize("dhcp_service_info", DHCP_SERVICE_INFO)
+async def test_dhcp_flow(
     hass: HomeAssistant, dhcp_service_info: DhcpServiceInfo
 ) -> None:
+    """Test the DHCP discovery flow."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=dhcp_service_info,
@@ -208,3 +179,23 @@ async def _test_dhcp_flow(
     assert result["title"] == "Airthings"
     assert result["data"] == TEST_DATA
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_dhcp_flow_hub_already_configured(hass: HomeAssistant) -> None:
+    """Test that DHCP discovery fails when already configured."""
+
+    first_entry = MockConfigEntry(
+        domain="airthings",
+        data=TEST_DATA,
+        unique_id=TEST_DATA[CONF_ID],
+    )
+    first_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=DHCP_SERVICE_INFO[0],
+        context={"source": config_entries.SOURCE_DHCP},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
