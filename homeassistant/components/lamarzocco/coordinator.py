@@ -22,6 +22,7 @@ from .const import DOMAIN
 SCAN_INTERVAL = timedelta(seconds=15)
 SETTINGS_UPDATE_INTERVAL = timedelta(hours=1)
 SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=5)
+STATISTICS_UPDATE_INTERVAL = timedelta(minutes=15)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -32,6 +33,7 @@ class LaMarzoccoRuntimeData:
     config_coordinator: LaMarzoccoConfigUpdateCoordinator
     settings_coordinator: LaMarzoccoSettingsUpdateCoordinator
     schedule_coordinator: LaMarzoccoScheduleUpdateCoordinator
+    statistics_coordinator: LaMarzoccoStatisticsUpdateCoordinator
 
 
 type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoRuntimeData]
@@ -42,6 +44,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     _default_update_interval = SCAN_INTERVAL
     config_entry: LaMarzoccoConfigEntry
+    websocket_terminated = True
 
     def __init__(
         self,
@@ -90,24 +93,36 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         await self.device.get_dashboard()
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 
-        _LOGGER.debug("Init WebSocket in background task")
-
         self.config_entry.async_create_background_task(
             hass=self.hass,
-            target=self.device.connect_dashboard_websocket(
-                update_callback=lambda _: self.async_set_updated_data(None)
-            ),
+            target=self.connect_websocket(),
             name="lm_websocket_task",
         )
 
         async def websocket_close(_: Any | None = None) -> None:
-            if self.device.websocket.connected:
-                await self.device.websocket.disconnect()
+            await self.device.websocket.disconnect()
 
         self.config_entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, websocket_close)
         )
         self.config_entry.async_on_unload(websocket_close)
+
+    async def connect_websocket(self) -> None:
+        """Connect to the websocket."""
+
+        _LOGGER.debug("Init WebSocket in background task")
+
+        self.websocket_terminated = False
+        self.async_update_listeners()
+
+        await self.device.connect_dashboard_websocket(
+            update_callback=lambda _: self.async_set_updated_data(None),
+            connect_callback=self.async_update_listeners,
+            disconnect_callback=self.async_update_listeners,
+        )
+
+        self.websocket_terminated = True
+        self.async_update_listeners()
 
 
 class LaMarzoccoSettingsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
@@ -130,3 +145,14 @@ class LaMarzoccoScheduleUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         """Fetch data from API endpoint."""
         await self.device.get_schedule()
         _LOGGER.debug("Current schedule: %s", self.device.schedule.to_dict())
+
+
+class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Coordinator for La Marzocco statistics."""
+
+    _default_update_interval = STATISTICS_UPDATE_INTERVAL
+
+    async def _internal_async_update_data(self) -> None:
+        """Fetch data from API endpoint."""
+        await self.device.get_coffee_and_flush_counter()
+        _LOGGER.debug("Current statistics: %s", self.device.statistics.to_dict())

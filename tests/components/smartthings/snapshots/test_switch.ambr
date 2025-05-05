@@ -93,6 +93,53 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_sabbath_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.refrigerator_sabbath_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sabbath mode',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sabbath_mode',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_samsungce.sabbathMode_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_sabbath_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Sabbath mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.refrigerator_sabbath_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ref_normal_01001][switch.refrigerator_ice_maker-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -369,6 +416,53 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.washing_machine_bubble_soak',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][switch.machine_a_laver_bubble_soak-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.machine_a_laver_bubble_soak',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bubble Soak',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bubble_soak',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.washerBubbleSoak_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][switch.machine_a_laver_bubble_soak-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Machine à Laver Bubble Soak',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.machine_a_laver_bubble_soak',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
