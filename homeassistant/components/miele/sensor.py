@@ -144,7 +144,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             MieleAppliance.STEAM_OVEN,
             MieleAppliance.MICROWAVE,
             MieleAppliance.COFFEE_SYSTEM,
-            MieleAppliance.ROBOT_VACUUM_CLEANER,
             MieleAppliance.WASHER_DRYER,
             MieleAppliance.STEAM_OVEN_COMBI,
             MieleAppliance.STEAM_OVEN_MICRO,
