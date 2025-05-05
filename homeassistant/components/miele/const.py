@@ -1038,7 +1038,7 @@ class SteamOvenMicroProgramId(MieleEnum):
     sweat_onions = 2603
     cook_bacon = 2604
     heating_damp_flannels = 2605
-    decrystallise_honey = 2606
+    decrystallize_honey = 2606
     make_yoghurt = 2607
     toffee_date_dessert_one_large = 2687
     beef_tenderloin_medaillons_1_cm_low_temperature_cooking = 2694
