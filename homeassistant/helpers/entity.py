@@ -18,6 +18,7 @@ import time
 from types import FunctionType
 from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
 
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -61,8 +62,6 @@ from .event import (
 )
 from .frame import report_non_thread_safe_operation
 from .typing import UNDEFINED, StateType, UndefinedType
-
-cached_property = property
 
 timer = time.time
 
@@ -414,7 +413,6 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "extra_state_attributes",
     "force_update",
     "icon",
-    "name",
     "should_poll",
     "state",
     "supported_features",
@@ -731,7 +729,7 @@ class Entity(
             name = self.name
         return None if name is UNDEFINED else name
 
-    @cached_property
+    @property
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         # The check for self.platform guards against integrations not using an
