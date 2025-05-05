@@ -35,7 +35,6 @@ from homeassistant.components.samsungtv.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
-    CONF_ID,
     CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
@@ -104,14 +103,12 @@ MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
 )
 MOCK_OLD_ENTRY = {
     CONF_HOST: "fake_host",
-    CONF_ID: "0d1cef00-00dc-1000-9c80-4844f7b172de_old",
     CONF_IP_ADDRESS: EXISTING_IP,
     CONF_METHOD: "legacy",
     CONF_PORT: None,
 }
 MOCK_LEGACY_ENTRY = {
     CONF_HOST: EXISTING_IP,
-    CONF_ID: "0d1cef00-00dc-1000-9c80-4844f7b172de_old",
     CONF_METHOD: "legacy",
     CONF_PORT: None,
 }
@@ -1296,7 +1293,6 @@ async def test_update_old_entry(hass: HomeAssistant) -> None:
     config_entries_domain = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries_domain) == 1
     assert entry is config_entries_domain[0]
-    assert entry.data[CONF_ID] == "0d1cef00-00dc-1000-9c80-4844f7b172de_old"
     assert entry.data[CONF_IP_ADDRESS] == EXISTING_IP
     assert not entry.unique_id
 
@@ -1315,7 +1311,6 @@ async def test_update_old_entry(hass: HomeAssistant) -> None:
     entry2 = config_entries_domain[0]
 
     # check updated device info
-    assert entry2.data.get(CONF_ID) is not None
     assert entry2.data.get(CONF_IP_ADDRESS) is not None
     assert entry2.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
