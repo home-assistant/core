@@ -11,7 +11,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-from homeassistant.helpers.storage import Store
 
 from . import mawaqit_wrapper, utils
 from .const import (
@@ -24,8 +23,6 @@ from .const import (
     CONF_TYPE_SEARCH_TRANSLATION_KEY,
     CONF_UUID,
     DOMAIN,
-    MAWAQIT_STORAGE_KEY,
-    MAWAQIT_STORAGE_VERSION,
     NO_MOSQUE_FOUND_KEYWORD,
     WRONG_CREDENTIAL,
 )
@@ -40,7 +37,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self.store: Store | None = None
         self.previous_keyword_search: str = ""
         self.mosques: list[Any] = []
         self.token = None
@@ -57,9 +53,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD): str,
             }
         )
-
-        if self.store is None:
-            self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
 
         if user_input is None:
             return self.async_show_form(
@@ -278,13 +271,10 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self) -> None:
         """Initialize the options flow handler."""
-        self.store: Store | None = None
         self.mosques: list[Any] = []
 
     async def async_step_init(self, user_input=None) -> config_entries.ConfigFlowResult:
         """Manage options."""
-
-        self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
 
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude

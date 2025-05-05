@@ -69,7 +69,6 @@ CONF_RESET: str = "reset"
 
 MAWAQIT_STORAGE_VERSION = 1
 MAWAQIT_STORAGE_KEY = "mawaqit_storage"
-MAWAQIT_TEST_STORAGE_KEY = "mawaqit_test_storage"
 
 MAWAQIT_PRAY_TIME = "pray_time"
 
