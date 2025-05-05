@@ -1,7 +1,5 @@
 """The tests for the PG LAB Electronics cover."""
 
-import json
-
 from homeassistant.components import cover
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -18,6 +16,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+
+from .test_common import get_device_discovery_payload, send_discovery_message
 
 from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
@@ -43,25 +43,13 @@ async def test_cover_features(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_pglab
 ) -> None:
     """Test cover features."""
-    topic = "pglab/discovery/E-Board-DD53AC85/config"
-    payload = {
-        "ip": "192.168.1.16",
-        "mac": "80:34:28:1B:18:5A",
-        "name": "test",
-        "hw": "1.0.7",
-        "fw": "1.0.0",
-        "type": "E-Board",
-        "id": "E-Board-DD53AC85",
-        "manufacturer": "PG LAB Electronics",
-        "params": {"shutters": 4, "boards": "10000000"},
-    }
 
-    async_fire_mqtt_message(
-        hass,
-        topic,
-        json.dumps(payload),
+    payload = get_device_discovery_payload(
+        number_of_shutters=4,
+        number_of_boards=1,
     )
-    await hass.async_block_till_done()
+
+    await send_discovery_message(hass, payload)
 
     assert len(hass.states.async_all("cover")) == 4
 
@@ -75,25 +63,13 @@ async def test_cover_availability(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_pglab
 ) -> None:
     """Check if covers are properly created."""
-    topic = "pglab/discovery/E-Board-DD53AC85/config"
-    payload = {
-        "ip": "192.168.1.16",
-        "mac": "80:34:28:1B:18:5A",
-        "name": "test",
-        "hw": "1.0.7",
-        "fw": "1.0.0",
-        "type": "E-Board",
-        "id": "E-Board-DD53AC85",
-        "manufacturer": "PG LAB Electronics",
-        "params": {"shutters": 6, "boards": "11000000"},
-    }
 
-    async_fire_mqtt_message(
-        hass,
-        topic,
-        json.dumps(payload),
+    payload = get_device_discovery_payload(
+        number_of_shutters=6,
+        number_of_boards=2,
     )
-    await hass.async_block_till_done()
+
+    await send_discovery_message(hass, payload)
 
     # We are creating 6 covers using two E-RELAY devices connected to E-BOARD.
     # Now we are going to check if all covers are created and their state is unknown.
@@ -111,25 +87,12 @@ async def test_cover_change_state_via_mqtt(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_pglab
 ) -> None:
     """Test state update via MQTT."""
-    topic = "pglab/discovery/E-Board-DD53AC85/config"
-    payload = {
-        "ip": "192.168.1.16",
-        "mac": "80:34:28:1B:18:5A",
-        "name": "test",
-        "hw": "1.0.7",
-        "fw": "1.0.0",
-        "type": "E-Board",
-        "id": "E-Board-DD53AC85",
-        "manufacturer": "PG LAB Electronics",
-        "params": {"shutters": 2, "boards": "10000000"},
-    }
-
-    async_fire_mqtt_message(
-        hass,
-        topic,
-        json.dumps(payload),
+    payload = get_device_discovery_payload(
+        number_of_shutters=2,
+        number_of_boards=1,
     )
-    await hass.async_block_till_done()
+
+    await send_discovery_message(hass, payload)
 
     # Check initial state is unknown
     cover = hass.states.get("cover.test_shutter_0")
@@ -165,25 +128,13 @@ async def test_cover_mqtt_state_by_calling_service(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_pglab
 ) -> None:
     """Calling service to OPEN/CLOSE cover and check mqtt state."""
-    topic = "pglab/discovery/E-Board-DD53AC85/config"
-    payload = {
-        "ip": "192.168.1.16",
-        "mac": "80:34:28:1B:18:5A",
-        "name": "test",
-        "hw": "1.0.7",
-        "fw": "1.0.0",
-        "type": "E-Board",
-        "id": "E-Board-DD53AC85",
-        "manufacturer": "PG LAB Electronics",
-        "params": {"shutters": 2, "boards": "10000000"},
-    }
 
-    async_fire_mqtt_message(
-        hass,
-        topic,
-        json.dumps(payload),
+    payload = get_device_discovery_payload(
+        number_of_shutters=2,
+        number_of_boards=1,
     )
-    await hass.async_block_till_done()
+
+    await send_discovery_message(hass, payload)
 
     cover = hass.states.get("cover.test_shutter_0")
     assert cover.state == STATE_UNKNOWN

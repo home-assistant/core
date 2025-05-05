@@ -14,7 +14,7 @@
       "unknown_device": "The device model is not known, not able to set up the device using config flow.",
       "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
       "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
-      "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials."
+      "cloud_login_error": "Could not log in to Xiaomi Miio Cloud, check the credentials."
     },
     "flow_title": "{name}",
     "step": {
@@ -82,15 +82,15 @@
       "airpurifier_mode": {
         "state": {
           "silent": "Silent",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "favorite": "Favorite"
         }
       },
       "ptc_level": {
         "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       }
     },
@@ -100,7 +100,7 @@
           "preset_mode": {
             "state": {
               "nature": "Nature",
-              "normal": "Normal"
+              "normal": "[%key:common::state::normal%]"
             }
           }
         }

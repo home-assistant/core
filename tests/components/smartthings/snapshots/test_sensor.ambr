@@ -1513,6 +1513,435 @@
     'state': '100',
   })
 # ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_airfree_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Office AirFree Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_airfree_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '602.171',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_difference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_airfree_energy_difference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy difference',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_difference',
+    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_difference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Office AirFree Energy difference',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_airfree_energy_difference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_saved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_airfree_energy_saved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy saved',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_saved',
+    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_saved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Office AirFree Energy saved',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_airfree_energy_saved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_airfree_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_relativeHumidityMeasurement_humidity_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Office AirFree Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_airfree_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '48',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_airfree_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Office AirFree Power',
+      'power_consumption_end': '2025-03-27T05:40:02Z',
+      'power_consumption_start': '2025-03-27T05:29:22Z',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_airfree_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_airfree_power_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Power energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_energy',
+    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Office AirFree Power energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_airfree_power_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_airfree_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_temperatureMeasurement_temperature_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Office AirFree Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_airfree_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_airfree_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume',
+    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_audioVolume_volume_volume',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Office AirFree Volume',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_airfree_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
 # name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3618,6 +4047,560 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0135559777781698',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.refrigerator_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Refrigerator Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4381.422',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_difference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.refrigerator_energy_difference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy difference',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_difference',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_difference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Refrigerator Energy difference',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_energy_difference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.027',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_saved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.refrigerator_energy_saved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy saved',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_saved',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_saved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Refrigerator Energy saved',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_energy_saved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.refrigerator_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Refrigerator Power',
+      'power_consumption_end': '2025-02-09T00:25:23Z',
+      'power_consumption_start': '2025-02-09T00:13:39Z',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '144',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.refrigerator_power_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Power energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_energy',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Refrigerator Power energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_power_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0270189050030708',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.frigo_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Frigo Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.frigo_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '66.571',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_difference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.frigo_energy_difference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy difference',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_difference',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_difference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Frigo Energy difference',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.frigo_energy_difference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.019',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_saved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.frigo_energy_saved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy saved',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_saved',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_saved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Frigo Energy saved',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.frigo_energy_saved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.frigo_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Frigo Power',
+      'power_consumption_end': '2025-03-30T18:38:18Z',
+      'power_consumption_start': '2025-03-30T18:21:37Z',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.frigo_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '61',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_power_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.frigo_power_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Power energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_energy',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][sensor.frigo_power_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Frigo Power energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.frigo_power_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0189117822202047',
   })
 # ---
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_battery-entry]
@@ -7042,6 +8025,527 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_completion_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_completion_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Completion time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'completion_time',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_washerOperatingState_completionTime_completionTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_completion_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Machine à Laver Completion time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_completion_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-25T10:34:12+00:00',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Machine à Laver Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26.8',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_energy_difference-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_energy_difference',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy difference',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_difference',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_energy_difference-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Machine à Laver Energy difference',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_energy_difference',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_energy_saved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_energy_saved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy saved',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_saved',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_energy_saved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Machine à Laver Energy saved',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_energy_saved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_job_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'air_wash',
+        'ai_rinse',
+        'ai_spin',
+        'ai_wash',
+        'cooling',
+        'delay_wash',
+        'drying',
+        'finish',
+        'none',
+        'pre_wash',
+        'rinse',
+        'spin',
+        'wash',
+        'weight_sensing',
+        'wrinkle_prevent',
+        'freeze_protection',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_job_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Job state',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_job_state',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_washerOperatingState_washerJobState_washerJobState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_job_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Machine à Laver Job state',
+      'options': list([
+        'air_wash',
+        'ai_rinse',
+        'ai_spin',
+        'ai_wash',
+        'cooling',
+        'delay_wash',
+        'drying',
+        'finish',
+        'none',
+        'pre_wash',
+        'rinse',
+        'spin',
+        'wash',
+        'weight_sensing',
+        'wrinkle_prevent',
+        'freeze_protection',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_job_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'wash',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_machine_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'pause',
+        'run',
+        'stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_machine_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Machine state',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_machine_state',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_washerOperatingState_machineState_machineState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_machine_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Machine à Laver Machine state',
+      'options': list([
+        'pause',
+        'run',
+        'stop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_machine_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'run',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Machine à Laver Power',
+      'power_consumption_end': '2025-04-25T08:43:46Z',
+      'power_consumption_start': '2025-04-25T08:28:43Z',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_power_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_power_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Power energy',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_energy',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_power_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Machine à Laver Power energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_power_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_water_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_water_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Water consumption',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_consumption',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.waterConsumptionReport_waterConsumption_waterConsumption',
+    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_water_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Machine à Laver Water consumption',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_water_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1642.2',
+  })
+# ---
 # name: test_all_entities[ecobee_sensor][sensor.child_bedroom_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7299,6 +8803,208 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[gas_meter][sensor.gas_meter_gas-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gas_meter_gas',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
+    'original_icon': None,
+    'original_name': 'Gas',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterVolume_gasMeterVolume',
+    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+  })
+# ---
+# name: test_all_entities[gas_meter][sensor.gas_meter_gas-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'gas',
+      'friendly_name': 'Gas Meter Gas',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_meter_gas',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gas_meter_gas_meter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Gas meter',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_meter',
+    'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeter_gasMeter',
+    'unit_of_measurement': 'kWh',
+  })
+# ---
+# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Gas Meter Gas meter',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_meter_gas_meter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '450.5',
+  })
+# ---
+# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter_calorific-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gas_meter_gas_meter_calorific',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gas meter calorific',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_meter_calorific',
+    'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterCalorific_gasMeterCalorific',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter_calorific-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gas Meter Gas meter calorific',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_meter_gas_meter_calorific',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gas_meter_gas_meter_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Gas meter time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_meter_time',
+    'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterTime_gasMeterTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Gas Meter Gas meter time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gas_meter_gas_meter_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-11T13:30:00+00:00',
   })
 # ---
 # name: test_all_entities[generic_ef00_v1][sensor.thermostat_kuche_link_quality-entry]
@@ -7660,182 +9366,6 @@
     'state': '19.0',
   })
 # ---
-# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_media_input_source-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'wifi',
-        'bluetooth',
-        'hdmi1',
-        'hdmi2',
-        'digital',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.soundbar_media_input_source',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Media input source',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'media_input_source',
-    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577_main_mediaInputSource_inputSource_inputSource',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_media_input_source-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Soundbar Media input source',
-      'options': list([
-        'wifi',
-        'bluetooth',
-        'hdmi1',
-        'hdmi2',
-        'digital',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.soundbar_media_input_source',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'wifi',
-  })
-# ---
-# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_media_playback_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'paused',
-        'playing',
-        'stopped',
-        'fast_forwarding',
-        'rewinding',
-        'buffering',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.soundbar_media_playback_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Media playback status',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'media_playback_status',
-    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577_main_mediaPlayback_playbackStatus_playbackStatus',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_media_playback_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Soundbar Media playback status',
-      'options': list([
-        'paused',
-        'playing',
-        'stopped',
-        'fast_forwarding',
-        'rewinding',
-        'buffering',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.soundbar_media_playback_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'playing',
-  })
-# ---
-# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_volume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.soundbar_volume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Volume',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'audio_volume',
-    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577_main_audioVolume_volume_volume',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_volume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Soundbar Volume',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.soundbar_volume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1',
-  })
-# ---
 # name: test_all_entities[ikea_kadrilj][sensor.kitchen_ikea_kadrilj_window_blind_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7883,261 +9413,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '37',
-  })
-# ---
-# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_input_source-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.galaxy_home_mini_media_input_source',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Media input source',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'media_input_source',
-    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_main_mediaInputSource_inputSource_inputSource',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_input_source-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Galaxy Home Mini Media input source',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.galaxy_home_mini_media_input_source',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_repeat-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.galaxy_home_mini_media_playback_repeat',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Media playback repeat',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'media_playback_repeat',
-    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_main_mediaPlaybackRepeat_playbackRepeatMode_playbackRepeatMode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_repeat-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Galaxy Home Mini Media playback repeat',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.galaxy_home_mini_media_playback_repeat',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_shuffle-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.galaxy_home_mini_media_playback_shuffle',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Media playback shuffle',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'media_playback_shuffle',
-    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_main_mediaPlaybackShuffle_playbackShuffle_playbackShuffle',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_shuffle-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Galaxy Home Mini Media playback shuffle',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.galaxy_home_mini_media_playback_shuffle',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'disabled',
-  })
-# ---
-# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'paused',
-        'playing',
-        'stopped',
-        'fast_forwarding',
-        'rewinding',
-        'buffering',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.galaxy_home_mini_media_playback_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Media playback status',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'media_playback_status',
-    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_main_mediaPlayback_playbackStatus_playbackStatus',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Galaxy Home Mini Media playback status',
-      'options': list([
-        'paused',
-        'playing',
-        'stopped',
-        'fast_forwarding',
-        'rewinding',
-        'buffering',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.galaxy_home_mini_media_playback_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'stopped',
-  })
-# ---
-# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_volume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.galaxy_home_mini_volume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Volume',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'audio_volume',
-    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_main_audioVolume_volume_volume',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_volume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Galaxy Home Mini Volume',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.galaxy_home_mini_volume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '52',
   })
 # ---
 # name: test_all_entities[multipurpose_sensor][sensor.deck_door_battery-entry]
@@ -8478,119 +9753,6 @@
     'state': '20',
   })
 # ---
-# name: test_all_entities[sonos_player][sensor.elliots_rum_media_playback_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'paused',
-        'playing',
-        'stopped',
-        'fast_forwarding',
-        'rewinding',
-        'buffering',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.elliots_rum_media_playback_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Media playback status',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'media_playback_status',
-    'unique_id': 'c85fced9-c474-4a47-93c2-037cc7829536_main_mediaPlayback_playbackStatus_playbackStatus',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sonos_player][sensor.elliots_rum_media_playback_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Elliots Rum Media playback status',
-      'options': list([
-        'paused',
-        'playing',
-        'stopped',
-        'fast_forwarding',
-        'rewinding',
-        'buffering',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.elliots_rum_media_playback_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'playing',
-  })
-# ---
-# name: test_all_entities[sonos_player][sensor.elliots_rum_volume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.elliots_rum_volume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Volume',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'audio_volume',
-    'unique_id': 'c85fced9-c474-4a47-93c2-037cc7829536_main_audioVolume_volume_volume',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[sonos_player][sensor.elliots_rum_volume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Elliots Rum Volume',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.elliots_rum_volume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '15',
-  })
-# ---
 # name: test_all_entities[tplink_p110][sensor.spulmaschine_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8701,119 +9863,6 @@
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[vd_network_audio_002s][sensor.soundbar_living_media_playback_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'paused',
-        'playing',
-        'stopped',
-        'fast_forwarding',
-        'rewinding',
-        'buffering',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.soundbar_living_media_playback_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Media playback status',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'media_playback_status',
-    'unique_id': '0d94e5db-8501-2355-eb4f-214163702cac_main_mediaPlayback_playbackStatus_playbackStatus',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[vd_network_audio_002s][sensor.soundbar_living_media_playback_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Soundbar Living Media playback status',
-      'options': list([
-        'paused',
-        'playing',
-        'stopped',
-        'fast_forwarding',
-        'rewinding',
-        'buffering',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.soundbar_living_media_playback_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'stopped',
-  })
-# ---
-# name: test_all_entities[vd_network_audio_002s][sensor.soundbar_living_volume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.soundbar_living_volume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Volume',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'audio_volume',
-    'unique_id': '0d94e5db-8501-2355-eb4f-214163702cac_main_audioVolume_volume_volume',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[vd_network_audio_002s][sensor.soundbar_living_volume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Soundbar Living Volume',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.soundbar_living_volume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '17',
-  })
-# ---
 # name: test_all_entities[vd_sensor_light_2023][sensor.light_sensor_55_the_frame_brightness_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8863,132 +9912,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
-  })
-# ---
-# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_input_source-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'digitaltv',
-        'hdmi1',
-        'hdmi4',
-        'hdmi4',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tv_samsung_8_series_49_media_input_source',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Media input source',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'media_input_source',
-    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main_mediaInputSource_inputSource_inputSource',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_input_source-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': '[TV] Samsung 8 Series (49) Media input source',
-      'options': list([
-        'digitaltv',
-        'hdmi1',
-        'hdmi4',
-        'hdmi4',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tv_samsung_8_series_49_media_input_source',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'hdmi1',
-  })
-# ---
-# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_playback_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'paused',
-        'playing',
-        'stopped',
-        'fast_forwarding',
-        'rewinding',
-        'buffering',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tv_samsung_8_series_49_media_playback_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Media playback status',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'media_playback_status',
-    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main_mediaPlayback_playbackStatus_playbackStatus',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_playback_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': '[TV] Samsung 8 Series (49) Media playback status',
-      'options': list([
-        'paused',
-        'playing',
-        'stopped',
-        'fast_forwarding',
-        'rewinding',
-        'buffering',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tv_samsung_8_series_49_media_playback_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_tv_channel-entry]
@@ -9083,54 +10006,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '',
-  })
-# ---
-# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_volume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.tv_samsung_8_series_49_volume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Volume',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'audio_volume',
-    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main_audioVolume_volume_volume',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_volume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '[TV] Samsung 8 Series (49) Volume',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.tv_samsung_8_series_49_volume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '13',
   })
 # ---
 # name: test_all_entities[virtual_thermostat][sensor.asd_battery-entry]

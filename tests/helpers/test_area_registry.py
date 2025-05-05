@@ -494,6 +494,29 @@ async def test_async_get_area_by_name(area_registry: ar.AreaRegistry) -> None:
     assert area_registry.async_get_area_by_name("M o c k 1").normalized_name == "mock1"
 
 
+async def test_async_get_areas_by_alias(
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Make sure we can get the areas by alias."""
+    area1 = area_registry.async_create("Mock1", aliases=("alias_1", "alias_2"))
+    area2 = area_registry.async_create("Mock2", aliases=("alias_1", "alias_3"))
+
+    assert len(area_registry.areas) == 2
+
+    alias1_list = area_registry.async_get_areas_by_alias("A l i a s_1")
+    alias2_list = area_registry.async_get_areas_by_alias("A l i a s_2")
+    alias3_list = area_registry.async_get_areas_by_alias("A l i a s_3")
+
+    assert len(alias1_list) == 2
+    assert len(alias2_list) == 1
+    assert len(alias3_list) == 1
+
+    assert area1 in alias1_list
+    assert area1 in alias2_list
+    assert area2 in alias1_list
+    assert area2 in alias3_list
+
+
 async def test_async_get_area_by_name_not_found(area_registry: ar.AreaRegistry) -> None:
     """Make sure we return None for non-existent areas."""
     area_registry.async_create("Mock1")
