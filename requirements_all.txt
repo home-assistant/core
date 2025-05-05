@@ -1200,7 +1200,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.1.0
+ical==9.2.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -2480,7 +2480,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.16.1
+python-roborock==2.18.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
