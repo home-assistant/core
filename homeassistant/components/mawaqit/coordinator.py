@@ -1,11 +1,12 @@
 """Example integration using DataUpdateCoordinator."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+import homeassistant.util.dt as dt_util
 
 from . import mawaqit_wrapper, utils
 from .const import MAWAQIT_STORAGE_KEY, MAWAQIT_STORAGE_VERSION
@@ -55,34 +56,56 @@ class PrayerTimeCoordinator(DataUpdateCoordinator):
         self.store: Store = Store(
             hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY
         )  # Store prayer times locally
+        self.last_fetch: datetime | None = None
 
         super().__init__(
             hass,
             _LOGGER,
             name="Prayer Times",
             update_method=self._async_update_data,
-            update_interval=timedelta(days=1),  # Fetch API data every day
+            update_interval=timedelta(minutes=1),
         )
 
     async def _async_update_data(self):
         """Fetch prayer times from API, update store, and notify sensors."""
-        try:
-            # Fetch new data from API
-            user_token = await utils.read_mawaqit_token(None, self.store)
-            prayer_times = await mawaqit_wrapper.fetch_prayer_times(
-                mosque=self.mosque_uuid, token=user_token
-            )
 
-        except Exception as err:
-            raise UpdateFailed(f"Failed to update prayer times: {err}") from err
+        now = dt_util.utcnow()
 
-        if not prayer_times:
-            _LOGGER.error("No prayer times received from API")
-            raise UpdateFailed("No data received from API")
+        if not self.last_fetch or (now - self.last_fetch) > timedelta(days=1):
+            _LOGGER.info("Attempting daily fetch of prayer times from Mawaqit API")
 
-        _LOGGER.info("Fetched new prayer times from API: %s", prayer_times)
+            try:
+                # Fetch new data from API
+                user_token = await utils.read_mawaqit_token(None, self.store)
+                prayer_times = await mawaqit_wrapper.fetch_prayer_times(
+                    mosque=self.mosque_uuid, token=user_token
+                )
 
-        # Save new data to store
-        await utils.write_pray_time(prayer_times, self.store)
+                if not prayer_times:
+                    _LOGGER.error("No prayer times received from API")
+                    raise UpdateFailed("No data received from API")
 
-        return prayer_times  # Return updated data for sensors
+                # Save new data to store
+                await utils.write_pray_time(prayer_times, self.store)
+                self.last_fetch = now
+
+            except ValueError as err:
+                _LOGGER.error("Failed to parse prayer times: %s", err)
+            except mawaqit_wrapper.BadCredentialsException as err:
+                _LOGGER.error("Bad credentials: %s", err)
+                # Handle re-authentication if needed
+            except mawaqit_wrapper.NoMosqueAround as err:
+                _LOGGER.error("No mosque found in the area: %s", err)
+            except mawaqit_wrapper.NoMosqueFound as err:
+                _LOGGER.error("No mosque found: %s", err)
+            except (ConnectionError, TimeoutError) as err:
+                _LOGGER.error("Network-related error: %s", err)
+
+                # # raise UpdateFailed(f"Failed to update prayer times: {err}") from err
+                # _LOGGER.error("Failed to update prayer times: %s", err)
+
+        # _LOGGER.info("Fetched new prayer times from API: %s", prayer_times)
+
+        return await utils.read_pray_time(
+            self.store
+        )  # Return the cached data for sensors

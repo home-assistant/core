@@ -355,19 +355,18 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
         """Initialize the sensor with a specific description."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"next_prayer_{self.entity_description.key.lower().replace(' ', '_')}"
-        )
+        self._attr_unique_id = f"next_prayer_{self.entity_description.key.lower()}"
         self.identifier = self._attr_unique_id
+        self.next_prayer_index, self.time_next_prayer = self._get_next_prayer_info()
 
     @property
     def native_value(self) -> str | datetime | None:
         """Return the appropriate value based on the sensor type."""
-        next_prayer_index, time_next_prayer = self._get_next_prayer_info()
+        self.next_prayer_index, self.time_next_prayer = self._get_next_prayer_info()
         if self.entity_description.key == "next_salat_name":
-            return PRAYER_NAMES[next_prayer_index]
+            return PRAYER_NAMES[self.next_prayer_index]
         if self.entity_description.key == "next_salat_time":
-            return time_next_prayer
+            return self.time_next_prayer
         return None
 
     def _get_next_prayer_info(self):
