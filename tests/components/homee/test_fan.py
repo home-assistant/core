@@ -17,7 +17,12 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.homee.const import DOMAIN
+from homeassistant.components.homee.const import (
+    DOMAIN,
+    PRESET_AUTO,
+    PRESET_MANUAL,
+    PRESET_SUMMER,
+)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -96,9 +101,9 @@ async def test_preset_mode(
         (SERVICE_INCREASE_SPEED, {}, (77, 1, 4)),
         (SERVICE_DECREASE_SPEED, {}, (77, 1, 2)),
         (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 42}, (77, 1, 4)),
-        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "manual"}, (77, 2, 0)),
-        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "auto"}, (77, 2, 1)),
-        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "summer"}, (77, 2, 2)),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: PRESET_MANUAL}, (77, 2, 0)),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: PRESET_AUTO}, (77, 2, 1)),
+        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: PRESET_SUMMER}, (77, 2, 2)),
         (SERVICE_TOGGLE, {}, (77, 1, 0)),
     ],
 )
@@ -140,7 +145,7 @@ async def test_turn_on_preset_last_value_zero(
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.test_fan", ATTR_PRESET_MODE: "manual"},
+        {ATTR_ENTITY_ID: "fan.test_fan", ATTR_PRESET_MODE: PRESET_MANUAL},
         blocking=True,
     )
 
@@ -163,7 +168,7 @@ async def test_turn_on_invalid_preset(
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "fan.test_fan", ATTR_PRESET_MODE: "auto"},
+            {ATTR_ENTITY_ID: "fan.test_fan", ATTR_PRESET_MODE: PRESET_AUTO},
             blocking=True,
         )
 

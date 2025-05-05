@@ -17,7 +17,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from . import HomeeConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, PRESET_AUTO, PRESET_MANUAL, PRESET_SUMMER
 from .entity import HomeeNodeEntity
 
 PARALLEL_UPDATES = 0
@@ -43,7 +43,7 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
     _attr_translation_key = DOMAIN
     _attr_name = None
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
-    _attr_preset_modes = ["manual", "auto", "summer"]
+    _attr_preset_modes = [PRESET_MANUAL, PRESET_AUTO, PRESET_SUMMER]
     speed_range = (1, 8)
     _attr_speed_count = int_states_in_range(speed_range)
 
