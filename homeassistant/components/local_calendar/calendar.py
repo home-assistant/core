@@ -94,20 +94,27 @@ class LocalCalendarEntity(CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        events = self._calendar.timeline_tz(start_date.tzinfo).overlapping(
-            start_date,
-            end_date,
-        )
-        return [_get_calendar_event(event) for event in events]
+
+        def events_in_range() -> list[CalendarEvent]:
+            events = self._calendar.timeline_tz(start_date.tzinfo).overlapping(
+                start_date,
+                end_date,
+            )
+            return [_get_calendar_event(event) for event in events]
+
+        return await self.hass.async_add_executor_job(events_in_range)
 
     async def async_update(self) -> None:
         """Update entity state with the next upcoming event."""
-        now = dt_util.now()
-        events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
-        if event := next(events, None):
-            self._event = _get_calendar_event(event)
-        else:
-            self._event = None
+
+        def next_event() -> CalendarEvent | None:
+            now = dt_util.now()
+            events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
+            if event := next(events, None):
+                return _get_calendar_event(event)
+            return None
+
+        self._event = await self.hass.async_add_executor_job(next_event)
 
     async def _async_store(self) -> None:
         """Persist the calendar to disk."""
