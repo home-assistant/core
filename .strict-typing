@@ -332,6 +332,7 @@ homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.met_eireann.*
 homeassistant.components.metoffice.*
+homeassistant.components.miele.*
 homeassistant.components.mikrotik.*
 homeassistant.components.min_max.*
 homeassistant.components.minecraft_server.*
@@ -463,6 +464,7 @@ homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
 homeassistant.components.smlight.*
+homeassistant.components.smtp.*
 homeassistant.components.snooz.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*

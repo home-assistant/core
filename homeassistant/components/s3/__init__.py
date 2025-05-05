@@ -7,6 +7,7 @@ from typing import cast
 
 from aiobotocore.client import AioBaseClient as S3Client
 from aiobotocore.session import AioSession
+from botocore.config import Config
 from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
 
 from homeassistant.config_entries import ConfigEntry
@@ -32,6 +33,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     """Set up S3 from a config entry."""
 
     data = cast(dict, entry.data)
+    # due to https://github.com/home-assistant/core/issues/143995
+    config = Config(
+        request_checksum_calculation="when_required",
+        response_checksum_validation="when_required",
+    )
     try:
         session = AioSession()
         # pylint: disable-next=unnecessary-dunder-call
@@ -40,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
             endpoint_url=data.get(CONF_ENDPOINT_URL),
             aws_secret_access_key=data[CONF_SECRET_ACCESS_KEY],
             aws_access_key_id=data[CONF_ACCESS_KEY_ID],
+            config=config,
         ).__aenter__()
         await client.head_bucket(Bucket=data[CONF_BUCKET])
     except ClientError as err:
