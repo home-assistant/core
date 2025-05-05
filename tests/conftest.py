@@ -352,6 +352,21 @@ def caplog_fixture(caplog: pytest.LogCaptureFixture) -> pytest.LogCaptureFixture
     return caplog
 
 
+@pytest.fixture(autouse=True)
+def clear_exception_tracback(request: pytest.FixtureRequest) -> Generator[None]:
+    """Clear exception traceback after each test."""
+    exceptions = []
+    for fixture_name in request.fixturenames:
+        if fixture_name not in ("exception", "side_effect"):
+            continue
+        if isinstance(request.getfixturevalue(fixture_name), BaseException):
+            exceptions.append(request.getfixturevalue(fixture_name))
+
+    yield
+    for ex in exceptions:
+        ex.__traceback__ = None
+
+
 @pytest.fixture(autouse=True, scope="module")
 def garbage_collection() -> None:
     """Run garbage collection at known locations.
