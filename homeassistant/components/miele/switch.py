@@ -25,7 +25,7 @@ from .const import (
     MieleAppliance,
     StateStatus,
 )
-from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
+from .coordinator import MieleConfigEntry
 from .entity import MieleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,16 +139,6 @@ class MieleSwitch(MieleEntity, SwitchEntity):
 
     entity_description: MieleSwitchDescription
 
-    def __init__(
-        self,
-        coordinator: MieleDataUpdateCoordinator,
-        device_id: str,
-        description: MieleSwitchDescription,
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(coordinator, device_id, description)
-        self.api = coordinator.api
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         await self.async_turn_switch(self.entity_description.on_cmd_data)
@@ -179,15 +169,14 @@ class MielePowerSwitch(MieleSwitch):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
-        return self.coordinator.data.actions[self._device_id].power_off_enabled
+        return self.action.power_off_enabled
 
     @property
     def available(self) -> bool:
         """Return the availability of the entity."""
 
         return (
-            self.coordinator.data.actions[self._device_id].power_off_enabled
-            or self.coordinator.data.actions[self._device_id].power_on_enabled
+            self.action.power_off_enabled or self.action.power_on_enabled
         ) and super().available
 
     async def async_turn_switch(self, mode: dict[str, str | int | bool]) -> None:
@@ -202,12 +191,8 @@ class MielePowerSwitch(MieleSwitch):
                     "entity": self.entity_id,
                 },
             ) from err
-        self.coordinator.data.actions[self._device_id].power_on_enabled = cast(
-            bool, mode
-        )
-        self.coordinator.data.actions[self._device_id].power_off_enabled = not cast(
-            bool, mode
-        )
+        self.action.power_on_enabled = cast(bool, mode)
+        self.action.power_off_enabled = not cast(bool, mode)
         self.async_write_ha_state()
 
 

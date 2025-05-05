@@ -167,7 +167,6 @@ class MieleClimate(MieleEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate entity."""
         super().__init__(coordinator, device_id, description)
-        self.api = coordinator.api
 
         t_key = self.entity_description.translation_key
 
@@ -175,6 +174,11 @@ class MieleClimate(MieleEntity, ClimateEntity):
             t_key = ZONE1_DEVICES.get(
                 cast(MieleAppliance, self.device.device_type), "zone_1"
             )
+            if self.device.device_type in (
+                MieleAppliance.FRIDGE,
+                MieleAppliance.FREEZER,
+            ):
+                self._attr_name = None
 
         if description.zone == 2:
             if self.device.device_type in (
@@ -193,8 +197,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        if self.entity_description.target_fn(self.device) is None:
-            return None
+
         return cast(float | None, self.entity_description.target_fn(self.device))
 
     @property
@@ -202,9 +205,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
         """Return the maximum target temperature."""
         return cast(
             float,
-            self.coordinator.data.actions[self._device_id]
-            .target_temperature[self.entity_description.zone - 1]
-            .max,
+            self.action.target_temperature[self.entity_description.zone - 1].max,
         )
 
     @property
@@ -212,9 +213,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
         """Return the minimum target temperature."""
         return cast(
             float,
-            self.coordinator.data.actions[self._device_id]
-            .target_temperature[self.entity_description.zone - 1]
-            .min,
+            self.action.target_temperature[self.entity_description.zone - 1].min,
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:

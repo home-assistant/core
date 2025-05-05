@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, PROCESS_ACTION, MieleActions, MieleAppliance
-from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
+from .coordinator import MieleConfigEntry
 from .entity import MieleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -125,24 +125,13 @@ class MieleButton(MieleEntity, ButtonEntity):
 
     entity_description: MieleButtonDescription
 
-    def __init__(
-        self,
-        coordinator: MieleDataUpdateCoordinator,
-        device_id: str,
-        description: MieleButtonDescription,
-    ) -> None:
-        """Initialize the button."""
-        super().__init__(coordinator, device_id, description)
-        self.api = coordinator.api
-
     @property
     def available(self) -> bool:
         """Return the availability of the entity."""
 
         return (
             super().available
-            and self.entity_description.press_data
-            in self.coordinator.data.actions[self._device_id].process_actions
+            and self.entity_description.press_data in self.action.process_actions
         )
 
     async def async_press(self) -> None:
