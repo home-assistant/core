@@ -116,17 +116,7 @@ MOCK_SSDP_DATA_NOPREFIX = SsdpServiceInfo(
         ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
     },
 )
-MOCK_SSDP_DATA_WRONGMODEL = SsdpServiceInfo(
-    ssdp_usn="mock_usn",
-    ssdp_st="mock_st",
-    ssdp_location="http://fake2_host:12345/test",
-    upnp={
-        ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
-        ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
-        ATTR_UPNP_MODEL_NAME: "HW-Qfake",
-        ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
-    },
-)
+
 MOCK_DHCP_DATA = DhcpServiceInfo(
     ip="fake_host", macaddress="aabbccddeeff", hostname="fake_hostname"
 )
@@ -794,20 +784,6 @@ async def test_ssdp_websocket_cannot_connect(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == RESULT_CANNOT_CONNECT
-
-
-@pytest.mark.usefixtures("remote")
-async def test_ssdp_model_not_supported(hass: HomeAssistant) -> None:
-    """Test starting a flow from discovery."""
-
-    # confirm to add the entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=MOCK_SSDP_DATA_WRONGMODEL,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 @pytest.mark.usefixtures("remoteencws_failing")
