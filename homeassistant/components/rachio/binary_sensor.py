@@ -46,20 +46,38 @@ from .webhooks import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RachioControllerBinarySensorDescription(BinarySensorEntityDescription):
     """Describe a Rachio controller binary sensor."""
+
+    update_received: Callable[[str], bool | None]
+    is_on: Callable[[RachioIro], bool]
+    signal_string: str
 
 
 CONTROLLER_BINARY_SENSOR_TYPES: tuple[RachioControllerBinarySensorDescription, ...] = (
     RachioControllerBinarySensorDescription(
         key=KEY_ONLINE,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        signal_string=SIGNAL_RACHIO_CONTROLLER_UPDATE,
+        is_on=lambda controller: controller.init_data[KEY_STATUS] == STATUS_ONLINE,
+        update_received=lambda state: True
+        if state in (SUBTYPE_ONLINE, SUBTYPE_COLD_REBOOT)
+        else False
+        if state == SUBTYPE_OFFLINE
+        else None,
     ),
     RachioControllerBinarySensorDescription(
         key=KEY_RAIN_SENSOR,
         translation_key="rain",
         device_class=BinarySensorDeviceClass.MOISTURE,
+        signal_string=SIGNAL_RACHIO_RAIN_SENSOR_UPDATE,
+        is_on=lambda controller: controller.init_data[KEY_RAIN_SENSOR_TRIPPED],
+        update_received=lambda state: True
+        if state == SUBTYPE_RAIN_SENSOR_DETECTION_ON
+        else False
+        if state == SUBTYPE_RAIN_SENSOR_DETECTION_OFF
+        else None,
     ),
 )
 
@@ -151,41 +169,23 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
-        if self.entity_description.key == KEY_ONLINE:
-            if args[0][0][KEY_SUBTYPE] in (SUBTYPE_ONLINE, SUBTYPE_COLD_REBOOT):
-                self._attr_is_on = True
-            elif args[0][0][KEY_SUBTYPE] == SUBTYPE_OFFLINE:
-                self._attr_is_on = False
-        elif self.entity_description.key == KEY_RAIN_SENSOR:
-            if args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_SENSOR_DETECTION_ON:
-                self._attr_is_on = True
-            elif args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_SENSOR_DETECTION_OFF:
-                self._attr_is_on = False
+        updated_state = self.entity_description.update_received(args[0][0][KEY_SUBTYPE])
+        if updated_state is not None:
+            self._attr_is_on = updated_state
 
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
-        if self.entity_description.key == KEY_ONLINE:
-            self._attr_is_on = self._controller.init_data[KEY_STATUS] == STATUS_ONLINE
+        self._attr_is_on = self.entity_description.is_on(self._controller)
 
-            self.async_on_remove(
-                async_dispatcher_connect(
-                    self.hass,
-                    SIGNAL_RACHIO_CONTROLLER_UPDATE,
-                    self._async_handle_any_update,
-                )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self.entity_description.signal_string,
+                self._async_handle_any_update,
             )
-        elif self.entity_description.key == KEY_RAIN_SENSOR:
-            self._attr_is_on = self._controller.init_data[KEY_RAIN_SENSOR_TRIPPED]
-
-            self.async_on_remove(
-                async_dispatcher_connect(
-                    self.hass,
-                    SIGNAL_RACHIO_RAIN_SENSOR_UPDATE,
-                    self._async_handle_any_update,
-                )
-            )
+        )
 
 
 class RachioHoseTimerBinarySensor(RachioHoseTimerEntity, BinarySensorEntity):
