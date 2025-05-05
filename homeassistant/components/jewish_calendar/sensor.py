@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
+import logging
 
 from hdate import HDateInfo, Zmanim
 from hdate.holidays import HolidayDatabase
@@ -15,10 +16,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import SUN_EVENT_SUNSET, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.sun import get_astral_event_date
+from homeassistant.util import dt as dt_util
 
 from .entity import (
     JewishCalendarConfigEntry,
@@ -26,17 +28,26 @@ from .entity import (
     JewishCalendarEntity,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True, kw_only=True)
-class JewishCalendarSensorDescription(SensorEntityDescription):
+class JewishCalendarBaseSensorDescription(SensorEntityDescription):
+    """Base class describing Jewish Calendar sensor entities."""
+
+    value_fn: Callable | None
+
+
+@dataclass(frozen=True, kw_only=True)
+class JewishCalendarSensorDescription(JewishCalendarBaseSensorDescription):
     """Class describing Jewish Calendar sensor entities."""
 
     value_fn: Callable[[JewishCalendarDataResults], str | int]
 
 
 @dataclass(frozen=True, kw_only=True)
-class JewishCalendarTimestampSensorDescription(SensorEntityDescription):
-    """Class describing Jewish Calendar sensor entities."""
+class JewishCalendarTimestampSensorDescription(JewishCalendarBaseSensorDescription):
+    """Class describing Jewish Calendar sensor timestamp entities."""
 
     value_fn: (
         Callable[[HDateInfo, Callable[[dt.date], Zmanim]], dt.datetime | None] | None
@@ -208,29 +219,75 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Jewish calendar sensors ."""
-    async_add_entities(
-        [
-            JewishCalendarSensor(config_entry, description)
-            for description in INFO_SENSORS
-        ]
+    sensors: list[JewishCalendarBaseSensor] = [
+        JewishCalendarSensor(config_entry, description) for description in INFO_SENSORS
+    ]
+    sensors.extend(
+        JewishCalendarTimeSensor(config_entry, description)
+        for description in TIME_SENSORS
     )
-    async_add_entities(
-        [
-            JewishCalendarTimeSensor(config_entry, description)
-            for description in TIME_SENSORS
-        ]
-    )
+    async_add_entities(sensors)
 
 
-class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
-    """Representation of an Jewish calendar sensor."""
+class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
+    """Base class for Jewish calendar sensors."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        await self.async_update_data()
+
+    async def async_update_data(self) -> None:
+        """Update the state of the sensor."""
+        now = dt_util.now()
+        _LOGGER.debug("Now: %s Location: %r", now, self.data.location)
+
+        today = now.date()
+        event_date = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, today)
+
+        if event_date is None:
+            _LOGGER.error("Can't get sunset event date for %s", today)
+            return
+
+        sunset = dt_util.as_local(event_date)
+
+        _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
+
+        daytime_date = HDateInfo(today, diaspora=self.data.diaspora)
+
+        # The Jewish day starts after darkness (called "tzais") and finishes at
+        # sunset ("shkia"). The time in between is a gray area
+        # (aka "Bein Hashmashot"  # codespell:ignore
+        # - literally: "in between the sun and the moon").
+
+        # For some sensors, it is more interesting to consider the date to be
+        # tomorrow based on sunset ("shkia"), for others based on "tzais".
+        # Hence the following variables.
+        after_tzais_date = after_shkia_date = daytime_date
+        today_times = self.make_zmanim(today)
+
+        if now > sunset:
+            after_shkia_date = daytime_date.next_day
+
+        if today_times.havdalah and now > today_times.havdalah:
+            after_tzais_date = daytime_date.next_day
+
+        self.data.results = JewishCalendarDataResults(
+            daytime_date, after_shkia_date, after_tzais_date, today_times
+        )
+
+
+class JewishCalendarSensor(JewishCalendarBaseSensor):
+    """Representation of an Jewish calendar sensor."""
 
     entity_description: JewishCalendarSensorDescription
 
     def __init__(
-        self, config_entry: JewishCalendarConfigEntry, description: EntityDescription
+        self,
+        config_entry: JewishCalendarConfigEntry,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
         super().__init__(config_entry, description)
@@ -247,11 +304,6 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         if self.data.results is None:
             return None
         return self.entity_description.value_fn(self.data.results)
-
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added to hass."""
-        await super().async_added_to_hass()
-        await self.async_update_data()
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -275,12 +327,10 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         return {}
 
 
-class JewishCalendarTimeSensor(JewishCalendarEntity, SensorEntity):
+class JewishCalendarTimeSensor(JewishCalendarBaseSensor):
     """Implement attributes for sensors returning times."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = SensorDeviceClass.TIMESTAMP
-
     entity_description: JewishCalendarTimestampSensorDescription
 
     @property
@@ -293,8 +343,3 @@ class JewishCalendarTimeSensor(JewishCalendarEntity, SensorEntity):
         return self.entity_description.value_fn(
             self.data.results.after_tzais_date, self.make_zmanim
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added to hass."""
-        await super().async_added_to_hass()
-        await self.async_update_data()
