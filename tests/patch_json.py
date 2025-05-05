@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 from typing import Any
+from unittest import mock
 
 import orjson
 
@@ -19,7 +20,7 @@ def json_encoder_default(obj: Any) -> Any:
 
     Hand other objects to the original method.
     """
-    if hasattr(obj, "assert_called"):
+    if isinstance(obj, mock.Base):
         mock_objects.append(obj)
         raise TypeError(f"Attempting to serialize mock object {obj}")
     return real_json_encoder_default(obj)
