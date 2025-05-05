@@ -1,5 +1,6 @@
 """Test the Teslemetry services."""
 
+from datetime import time
 from unittest.mock import patch
 
 import pytest
@@ -9,7 +10,6 @@ from homeassistant.components.teslemetry.services import (
     ATTR_DAYS_OF_WEEK,
     ATTR_DEPARTURE_TIME,
     ATTR_ENABLE,
-    ATTR_END_ENABLED,
     ATTR_END_OFF_PEAK_TIME,
     ATTR_END_TIME,
     ATTR_GPS,
@@ -23,7 +23,6 @@ from homeassistant.components.teslemetry.services import (
     ATTR_PRECONDITION_TIME,
     ATTR_PRECONDITIONING_ENABLED,
     ATTR_PRECONDITIONING_WEEKDAYS,
-    ATTR_START_ENABLED,
     ATTR_START_TIME,
     ATTR_TIME,
     ATTR_TOU_SETTINGS,
@@ -89,7 +88,7 @@ async def test_services(
             {
                 CONF_DEVICE_ID: vehicle_device,
                 ATTR_ENABLE: True,
-                ATTR_TIME: "6:00",
+                ATTR_TIME: time(6, 0, 0),  # 6:00 AM
             },
             blocking=True,
         )
@@ -118,10 +117,10 @@ async def test_services(
                 ATTR_ENABLE: True,
                 ATTR_PRECONDITIONING_ENABLED: True,
                 ATTR_PRECONDITIONING_WEEKDAYS: False,
-                ATTR_DEPARTURE_TIME: "6:00",
+                ATTR_DEPARTURE_TIME: time(6, 0, 0),  # 6:00 AM
                 ATTR_OFF_PEAK_CHARGING_ENABLED: True,
                 ATTR_OFF_PEAK_CHARGING_WEEKDAYS: False,
-                ATTR_END_OFF_PEAK_TIME: "5:00",
+                ATTR_END_OFF_PEAK_TIME: time(5, 0, 0),  # 5:00 AM
             },
             blocking=True,
         )
@@ -223,13 +222,11 @@ async def test_services(
             SERVICE_ADD_CHARGE_SCHEDULE,
             {
                 CONF_DEVICE_ID: vehicle_device,
-                ATTR_DAYS_OF_WEEK: "All",
+                ATTR_DAYS_OF_WEEK: ["Monday", "Tuesday"],
                 ATTR_ENABLE: True,
                 ATTR_LOCATION: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
-                ATTR_START_ENABLED: True,
-                ATTR_END_ENABLED: True,
-                ATTR_START_TIME: 420,  # 7:00 AM
-                ATTR_END_TIME: 1080,  # 6:00 PM
+                ATTR_START_TIME: time(7, 0, 0),  # 7:00 AM
+                ATTR_END_TIME: time(18, 0, 0),  # 6:00 PM
                 ATTR_ONE_TIME: False,
                 ATTR_NAME: "Test Schedule",
             },
@@ -247,10 +244,8 @@ async def test_services(
             SERVICE_ADD_CHARGE_SCHEDULE,
             {
                 CONF_DEVICE_ID: vehicle_device,
-                ATTR_DAYS_OF_WEEK: "Weekdays",
+                ATTR_DAYS_OF_WEEK: ["Monday", "Tuesday"],
                 ATTR_ENABLE: True,
-                ATTR_START_ENABLED: False,
-                ATTR_END_ENABLED: False,
             },
             blocking=True,
         )
@@ -280,10 +275,10 @@ async def test_services(
             SERVICE_ADD_PRECONDITION_SCHEDULE,
             {
                 CONF_DEVICE_ID: vehicle_device,
-                ATTR_DAYS_OF_WEEK: "All",
+                ATTR_DAYS_OF_WEEK: ["Monday", "Tuesday"],
                 ATTR_ENABLE: True,
                 ATTR_LOCATION: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
-                ATTR_PRECONDITION_TIME: 420,  # 7:00 AM
+                ATTR_PRECONDITION_TIME: time(7, 0, 0),  # 7:00 AM
                 ATTR_ONE_TIME: False,
                 ATTR_NAME: "Test Precondition Schedule",
             },
@@ -301,9 +296,9 @@ async def test_services(
             SERVICE_ADD_PRECONDITION_SCHEDULE,
             {
                 CONF_DEVICE_ID: vehicle_device,
-                ATTR_DAYS_OF_WEEK: "Weekdays",
+                ATTR_DAYS_OF_WEEK: ["Monday", "Tuesday"],
                 ATTR_ENABLE: True,
-                ATTR_PRECONDITION_TIME: 480,  # 8:00 AM
+                ATTR_PRECONDITION_TIME: time(8, 0, 0),  # 8:00 AM
             },
             blocking=True,
         )

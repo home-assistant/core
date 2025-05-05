@@ -42,8 +42,6 @@ ATTR_START_TIME = "start_time"
 ATTR_END_TIME = "end_time"
 ATTR_ONE_TIME = "one_time"
 ATTR_NAME = "name"
-ATTR_START_ENABLED = "start_enabled"
-ATTR_END_ENABLED = "end_enabled"
 ATTR_PRECONDITION_TIME = "precondition_time"
 
 # Services
@@ -151,18 +149,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        time: int | None = None
-        # Convert time to minutes since minute
-        if "time" in call.data:
-            (hours, minutes, *seconds) = call.data["time"].split(":")
-            time = int(hours) * 60 + int(minutes)
-        elif call.data["enable"]:
+        charge_time: int | None = None
+        # Convert time to minutes since midnight
+        if time_obj := call.data.get(ATTR_TIME):
+            charge_time = time_obj.hour * 60 + time_obj.minute
+        elif call.data[ATTR_ENABLE]:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="set_scheduled_charging_time"
             )
 
         await handle_vehicle_command(
-            vehicle.api.set_scheduled_charging(enable=call.data["enable"], time=time)
+            vehicle.api.set_scheduled_charging(
+                enable=call.data[ATTR_ENABLE], time=charge_time
+            )
         )
 
     hass.services.async_register(
@@ -184,7 +183,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        enable = call.data.get("enable", True)
+        enable = call.data.get(ATTR_ENABLE, True)
 
         # Preconditioning
         preconditioning_enabled = call.data.get(ATTR_PRECONDITIONING_ENABLED, False)
@@ -192,9 +191,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ATTR_PRECONDITIONING_WEEKDAYS, False
         )
         departure_time: int | None = None
-        if ATTR_DEPARTURE_TIME in call.data:
-            (hours, minutes, *seconds) = call.data[ATTR_DEPARTURE_TIME].split(":")
-            departure_time = int(hours) * 60 + int(minutes)
+        if departure_time_obj := call.data.get(ATTR_DEPARTURE_TIME):
+            departure_time = departure_time_obj.hour * 60 + departure_time_obj.minute
         elif preconditioning_enabled:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -208,9 +206,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         end_off_peak_time: int | None = None
 
-        if ATTR_END_OFF_PEAK_TIME in call.data:
-            (hours, minutes, *seconds) = call.data[ATTR_END_OFF_PEAK_TIME].split(":")
-            end_off_peak_time = int(hours) * 60 + int(minutes)
+        if end_off_peak_time_obj := call.data.get(ATTR_END_OFF_PEAK_TIME):
+            end_off_peak_time = (
+                end_off_peak_time_obj.hour * 60 + end_off_peak_time_obj.minute
+            )
         elif off_peak_charging_enabled:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -337,9 +336,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Extract parameters from the service call
         days_of_week = call.data[ATTR_DAYS_OF_WEEK]
+        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        if isinstance(days_of_week, list):
+            days_of_week = ",".join(days_of_week)
         enabled = call.data[ATTR_ENABLE]
-        start_enabled = call.data[ATTR_START_ENABLED]
-        end_enabled = call.data[ATTR_END_ENABLED]
 
         # Optional parameters
         location = call.data.get(
@@ -349,8 +349,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 CONF_LONGITUDE: hass.config.longitude,
             },
         )
-        start_time = call.data.get(ATTR_START_TIME) if start_enabled else None
-        end_time = call.data.get(ATTR_END_TIME) if end_enabled else None
+
+        # Handle time inputs
+        start_time = None
+        if start_time_obj := call.data.get(ATTR_START_TIME):
+            # Convert time object to minutes since midnight
+            start_time = start_time_obj.hour * 60 + start_time_obj.minute
+
+        end_time = None
+        if end_time_obj := call.data.get(ATTR_END_TIME):
+            # Convert time object to minutes since midnight
+            end_time = end_time_obj.hour * 60 + end_time_obj.minute
+
         one_time = call.data.get(ATTR_ONE_TIME)
         schedule_id = call.data.get(ATTR_ID)
         name = call.data.get(ATTR_NAME)
@@ -376,20 +386,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=vol.Schema(
             {
                 vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_DAYS_OF_WEEK): cv.string,
+                vol.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
                 vol.Required(ATTR_ENABLE): cv.boolean,
                 vol.Optional(ATTR_LOCATION): {
                     vol.Required(CONF_LATITUDE): cv.latitude,
                     vol.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Required(ATTR_START_ENABLED): cv.boolean,
-                vol.Required(ATTR_END_ENABLED): cv.boolean,
-                vol.Optional(ATTR_START_TIME): vol.All(
-                    cv.positive_int, Range(min=0, max=1440)
-                ),
-                vol.Optional(ATTR_END_TIME): vol.All(
-                    cv.positive_int, Range(min=0, max=1440)
-                ),
+                vol.Optional(ATTR_START_TIME): cv.time,
+                vol.Optional(ATTR_END_TIME): cv.time,
                 vol.Optional(ATTR_ONE_TIME): cv.boolean,
                 vol.Optional(ATTR_ID): cv.positive_int,
                 vol.Optional(ATTR_NAME): cv.string,
@@ -432,6 +436,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Extract parameters from the service call
         days_of_week = call.data[ATTR_DAYS_OF_WEEK]
+        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        if isinstance(days_of_week, list):
+            days_of_week = ",".join(days_of_week)
         enabled = call.data[ATTR_ENABLE]
         location = call.data.get(
             ATTR_LOCATION,
@@ -440,7 +447,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 CONF_LONGITUDE: hass.config.longitude,
             },
         )
-        precondition_time = call.data[ATTR_PRECONDITION_TIME]
+
+        # Handle time input
+        precondition_time = None
+        if precondition_time_obj := call.data.get(ATTR_PRECONDITION_TIME):
+            # Convert time object to minutes since midnight
+            precondition_time = (
+                precondition_time_obj.hour * 60 + precondition_time_obj.minute
+            )
 
         # Optional parameters
         schedule_id = call.data.get(ATTR_ID)
@@ -467,15 +481,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=vol.Schema(
             {
                 vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_DAYS_OF_WEEK): cv.string,
+                vol.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
                 vol.Required(ATTR_ENABLE): cv.boolean,
                 vol.Optional(ATTR_LOCATION): {
                     vol.Required(CONF_LATITUDE): cv.latitude,
                     vol.Required(CONF_LONGITUDE): cv.longitude,
                 },
-                vol.Required(ATTR_PRECONDITION_TIME): vol.All(
-                    cv.positive_int, Range(min=0, max=1440)
-                ),
+                vol.Required(ATTR_PRECONDITION_TIME): cv.time,
                 vol.Optional(ATTR_ID): cv.positive_int,
                 vol.Optional(ATTR_ONE_TIME): cv.boolean,
                 vol.Optional(ATTR_NAME): cv.string,
