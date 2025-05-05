@@ -59,6 +59,9 @@
     }
   },
   "options": {
+    "abort": {
+      "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one."
+    },
     "step": {
       "init": {
         "data": {
