@@ -113,14 +113,14 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             _LOGGER.error("Error getting accounts: %s", err)
             raise
         for account in accounts:
-            # Some utilities like AEP have "-" in their account id.
-            # Other utilities like ngny-gas have "-" in their subdomain.
-            # Replace it with "_" to avoid "Invalid statistic_id"
             id_prefix = (
                 (
                     f"{self.api.utility.subdomain()}_{account.meter_type.name}_"
                     f"{account.utility_account_id}"
                 )
+                # Some utilities like AEP have "-" in their account id.
+                # Other utilities like ngny-gas have "-" in their subdomain.
+                # Replace it with "_" to avoid "Invalid statistic_id"
                 .replace("-", "_")
                 .lower()
             )
