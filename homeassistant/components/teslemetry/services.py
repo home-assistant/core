@@ -153,10 +153,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         # Convert time to minutes since midnight
         if time_obj := call.data.get(ATTR_TIME):
             charge_time = time_obj.hour * 60 + time_obj.minute
-        elif call.data[ATTR_ENABLE]:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="set_scheduled_charging_time"
-            )
 
         await handle_vehicle_command(
             vehicle.api.set_scheduled_charging(
@@ -172,7 +168,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             {
                 vol.Required(CONF_DEVICE_ID): cv.string,
                 vol.Required(ATTR_ENABLE): bool,
-                vol.Optional(ATTR_TIME): str,
+                vol.Optional(ATTR_TIME): cv.time,
             }
         ),
     )
@@ -190,30 +186,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
         preconditioning_weekdays_only = call.data.get(
             ATTR_PRECONDITIONING_WEEKDAYS, False
         )
-        departure_time: int | None = None
+        departure_time: int = 0
         if departure_time_obj := call.data.get(ATTR_DEPARTURE_TIME):
             departure_time = departure_time_obj.hour * 60 + departure_time_obj.minute
-        elif preconditioning_enabled:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="set_scheduled_departure_preconditioning",
-            )
 
         # Off peak charging
         off_peak_charging_enabled = call.data.get(ATTR_OFF_PEAK_CHARGING_ENABLED, False)
         off_peak_charging_weekdays_only = call.data.get(
             ATTR_OFF_PEAK_CHARGING_WEEKDAYS, False
         )
-        end_off_peak_time: int | None = None
+        end_off_peak_time: int = 0
 
         if end_off_peak_time_obj := call.data.get(ATTR_END_OFF_PEAK_TIME):
             end_off_peak_time = (
                 end_off_peak_time_obj.hour * 60 + end_off_peak_time_obj.minute
-            )
-        elif off_peak_charging_enabled:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="set_scheduled_departure_off_peak",
             )
 
         await handle_vehicle_command(
@@ -238,10 +224,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_ENABLE): bool,
                 vol.Optional(ATTR_PRECONDITIONING_ENABLED): bool,
                 vol.Optional(ATTR_PRECONDITIONING_WEEKDAYS): bool,
-                vol.Optional(ATTR_DEPARTURE_TIME): str,
+                vol.Optional(ATTR_DEPARTURE_TIME): cv.time,
                 vol.Optional(ATTR_OFF_PEAK_CHARGING_ENABLED): bool,
                 vol.Optional(ATTR_OFF_PEAK_CHARGING_WEEKDAYS): bool,
-                vol.Optional(ATTR_END_OFF_PEAK_TIME): str,
+                vol.Optional(ATTR_END_OFF_PEAK_TIME): cv.time,
             }
         ),
     )
@@ -448,13 +434,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             },
         )
 
-        # Handle time input
-        precondition_time = None
-        if precondition_time_obj := call.data.get(ATTR_PRECONDITION_TIME):
-            # Convert time object to minutes since midnight
-            precondition_time = (
-                precondition_time_obj.hour * 60 + precondition_time_obj.minute
-            )
+        # Convert time object to minutes since midnight
+        precondition_time = (
+            call.data[ATTR_PRECONDITION_TIME].hour * 60
+            + call.data[ATTR_PRECONDITION_TIME].minute
+        )
 
         # Optional parameters
         schedule_id = call.data.get(ATTR_ID)
