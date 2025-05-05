@@ -110,10 +110,6 @@ class AiohttpClientMocker:
         """Register a mock patch request."""
         self.request("patch", *args, **kwargs)
 
-    def connect(self, *args, **kwargs):
-        """Register a mock connect request."""
-        self.request("connect", *args, **kwargs)
-
     def head(self, *args, **kwargs):
         """Register a mock head request."""
         self.request("head", *args, **kwargs)

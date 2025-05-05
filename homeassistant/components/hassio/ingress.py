@@ -109,7 +109,6 @@ class HassIOIngress(HomeAssistantView):
     delete = _handle
     patch = _handle
     options = _handle
-    connect = _handle
     head = _handle
     trace = _handle
 
