@@ -1257,7 +1257,7 @@
           "name": "Vehicle"
         },
         "days_of_week": {
-          "description": "A comma separated list of days this schedule should be enabled. Example: \"Thursday,Saturday\". Also supports \"All\" and \"Weekdays\".",
+          "description": "Select which days this schedule should be enabled on. You can select multiple days.",
           "name": "Days of week"
         },
         "enable": {
@@ -1268,20 +1268,12 @@
           "description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location.",
           "name": "Location"
         },
-        "start_enabled": {
-          "description": "If the vehicle should begin charging at the given start_time.",
-          "name": "Start enabled"
-        },
-        "end_enabled": {
-          "description": "If the vehicle should stop charging after the given end_time.",
-          "name": "End enabled"
-        },
         "start_time": {
-          "description": "The number of minutes into the day this schedule begins. 1:05 AM is represented as 65. Omit if start_enabled set to false.",
+          "description": "The time this schedule begins, e.g. 01:05 for 1:05 AM.",
           "name": "Start time"
         },
         "end_time": {
-          "description": "The number of minutes into the day this schedule ends. 1:05 AM is represented as 65. Omit if end_enabled set to false.",
+          "description": "The time this schedule ends, e.g. 01:05 for 1:05 AM.",
           "name": "End time"
         },
         "one_time": {
@@ -1321,7 +1313,7 @@
           "name": "Vehicle"
         },
         "days_of_week": {
-          "description": "A comma separated list of days this schedule should be enabled. Example: \"Thursday,Saturday\". Also supports \"All\" and \"Weekdays\".",
+          "description": "Select which days this schedule should be enabled on. You can select multiple days.",
           "name": "Days of week"
         },
         "enable": {
@@ -1333,7 +1325,7 @@
           "name": "Location"
         },
         "precondition_time": {
-          "description": "The number of minutes into the day the vehicle should complete preconditioning. 1:05 AM is represented as 65.",
+          "description": "The time the vehicle should complete preconditioning, e.g. 01:05 for 1:05 AM.",
           "name": "Precondition time"
         },
         "id": {
