@@ -2,16 +2,16 @@
   "config": {
     "step": {
       "user": {
-        "title": "Fing Agent Setup",
+        "title": "Fing agent setup",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]",
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "ip_address": "Insert the IP address of the Fing agent.",
-          "port": "Insert the port used by the Fing API.",
-          "api_key": "Insert your Fing API key."
+          "ip_address": "IP address of the Fing Agent.",
+          "port": "Port number of the Fing API.",
+          "api_key": "API key used to authenticate with the Fing API."
         }
       }
     },
@@ -21,7 +21,7 @@
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect]",
       "unexpected_error": "[%key:common::config_flow::error::unknown]",
       "url_error": "[%key:common::config_flow::error::invalid_host]",
-      "http_status_error": "HTTP request failed -> {message}"
+      "http_status_error": "HTTP request failed: {message}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
