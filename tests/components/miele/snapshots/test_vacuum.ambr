@@ -51,7 +51,6 @@
         'silent',
       ]),
       'friendly_name': 'robot_vacuum_cleaner',
-      'status': 'wheel_lifted',
       'supported_features': <VacuumEntityFeature: 13420>,
     }),
     'context': <ANY>,

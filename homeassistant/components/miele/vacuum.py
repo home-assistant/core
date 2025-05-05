@@ -11,7 +11,6 @@ from aiohttp import ClientResponseError
 from pymiele import MieleEnum
 
 from homeassistant.components.vacuum import (
-    ATTR_STATUS,
     StateVacuumEntity,
     StateVacuumEntityDescription,
     VacuumActivity,
@@ -116,6 +115,7 @@ VACUUM_TYPES: Final[tuple[MieleVacuumDefinition, ...]] = (
         description=MieleVacuumDescription(
             key="vacuum",
             on_value=14,
+            name=None,
             translation_key="vacuum",
         ),
     ),
@@ -176,14 +176,6 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
     def status(self) -> str:
         """Map status text."""
         return MieleVacuumStateCode(self.device.state_program_phase).name
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the vacuum cleaner."""
-        data: dict[str, Any] = {}
-        if self.status is not None:
-            data[ATTR_STATUS] = self.status
-        return data
 
     @property
     def battery_level(self) -> int | None:

@@ -880,7 +880,6 @@
     },
     "vacuum": {
       "vacuum": {
-        "name": "Vacuum",
         "state_attributes": {
           "status": {
             "name": "Status",
