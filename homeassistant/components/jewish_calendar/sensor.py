@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -24,31 +25,37 @@ from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class JewishCalendarSensorDescription(SensorEntityDescription):
+    """Class describing Jewish Calendar sensor entities."""
+
+
+INFO_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
+    JewishCalendarSensorDescription(
         key="date",
         translation_key="hebrew_date",
         icon="mdi:star-david",
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="weekly_portion",
         translation_key="weekly_portion",
         icon="mdi:book-open-variant",
         device_class=SensorDeviceClass.ENUM,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="holiday",
         translation_key="holiday",
         icon="mdi:calendar-star",
         device_class=SensorDeviceClass.ENUM,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="omer_count",
         translation_key="omer_count",
         icon="mdi:counter",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="daf_yomi",
         translation_key="daf_yomi",
         icon="mdi:book-open-variant",
@@ -56,107 +63,107 @@ INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+TIME_SENSORS: tuple[JewishCalendarSensorDescription, ...] = (
+    JewishCalendarSensorDescription(
         key="alot_hashachar",
         translation_key="alot_hashachar",
         icon="mdi:weather-sunset-up",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="talit_and_tefillin",
         translation_key="talit_and_tefillin",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="netz_hachama",
         translation_key="netz_hachama",
         icon="mdi:calendar-clock",
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="sof_zman_shema_gra",
         translation_key="sof_zman_shema_gra",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="sof_zman_shema_mga",
         translation_key="sof_zman_shema_mga",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="sof_zman_tfilla_gra",
         translation_key="sof_zman_tfilla_gra",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="sof_zman_tfilla_mga",
         translation_key="sof_zman_tfilla_mga",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="chatzot_hayom",
         translation_key="chatzot_hayom",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="mincha_gedola",
         translation_key="mincha_gedola",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="mincha_ketana",
         translation_key="mincha_ketana",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="plag_hamincha",
         translation_key="plag_hamincha",
         icon="mdi:weather-sunset-down",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="shkia",
         translation_key="shkia",
         icon="mdi:weather-sunset",
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="tset_hakohavim_tsom",
         translation_key="tset_hakohavim_tsom",
         icon="mdi:weather-night",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="tset_hakohavim_shabbat",
         translation_key="tset_hakohavim_shabbat",
         icon="mdi:weather-night",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="upcoming_shabbat_candle_lighting",
         translation_key="upcoming_shabbat_candle_lighting",
         icon="mdi:candle",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="upcoming_shabbat_havdalah",
         translation_key="upcoming_shabbat_havdalah",
         icon="mdi:weather-night",
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="upcoming_candle_lighting",
         translation_key="upcoming_candle_lighting",
         icon="mdi:candle",
     ),
-    SensorEntityDescription(
+    JewishCalendarSensorDescription(
         key="upcoming_havdalah",
         translation_key="upcoming_havdalah",
         icon="mdi:weather-night",
@@ -189,7 +196,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
     def __init__(
         self,
         config_entry: JewishCalendarConfigEntry,
-        description: SensorEntityDescription,
+        description: JewishCalendarSensorDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
         super().__init__(config_entry, description)
