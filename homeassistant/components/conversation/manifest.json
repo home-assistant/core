@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/conversation",
   "integration_type": "system",
   "quality_scale": "internal",
-  "requirements": ["hassil==2.2.3", "home-assistant-intents==2025.3.5"]
+  "requirements": ["hassil==2.2.3", "home-assistant-intents==2025.4.30"]
 }

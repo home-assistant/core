@@ -144,13 +144,14 @@ async def auth(
     return FakeAuth(aioclient_mock, create_device, device_access_project_id)
 
 
-@pytest.fixture(autouse=True)
-def cleanup_media_storage(hass: HomeAssistant) -> Generator[None]:
+@pytest.fixture(autouse=True, name="media_path")
+def cleanup_media_storage(hass: HomeAssistant) -> Generator[str]:
     """Test cleanup, remove any media storage persisted during the test."""
     tmp_path = str(uuid.uuid4())
     with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):
-        yield
-        shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)
+        full_path = hass.config.path(tmp_path)
+        yield full_path
+        shutil.rmtree(full_path, ignore_errors=True)
 
 
 @pytest.fixture

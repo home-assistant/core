@@ -2,5 +2,6 @@
 
 DOMAIN = "mcp_server"
 TITLE = "Model Context Protocol Server"
-LLM_API = "stateless_assist"
-LLM_API_NAME = "Stateless Assist"
+# The Stateless API is no longer registered explicitly, but this name may still exist in the
+# users config entry.
+STATELESS_LLM_API = "stateless_assist"

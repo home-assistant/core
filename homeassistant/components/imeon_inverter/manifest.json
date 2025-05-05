@@ -1,0 +1,18 @@
+{
+  "domain": "imeon_inverter",
+  "name": "Imeon Inverter",
+  "codeowners": ["@Imeon-Energy"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/imeon_inverter",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["imeon_inverter_api==0.3.12"],
+  "ssdp": [
+    {
+      "manufacturer": "IMEON",
+      "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+      "st": "upnp:rootdevice"
+    }
+  ]
+}

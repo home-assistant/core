@@ -22,7 +22,11 @@ from homeassistant.components.reolink import (
 from homeassistant.components.reolink.const import CONF_BC_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
     CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -35,17 +39,25 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_USE_HTTPS,
+    DEFAULT_PROTOCOL,
     TEST_BC_PORT,
     TEST_CAM_MODEL,
+    TEST_HOST,
     TEST_HOST_MODEL,
     TEST_MAC,
     TEST_NVR_NAME,
     TEST_PORT,
+    TEST_PRIVACY,
     TEST_UID,
     TEST_UID_CAM,
+    TEST_USE_HTTPS,
+    TEST_USERNAME,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -412,6 +424,15 @@ async def test_removing_chime(
             True,
             True,
         ),
+        (
+            f"{TEST_UID}_unexpected",
+            f"{TEST_UID}_unexpected",
+            f"{TEST_UID}_{TEST_UID_CAM}",
+            f"{TEST_UID}_{TEST_UID_CAM}",
+            Platform.SWITCH,
+            True,
+            True,
+        ),
     ],
 )
 async def test_migrate_entity_ids(
@@ -457,7 +478,8 @@ async def test_migrate_entity_ids(
     )
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
-    assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id) is None
+    if original_id != new_id:
+        assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id) is None
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
     if new_dev_id != original_dev_id:
@@ -470,7 +492,8 @@ async def test_migrate_entity_ids(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
+    if original_id != new_id:
+        assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
     assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
 
     if new_dev_id != original_dev_id:
@@ -723,6 +746,41 @@ async def test_firmware_repair_issue(
     await hass.async_block_till_done()
 
     assert (DOMAIN, "firmware_update_host") in issue_registry.issues
+    reolink_connect.camera_sw_version_update_required.return_value = False
+
+
+async def test_password_too_long_repair_issue(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test password too long issue is raised."""
+    reolink_connect.valid_password.return_value = False
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: "too_longgggggggggggggggggggggggggggggggggggggggggggggggggg",
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        DOMAIN,
+        f"password_too_long_{config_entry.entry_id}",
+    ) in issue_registry.issues
+    reolink_connect.valid_password.return_value = True
 
 
 async def test_new_device_discovered(
