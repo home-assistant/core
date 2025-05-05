@@ -1,0 +1,11 @@
+{
+  "ssdp_usn": "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de::urn:schemas-upnp-org:service:RenderingControl:1",
+  "ssdp_st": "urn:schemas-upnp-org:service:RenderingControl:1",
+  "upnp": {
+    "friendlyName": "[TV] fake_name",
+    "manufacturer": "Samsung fake_manufacturer",
+    "modelName": "fake_model",
+    "UDN": "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de"
+  },
+  "ssdp_location": "https://fake_host:12345/test"
+}
