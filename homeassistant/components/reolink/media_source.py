@@ -405,20 +405,18 @@ class ReolinkVODMediaSource(MediaSource):
             for file in vod_files:
                 triggers |= file.triggers
 
-            for trigger in triggers:
-                if trigger == trigger.NONE:
-                    continue
-                children.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"EVE|{config_entry_id}|{channel}|{stream}|{year}|{month}|{day}|{trigger.name}",
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_type=MediaType.PLAYLIST,
-                        title=str(trigger.name).title(),
-                        can_play=False,
-                        can_expand=True,
-                    )
+            children.extend(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"EVE|{config_entry_id}|{channel}|{stream}|{year}|{month}|{day}|{trigger.name}",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.PLAYLIST,
+                    title=str(trigger.name).title(),
+                    can_play=False,
+                    can_expand=True,
                 )
+                for trigger in triggers
+            )
 
         for file in vod_files:
             file_name = f"{file.start_time.time()} {file.duration}"
