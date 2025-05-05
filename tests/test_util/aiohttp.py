@@ -85,6 +85,7 @@ class AiohttpClientMocker:
                 closing=closing,
             )
         )
+    
 
     def get(self, *args, **kwargs):
         """Register a mock get request."""
@@ -109,6 +110,18 @@ class AiohttpClientMocker:
     def patch(self, *args, **kwargs):
         """Register a mock patch request."""
         self.request("patch", *args, **kwargs)
+
+    def connect(self, *args, **kwargs):
+        """Register a mock connect request."""
+        self.request("connect", *args, **kwargs)
+
+    def head(self, *args, **kwargs):
+        """Register a mock head request."""
+        self.request("head", *args, **kwargs)
+
+    def trace(self, *args, **kwargs):
+        """Register a mock trace request."""
+        self.request("trace", *args, **kwargs)
 
     @property
     def call_count(self):

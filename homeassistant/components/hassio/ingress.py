@@ -103,14 +103,14 @@ class HassIOIngress(HomeAssistantView):
 
         raise HTTPBadGateway from None
 
-    connect = _handle
     get = _handle
-    head = _handle
     post = _handle
     put = _handle
     delete = _handle
-    patch = _handle
     options = _handle
+    patch = _handle
+    connect = _handle
+    head = _handle
     trace = _handle
 
     async def _handle_websocket(
