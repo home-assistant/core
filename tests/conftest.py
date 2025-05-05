@@ -261,7 +261,7 @@ def pytest_runtest_setup() -> None:
         if isinstance(effect, Exception):
             import copy  # pylint: disable=import-outside-toplevel
 
-            raise SideEffectError(self, origin=copy(effect))
+            raise SideEffectError(self, origin=copy.copy(effect))
 
         # Handle Exception `type` side effect
         if isinstance(effect, type):
