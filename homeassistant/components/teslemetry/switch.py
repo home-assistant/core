@@ -8,7 +8,7 @@ from itertools import chain
 from typing import Any
 
 from tesla_fleet_api.const import AutoSeat, Scope
-from tesla_fleet_api.teslemetry.vehicles import TeslemetryVehicle
+from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.switch import (
@@ -38,8 +38,8 @@ PARALLEL_UPDATES = 0
 class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
     """Describes Teslemetry Switch entity."""
 
-    on_func: Callable[[TeslemetryVehicle], Awaitable[dict[str, Any]]]
-    off_func: Callable[[TeslemetryVehicle], Awaitable[dict[str, Any]]]
+    on_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
+    off_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
     scopes: list[Scope]
     value_func: Callable[[StateType], bool] = bool
     streaming_listener: Callable[
@@ -58,6 +58,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         ),
         on_func=lambda api: api.set_sentry_mode(on=True),
         off_func=lambda api: api.set_sentry_mode(on=False),
+        scopes=[Scope.VEHICLE_CMDS],
+    ),
+    TeslemetrySwitchEntityDescription(
+        key="vehicle_state_valet_mode",
+        streaming_listener=lambda vehicle, value: vehicle.listen_ValetModeEnabled(
+            value
+        ),
+        streaming_firmware="2024.44.25",
+        on_func=lambda api: api.set_valet_mode(on=True, password=""),
+        off_func=lambda api: api.set_valet_mode(on=False, password=""),
         scopes=[Scope.VEHICLE_CMDS],
     ),
     TeslemetrySwitchEntityDescription(
@@ -166,6 +176,7 @@ async def async_setup_entry(
 class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
     """Base class for all Teslemetry switch entities."""
 
+    api: Vehicle
     _attr_device_class = SwitchDeviceClass.SWITCH
     entity_description: TeslemetrySwitchEntityDescription
 
