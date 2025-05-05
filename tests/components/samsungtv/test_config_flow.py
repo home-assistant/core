@@ -61,6 +61,7 @@ from homeassistant.setup import async_setup_component
 from .const import (
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     MOCK_ENTRYDATA_WS,
+    MOCK_SSDP_DATA,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
 )
@@ -84,38 +85,7 @@ MOCK_IMPORT_WSDATA = {
     CONF_PORT: 8002,
 }
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
-MOCK_SSDP_DATA = SsdpServiceInfo(
-    ssdp_usn="mock_usn",
-    ssdp_st="mock_st",
-    ssdp_location="https://fake_host:12345/test",
-    upnp={
-        ATTR_UPNP_FRIENDLY_NAME: "[TV] fake_name",
-        ATTR_UPNP_MANUFACTURER: "Samsung fake_manufacturer",
-        ATTR_UPNP_MODEL_NAME: "fake_model",
-        ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
-    },
-)
-MOCK_SSDP_DATA_NO_MANUFACTURER = SsdpServiceInfo(
-    ssdp_usn="mock_usn",
-    ssdp_st="mock_st",
-    ssdp_location="https://fake_host:12345/test",
-    upnp={
-        ATTR_UPNP_FRIENDLY_NAME: "[TV] fake_name",
-        ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
-    },
-)
 
-MOCK_SSDP_DATA_NOPREFIX = SsdpServiceInfo(
-    ssdp_usn="mock_usn",
-    ssdp_st="mock_st",
-    ssdp_location="http://fake2_host:12345/test",
-    upnp={
-        ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
-        ATTR_UPNP_MANUFACTURER: "Samsung fake2_manufacturer",
-        ATTR_UPNP_MODEL_NAME: "fake2_model",
-        ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
-    },
-)
 MOCK_SSDP_DATA_WRONGMODEL = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
@@ -540,13 +510,16 @@ async def test_ssdp(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remote", "rest_api_failing")
 async def test_ssdp_no_manufacturer(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery when the manufacturer data is missing."""
+    ssdp_data = deepcopy(MOCK_SSDP_DATA)
+    ssdp_data.upnp.pop(ATTR_UPNP_MANUFACTURER)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=MOCK_SSDP_DATA_NO_MANUFACTURER,
+        data=ssdp_data,
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_supported"
+    assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 @pytest.mark.parametrize(
@@ -566,12 +539,17 @@ async def test_ssdp_legacy_not_remote_control_receiver_udn(
 
 @pytest.mark.usefixtures("remote", "rest_api_failing")
 async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
-    """Test starting a flow from discovery without prefixes."""
+    """Test starting a flow from discovery when friendly name doesn't start with [TV]."""
+    ssdp_data = deepcopy(MOCK_SSDP_DATA)
+    ssdp_data.upnp[ATTR_UPNP_FRIENDLY_NAME] = ssdp_data.upnp[ATTR_UPNP_FRIENDLY_NAME][
+        4:
+    ]
+
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=MOCK_SSDP_DATA_NOPREFIX,
+        data=ssdp_data,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -580,12 +558,12 @@ async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
         result["flow_id"], user_input="whatever"
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "fake2_model"
-    assert result["data"][CONF_HOST] == "fake2_host"
-    assert result["data"][CONF_NAME] == "fake2_model"
-    assert result["data"][CONF_MANUFACTURER] == "Samsung fake2_manufacturer"
-    assert result["data"][CONF_MODEL] == "fake2_model"
-    assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172df"
+    assert result["title"] == "fake_model"
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_NAME] == "fake_model"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
+    assert result["data"][CONF_MODEL] == "fake_model"
+    assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
 @pytest.mark.usefixtures("remotews", "rest_api_failing")
@@ -1100,7 +1078,7 @@ async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, rest_api: Mock) ->
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_supported"
+    assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 @pytest.mark.usefixtures("remote", "remotews", "remoteencws", "rest_api_failing")
@@ -1113,7 +1091,7 @@ async def test_zeroconf_no_device_info(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_supported"
+    assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 @pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
@@ -1493,7 +1471,7 @@ async def test_update_zeroconf_discovery_preserved_unique_id(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_supported"
+    assert result["reason"] == RESULT_NOT_SUPPORTED
     assert entry.data[CONF_MAC] == "aa:bb:zz:ee:rr:oo"
     assert entry.unique_id == "original"
 
@@ -1752,7 +1730,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
         assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_supported"
+    assert result["reason"] == RESULT_NOT_SUPPORTED
     assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
     assert entry.unique_id is None
 
@@ -1905,7 +1883,7 @@ async def test_form_reauth_websocket_not_supported(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "not_supported"
+    assert result2["reason"] == RESULT_NOT_SUPPORTED
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")

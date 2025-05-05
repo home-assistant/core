@@ -68,6 +68,9 @@ SAMPLE_DEVICE_INFO_WIFI = {
     },
 }
 
+MOCK_SSDP_DATA = SsdpServiceInfo(
+    **load_json_object_fixture("ssdp_service_remote_control_receiver.json", DOMAIN)
+)
 
 MOCK_SSDP_DATA_RENDERING_CONTROL_ST = SsdpServiceInfo(
     **load_json_object_fixture("ssdp_service_rendering_control.json", DOMAIN)
