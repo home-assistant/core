@@ -26,7 +26,6 @@ class TeslemetryRootEntity(Entity):
 
     _attr_has_entity_name = True
     scoped: bool
-    api: Vehicle | EnergySite
 
     def raise_for_scope(self, scope: Scope):
         """Raise an error if a scope is not available."""
@@ -247,6 +246,8 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
 
 class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
     """Parent class for Teslemetry Vehicle Stream entities."""
+
+    api: Vehicle
 
     def __init__(self, data: TeslemetryVehicleData, key: str) -> None:
         """Initialize common aspects of a Teslemetry entity."""

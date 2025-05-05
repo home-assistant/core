@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -76,6 +77,7 @@ async def async_setup_entry(
 class TeslemetryButtonEntity(TeslemetryVehiclePollingEntity, ButtonEntity):
     """Base class for Teslemetry buttons."""
 
+    api: Vehicle
     entity_description: TeslemetryButtonEntityDescription
 
     def __init__(
