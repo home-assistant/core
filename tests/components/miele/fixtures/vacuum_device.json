@@ -44,6 +44,8 @@
       "startTime": [0, 0],
       "targetTemperature": [],
       "temperature": [],
+      "coreTargetTemperature": [],
+      "coreTemperature": [],
       "signalInfo": false,
       "signalFailure": false,
       "signalDoor": false,

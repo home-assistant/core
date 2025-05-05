@@ -82,7 +82,7 @@ class MieleVacuumStateCode(MieleEnum):
     docked = 5903
     docked_2 = 5904
     remote_controlled = 5910
-    unknown = 99999
+    unknown = -9999
 
 
 SUPPORTED_FEATURES = (
@@ -178,7 +178,7 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
         )
 
     @property
-    def status(self):
+    def status(self) -> str:
         """Map status text."""
         return MieleVacuumStateCode(self.device.state_program_phase).name
 
@@ -205,7 +205,7 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
         """Return the availability of the entity."""
 
         return (
-            self.actions.power_off_enabled or self.actions.power_on_enabled
+            self.action.power_off_enabled or self.action.power_on_enabled
         ) and super().available
 
     async def send(self, device_id: str, action: dict[str, Any]) -> None:
