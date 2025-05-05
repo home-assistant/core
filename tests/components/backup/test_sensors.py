@@ -104,6 +104,8 @@ async def test_sensor_updates(
         )
         await hass.async_block_till_done(wait_background_tasks=True)
 
+    state = hass.states.get("sensor.backup_last_attempted_automatic_backup")
+    assert state.state == "2024-11-11T03:45:00+00:00"
     state = hass.states.get("sensor.backup_last_successful_automatic_backup")
     assert state.state == "2024-11-11T03:45:00+00:00"
     state = hass.states.get("sensor.backup_next_scheduled_automatic_backup")
@@ -113,6 +115,8 @@ async def test_sensor_updates(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    state = hass.states.get("sensor.backup_last_attempted_automatic_backup")
+    assert state.state == "2024-11-13T11:00:00+00:00"
     state = hass.states.get("sensor.backup_last_successful_automatic_backup")
     assert state.state == "2024-11-13T11:00:00+00:00"
     state = hass.states.get("sensor.backup_next_scheduled_automatic_backup")
