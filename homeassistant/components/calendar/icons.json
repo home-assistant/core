@@ -12,6 +12,9 @@
     "create_event": {
       "service": "mdi:calendar-plus"
     },
+    "delete_event": {
+      "service": "mdi:calendar-remove"
+    },
     "get_events": {
       "service": "mdi:calendar-month"
     }
