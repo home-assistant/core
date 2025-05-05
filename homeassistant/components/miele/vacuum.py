@@ -79,8 +79,7 @@ class MieleVacuumStateCode(MieleEnum):
     check_dust_box_and_filter = 5898
     internal_fault_reboot = 5899
     blocked_front_wheel = 5900
-    docked = 5903
-    docked_2 = 5904
+    docked = 5903, 5904
     remote_controlled = 5910
     unknown = -9999
 
@@ -142,7 +141,6 @@ async def async_setup_entry(
 VACUUM_PHASE_TO_ACTIVITY = {
     MieleVacuumStateCode.idle: VacuumActivity.IDLE,
     MieleVacuumStateCode.docked: VacuumActivity.DOCKED,
-    MieleVacuumStateCode.docked_2: VacuumActivity.DOCKED,
     MieleVacuumStateCode.cleaning: VacuumActivity.CLEANING,
     MieleVacuumStateCode.going_to_target_area: VacuumActivity.CLEANING,
     MieleVacuumStateCode.returning: VacuumActivity.RETURNING,
