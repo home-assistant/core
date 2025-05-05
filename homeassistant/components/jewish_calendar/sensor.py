@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import datetime as dt
 import logging
 from typing import Any
 
-from hdate import HDateInfo, Zmanim
+from hdate import HDateInfo
 from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 
@@ -241,15 +240,6 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         )
         _LOGGER.debug(
             "New value for %s: %s", self.entity_description.key, self._attr_native_value
-        )
-
-    def make_zmanim(self, date: dt.date) -> Zmanim:
-        """Create a Zmanim object."""
-        return Zmanim(
-            date=date,
-            location=self._location,
-            candle_lighting_offset=self._candle_lighting_offset,
-            havdalah_offset=self._havdalah_offset,
         )
 
     @property

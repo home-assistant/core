@@ -1,8 +1,9 @@
 """Entity representing a Jewish Calendar sensor."""
 
 from dataclasses import dataclass
+import datetime as dt
 
-from hdate import Location
+from hdate import Location, Zmanim
 from hdate.translator import Language, set_language
 
 from homeassistant.config_entries import ConfigEntry
@@ -48,3 +49,12 @@ class JewishCalendarEntity(Entity):
         self._havdalah_offset = data.havdalah_offset
         self._diaspora = data.diaspora
         set_language(data.language)
+
+    def make_zmanim(self, date: dt.date) -> Zmanim:
+        """Create a Zmanim object."""
+        return Zmanim(
+            date=date,
+            location=self._location,
+            candle_lighting_offset=self._candle_lighting_offset,
+            havdalah_offset=self._havdalah_offset,
+        )
