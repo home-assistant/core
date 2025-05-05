@@ -2,9 +2,9 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter either a Claim Token or an Access URL.",
+        "description": "Please enter either a claim token or an access URL.",
         "data": {
-          "api_token": "Claim Token or Access URL"
+          "api_token": "Claim token or access URL"
         }
       }
     },
@@ -13,11 +13,11 @@
       "claim_error": "The claim token either does not exist or has already been used by someone else. Receiving this could mean that the user\u2019s transaction information has been compromised",
       "invalid_claim_token": "The claim token is invalid and could not be decoded",
       "payment_required": "You presented a valid access URL, however payment is required before you can obtain data",
-      "url_error": "There was an issue parsing the Account URL"
+      "url_error": "There was an issue parsing the access URL"
     },
     "abort": {
-      "missing_access_url": "Access URL or Claim Token missing",
-      "already_configured": "This Access URL is already configured."
+      "missing_access_url": "Access URL or claim token missing",
+      "already_configured": "This access URL is already configured."
     }
   },
   "entity": {
