@@ -362,7 +362,7 @@ async def test_agents_upload_network_failure(
         )
 
     assert resp.status == 201
-    assert "Upload failed for s3" in caplog.text
+    assert "Upload failed for aws_s3" in caplog.text
 
 
 async def test_agents_download(
