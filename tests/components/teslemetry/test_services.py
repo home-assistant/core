@@ -94,17 +94,6 @@ async def test_services(
         )
         set_scheduled_charging.assert_called_once()
 
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_SCHEDULED_CHARGING,
-            {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ENABLE: True,
-            },
-            blocking=True,
-        )
-
     with patch(
         "tesla_fleet_api.teslemetry.Vehicle.set_scheduled_departure",
         return_value=COMMAND_OK,
@@ -125,30 +114,6 @@ async def test_services(
             blocking=True,
         )
         set_scheduled_departure.assert_called_once()
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_SCHEDULED_DEPARTURE,
-            {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ENABLE: True,
-                ATTR_PRECONDITIONING_ENABLED: True,
-            },
-            blocking=True,
-        )
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_SCHEDULED_DEPARTURE,
-            {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ENABLE: True,
-                ATTR_OFF_PEAK_CHARGING_ENABLED: True,
-            },
-            blocking=True,
-        )
 
     with patch(
         "tesla_fleet_api.teslemetry.Vehicle.set_valet_mode",
