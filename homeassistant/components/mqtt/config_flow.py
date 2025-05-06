@@ -1385,8 +1385,11 @@ def subentry_schema_default_data_from_fields(
     return {
         key: field.default
         for key, field in data_schema_fields.items()
-        if field.is_schema_default
-        or (field.default is not vol.UNDEFINED and key not in component_data)
+        if _check_conditions(field, component_data)
+        and (
+            field.is_schema_default
+            or (field.default is not vol.UNDEFINED and key not in component_data)
+        )
     }
 
 
@@ -2212,7 +2215,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         for component_data in self._subentry_data["components"].values():
             platform = component_data[CONF_PLATFORM]
             subentry_default_data = subentry_schema_default_data_from_fields(
-                PLATFORM_ENTITY_FIELDS[platform] | COMMON_ENTITY_FIELDS, component_data
+                COMMON_ENTITY_FIELDS
+                | PLATFORM_ENTITY_FIELDS[platform]
+                | PLATFORM_MQTT_FIELDS[platform],
+                component_data,
             )
             component_data.update(subentry_default_data)
 
