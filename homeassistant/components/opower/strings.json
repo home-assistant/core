@@ -31,5 +31,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "issues": {
+    "return_to_grid_migration": {
+      "title": "Return to grid statistics for account: {utility_account_id}",
+      "description": "We found negative values in your existing consumption statistics, likely because you have solar. We split those in separate return statistics for a better experience in the Energy dashboard.\n\nPlease visit the [Energy configuration page]({energy_settings}) to add the following statistics in the **Return to grid** section:\n\n{target_ids}\n\nOnce you have added them, ignore this issue."
+    }
   }
 }

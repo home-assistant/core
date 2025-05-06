@@ -2,8 +2,8 @@
 
 aiodhcpwatcher==1.1.1
 aiodiscover==2.6.1
-aiodns==3.2.0
-aiohasupervisor==0.3.1b1
+aiodns==3.3.0
+aiohasupervisor==0.3.1
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.2.3
 aiohttp==3.11.18
@@ -23,30 +23,30 @@ bcrypt==4.2.0
 bleak-retry-connector==3.9.0
 bleak==0.22.3
 bluetooth-adapters==0.21.4
-bluetooth-auto-recovery==1.4.5
-bluetooth-data-tools==1.27.0
+bluetooth-auto-recovery==1.5.1
+bluetooth-data-tools==1.28.1
 cached-ipaddress==0.10.0
 certifi>=2021.5.30
 ciso8601==2.3.2
 cronsim==2.6
 cryptography==44.0.1
 dbus-fast==2.43.0
-fnv-hash-fast==1.4.0
+fnv-hash-fast==1.5.0
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.39.0
-hass-nabucasa==0.94.0
+habluetooth==3.48.2
+hass-nabucasa==0.96.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250411.0
-home-assistant-intents==2025.3.28
+home-assistant-frontend==20250502.1
+home-assistant-intents==2025.4.30
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
 lru-dict==1.3.0
 mutagen==1.47.0
 numpy==2.2.2
-orjson==3.10.16
+orjson==3.10.18
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==11.2.1
@@ -69,13 +69,13 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.13.0,<5.0
 ulid-transform==1.4.0
 urllib3>=1.26.5,<2
-uv==0.6.10
-voluptuous-openapi==0.0.6
+uv==0.7.1
+voluptuous-openapi==0.0.7
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.20.0
-zeroconf==0.146.5
+zeroconf==0.147.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238

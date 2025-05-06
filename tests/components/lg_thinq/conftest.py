@@ -94,7 +94,7 @@ def mock_invalid_thinq_api(mock_config_thinq_api: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture
-def mock_thinq_api() -> Generator[AsyncMock]:
+def mock_thinq_api(mock_thinq_mqtt_client: None) -> Generator[AsyncMock]:
     """Mock a thinq api."""
     with patch("homeassistant.components.lg_thinq.ThinQApi", autospec=True) as mock_api:
         thinq_api = mock_api.return_value
@@ -111,7 +111,7 @@ def mock_thinq_api() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_thinq_mqtt_client() -> Generator[AsyncMock]:
+def mock_thinq_mqtt_client() -> Generator[None]:
     """Mock a thinq mqtt client."""
     with patch(
         "homeassistant.components.lg_thinq.mqtt.ThinQMQTTClient",
