@@ -24,6 +24,7 @@ from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
 from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -71,6 +72,19 @@ NO_ENTITIES_PROMPT = (
     "Only if the user wants to control a device, tell them to expose entities "
     "to their voice assistant in Home Assistant."
 )
+
+DYNAMIC_CONTEXT_PROMPT = """You ARE equipped to answer questions about the current state of
+the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
+functionality if the question requires live data.
+If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer
+from the static context below.
+If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",
+"Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):
+    1.  Recognize this requires live data.
+    2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).
+    3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
+For general knowledge questions not about the home: Answer truthfully from internal knowledge.
+"""
 
 
 @callback
@@ -495,6 +509,8 @@ class AssistAPI(API):
         ):
             prompt.append("This device is not able to start timers.")
 
+        prompt.append(DYNAMIC_CONTEXT_PROMPT)
+
         return prompt
 
     @callback
@@ -506,7 +522,7 @@ class AssistAPI(API):
 
         if exposed_entities and exposed_entities["entities"]:
             prompt.append(
-                "An overview of the areas and the devices in this smart home:"
+                "Static Context: An overview of the areas and the devices in this smart home:"
             )
             prompt.append(yaml_util.dump(list(exposed_entities["entities"].values())))
 
@@ -562,13 +578,21 @@ class AssistAPI(API):
                     names.extend(info["names"].split(", "))
                 tools.append(CalendarGetEventsTool(names))
 
+            if exposed_domains is not None and TODO_DOMAIN in exposed_domains:
+                names = []
+                for info in exposed_entities["entities"].values():
+                    if info["domain"] != TODO_DOMAIN:
+                        continue
+                    names.extend(info["names"].split(", "))
+                tools.append(TodoGetItemsTool(names))
+
             tools.extend(
                 ScriptTool(self.hass, script_entity_id)
                 for script_entity_id in exposed_entities[SCRIPT_DOMAIN]
             )
 
         if exposed_domains:
-            tools.append(GetHomeStateTool())
+            tools.append(GetLiveContextTool())
 
         return tools
 
@@ -1009,7 +1033,66 @@ class CalendarGetEventsTool(Tool):
         return {"success": True, "result": events}
 
 
-class GetHomeStateTool(Tool):
+class TodoGetItemsTool(Tool):
+    """LLM Tool allowing querying a to-do list."""
+
+    name = "todo_get_items"
+    description = (
+        "Query a to-do list to find out what items are on it. "
+        "Use this to answer questions like 'What's on my task list?' or 'Read my grocery list'. "
+        "Filters items by status (needs_action, completed, all)."
+    )
+
+    def __init__(self, todo_lists: list[str]) -> None:
+        """Init the get items tool."""
+        self.parameters = vol.Schema(
+            {
+                vol.Required("todo_list"): vol.In(todo_lists),
+                vol.Optional(
+                    "status",
+                    description="Filter returned items by status, by default returns incomplete items",
+                    default="needs_action",
+                ): vol.In(["needs_action", "completed", "all"]),
+            }
+        )
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Query a to-do list."""
+        data = self.parameters(tool_input.tool_args)
+        result = intent.async_match_targets(
+            hass,
+            intent.MatchTargetsConstraints(
+                name=data["todo_list"],
+                domains=[TODO_DOMAIN],
+                assistant=llm_context.assistant,
+            ),
+        )
+        if not result.is_match:
+            return {"success": False, "error": "To-do list not found"}
+        entity_id = result.states[0].entity_id
+        service_data: dict[str, Any] = {"entity_id": entity_id}
+        if status := data.get("status"):
+            if status == "all":
+                service_data["status"] = ["needs_action", "completed"]
+            else:
+                service_data["status"] = [status]
+        service_result = await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.GET_ITEMS,
+            service_data,
+            context=llm_context.context,
+            blocking=True,
+            return_response=True,
+        )
+        if not service_result:
+            return {"success": False, "error": "To-do list not found"}
+        items = cast(dict, service_result)[entity_id]["items"]
+        return {"success": True, "result": items}
+
+
+class GetLiveContextTool(Tool):
     """Tool for getting the current state of exposed entities.
 
     This returns state for all entities that have been exposed to
@@ -1017,8 +1100,13 @@ class GetHomeStateTool(Tool):
     returns state for entities based on intent parameters.
     """
 
-    name = "get_home_state"
-    description = "Get the current state of all devices in the home. "
+    name = "GetLiveContext"
+    description = (
+        "Provides real-time information about the CURRENT state, value, or mode of devices, sensors, entities, or areas. "
+        "Use this tool for: "
+        "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
+        "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first)."
+    )
 
     async def async_call(
         self,
@@ -1036,7 +1124,7 @@ class GetHomeStateTool(Tool):
         if not exposed_entities["entities"]:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
         prompt = [
-            "An overview of the areas and the devices in this smart home:",
+            "Live Context: An overview of the areas and the devices in this smart home:",
             yaml_util.dump(list(exposed_entities["entities"].values())),
         ]
         return {

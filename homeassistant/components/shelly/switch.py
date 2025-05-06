@@ -39,6 +39,8 @@ from .utils import (
     is_rpc_exclude_from_relay,
 )
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class BlockSwitchDescription(BlockEntityDescription, SwitchEntityDescription):

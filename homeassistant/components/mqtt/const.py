@@ -105,6 +105,7 @@ CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_LIST = "modes"
 CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
+CONF_OFF_DELAY = "off_delay"
 CONF_ON_COMMAND_TYPE = "on_command_type"
 CONF_PAYLOAD_CLOSE = "payload_close"
 CONF_PAYLOAD_OPEN = "payload_open"
@@ -195,6 +196,8 @@ DEFAULT_POSITION_CLOSED = 0
 DEFAULT_POSITION_OPEN = 100
 DEFAULT_RETAIN = False
 DEFAULT_WHITE_SCALE = 255
+
+VALUES_ON_COMMAND_TYPE = ["first", "last", "brightness"]
 
 PROTOCOL_31 = "3.1"
 PROTOCOL_311 = "3.1.1"

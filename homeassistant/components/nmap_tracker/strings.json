@@ -24,10 +24,10 @@
       "user": {
         "description": "Configure hosts to be scanned by Nmap. Network address and excludes can be IP addresses (192.168.1.1), IP networks (192.168.0.0/24) or IP ranges (192.168.1.0-32).",
         "data": {
-          "hosts": "Network addresses (comma separated) to scan",
+          "hosts": "Network addresses (comma-separated) to scan",
           "home_interval": "Minimum number of minutes between scans of active devices (preserve battery)",
-          "exclude": "Network addresses (comma separated) to exclude from scanning",
-          "mac_exclude": "MAC addresses (comma separated) to exclude from tracking",
+          "exclude": "Network addresses (comma-separated) to exclude from scanning",
+          "mac_exclude": "MAC addresses (comma-separated) to exclude from tracking",
           "scan_options": "Raw configurable scan options for Nmap"
         }
       }
