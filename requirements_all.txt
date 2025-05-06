@@ -1161,7 +1161,7 @@ hole==0.8.0
 holidays==0.70
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250502.0
+home-assistant-frontend==20250502.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.4.30
@@ -1200,7 +1200,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.1.0
+ical==9.2.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1496,7 +1496,7 @@ nettigo-air-monitor==4.1.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.7.0
+nexia==2.9.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -2093,7 +2093,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.0b7
+pylamarzocco==2.0.0
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2480,7 +2480,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.16.1
+python-roborock==2.18.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
@@ -3007,7 +3007,7 @@ url-normalize==2.2.1
 uvcclient==0.12.1
 
 # homeassistant.components.roborock
-vacuum-map-parser-roborock==0.1.2
+vacuum-map-parser-roborock==0.1.4
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.3.0
@@ -3025,7 +3025,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.5.0
 
 # homeassistant.components.voip
-voip-utils==0.3.1
+voip-utils==0.3.2
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
@@ -3101,7 +3101,7 @@ wyoming==1.5.4
 xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.37.0
+xiaomi-ble==0.38.0
 
 # homeassistant.components.knx
 xknx==3.6.0
