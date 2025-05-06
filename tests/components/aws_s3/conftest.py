@@ -1,4 +1,4 @@
-"""Common fixtures for the S3 tests."""
+"""Common fixtures for the AWS S3 tests."""
 
 from collections.abc import AsyncIterator, Generator
 import json
@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.backup import AgentBackup
-from homeassistant.components.s3.backup import (
+from homeassistant.components.aws_s3.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
     suggested_filenames,
 )
-from homeassistant.components.s3.const import DOMAIN
+from homeassistant.components.aws_s3.const import DOMAIN
+from homeassistant.components.backup import AgentBackup
 
 from .const import USER_INPUT
 
