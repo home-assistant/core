@@ -432,6 +432,31 @@ class InverterSensor(InverterEntity, SensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
+<<<<<<< HEAD
+=======
+    def __init__(
+        self,
+        coordinator: InverterCoordinator,
+        entry: InverterConfigEntry,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Pass coordinator to CoordinatorEntity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._inverter = coordinator.api.inverter
+        self.data_key = description.key
+        assert entry.unique_id
+        self._attr_unique_id = f"{entry.unique_id}_{self.data_key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id)},
+            name="Imeon inverter",
+            manufacturer="Imeon Energy",
+            model=self._inverter.get("inverter"),
+            sw_version=self._inverter.get("software"),
+            serial_number=self._inverter.get("serial"),
+        )
+
+>>>>>>> 3bcdad8d743 (Display serial number of the device)
     @property
     def native_value(self) -> StateType | None:
         """Return the state of the entity."""
