@@ -628,7 +628,7 @@ blockchain==1.4.4
 bluecurrent-api==1.2.3
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.4.0
+bluemaestro-ble==0.4.1
 
 # homeassistant.components.decora
 # bluepy==1.3.0
