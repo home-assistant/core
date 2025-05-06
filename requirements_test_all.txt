@@ -963,7 +963,7 @@ habiticalib==0.3.7
 habluetooth==3.48.2
 
 # homeassistant.components.cloud
-hass-nabucasa==0.96.0
+hass-nabucasa==0.98.0
 
 # homeassistant.components.conversation
 hassil==2.2.3

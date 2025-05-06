@@ -52,7 +52,7 @@ dependencies = [
   "ha-ffmpeg==3.2.2",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==0.96.0",
+  "hass-nabucasa==0.98.0",
   # hassil is indirectly imported from onboarding via the import chain
   # onboarding->cloud->assist_pipeline->conversation->hassil. Onboarding needs
   # to be setup in stage 0, but we don't want to also promote cloud with all its
