@@ -219,6 +219,12 @@
           "iot_class": "cloud_push",
           "name": "Amazon Web Services (AWS)"
         },
+        "aws_s3": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "AWS S3"
+        },
         "fire_tv": {
           "integration_type": "virtual",
           "config_flow": false,
@@ -604,12 +610,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "aws_s3": {
-      "name": "AWS S3",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_push"
     },
     "axis": {
       "name": "Axis",
