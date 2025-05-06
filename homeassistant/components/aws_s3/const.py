@@ -1,11 +1,11 @@
-"""Constants for the S3 integration."""
+"""Constants for the AWS S3 integration."""
 
 from collections.abc import Callable
 from typing import Final
 
 from homeassistant.util.hass_dict import HassKey
 
-DOMAIN: Final = "s3"
+DOMAIN: Final = "aws_s3"
 
 CONF_ACCESS_KEY_ID = "access_key_id"
 CONF_SECRET_ACCESS_KEY = "secret_access_key"
