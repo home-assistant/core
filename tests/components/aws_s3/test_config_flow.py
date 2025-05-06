@@ -1,4 +1,4 @@
-"""Test the S3 config flow."""
+"""Test the AWS S3 config flow."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -10,7 +10,7 @@ from botocore.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.s3.const import CONF_BUCKET, CONF_ENDPOINT_URL, DOMAIN
+from homeassistant.components.aws_s3.const import CONF_BUCKET, CONF_ENDPOINT_URL, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
