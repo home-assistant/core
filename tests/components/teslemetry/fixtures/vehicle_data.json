@@ -278,6 +278,165 @@
       "vehicle_self_test_progress": 0,
       "vehicle_self_test_requested": false,
       "webcam_available": true
+    },
+    "charge_schedule_data": {
+      "charge_schedules": [
+        {
+          "id": 1728797699,
+          "name": "",
+          "days_of_week": 127,
+          "start_enabled": true,
+          "start_time": 540,
+          "end_enabled": true,
+          "end_time": 960,
+          "one_time": false,
+          "enabled": true,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 1745538630,
+          "name": "",
+          "days_of_week": 2,
+          "start_enabled": true,
+          "start_time": 360,
+          "end_enabled": false,
+          "end_time": 360,
+          "one_time": true,
+          "enabled": true,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 1745538649,
+          "name": "",
+          "days_of_week": 4,
+          "start_enabled": false,
+          "start_time": 1320,
+          "end_enabled": true,
+          "end_time": 360,
+          "one_time": true,
+          "enabled": true,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 1745538666,
+          "name": "",
+          "days_of_week": 28,
+          "start_enabled": true,
+          "start_time": 1320,
+          "end_enabled": true,
+          "end_time": 360,
+          "one_time": false,
+          "enabled": true,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 1745538667,
+          "name": "",
+          "days_of_week": 1,
+          "start_enabled": true,
+          "start_time": 1320,
+          "end_enabled": true,
+          "end_time": 360,
+          "one_time": false,
+          "enabled": false,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        }
+      ],
+      "timestamp": {
+        "seconds": 1745538813,
+        "nanos": 178000000
+      },
+      "charge_schedule_window": null,
+      "charge_buffer": 6,
+      "max_num_charge_schedules": 100,
+      "next_schedule": true,
+      "show_schedule_complete_state": false
+    },
+    "preconditioning_schedule_data": {
+      "precondition_schedules": [
+        {
+          "id": 1739410968753,
+          "name": "",
+          "days_of_week": 0,
+          "precondition_time": 60,
+          "one_time": true,
+          "enabled": true,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 1724190474,
+          "name": "",
+          "days_of_week": 127,
+          "precondition_time": 960,
+          "one_time": false,
+          "enabled": false,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 1738189335,
+          "name": "",
+          "days_of_week": 48,
+          "precondition_time": 945,
+          "one_time": false,
+          "enabled": false,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 1730953614,
+          "name": "",
+          "days_of_week": 48,
+          "precondition_time": 510,
+          "one_time": false,
+          "enabled": true,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 1734819574,
+          "name": "",
+          "days_of_week": 1,
+          "precondition_time": 540,
+          "one_time": true,
+          "enabled": false,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 1724190472,
+          "name": "",
+          "days_of_week": 127,
+          "precondition_time": 465,
+          "one_time": false,
+          "enabled": false,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 1724190471,
+          "name": "",
+          "days_of_week": 127,
+          "precondition_time": 450,
+          "one_time": false,
+          "enabled": false,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        }
+      ],
+      "timestamp": {
+        "seconds": 1745538813,
+        "nanos": 727000000
+      },
+      "preconditioning_schedule_window": null,
+      "max_num_precondition_schedules": 100,
+      "next_schedule": true
     }
   }
 }
