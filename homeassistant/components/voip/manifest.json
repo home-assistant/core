@@ -8,5 +8,5 @@
   "iot_class": "local_push",
   "loggers": ["voip_utils"],
   "quality_scale": "internal",
-  "requirements": ["voip-utils==0.3.1"]
+  "requirements": ["voip-utils==0.3.2"]
 }

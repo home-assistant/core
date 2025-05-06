@@ -1151,7 +1151,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
 }
 
 MQTT_DEVICE_PLATFORM_FIELDS = {
-    ATTR_NAME: PlatformField(selector=TEXT_SELECTOR, required=False, validator=str),
+    ATTR_NAME: PlatformField(selector=TEXT_SELECTOR, required=True, validator=str),
     ATTR_SW_VERSION: PlatformField(
         selector=TEXT_SELECTOR, required=False, validator=str
     ),
