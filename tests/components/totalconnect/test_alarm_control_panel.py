@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -32,12 +32,14 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
+from . import setup_integration
 from .common import (
     ENDPOINT_FULL_STATUS,
     LOCATION_ID,
@@ -58,7 +60,7 @@ from .common import (
     setup_platform,
 )
 
-from tests.common import async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "alarm_control_panel.test"
 ENTITY_ID_2 = "alarm_control_panel.test_partition_2"
@@ -69,21 +71,21 @@ DELAY = timedelta(seconds=10)
 ARMING_HELPER = "homeassistant.components.totalconnect.alarm_control_panel.ArmingHelper"
 
 
-async def test_attributes(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+async def test_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the alarm control panel attributes are correct."""
-    entry = await setup_platform(hass, ALARM_DOMAIN)
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            ENDPOINT_FULL_STATUS,
-            json=PANEL_STATUS_DISARMED,
-        )
+    with patch(
+        "homeassistant.components.totalconnect.PLATFORMS",
+        [Platform.ALARM_CONTROL_PANEL],
+    ):
+        await setup_integration(hass, mock_config_entry)
 
-        await async_update_entity(hass, ENTITY_ID)
-    await hass.async_block_till_done()
-
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 def _pick_domain(action: str) -> str:
