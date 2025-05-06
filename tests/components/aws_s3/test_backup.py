@@ -1,4 +1,4 @@
-"""Test the S3 backup platform."""
+"""Test the AWS S3 backup platform."""
 
 from collections.abc import AsyncGenerator
 from io import StringIO
@@ -9,19 +9,19 @@ from unittest.mock import AsyncMock, Mock, patch
 from botocore.exceptions import ConnectTimeoutError
 import pytest
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
-from homeassistant.components.s3.backup import (
+from homeassistant.components.aws_s3.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
     BotoCoreError,
     S3BackupAgent,
     async_register_backup_agents_listener,
     suggested_filenames,
 )
-from homeassistant.components.s3.const import (
+from homeassistant.components.aws_s3.const import (
     CONF_ENDPOINT_URL,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
@@ -362,7 +362,7 @@ async def test_agents_upload_network_failure(
         )
 
     assert resp.status == 201
-    assert "Upload failed for s3" in caplog.text
+    assert "Upload failed for aws_s3" in caplog.text
 
 
 async def test_agents_download(

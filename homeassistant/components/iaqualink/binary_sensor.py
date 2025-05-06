@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN as AQUALINK_DOMAIN
+from .const import DOMAIN
 from .entity import AqualinkEntity
 
 PARALLEL_UPDATES = 0
@@ -28,7 +28,7 @@ async def async_setup_entry(
     async_add_entities(
         (
             HassAqualinkBinarySensor(dev)
-            for dev in hass.data[AQUALINK_DOMAIN][BINARY_SENSOR_DOMAIN]
+            for dev in hass.data[DOMAIN][BINARY_SENSOR_DOMAIN]
         ),
         True,
     )

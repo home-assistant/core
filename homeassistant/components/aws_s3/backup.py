@@ -1,4 +1,4 @@
-"""Backup platform for the S3 integration."""
+"""Backup platform for the AWS S3 integration."""
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 import functools
