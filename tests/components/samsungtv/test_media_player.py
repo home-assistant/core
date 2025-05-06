@@ -1105,17 +1105,27 @@ async def test_select_source(hass: HomeAssistant, remote: Mock) -> None:
 
 async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
     """Test for select_source with invalid source."""
+
+    source = "INVALID"
+
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv_entry(hass, MOCK_CONFIG)
         remote.reset_mock()
-        await hass.services.async_call(
-            MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "INVALID"},
-            True,
-        )
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                MP_DOMAIN,
+                SERVICE_SELECT_SOURCE,
+                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: source},
+                True,
+            )
         # control not called
         assert remote.control.call_count == 0
+        assert exc_info.value.translation_domain == DOMAIN
+        assert exc_info.value.translation_key == "source_unsupported"
+        assert exc_info.value.translation_placeholders == {
+            "entity": ENTITY_ID,
+            "source": source,
+        }
 
 
 @pytest.mark.usefixtures("rest_api")
