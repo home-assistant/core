@@ -1,11 +1,12 @@
 """Config flow for growatt server integration."""
 
+import logging
 from typing import Any
 
 import growattServer
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -14,8 +15,11 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
+    LOGIN_LOCKED_CODE,
     SERVER_URLS,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -61,11 +65,26 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             self.api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
         )
 
-        if (
-            not login_response["success"]
-            and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
-        ):
-            return self._async_show_user_form({"base": "invalid_auth"})
+        if not login_response["success"]:
+            if login_response["msg"] == LOGIN_INVALID_AUTH_CODE:
+                # Invalid auth code
+                _LOGGER.error(
+                    "Invalid authentication for %s", user_input[CONF_USERNAME]
+                )
+                return self._async_show_user_form({"base": "invalid_auth"})
+            if login_response["msg"] == LOGIN_LOCKED_CODE:
+                # Account locked
+                _LOGGER.error(
+                    "Account %s is locked for %s hours",
+                    user_input[CONF_USERNAME],
+                    login_response["lockDuration"],
+                )
+                return self._async_show_user_form({"base": "account_locked"})
+            _LOGGER.error(
+                "Unknown error for %s: %s", user_input[CONF_USERNAME], login_response
+            )
+            # Unknown error
+            return self._async_show_user_form({"base": "unknown_error"})
         self.user_id = login_response["user"]["id"]
 
         self.data = user_input
