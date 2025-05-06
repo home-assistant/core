@@ -47,7 +47,7 @@ def mock_coordinator(mock_nanoleaf):
     return coordinator
 
 
-async def test_async_turn_on_writes_state(mock_coordinator):
+async def test_async_turn_on_writes_state(mock_coordinator) -> None:
     """Test that async_turn_on calls async_write_ha_state."""
     entity = NanoleafLight(mock_coordinator)
 
@@ -56,7 +56,7 @@ async def test_async_turn_on_writes_state(mock_coordinator):
         mock_async_write_ha_state.assert_called_once()
 
 
-async def test_async_turn_off_writes_state(mock_coordinator):
+async def test_async_turn_off_writes_state(mock_coordinator) -> None:
     """Test that async_turn_off calls async_write_ha_state."""
     entity = NanoleafLight(mock_coordinator)
 
@@ -65,7 +65,7 @@ async def test_async_turn_off_writes_state(mock_coordinator):
         mock_async_write_ha_state.assert_called_once()
 
 
-async def test_async_turn_on_with_options_writes_state(mock_coordinator):
+async def test_async_turn_on_with_options_writes_state(mock_coordinator) -> None:
     """Test that async_turn_on with various options calls async_write_ha_state."""
     entity = NanoleafLight(mock_coordinator)
 
@@ -84,7 +84,7 @@ async def test_async_turn_on_with_options_writes_state(mock_coordinator):
             mock_async_write_ha_state.assert_called_once()
 
 
-async def test_async_turn_off_with_transition_writes_state(mock_coordinator):
+async def test_async_turn_off_with_transition_writes_state(mock_coordinator) -> None:
     """Test that async_turn_off with transition calls async_write_ha_state."""
     entity = NanoleafLight(mock_coordinator)
 
@@ -93,7 +93,7 @@ async def test_async_turn_off_with_transition_writes_state(mock_coordinator):
         mock_async_write_ha_state.assert_called_once()
 
 
-async def test_effect_validation(mock_coordinator):
+async def test_effect_validation(mock_coordinator) -> None:
     """Test that invalid effects raise ValueError."""
     mock_coordinator.nanoleaf.effects_list = ["Rainbow", "Sunset"]
     entity = NanoleafLight(mock_coordinator)
