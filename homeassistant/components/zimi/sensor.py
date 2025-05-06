@@ -62,7 +62,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Zimi Sensor platform."""
 
-    api: ControlPoint = config_entry.runtime_data
+    api = config_entry.runtime_data
 
     for description in GARAGE_SENSOR_DESCRIPTIONS:
         sensors: list[ZimiSensor] = [
@@ -87,10 +87,6 @@ class ZimiSensor(ZimiEntity, SensorEntity):
 
         self.entity_description = description
         self._attr_unique_id = device.identifier + "." + self.entity_description.key
-
-        _LOGGER.debug(
-            "Initialising ZimiSensor %s in %s", self._device.name, self._device.room
-        )
 
     @property
     def native_value(self) -> float | None:
