@@ -94,3 +94,8 @@ HOME_COMPATIBLE_CATEGORIES = [
     FreeboxHomeCategory.PIR,
     FreeboxHomeCategory.RTS,
 ]
+
+WIFI_BANDS = {
+    "2d4g": "2.4GHz",
+    "5g": "5GHz",
+}
