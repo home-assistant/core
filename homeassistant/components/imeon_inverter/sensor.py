@@ -456,6 +456,7 @@ class InverterSensor(CoordinatorEntity[InverterCoordinator], SensorEntity):
             manufacturer="Imeon Energy",
             model=self._inverter.get("inverter"),
             sw_version=self._inverter.get("software"),
+            serial_number=self._inverter.get("serial"),
         )
 
     @property
