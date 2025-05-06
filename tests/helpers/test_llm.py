@@ -670,8 +670,11 @@ async def test_assist_api_prompt(
     no_timer_prompt = "This device is not able to start timers."
 
     area_prompt = (
+        "When there is only one device of a specific type, "
+        "you can assume the user is referring to that device."
         "When a user asks to turn on all devices of a specific type, "
-        "ask user to specify an area, unless there is only one device of that type."
+        "If there is more than one device of that type, "
+        "ask user to specify an area."
     )
     dynamic_context_prompt = """You ARE equipped to answer questions about the current state of
 the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
