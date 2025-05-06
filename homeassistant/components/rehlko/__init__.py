@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bo
     websession = async_get_clientsession(hass)
     rehlko = AioKem(session=websession)
     # If requests take more than 20 seconds; timeout and let the setup retry.
-    rehlko.set_timeout(timeout=20)
+    rehlko.set_timeout(20)
 
     async def async_refresh_token_update(refresh_token: str) -> None:
         """Handle refresh token update."""
@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bo
     # Retrys enabled after successful connection to prevent blocking startup
     rehlko.set_retry_policy(retry_count=3, retry_delays=[5, 10, 20])
     # Rehlko service can be slow to respond, increase timeout for polls.
-    rehlko.set_timeout(timeout=100)
+    rehlko.set_timeout(100)
     return True
 
 
