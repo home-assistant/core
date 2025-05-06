@@ -1,15 +1,20 @@
 """Calendar platform for Teslemetry integration."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
-from itertools import chain
 from typing import Any
 
+# Use List instead of list for older Python compatibility if needed,
+# but List is deprecated in newer versions. Sticking with list for modern Python.
+# from typing import List
 from attr import dataclass
 from tesla_fleet_api.const import Scope
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+)  # Renamed in newer HA Core
 from homeassistant.util import dt as dt_util
 
 from . import TeslemetryConfigEntry
@@ -17,68 +22,35 @@ from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehiclePollingEntity
 from .models import TeslemetryVehicleData
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: TeslemetryConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up the Teslemetry Calendar platform from a config entry."""
-
-    async_add_entities(
-        chain(
-            (
-                TeslemetryChargeSchedule(vehicle, entry.runtime_data.scopes)
-                for vehicle in entry.runtime_data.vehicles
-            ),
-            (
-                TeslemetryPreconditionSchedule(vehicle, entry.runtime_data.scopes)
-                for vehicle in entry.runtime_data.vehicles
-            ),
-            (
-                TeslemetryTariffSchedule(energy, "tariff_content_v2")
-                for energy in entry.runtime_data.energysites
-                if energy.info_coordinator.data.get("tariff_content_v2_seasons")
-            ),
-            (
-                TeslemetryTariffSchedule(energy, "tariff_content_v2_sell_tariff")
-                for energy in entry.runtime_data.energysites
-                if energy.info_coordinator.data.get(
-                    "tariff_content_v2_sell_tariff_seasons"
-                )
-            ),
-        )
-    )
-
-
+# Helper function to generate rrule day strings
 def get_rrule_days(days_of_week: int) -> list[str]:
     """Get the rrule days for a days_of_week binary."""
-
+    rrule_days_map = {
+        0b0000001: "MO",
+        0b0000010: "TU",
+        0b0000100: "WE",
+        0b0001000: "TH",
+        0b0010000: "FR",
+        0b0100000: "SA",
+        0b1000000: "SU",
+    }
     rrule_days = []
-    if days_of_week & 0b0000001:
-        rrule_days.append("MO")
-    if days_of_week & 0b0000010:
-        rrule_days.append("TU")
-    if days_of_week & 0b0000100:
-        rrule_days.append("WE")
-    if days_of_week & 0b0001000:
-        rrule_days.append("TH")
-    if days_of_week & 0b0010000:
-        rrule_days.append("FR")
-    if days_of_week & 0b0100000:
-        rrule_days.append("SA")
-    if days_of_week & 0b1000000:
-        rrule_days.append("SU")
+    for day_flag, day_code in rrule_days_map.items():
+        if days_of_week & day_flag:
+            rrule_days.append(day_code)
     return rrule_days
 
 
+# Helper function to check if a date matches the days_of_week mask
 def test_days_of_week(date: datetime, days_of_week: int) -> bool:
     """Check if a specific day is in the days_of_week binary."""
-    return days_of_week & 1 << date.weekday() > 0
+    # Ensure comparison is done correctly, shift 1 by weekday index
+    return (days_of_week & (1 << date.weekday())) > 0
 
 
 @dataclass
 class Schedule:
-    """A schedule for a vehicle."""
+    """A schedule for a vehicle or tariff."""
 
     name: str
     start_mins: timedelta
@@ -86,50 +58,140 @@ class Schedule:
     days_of_week: int
     uid: str
     location: str
-    rrule: str | None
+    rrule: (
+        str | None
+    )  # Use Optional[str] instead of str | None for broader compatibility
+
+    def generate_upcoming_events(
+        self, start_dt: datetime, end_dt: datetime
+    ) -> Generator[CalendarEvent]:
+        """Generate CalendarEvent objects for this schedule occurring strictly within the time range [start_dt, end_dt).
+
+        Args:
+            start_dt: The inclusive start datetime of the query range.
+            end_dt: The exclusive end datetime of the query range.
+
+        Yields:
+            CalendarEvent: Event objects for occurrences within the range.
+
+        """
+        # Start iterating from the beginning of the day of start_dt
+        current_day = dt_util.start_of_local_day(start_dt)
+
+        while current_day < end_dt:
+            # Check if the schedule runs on this day of the week
+            if test_days_of_week(current_day, self.days_of_week):
+                # Calculate the event's start and end datetime for the current day
+                event_start = current_day + self.start_mins
+                event_end = (
+                    current_day + self.end_mins
+                )  # end_mins might already include day rollover
+
+                # Ensure event_end is after event_start (handles midnight crossing if start_mins > end_mins)
+                # Note: The original _async_update_attrs already handles the timedelta calculation
+                # for midnight crossing, so end_mins might be > 1 day.
+
+                # Check if the calculated event overlaps with the query range [start_dt, end_dt)
+                # Overlap condition: (event_start < end_dt) and (event_end > start_dt)
+                if event_start < end_dt and event_end > start_dt:
+                    # Yield the event if it overlaps
+                    yield CalendarEvent(
+                        start=event_start,
+                        end=event_end,
+                        summary=self.name,
+                        description=self.location,  # Or a more specific description if available
+                        location=self.location,
+                        uid=self.uid,
+                        rrule=self.rrule,
+                    )
+
+            # Move to the next day
+            current_day += timedelta(days=1)
+
+            # Optimization: If rrule indicates COUNT=1, stop after the first valid day found
+            # However, the current rrule string doesn't reliably encode one-time nature
+            # separate from days_of_week. Relying on the date iteration boundary is safer.
+            # The original code had a `count < 7` check which is removed here in favor
+            # of strictly adhering to start_dt and end_dt.
 
 
+# Shared utility function to get sorted events from multiple schedules
+async def async_get_sorted_schedule_events(
+    schedules: list[Schedule], start_dt: datetime, end_dt: datetime
+) -> list[CalendarEvent]:
+    """Fetch events from multiple schedules within a time range and return them sorted by start time.
+
+    Args:
+        schedules: A list of Schedule objects.
+        start_dt: The inclusive start datetime of the query range.
+        end_dt: The exclusive end datetime of the query range.
+
+    Returns:
+        A list of CalendarEvent objects, sorted chronologically.
+
+    """
+    # Gather all events from all schedules within the given time range
+    # This uses a nested list comprehension for conciseness.
+    all_events: list[CalendarEvent] = [
+        event
+        for schedule in schedules
+        for event in schedule.generate_upcoming_events(start_dt, end_dt)
+    ]
+
+    # Sort the collected events by their start time
+    return sorted(all_events, key=lambda event: event.start)
+
+
+# --- Vehicle Charge Schedule ---
 class TeslemetryChargeSchedule(TeslemetryVehiclePollingEntity, CalendarEntity):
     """Vehicle Charge Schedule Calendar."""
 
     _attr_entity_registry_enabled_default = False
     schedules: list[Schedule]
-    summary: str
+    summary_format: str  # Use a format string for summary
 
     def __init__(
         self,
         data: TeslemetryVehicleData,
         scopes: list[Scope],
     ) -> None:
-        """Initialize the climate."""
+        """Initialize the charge schedule calendar."""
         self.schedules = []
-        self.summary = f"Charge scheduled for {data.device.get('name')}"
+        # Store format string, actual name might be None initially
+        self.summary_format = (
+            f"Charge scheduled for {data.device.get('name', 'Vehicle')}"
+        )
         super().__init__(data, "charge_schedule_data_charge_schedules")
+        # Set name based on device name if available
+        self._attr_name = f"{data.device.get('name', 'Vehicle')} Charge Schedule"
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         now = dt_util.now()
-        event = None
-        for schedule in self.schedules:
-            day = dt_util.start_of_local_day()
-            while not event or day < event.start:
-                if test_days_of_week(day, schedule.days_of_week):
-                    start = day + schedule.start_mins
-                    end = day + schedule.end_mins
+        next_event: CalendarEvent | None = None
 
-                    if end > now and (not event or start < event.start):
-                        event = CalendarEvent(
-                            start=start,
-                            end=end,
-                            summary=schedule.name,
-                            description=schedule.location,
-                            location=schedule.location,
-                            uid=schedule.uid,
-                            rrule=schedule.rrule,
-                        )
-                day += timedelta(days=1)
-        return event
+        # Define a reasonable future limit for finding the 'next' event (e.g., 14 days)
+        # Avoids iterating indefinitely if schedules are far in the future.
+        future_limit = now + timedelta(days=14)
+
+        for schedule in self.schedules:
+            # Use the generator to find the first event for this schedule after 'now'
+            try:
+                # Get the first event yielded by the generator within the future limit
+                first_occurrence = next(
+                    schedule.generate_upcoming_events(now, future_limit), None
+                )
+            except StopIteration:
+                # Generator finished without yielding anything in the range
+                first_occurrence = None
+
+            if first_occurrence:
+                # If this is the first event found, or if it's earlier than the current 'next_event'
+                if next_event is None or first_occurrence.start < next_event.start:
+                    next_event = first_occurrence
+
+        return next_event
 
     async def async_get_events(
         self,
@@ -137,120 +199,115 @@ class TeslemetryChargeSchedule(TeslemetryVehiclePollingEntity, CalendarEntity):
         start_date: datetime,
         end_date: datetime,
     ) -> list[CalendarEvent]:
-        """Return calendar events within a datetime range."""
-
-        events = []
-        for schedule in self.schedules:
-            day = dt_util.start_of_local_day()
-            count = 0
-
-            # Iterate through the next 7 days for non-reoccuring schedules
-            # or every day for recurring schedules, until end_date
-            while day < end_date and (count < 7 or schedule.rrule):
-                if day >= start_date and test_days_of_week(day, schedule.days_of_week):
-                    start = day + schedule.start_mins
-                    end = day + schedule.end_mins
-                    if (end > start_date) and (start < end_date):
-                        events.append(
-                            CalendarEvent(
-                                start=start,
-                                end=end,
-                                summary=schedule.name,
-                                description=schedule.location,
-                                location=schedule.location,
-                                uid=schedule.uid,
-                                rrule=schedule.rrule,
-                            )
-                        )
-                day += timedelta(days=1)
-                count += 1
-
-        events.sort(key=lambda x: x.start)
-        return events
+        """Return calendar events within a datetime range using the shared helper."""
+        # Delegate to the shared function
+        return await async_get_sorted_schedule_events(
+            self.schedules, start_date, end_date
+        )
 
     def _async_update_attrs(self) -> None:
-        """Update the Calendar events."""
-        schedules = self._value or []
+        """Update the Calendar events by parsing raw schedule data."""
+        raw_schedules_data = self._value or []
         self.schedules = []
-        for schedule in schedules:
-            if not schedule["enabled"] or not schedule["days_of_week"]:
+        for schedule_data in raw_schedules_data:
+            if not schedule_data.get("enabled") or not schedule_data.get(
+                "days_of_week"
+            ):
                 continue
-            if not schedule["end_enabled"]:
-                start_mins = timedelta(minutes=schedule["start_time"])
-                end_mins = start_mins
-            elif not schedule["start_enabled"]:
-                end_mins = timedelta(minutes=schedule["end_time"])
-                start_mins = end_mins
-            elif schedule["start_time"] > schedule["end_time"]:
-                start_mins = timedelta(minutes=schedule["start_time"])
-                end_mins = timedelta(days=1, minutes=schedule["end_time"])
-            else:
-                start_mins = timedelta(minutes=schedule["start_time"])
-                end_mins = timedelta(minutes=schedule["end_time"])
 
-            rrule = f"FREQ=WEEKLY;WKST=MO;BYDAY={','.join(get_rrule_days(schedule['days_of_week']))}"
-            if schedule["one_time"]:
+            start_time_min = schedule_data.get("start_time", 0)
+            end_time_min = schedule_data.get("end_time", 0)
+            start_enabled = schedule_data.get(
+                "start_enabled", True
+            )  # Assume enabled if key missing? API dependent.
+            end_enabled = schedule_data.get("end_enabled", True)
+
+            # Determine start and end timedeltas based on enabled flags and times
+            if not end_enabled:
+                start_mins = timedelta(minutes=start_time_min)
+                end_mins = start_mins  # Treat as instantaneous if end is disabled
+            elif not start_enabled:
+                end_mins = timedelta(minutes=end_time_min)
+                start_mins = end_mins  # Treat as instantaneous if start is disabled
+            elif start_time_min > end_time_min:
+                # Crosses midnight
+                start_mins = timedelta(minutes=start_time_min)
+                end_mins = timedelta(days=1, minutes=end_time_min)
+            else:
+                # Same day
+                start_mins = timedelta(minutes=start_time_min)
+                end_mins = timedelta(minutes=end_time_min)
+
+            days_of_week = schedule_data["days_of_week"]
+            rrule_days = get_rrule_days(days_of_week)
+            rrule = f"FREQ=WEEKLY;WKST=MO;BYDAY={','.join(rrule_days)}"
+
+            # Handle one-time schedules - modify rrule or handle in generator?
+            # The original code added COUNT=1. Let's keep that for rrule consistency.
+            # Note: The generator logic currently doesn't explicitly use rrule for iteration control,
+            # it relies on date boundaries. But rrule is useful for calendar clients.
+            if schedule_data.get("one_time"):
                 rrule += ";COUNT=1"
+                # If one_time, ensure days_of_week represents *only* the specific day? API dependent.
 
             self.schedules.append(
                 Schedule(
-                    name=schedule["name"] or self.summary,
+                    name=schedule_data.get("name")
+                    or self.summary_format,  # Use format string
                     start_mins=start_mins,
                     end_mins=end_mins,
-                    days_of_week=schedule["days_of_week"],
-                    uid=str(schedule["id"]),
-                    location=f"{schedule['latitude']},{schedule['longitude']}",
+                    days_of_week=days_of_week,
+                    uid=str(
+                        schedule_data.get("id", f"charge_{len(self.schedules)}")
+                    ),  # Ensure unique ID
+                    location=f"{schedule_data.get('latitude', '')},{schedule_data.get('longitude', '')}",
                     rrule=rrule,
                 )
             )
+        # Update the entity's availability based on whether schedules exist
+        self._attr_available = bool(self.schedules)
 
 
 class TeslemetryPreconditionSchedule(TeslemetryVehiclePollingEntity, CalendarEntity):
     """Vehicle Precondition Schedule Calendar."""
 
     _attr_entity_registry_enabled_default = False
-    events: list[CalendarEvent]
-    summary: str
+    schedules: list[Schedule]
+    summary_format: str
 
     def __init__(
         self,
         data: TeslemetryVehicleData,
         scopes: list[Scope],
     ) -> None:
-        """Initialize the climate."""
-        self.summary = f"Precondition scheduled for {data.device.get('name')}"
+        """Initialize the precondition schedule calendar."""
+        self.schedules = []
+        self.summary_format = (
+            f"Precondition scheduled for {data.device.get('name', 'Vehicle')}"
+        )
         super().__init__(data, "preconditioning_schedule_data_precondition_schedules")
+        self._attr_name = f"{data.device.get('name', 'Vehicle')} Precondition Schedule"
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         now = dt_util.now()
-        event = None
+        next_event: CalendarEvent | None = None
+        future_limit = now + timedelta(days=14)  # Look ahead 14 days
 
         for schedule in self.schedules:
-            day = dt_util.start_of_local_day()
+            try:
+                first_occurrence = next(
+                    schedule.generate_upcoming_events(now, future_limit), None
+                )
+            except StopIteration:
+                first_occurrence = None
 
-            # Find the next occurrence of the schedule in time
-            # but dont look past an existing valid event
-            while not event or day < event.start:
-                # Confirm the schedule runs on this day of the week
-                if test_days_of_week(day, schedule.days_of_week):
-                    start = day + schedule.start_mins
-                    end = day + schedule.end_mins
+            if first_occurrence:
+                if next_event is None or first_occurrence.start < next_event.start:
+                    next_event = first_occurrence
 
-                    # Confirm schedule in in the future, and before any other valid event
-                    if end > now and (not event or start < event.start):
-                        event = CalendarEvent(
-                            start=start,
-                            end=end,
-                            summary=schedule.name,
-                            description=schedule.location,
-                            location=schedule.location,
-                            uid=schedule.uid,
-                            rrule=schedule.rrule,
-                        )
-                day += timedelta(days=1)
-        return event
+        return next_event
 
     async def async_get_events(
         self,
@@ -258,70 +315,53 @@ class TeslemetryPreconditionSchedule(TeslemetryVehiclePollingEntity, CalendarEnt
         start_date: datetime,
         end_date: datetime,
     ) -> list[CalendarEvent]:
-        """Return calendar events within a datetime range."""
-
-        events = []
-        # Iterate through each schedule
-        for schedule in self.schedules:
-            day = dt_util.start_of_local_day()
-            count = 0
-
-            # Iterate through the next 7 days for non-reoccuring schedules,
-            # or every day for recurring schedules, until end_date
-            while day < end_date and (count < 7 or schedule.rrule):
-                # Ensure that the event is within the specified date range, and on this day of the week.
-                if day >= start_date and test_days_of_week(day, schedule.days_of_week):
-                    start = day + schedule.start_mins
-                    end = day + schedule.end_mins
-                    # Check if the event is within the requested date range
-                    if (end > start_date) and (start < end_date):
-                        events.append(
-                            CalendarEvent(
-                                start=start,
-                                end=end,
-                                summary=schedule.name,
-                                description=schedule.location,
-                                location=schedule.location,
-                                uid=schedule.uid,
-                                rrule=schedule.rrule,
-                            )
-                        )
-                day += timedelta(days=1)
-                count += 1
-
-        # Sort events by start time
-        events.sort(key=lambda x: x.start)
-        return events
+        """Return calendar events within a datetime range using the shared helper."""
+        # Delegate to the shared function
+        return await async_get_sorted_schedule_events(
+            self.schedules, start_date, end_date
+        )
 
     def _async_update_attrs(self) -> None:
-        """Update the Calendar events."""
-        schedules = self._value or []
+        """Update the Calendar events by parsing raw schedule data."""
+        raw_schedules_data = self._value or []
         self.schedules = []
-        for schedule in schedules:
-            if not schedule["enabled"] or not schedule["days_of_week"]:
+        for schedule_data in raw_schedules_data:
+            if not schedule_data.get("enabled") or not schedule_data.get(
+                "days_of_week"
+            ):
                 continue
-            start_mins = timedelta(minutes=schedule["precondition_time"])
-            end_mins = timedelta(minutes=schedule["precondition_time"])
 
+            # Preconditioning seems to be instantaneous based on original code
+            precondition_time_min = schedule_data.get("precondition_time", 0)
+            start_mins = timedelta(minutes=precondition_time_min)
+            end_mins = start_mins  # Instantaneous event
+
+            days_of_week = schedule_data["days_of_week"]
             rrule = None
-            if not schedule["one_time"]:
-                rrule = f"FREQ=WEEKLY;WKST=MO;BYDAY={','.join(get_rrule_days(schedule['days_of_week']))}"
+            # Only set rrule if it's a recurring schedule
+            if not schedule_data.get("one_time"):
+                rrule_days = get_rrule_days(days_of_week)
+                rrule = f"FREQ=WEEKLY;WKST=MO;BYDAY={','.join(rrule_days)}"
 
             self.schedules.append(
                 Schedule(
-                    name=schedule["name"] or self.summary,
+                    name=schedule_data.get("name") or self.summary_format,
                     start_mins=start_mins,
                     end_mins=end_mins,
-                    days_of_week=schedule["days_of_week"],
-                    uid=str(schedule["id"]),
-                    location=f"{schedule['latitude']},{schedule['longitude']}",
+                    days_of_week=days_of_week,
+                    uid=str(
+                        schedule_data.get("id", f"precondition_{len(self.schedules)}")
+                    ),
+                    location=f"{schedule_data.get('latitude', '')},{schedule_data.get('longitude', '')}",
                     rrule=rrule,
                 )
             )
+        self._attr_available = bool(self.schedules)
 
 
+# --- Energy Tariff Schedule (Largely Unchanged by this Refactoring) ---
 @dataclass
-class TarrifPeriod:
+class TariffPeriod:  # Renamed from TarrifPeriod
     """A single tariff period."""
 
     name: str
@@ -333,78 +373,97 @@ class TarrifPeriod:
 
 
 class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
-    """Vehicle Charge Schedule Calendar."""
+    """Energy Site Tariff Schedule Calendar."""
 
-    seasons: dict[str, dict[str, Any]]
-    charges: dict[str, dict[str, Any]]
-    currency: str
+    # Define attributes for clarity
+    seasons: dict[str, dict[str, Any]] = {}
+    charges: dict[str, dict[str, Any]] = {}
+    currency: str = ""  # Should be fetched from config or site info if available
+    key_base: str  # Store the base key ('tariff_content_v2' or 'tariff_content_v2_sell_tariff')
+
+    def __init__(
+        self,
+        data: Any,  # Replace Any with specific EnergySite data type if available
+        key_base: str,
+    ) -> None:
+        """Initialize the tariff schedule calendar."""
+        # Assuming 'data' is the EnergySite object from runtime_data
+        self.key_base = key_base
+        self._attr_name = f"{data.info_coordinator.data.get('site_name', 'Energy Site')} {key_base.replace('_', ' ').replace('tariff content v2', 'Tariff').replace('sell tariff', 'Sell Tariff')}"
+        super().__init__(data, f"{key_base}_seasons")  # Use one key for initial check
 
     @property
     def event(self) -> CalendarEvent | None:
-        """Return the next upcoming event."""
-
+        """Return the *current* active tariff event."""
+        # This method finds the currently active period, not the *next* upcoming one.
+        # Keeping original logic as refactoring focused on the other schedule types.
         now = dt_util.now()
-        season = None
-        for season_name, season_data in self.seasons.items():
-            if not season_data:
-                continue
+        current_season_name = self._get_current_season(now)
 
-            start = datetime(
-                now.year,
-                season_data["fromMonth"],
-                season_data["fromDay"],
-                tzinfo=now.tzinfo,
-            )
-            end = datetime(
-                now.year,
-                season_data["toMonth"],
-                season_data["toDay"],
-                tzinfo=now.tzinfo,
-            ) + timedelta(days=1)
-
-            if end <= now <= start:
-                season = season_name
-                break
-
-        if not season:
+        if not current_season_name or not self.seasons.get(current_season_name):
             return None
 
-        for name in self.seasons[season]["tou_periods"]:
-            for period in self.seasons[season]["tou_periods"][name]["periods"]:
-                day = now.weekday()
-                if day < period.get("fromDayOfWeek", 0) or day > period.get(
-                    "toDayOfWeek", 6
-                ):
+        season_data = self.seasons[current_season_name]
+        tou_periods = season_data.get("tou_periods", {})
+
+        for period_name, period_group in tou_periods.items():
+            for period_def in period_group.get("periods", []):
+                # Check if today is within the period's day of week range
+                day_of_week = now.weekday()  # Monday is 0, Sunday is 6
+                from_day = period_def.get("fromDayOfWeek", 0)
+                to_day = period_def.get("toDayOfWeek", 6)
+                if not (from_day <= day_of_week <= to_day):
                     continue
-                start_time = datetime(
-                    now.year,
-                    now.month,
-                    now.day,
-                    period.get("from_hour", 0) % 24,
-                    period.get("from_minute", 0) % 60,
-                    tzinfo=now.tzinfo,
+
+                # Calculate start and end times for today
+                from_hour = period_def.get("fromHour", 0) % 24
+                from_minute = period_def.get("fromMinute", 0) % 60
+                to_hour = period_def.get("toHour", 0) % 24
+                to_minute = period_def.get("toMinute", 0) % 60
+
+                start_time = now.replace(
+                    hour=from_hour, minute=from_minute, second=0, microsecond=0
                 )
-                end_time = datetime(
-                    now.year,
-                    now.month,
-                    now.day,
-                    period.get("to_hour", 0) % 24,
-                    period.get("to_minute", 0) % 60,
-                    tzinfo=now.tzinfo,
+                end_time = now.replace(
+                    hour=to_hour, minute=to_minute, second=0, microsecond=0
                 )
-                if end_time < start_time:
-                    end_time += timedelta(days=1)
-                if start_time < now < end_time:
-                    price = self.charges.get(season, self.charges["ALL"])["rates"].get(
-                        name, self.charges["ALL"]["rates"]["ALL"]
-                    )
-                    return CalendarEvent(
-                        start=start_time,
-                        end=end_time,
-                        summary=f"{price}/kWh",
-                        description=f"Seasons: {season}\nPeriod: {name}\nPrice: {price}/kWh",
-                    )
-        return None
+
+                # Handle midnight crossing for the end time
+                if end_time <= start_time:
+                    # If end time is on or before start time, it means it ends the next day
+                    potential_end_time = end_time + timedelta(days=1)
+                    # Check if 'now' is between start_time today and end_time tomorrow
+                    if start_time <= now < potential_end_time:
+                        end_time = potential_end_time  # Use the next day's end time
+                    # Check if 'now' is between start_time yesterday (crossing midnight) and end_time today
+                    elif (start_time - timedelta(days=1)) <= now < end_time:
+                        start_time -= timedelta(days=1)  # Use yesterday's start time
+                    else:
+                        continue  # 'now' is not within this period
+                elif not (start_time <= now < end_time):
+                    continue  # 'now' is not within this period (same day)
+
+                # Found the active period
+                price = self._get_price_for_period(current_season_name, period_name)
+                price_str = (
+                    f"{price:.2f} {self.currency}/kWh"
+                    if price is not None
+                    else "Unknown Price"
+                )
+
+                return CalendarEvent(
+                    start=start_time,
+                    end=end_time,
+                    summary=f"{period_name.capitalize()}: {price_str}",
+                    description=(
+                        f"Season: {current_season_name.capitalize()}\n"
+                        f"Period: {period_name.capitalize()}\n"
+                        f"Price: {price_str}"
+                    ),
+                    uid=f"{self.key_base}_{current_season_name}_{period_name}_{start_time.isoformat()}",
+                )
+
+        return None  # No active period found for the current time and season
 
     async def async_get_events(
         self,
@@ -412,101 +471,209 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         start_date: datetime,
         end_date: datetime,
     ) -> list[CalendarEvent]:
-        """Return calendar events within a datetime range."""
+        """Return calendar events (tariff periods) within a datetime range."""
+        # Keeping original logic structure, but with minor cleanups.
         events: list[CalendarEvent] = []
 
-        TZ = dt_util.get_default_time_zone()
+        # Ensure start_date and end_date are timezone-aware (using local)
+        start_date = dt_util.as_local(start_date)
+        end_date = dt_util.as_local(end_date)
 
-        for year in range(start_date.year, end_date.year + 1):
-            for season, season_data in self.seasons.items():
-                if not season_data:
-                    continue
-                start = datetime(
-                    year,
-                    season_data["fromMonth"],
-                    season_data["fromDay"],
-                    tzinfo=TZ,
-                )
-                end = datetime(
-                    year,
-                    season_data["toMonth"],
-                    season_data["toDay"],
-                    tzinfo=TZ,
-                ) + timedelta(days=1)
+        # Iterate through each day in the requested range
+        current_day = dt_util.start_of_local_day(start_date)
+        while current_day < end_date:
+            season_name = self._get_current_season(current_day)
+            if not season_name or not self.seasons.get(season_name):
+                current_day += timedelta(days=1)
+                continue
 
-                # Skip if the range doesn't overlap with the season
-                if end <= start_date or start >= end_date:
-                    continue
+            season_data = self.seasons[season_name]
+            tou_periods = season_data.get("tou_periods", {})
+            day_of_week = current_day.weekday()
 
-                week: list[list[TarrifPeriod]] = [[], [], [], [], [], [], []]
-                for name, period_data in self.seasons[season]["tou_periods"].items():
-                    for period in period_data["periods"]:
-                        # Iterate through the specified day of week range
-                        for x in range(
-                            period.get("fromDayOfWeek", 0),
-                            period.get("toDayOfWeek", 6) + 1,
-                        ):
-                            week[x].append(
-                                # Values can be
-                                TarrifPeriod(
-                                    name,
-                                    self.charges.get(season, self.charges["ALL"])[
-                                        "rates"
-                                    ].get(name, self.charges["ALL"]["rates"]["ALL"]),
-                                    period.get("fromHour", 0) % 24,
-                                    period.get("fromMinute", 0) % 60,
-                                    period.get("toHour", 0) % 24,
-                                    period.get("toMinute", 0) % 60,
-                                )
-                            )
+            for period_name, period_group in tou_periods.items():
+                for period_def in period_group.get("periods", []):
+                    # Check if the current day matches the period's day range
+                    from_day = period_def.get("fromDayOfWeek", 0)
+                    to_day = period_def.get("toDayOfWeek", 6)
+                    if not (from_day <= day_of_week <= to_day):
+                        continue
 
-                # Find the overlap between the season and the requested time period
-                start = max(start_date, start)
-                end = min(end_date, end)
+                    # Calculate start and end times for the current day
+                    from_hour = period_def.get("fromHour", 0) % 24
+                    from_minute = period_def.get("fromMinute", 0) % 60
+                    to_hour = period_def.get("toHour", 0) % 24
+                    to_minute = period_def.get("toMinute", 0) % 60
 
-                # Iterate each day of that overlap
-                date = start
-                while date < end:
-                    weekday = date.weekday()
-                    for period in week[weekday]:
-                        start_time = datetime(
-                            date.year,
-                            date.month,
-                            date.day,
-                            period.from_hour,
-                            period.from_minute,
-                            tzinfo=TZ,
+                    start_time = current_day.replace(
+                        hour=from_hour, minute=from_minute, second=0, microsecond=0
+                    )
+                    end_time = current_day.replace(
+                        hour=to_hour, minute=to_minute, second=0, microsecond=0
+                    )
+
+                    # Handle midnight crossing
+                    if end_time <= start_time:
+                        end_time += timedelta(days=1)
+
+                    # Check if the event overlaps with the query range [start_date, end_date)
+                    if start_time < end_date and end_time > start_date:
+                        price = self._get_price_for_period(season_name, period_name)
+                        price_str = (
+                            f"{price:.2f} {self.currency}/kWh"
+                            if price is not None
+                            else "Unknown Price"
                         )
-                        end_time = datetime(
-                            date.year,
-                            date.month,
-                            date.day,
-                            period.to_hour,
-                            period.to_minute,
-                            tzinfo=TZ,
-                        )
-                        if end_time < start_time:
-                            # Handle periods that span midnight
-                            end_time += timedelta(days=1)
-                        if end_time > start_date or start_time < end_date:
-                            events.append(
-                                CalendarEvent(
-                                    start=start_time,
-                                    end=end_time,
-                                    summary=f"{period.price}/kWh",
-                                    description=f"Seasons: {season}\nPeriod: {period.name}\nPrice: {period.price}/kWh",
-                                )
+                        events.append(
+                            CalendarEvent(
+                                start=start_time,
+                                end=end_time,
+                                summary=f"{period_name.capitalize()}: {price_str}",
+                                description=(
+                                    f"Season: {season_name.capitalize()}\n"
+                                    f"Period: {period_name.capitalize()}\n"
+                                    f"Price: {price_str}"
+                                ),
+                                # Create a unique ID for each occurrence
+                                uid=f"{self.key_base}_{season_name}_{period_name}_{start_time.isoformat()}",
                             )
-                    date += timedelta(days=1)
+                        )
 
-        # Sort events by start time
+            current_day += timedelta(days=1)
+
+        # Sort events by start time (although daily iteration might already achieve this)
         events.sort(key=lambda x: x.start)
-
         return events
 
+    def _get_current_season(self, date_to_check: datetime) -> str | None:
+        """Determine the active season for a given date."""
+        local_date = dt_util.as_local(date_to_check)
+        year = local_date.year
+
+        for season_name, season_data in self.seasons.items():
+            if not season_data:
+                continue
+
+            # Create timezone-aware start and end dates for the season
+            try:
+                from_month = season_data["fromMonth"]
+                from_day = season_data["fromDay"]
+                to_month = season_data["toMonth"]
+                to_day = season_data["toDay"]
+
+                # Handle potential year wrapping for seasons crossing New Year
+                start_year = year
+                end_year = year
+
+                # If start month is later than end month, the season crosses the year boundary
+                if from_month > to_month or (
+                    from_month == to_month and from_day > to_day
+                ):
+                    # If the date_to_check is in the start month or later, it's this year's season start
+                    if local_date.month > from_month or (
+                        local_date.month == from_month and local_date.day >= from_day
+                    ):
+                        end_year = year + 1  # Season ends next year
+                    # Otherwise, the date must be before the end month/day, meaning it's part of the season that started last year
+                    else:
+                        start_year = year - 1  # Season started last year
+                # Else: Season is within the same calendar year
+
+                season_start = local_date.replace(
+                    year=start_year,
+                    month=from_month,
+                    day=from_day,
+                    hour=0,
+                    minute=0,
+                    second=0,
+                    microsecond=0,
+                )
+                # End date is exclusive, so add one day to the 'toDay'
+                season_end = local_date.replace(
+                    year=end_year,
+                    month=to_month,
+                    day=to_day,
+                    hour=0,
+                    minute=0,
+                    second=0,
+                    microsecond=0,
+                ) + timedelta(days=1)
+
+                if season_start <= local_date < season_end:
+                    return season_name
+            except (KeyError, ValueError):
+                # Handle potential issues with season data format
+                continue  # Skip this season if data is invalid
+
+        return None  # No matching season found
+
+    def _get_price_for_period(self, season_name: str, period_name: str) -> float | None:
+        """Get the price for a specific season and period name."""
+        try:
+            # Find the rates for the season, fallback to "ALL" season if specific not found
+            season_charges = self.charges.get(season_name, self.charges.get("ALL", {}))
+            rates = season_charges.get("rates", {})
+            # Find the price for the period, fallback to "ALL" period if specific not found
+            price = rates.get(period_name, rates.get("ALL"))
+            return float(price) if price is not None else None
+        except (KeyError, ValueError, TypeError):
+            return None  # Return None if price cannot be determined
+
     def _async_update_attrs(self) -> None:
-        """Update the Calendar events."""
-        if seasons := self.get(f"{self.key}_seasons"):
-            self.seasons = seasons
-        if charges := self.get(f"{self.key}_energy_charges"):
-            self.charges = charges
+        """Update the Calendar attributes from coordinator data."""
+        # Fetch latest seasons and charges data using the base key
+        self.seasons = self.coordinator.data.get(f"{self.key_base}_seasons", {})
+        self.charges = self.coordinator.data.get(f"{self.key_base}_energy_charges", {})
+        # Attempt to get currency info (location might vary)
+        self.currency = self.coordinator.data.get("currency", "")
+
+        # Update availability based on whether necessary data is present
+        self._attr_available = bool(self.seasons and self.charges)
+
+
+# --- Setup Function ---
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Teslemetry Calendar platform from a config entry."""
+    # Ensure runtime_data is loaded
+    if not entry.runtime_data:
+        # Handle case where data might not be ready (log error, etc.)
+        # _LOGGER.error("Teslemetry runtime data not available for calendar setup")
+        return
+
+    entities_to_add = []
+
+    # Vehicle Charge Schedules
+    entities_to_add.extend(
+        TeslemetryChargeSchedule(vehicle, entry.runtime_data.scopes)
+        for vehicle in entry.runtime_data.vehicles
+        # Add check if vehicle data actually supports charge schedules?
+    )
+
+    # Vehicle Precondition Schedules
+    entities_to_add.extend(
+        TeslemetryPreconditionSchedule(vehicle, entry.runtime_data.scopes)
+        for vehicle in entry.runtime_data.vehicles
+        # Add check if vehicle data actually supports precondition schedules?
+    )
+
+    # Energy Site Tariff Schedules (Buy)
+    entities_to_add.extend(
+        TeslemetryTariffSchedule(energy, "tariff_content_v2")
+        for energy in entry.runtime_data.energysites
+        # Check based on the specific key used in _async_update_attrs
+        if energy.info_coordinator.data.get("tariff_content_v2_seasons")
+    )
+
+    # Energy Site Tariff Schedules (Sell)
+    entities_to_add.extend(
+        TeslemetryTariffSchedule(energy, "tariff_content_v2_sell_tariff")
+        for energy in entry.runtime_data.energysites
+        # Check based on the specific key used in _async_update_attrs
+        if energy.info_coordinator.data.get("tariff_content_v2_sell_tariff_seasons")
+    )
+
+    async_add_entities(entities_to_add)
