@@ -1,4 +1,4 @@
-"""Config flow for the S3 integration."""
+"""Config flow for the AWS S3 integration."""
 
 from __future__ import annotations
 
