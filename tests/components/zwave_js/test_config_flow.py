@@ -653,6 +653,7 @@ async def test_usb_discovery(
     install_addon,
     addon_options,
     get_addon_discovery_info,
+    mock_usb_serial_by_id: MagicMock,
     set_addon_options,
     start_addon,
     usb_discovery_info: UsbServiceInfo,
@@ -668,6 +669,7 @@ async def test_usb_discovery(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
     assert result["description_placeholders"] == {"name": discovery_name}
+    assert mock_usb_serial_by_id.call_count == 1
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -765,6 +767,7 @@ async def test_usb_discovery_addon_not_running(
     supervisor,
     addon_installed,
     addon_options,
+    mock_usb_serial_by_id: MagicMock,
     set_addon_options,
     start_addon,
     get_addon_discovery_info,
@@ -779,6 +782,7 @@ async def test_usb_discovery_addon_not_running(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
+    assert mock_usb_serial_by_id.call_count == 2
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -876,6 +880,7 @@ async def test_usb_discovery_addon_not_running(
 async def test_usb_discovery_migration(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
+    mock_usb_serial_by_id: MagicMock,
     set_addon_options: AsyncMock,
     restart_addon: AsyncMock,
     client: MagicMock,
@@ -929,6 +934,7 @@ async def test_usb_discovery_migration(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
+    assert mock_usb_serial_by_id.call_count == 2
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -1278,6 +1284,7 @@ async def test_abort_usb_discovery_addon_required(
 async def test_abort_usb_discovery_confirm_addon_required(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
+    mock_usb_serial_by_id: MagicMock,
 ) -> None:
     """Test usb discovery confirm aborted when existing entry not using add-on."""
     addon_options["device"] = "/dev/another_device"
@@ -1301,6 +1308,7 @@ async def test_abort_usb_discovery_confirm_addon_required(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
+    assert mock_usb_serial_by_id.call_count == 2
 
     hass.config_entries.async_update_entry(
         entry,
@@ -1331,6 +1339,7 @@ async def test_usb_discovery_requires_supervisor(hass: HomeAssistant) -> None:
 async def test_usb_discovery_same_device(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
+    mock_usb_serial_by_id: MagicMock,
 ) -> None:
     """Test usb discovery flow is aborted when the add-on device is discovered."""
     addon_options["device"] = USB_DISCOVERY_INFO.device
@@ -1341,6 +1350,7 @@ async def test_usb_discovery_same_device(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert mock_usb_serial_by_id.call_count == 2
 
 
 @pytest.mark.parametrize(
