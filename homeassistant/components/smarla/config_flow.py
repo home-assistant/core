@@ -33,7 +33,6 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if await conn.refresh_token():
             info["serial_number"] = conn.token.serialNumber
-            info["token"] = conn.token.get_string()
         else:
             errors["base"] = "invalid_auth"
 
@@ -46,15 +45,19 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            errors, info = await self._handle_token(token=user_input[CONF_ACCESS_TOKEN])
+            token = user_input[CONF_ACCESS_TOKEN]
+
+            errors, info = await self._handle_token(token=token)
 
             if not errors:
-                await self.async_set_unique_id(info["serial_number"])
+                serial_number = info["serial_number"]
+
+                await self.async_set_unique_id(serial_number)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=info["serial_number"],
-                    data={CONF_ACCESS_TOKEN: info["token"]},
+                    title=serial_number,
+                    data={CONF_ACCESS_TOKEN: token},
                 )
 
         return self.async_show_form(

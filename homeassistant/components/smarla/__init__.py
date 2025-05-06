@@ -14,7 +14,7 @@ type FederwiegeConfigEntry = ConfigEntry[Federwiege]
 
 async def async_setup_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) -> bool:
     """Set up this integration using UI."""
-    connection = Connection(HOST, token_str=entry.data.get(CONF_ACCESS_TOKEN, None))
+    connection = Connection(HOST, token_b64=entry.data.get(CONF_ACCESS_TOKEN, None))
 
     # Check if token still has access
     if not await connection.refresh_token():
@@ -26,23 +26,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) -
 
     entry.runtime_data = federwiege
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry,
-        PLATFORMS,
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry,
-        PLATFORMS,
-    )
-
-    if unload_ok:
-        federwiege = entry.runtime_data
-        federwiege.disconnect()
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        entry.runtime_data.disconnect()
 
     return unload_ok

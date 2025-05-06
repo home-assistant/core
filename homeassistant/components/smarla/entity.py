@@ -14,14 +14,8 @@ from .const import DEVICE_MODEL_NAME, DOMAIN, MANUFACTURER_NAME
 class SmarlaBaseEntity(Entity):
     """Common Base Entity class for defining Smarla device."""
 
-    _property: Property
-
     _attr_should_poll = False
     _attr_has_entity_name = True
-
-    async def on_change(self, value: Any):
-        """Notify ha when state changes."""
-        self.async_write_ha_state()
 
     def __init__(self, federwiege: Federwiege, prop: Property) -> None:
         """Initialise the entity."""
@@ -33,6 +27,10 @@ class SmarlaBaseEntity(Entity):
             manufacturer=MANUFACTURER_NAME,
             serial_number=federwiege.serial_number,
         )
+
+    async def on_change(self, value: Any):
+        """Notify ha when state changes."""
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
