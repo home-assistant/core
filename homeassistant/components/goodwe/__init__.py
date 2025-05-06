@@ -13,7 +13,6 @@ from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoord
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bool:
     """Set up the Goodwe components from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
     model_family = entry.data[CONF_MODEL_FAMILY]
 
