@@ -198,7 +198,7 @@ aioazuredevops==2.2.1
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-# homeassistant.components.s3
+# homeassistant.components.aws_s3
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
@@ -556,7 +556,7 @@ blinkpy==0.23.0
 bluecurrent-api==1.2.3
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.4.0
+bluemaestro-ble==0.4.1
 
 # homeassistant.components.bluetooth
 bluetooth-adapters==0.21.4
@@ -991,7 +991,7 @@ hole==0.8.0
 holidays==0.70
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250502.0
+home-assistant-frontend==20250502.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.4.30
@@ -1708,7 +1708,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.0b7
+pylamarzocco==2.0.0
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2430,7 +2430,7 @@ url-normalize==2.2.1
 uvcclient==0.12.1
 
 # homeassistant.components.roborock
-vacuum-map-parser-roborock==0.1.2
+vacuum-map-parser-roborock==0.1.4
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.3.0
@@ -2448,7 +2448,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.5.0
 
 # homeassistant.components.voip
-voip-utils==0.3.1
+voip-utils==0.3.2
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
@@ -2509,7 +2509,7 @@ wyoming==1.5.4
 xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.37.0
+xiaomi-ble==0.38.0
 
 # homeassistant.components.knx
 xknx==3.6.0
