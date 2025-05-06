@@ -14,14 +14,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, ENVIRONMENT, LOGGER, UPDATE_INTERVAL
 
+type GeocachingConfigEntry = ConfigEntry[GeocachingDataUpdateCoordinator]
+
 
 class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
     """Class to manage fetching Geocaching data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: GeocachingConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, *, entry: ConfigEntry, session: OAuth2Session
+        self,
+        hass: HomeAssistant,
+        *,
+        entry: GeocachingConfigEntry,
+        session: OAuth2Session,
     ) -> None:
         """Initialize global Geocaching data updater."""
         self.session = session

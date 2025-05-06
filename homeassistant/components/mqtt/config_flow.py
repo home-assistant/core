@@ -25,6 +25,7 @@ from cryptography.hazmat.primitives.serialization import (
 from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.components.light import (
@@ -157,6 +158,7 @@ from .const import (
     CONF_LAST_RESET_VALUE_TEMPLATE,
     CONF_MAX_KELVIN,
     CONF_MIN_KELVIN,
+    CONF_OFF_DELAY,
     CONF_ON_COMMAND_TYPE,
     CONF_OPTIONS,
     CONF_PAYLOAD_AVAILABLE,
@@ -305,7 +307,13 @@ KEY_UPLOAD_SELECTOR = FileSelector(
 )
 
 # Subentry selectors
-SUBENTRY_PLATFORMS = [Platform.LIGHT, Platform.NOTIFY, Platform.SENSOR, Platform.SWITCH]
+SUBENTRY_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[platform.value for platform in SUBENTRY_PLATFORMS],
@@ -337,6 +345,14 @@ SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
         sort=True,
     )
 )
+BINARY_SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[device_class.value for device_class in BinarySensorDeviceClass],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key="device_class_binary_sensor",
+        sort=True,
+    )
+)
 SENSOR_STATE_CLASS_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[device_class.value for device_class in SensorStateClass],
@@ -354,7 +370,7 @@ OPTIONS_SELECTOR = SelectSelector(
 SUGGESTED_DISPLAY_PRECISION_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=9)
 )
-EXPIRE_AFTER_SELECTOR = NumberSelector(
+TIMEOUT_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0)
 )
 
@@ -465,7 +481,7 @@ class PlatformField:
     required: bool
     validator: Callable[..., Any]
     error: str | None = None
-    default: str | int | bool | vol.Undefined = vol.UNDEFINED
+    default: str | int | bool | None | vol.Undefined = vol.UNDEFINED
     is_schema_default: bool = False
     exclude_from_reconfig: bool = False
     conditions: tuple[dict[str, Any], ...] | None = None
@@ -515,6 +531,7 @@ COMMON_ENTITY_FIELDS = {
         required=False,
         validator=str,
         exclude_from_reconfig=True,
+        default=None,
     ),
     CONF_ENTITY_PICTURE: PlatformField(
         selector=TEXT_SELECTOR, required=False, validator=cv.url, error="invalid_url"
@@ -522,6 +539,13 @@ COMMON_ENTITY_FIELDS = {
 }
 
 PLATFORM_ENTITY_FIELDS = {
+    Platform.BINARY_SENSOR.value: {
+        CONF_DEVICE_CLASS: PlatformField(
+            selector=BINARY_SENSOR_DEVICE_CLASS_SELECTOR,
+            required=False,
+            validator=str,
+        ),
+    },
     Platform.NOTIFY.value: {},
     Platform.SENSOR.value: {
         CONF_DEVICE_CLASS: PlatformField(
@@ -572,6 +596,44 @@ PLATFORM_ENTITY_FIELDS = {
     },
 }
 PLATFORM_MQTT_FIELDS = {
+    Platform.BINARY_SENSOR.value: {
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+        ),
+        CONF_PAYLOAD_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_OFF,
+        ),
+        CONF_PAYLOAD_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_ON,
+        ),
+        CONF_EXPIRE_AFTER: PlatformField(
+            selector=TIMEOUT_SELECTOR,
+            required=False,
+            validator=cv.positive_int,
+            section="advanced_settings",
+        ),
+        CONF_OFF_DELAY: PlatformField(
+            selector=TIMEOUT_SELECTOR,
+            required=False,
+            validator=cv.positive_int,
+            section="advanced_settings",
+        ),
+    },
     Platform.NOTIFY.value: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
@@ -610,7 +672,7 @@ PLATFORM_MQTT_FIELDS = {
             conditions=({CONF_STATE_CLASS: "total"},),
         ),
         CONF_EXPIRE_AFTER: PlatformField(
-            selector=EXPIRE_AFTER_SELECTOR,
+            selector=TIMEOUT_SELECTOR,
             required=False,
             validator=cv.positive_int,
             section="advanced_settings",
@@ -1143,6 +1205,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
     str,
     Callable[[dict[str, Any]], dict[str, str]] | None,
 ] = {
+    Platform.BINARY_SENSOR.value: None,
     Platform.LIGHT.value: validate_light_platform_config,
     Platform.NOTIFY.value: None,
     Platform.SENSOR.value: validate_sensor_platform_config,
@@ -1150,7 +1213,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
 }
 
 MQTT_DEVICE_PLATFORM_FIELDS = {
-    ATTR_NAME: PlatformField(selector=TEXT_SELECTOR, required=False, validator=str),
+    ATTR_NAME: PlatformField(selector=TEXT_SELECTOR, required=True, validator=str),
     ATTR_SW_VERSION: PlatformField(
         selector=TEXT_SELECTOR, required=False, validator=str
     ),
@@ -1324,7 +1387,10 @@ def data_schema_from_fields(
             vol.Required(field_name, default=field_details.default)
             if field_details.required
             else vol.Optional(
-                field_name, default=field_details.default
+                field_name,
+                default=field_details.default
+                if field_details.default is not None
+                else vol.UNDEFINED,
             ): field_details.selector(component_data_with_user_input)  # type: ignore[operator]
             if field_details.custom_filtering
             else field_details.selector
@@ -1375,12 +1441,14 @@ def data_schema_from_fields(
 @callback
 def subentry_schema_default_data_from_fields(
     data_schema_fields: dict[str, PlatformField],
+    component_data: dict[str, Any],
 ) -> dict[str, Any]:
     """Generate custom data schema from platform fields or device data."""
     return {
         key: field.default
         for key, field in data_schema_fields.items()
         if field.is_schema_default
+        or (field.default is not vol.UNDEFINED and key not in component_data)
     }
 
 
@@ -2206,7 +2274,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         for component_data in self._subentry_data["components"].values():
             platform = component_data[CONF_PLATFORM]
             subentry_default_data = subentry_schema_default_data_from_fields(
-                PLATFORM_ENTITY_FIELDS[platform]
+                PLATFORM_ENTITY_FIELDS[platform] | COMMON_ENTITY_FIELDS, component_data
             )
             component_data.update(subentry_default_data)
 
