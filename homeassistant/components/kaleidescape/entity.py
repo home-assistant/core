@@ -9,7 +9,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as KALEIDESCAPE_DOMAIN, NAME as KALEIDESCAPE_NAME
+from .const import DOMAIN, NAME as KALEIDESCAPE_NAME
 
 if TYPE_CHECKING:
     from kaleidescape import Device as KaleidescapeDevice
@@ -29,7 +29,7 @@ class KaleidescapeEntity(Entity):
 
         self._attr_unique_id = device.serial_number
         self._attr_device_info = DeviceInfo(
-            identifiers={(KALEIDESCAPE_DOMAIN, self._device.serial_number)},
+            identifiers={(DOMAIN, self._device.serial_number)},
             # Instead of setting the device name to the entity name, kaleidescape
             # should be updated to set has_entity_name = True
             name=f"{KALEIDESCAPE_NAME} {device.system.friendly_name}",
