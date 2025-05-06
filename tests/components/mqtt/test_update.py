@@ -213,7 +213,7 @@ async def test_value_template(
     assert state.attributes.get("latest_version") == "1.9.0"
     assert (
         state.attributes.get("entity_picture")
-        == "https://brands.home-assistant.io/_/mqtt/icon.png"
+        == None
     )
 
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"2.0.0"}')
