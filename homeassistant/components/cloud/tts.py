@@ -308,6 +308,51 @@ async def async_setup_entry(
     async_add_entities([CloudTTSEntity(cloud)])
 
 
+@callback
+def _async_get_supported_voices(language: str) -> list[Voice] | None:
+    """Return a list of supported voices for a language."""
+    if not (voices := TTS_VOICES.get(language)):
+        return None
+
+    result = []
+
+    for voice_id, voice_info in voices.items():
+        if isinstance(voice_info, str):
+            result.append(
+                Voice(
+                    voice_id,
+                    voice_info,
+                )
+            )
+            continue
+
+        name = voice_info["name"]
+
+        result.append(
+            Voice(
+                voice_id,
+                name,
+            )
+        )
+
+        if language == "pt-PT" and voice_id == "RaquelNeural":
+            # RaquelNeural variants don't seem to be different
+            # from the default voice
+            continue
+
+        result.extend(
+            [
+                Voice(
+                    f"{voice_id}{VOICE_STYLE_SEPERATOR}{variant}",
+                    f"{name} ({variant})",
+                )
+                for variant in voice_info.get("variants", [])
+            ]
+        )
+
+    return result
+
+
 class CloudTTSEntity(TextToSpeechEntity):
     """Home Assistant Cloud text-to-speech entity."""
 
@@ -369,40 +414,7 @@ class CloudTTSEntity(TextToSpeechEntity):
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
-        if not (voices := TTS_VOICES.get(language)):
-            return None
-
-        result = []
-
-        for voice_id, voice_info in voices.items():
-            if isinstance(voice_info, str):
-                result.append(
-                    Voice(
-                        voice_id,
-                        voice_info,
-                    )
-                )
-                continue
-
-            name = voice_info["name"]
-
-            result.append(
-                Voice(
-                    voice_id,
-                    name,
-                )
-            )
-            result.extend(
-                [
-                    Voice(
-                        f"{voice_id}{VOICE_STYLE_SEPERATOR}{variant}",
-                        f"{name} ({variant})",
-                    )
-                    for variant in voice_info.get("variants", [])
-                ]
-            )
-
-        return result
+        return _async_get_supported_voices(language)
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
@@ -469,40 +481,7 @@ class CloudProvider(Provider):
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
-        if not (voices := TTS_VOICES.get(language)):
-            return None
-
-        result = []
-
-        for voice_id, voice_info in voices.items():
-            if isinstance(voice_info, str):
-                result.append(
-                    Voice(
-                        voice_id,
-                        voice_info,
-                    )
-                )
-                continue
-
-            name = voice_info["name"]
-
-            result.append(
-                Voice(
-                    voice_id,
-                    name,
-                )
-            )
-            result.extend(
-                [
-                    Voice(
-                        f"{voice_id}{VOICE_STYLE_SEPERATOR}{variant}",
-                        f"{name} ({variant})",
-                    )
-                    for variant in voice_info.get("variants", [])
-                ]
-            )
-
-        return result
+        return _async_get_supported_voices(language)
 
     @property
     def default_options(self) -> dict[str, str]:
