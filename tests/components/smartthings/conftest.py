@@ -5,6 +5,7 @@ import time
 from unittest.mock import AsyncMock, patch
 
 from pysmartthings import (
+    DeviceHealth,
     DeviceResponse,
     DeviceStatus,
     LocationResponse,
@@ -12,6 +13,7 @@ from pysmartthings import (
     SceneResponse,
     Subscription,
 )
+from pysmartthings.models import HealthStatus
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -86,6 +88,9 @@ def mock_smartthings() -> Generator[AsyncMock]:
         client.create_subscription.return_value = Subscription.from_json(
             load_fixture("subscription.json", DOMAIN)
         )
+        client.get_device_health.return_value = DeviceHealth.from_json(
+            load_fixture("device_health.json", DOMAIN)
+        )
         yield client
 
 
@@ -107,13 +112,16 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "centralite",
         "da_ref_normal_000001",
         "da_ref_normal_01011",
+        "da_ref_normal_01001",
         "vd_network_audio_002s",
+        "vd_network_audio_003s",
         "vd_sensor_light_2023",
         "iphone",
         "da_sac_ehs_000001_sub",
         "da_wm_dw_000001",
         "da_wm_wd_000001",
         "da_wm_wd_000001_1",
+        "da_wm_wm_01011",
         "da_wm_wm_000001",
         "da_wm_wm_000001_1",
         "da_wm_sc_000001",
@@ -146,6 +154,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "ikea_kadrilj",
         "aux_ac",
         "hw_q80r_soundbar",
+        "gas_meter",
     ]
 )
 def device_fixture(
@@ -165,6 +174,13 @@ def devices(mock_smartthings: AsyncMock, device_fixture: str) -> Generator[Async
         load_fixture(f"device_status/{device_fixture}.json", DOMAIN)
     ).components
     return mock_smartthings
+
+
+@pytest.fixture
+def unavailable_device(devices: AsyncMock) -> AsyncMock:
+    """Mock an unavailable device."""
+    devices.get_device_health.return_value.state = HealthStatus.OFFLINE
+    return devices
 
 
 @pytest.fixture

@@ -1,0 +1,69 @@
+# serializer version: 1
+# name: test_water_heaters[silabs_water_heater][water_heater.water_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_temp': 65,
+      'min_temp': 40,
+      'operation_list': list([
+        'eco',
+        'high_demand',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.water_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-MatterWaterHeater-513-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_water_heaters[silabs_water_heater][water_heater.water_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 50,
+      'friendly_name': 'Water Heater',
+      'max_temp': 65,
+      'min_temp': 40,
+      'operation_list': list([
+        'eco',
+        'high_demand',
+        'off',
+      ]),
+      'operation_mode': 'eco',
+      'supported_features': <WaterHeaterEntityFeature: 11>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': 65,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.water_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'eco',
+  })
+# ---
