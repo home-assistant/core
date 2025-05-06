@@ -1109,10 +1109,10 @@ async def test_usb_discovery_migration_driver_ready_timeout(
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
@@ -3776,6 +3776,7 @@ async def test_reconfigure_migrate_with_addon(
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -3790,7 +3791,6 @@ async def test_reconfigure_migrate_with_addon(
         },
     )
 
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
@@ -3918,6 +3918,7 @@ async def test_reconfigure_migrate_driver_ready_timeout(
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -3932,7 +3933,6 @@ async def test_reconfigure_migrate_driver_ready_timeout(
         },
     )
 
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
@@ -4108,6 +4108,7 @@ async def test_reconfigure_migrate_start_addon_failure(
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -4202,6 +4203,7 @@ async def test_reconfigure_migrate_restore_failure(
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -4367,6 +4369,7 @@ async def test_choose_serial_port_usb_ports_failure(
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     with patch(
         "homeassistant.components.zwave_js.config_flow.async_get_usb_ports",
