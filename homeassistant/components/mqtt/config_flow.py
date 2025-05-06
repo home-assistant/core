@@ -1490,8 +1490,11 @@ def subentry_schema_default_data_from_fields(
     return {
         key: field.default
         for key, field in data_schema_fields.items()
-        if field.is_schema_default
-        or (field.default is not vol.UNDEFINED and key not in component_data)
+        if _check_conditions(field, component_data)
+        and (
+            field.is_schema_default
+            or (field.default is not vol.UNDEFINED and key not in component_data)
+        )
     }
 
 
