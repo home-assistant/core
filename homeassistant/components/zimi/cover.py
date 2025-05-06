@@ -5,17 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from zcc import ControlPoint
-from zcc.device import ControlPointDevice
-
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-
-# Import the device class from the component that you want to support
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ZimiConfigEntry
@@ -31,7 +26,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Zimi Cover platform."""
 
-    api: ControlPoint = config_entry.runtime_data
+    api = config_entry.runtime_data
 
     doors: list[ZimiCover] = [ZimiCover(device, api) for device in api.doors]
 
@@ -48,15 +43,6 @@ class ZimiCover(ZimiEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
         | CoverEntityFeature.STOP
     )
-
-    def __init__(self, device: ControlPointDevice, api: ControlPoint) -> None:
-        """Initialize an Zimicover."""
-
-        super().__init__(device, api)
-
-        _LOGGER.debug(
-            "Initialising ZimiCover %s in %s", self._device.name, self._device.room
-        )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover/door."""
