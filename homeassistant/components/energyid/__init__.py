@@ -95,18 +95,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _async_cleanup_listeners() -> None:
         """Remove state listeners."""
         _LOGGER.debug("Cleaning up listeners for %s", entry.entry_id)
-        if (
-            listeners := hass.data[DOMAIN]
-            .get(entry.entry_id, {})
-            .pop(DATA_LISTENERS, None)
-        ):
+
+        # Get listeners directly from entry data if it exists
+        entry_data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+
+        if listeners := entry_data.get(DATA_LISTENERS, []):
             for unsub in listeners:
                 unsub()
 
     async def _async_close_client(*_: Any) -> None:
         """Close client session."""
         _LOGGER.debug("Closing EnergyID client for %s", entry.entry_id)
-        if client := hass.data[DOMAIN].get(entry.entry_id, {}).get(DATA_CLIENT):
+
+        # Get client directly from entry data if it exists
+        client = hass.data.get(DOMAIN, {}).get(entry.entry_id, {}).get(DATA_CLIENT)
+
+        if client:
             await client.close()
 
     entry.async_on_unload(_async_cleanup_listeners)
