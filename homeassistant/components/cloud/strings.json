@@ -69,6 +69,10 @@
     "reset_bad_custom_domain_configuration": {
       "title": "Custom domain ignored",
       "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. This domain has now been ignored and will not be used for Home Assistant Cloud. If you want to use this domain, please fix the DNS configuration and restart Home Assistant. If you do not need this anymore, you can remove it from the account page."
+    },
+    "subscription_expired_handler": {
+      "title": "Subscription has expired",
+      "description": "Your Home Assistant Cloud subscription has expired, and you are no longer able to use the services. The integration will periodically check for subscription renewal and re-enable services when detected."
     }
   },
   "services": {
