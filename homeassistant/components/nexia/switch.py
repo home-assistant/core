@@ -133,13 +133,6 @@ class NexiaRoomIQSwitch(NexiaThermostatZoneEntity, SwitchEntity):
         self._harmonizer.trigger_remove_sensor(self._sensor_id)
         self._signal_zone_update()
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return our extra state information."""
-        return {
-            "request_pending": self._harmonizer.request_pending(),
-        }
-
 
 class NexiaEmergencyHeatSwitch(NexiaThermostatEntity, SwitchEntity):
     """Provides Nexia emergency heat switch support."""
