@@ -3,9 +3,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
+
+if TYPE_CHECKING:
+    from .websocket_api import SystemStatus
+
+
+class HardwareData(TypedDict, total=False):
+    """Hardware data."""
+
+    hardware_platform: dict[str, HardwareProtocol]
+    system_status: SystemStatus
 
 
 @dataclass(slots=True)
