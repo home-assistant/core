@@ -26,6 +26,7 @@ from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certifica
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.components.light import (
@@ -163,6 +164,7 @@ from .const import (
     CONF_OPTIONS,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
+    CONF_PAYLOAD_PRESS,
     CONF_QOS,
     CONF_RED_TEMPLATE,
     CONF_RETAIN,
@@ -206,6 +208,7 @@ from .const import (
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DEFAULT_PAYLOAD_OFF,
     DEFAULT_PAYLOAD_ON,
+    DEFAULT_PAYLOAD_PRESS,
     DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
@@ -309,6 +312,7 @@ KEY_UPLOAD_SELECTOR = FileSelector(
 # Subentry selectors
 SUBENTRY_PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.LIGHT,
     Platform.NOTIFY,
     Platform.SENSOR,
@@ -350,6 +354,14 @@ BINARY_SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
         options=[device_class.value for device_class in BinarySensorDeviceClass],
         mode=SelectSelectorMode.DROPDOWN,
         translation_key="device_class_binary_sensor",
+        sort=True,
+    )
+)
+BUTTON_DEVICE_CLASS_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[device_class.value for device_class in ButtonDeviceClass],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key="device_class_button",
         sort=True,
     )
 )
@@ -546,6 +558,13 @@ PLATFORM_ENTITY_FIELDS = {
             validator=str,
         ),
     },
+    Platform.BUTTON.value: {
+        CONF_DEVICE_CLASS: PlatformField(
+            selector=BUTTON_DEVICE_CLASS_SELECTOR,
+            required=False,
+            validator=str,
+        ),
+    },
     Platform.NOTIFY.value: {},
     Platform.SENSOR.value: {
         CONF_DEVICE_CLASS: PlatformField(
@@ -632,6 +651,29 @@ PLATFORM_MQTT_FIELDS = {
             required=False,
             validator=cv.positive_int,
             section="advanced_settings",
+        ),
+    },
+    Platform.BUTTON.value: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
+        ),
+        CONF_PAYLOAD_PRESS: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=str,
+            default=DEFAULT_PAYLOAD_PRESS,
+        ),
+        CONF_RETAIN: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=bool
         ),
     },
     Platform.NOTIFY.value: {
@@ -1206,6 +1248,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Callable[[dict[str, Any]], dict[str, str]] | None,
 ] = {
     Platform.BINARY_SENSOR.value: None,
+    Platform.BUTTON.value: None,
     Platform.LIGHT.value: validate_light_platform_config,
     Platform.NOTIFY.value: None,
     Platform.SENSOR.value: validate_sensor_platform_config,
@@ -1447,8 +1490,11 @@ def subentry_schema_default_data_from_fields(
     return {
         key: field.default
         for key, field in data_schema_fields.items()
-        if field.is_schema_default
-        or (field.default is not vol.UNDEFINED and key not in component_data)
+        if _check_conditions(field, component_data)
+        and (
+            field.is_schema_default
+            or (field.default is not vol.UNDEFINED and key not in component_data)
+        )
     }
 
 
@@ -2274,7 +2320,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         for component_data in self._subentry_data["components"].values():
             platform = component_data[CONF_PLATFORM]
             subentry_default_data = subentry_schema_default_data_from_fields(
-                PLATFORM_ENTITY_FIELDS[platform] | COMMON_ENTITY_FIELDS, component_data
+                COMMON_ENTITY_FIELDS
+                | PLATFORM_ENTITY_FIELDS[platform]
+                | PLATFORM_MQTT_FIELDS[platform],
+                component_data,
             )
             component_data.update(subentry_default_data)
 
