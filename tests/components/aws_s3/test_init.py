@@ -1,4 +1,4 @@
-"""Test the s3 storage integration."""
+"""Test the AWS S3 storage integration."""
 
 from unittest.mock import AsyncMock, patch
 
