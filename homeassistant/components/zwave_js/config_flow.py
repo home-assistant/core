@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -77,6 +78,7 @@ ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 CONF_EMULATE_HARDWARE = "emulate_hardware"
 CONF_LOG_LEVEL = "log_level"
+RESTORE_NVM_DRIVER_READY_TIMEOUT = 60
 SERVER_VERSION_TIMEOUT = 10
 
 ADDON_LOG_LEVELS = {
@@ -461,10 +463,18 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if vid == "10C4" and pid == "EA60" and description and "2652" in description:
             return self.async_abort(reason="not_zwave_device")
 
+        discovery_info.device = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
+        )
+
         addon_info = await self._async_get_addon_info()
         if (
             addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.INSTALLING)
-            and addon_info.options.get(CONF_ADDON_DEVICE) == discovery_info.device
+            and (addon_device := addon_info.options.get(CONF_ADDON_DEVICE)) is not None
+            and await self.hass.async_add_executor_job(
+                usb.get_serial_by_id, addon_device
+            )
+            == discovery_info.device
         ):
             return self.async_abort(reason="already_configured")
 
@@ -897,10 +907,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Reset the current controller, and instruct the user to unplug it."""
 
         if user_input is not None:
-            config_entry = self._reconfigure_config_entry
-            assert config_entry is not None
-            # Unload the config entry before stopping the add-on.
-            await self.hass.config_entries.async_unload(config_entry.entry_id)
             if self.usb_path:
                 # USB discovery was used, so the device is already known.
                 await self._async_set_addon_config({CONF_ADDON_DEVICE: self.usb_path})
@@ -914,6 +920,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         except (AbortFlow, FailedCommand) as err:
             _LOGGER.error("Failed to reset controller: %s", err)
             return self.async_abort(reason="reset_failed")
+
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        # Unload the config entry before asking the user to unplug the controller.
+        await self.hass.config_entries.async_unload(config_entry.entry_id)
 
         return self.async_show_form(
             step_id="instruct_unplug",
@@ -1309,15 +1320,28 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     event["bytesWritten"] / event["total"] * 0.5 + 0.5
                 )
 
-        controller = self._get_driver().controller
+        @callback
+        def set_driver_ready(event: dict) -> None:
+            "Set the driver ready event."
+            wait_driver_ready.set()
+
+        driver = self._get_driver()
+        controller = driver.controller
+        wait_driver_ready = asyncio.Event()
         unsubs = [
             controller.on("nvm convert progress", forward_progress),
             controller.on("nvm restore progress", forward_progress),
+            driver.once("driver ready", set_driver_ready),
         ]
         try:
             await controller.async_restore_nvm(self.backup_data)
         except FailedCommand as err:
             raise AbortFlow(f"Failed to restore network: {err}") from err
+        else:
+            with suppress(TimeoutError):
+                async with asyncio.timeout(RESTORE_NVM_DRIVER_READY_TIMEOUT):
+                    await wait_driver_ready.wait()
+            await self.hass.config_entries.async_reload(config_entry.entry_id)
         finally:
             for unsub in unsubs:
                 unsub()

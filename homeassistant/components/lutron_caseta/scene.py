@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN as CASETA_DOMAIN
+from .const import DOMAIN
 from .util import serial_to_unique_id
 
 
@@ -39,7 +39,7 @@ class LutronCasetaScene(Scene):
         self._bridge: Smartbridge = data.bridge
         bridge_unique_id = serial_to_unique_id(data.bridge_device["serial"])
         self._attr_device_info = DeviceInfo(
-            identifiers={(CASETA_DOMAIN, data.bridge_device["serial"])},
+            identifiers={(DOMAIN, data.bridge_device["serial"])},
         )
         self._attr_name = scene["name"]
         self._attr_unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"
