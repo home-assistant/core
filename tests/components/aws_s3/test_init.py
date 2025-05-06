@@ -1,8 +1,7 @@
-"""Test the s3 storage integration."""
+"""Test the AWS S3 storage integration."""
 
 from unittest.mock import AsyncMock, patch
 
-from botocore.config import Config
 from botocore.exceptions import (
     ClientError,
     EndpointConnectionError,
@@ -74,19 +73,3 @@ async def test_setup_entry_head_bucket_error(
     )
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_checksum_settings_present(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test that checksum validation is set to be compatible with third-party S3 providers."""
-    # due to https://github.com/home-assistant/core/issues/143995
-    with patch(
-        "homeassistant.components.s3.AioSession.create_client"
-    ) as mock_create_client:
-        await setup_integration(hass, mock_config_entry)
-
-        config_arg = mock_create_client.call_args[1]["config"]
-        assert isinstance(config_arg, Config)
-        assert config_arg.request_checksum_calculation == "when_required"
-        assert config_arg.response_checksum_validation == "when_required"
