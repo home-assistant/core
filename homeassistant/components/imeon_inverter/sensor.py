@@ -432,8 +432,6 @@ class InverterSensor(InverterEntity, SensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-<<<<<<< HEAD
-=======
     def __init__(
         self,
         coordinator: InverterCoordinator,
@@ -456,7 +454,6 @@ class InverterSensor(InverterEntity, SensorEntity):
             serial_number=self._inverter.get("serial"),
         )
 
->>>>>>> 3bcdad8d743 (Display serial number of the device)
     @property
     def native_value(self) -> StateType | None:
         """Return the state of the entity."""
