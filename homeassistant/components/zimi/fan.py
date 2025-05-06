@@ -11,8 +11,6 @@ from zcc.device import ControlPointDevice
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
-
-# Import the device class from the component that you want to support
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -33,9 +31,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Zimi Cover platform."""
 
-    api: ControlPoint = config_entry.runtime_data
+    api = config_entry.runtime_data
 
-    fans: list[ZimiFan] = [ZimiFan(device, api) for device in api.fans]
+    fans = [ZimiFan(device, api) for device in api.fans]
 
     async_add_entities(fans)
 
@@ -54,15 +52,10 @@ class ZimiFan(ZimiEntity, FanEntity):
 
         super().__init__(device, api)
 
-        _LOGGER.debug(
-            "Initialising ZimiFan %s in %s", self._device.name, self._device.room
-        )
-
         self._speed = self._device.fanspeed
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the desired speed for the fan."""
-        _LOGGER.debug("Sending async_set_percentage() with percentage %s", percentage)
 
         if percentage == 0:
             await self.async_turn_off()
@@ -71,11 +64,8 @@ class ZimiFan(ZimiEntity, FanEntity):
         target_speed = math.ceil(
             percentage_to_ranged_value(self._speed_range, percentage)
         )
-        _LOGGER.debug(
-            "async_set_percentage() converted percentage %s to speed %s",
-            percentage,
-            target_speed,
-        )
+
+        _LOGGER.debug("Sending async_set_percentage() with percentage %s", percentage)
 
         await self._device.set_fanspeed(target_speed)
 
