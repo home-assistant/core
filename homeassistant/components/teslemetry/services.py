@@ -160,16 +160,25 @@ def async_setup_services(hass: HomeAssistant) -> None:
             )
         )
 
+    def _validate_scheduled_charging(obj):
+        """Validate the scheduled charging schema."""
+        if obj[ATTR_ENABLE] and ATTR_TIME not in obj:
+            raise vol.Invalid(f"{ATTR_TIME} is required when {ATTR_ENABLE} is true")
+        return obj
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_SCHEDULED_CHARGING,
         set_scheduled_charging,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ENABLE): bool,
-                vol.Optional(ATTR_TIME): cv.time,
-            }
+        schema=vol.All(
+            vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE_ID): cv.string,
+                    vol.Required(ATTR_ENABLE): bool,
+                    vol.Optional(ATTR_TIME): cv.time,
+                }
+            ),
+            _validate_scheduled_charging,
         ),
     )
 
