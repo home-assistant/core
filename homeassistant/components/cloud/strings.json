@@ -72,7 +72,7 @@
     },
     "subscription_expired": {
       "title": "Subscription has expired",
-      "description": "Your Home Assistant Cloud subscription has expired, and you are no longer able to use the services. The integration will periodically check for subscription renewal and re-enable services when detected."
+      "description": "Your Home Assistant Cloud subscription has expired, resubscribe at https://account.nabucasa.com"
     }
   },
   "services": {
