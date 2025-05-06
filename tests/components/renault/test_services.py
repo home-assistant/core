@@ -22,18 +22,9 @@ from homeassistant.components.renault.services import (
     SERVICE_CHARGE_SET_SCHEDULES,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-
-from .const import MOCK_VEHICLES
 
 from tests.common import load_fixture
 
@@ -56,7 +47,7 @@ def override_vehicle_type(request: pytest.FixtureRequest) -> str:
 def get_device_id(hass: HomeAssistant) -> str:
     """Get device_id."""
     device_registry = dr.async_get(hass)
-    identifiers = {(DOMAIN, "VF1AAAAA555777999")}
+    identifiers = {(DOMAIN, "VF1ZOE40VIN")}
     device = device_registry.async_get_device(identifiers=identifiers)
     return device.id
 
@@ -340,7 +331,7 @@ async def test_service_set_ac_schedule_multi(
 async def test_service_invalid_device_id(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
-    """Test that service fails with ValueError if device_id not found in registry."""
+    """Test that service fails if device_id not found in registry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -357,22 +348,19 @@ async def test_service_invalid_device_id(
 async def test_service_invalid_device_id2(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, config_entry: ConfigEntry
 ) -> None:
-    """Test that service fails with ValueError if device_id not found in vehicles."""
+    """Test that service fails if device_id not available in the hub."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    extra_vehicle = MOCK_VEHICLES["captur_phev"]["expected_device"]
-
+    # Create a fake second vehicle in the device registry, but
+    # not initialised by the hub.
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers=extra_vehicle[ATTR_IDENTIFIERS],
-        manufacturer=extra_vehicle[ATTR_MANUFACTURER],
-        name=extra_vehicle[ATTR_NAME],
-        model=extra_vehicle[ATTR_MODEL],
-        model_id=extra_vehicle[ATTR_MODEL_ID],
+        identifiers={(DOMAIN, "VF1AAAAA111222333")},
+        name="REG-NUMBER",
     )
     device_id = device_registry.async_get_device(
-        identifiers=extra_vehicle[ATTR_IDENTIFIERS]
+        identifiers={(DOMAIN, "VF1AAAAA111222333")},
     ).id
 
     data = {ATTR_VEHICLE: device_id}
