@@ -6,6 +6,7 @@ import pytest
 from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.google_generative_ai_conversation import CONF_CHAT_MODEL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -20,6 +21,23 @@ async def test_generate_content_service_without_images(
     hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
     """Test generate content service."""
+    SAMPLE_MODEL = "fake-test-model"
+
+    second_entry = MockConfigEntry(
+        domain="google_generative_ai_conversation",
+        title="Google Generative AI Conversation",
+        data={
+            "api_key": "bla",
+        },
+        options={
+            CONF_CHAT_MODEL: SAMPLE_MODEL,
+        },
+    )
+    second_entry.add_to_hass(hass)
+    with patch("google.genai.models.AsyncModels.get"):
+        await hass.config_entries.async_setup(second_entry.entry_id)
+        await hass.async_block_till_done()
+
     stubbed_generated_content = (
         "I'm thrilled to welcome you all to the release "
         "party for the latest version of Home Assistant!"
@@ -36,7 +54,10 @@ async def test_generate_content_service_without_images(
         response = await hass.services.async_call(
             "google_generative_ai_conversation",
             "generate_content",
-            {"prompt": "Write an opening speech for a Home Assistant release party"},
+            {
+                "config_entry": second_entry.entry_id,
+                "prompt": "Write an opening speech for a Home Assistant release party",
+            },
             blocking=True,
             return_response=True,
         )
@@ -44,6 +65,7 @@ async def test_generate_content_service_without_images(
     assert response == {
         "text": stubbed_generated_content,
     }
+    assert mock_generate.call_args.kwargs["model"] == SAMPLE_MODEL
     assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot
 
 

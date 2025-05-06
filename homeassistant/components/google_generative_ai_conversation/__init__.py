@@ -23,6 +23,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
+    ServiceValidationError,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -35,10 +36,12 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
     TIMEOUT_MILLIS,
 )
+from .model_setup import get_content_config
 
 SERVICE_GENERATE_CONTENT = "generate_content"
 CONF_IMAGE_FILENAME = "image_filename"
 CONF_FILENAMES = "filenames"
+CONF_CONFIG_ENTRY = "config_entry"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
@@ -64,11 +67,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_key="deprecated_image_filename_parameter",
             )
 
-        prompt_parts = [call.data[CONF_PROMPT]]
+        config_entry: GoogleGenerativeAIConfigEntry
+        if CONF_CONFIG_ENTRY in call.data:
+            entry_id = call.data[CONF_CONFIG_ENTRY]
+            found_entry = hass.config_entries.async_get_entry(entry_id)
+            if found_entry is None or found_entry.domain != DOMAIN:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_config_entry",
+                    translation_placeholders={"config_entry": entry_id},
+                )
+            config_entry = found_entry
+        else:
+            # Deprecated in 2025.6, to remove in 2025.10
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "missing_config_entry_parameter",
+                breaks_in_ha_version="2025.10.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="missing_config_entry_parameter",
+            )
+            config_entry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
 
-        config_entry: GoogleGenerativeAIConfigEntry = (
-            hass.config_entries.async_loaded_entries(DOMAIN)[0]
-        )
+        prompt_parts = [call.data[CONF_PROMPT]]
 
         client = config_entry.runtime_data
 
@@ -93,9 +116,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         await hass.async_add_executor_job(append_files_to_prompt)
 
+        model_name = config_entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+
         try:
             response = await client.aio.models.generate_content(
-                model=RECOMMENDED_CHAT_MODEL, contents=prompt_parts
+                model=model_name,
+                # Features like tools and custom prompts are powered by
+                # HA's Conversation infra, so we cannot use them here.
+                config=get_content_config(config_entry),
+                contents=prompt_parts,
             )
         except (
             APIError,
@@ -120,6 +149,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema(
             {
                 vol.Required(CONF_PROMPT): cv.string,
+                vol.Optional(CONF_CONFIG_ENTRY): cv.string,
                 vol.Optional(CONF_IMAGE_FILENAME, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
