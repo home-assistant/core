@@ -162,8 +162,6 @@ class TeslemetryChargeSchedule(TeslemetryVehiclePollingEntity, CalendarEntity):
             f"Charge scheduled for {data.device.get('name', 'Vehicle')}"
         )
         super().__init__(data, "charge_schedule_data_charge_schedules")
-        # Set name based on device name if available
-        self._attr_name = f"{data.device.get('name', 'Vehicle')} Charge Schedule"
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -286,7 +284,6 @@ class TeslemetryPreconditionSchedule(TeslemetryVehiclePollingEntity, CalendarEnt
             f"Precondition scheduled for {data.device.get('name', 'Vehicle')}"
         )
         super().__init__(data, "preconditioning_schedule_data_precondition_schedules")
-        self._attr_name = f"{data.device.get('name', 'Vehicle')} Precondition Schedule"
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -387,10 +384,8 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         key_base: str,
     ) -> None:
         """Initialize the tariff schedule calendar."""
-        # Assuming 'data' is the EnergySite object from runtime_data
         self.key_base = key_base
-        self._attr_name = f"{data.info_coordinator.data.get('site_name', 'Energy Site')} {key_base.replace('_', ' ').replace('tariff content v2', 'Tariff').replace('sell tariff', 'Sell Tariff')}"
-        super().__init__(data, f"{key_base}_seasons")  # Use one key for initial check
+        super().__init__(data, key_base)  # Use one key for initial check
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -454,10 +449,10 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
                 return CalendarEvent(
                     start=start_time,
                     end=end_time,
-                    summary=f"{period_name.capitalize()}: {price_str}",
+                    summary=f"{period_name.capitalize().replace('_', ' ')}: {price_str}",
                     description=(
                         f"Season: {current_season_name.capitalize()}\n"
-                        f"Period: {period_name.capitalize()}\n"
+                        f"Period: {period_name.capitalize().replace('_', ' ')}\n"
                         f"Price: {price_str}"
                     ),
                     uid=f"{self.key_base}_{current_season_name}_{period_name}_{start_time.isoformat()}",
@@ -528,10 +523,10 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
                             CalendarEvent(
                                 start=start_time,
                                 end=end_time,
-                                summary=f"{period_name.capitalize()}: {price_str}",
+                                summary=f"{period_name.capitalize().replace('_', ' ')}: {price_str}",
                                 description=(
                                     f"Season: {season_name.capitalize()}\n"
-                                    f"Period: {period_name.capitalize()}\n"
+                                    f"Period: {period_name.capitalize().replace('_', ' ')}\n"
                                     f"Price: {price_str}"
                                 ),
                                 # Create a unique ID for each occurrence
@@ -644,7 +639,7 @@ async def async_setup_entry(
         # _LOGGER.error("Teslemetry runtime data not available for calendar setup")
         return
 
-    entities_to_add = []
+    entities_to_add: list[CalendarEntity] = []
 
     # Vehicle Charge Schedules
     entities_to_add.extend(
