@@ -268,7 +268,7 @@ aioimaplib==2.0.1
 aiokafka==0.10.0
 
 # homeassistant.components.rehlko
-aiokem==0.5.9
+aiokem==0.5.10
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
@@ -667,7 +667,7 @@ deluge-client==1.10.2
 demetriek==1.2.0
 
 # homeassistant.components.denonavr
-denonavr==1.0.1
+denonavr==1.1.0
 
 # homeassistant.components.devialet
 devialet==1.5.7
@@ -960,7 +960,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.47.1
+habluetooth==3.48.2
 
 # homeassistant.components.cloud
 hass-nabucasa==0.96.0
@@ -991,13 +991,13 @@ hole==0.8.0
 holidays==0.70
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250502.0
+home-assistant-frontend==20250502.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.4.30
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.1
+homematicip==2.0.1.1
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1021,7 +1021,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.1.0
+ical==9.2.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1260,7 +1260,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==4.1.0
 
 # homeassistant.components.nexia
-nexia==2.7.0
+nexia==2.9.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1708,7 +1708,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.0b7
+pylamarzocco==2.0.0
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1747,7 +1747,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.4.1
+pymiele==0.4.3
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -2017,7 +2017,7 @@ python-picnic-api2==1.2.4
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.16.1
+python-roborock==2.18.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
@@ -2430,7 +2430,7 @@ url-normalize==2.2.1
 uvcclient==0.12.1
 
 # homeassistant.components.roborock
-vacuum-map-parser-roborock==0.1.2
+vacuum-map-parser-roborock==0.1.4
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.3.0
@@ -2554,8 +2554,11 @@ yt-dlp[default]==2025.03.31
 # homeassistant.components.zamg
 zamg==0.3.6
 
+# homeassistant.components.zimi
+zcc-helper==3.5
+
 # homeassistant.components.zeroconf
-zeroconf==0.146.5
+zeroconf==0.147.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2

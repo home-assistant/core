@@ -1678,8 +1678,8 @@ build.json @home-assistant/supervisor
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
 /homeassistant/components/vodafone_station/ @paoloantinori @chemelli74
 /tests/components/vodafone_station/ @paoloantinori @chemelli74
-/homeassistant/components/voip/ @balloob @synesthesiam
-/tests/components/voip/ @balloob @synesthesiam
+/homeassistant/components/voip/ @balloob @synesthesiam @jaminh
+/tests/components/voip/ @balloob @synesthesiam @jaminh
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvooncall/ @molobrakos
@@ -1796,6 +1796,8 @@ build.json @home-assistant/supervisor
 /tests/components/zeversolar/ @kvanzuijlen
 /homeassistant/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /tests/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
+/homeassistant/components/zimi/ @markhannon
+/tests/components/zimi/ @markhannon
 /homeassistant/components/zodiac/ @JulienTant
 /tests/components/zodiac/ @JulienTant
 /homeassistant/components/zone/ @home-assistant/core
