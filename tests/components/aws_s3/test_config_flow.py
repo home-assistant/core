@@ -21,8 +21,12 @@ from tests.common import MockConfigEntry
 
 async def _async_start_flow(
     hass: HomeAssistant,
+    user_input: dict[str, str] | None = None,
 ) -> FlowResultType:
     """Initialize the config flow."""
+    if user_input is None:
+        user_input = USER_INPUT
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -30,7 +34,7 @@ async def _async_start_flow(
 
     return await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        user_input,
     )
 
 
@@ -116,3 +120,24 @@ async def test_abort_if_already_configured(
     result = await _async_start_flow(hass)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_flow_create_not_aws_endpoint(
+    hass: HomeAssistant,
+) -> None:
+    """Test config flow with a not aws endpoint should raise an error."""
+    result = await _async_start_flow(
+        hass, USER_INPUT | {CONF_ENDPOINT_URL: "http://example.com"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_ENDPOINT_URL: "invalid_endpoint_url"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test"
+    assert result["data"] == USER_INPUT
