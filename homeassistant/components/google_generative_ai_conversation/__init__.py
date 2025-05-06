@@ -98,11 +98,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async def wait_for_file_processing(uploaded_file: File) -> None:
             """Wait for file processing to complete."""
             while True:
-                LOGGER.debug(
-                    "Waiting for file `%s` to be processed, current state: %s",
-                    uploaded_file.name,
-                    uploaded_file.state,
-                )
                 uploaded_file = await client.aio.files.get(
                     name=uploaded_file.name,
                     config={"http_options": {"timeout": TIMEOUT_MILLIS}},
@@ -112,6 +107,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     FileState.PROCESSING,
                 ):
                     break
+                LOGGER.debug(
+                    "Waiting for file `%s` to be processed, current state: %s",
+                    uploaded_file.name,
+                    uploaded_file.state,
+                )
                 await asyncio.sleep(FILE_POLLING_INTERVAL_SECONDS)
 
             if uploaded_file.state == FileState.FAILED:
