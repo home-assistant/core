@@ -52,7 +52,7 @@ class GuardianData:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Renault component."""
+    """Set up the Elexa Guardian component."""
     setup_services(hass)
     return True
 
