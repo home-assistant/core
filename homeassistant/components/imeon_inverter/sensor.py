@@ -21,20 +21,18 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import InverterCoordinator
+from .entity import InverterEntity
 
 type InverterConfigEntry = ConfigEntry[InverterCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-ENTITY_DESCRIPTIONS = (
+SENSOR_DESCRIPTIONS = (
     # Battery
     SensorEntityDescription(
         key="battery_autonomy",
@@ -423,43 +421,19 @@ async def async_setup_entry(
     """Create each sensor for a given config entry."""
 
     coordinator = entry.runtime_data
-
-    # Init sensor entities
     async_add_entities(
         InverterSensor(coordinator, entry, description)
-        for description in ENTITY_DESCRIPTIONS
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
-class InverterSensor(CoordinatorEntity[InverterCoordinator], SensorEntity):
-    """A sensor that returns numerical values with units."""
+class InverterSensor(InverterEntity, SensorEntity):
+    """Representation of an Imeon inverter sensor."""
 
-    _attr_has_entity_name = True
+    entity_description: SensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(
-        self,
-        coordinator: InverterCoordinator,
-        entry: InverterConfigEntry,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._inverter = coordinator.api.inverter
-        self.data_key = description.key
-        assert entry.unique_id
-        self._attr_unique_id = f"{entry.unique_id}_{self.data_key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},
-            name="Imeon inverter",
-            manufacturer="Imeon Energy",
-            model=self._inverter.get("inverter"),
-            sw_version=self._inverter.get("software"),
-            serial_number=self._inverter.get("serial"),
-        )
 
     @property
     def native_value(self) -> StateType | None:
-        """Value of the sensor."""
+        """Return the state of the entity."""
         return self.coordinator.data.get(self.data_key)
