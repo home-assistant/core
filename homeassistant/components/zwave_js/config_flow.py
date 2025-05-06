@@ -923,7 +923,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-        # Unload the config entry before asking the user to unplug the controller.F
+        # Unload the config entry before asking the user to unplug the controller.
         await self.hass.config_entries.async_unload(config_entry.entry_id)
 
         return self.async_show_form(
