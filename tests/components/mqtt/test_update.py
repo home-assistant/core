@@ -211,10 +211,7 @@ async def test_value_template(
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "1.9.0"
-    assert (
-        state.attributes.get("entity_picture")
-        == None
-    )
+    assert state.attributes.get("entity_picture") == None
 
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"2.0.0"}')
 
