@@ -65,7 +65,11 @@ class ZimiFan(ZimiEntity, FanEntity):
             percentage_to_ranged_value(self._speed_range, percentage)
         )
 
-        _LOGGER.debug("Sending async_set_percentage() with percentage %s", percentage)
+        _LOGGER.debug(
+            "Sending async_set_percentage() for %s with percentage %s",
+            self.name,
+            percentage,
+        )
 
         await self._device.set_fanspeed(target_speed)
 
@@ -84,6 +88,7 @@ class ZimiFan(ZimiEntity, FanEntity):
         """Instruct the fan to turn off."""
 
         _LOGGER.debug("Sending turn_off() for %s", self.name)
+
         await self._device.turn_off()
 
     @property
