@@ -153,8 +153,14 @@
       "battery_current_total": { "name": "Total battery current" },
       "battery_date": { "name": "Battery date" },
       "battery_mfr_date": { "name": "Battery manuf. date" },
-      "battery_packs": { "name": "Number of batteries" },
-      "battery_packs_bad": { "name": "Number of bad batteries" },
+      "battery_packs": {
+        "name": "Number of batteries",
+        "unit_of_measurement": "packs"
+      },
+      "battery_packs_bad": {
+        "name": "Number of bad batteries",
+        "unit_of_measurement": "packs"
+      },
       "battery_runtime": { "name": "Battery runtime" },
       "battery_runtime_low": { "name": "Low battery runtime" },
       "battery_runtime_restart": { "name": "Minimum battery runtime to start" },
@@ -175,7 +181,10 @@
       "input_bypass_l3_current": { "name": "Input bypass L3 current" },
       "input_bypass_l3_n_voltage": { "name": "Input bypass L3-N voltage" },
       "input_bypass_l3_realpower": { "name": "Input bypass L3 real power" },
-      "input_bypass_phases": { "name": "Input bypass phases" },
+      "input_bypass_phases": {
+        "name": "Input bypass phases",
+        "unit_of_measurement": "phase"
+      },
       "input_bypass_realpower": { "name": "Input bypass real power" },
       "input_bypass_voltage": { "name": "Input bypass voltage" },
       "input_current": { "name": "Input current" },
@@ -211,7 +220,10 @@
       "input_l3_n_voltage": { "name": "Input L3 voltage" },
       "input_l3_realpower": { "name": "Input L3 real power" },
       "input_load": { "name": "Input load" },
-      "input_phases": { "name": "Input phases" },
+      "input_phases": {
+        "name": "Input phases",
+        "unit_of_measurement": "phase"
+      },
       "input_power": { "name": "Input power" },
       "input_realpower": { "name": "Input real power" },
       "input_sensitivity": { "name": "Input power sensitivity" },
@@ -245,7 +257,10 @@
       "output_l3_n_voltage": { "name": "Output L3-N voltage" },
       "output_l3_power_percent": { "name": "Output L3 power usage" },
       "output_l3_realpower": { "name": "Output L3 real power" },
-      "output_phases": { "name": "Output phases" },
+      "output_phases": {
+        "name": "Output phases",
+        "unit_of_measurement": "phase"
+      },
       "output_power": { "name": "Output apparent power" },
       "output_power_nominal": { "name": "Nominal output power" },
       "output_realpower": { "name": "Output real power" },
@@ -297,13 +312,16 @@
     }
   },
   "exceptions": {
+    "config_invalid": {
+      "message": "Invalid configuration entries for NUT device with ID {device_id}"
+    },
     "data_fetch_error": {
       "message": "Error fetching UPS state: {err}"
     },
     "device_authentication": {
       "message": "Device authentication error: {err}"
     },
-    "device_invalid": {
+    "device_not_found": {
       "message": "Unable to find a NUT device with ID {device_id}"
     },
     "nut_command_error": {

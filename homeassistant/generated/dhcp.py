@@ -259,6 +259,21 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "30AEA4*",
     },
     {
+        "domain": "home_connect",
+        "hostname": "balay-*",
+        "macaddress": "C8D778*",
+    },
+    {
+        "domain": "home_connect",
+        "hostname": "(bosch|siemens)-*",
+        "macaddress": "68A40E*",
+    },
+    {
+        "domain": "home_connect",
+        "hostname": "siemens-*",
+        "macaddress": "38B4D3*",
+    },
+    {
         "domain": "homewizard",
         "registered_devices": True,
     },
@@ -310,6 +325,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "isy994",
         "hostname": "polisy*",
         "macaddress": "000DB9*",
+    },
+    {
+        "domain": "knocki",
+        "hostname": "knc*",
     },
     {
         "domain": "lamarzocco",
@@ -405,11 +424,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "9CADEF*",
     },
     {
-        "domain": "oncue",
-        "hostname": "kohlergen*",
-        "macaddress": "00146F*",
-    },
-    {
         "domain": "onvif",
         "registered_devices": True,
     },
@@ -470,6 +484,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "rainforest_eagle",
         "macaddress": "D8D5B9*",
+    },
+    {
+        "domain": "rehlko",
+        "hostname": "kohlergen*",
+        "macaddress": "00146F*",
     },
     {
         "domain": "reolink",
