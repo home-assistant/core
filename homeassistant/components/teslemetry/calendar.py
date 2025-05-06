@@ -4,17 +4,12 @@ from collections.abc import Generator
 from datetime import datetime, timedelta
 from typing import Any
 
-# Use List instead of list for older Python compatibility if needed,
-# but List is deprecated in newer versions. Sticking with list for modern Python.
-# from typing import List
 from attr import dataclass
 from tesla_fleet_api.const import Scope
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-)  # Renamed in newer HA Core
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import TeslemetryConfigEntry
@@ -44,7 +39,6 @@ def get_rrule_days(days_of_week: int) -> list[str]:
 # Helper function to check if a date matches the days_of_week mask
 def test_days_of_week(date: datetime, days_of_week: int) -> bool:
     """Check if a specific day is in the days_of_week binary."""
-    # Ensure comparison is done correctly, shift 1 by weekday index
     return (days_of_week & (1 << date.weekday())) > 0
 
 
@@ -58,9 +52,7 @@ class Schedule:
     days_of_week: int
     uid: str
     location: str
-    rrule: (
-        str | None
-    )  # Use Optional[str] instead of str | None for broader compatibility
+    rrule: str | None = None
 
     def generate_upcoming_events(
         self, start_dt: datetime, end_dt: datetime
@@ -83,18 +75,10 @@ class Schedule:
             if test_days_of_week(current_day, self.days_of_week):
                 # Calculate the event's start and end datetime for the current day
                 event_start = current_day + self.start_mins
-                event_end = (
-                    current_day + self.end_mins
-                )  # end_mins might already include day rollover
-
-                # Ensure event_end is after event_start (handles midnight crossing if start_mins > end_mins)
-                # Note: The original _async_update_attrs already handles the timedelta calculation
-                # for midnight crossing, so end_mins might be > 1 day.
+                event_end = current_day + self.end_mins
 
                 # Check if the calculated event overlaps with the query range [start_dt, end_dt)
-                # Overlap condition: (event_start < end_dt) and (event_end > start_dt)
                 if event_start < end_dt and event_end > start_dt:
-                    # Yield the event if it overlaps
                     yield CalendarEvent(
                         start=event_start,
                         end=event_end,
@@ -440,11 +424,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
 
                 # Found the active period
                 price = self._get_price_for_period(current_season_name, period_name)
-                price_str = (
-                    f"{price:.2f} {self.currency}/kWh"
-                    if price is not None
-                    else "Unknown Price"
-                )
+                price_str = f"{price:.2f}/kWh" if price is not None else "Unknown Price"
 
                 return CalendarEvent(
                     start=start_time,
@@ -515,9 +495,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
                     if start_time < end_date and end_time > start_date:
                         price = self._get_price_for_period(season_name, period_name)
                         price_str = (
-                            f"{price:.2f} {self.currency}/kWh"
-                            if price is not None
-                            else "Unknown Price"
+                            f"{price:.2f}/kWh" if price is not None else "Unknown Price"
                         )
                         events.append(
                             CalendarEvent(
@@ -619,25 +597,17 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         # Fetch latest seasons and charges data using the base key
         self.seasons = self.coordinator.data.get(f"{self.key_base}_seasons", {})
         self.charges = self.coordinator.data.get(f"{self.key_base}_energy_charges", {})
-        # Attempt to get currency info (location might vary)
-        self.currency = self.coordinator.data.get("currency", "")
 
         # Update availability based on whether necessary data is present
         self._attr_available = bool(self.seasons and self.charges)
 
 
-# --- Setup Function ---
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry Calendar platform from a config entry."""
-    # Ensure runtime_data is loaded
-    if not entry.runtime_data:
-        # Handle case where data might not be ready (log error, etc.)
-        # _LOGGER.error("Teslemetry runtime data not available for calendar setup")
-        return
 
     entities_to_add: list[CalendarEntity] = []
 
@@ -645,21 +615,18 @@ async def async_setup_entry(
     entities_to_add.extend(
         TeslemetryChargeSchedule(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
-        # Add check if vehicle data actually supports charge schedules?
     )
 
     # Vehicle Precondition Schedules
     entities_to_add.extend(
         TeslemetryPreconditionSchedule(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
-        # Add check if vehicle data actually supports precondition schedules?
     )
 
     # Energy Site Tariff Schedules (Buy)
     entities_to_add.extend(
         TeslemetryTariffSchedule(energy, "tariff_content_v2")
         for energy in entry.runtime_data.energysites
-        # Check based on the specific key used in _async_update_attrs
         if energy.info_coordinator.data.get("tariff_content_v2_seasons")
     )
 
@@ -667,7 +634,6 @@ async def async_setup_entry(
     entities_to_add.extend(
         TeslemetryTariffSchedule(energy, "tariff_content_v2_sell_tariff")
         for energy in entry.runtime_data.energysites
-        # Check based on the specific key used in _async_update_attrs
         if energy.info_coordinator.data.get("tariff_content_v2_sell_tariff_seasons")
     )
 
