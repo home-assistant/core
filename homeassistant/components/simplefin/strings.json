@@ -2,9 +2,9 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter either a setup token or an access URL.",
+        "description": "Please enter a SimpleFIN setup token.",
         "data": {
-          "api_token": "Setup token or access URL"
+          "api_token": "Setup token"
         }
       }
     },
