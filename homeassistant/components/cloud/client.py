@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 VALID_REPAIR_TRANSLATION_KEYS = {
     "warn_bad_custom_domain_configuration",
     "reset_bad_custom_domain_configuration",
-    "subscription_expired_handler",
+    "subscription_expired",
 }
 
 
