@@ -907,10 +907,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Reset the current controller, and instruct the user to unplug it."""
 
         if user_input is not None:
-            config_entry = self._reconfigure_config_entry
-            assert config_entry is not None
-            # Unload the config entry before stopping the add-on.
-            await self.hass.config_entries.async_unload(config_entry.entry_id)
             if self.usb_path:
                 # USB discovery was used, so the device is already known.
                 await self._async_set_addon_config({CONF_ADDON_DEVICE: self.usb_path})
@@ -924,6 +920,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         except (AbortFlow, FailedCommand) as err:
             _LOGGER.error("Failed to reset controller: %s", err)
             return self.async_abort(reason="reset_failed")
+
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        # Unload the config entry before asking the user to unplug the controller.F
+        await self.hass.config_entries.async_unload(config_entry.entry_id)
 
         return self.async_show_form(
             step_id="instruct_unplug",
