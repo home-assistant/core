@@ -43,30 +43,30 @@ def mock_nanoleaf():
 def mock_coordinator(mock_nanoleaf):
     """Create a mock coordinator."""
     coordinator = MagicMock()
+    coordinator.async_refresh = AsyncMock()
     coordinator.nanoleaf = mock_nanoleaf
     return coordinator
 
 
 async def test_async_turn_on_writes_state(mock_coordinator) -> None:
-    """Test that async_turn_on calls async_write_ha_state."""
+    """Test that async_turn_on calls coordinator.async_refresh."""
     entity = NanoleafLight(mock_coordinator)
-
-    with patch.object(entity, "async_write_ha_state") as mock_async_write_ha_state:
+    with patch.object(entity.coordinator, "async_refresh") as mock_async_refresh:
         await entity.async_turn_on()
-        mock_async_write_ha_state.assert_called_once()
+        mock_async_refresh.assert_called_once()
 
 
 async def test_async_turn_off_writes_state(mock_coordinator) -> None:
-    """Test that async_turn_off calls async_write_ha_state."""
+    """Test that async_turn_off calls coordinator.async_refresh."""
     entity = NanoleafLight(mock_coordinator)
 
-    with patch.object(entity, "async_write_ha_state") as mock_async_write_ha_state:
+    with patch.object(entity.coordinator, "async_refresh") as mock_async_refresh:
         await entity.async_turn_off()
-        mock_async_write_ha_state.assert_called_once()
+        mock_async_refresh.assert_called_once()
 
 
 async def test_async_turn_on_with_options_writes_state(mock_coordinator) -> None:
-    """Test that async_turn_on with various options calls async_write_ha_state."""
+    """Test that async_turn_on with various options calls coordinator.async_refresh."""
     entity = NanoleafLight(mock_coordinator)
 
     test_cases = [
@@ -79,18 +79,18 @@ async def test_async_turn_on_with_options_writes_state(mock_coordinator) -> None
     ]
 
     for options in test_cases:
-        with patch.object(entity, "async_write_ha_state") as mock_async_write_ha_state:
+        with patch.object(entity.coordinator, "async_refresh") as mock_async_refresh:
             await entity.async_turn_on(**options)
-            mock_async_write_ha_state.assert_called_once()
+            mock_async_refresh.assert_called_once()
 
 
 async def test_async_turn_off_with_transition_writes_state(mock_coordinator) -> None:
-    """Test that async_turn_off with transition calls async_write_ha_state."""
+    """Test that async_turn_off with transition calls coordinator.async_refresh."""
     entity = NanoleafLight(mock_coordinator)
 
-    with patch.object(entity, "async_write_ha_state") as mock_async_write_ha_state:
+    with patch.object(entity.coordinator, "async_refresh") as mock_async_refresh:
         await entity.async_turn_off(**{ATTR_TRANSITION: 5})
-        mock_async_write_ha_state.assert_called_once()
+        mock_async_refresh.assert_called_once()
 
 
 async def test_effect_validation(mock_coordinator) -> None:
@@ -98,7 +98,7 @@ async def test_effect_validation(mock_coordinator) -> None:
     mock_coordinator.nanoleaf.effects_list = ["Rainbow", "Sunset"]
     entity = NanoleafLight(mock_coordinator)
 
-    with patch.object(entity, "async_write_ha_state") as mock_async_write_ha_state:
+    with patch.object(entity.coordinator, "async_refresh") as mock_async_refresh:
         with pytest.raises(ValueError):
             await entity.async_turn_on(**{ATTR_EFFECT: "Invalid Effect"})
-        mock_async_write_ha_state.assert_not_called()
+        mock_async_refresh.assert_not_called()

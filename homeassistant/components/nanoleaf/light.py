@@ -125,10 +125,10 @@ class NanoleafLight(NanoleafEntity, LightEntity):
             await self._nanoleaf.turn_on()
             if brightness:
                 await self._nanoleaf.set_brightness(int(brightness / 2.55))
-        self.async_write_ha_state()
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         transition: float | None = kwargs.get(ATTR_TRANSITION)
         await self._nanoleaf.turn_off(None if transition is None else int(transition))
-        self.async_write_ha_state()
+        await self.coordinator.async_refresh()
