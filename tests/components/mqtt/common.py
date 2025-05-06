@@ -66,6 +66,20 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "configuration_url": "http://example.com",
 }
 
+MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT = {
+    "5b06357ef8654e8d9c54cee5bb0e939b": {
+        "platform": "binary_sensor",
+        "name": "Hatch",
+        "device_class": "door",
+        "state_topic": "test-topic",
+        "payload_on": "ON",
+        "payload_off": "OFF",
+        "expire_after": 1200,
+        "off_delay": 5,
+        "value_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com/5b06357ef8654e8d9c54cee5bb0e939b",
+    },
+}
 MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
@@ -87,6 +101,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
 MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
     "5269352dd9534c908d22812ea5d714cd": {
         "platform": "notify",
+        "name": None,
         "command_topic": "test-topic",
         "command_template": "{{ value }}",
         "entity_picture": "https://example.com/5269352dd9534c908d22812ea5d714cd",
@@ -186,6 +201,10 @@ MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 
+MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT,
+}
 MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
