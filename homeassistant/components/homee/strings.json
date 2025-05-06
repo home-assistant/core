@@ -358,7 +358,7 @@
   "issues": {
     "deprecated_entity": {
       "title": "The Homee {name} entity is deprecated",
-      "description": "The Homee entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
+      "description": "The Homee entity `{entity}` is deprecated and will be removed in release 2025.12.\nThe valve is available directly in the respective climate entity.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
     }
   }
 }
