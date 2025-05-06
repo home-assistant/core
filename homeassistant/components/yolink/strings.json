@@ -87,6 +87,12 @@
       },
       "water_meter_reading": {
         "name": "Water meter reading"
+      },
+      "water_meter_1_reading": {
+        "name": "Water meter 1 reading"
+      },
+      "water_meter_2_reading": {
+        "name": "Water meter 2 reading"
       }
     },
     "number": {
@@ -97,6 +103,12 @@
     "valve": {
       "meter_valve_state": {
         "name": "Valve state"
+      },
+      "meter_valve_1_state": {
+        "name": "Valve 1 state"
+      },
+      "meter_valve_2_state": {
+        "name": "Valve 2 state"
       }
     }
   },
