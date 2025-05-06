@@ -25,6 +25,7 @@ from .coordinator import (
 class TeslemetryData:
     """Data for the Teslemetry integration."""
 
+    unique_id: str
     vehicles: list[TeslemetryVehicleData]
     energysites: list[TeslemetryEnergyData]
     scopes: list[Scope]
