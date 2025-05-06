@@ -262,12 +262,9 @@ class APIEntityStateView(HomeAssistantView):
         hass = request.app[KEY_HASS]
 
         body = await request.text()
-        try:
-            data: Any = json_loads(body) if body else None
-        except ValueError:
-            return self.json_message(
-                "State data should be valid JSON.", HTTPStatus.BAD_REQUEST
-            )
+
+        data: Any = json_loads(body) if body else None
+
         if not isinstance(data, dict):
             return self.json_message(
                 "State data should be a JSON object", HTTPStatus.BAD_REQUEST
@@ -488,12 +485,9 @@ class APITemplateView(HomeAssistantView):
         """Render a template."""
         try:
             body = await request.text()
-            try:
-                data: Any = json_loads(body) if body else None
-            except ValueError:
-                return self.json_message(
-                    "Template data should be valid JSON.", HTTPStatus.BAD_REQUEST
-                )
+
+            data: Any = json_loads(body) if body else None
+
             if not isinstance(data, dict):
                 return self.json_message(
                     "Template data should be a JSON object", HTTPStatus.BAD_REQUEST
