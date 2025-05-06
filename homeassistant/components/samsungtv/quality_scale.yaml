@@ -28,9 +28,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: handle _async_send_keys and async_set_volume_level exceptions
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
