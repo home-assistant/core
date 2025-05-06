@@ -3,28 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
 
 from aioguardian import Client
-from aioguardian.errors import GuardianError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONF_DEVICE_ID,
-    CONF_FILENAME,
-    CONF_IP_ADDRESS,
-    CONF_PORT,
-    CONF_URL,
-    Platform,
-)
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API_SENSOR_PAIR_DUMP,
@@ -39,40 +27,10 @@ from .const import (
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
 from .coordinator import GuardianDataUpdateCoordinator
+from .services import setup_services
 
-DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-SERVICE_NAME_PAIR_SENSOR = "pair_sensor"
-SERVICE_NAME_UNPAIR_SENSOR = "unpair_sensor"
-SERVICE_NAME_UPGRADE_FIRMWARE = "upgrade_firmware"
-
-SERVICES = (
-    SERVICE_NAME_PAIR_SENSOR,
-    SERVICE_NAME_UNPAIR_SENSOR,
-    SERVICE_NAME_UPGRADE_FIRMWARE,
-)
-
-SERVICE_BASE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-    }
-)
-
-SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(CONF_UID): cv.string,
-    }
-)
-
-SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Optional(CONF_URL): cv.url,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_FILENAME): cv.string,
-    },
-)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -93,22 +51,10 @@ class GuardianData:
     paired_sensor_manager: PairedSensorManager
 
 
-@callback
-def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) -> str:
-    """Get the entry ID related to a service call (by device ID)."""
-    device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(hass)
-
-    if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ValueError(f"Invalid Guardian device ID: {device_id}")
-
-    for entry_id in device_entry.config_entries:
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
-            continue
-        if entry.domain == DOMAIN:
-            return entry_id
-
-    raise ValueError(f"No config entry for device ID: {device_id}")
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Elexa Guardian component."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -173,71 +119,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Set up all of the Guardian entity platforms:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    @callback
-    def call_with_data(
-        func: Callable[[ServiceCall, GuardianData], Coroutine[Any, Any, None]],
-    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
-        """Hydrate a service call with the appropriate GuardianData object."""
-
-        async def wrapper(call: ServiceCall) -> None:
-            """Wrap the service function."""
-            entry_id = async_get_entry_id_for_service_call(hass, call)
-            data = hass.data[DOMAIN][entry_id]
-
-            try:
-                async with data.client:
-                    await func(call, data)
-            except GuardianError as err:
-                raise HomeAssistantError(
-                    f"Error while executing {func.__name__}: {err}"
-                ) from err
-
-        return wrapper
-
-    @call_with_data
-    async def async_pair_sensor(call: ServiceCall, data: GuardianData) -> None:
-        """Add a new paired sensor."""
-        uid = call.data[CONF_UID]
-        await data.client.sensor.pair_sensor(uid)
-        await data.paired_sensor_manager.async_pair_sensor(uid)
-
-    @call_with_data
-    async def async_unpair_sensor(call: ServiceCall, data: GuardianData) -> None:
-        """Remove a paired sensor."""
-        uid = call.data[CONF_UID]
-        await data.client.sensor.unpair_sensor(uid)
-        await data.paired_sensor_manager.async_unpair_sensor(uid)
-
-    @call_with_data
-    async def async_upgrade_firmware(call: ServiceCall, data: GuardianData) -> None:
-        """Upgrade the device firmware."""
-        await data.client.system.upgrade_firmware(
-            url=call.data[CONF_URL],
-            port=call.data[CONF_PORT],
-            filename=call.data[CONF_FILENAME],
-        )
-
-    for service_name, schema, method in (
-        (
-            SERVICE_NAME_PAIR_SENSOR,
-            SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
-            async_pair_sensor,
-        ),
-        (
-            SERVICE_NAME_UNPAIR_SENSOR,
-            SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
-            async_unpair_sensor,
-        ),
-        (
-            SERVICE_NAME_UPGRADE_FIRMWARE,
-            SERVICE_UPGRADE_FIRMWARE_SCHEMA,
-            async_upgrade_firmware,
-        ),
-    ):
-        if hass.services.has_service(DOMAIN, service_name):
-            continue
-        hass.services.async_register(DOMAIN, service_name, method, schema=schema)
-
     return True
 
 
@@ -246,12 +127,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        # If this is the last loaded instance of Guardian, deregister any services
-        # defined during integration setup:
-        for service_name in SERVICES:
-            hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
 
