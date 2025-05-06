@@ -209,7 +209,7 @@
         "name": "Last water leak alert"
       },
       "auto_off_at": {
-        "name": "Auto off at"
+        "name": "Auto-off at"
       },
       "report_interval": {
         "name": "Report interval"
@@ -297,10 +297,10 @@
         "name": "LED"
       },
       "auto_update_enabled": {
-        "name": "Auto update enabled"
+        "name": "Auto-update enabled"
       },
       "auto_off_enabled": {
-        "name": "Auto off enabled"
+        "name": "Auto-off enabled"
       },
       "smooth_transitions": {
         "name": "Smooth transitions"
@@ -388,7 +388,7 @@
         },
         "segments": {
           "name": "Segments",
-          "description": "List of Segments (0 for all)."
+          "description": "List of segments (0 for all)."
         },
         "brightness": {
           "name": "Brightness",

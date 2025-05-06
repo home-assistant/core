@@ -7,6 +7,7 @@ from aiohttp import ClientError, ClientResponseError
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -18,7 +19,13 @@ from .const import DOMAIN
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.FAN,
+    Platform.LIGHT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
@@ -68,3 +75,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> bo
     """Unload a config entry."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: MieleConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+        and identifier[1] in config_entry.runtime_data.data.devices
+    )

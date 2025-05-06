@@ -315,6 +315,41 @@ class RestEntityDescription(EntityDescription):
     value: Callable[[dict, Any], Any] | None = None
 
 
+def rpc_call[_T: ShellyRpcEntity, **_P](
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
+    """Catch rpc_call exceptions."""
+
+    @wraps(func)
+    async def cmd_wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        """Wrap all command methods."""
+        try:
+            await func(self, *args, **kwargs)
+        except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rpc_call_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except InvalidAuthError:
+            await self.coordinator.async_shutdown_device_and_start_reauth()
+
+    return cmd_wrapper
+
+
 class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Helper class to represent a block entity."""
 
@@ -364,9 +399,9 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-        self._attr_device_info = {
-            "connections": {(CONNECTION_NETWORK_MAC, coordinator.mac)}
-        }
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
+        )
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
 
@@ -393,6 +428,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Handle device update."""
         self.async_write_ha_state()
 
+    @rpc_call
     async def call_rpc(
         self, method: str, params: Any, timeout: float | None = None
     ) -> Any:
@@ -404,31 +440,9 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
             params,
             timeout,
         )
-        try:
-            if timeout:
-                return await self.coordinator.device.call_rpc(method, params, timeout)
-            return await self.coordinator.device.call_rpc(method, params)
-        except DeviceConnectionError as err:
-            self.coordinator.last_update_success = False
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="device_communication_action_error",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "device": self.coordinator.name,
-                },
-            ) from err
-        except RpcCallError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="rpc_call_action_error",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "device": self.coordinator.name,
-                },
-            ) from err
-        except InvalidAuthError:
-            await self.coordinator.async_shutdown_device_and_start_reauth()
+        if timeout:
+            return await self.coordinator.device.call_rpc(method, params, timeout)
+        return await self.coordinator.device.call_rpc(method, params)
 
 
 class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
@@ -708,38 +722,3 @@ def get_entity_class(
         return description.entity_class
 
     return sensor_class
-
-
-def rpc_call[_T: ShellyRpcEntity, **_P](
-    func: Callable[Concatenate[_T, _P], Awaitable[None]],
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
-    """Catch rpc_call exceptions."""
-
-    @wraps(func)
-    async def cmd_wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
-        """Wrap all command methods."""
-        try:
-            await func(self, *args, **kwargs)
-        except DeviceConnectionError as err:
-            self.coordinator.last_update_success = False
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="device_communication_action_error",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "device": self.coordinator.name,
-                },
-            ) from err
-        except RpcCallError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="rpc_call_action_error",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "device": self.coordinator.name,
-                },
-            ) from err
-        except InvalidAuthError:
-            await self.coordinator.async_shutdown_device_and_start_reauth()
-
-    return cmd_wrapper
