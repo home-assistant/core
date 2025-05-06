@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -77,6 +78,7 @@ ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 CONF_EMULATE_HARDWARE = "emulate_hardware"
 CONF_LOG_LEVEL = "log_level"
+RESTORE_NVM_DRIVER_READY_TIMEOUT = 60
 SERVER_VERSION_TIMEOUT = 10
 
 ADDON_LOG_LEVELS = {
@@ -1317,15 +1319,28 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     event["bytesWritten"] / event["total"] * 0.5 + 0.5
                 )
 
-        controller = self._get_driver().controller
+        @callback
+        def set_driver_ready(event: dict) -> None:
+            "Set the driver ready event."
+            wait_driver_ready.set()
+
+        driver = self._get_driver()
+        controller = driver.controller
+        wait_driver_ready = asyncio.Event()
         unsubs = [
             controller.on("nvm convert progress", forward_progress),
             controller.on("nvm restore progress", forward_progress),
+            driver.once("driver ready", set_driver_ready),
         ]
         try:
             await controller.async_restore_nvm(self.backup_data)
         except FailedCommand as err:
             raise AbortFlow(f"Failed to restore network: {err}") from err
+        else:
+            with suppress(TimeoutError):
+                async with asyncio.timeout(RESTORE_NVM_DRIVER_READY_TIMEOUT):
+                    await wait_driver_ready.wait()
+            await self.hass.config_entries.async_reload(config_entry.entry_id)
         finally:
             for unsub in unsubs:
                 unsub()
