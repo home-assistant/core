@@ -345,6 +345,8 @@ def clear_exception_traceback(request: pytest.FixtureRequest) -> Generator[None]
 
     yield
     for ex in exceptions:
+        ex.__cause__ = None
+        ex.__context__ = None
         ex.__traceback__ = None
     for ctx in raises_ctx:
         ctx.excinfo = None
