@@ -29,7 +29,7 @@ async def async_setup_entry(
     config_entry: ZimiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Zimi Cover platform."""
+    """Set up the Zimi Fan platform."""
 
     api = config_entry.runtime_data
 
