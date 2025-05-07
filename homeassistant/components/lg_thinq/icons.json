@@ -45,6 +45,9 @@
       },
       "display_light": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "air_clean_operation_mode": {
+        "default": "mdi:air-filter"
       }
     },
     "binary_sensor": {
