@@ -43,6 +43,7 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock]:
             pytest.fail("Listen was not cancelled!")
 
         client.connect = AsyncMock(side_effect=connect)
+        client.check_node_update = AsyncMock(return_value=None)
         client.start_listening = AsyncMock(side_effect=listen)
         client.server_info = ServerInfoMessage(
             fabric_id=MOCK_FABRIC_ID,
