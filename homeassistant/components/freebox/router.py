@@ -38,6 +38,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type FreeboxConfigEntry = ConfigEntry[FreeboxRouter]
+
 
 def is_json(json_str: str) -> bool:
     """Validate if a String is a JSON value or not."""
@@ -118,7 +120,7 @@ class FreeboxRouter:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: FreeboxConfigEntry,
         api: Freepybox,
         freebox_config: Mapping[str, Any],
     ) -> None:

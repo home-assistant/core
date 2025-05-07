@@ -224,16 +224,20 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_RESOLVER: "8.8.8.8",
-            CONF_RESOLVER_IPV6: "2001:4860:4860::8888",
-            CONF_PORT: 53,
-            CONF_PORT_IPV6: 53,
-        },
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+        return_value=RetrieveDNS(),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RESOLVER: "8.8.8.8",
+                CONF_RESOLVER_IPV6: "2001:4860:4860::8888",
+                CONF_PORT: 53,
+                CONF_PORT_IPV6: 53,
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {

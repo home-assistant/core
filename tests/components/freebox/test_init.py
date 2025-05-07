@@ -1,14 +1,13 @@
 """Tests for the Freebox init."""
 
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, Mock
 
 from pytest_unordered import unordered
 
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
 from homeassistant.components.freebox.const import (
     CONF_SERVICE_USER_NAME,
-    DOMAIN,
-    SERVICE_REBOOT,
+    DOMAIN
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -41,19 +40,6 @@ async def test_setup(hass: HomeAssistant, router: Mock) -> None:
     assert router.call_count == 1
     assert router().open.call_count == 1
 
-    assert hass.services.has_service(DOMAIN, SERVICE_REBOOT)
-
-    with patch(
-        "homeassistant.components.freebox.router.FreeboxRouter.reboot"
-    ) as mock_service:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_REBOOT,
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        mock_service.assert_called_once()
-
 
 async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
     """Test setup of integration from import."""
@@ -84,8 +70,6 @@ async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
 
     assert router.call_count == 1
     assert router().open.call_count == 1
-
-    assert hass.services.has_service(DOMAIN, SERVICE_REBOOT)
 
 
 async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
@@ -126,7 +110,6 @@ async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
     assert state_switch.state == STATE_UNAVAILABLE
 
     assert router().close.call_count == 1
-    assert not hass.services.has_service(DOMAIN, SERVICE_REBOOT)
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()

@@ -203,6 +203,9 @@
       "defrost_for_preconditioning": {
         "name": "Defrost for preconditioning"
       },
+      "lights_hazards_active": {
+        "name": "Hazard lights"
+      },
       "lights_high_beams": {
         "name": "High beams"
       },
