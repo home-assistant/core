@@ -45,6 +45,18 @@
       "switch_output": {
         "name": "Relay Switch {index}"
       }
+    },
+    "sensor": {
+      "sensor_input": {
+        "name": "Input {index}",
+        "state": {
+          "undefined": "Undefined",
+          "tamper": "Tamper",
+          "active": "Active",
+          "normal": "Normal",
+          "problem": "Problem"
+        }
+      }
     }
   }
 }
