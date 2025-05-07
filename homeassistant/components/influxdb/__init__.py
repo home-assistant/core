@@ -356,8 +356,8 @@ def get_influx_connection(  # noqa: C901
         kwargs[CONF_TOKEN] = conf[CONF_TOKEN]
         kwargs[INFLUX_CONF_ORG] = conf[CONF_ORG]
         kwargs[CONF_VERIFY_SSL] = conf[CONF_VERIFY_SSL]
-        if CONF_SSL_CA_CERT in conf:
-            kwargs[CONF_SSL_CA_CERT] = conf[CONF_SSL_CA_CERT]
+        if (cert := conf.get(CONF_SSL_CA_CERT)) is not None:
+            kwargs[CONF_SSL_CA_CERT] = cert
         bucket = conf.get(CONF_BUCKET)
         influx = InfluxDBClientV2(**kwargs)
         query_api = influx.query_api()
