@@ -1011,6 +1011,12 @@
       "charge_rate_mile_per_hour": {
         "name": "Charge rate"
       },
+      "hvac_left_temperature_request": {
+        "name": "Left temperature request"
+      },
+      "hvac_right_temperature_request": {
+        "name": "Right temperature request"
+      },
       "hvac_power_state": {
         "name": "HVAC power state",
         "state": {
