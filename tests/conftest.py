@@ -59,6 +59,7 @@ from homeassistant import components, core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
+from homeassistant.components import api, mobile_app, websocket_api
 from homeassistant.components.device_tracker.legacy import Device
 
 # pylint: disable-next=hass-component-root-import
@@ -546,7 +547,13 @@ def reset_globals() -> Generator[None]:
     # Reset the aiohttp cache
     web_app._cached_build_middleware.cache_clear()
 
-    # Reset the template cache
+    # Reset the recorder helper get_instance cache
+    recorder_helper.get_instance.cache_clear()
+
+    # Reset the template caches
+    api._cached_template.cache_clear()
+    mobile_app.webhook._cached_template.cache_clear()
+    websocket_api.commands._cached_template.cache_clear()
     template.CACHED_TEMPLATE_LRU.clear()
     template.CACHED_TEMPLATE_NO_COLLECT_LRU.clear()
     template._domain_states.cache_clear()
