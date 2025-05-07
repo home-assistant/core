@@ -7,5 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["energyid_webhooks"],
-  "requirements": ["energyid-webhooks==0.0.12"]
+  "quality_scale": "silver",
+  "requirements": ["energyid-webhooks==0.0.14"]
 }

@@ -61,3 +61,4 @@ voluptuous-openapi==0.0.7
 yarl==1.20.0
 webrtc-models==0.3.0
 zeroconf==0.146.5
+energyid-webhooks>=0.0.14

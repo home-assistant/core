@@ -582,16 +582,16 @@ wheels = [
 
 [[package]]
 name = "energyid-webhooks"
-version = "0.0.13"
+version = "0.0.14"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "backoff" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/73/a7/323cdd479efdf636f5da84849f759239e0f0cd61814060d750172f5166d1/energyid_webhooks-0.0.13.tar.gz", hash = "sha256:d5963339efb726005dc761a1e67d8bbadbff18b1e8eeb6b0374a70e6f5a038fc", size = 96052, upload-time = "2025-05-02T19:10:50.103Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/10/71/2389b2786f904b1835012e9ec31cc18a69d6b2e9a1998182b98cba3ed247/energyid_webhooks-0.0.14.tar.gz", hash = "sha256:b71cd8f8ed77244d49b1cda736a654241ceeb65058a1b6c73f741edb751ee2dd", size = 96334, upload-time = "2025-05-06T12:05:36.047Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/68/1c/abb1086fbb878f9e532ca9d87c9a415bee9826208e40699757d3d16f1051/energyid_webhooks-0.0.13-py3-none-any.whl", hash = "sha256:67d7ed3d4d56ea294174b0395671c4cc2a4b5c891ab47e1b60fe3d42d2798264", size = 12332, upload-time = "2025-05-02T19:10:47.34Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/aa/fb6de8596160a75e225d559cd0582a7d95addfff5d25f1bdaa70265f7b0b/energyid_webhooks-0.0.14-py3-none-any.whl", hash = "sha256:bd179a4682f92b85d5890f5e5d0801392804314783ef180b203bab12a7d72e12", size = 12408, upload-time = "2025-05-06T12:05:34.466Z" },
 ]
 
 [[package]]
@@ -895,7 +895,7 @@ requires-dist = [
     { name = "ciso8601", specifier = "==2.3.2" },
     { name = "cronsim", specifier = "==2.6" },
     { name = "cryptography", specifier = "==44.0.1" },
-    { name = "energyid-webhooks", specifier = ">=0.0.13" },
+    { name = "energyid-webhooks", specifier = ">=0.0.14" },
     { name = "fnv-hash-fast", specifier = "==1.5.0" },
     { name = "ha-ffmpeg", specifier = "==3.2.2" },
     { name = "hass-nabucasa", specifier = "==0.96.0" },
