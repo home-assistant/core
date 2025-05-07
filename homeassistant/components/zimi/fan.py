@@ -33,13 +33,13 @@ async def async_setup_entry(
 
     api = config_entry.runtime_data
 
-    fans = [ZimiFan(device, api) for device in api.fans]
-
-    async_add_entities(fans)
+    async_add_entities([ZimiFan(device, api) for device in api.fans])
 
 
 class ZimiFan(ZimiEntity, FanEntity):
     """Representation of a Zimi fan."""
+
+    _attr_speed_range = (0, 7)
 
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
@@ -62,7 +62,7 @@ class ZimiFan(ZimiEntity, FanEntity):
             return
 
         target_speed = math.ceil(
-            percentage_to_ranged_value(self._speed_range, percentage)
+            percentage_to_ranged_value(self._attr_speed_range, percentage)
         )
 
         _LOGGER.debug(
@@ -96,14 +96,9 @@ class ZimiFan(ZimiEntity, FanEntity):
         """Return the current speed percentage for the fan."""
         if not self._device.fanspeed:
             return 0
-        return ranged_value_to_percentage(self._speed_range, self._device.fanspeed)
-
-    @property
-    def _speed_range(self) -> tuple[int, int]:
-        """Return the range of speeds."""
-        return (0, 7)
+        return ranged_value_to_percentage(self._attr_speed_range, self._device.fanspeed)
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(self._speed_range)
+        return int_states_in_range(self._attr_speed_range)
