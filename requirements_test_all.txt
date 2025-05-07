@@ -232,7 +232,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==30.1.0
+aioesphomeapi==30.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -556,7 +556,7 @@ blinkpy==0.23.0
 bluecurrent-api==1.2.3
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.4.0
+bluemaestro-ble==0.4.1
 
 # homeassistant.components.bluetooth
 bluetooth-adapters==0.21.4
@@ -991,7 +991,7 @@ hole==0.8.0
 holidays==0.70
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250502.1
+home-assistant-frontend==20250506.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.4.30
@@ -1260,7 +1260,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==4.1.0
 
 # homeassistant.components.nexia
-nexia==2.9.0
+nexia==2.10.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -2138,7 +2138,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.3.0
+renault-api==0.3.1
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2404,7 +2404,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.5.5
+uiprotect==7.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7

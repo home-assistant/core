@@ -81,7 +81,7 @@ MOCK_IMPORT_WSDATA = {
     CONF_NAME: "fake",
     CONF_PORT: 8002,
 }
-MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
+MOCK_USER_DATA = {CONF_HOST: "fake_host"}
 
 MOCK_DHCP_DATA = DhcpServiceInfo(
     ip="fake_host", macaddress="aabbccddeeff", hostname="fake_hostname"
@@ -176,9 +176,8 @@ async def test_user_legacy(hass: HomeAssistant) -> None:
     )
     # legacy tv entry created
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "fake_name"
+    assert result["title"] == "fake_host"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "fake_name"
     assert result["data"][CONF_METHOD] == "legacy"
     assert result["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result["data"][CONF_MODEL] is None
@@ -211,9 +210,8 @@ async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
 
     # legacy tv entry created
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "fake_name"
+    assert result3["title"] == "fake_host"
     assert result3["data"][CONF_HOST] == "fake_host"
-    assert result3["data"][CONF_NAME] == "fake_name"
     assert result3["data"][CONF_METHOD] == "legacy"
     assert result3["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result3["data"][CONF_MODEL] is None
@@ -241,7 +239,6 @@ async def test_user_websocket(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "Living Room (82GXARRS)"
         assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_NAME] == "Living Room"
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_MANUFACTURER] == "Samsung"
         assert result["data"][CONF_MODEL] == "82GXARRS"
@@ -290,7 +287,6 @@ async def test_user_encrypted_websocket(
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result4["data"][CONF_HOST] == "fake_host"
-    assert result4["data"][CONF_NAME] == "TV-UE48JU6470"
     assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
@@ -422,7 +418,6 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "Living Room"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -485,7 +480,6 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "fake_model"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "fake_model"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "fake_model"
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
@@ -544,7 +538,6 @@ async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "fake_model"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "fake_model"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "fake_model"
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
@@ -580,7 +573,6 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "fake_model"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "fake_model"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "fake_model"
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
@@ -620,7 +612,6 @@ async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "Living Room"
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "82GXARRS"
@@ -650,7 +641,6 @@ async def test_ssdp_websocket_success_populates_mac_address_and_main_tv_ssdp_loc
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "Living Room"
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "82GXARRS"
@@ -702,7 +692,6 @@ async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_l
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result4["data"][CONF_HOST] == "fake_host"
-    assert result4["data"][CONF_NAME] == "TV-UE48JU6470"
     assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
@@ -907,7 +896,6 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "TV-UE48JU6470"
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE48JU6400"
@@ -938,7 +926,6 @@ async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Samsung Frame (43) (UE43LS003)"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "Samsung Frame (43)"
     assert result["data"][CONF_MAC] == "aa:ee:tt:hh:ee:rr"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE43LS003"
@@ -1036,7 +1023,6 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "127.0.0.1"
-    assert result["data"][CONF_NAME] == "Living Room"
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
@@ -1255,7 +1241,6 @@ async def test_autodetect_legacy(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_METHOD] == "legacy"
-    assert result["data"][CONF_NAME] == "fake_name"
     assert result["data"][CONF_MAC] is None
     assert result["data"][CONF_PORT] == LEGACY_PORT
 
