@@ -2861,11 +2861,19 @@ async def test_migrate_of_incompatible_config_entry(
                 (
                     {
                         "command_topic": "test-topic",
+                        "light_brightness_settings": {
+                            "brightness_command_topic": "test-topic#invalid"
+                        },
+                    },
+                    {"light_brightness_settings": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
                         "advanced_settings": {"max_kelvin": 2000, "min_kelvin": 2000},
                     },
                     {
-                        "max_kelvin": "max_below_min_kelvin",
-                        "min_kelvin": "max_below_min_kelvin",
+                        "advanced_settings": "max_below_min_kelvin",
                     },
                 ),
             ),
