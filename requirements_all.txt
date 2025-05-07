@@ -1224,7 +1224,7 @@ igloohome-api==0.1.0
 ihcsdk==2.8.5
 
 # homeassistant.components.imeon_inverter
-imeon_inverter_api==0.3.12
+imeon_inverter_api==0.3.13
 
 # homeassistant.components.imgw_pib
 imgw_pib==1.0.10

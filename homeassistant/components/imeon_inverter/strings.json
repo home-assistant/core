@@ -160,6 +160,24 @@
       },
       "monitoring_minute_solar_production": {
         "name": "Solar production"
+      },
+      "energy_pv": {
+        "name": "Today PV energy"
+      },
+      "energy_grid_injected": {
+        "name": "Today grid injected energy"
+      },
+      "energy_grid_consumed": {
+        "name": "Today grid consumed energy"
+      },
+      "energy_building_consumption": {
+        "name": "Today building consumption"
+      },
+      "energy_battery_stored": {
+        "name": "Today battery stored energy"
+      },
+      "energy_battery_consumed": {
+        "name": "Today battery consumed energy"
       }
     }
   }

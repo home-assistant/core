@@ -132,6 +132,24 @@
       },
       "monitoring_minute_solar_production": {
         "default": "mdi:solar-power"
+      },
+      "energy_pv": {
+        "default": "mdi:solar-power"
+      },
+      "energy_grid_injected": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "energy_grid_consumed": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "energy_building_consumption": {
+        "default": "mdi:home-lightning-bolt-outline"
+      },
+      "energy_battery_stored": {
+        "default": "mdi:battery-arrow-up-outline"
+      },
+      "energy_battery_consumed": {
+        "default": "mdi:battery-arrow-down-outline"
       }
     }
   }

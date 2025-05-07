@@ -7,7 +7,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["imeon_inverter_api==0.3.12"],
+  "requirements": ["imeon_inverter_api==0.3.13"],
   "ssdp": [
     {
       "manufacturer": "IMEON",
