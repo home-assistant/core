@@ -47,6 +47,35 @@
       "spin_speed": {
         "default": "mdi:sync"
       },
+      "plate": {
+        "default": "mdi:circle-outline",
+        "state": {
+          "p_0": "mdi:circle-outline",
+          "p_110": "mdi:alpha-w-circle-outline",
+          "p_220": "mdi:alpha-w-circle-outline",
+          "p_1": "mdi:circle-slice-1",
+          "p_2": "mdi:circle-slice-1",
+          "p_3": "mdi:circle-slice-2",
+          "p_4": "mdi:circle-slice-2",
+          "p_5": "mdi:circle-slice-3",
+          "p_6": "mdi:circle-slice-3",
+          "p_7": "mdi:circle-slice-4",
+          "p_8": "mdi:circle-slice-4",
+          "p_9": "mdi:circle-slice-5",
+          "p_10": "mdi:circle-slice-5",
+          "p_11": "mdi:circle-slice-5",
+          "p_12": "mdi:circle-slice-6",
+          "p_13": "mdi:circle-slice-6",
+          "p_14": "mdi:circle-slice-6",
+          "p_15": "mdi:circle-slice-7",
+          "p_16": "mdi:circle-slice-7",
+          "p_17": "mdi:circle-slice-8",
+          "p_18": "mdi:circle-slice-8",
+          "p_117": "mdi:alpha-b-circle-outline",
+          "p_118": "mdi:alpha-b-circle-outline",
+          "p_217": "mdi:alpha-b-circle-outline"
+        }
+      },
       "program_type": {
         "default": "mdi:state-machine"
       },

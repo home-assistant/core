@@ -42,6 +42,56 @@ _LOGGER = logging.getLogger(__name__)
 
 DISABLED_TEMPERATURE = -32768
 
+PLATE_POWERS = [
+    "p_0",
+    "p_110",
+    "p_220",
+    "p_1",
+    "p_2",
+    "p_3",
+    "p_4",
+    "p_5",
+    "p_6",
+    "p_7",
+    "p_8",
+    "p_9",
+    "p_10",
+    "p_11",
+    "p_12",
+    "p_13",
+    "p_14",
+    "p_15",
+    "p_16",
+    "p_17",
+    "p_18",
+    "p_117",
+    "p_118",
+    "p_217",
+]
+
+
+DEFAULT_PLATE_COUNT = 4
+
+PLATE_COUNT = {
+    "KM7678": 6,
+    "KM7697": 6,
+    "KM7878": 6,
+    "KM7897": 6,
+    "KMDA7633": 5,
+    "KMDA7634": 5,
+    "KMDA7774": 5,
+    "KMX": 6,
+}
+
+
+def _get_plate_count(tech_type: str) -> int:
+    """Get number of zones for hob."""
+    stripped = tech_type.replace(" ", "")
+    for prefix, plates in PLATE_COUNT.items():
+        if stripped.startswith(prefix):
+            return plates
+    return DEFAULT_PLATE_COUNT
+
 
 def _convert_duration(value_list: list[int]) -> int | None:
     """Convert duration to minutes."""
@@ -53,7 +103,7 @@ class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
     value_fn: Callable[[MieleDevice], StateType]
-    zone: int | None = None
+    zone: int = 1
 
 
 @dataclass
@@ -338,7 +388,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         ),
         description=MieleSensorDescription(
             key="state_temperature_1",
-            zone=1,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
@@ -385,7 +434,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_core_target_temperature",
             translation_key="core_target_temperature",
-            zone=1,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
@@ -406,7 +454,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_core_temperature",
             translation_key="core_temperature",
-            zone=1,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
@@ -415,6 +462,25 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 / 100.0
             ),
         ),
+    ),
+    *(
+        MieleSensorDefinition(
+            types=(
+                MieleAppliance.HOB_HIGHLIGHT,
+                MieleAppliance.HOB_INDUCT_EXTR,
+                MieleAppliance.HOB_INDUCTION,
+            ),
+            description=MieleSensorDescription(
+                key="state_plate_step",
+                translation_key="plate",
+                translation_placeholders={"plate_no": str(i)},
+                zone=i,
+                device_class=SensorDeviceClass.ENUM,
+                options=PLATE_POWERS,
+                value_fn=lambda value: value.state_plate_step[0].value_raw,
+            ),
+        )
+        for i in range(1, 7)
     ),
 )
 
@@ -439,12 +505,18 @@ async def async_setup_entry(
                         entity_class = MieleProgramIdSensor
                     case "state_program_phase":
                         entity_class = MielePhaseSensor
+                    case "state_plate_step":
+                        entity_class = MielePlateSensor
                     case _:
                         entity_class = MieleSensor
+
                 if (
                     definition.description.device_class == SensorDeviceClass.TEMPERATURE
                     and definition.description.value_fn(device)
                     == DISABLED_TEMPERATURE / 100
+                ) or (
+                    definition.description.key == "state_plate_step"
+                    and definition.description.zone > _get_plate_count(device.tech_type)
                 ):
                     # Don't create entity if API signals that datapoint is disabled
                     continue
@@ -494,6 +566,33 @@ class MieleSensor(MieleEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
+
+
+class MielePlateSensor(MieleSensor):
+    """Representation of a Sensor."""
+
+    entity_description: MieleSensorDescription
+
+    def __init__(
+        self,
+        coordinator: MieleDataUpdateCoordinator,
+        device_id: str,
+        description: MieleSensorDescription,
+    ) -> None:
+        """Initialize the plate sensor."""
+        super().__init__(coordinator, device_id, description)
+        self._attr_unique_id = f"{device_id}-{description.key}-{description.zone}"
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the plate sensor."""
+        # state_plate_step is [] if all zones are off
+        plate_power = (
+            self.device.state_plate_step[self.entity_description.zone - 1].value_raw
+            if self.device.state_plate_step
+            else 0
+        )
+        return f"p_{plate_power}"
 
 
 class MieleStatusSensor(MieleSensor):

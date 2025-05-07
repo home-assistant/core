@@ -191,6 +191,35 @@
       "energy_consumption": {
         "name": "Energy consumption"
       },
+      "plate": {
+        "name": "Plate {plate_no}",
+        "state": {
+          "p_0": "0",
+          "p_110": "Warming",
+          "p_220": "%key::component::miele::sensor::plate::state::p_110%",
+          "p_1": "1",
+          "p_2": "1\u2022",
+          "p_3": "2",
+          "p_4": "2\u2022",
+          "p_5": "3",
+          "p_6": "3\u2022",
+          "p_7": "4",
+          "p_8": "4\u2022",
+          "p_9": "5",
+          "p_10": "5\u2022",
+          "p_11": "6",
+          "p_12": "6\u2022",
+          "p_13": "7",
+          "p_14": "7\u2022",
+          "p_15": "8",
+          "p_16": "8\u2022",
+          "p_17": "9",
+          "p_18": "9\u2022",
+          "p_117": "Boost",
+          "p_118": "%key::component::miele::sensor::plate::state::p_117%",
+          "p_217": "%key::component::miele::sensor::plate::state::p_117%"
+        }
+      },
       "program_phase": {
         "name": "Program phase",
         "state": {
