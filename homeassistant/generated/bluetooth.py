@@ -205,6 +205,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
+        "local_name": "GVH5110*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
         "manufacturer_id": 1,
         "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
     },
@@ -357,6 +362,41 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "tps",
     },
     {
+        "connectable": False,
+        "domain": "inkbird",
+        "local_name": "ITH-11-B",
+    },
+    {
+        "connectable": False,
+        "domain": "inkbird",
+        "local_name": "ITH-13-B",
+    },
+    {
+        "connectable": False,
+        "domain": "inkbird",
+        "local_name": "ITH-21-B",
+    },
+    {
+        "connectable": False,
+        "domain": "inkbird",
+        "local_name": "IBS-P02B",
+    },
+    {
+        "connectable": True,
+        "domain": "inkbird",
+        "local_name": "Ink@IAM-T1",
+    },
+    {
+        "connectable": True,
+        "domain": "inkbird",
+        "manufacturer_data_start": [
+            65,
+            67,
+            45,
+        ],
+        "manufacturer_id": 12628,
+    },
+    {
         "connectable": True,
         "domain": "iron_os",
         "service_uuid": "9eae1000-9d0d-48c5-aa55-33e27f9bc533",
@@ -373,6 +413,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "keymitt_ble",
         "local_name": "mib*",
+    },
+    {
+        "domain": "kulersky",
+        "service_uuid": "8d96a001-0002-64c2-0001-9acc4838521c",
     },
     {
         "domain": "lamarzocco",

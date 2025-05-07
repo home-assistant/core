@@ -67,6 +67,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .common import async_setup_gree, build_device_mock
 
@@ -411,19 +416,19 @@ async def test_send_power_off_device_timeout(
 
 @pytest.mark.parametrize(
     ("units", "temperature"),
-    [(UnitOfTemperature.CELSIUS, 26), (UnitOfTemperature.FAHRENHEIT, 73)],
+    [(METRIC_SYSTEM, 26), (US_CUSTOMARY_SYSTEM, 73)],
 )
 async def test_send_target_temperature(
-    hass: HomeAssistant, discovery, device, units, temperature
+    hass: HomeAssistant, discovery, device, units: UnitSystem, temperature
 ) -> None:
     """Test for sending target temperature command to the device."""
-    hass.config.units.temperature_unit = units
+    hass.config.units = units
 
     device().power = True
     device().mode = HVAC_MODES_REVERSE.get(HVACMode.AUTO)
 
     fake_device = device()
-    if units == UnitOfTemperature.FAHRENHEIT:
+    if units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
         fake_device.temperature_units = 1
 
     await async_setup_gree(hass)
@@ -435,7 +440,7 @@ async def test_send_target_temperature(
         ENTITY_ID,
         "off",
         {
-            ATTR_UNIT_OF_MEASUREMENT: units,
+            ATTR_UNIT_OF_MEASUREMENT: units.temperature_unit,
         },
     )
 
@@ -450,10 +455,6 @@ async def test_send_target_temperature(
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == temperature
     assert state.state == HVAC_MODES.get(fake_device.mode)
-
-    # Reset config temperature_unit back to CELSIUS, required for
-    # additional tests outside this component.
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
 @pytest.mark.parametrize(
@@ -493,17 +494,17 @@ async def test_send_target_temperature_with_hvac_mode(
 @pytest.mark.parametrize(
     ("units", "temperature"),
     [
-        (UnitOfTemperature.CELSIUS, 25),
-        (UnitOfTemperature.FAHRENHEIT, 73),
-        (UnitOfTemperature.FAHRENHEIT, 74),
+        (METRIC_SYSTEM, 25),
+        (US_CUSTOMARY_SYSTEM, 73),
+        (US_CUSTOMARY_SYSTEM, 74),
     ],
 )
 async def test_send_target_temperature_device_timeout(
-    hass: HomeAssistant, discovery, device, units, temperature
+    hass: HomeAssistant, discovery, device, units: UnitSystem, temperature
 ) -> None:
     """Test for sending target temperature command to the device with a device timeout."""
-    hass.config.units.temperature_unit = units
-    if units == UnitOfTemperature.FAHRENHEIT:
+    hass.config.units = units
+    if units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
         device().temperature_units = 1
     device().push_state_update.side_effect = DeviceTimeoutError
 
@@ -520,24 +521,21 @@ async def test_send_target_temperature_device_timeout(
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == temperature
 
-    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
-
 
 @pytest.mark.parametrize(
     ("units", "temperature"),
     [
-        (UnitOfTemperature.CELSIUS, 25),
-        (UnitOfTemperature.FAHRENHEIT, 73),
-        (UnitOfTemperature.FAHRENHEIT, 74),
+        (METRIC_SYSTEM, 25),
+        (US_CUSTOMARY_SYSTEM, 73),
+        (US_CUSTOMARY_SYSTEM, 74),
     ],
 )
 async def test_update_target_temperature(
-    hass: HomeAssistant, discovery, device, units, temperature
+    hass: HomeAssistant, discovery, device, units: UnitSystem, temperature
 ) -> None:
     """Test for updating target temperature from the device."""
-    hass.config.units.temperature_unit = units
-    if units == UnitOfTemperature.FAHRENHEIT:
+    hass.config.units = units
+    if units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
         device().temperature_units = 1
     device().target_temperature = temperature
 
@@ -553,9 +551,6 @@ async def test_update_target_temperature(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == temperature
-
-    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
 @pytest.mark.parametrize(

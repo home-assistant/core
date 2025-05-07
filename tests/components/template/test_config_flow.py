@@ -13,8 +13,38 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 from tests.typing import WebSocketGenerator
+
+SWITCH_BEFORE_OPTIONS = {
+    "name": "test_template_switch",
+    "template_type": "switch",
+    "turn_off": [{"event": "test_template_switch", "event_data": {"event": "off"}}],
+    "turn_on": [{"event": "test_template_switch", "event_data": {"event": "on"}}],
+    "value_template": "{{ now().minute % 2 == 0 }}",
+}
+
+
+SWITCH_AFTER_OPTIONS = {
+    "name": "test_template_switch",
+    "template_type": "switch",
+    "turn_off": [{"event": "test_template_switch", "event_data": {"event": "off"}}],
+    "turn_on": [{"event": "test_template_switch", "event_data": {"event": "on"}}],
+    "state": "{{ now().minute % 2 == 0 }}",
+    "value_template": "{{ now().minute % 2 == 0 }}",
+}
+
+SENSOR_OPTIONS = {
+    "name": "test_template_sensor",
+    "template_type": "sensor",
+    "state": "{{ 'a' if now().minute % 2 == 0 else 'b' }}",
+}
+
+BINARY_SENSOR_OPTIONS = {
+    "name": "test_template_sensor",
+    "template_type": "binary_sensor",
+    "state": "{{ now().minute % 2 == 0 else }}",
+}
 
 
 @pytest.mark.parametrize(
@@ -377,17 +407,6 @@ async def test_config_flow_device(
     }
 
 
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    # If the desired key is missing from the schema, return None
-    return None
-
-
 @pytest.mark.parametrize(
     (
         "template_type",
@@ -578,7 +597,7 @@ async def test_options(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
-    assert get_suggested(
+    assert get_schema_suggested_value(
         result["data_schema"].schema, key_template
     ) == old_state_template.get(key_template)
     assert "name" not in result["data_schema"].schema
@@ -625,8 +644,10 @@ async def test_options(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
 
-    assert get_suggested(result["data_schema"].schema, "name") is None
-    assert get_suggested(result["data_schema"].schema, key_template) is None
+    assert get_schema_suggested_value(result["data_schema"].schema, "name") is None
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, key_template) is None
+    )
 
 
 @pytest.mark.parametrize(

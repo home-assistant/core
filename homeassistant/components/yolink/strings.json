@@ -61,8 +61,8 @@
       "power_failure_alarm": {
         "name": "Power failure alarm",
         "state": {
-          "normal": "Normal",
           "alert": "Alert",
+          "normal": "[%key:common::state::normal%]",
           "off": "[%key:common::state::off%]"
         }
       },
@@ -72,7 +72,11 @@
       },
       "power_failure_alarm_volume": {
         "name": "Power failure alarm volume",
-        "state": { "low": "Low", "medium": "Medium", "high": "High" }
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
       },
       "power_failure_alarm_beep": {
         "name": "Power failure alarm beep",
