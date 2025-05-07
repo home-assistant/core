@@ -29,10 +29,10 @@ async def test_fan_state(
     await hass.async_block_till_done()
 
     # Set coordinator data
-    mock_coordinator.data["is_on"] = True
-    mock_coordinator.data["mode"] = "auto"
-    mock_coordinator.data["speed"] = 100
-    mock_coordinator.data["oscillate"] = True
+    mock_coordinator.data.is_on = True
+    mock_coordinator.data.mode = "auto"
+    mock_coordinator.data.speed_percentage = 100
+    mock_coordinator.data.oscillate = True
 
     # Update entity state
     mock_fan_entity.async_write_ha_state()
@@ -55,10 +55,10 @@ async def test_turn_on(
 ) -> None:
     """Test turning on the fan."""
     # Turn off the fan first
-    mock_coordinator.data["is_on"] = False
-    mock_coordinator.data["mode"] = None
-    mock_coordinator.data["speed"] = 0
-    mock_coordinator.data["oscillate"] = None
+    mock_coordinator.data.is_on = False
+    mock_coordinator.data.mode = None
+    mock_coordinator.data.speed_percentage = 0
+    mock_coordinator.data.oscillate = None
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -92,10 +92,10 @@ async def test_turn_on(
     )
 
     # Update coordinator data with the "response" from the API
-    mock_coordinator.data["is_on"] = True
-    mock_coordinator.data["mode"] = "auto"
-    mock_coordinator.data["speed"] = 100
-    mock_coordinator.data["oscillate"] = False
+    mock_coordinator.data.is_on = True
+    mock_coordinator.data.mode = "auto"
+    mock_coordinator.data.speed_percentage = 100
+    mock_coordinator.data.oscillate = False
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -116,10 +116,10 @@ async def test_turn_off(
 ) -> None:
     """Test turning off the fan."""
     # Ensure fan is on first
-    mock_coordinator.data["is_on"] = True
-    mock_coordinator.data["mode"] = "auto"
-    mock_coordinator.data["speed"] = 100
-    mock_coordinator.data["oscillate"] = True
+    mock_coordinator.data.is_on = True
+    mock_coordinator.data.mode = "auto"
+    mock_coordinator.data.speed_percentage = 100
+    mock_coordinator.data.oscillate = True
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -152,10 +152,10 @@ async def test_turn_off(
     )
 
     # Update coordinator data with the "response" from the API
-    mock_coordinator.data["is_on"] = False
-    mock_coordinator.data["mode"] = None
-    mock_coordinator.data["speed"] = 0
-    mock_coordinator.data["oscillate"] = None
+    mock_coordinator.data.is_on = False
+    mock_coordinator.data.mode = None
+    mock_coordinator.data.speed_percentage = 0
+    mock_coordinator.data.oscillate = None
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -175,10 +175,10 @@ async def test_set_percentage(
 ) -> None:
     """Test setting the fan speed percentage."""
     # Ensure fan is on with initial settings
-    mock_coordinator.data["is_on"] = True
-    mock_coordinator.data["mode"] = "auto"
-    mock_coordinator.data["speed"] = 100
-    mock_coordinator.data["oscillate"] = True
+    mock_coordinator.data.is_on = True
+    mock_coordinator.data.mode = "auto"
+    mock_coordinator.data.speed_percentage = 100
+    mock_coordinator.data.oscillate = True
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -213,7 +213,7 @@ async def test_set_percentage(
     mock_dreo_client.update_status.assert_called_once_with("test-device-id", speed=2)
 
     # Update coordinator data with the "response" from the API
-    mock_coordinator.data["speed"] = 50
+    mock_coordinator.data.speed_percentage = 50
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -233,10 +233,10 @@ async def test_set_preset_mode(
 ) -> None:
     """Test setting the fan preset mode."""
     # Ensure fan is on with initial settings
-    mock_coordinator.data["is_on"] = True
-    mock_coordinator.data["mode"] = "auto"
-    mock_coordinator.data["speed"] = 100
-    mock_coordinator.data["oscillate"] = True
+    mock_coordinator.data.is_on = True
+    mock_coordinator.data.mode = "auto"
+    mock_coordinator.data.speed_percentage = 100
+    mock_coordinator.data.oscillate = True
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -272,7 +272,7 @@ async def test_set_preset_mode(
     )
 
     # Update coordinator data with the "response" from the API
-    mock_coordinator.data["mode"] = "normal"
+    mock_coordinator.data.mode = "normal"
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -292,10 +292,10 @@ async def test_set_oscillate(
 ) -> None:
     """Test setting the fan oscillation."""
     # Ensure fan is on with oscillation enabled
-    mock_coordinator.data["is_on"] = True
-    mock_coordinator.data["mode"] = "auto"
-    mock_coordinator.data["speed"] = 100
-    mock_coordinator.data["oscillate"] = True
+    mock_coordinator.data.is_on = True
+    mock_coordinator.data.mode = "auto"
+    mock_coordinator.data.speed_percentage = 100
+    mock_coordinator.data.oscillate = True
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -331,7 +331,7 @@ async def test_set_oscillate(
     )
 
     # Update coordinator data with the "response" from the API
-    mock_coordinator.data["oscillate"] = False
+    mock_coordinator.data.oscillate = False
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -351,7 +351,7 @@ async def test_fan_unavailable(
 ) -> None:
     """Test handling of an unavailable fan."""
     # Make fan unavailable
-    mock_coordinator.data["available"] = False
+    mock_coordinator.data.available = False
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -361,8 +361,8 @@ async def test_fan_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
     # Set back to available and verify state changes
-    mock_coordinator.data["available"] = True
-    mock_coordinator.data["is_on"] = True
+    mock_coordinator.data.available = True
+    mock_coordinator.data.is_on = True
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -380,10 +380,10 @@ async def test_client_error(
 ) -> None:
     """Test handling of client errors."""
     # Ensure fan is off initially
-    mock_coordinator.data["is_on"] = False
-    mock_coordinator.data["mode"] = None
-    mock_coordinator.data["speed"] = 0
-    mock_coordinator.data["oscillate"] = None
+    mock_coordinator.data.is_on = False
+    mock_coordinator.data.mode = None
+    mock_coordinator.data.speed_percentage = 0
+    mock_coordinator.data.oscillate = None
     mock_fan_entity.async_write_ha_state()
     await hass.async_block_till_done()
 

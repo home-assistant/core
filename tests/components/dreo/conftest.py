@@ -58,24 +58,24 @@ class MockDreoFan(FanEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if self.coordinator and hasattr(self.coordinator.data, "get"):
-            return self.coordinator.data.get("available", True)
+        if self.coordinator and hasattr(self.coordinator.data, "available"):
+            return self.coordinator.data.available
         return True
 
     @property
     def is_on(self) -> bool:
         """Return if device is on."""
         # Use coordinator data if available
-        if self.coordinator and hasattr(self.coordinator.data, "get"):
-            return self.coordinator.data.get("is_on", False)
+        if self.coordinator and hasattr(self.coordinator.data, "is_on"):
+            return self.coordinator.data.is_on
         return self._attr_state == "on"
 
     @property
     def percentage(self) -> int:
         """Return the fan speed."""
         # Use coordinator data if available
-        if self.coordinator and hasattr(self.coordinator.data, "get"):
-            speed = self.coordinator.data.get("speed")
+        if self.coordinator and hasattr(self.coordinator.data, "speed_percentage"):
+            speed = self.coordinator.data.speed_percentage
             if speed is not None:
                 try:
                     return int(speed)
@@ -87,8 +87,8 @@ class MockDreoFan(FanEntity):
     def preset_mode(self) -> str:
         """Return the preset mode."""
         # Use coordinator data if available
-        if self.coordinator and hasattr(self.coordinator.data, "get"):
-            mode = self.coordinator.data.get("mode")
+        if self.coordinator and hasattr(self.coordinator.data, "mode"):
+            mode = self.coordinator.data.mode
             if mode is not None:
                 return str(mode)
         return self._attr_preset_mode or ""
@@ -97,8 +97,8 @@ class MockDreoFan(FanEntity):
     def oscillating(self) -> bool:
         """Return if oscillating."""
         # Use coordinator data if available
-        if self.coordinator and hasattr(self.coordinator.data, "get"):
-            oscillate = self.coordinator.data.get("oscillate")
+        if self.coordinator and hasattr(self.coordinator.data, "oscillate"):
+            oscillate = self.coordinator.data.oscillate
             if oscillate is not None:
                 return bool(oscillate)
         return self._attr_oscillating or False
@@ -162,12 +162,14 @@ class MockDreoCoordinator(DreoDataUpdateCoordinator):
 
         # Override the data with test values
         self.device_type = "fan"
-        # Create a DreoFanDeviceData instance instead of adding keys to DreoGenericDeviceData
-        fan_data = DreoFanDeviceData(available=True, is_on=True)
-        fan_data["mode"] = "auto"
-        fan_data["speed"] = 100
-        fan_data["oscillate"] = True
-        self.data = fan_data
+        # Create a DreoFanDeviceData instance with proper initialization
+        self.data = DreoFanDeviceData(
+            available=True,
+            is_on=True,
+            mode="auto",
+            oscillate=True,
+            speed_percentage=100,
+        )
 
     async def async_refresh(self) -> None:
         """Mock refresh method."""

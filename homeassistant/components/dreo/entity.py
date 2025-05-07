@@ -1,7 +1,6 @@
 """Dreo device base entity."""
 
 from functools import partial
-import logging
 from typing import Any
 
 from hscloud.hscloudexception import (
@@ -17,8 +16,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import DreoDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
@@ -81,8 +78,6 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
                     self.coordinator.client.update_status, self._device_id, **kwargs
                 )
             )
-            # Force immediate refresh of device state
-            # The coordinator will automatically update all registered entities
             await self.coordinator.async_refresh()
         except (
             HsCloudException,
