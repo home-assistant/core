@@ -673,7 +673,7 @@ denonavr==1.0.1
 devialet==1.5.7
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.18.3
+devolo-home-control-api==0.19.0
 
 # homeassistant.components.devolo_home_network
 devolo-plc-api==1.5.1
