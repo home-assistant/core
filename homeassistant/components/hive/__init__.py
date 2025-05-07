@@ -37,6 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     hive_config["options"].update(
         {CONF_SCAN_INTERVAL: dict(entry.options).get(CONF_SCAN_INTERVAL, 120)}
     )
+    entry.runtime_data = hive
 
     try:
         devices = await hive.session.startSession(hive_config)
@@ -45,8 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
         raise ConfigEntryNotReady from error
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
-
-    entry.runtime_data = hive
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
