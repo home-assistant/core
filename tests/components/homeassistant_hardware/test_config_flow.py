@@ -584,6 +584,7 @@ async def test_config_flow_zigbee_not_hassio(hass: HomeAssistant) -> None:
     assert zha_flow["step_id"] == "confirm"
 
 
+@pytest.mark.usefixtures("addon_store_info")
 async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
     """Test the options flow, migrating Zigbee to Thread."""
     config_entry = MockConfigEntry(
@@ -675,6 +676,7 @@ async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
         assert config_entry.data["firmware"] == "spinel"
 
 
+@pytest.mark.usefixtures("addon_store_info")
 async def test_options_flow_thread_to_zigbee(hass: HomeAssistant) -> None:
     """Test the options flow, migrating Thread to Zigbee."""
     config_entry = MockConfigEntry(

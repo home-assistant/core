@@ -1,0 +1,17 @@
+{
+  "domain": "rehlko",
+  "name": "Rehlko",
+  "codeowners": ["@bdraco", "@peterager"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "kohlergen*",
+      "macaddress": "00146F*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/rehlko",
+  "iot_class": "cloud_polling",
+  "loggers": ["aiokem"],
+  "quality_scale": "silver",
+  "requirements": ["aiokem==0.5.10"]
+}

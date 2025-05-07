@@ -42,9 +42,9 @@
     "sensor": {
       "zone_status": {
         "state": {
+          "open": "[%key:common::state::open%]",
           "alarm": "Alarm",
           "armed": "Armed",
-          "open": "Open",
           "excluded": "Excluded",
           "faulty": "Faulty",
           "inhibited": "Inhibited",
@@ -74,7 +74,10 @@
       "message": "Error connecting: {error}"
     },
     "cannot_authenticate": {
-      "message": "Error authenticating: {error}"
+      "message": "Error authenticating"
+    },
+    "updated_failed": {
+      "message": "Failed to update data: {error}"
     }
   }
 }

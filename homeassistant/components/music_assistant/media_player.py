@@ -36,6 +36,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType as HAMediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.const import ATTR_NAME, STATE_OFF
@@ -74,7 +76,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import MusicAssistantEntity
-from .media_browser import async_browse_media
+from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
 if TYPE_CHECKING:
@@ -91,6 +93,7 @@ SUPPORTED_FEATURES_BASE = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
     | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.SEARCH_MEDIA
     | MediaPlayerEntityFeature.MEDIA_ENQUEUE
     | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     | MediaPlayerEntityFeature.SEEK
@@ -596,20 +599,34 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             media_content_type,
         )
 
+    async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
+        """Search media."""
+        return await async_search_media(
+            self.mass,
+            query,
+        )
+
     def _update_media_image_url(
         self, player: Player, queue: PlayerQueue | None
     ) -> None:
-        """Update image URL for the active queue item."""
-        if queue is None or queue.current_item is None:
-            self._attr_media_image_url = None
-            return
-        if image_url := self.mass.get_media_item_image_url(queue.current_item):
+        """Update image URL."""
+        if queue and queue.current_item:
+            # image_url is provided by an music-assistant queue
+            image_url = self.mass.get_media_item_image_url(queue.current_item)
+        elif player.current_media and player.current_media.image_url:
+            # image_url is provided by an external source
+            image_url = player.current_media.image_url
+        else:
+            image_url = None
+
+        # check if the image is provided via music-assistant and therefore
+        # not accessible from the outside
+        if image_url:
             self._attr_media_image_remotely_accessible = (
                 self.mass.server_url not in image_url
             )
-            self._attr_media_image_url = image_url
-            return
-        self._attr_media_image_url = None
+
+        self._attr_media_image_url = image_url
 
     def _update_media_attributes(
         self, player: Player, queue: PlayerQueue | None

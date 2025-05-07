@@ -807,10 +807,28 @@ _CONVERTED_VALUE: dict[
             UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
         ),
         (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+            3600,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+            3600000,
+            UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        ),
+        (
             3,
             UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
             50,
             UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+        ),
+        (
+            3.6,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         ),
     ],
 }

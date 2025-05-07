@@ -72,7 +72,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         == SUPPORT_SAMSUNGTV | MediaPlayerEntityFeature.TURN_ON
     )
 
-    # test host and port
+    # Ensure service is registered
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -235,7 +235,7 @@ async def test_cleanup_mac(
         domain=DOMAIN,
         data=MOCK_ENTRY_WS_WITH_MAC,
         entry_id="123456",
-        unique_id="any",
+        unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
         version=2,
         minor_version=1,
     )
@@ -248,7 +248,7 @@ async def test_cleanup_mac(
             (dr.CONNECTION_NETWORK_MAC, "none"),
             (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
         },
-        identifiers={("samsungtv", "any")},
+        identifiers={("samsungtv", "be9554b9-c9fb-41f4-8920-22da015376a4")},
         model="82GXARRS",
         name="fake",
     )
