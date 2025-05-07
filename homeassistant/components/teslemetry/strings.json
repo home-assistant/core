@@ -491,7 +491,7 @@
         "name": "Passenger temperature setting"
       },
       "credit_balance": {
-        "name": "Credits"
+        "name": "Teslemetry credits"
       },
       "drive_state_active_route_destination": {
         "name": "Destination"
