@@ -46,7 +46,7 @@ async def async_setup_entry(
     async_add_entities(entities)
     for harmonizer in room_iq_zones.values():
 
-        async def _stop_obj(_: Event, obj=harmonizer) -> None:
+        async def _stop_obj(_: Event, obj: NexiaRoomIQHarmonizer = harmonizer) -> None:
             """Run the shutdown method when preparing to stop."""
             await obj.async_shutdown()
 
@@ -102,12 +102,13 @@ class NexiaRoomIQSwitch(NexiaThermostatZoneEntity, SwitchEntity):
         super().__init__(coordinator, zone, f"{sensor.id}_room_iq_sensor")
         self._attr_translation_placeholders = {"sensor_name": sensor.name}
         self._sensor_id = sensor.id
-        self._harmonizer = room_iq_zones.setdefault(
-            zone.zone_id,
-            NexiaRoomIQHarmonizer(
+        if zone.zone_id in room_iq_zones:
+            self._harmonizer = room_iq_zones[zone.zone_id]
+        else:
+            self._harmonizer = NexiaRoomIQHarmonizer(
                 zone, coordinator.async_refresh, self._signal_zone_update
-            ),
-        )
+            )
+            room_iq_zones[zone.zone_id] = self._harmonizer
 
     @property
     def is_on(self) -> bool:
@@ -115,13 +116,7 @@ class NexiaRoomIQSwitch(NexiaThermostatZoneEntity, SwitchEntity):
         if self._harmonizer.request_pending():
             return self._sensor_id in self._harmonizer.selected_sensor_ids
 
-        included = self._zone.get_sensor_by_id(self._sensor_id).weight > 0.0
-        # Keep our collection of selected RoomIQ sensors up to date
-        if included:
-            self._harmonizer.selected_sensor_ids.add(self._sensor_id)
-        else:
-            self._harmonizer.selected_sensor_ids.discard(self._sensor_id)
-        return included
+        return self._zone.get_sensor_by_id(self._sensor_id).weight > 0.0
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Include this sensor."""
