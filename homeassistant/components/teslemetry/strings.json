@@ -2,9 +2,7 @@
   "common": {
     "unavailable": "Unavailable",
     "abort": "Abort",
-    "vehicle": "Vehicle",
-    "wake_up_failed": "Failed to wake up vehicle: {message}",
-    "wake_up_timeout": "Timed out trying to wake up vehicle"
+    "vehicle": "Vehicle"
   },
   "config": {
     "abort": {
@@ -1104,10 +1102,10 @@
       "message": "Command had no result"
     },
     "wake_up_failed": {
-      "message": "[%key:component::teslemetry::common::wake_up_failed%]"
+      "message": "Failed to wake up vehicle: {message}"
     },
     "wake_up_timeout": {
-      "message": "[%key:component::teslemetry::common::wake_up_timeout%]"
+      "message": "Timed out trying to wake up vehicle"
     },
     "missing_scope": {
       "message": "Missing required scope: {scope}"
