@@ -72,7 +72,7 @@
     },
     "subscription_expired": {
       "title": "Subscription has expired",
-      "description": "Your Home Assistant Cloud subscription has expired, resubscribe at https://account.nabucasa.com"
+      "description": "Your Home Assistant Cloud subscription has expired. Resubscribe at {account_url}."
     }
   },
   "services": {
