@@ -64,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_DEVICE_PORT): cv.port,
-                vol.Optional(CONF_PANEL_NAME): cv.string,
+                vol.Optional(CONF_PANEL_NAME, default="Alarm Panel"): cv.string,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.positive_time_period,
@@ -105,7 +105,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     infer_arming_state = conf[CONF_INFER_ARMING_STATE]
 
     client = Client(
-        name=panel_name,
         host=host,
         port=port,
         update_interval=scan_interval.total_seconds(),
@@ -132,7 +131,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
     )
     hass.async_create_task(
-        async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, {}, config)
+        async_load_platform(
+            hass,
+            Platform.ALARM_CONTROL_PANEL,
+            DOMAIN,
+            {"panel_name": panel_name},
+            config,
+        )
     )
 
     def on_zone_change(zone_id: int, state: bool):

@@ -41,7 +41,9 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    device = NessAlarmPanel(hass.data[DATA_NESS])
+    panel_name = discovery_info.get("panel_name")
+
+    device = NessAlarmPanel(hass.data[DATA_NESS], panel_name)
     async_add_entities([device])
 
 
@@ -56,10 +58,10 @@ class NessAlarmPanel(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.TRIGGER
     )
 
-    def __init__(self, client: Client) -> None:
+    def __init__(self, client: Client, panel_name) -> None:
         """Initialize the alarm panel."""
         self._client = client
-        self._attr_name = client.name
+        self._attr_name = panel_name if panel_name else "Alarm Panel"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
