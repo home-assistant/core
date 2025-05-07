@@ -91,7 +91,11 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
-        if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True) or (
+        self._return_home_use_switch_charge = False
+        if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True):
+            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
+            self._return_home_use_switch_charge = True
+        elif (
             (
                 enum_type := self.find_dpcode(
                     DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
@@ -159,12 +163,14 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
-        self._send_command(
-            [
-                {"code": DPCode.SWITCH_CHARGE, "value": True},
-                {"code": DPCode.MODE, "value": TUYA_MODE_RETURN_HOME},
-            ]
-        )
+        if self._return_home_use_switch_charge:
+            self._send_command([
+                {"code": DPCode.SWITCH_CHARGE, "value": True}
+            ])
+        else:
+            self._send_command([
+                {"code": DPCode.MODE, "value": TUYA_MODE_RETURN_HOME}
+            ])
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the device."""
