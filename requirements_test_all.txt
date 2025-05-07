@@ -653,7 +653,7 @@ dbus-fast==2.43.0
 debugpy==1.8.13
 
 # homeassistant.components.ecovacs
-deebot-client==13.0.1
+deebot-client==13.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -994,7 +994,7 @@ holidays==0.70
 home-assistant-frontend==20250507.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.4.30
+home-assistant-intents==2025.5.7
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.0.1.1
