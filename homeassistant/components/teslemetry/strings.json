@@ -2,7 +2,14 @@
   "common": {
     "unavailable": "Unavailable",
     "abort": "Abort",
-    "vehicle": "Vehicle"
+    "vehicle": "Vehicle",
+    "schedule_id": "Schedule ID",
+    "schedule_id_description": "The ID of an existing schedule to modify. Omit if creating a new schedule.",
+    "days_of_week": "Days of week",
+    "days_of_week_description": "Select which days this schedule should be enabled on. You can select multiple days.",
+    "one_time": "One time",
+    "one_time_description": "If this is a one-time schedule.",
+    "location_description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location."
   },
   "config": {
     "abort": {
@@ -1232,18 +1239,18 @@
       "fields": {
         "device_id": {
           "description": "Vehicle to schedule.",
-          "name": "Vehicle"
+          "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "days_of_week": {
-          "description": "Select which days this schedule should be enabled on. You can select multiple days.",
-          "name": "Days of week"
+          "description": "[%key:component::teslemetry::common::days_of_week_description%]",
+          "name": "[%key:component::teslemetry::common::days_of_week%]"
         },
         "enable": {
           "description": "If this schedule should be considered for execution.",
           "name": "[%key:common::action::enable%]"
         },
         "location": {
-          "description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location.",
+          "description": "[%key:component::teslemetry::common::location_description%]",
           "name": "Location"
         },
         "start_time": {
@@ -1255,12 +1262,12 @@
           "name": "End time"
         },
         "one_time": {
-          "description": "If this is a one-time schedule.",
-          "name": "One time"
+          "description": "[%key:component::teslemetry::common::one_time_description%]",
+          "name": "[%key:component::teslemetry::common::one_time%]"
         },
         "id": {
-          "description": "The ID of an existing schedule to modify. Omit if creating a new schedule.",
-          "name": "Schedule ID"
+          "description": "[%key:component::teslemetry::common::schedule_id_description%]",
+          "name": "[%key:component::teslemetry::common::schedule_id%]"
         },
         "name": {
           "description": "The name of the schedule.",
@@ -1274,11 +1281,11 @@
       "fields": {
         "device_id": {
           "description": "Vehicle to remove schedule from.",
-          "name": "Vehicle"
+          "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "id": {
           "description": "The ID of the schedule to remove.",
-          "name": "Schedule ID"
+          "name": "[%key:component::teslemetry::common::schedule_id%]"
         }
       },
       "name": "Remove charge schedule"
@@ -1288,18 +1295,18 @@
       "fields": {
         "device_id": {
           "description": "Vehicle to schedule.",
-          "name": "Vehicle"
+          "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "days_of_week": {
-          "description": "Select which days this schedule should be enabled on. You can select multiple days.",
-          "name": "Days of week"
+          "description": "[%key:component::teslemetry::common::days_of_week_description%]",
+          "name": "[%key:component::teslemetry::common::days_of_week%]"
         },
         "enable": {
           "description": "If this schedule should be considered for execution.",
           "name": "[%key:common::action::enable%]"
         },
         "location": {
-          "description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location.",
+          "description": "[%key:component::teslemetry::common::location_description%]",
           "name": "Location"
         },
         "precondition_time": {
@@ -1307,12 +1314,12 @@
           "name": "Precondition time"
         },
         "id": {
-          "description": "The ID of an existing schedule to modify. Omit if creating a new schedule.",
-          "name": "Schedule ID"
+          "description": "[%key:component::teslemetry::common::schedule_id_description%]",
+          "name": "[%key:component::teslemetry::common::schedule_id%]"
         },
         "one_time": {
-          "description": "If this is a one-time schedule.",
-          "name": "One time"
+          "description": "[%key:component::teslemetry::common::one_time_description%]",
+          "name": "[%key:component::teslemetry::common::one_time%]"
         },
         "name": {
           "description": "The name of this schedule.",
@@ -1326,11 +1333,11 @@
       "fields": {
         "device_id": {
           "description": "Vehicle to remove schedule from.",
-          "name": "Vehicle"
+          "name": "[%key:component::teslemetry::common::vehicle%]"
         },
         "id": {
           "description": "The ID of the schedule to remove.",
-          "name": "Schedule ID"
+          "name": "[%key:component::teslemetry::common::schedule_id%]"
         }
       },
       "name": "Remove precondition schedule"
