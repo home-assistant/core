@@ -304,6 +304,7 @@ async def test_refresh_known_errors(
     assert crd.last_update_success is False
     assert isinstance(crd.last_exception, err_msg[1])
     assert err_msg[2] in caplog.text
+    err_msg[0].__traceback__ = None
 
 
 async def test_refresh_fail_unknown(
@@ -564,6 +565,7 @@ async def test_async_config_entry_first_refresh_failure(
     assert crd.last_update_success is False
     assert isinstance(crd.last_exception, err_msg[1])
     assert err_msg[2] not in caplog.text
+    err_msg[0].__traceback__ = None
 
 
 @pytest.mark.parametrize(
@@ -602,6 +604,7 @@ async def test_async_config_entry_first_refresh_failure_passed_through(
     assert crd.last_update_success is False
     assert isinstance(crd.last_exception, err_msg[1])
     assert err_msg[2] not in caplog.text
+    err_msg[0].__traceback__ = None
 
 
 async def test_async_config_entry_first_refresh_success(hass: HomeAssistant) -> None:
