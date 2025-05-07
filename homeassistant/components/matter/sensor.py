@@ -83,6 +83,14 @@ BOOST_STATE_MAP = {
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kUnknownEnumValue: None,
 }
 
+ESA_STATE_MAP = {
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOffline: "offline",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline: "online",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kFault: "fault",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive: "power_adjust_active",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPaused: "paused",
+}
+
 EVSE_FAULT_STATE_MAP = {
     clusters.EnergyEvse.Enums.FaultStateEnum.kNoError: "no_error",
     clusters.EnergyEvse.Enums.FaultStateEnum.kMeterFailure: "meter_failure",
@@ -1060,5 +1068,18 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.WaterHeaterManagement.Attributes.EstimatedHeatRequired,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ESAState",
+            translation_key="esa_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(ESA_STATE_MAP.values()),
+            measurement_to_ha=ESA_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.DeviceEnergyManagement.Attributes.ESAState,),
     ),
 ]

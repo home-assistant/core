@@ -3038,6 +3038,69 @@
     'state': '120.0',
   })
 # ---
+# name: test_sensors[silabs_evse_charging][sensor.evse_appliance_energy_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'offline',
+        'online',
+        'fault',
+        'power_adjust_active',
+        'paused',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.evse_appliance_energy_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Appliance energy state',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'esa_state',
+    'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-ESAState-152-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_evse_charging][sensor.evse_appliance_energy_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'evse Appliance energy state',
+      'options': list([
+        'offline',
+        'online',
+        'fault',
+        'power_adjust_active',
+        'paused',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.evse_appliance_energy_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
+  })
+# ---
 # name: test_sensors[silabs_evse_charging][sensor.evse_circuit_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3705,6 +3768,69 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '120.0',
+  })
+# ---
+# name: test_sensors[silabs_water_heater][sensor.water_heater_appliance_energy_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'offline',
+        'online',
+        'fault',
+        'power_adjust_active',
+        'paused',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.water_heater_appliance_energy_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Appliance energy state',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'esa_state',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ESAState-152-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_water_heater][sensor.water_heater_appliance_energy_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Water Heater Appliance energy state',
+      'options': list([
+        'offline',
+        'online',
+        'fault',
+        'power_adjust_active',
+        'paused',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_heater_appliance_energy_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
   })
 # ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_current-entry]

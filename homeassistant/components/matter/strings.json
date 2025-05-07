@@ -306,6 +306,16 @@
       "energy_exported": {
         "name": "Energy exported"
       },
+      "esa_state": {
+        "name": "Appliance energy state",
+        "state": {
+          "offline": "Offline",
+          "online": "Online",
+          "fault": "Fault",
+          "power_adjust_active": "Power adjust",
+          "paused": "[%key:common::state::paused%]"
+        }
+      },
       "evse_fault_state": {
         "name": "Fault state",
         "state": {
