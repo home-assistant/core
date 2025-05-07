@@ -6,9 +6,6 @@ import logging
 import math
 from typing import Any
 
-from zcc import ControlPoint
-from zcc.device import ControlPointDevice
-
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -46,13 +43,6 @@ class ZimiFan(ZimiEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-
-    def __init__(self, device: ControlPointDevice, api: ControlPoint) -> None:
-        """Initialize an ZimiFan."""
-
-        super().__init__(device, api)
-
-        self._speed = device.fanspeed
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the desired speed for the fan."""
