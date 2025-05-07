@@ -748,6 +748,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="ElectricalEnergyMeasurementCumulativeEnergyExported",
+            translation_key="energy_exported",
             device_class=SensorDeviceClass.ENERGY,
             entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,

@@ -4254,7 +4254,7 @@
     'state': '-3.62',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_energy-entry]
+# name: test_sensors[solar_power][sensor.solarpower_energy_exported-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4269,7 +4269,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_energy',
+    'entity_id': 'sensor.solarpower_energy_exported',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4287,25 +4287,25 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy exported',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_exported',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_energy-state]
+# name: test_sensors[solar_power][sensor.solarpower_energy_exported-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'SolarPower Energy',
+      'friendly_name': 'SolarPower Energy exported',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_energy',
+    'entity_id': 'sensor.solarpower_energy_exported',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
