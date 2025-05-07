@@ -19,22 +19,17 @@ async def async_setup_entry(
     entry: YALEXSBLEConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Setup securemode switch."""
+    """Set up secure mode switch."""
     async_add_entities([YaleXSBLESecuremodeSwitch(entry.runtime_data)])
 
 
 class YaleXSBLESecuremodeSwitch(YALEXSBLEEntity, SwitchEntity):
-    """Securemode switch for a Yale BLE lock."""
+    """Secure mode switch for a Yale BLE lock."""
 
     _attr_has_entity_name = True
-    # Hide the securemode switch be default
     _attr_entity_registry_enabled_default = False
     _attr_device_class = SwitchDeviceClass.SWITCH
-
-    @property
-    def name(self):
-        """Name of the entity."""
-        return "Securemode"
+    _attr_translation_key = "secure_mode"
 
     @callback
     def _async_update_state(
