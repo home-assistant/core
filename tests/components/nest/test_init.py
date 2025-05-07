@@ -8,7 +8,7 @@ mode (e.g. yaml, ConfigEntry, etc) however some tests override and just run in
 relevant modes.
 """
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 import datetime
 from http import HTTPStatus
 import logging
@@ -146,23 +146,31 @@ async def test_setup_device_manager_failure(
 
 @pytest.mark.parametrize("token_expiration_time", [EXPIRED_TOKEN_TIMESTAMP])
 @pytest.mark.parametrize(
-    ("token_response_args", "expected_state", "expected_steps"),
+    ("token_response_args", "token_response_exc", "expected_state", "expected_steps"),
     [
         # Cases that retry integration setup
         (
             {"status": HTTPStatus.INTERNAL_SERVER_ERROR},
+            lambda: None,
             ConfigEntryState.SETUP_RETRY,
             [],
         ),
-        ({"exc": aiohttp.ClientError("No internet")}, ConfigEntryState.SETUP_RETRY, []),
+        (
+            {},
+            lambda: aiohttp.ClientError("No internet"),
+            ConfigEntryState.SETUP_RETRY,
+            [],
+        ),
         # Cases that require the user to reauthenticate in a config flow
         (
             {"status": HTTPStatus.BAD_REQUEST},
+            lambda: None,
             ConfigEntryState.SETUP_ERROR,
             ["reauth_confirm"],
         ),
         (
             {"status": HTTPStatus.FORBIDDEN},
+            lambda: None,
             ConfigEntryState.SETUP_ERROR,
             ["reauth_confirm"],
         ),
@@ -173,6 +181,7 @@ async def test_expired_token_refresh_error(
     setup_base_platform: PlatformSetup,
     aioclient_mock: AiohttpClientMocker,
     token_response_args: dict,
+    token_response_exc: Callable[[], Exception | None],
     expected_state: ConfigEntryState,
     expected_steps: list[str],
 ) -> None:
@@ -180,6 +189,7 @@ async def test_expired_token_refresh_error(
 
     aioclient_mock.post(
         OAUTH2_TOKEN,
+        exc=token_response_exc(),
         **token_response_args,
     )
 
