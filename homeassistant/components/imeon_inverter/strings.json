@@ -29,12 +29,6 @@
   },
   "entity": {
     "sensor": {
-      "battery_autonomy": {
-        "name": "Battery autonomy"
-      },
-      "battery_charge_time": {
-        "name": "Battery charge time"
-      },
       "battery_power": {
         "name": "Battery power"
       },
@@ -43,6 +37,9 @@
       },
       "battery_stored": {
         "name": "Battery stored"
+      },
+      "battery_consumed": {
+        "name": "Battery consumed"
       },
       "grid_current_l1": {
         "name": "Grid current L1"
@@ -85,9 +82,6 @@
       },
       "meter_power": {
         "name": "Meter power"
-      },
-      "meter_power_protocol": {
-        "name": "Meter power protocol"
       },
       "output_current_l1": {
         "name": "Output current L1"
@@ -143,44 +137,29 @@
       "temp_component_temperature": {
         "name": "Component temperature"
       },
-      "monitoring_building_consumption": {
-        "name": "Monitoring building consumption"
-      },
-      "monitoring_economy_factor": {
-        "name": "Monitoring economy factor"
-      },
-      "monitoring_grid_consumption": {
-        "name": "Monitoring grid consumption"
-      },
-      "monitoring_grid_injection": {
-        "name": "Monitoring grid injection"
-      },
-      "monitoring_grid_power_flow": {
-        "name": "Monitoring grid power flow"
+      "monitoring_self_produced": {
+        "name": "Self produced"
       },
       "monitoring_self_consumption": {
-        "name": "Monitoring self-consumption"
+        "name": "Self consumption"
       },
       "monitoring_self_sufficiency": {
-        "name": "Monitoring self-sufficiency"
-      },
-      "monitoring_solar_production": {
-        "name": "Monitoring solar production"
+        "name": "Self sufficiency"
       },
       "monitoring_minute_building_consumption": {
-        "name": "Monitoring building consumption (minute)"
+        "name": "Building consumption"
       },
       "monitoring_minute_grid_consumption": {
-        "name": "Monitoring grid consumption (minute)"
+        "name": "Grid consumption"
       },
       "monitoring_minute_grid_injection": {
-        "name": "Monitoring grid injection (minute)"
+        "name": "Grid injection"
       },
       "monitoring_minute_grid_power_flow": {
-        "name": "Monitoring grid power flow (minute)"
+        "name": "Grid power flow"
       },
       "monitoring_minute_solar_production": {
-        "name": "Monitoring solar production (minute)"
+        "name": "Solar production"
       }
     }
   }
