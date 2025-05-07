@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import YALEXSBLEConfigEntry
 from .entity import YALEXSBLEEntity
+from .models import YaleXSBLEData
 
 
 async def async_setup_entry(
@@ -78,6 +79,11 @@ class YaleXSBLESecureModeLock(YaleXSBLEBaseLock):
     _attr_entity_registry_enabled_default = False
     _attr_translation_key = "secure_mode"
     _secure_mode = True
+
+    def __init__(self, data: YaleXSBLEData) -> None:
+        """Initialize the entity."""
+        super().__init__(data)
+        self._attr_unique_id = f"{self._device.address}_secure_mode"
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
