@@ -322,6 +322,7 @@ def clear_exception_traceback(request: pytest.FixtureRequest) -> Generator[None]
     raises_ctx: list[_pytest.python_api.RaisesContext] = []
     for fixture_name in request.fixturenames:
         if fixture_name not in {
+            "api_exception",
             "doorbell_state_side_effect",
             "error",
             "error_type",
@@ -337,12 +338,14 @@ def clear_exception_traceback(request: pytest.FixtureRequest) -> Generator[None]
             "raises",
             "set_active_program_option_side_effect",
             "set_active_program_options_side_effect",
+            "set_query_mock",
             "set_selected_program_option_side_effect",
             "set_selected_program_options_side_effect",
             "side_eff",
             "side_effect",
             "sideeffect",
             "subscriber_side_effect",
+            "test_exception",
         }:
             continue
         if isinstance(request.getfixturevalue(fixture_name), BaseException):
