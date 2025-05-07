@@ -21,7 +21,7 @@ from .const import MOCK_CONFIG, MOCK_ENTRY_WS_WITH_MAC, MOCK_ENTRYDATA_ENCRYPTED
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = f"{REMOTE_DOMAIN}.fake"
+ENTITY_ID = f"{REMOTE_DOMAIN}.mock_title"
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
