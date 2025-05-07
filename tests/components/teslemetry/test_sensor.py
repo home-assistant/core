@@ -97,7 +97,7 @@ async def test_sensors_streaming(
         "sensor.test_charge_cable",
         "sensor.test_time_to_full_charge",
         "sensor.test_time_to_arrival",
-        "sensor.credit_balance",
+        "sensor.teslemetry_credits",
     ):
         state = hass.states.get(entity_id)
         assert state.state == snapshot(name=f"{entity_id}-state")
