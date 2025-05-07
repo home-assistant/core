@@ -2975,7 +2975,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.5.5
+uiprotect==7.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
