@@ -663,13 +663,16 @@ async def test_get_request_host_no_host_header(hass: HomeAssistant) -> None:
         assert _get_request_host() is None
 
 
-@patch("homeassistant.components.hassio.is_hassio", Mock(return_value=True))
+@patch(
+    "homeassistant.components.hassio.is_hassio",
+    return_value=True,
+)
 @patch(
     "homeassistant.components.hassio.get_host_info",
-    Mock(return_value={"hostname": "homeassistant"}),
+    return_value={"hostname": "homeassistant"},
 )
 async def test_get_current_request_url_with_known_host(
-    hass: HomeAssistant, current_request
+    get_host_info, is_hassio, hass: HomeAssistant, current_request
 ) -> None:
     """Test getting current request URL with known hosts addresses."""
     hass.config.api = Mock(use_ssl=False, port=8123, local_ip="127.0.0.1")
@@ -728,13 +731,15 @@ async def test_get_current_request_url_with_known_host(
 
 @patch(
     "homeassistant.helpers.network.is_hassio",
-    Mock(return_value={"hostname": "homeassistant"}),
+    return_value={"hostname": "homeassistant"},
 )
 @patch(
     "homeassistant.components.hassio.get_host_info",
-    Mock(return_value={"hostname": "hellohost"}),
+    return_value={"hostname": "hellohost"},
 )
-async def test_is_internal_request(hass: HomeAssistant, mock_current_request) -> None:
+async def test_is_internal_request(
+    get_host_info, is_hassio, hass: HomeAssistant, mock_current_request
+) -> None:
     """Test if accessing an instance on its internal URL."""
     # Test with internal URL: http://example.local:8123
     await async_process_ha_core_config(
