@@ -132,7 +132,9 @@ async def test_setup_updates_from_ssdp(
 ) -> None:
     """Test setting up the entry fetches data from ssdp cache."""
     entry = MockConfigEntry(
-        domain="samsungtv", data=MOCK_ENTRYDATA_WS, entry_id="sample-entry-id"
+        domain="samsungtv",
+        data={**MOCK_ENTRYDATA_WS, CONF_HOST: "10.10.12.34"},
+        entry_id="sample-entry-id",
     )
     entry.add_to_hass(hass)
 
@@ -154,12 +156,11 @@ async def test_setup_updates_from_ssdp(
     assert hass.states.get("media_player.mock_title") == snapshot
     assert entity_registry.async_get("media_player.mock_title") == snapshot
     assert (
-        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
-        == "https://fake_host:12345/tv_agent"
+        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] == "http://10.10.12.34:7676/smp_2_"
     )
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
-        == "https://fake_host:12345/test"
+        == "http://10.10.12.34:7676/smp_15_"
     )
 
 
