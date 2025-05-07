@@ -120,10 +120,32 @@ def mock_api(tasks: list[Task]) -> AsyncMock:
         Label(id="1", name="Label1", color="1", order=1, is_favorite=False)
     ]
     api.get_collaborators.return_value = [
-        Collaborator(email="user@gmail.com", id="1", name="user")
+        Collaborator(email="user1@gmail.com", id="1", name="user1"),
+        Collaborator(email="user2@gmail.com", id="2", name="user2"),
     ]
     api.get_tasks.return_value = tasks
+    api.add_task.return_value = make_api_task()
     return api
+
+
+@pytest.fixture(name="mock_post")
+async def mock_session_post() -> AsyncMock:
+    """Mock the session.post method."""
+    with (
+        patch(
+            "homeassistant.helpers.aiohttp_client.async_get_clientsession"
+        ) as mock_get_clientsession,
+        patch("aiohttp.ClientSession.post", new_callable=AsyncMock) as mock_post,
+    ):
+        # Mock the aiohttp session
+        mock_session = AsyncMock()
+        mock_get_clientsession.return_value = mock_session
+
+        # Mock the POST request to the Todoist API
+        mock_post.return_value.__aenter__.return_value.json = AsyncMock(
+            return_value={"status": "ok"}
+        )
+        yield mock_post
 
 
 @pytest.fixture(name="todoist_api_status")

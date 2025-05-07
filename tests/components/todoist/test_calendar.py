@@ -3,7 +3,7 @@
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 import urllib
 import zoneinfo
 
@@ -19,6 +19,8 @@ from homeassistant.components.todoist.const import (
     DOMAIN,
     LABELS,
     PROJECT_NAME,
+    REMINDER_DATE_STRING,
+    REMINDER_USERS,
     SECTION_NAME,
     SERVICE_NEW_TASK,
 )
@@ -263,7 +265,7 @@ async def test_create_task_service_call(hass: HomeAssistant, api: AsyncMock) -> 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_NEW_TASK,
-        {ASSIGNEE: "user", CONTENT: "task", LABELS: ["Label1"], PROJECT_NAME: "Name"},
+        {ASSIGNEE: "user1", CONTENT: "task", LABELS: ["Label1"], PROJECT_NAME: "Name"},
     )
     await hass.async_block_till_done()
 
@@ -282,7 +284,7 @@ async def test_create_task_service_call_raises(
             DOMAIN,
             SERVICE_NEW_TASK,
             {
-                ASSIGNEE: "user",
+                ASSIGNEE: "user1",
                 CONTENT: "task",
                 LABELS: ["Label1"],
                 PROJECT_NAME: "Missing Project",
@@ -299,7 +301,7 @@ async def test_create_task_service_call_with_existing_section(
         DOMAIN,
         SERVICE_NEW_TASK,
         {
-            ASSIGNEE: "user",
+            ASSIGNEE: "user1",
             CONTENT: "task",
             LABELS: ["Label1"],
             PROJECT_NAME: "Name",
@@ -326,7 +328,7 @@ async def test_create_task_service_call_with_new_section(
         DOMAIN,
         SERVICE_NEW_TASK,
         {
-            ASSIGNEE: "user",
+            ASSIGNEE: "user1",
             CONTENT: "task",
             LABELS: ["Label1"],
             PROJECT_NAME: "Name",
@@ -355,7 +357,7 @@ async def test_create_task_service_call_with_missing_section_and_no_create(
             DOMAIN,
             SERVICE_NEW_TASK,
             {
-                ASSIGNEE: "user",
+                ASSIGNEE: "user1",
                 CONTENT: "task",
                 LABELS: ["Label1"],
                 PROJECT_NAME: "Name",
@@ -389,6 +391,191 @@ async def test_create_task_service_call_with_section_name_none(
     api.add_task.assert_called_once_with(
         "task",
         project_id=PROJECT_ID,
+    )
+
+
+async def test_create_task_service_call_with_reminder_users(
+    hass: HomeAssistant, api: AsyncMock, mock_post: AsyncMock
+) -> None:
+    """Test creating a task with reminders for specific users."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            ASSIGNEE: "user1",
+            CONTENT: "task",
+            LABELS: ["Label1"],
+            PROJECT_NAME: "Name",
+            REMINDER_DATE_STRING: "tomorrow",
+            REMINDER_USERS: ["User1", "User2"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    api.get_collaborators.assert_called_once_with(PROJECT_ID)
+    api.add_task.assert_called_once_with(
+        "task",
+        project_id=PROJECT_ID,
+        labels=["Label1"],
+        assignee_id="1",
+    )
+
+    # Verify reminders are created for both users
+    assert mock_post.call_count == 2
+    mock_post.assert_any_call(
+        "https://api.todoist.com/sync/v9/sync",
+        headers={
+            "Authorization": "Bearer token",
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        json={
+            "commands": [
+                {
+                    "type": "reminder_add",
+                    "temp_id": ANY,
+                    "uuid": ANY,
+                    "args": {
+                        "item_id": ANY,
+                        "type": "absolute",
+                        "due": {"string": "tomorrow"},
+                        "notify_uid": "1",
+                    },
+                }
+            ]
+        },
+    )
+    mock_post.assert_any_call(
+        "https://api.todoist.com/sync/v9/sync",
+        headers={
+            "Authorization": "Bearer token",
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        json={
+            "commands": [
+                {
+                    "type": "reminder_add",
+                    "temp_id": ANY,
+                    "uuid": ANY,
+                    "args": {
+                        "item_id": ANY,
+                        "type": "absolute",
+                        "due": {"string": "tomorrow"},
+                        "notify_uid": "2",
+                    },
+                }
+            ]
+        },
+    )
+
+
+async def test_create_task_service_call_without_assignee_or_reminder_users(
+    hass: HomeAssistant, api: AsyncMock, mock_post: AsyncMock
+) -> None:
+    """Test creating a task without specifying assignee or reminder users."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            CONTENT: "task",
+            LABELS: ["Label1"],
+            PROJECT_NAME: "Name",
+            REMINDER_DATE_STRING: "tomorrow",
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Ensure collaborators are not fetched unnecessarily
+    api.get_collaborators.assert_not_called()
+
+    # Verify task creation
+    api.add_task.assert_called_once_with(
+        "task", project_id=PROJECT_ID, labels=["Label1"]
+    )
+
+    # Verify default reminder behavior
+    assert mock_post.call_count == 1
+    mock_post.assert_any_call(
+        "https://api.todoist.com/sync/v9/sync",
+        headers={
+            "Authorization": "Bearer token",
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        json={
+            "commands": [
+                {
+                    "type": "reminder_add",
+                    "temp_id": ANY,
+                    "uuid": ANY,
+                    "args": {
+                        "item_id": ANY,
+                        "type": "absolute",
+                        "due": {"string": "tomorrow"},
+                    },
+                }
+            ]
+        },
+    )
+
+
+async def test_create_task_service_call_with_invalid_reminder_users(
+    hass: HomeAssistant, api: AsyncMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test creating a task with invalid reminder users."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            ASSIGNEE: "user1",
+            CONTENT: "task",
+            LABELS: ["Label1"],
+            PROJECT_NAME: "Name",
+            REMINDER_DATE_STRING: "tomorrow",
+            REMINDER_USERS: ["User1", "InvalidUser"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    api.get_collaborators.assert_called_once_with(PROJECT_ID)
+    api.add_task.assert_called_once_with(
+        "task",
+        project_id=PROJECT_ID,
+        labels=["Label1"],
+        assignee_id="1",
+    )
+
+    # Verify warning for invalid user
+    assert "User is not part of the shared project. user: InvalidUser" in caplog.text
+
+
+async def test_create_task_service_call_with_reminder_users_but_no_reminder_data(
+    hass: HomeAssistant, api: AsyncMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test creating a task with REMINDER_USERS but no reminder date."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            ASSIGNEE: "user1",
+            CONTENT: "task",
+            LABELS: ["Label1"],
+            PROJECT_NAME: "Name",
+            REMINDER_USERS: ["User1", "User2"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    api.get_collaborators.assert_called_once_with(PROJECT_ID)
+    api.add_task.assert_called_once_with(
+        "task",
+        project_id=PROJECT_ID,
+        labels=["Label1"],
+        assignee_id="1",
+    )
+
+    # Verify error is logged for missing reminder date
+    assert (
+        f"`{REMINDER_USERS}` provided but no supporting reminder parameters were provided."
+        in caplog.text
     )
 
 

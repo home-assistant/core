@@ -31,6 +31,8 @@ DUE_DATE_LANG: Final = "due_date_lang"
 REMINDER_DATE_STRING: Final = "reminder_date_string"
 # Service Call: The language of REMINDER_DATE_STRING
 REMINDER_DATE_LANG: Final = "reminder_date_lang"
+# Service Call: The user to be reminded of this task
+REMINDER_USERS: Final = "reminder_users"
 # Service Call: The available options of DUE_DATE_LANG
 DUE_DATE_VALID_LANGS: Final = [
     "en",

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date, datetime, timedelta
 import logging
 from typing import Any
@@ -58,6 +59,7 @@ from .const import (
     REMINDER_DATE,
     REMINDER_DATE_LANG,
     REMINDER_DATE_STRING,
+    REMINDER_USERS,
     SECTION_NAME,
     SERVICE_NEW_TASK,
     START,
@@ -86,6 +88,7 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
             cv.string, vol.In(DUE_DATE_VALID_LANGS)
         ),
         vol.Exclusive(REMINDER_DATE, "reminder_date"): cv.string,
+        vol.Optional(REMINDER_USERS): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -284,11 +287,16 @@ def async_register_services(  # noqa: C901
         if task_labels := call.data.get(LABELS):
             data["labels"] = task_labels
 
-        if ASSIGNEE in call.data:
+        collaborator_id_lookup = None
+        if ASSIGNEE in call.data or REMINDER_USERS in call.data:
             collaborators = await coordinator.api.get_collaborators(project_id)
             collaborator_id_lookup = {
                 collab.name.lower(): collab.id for collab in collaborators
             }
+
+        if ASSIGNEE in call.data:
+            if collaborator_id_lookup is None:
+                raise ValueError("Collaborators not fetched")
             task_assignee = call.data[ASSIGNEE].lower()
             if task_assignee in collaborator_id_lookup:
                 data["assignee_id"] = collaborator_id_lookup[task_assignee]
@@ -345,7 +353,7 @@ def async_register_services(  # noqa: C901
             date_format = "%Y-%m-%dT%H:%M:%S"
             _reminder_due["date"] = datetime.strftime(due_date, date_format)
 
-        async def add_reminder(reminder_due: dict):
+        async def add_reminder(reminder_due: dict, notify_uid: str | None = None):
             reminder_data = {
                 "commands": [
                     {
@@ -360,11 +368,43 @@ def async_register_services(  # noqa: C901
                     }
                 ]
             }
+            if notify_uid:
+                reminder_data["commands"][0]["args"]["notify_uid"] = notify_uid
+
             headers = create_headers(token=coordinator.token, with_content=True)
             return await session.post(sync_url, headers=headers, json=reminder_data)
 
         if _reminder_due:
-            await add_reminder(_reminder_due)
+            if REMINDER_USERS in call.data:
+                if collaborator_id_lookup is None:
+                    _LOGGER.error("Collaborators not fetched")
+                else:
+                    reminders = [
+                        add_reminder(
+                            _reminder_due,
+                            notify_uid=collaborator_id_lookup[person.lower()],
+                        )
+                        for person in call.data[REMINDER_USERS]
+                        if person.lower() in collaborator_id_lookup
+                    ]
+                    missing_users = [
+                        person
+                        for person in call.data[REMINDER_USERS]
+                        if person.lower() not in collaborator_id_lookup
+                    ]
+                    for missing_user in missing_users:
+                        _LOGGER.error(
+                            "User is not part of the shared project. user: %s",
+                            missing_user,
+                        )
+                    await asyncio.gather(*reminders)
+            else:
+                await add_reminder(_reminder_due)
+        elif REMINDER_USERS in call.data:
+            _LOGGER.error(
+                "`%s` provided but no supporting reminder parameters were provided.",
+                REMINDER_USERS,
+            )
 
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 

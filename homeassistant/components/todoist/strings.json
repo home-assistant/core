@@ -88,6 +88,10 @@
         "reminder_date": {
           "name": "Reminder date",
           "description": "When the user should be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone."
+        },
+        "reminder_users": {
+          "name": "Reminder users",
+          "description": "The username(s) of a shared project's member(s) to receive the reminder."
         }
       }
     }
