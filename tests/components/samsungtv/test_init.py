@@ -49,7 +49,7 @@ from .const import (
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
-ENTITY_ID = f"{MP_DOMAIN}.fake_name"
+ENTITY_ID = f"{MP_DOMAIN}.mock_title"
 MOCK_CONFIG = {
     CONF_HOST: "fake_host",
     CONF_NAME: "fake_name",
@@ -65,7 +65,7 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     # test name and turn_on
     assert state
-    assert state.name == "fake_name"
+    assert state.name == "Mock Title"
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == SUPPORT_SAMSUNGTV | MediaPlayerEntityFeature.TURN_ON
@@ -151,8 +151,8 @@ async def test_setup_updates_from_ssdp(
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
-    assert hass.states.get("media_player.any") == snapshot
-    assert entity_registry.async_get("media_player.any") == snapshot
+    assert hass.states.get("media_player.mock_title") == snapshot
+    assert entity_registry.async_get("media_player.mock_title") == snapshot
     assert (
         entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
         == "https://fake_host:12345/tv_agent"
