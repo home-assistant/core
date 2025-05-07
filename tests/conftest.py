@@ -362,8 +362,10 @@ def clear_exception_traceback(request: pytest.FixtureRequest) -> Generator[None]
         if fixture_name not in (
             "doorbell_state_side_effect",
             "error",
+            "error_type",
             "exc",
             "exception",
+            "raise_error",
             "expected_result",
             "raises",
             "side_eff",
