@@ -1272,7 +1272,9 @@ async def test_autodetect_none(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
 async def test_update_old_entry(hass: HomeAssistant) -> None:
     """Test update of old entry."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_OLD_ENTRY, CONF_HOST: "10.10.12.34"}
+    )
     entry.add_to_hass(hass)
 
     config_entries_domain = hass.config_entries.async_entries(DOMAIN)
@@ -1377,7 +1379,7 @@ async def test_update_missing_model_added_from_ssdp(
     """Test missing model added via ssdp on legacy models."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_OLD_ENTRY,
+        data={**MOCK_OLD_ENTRY, CONF_HOST: "10.10.12.34"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1392,7 +1394,7 @@ async def test_update_missing_model_added_from_ssdp(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MODEL] == "fake_model"
+    assert entry.data[CONF_MODEL] == "UE55H6400"
 
 
 @pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
@@ -1400,7 +1402,9 @@ async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac, ssdp_location, and unique id added via ssdp."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_OLD_ENTRY, CONF_HOST: "10.10.12.34"}, unique_id=None
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
