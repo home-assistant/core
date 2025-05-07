@@ -26,7 +26,6 @@ async def async_setup_entry(
 class YaleXSBLESecuremodeSwitch(YALEXSBLEEntity, SwitchEntity):
     """Secure mode switch for a Yale BLE lock."""
 
-    _attr_has_entity_name = True
     _attr_entity_registry_enabled_default = False
     _attr_device_class = SwitchDeviceClass.SWITCH
     _attr_translation_key = "secure_mode"
