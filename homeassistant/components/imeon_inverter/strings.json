@@ -215,6 +215,17 @@
       "energy_battery_consumed": {
         "name": "Today battery consumed energy"
       }
+    },
+    "select": {
+      "manager_inverter_mode": {
+        "name": "Inverter mode",
+        "state": {
+          "smg": "Smart Grid",
+          "bup": "Backup",
+          "ong": "On-grid",
+          "ofg": "Off-grid"
+        }
+      }
     }
   }
 }

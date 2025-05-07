@@ -5,9 +5,11 @@ from homeassistant.const import Platform
 DOMAIN = "imeon_inverter"
 TIMEOUT = 30
 PLATFORMS = [
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 ATTR_BATTERY_STATUS = ["charging", "discharging", "charged"]
+ATTR_INVERTER_MODE = ["smg", "bup", "ong", "ofg"]
 ATTR_INVERTER_STATE = [
     "unsynchronised",
     "grid_consumption",

@@ -154,6 +154,11 @@
       "energy_battery_consumed": {
         "default": "mdi:battery-arrow-down-outline"
       }
+    },
+    "select": {
+      "manager_inverter_mode": {
+        "default": "mdi:view-grid"
+      }
     }
   }
 }
