@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import ATTR_BATTERY_STATUS, ATTR_INVERTER_STATE
 from .coordinator import InverterCoordinator
 from .entity import InverterEntity
 
@@ -46,6 +47,12 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="battery_status",
+        translation_key="battery_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=ATTR_BATTERY_STATUS,
     ),
     SensorEntityDescription(
         key="battery_stored",
@@ -154,6 +161,12 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="manager_inverter_state",
+        translation_key="manager_inverter_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=ATTR_INVERTER_STATE,
     ),
     # Meter
     SensorEntityDescription(

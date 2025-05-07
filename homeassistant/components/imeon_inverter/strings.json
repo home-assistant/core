@@ -35,6 +35,23 @@
       "battery_soc": {
         "name": "Battery state of charge"
       },
+      "battery_status": {
+        "name": "Battery status",
+        "state": {
+          "charged": "Charged",
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "charged": "[%key:component::imeon_inverter::entity::sensor::battery_status::state::charged%]",
+              "charging": "[%key:common::state::charging%]",
+              "discharging": "[%key:common::state::discharging%]"
+            }
+          }
+        }
+      },
       "battery_stored": {
         "name": "Battery stored"
       },
@@ -79,6 +96,25 @@
       },
       "inverter_injection_power_limit": {
         "name": "Injection power limit"
+      },
+      "manager_inverter_state": {
+        "name": "Inverter state",
+        "state": {
+          "unsynchronised": "Unsynchronised",
+          "grid_consumption": "Grid consumption",
+          "grid_injection": "Grid injection",
+          "grid_synchronised_but_not_used": "Grid unsynchronised but used"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "unsynchronised": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::unsynchronised%]",
+              "grid_consumption": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_consumption%]",
+              "grid_injection": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_injection%]",
+              "grid_synchronised_but_not_used": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_synchronised_but_not_used%]"
+            }
+          }
+        }
       },
       "meter_power": {
         "name": "Meter power"
