@@ -132,9 +132,7 @@ async def test_setup_updates_from_ssdp(
 ) -> None:
     """Test setting up the entry fetches data from ssdp cache."""
     entry = MockConfigEntry(
-        domain="samsungtv",
-        data={**MOCK_ENTRYDATA_WS, CONF_HOST: "10.10.12.34"},
-        entry_id="sample-entry-id",
+        domain="samsungtv", data=MOCK_ENTRYDATA_WS, entry_id="sample-entry-id"
     )
     entry.add_to_hass(hass)
 
