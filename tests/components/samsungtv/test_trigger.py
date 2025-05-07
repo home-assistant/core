@@ -28,7 +28,7 @@ async def test_turn_on_trigger_device_id(
     """Test for turn_on triggers by device_id firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
-    entity_id = f"{entity_domain}.fake"
+    entity_id = f"{entity_domain}.mock_title"
 
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "be9554b9-c9fb-41f4-8920-22da015376a4")}
@@ -92,7 +92,7 @@ async def test_turn_on_trigger_entity_id(
     """Test for turn_on triggers by entity_id firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
-    entity_id = f"{entity_domain}.fake"
+    entity_id = f"{entity_domain}.mock_title"
 
     assert await async_setup_component(
         hass,
