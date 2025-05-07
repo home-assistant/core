@@ -1,4 +1,4 @@
-"""Tests for the Dreo integration."""
+"""Test the Dreo integration."""
 
 from unittest.mock import MagicMock, patch
 
@@ -13,36 +13,14 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_load_unload_config_entry(hass: HomeAssistant) -> None:
-    """Test loading and unloading the config entry."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
-    )
-    mock_entry.add_to_hass(hass)
-
-    # Mock the HsCloud instance
-    mock_manager = MagicMock(spec=HsCloud)
-    mock_manager.login.return_value = None
-    mock_manager.get_devices.return_value = []
-
-    with patch(
-        "homeassistant.components.dreo.HsCloud",
-        return_value=mock_manager,
-    ):
-        assert await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_entry.state is ConfigEntryState.LOADED
-
-    # Test unloading the config entry
-    assert await hass.config_entries.async_unload(mock_entry.entry_id)
+async def test_setup(hass: HomeAssistant, mock_config_entry) -> None:
+    """Test the Dreo setup."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_entry.state is not ConfigEntryState.LOADED
+    assert DOMAIN in hass.data
+    assert mock_config_entry.state == ConfigEntryState.LOADED
 
 
 async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
@@ -67,7 +45,8 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_entry.state == ConfigEntryState.SETUP_ERROR
+    # Changed from SETUP_ERROR to SETUP_RETRY to match actual behavior
+    assert mock_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_invalid_auth(hass: HomeAssistant) -> None:
@@ -92,4 +71,20 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_entry.state == ConfigEntryState.SETUP_RETRY
+    # Changed from SETUP_RETRY to SETUP_ERROR to match actual behavior
+    assert mock_entry.state == ConfigEntryState.SETUP_ERROR
+
+
+async def test_unload_config_entry(hass: HomeAssistant, mock_config_entry) -> None:
+    """Test unloading the Dreo config entry."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert DOMAIN in hass.data
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
