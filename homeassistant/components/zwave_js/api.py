@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
+from contextlib import suppress
 import dataclasses
 from functools import partial, wraps
 from typing import Any, Concatenate, Literal, cast
@@ -181,6 +183,8 @@ STRATEGY = "strategy"
 
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
 MINIMUM_QR_STRING_LENGTH = 52
+
+HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT = 60
 
 
 # Helper schemas
@@ -2816,6 +2820,7 @@ async def websocket_hard_reset_controller(
     driver: Driver,
 ) -> None:
     """Hard reset controller."""
+    unsubs: list[Callable[[], None]]
 
     @callback
     def async_cleanup() -> None:
@@ -2831,12 +2836,27 @@ async def websocket_hard_reset_controller(
             connection.send_result(msg[ID], device.id)
             async_cleanup()
 
+    @callback
+    def set_driver_ready(event: dict) -> None:
+        "Set the driver ready event."
+        wait_driver_ready.set()
+
+    wait_driver_ready = asyncio.Event()
+
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, _handle_device_added
-        )
+        ),
+        driver.once("driver ready", set_driver_ready),
     ]
+
     await driver.async_hard_reset()
+
+    with suppress(TimeoutError):
+        async with asyncio.timeout(HARD_RESET_CONTROLLER_DRIVER_READY_TIMEOUT):
+            await wait_driver_ready.wait()
+
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 @websocket_api.websocket_command(
