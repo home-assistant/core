@@ -1457,6 +1457,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
         domain=DOMAIN,
         data={
             **MOCK_OLD_ENTRY,
+            CONF_HOST: "10.10.12.34",
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
         },
         unique_id=None,
@@ -1490,6 +1491,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
         domain=DOMAIN,
         data={
             **MOCK_OLD_ENTRY,
+            CONF_HOST: "10.10.12.34",
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
         },
         unique_id=None,
@@ -1510,7 +1512,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
     # Correct ST, ssdp location should change
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
-        == "https://fake_host:12345/test"
+        == "http://10.10.12.34:7676/smp_15_"
     )
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
@@ -1524,6 +1526,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st
         domain=DOMAIN,
         data={
             **MOCK_OLD_ENTRY,
+            CONF_HOST: "10.10.12.34",
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
             CONF_SSDP_MAIN_TV_AGENT_LOCATION: "https://1.2.3.4:555/test",
         },
@@ -1544,8 +1547,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st
     assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Main TV Agent ST, ssdp location should change
     assert (
-        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
-        == "https://fake_host:12345/tv_agent"
+        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] == "http://10.10.12.34:7676/smp_2_"
     )
     # Rendering control should not be affected
     assert (
@@ -1580,7 +1582,7 @@ async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
     # Correct ST, ssdp location should be added
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
-        == "https://fake_host:12345/test"
+        == "http://10.10.12.34:7676/smp_15_"
     )
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
@@ -1610,8 +1612,7 @@ async def test_update_main_tv_ssdp_location_rendering_st_updated_from_ssdp(
     assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Correct ST for MainTV, ssdp location should be added
     assert (
-        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
-        == "https://fake_host:12345/tv_agent"
+        entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION] == "http://10.10.12.34:7676/smp_2_"
     )
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
@@ -1761,7 +1762,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_con
     # Correct st
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
-        == "https://fake_host:12345/test"
+        == "http://10.10.12.34:7676/smp_15_"
     )
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
