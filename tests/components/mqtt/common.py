@@ -179,6 +179,10 @@ MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
         "state_topic": "test-topic",
         "color_temp_kelvin": True,
         "state_value_template": "{{ value_json.value }}",
+        "brightness_scale": 255,
+        "max_kelvin": 6535,
+        "min_kelvin": 2000,
+        "white_scale": 255,
         "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
     },
 }

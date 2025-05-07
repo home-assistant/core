@@ -526,8 +526,7 @@ def validate_light_platform_config(user_data: dict[str, Any]) -> dict[str, str]:
     if user_data.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN) >= user_data.get(
         CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN
     ):
-        errors[CONF_MAX_KELVIN] = "max_below_min_kelvin"
-        errors[CONF_MIN_KELVIN] = "max_below_min_kelvin"
+        errors["advanced_settings"] = "max_below_min_kelvin"
     return errors
 
 
@@ -1381,7 +1380,10 @@ def validate_user_input(
         try:
             validator(value)
         except (ValueError, vol.Error, vol.Invalid):
-            errors[field] = data_schema_fields[field].error or "invalid_input"
+            data_schema_field = data_schema_fields[field]
+            errors[data_schema_field.section or field] = (
+                data_schema_field.error or "invalid_input"
+            )
 
     if config_validator is not None:
         if TYPE_CHECKING:
@@ -1490,8 +1492,11 @@ def subentry_schema_default_data_from_fields(
     return {
         key: field.default
         for key, field in data_schema_fields.items()
-        if field.is_schema_default
-        or (field.default is not vol.UNDEFINED and key not in component_data)
+        if _check_conditions(field, component_data)
+        and (
+            field.is_schema_default
+            or (field.default is not vol.UNDEFINED and key not in component_data)
+        )
     }
 
 
@@ -2317,7 +2322,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         for component_data in self._subentry_data["components"].values():
             platform = component_data[CONF_PLATFORM]
             subentry_default_data = subentry_schema_default_data_from_fields(
-                PLATFORM_ENTITY_FIELDS[platform] | COMMON_ENTITY_FIELDS, component_data
+                COMMON_ENTITY_FIELDS
+                | PLATFORM_ENTITY_FIELDS[platform]
+                | PLATFORM_MQTT_FIELDS[platform],
+                component_data,
             )
             component_data.update(subentry_default_data)
 
