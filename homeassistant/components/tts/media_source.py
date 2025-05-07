@@ -145,13 +145,20 @@ class TTSMediaSource(MediaSource):
             return self._engine_item(engine, params)
 
         # Root. List providers.
-        children = [
-            self._engine_item(engine)
-            for engine in self.hass.data[DATA_TTS_MANAGER].providers
-        ] + [
-            self._engine_item(entity.entity_id)
-            for entity in self.hass.data[DATA_COMPONENT].entities
-        ]
+        children = sorted(
+            [
+                self._engine_item(engine_id)
+                for engine_id, provider in self.hass.data[
+                    DATA_TTS_MANAGER
+                ].providers.items()
+                if not provider.has_entity
+            ]
+            + [
+                self._engine_item(entity.entity_id)
+                for entity in self.hass.data[DATA_COMPONENT].entities
+            ],
+            key=lambda x: x.title,
+        )
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
@@ -173,7 +180,7 @@ class TTSMediaSource(MediaSource):
             raise BrowseError("Unknown provider")
 
         if isinstance(engine_instance, TextToSpeechEntity):
-            engine_domain = engine_instance.platform.domain
+            engine_domain = engine_instance.platform.platform_name
         else:
             engine_domain = engine
 

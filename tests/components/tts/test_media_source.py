@@ -78,6 +78,7 @@ async def test_browsing(hass: HomeAssistant, setup: str) -> None:
     assert item_child.children is None
     assert item_child.can_play is False
     assert item_child.can_expand is True
+    assert item_child.thumbnail == "https://brands.home-assistant.io/_/test/logo.png"
 
     item_child = await media_source.async_browse_media(
         hass, item.children[0].media_content_id + "?message=bla"
@@ -113,6 +114,13 @@ async def test_legacy_resolving(
     """Test resolving legacy provider."""
     await mock_setup(hass, mock_provider)
     mock_get_tts_audio = mock_provider.get_tts_audio
+
+    mock_provider.has_entity = True
+    root = await media_source.async_browse_media(hass, "media-source://tts")
+    assert len(root.children) == 0
+    mock_provider.has_entity = False
+    root = await media_source.async_browse_media(hass, "media-source://tts")
+    assert len(root.children) == 1
 
     mock_get_tts_audio.reset_mock()
     media_id = "media-source://tts/test?message=Hello%20World"
