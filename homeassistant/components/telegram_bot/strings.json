@@ -642,11 +642,11 @@
       "fields": {
         "message_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
-          "description": "Id of the message to react to."
+          "description": "ID of the message to react to."
         },
         "chat_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
-          "description": "Id of the chat containing the message."
+          "description": "ID of the chat containing the message."
         },
         "reaction": {
           "name": "Reaction",
