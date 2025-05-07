@@ -673,7 +673,7 @@ denonavr==1.1.0
 devialet==1.5.7
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.18.3
+devolo-home-control-api==0.19.0
 
 # homeassistant.components.devolo_home_network
 devolo-plc-api==1.5.1
@@ -963,7 +963,7 @@ habiticalib==0.3.7
 habluetooth==3.48.2
 
 # homeassistant.components.cloud
-hass-nabucasa==0.96.0
+hass-nabucasa==0.100.0
 
 # homeassistant.components.conversation
 hassil==2.2.3
@@ -1260,7 +1260,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==4.1.0
 
 # homeassistant.components.nexia
-nexia==2.9.0
+nexia==2.10.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1899,7 +1899,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.0
+pysmartthings==3.2.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2138,7 +2138,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.3.0
+renault-api==0.3.1
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2404,7 +2404,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.5.5
+uiprotect==7.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2485,7 +2485,7 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.3.7
+weheat==2025.4.29
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.20.0
