@@ -332,6 +332,7 @@ homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.met_eireann.*
 homeassistant.components.metoffice.*
+homeassistant.components.miele.*
 homeassistant.components.mikrotik.*
 homeassistant.components.min_max.*
 homeassistant.components.minecraft_server.*
@@ -386,6 +387,7 @@ homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*
+homeassistant.components.pegel_online.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.person.*
 homeassistant.components.pi_hole.*
@@ -462,6 +464,7 @@ homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
 homeassistant.components.smlight.*
+homeassistant.components.smtp.*
 homeassistant.components.snooz.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*

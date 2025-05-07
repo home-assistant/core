@@ -29,7 +29,6 @@ from homeassistant.util.enum import try_parse_enum
 from .const import DOMAIN
 from .coordinator import ESPHomeDashboardCoordinator
 from .dashboard import async_get_dashboard
-from .domain_data import DomainData
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
@@ -62,7 +61,7 @@ async def async_setup_entry(
 
     if (dashboard := async_get_dashboard(hass)) is None:
         return
-    entry_data = DomainData.get(hass).get_entry_data(entry)
+    entry_data = entry.runtime_data
     assert entry_data.device_info is not None
     device_name = entry_data.device_info.name
     unsubs: list[CALLBACK_TYPE] = []
@@ -70,7 +69,6 @@ async def async_setup_entry(
     @callback
     def _async_setup_update_entity() -> None:
         """Set up the update entity."""
-        nonlocal unsubs
         assert dashboard is not None
         # Keep listening until device is available
         if not entry_data.available or not dashboard.last_update_success:
@@ -95,10 +93,12 @@ async def async_setup_entry(
         _async_setup_update_entity()
         return
 
-    unsubs = [
-        entry_data.async_subscribe_device_updated(_async_setup_update_entity),
-        dashboard.async_add_listener(_async_setup_update_entity),
-    ]
+    unsubs.extend(
+        [
+            entry_data.async_subscribe_device_updated(_async_setup_update_entity),
+            dashboard.async_add_listener(_async_setup_update_entity),
+        ]
+    )
 
 
 class ESPHomeDashboardUpdateEntity(
@@ -109,7 +109,6 @@ class ESPHomeDashboardUpdateEntity(
     _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_title = "ESPHome"
-    _attr_name = "Firmware"
     _attr_release_url = "https://esphome.io/changelog/"
     _attr_entity_registry_enabled_default = False
 
@@ -126,21 +125,17 @@ class ESPHomeDashboardUpdateEntity(
                 (dr.CONNECTION_NETWORK_MAC, entry_data.device_info.mac_address)
             }
         )
+        self._install_lock = asyncio.Lock()
+        self._available_future: asyncio.Future[None] | None = None
         self._update_attrs()
 
     @callback
     def _update_attrs(self) -> None:
         """Update the supported features."""
-        # If the device has deep sleep, we can't assume we can install updates
-        # as the ESP will not be connectable (by design).
         coordinator = self.coordinator
         device_info = self._device_info
         # Install support can change at run time
-        if (
-            coordinator.last_update_success
-            and coordinator.supports_update
-            and not device_info.has_deep_sleep
-        ):
+        if coordinator.last_update_success and coordinator.supports_update:
             self._attr_supported_features = UpdateEntityFeature.INSTALL
         else:
             self._attr_supported_features = NO_FEATURES
@@ -179,6 +174,13 @@ class ESPHomeDashboardUpdateEntity(
         self, static_info: list[EntityInfo] | None = None
     ) -> None:
         """Handle updated data from the device."""
+        if (
+            self._entry_data.available
+            and self._available_future
+            and not self._available_future.done()
+        ):
+            self._available_future.set_result(None)
+            self._available_future = None
         self._update_attrs()
         self.async_write_ha_state()
 
@@ -193,17 +195,46 @@ class ESPHomeDashboardUpdateEntity(
             entry_data.async_subscribe_device_updated(self._handle_device_update)
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle entity about to be removed from Home Assistant."""
+        if self._available_future and not self._available_future.done():
+            self._available_future.cancel()
+            self._available_future = None
+
+    async def _async_wait_available(self) -> None:
+        """Wait until the device is available."""
+        # If the device has deep sleep, we need to wait for it to wake up
+        # and connect to the network to be able to install the update.
+        if self._entry_data.available:
+            return
+        self._available_future = self.hass.loop.create_future()
+        try:
+            await self._available_future
+        finally:
+            self._available_future = None
+
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        async with self.hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock()):
-            coordinator = self.coordinator
-            api = coordinator.api
-            device = coordinator.data.get(self._device_info.name)
-            assert device is not None
-            configuration = device["configuration"]
-            try:
+        if self._install_lock.locked():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="ota_in_progress",
+                translation_placeholders={
+                    "configuration": self._device_info.name,
+                },
+            )
+
+        # Ensure only one OTA per device at a time
+        async with self._install_lock:
+            # Ensure only one compile at a time for ALL devices
+            async with self.hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock()):
+                coordinator = self.coordinator
+                api = coordinator.api
+                device = coordinator.data.get(self._device_info.name)
+                assert device is not None
+                configuration = device["configuration"]
                 if not await api.compile(configuration):
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
@@ -212,14 +243,25 @@ class ESPHomeDashboardUpdateEntity(
                             "configuration": configuration,
                         },
                     )
-                if not await api.upload(configuration, "OTA"):
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="error_uploading",
-                        translation_placeholders={
-                            "configuration": configuration,
-                        },
-                    )
+
+            # If the device uses deep sleep, there's a small chance it goes
+            # to sleep right after the dashboard connects but before the OTA
+            # starts. In that case, the update won't go through, so we try
+            # again to catch it on its next wakeup.
+            attempts = 2 if self._device_info.has_deep_sleep else 1
+            try:
+                for attempt in range(1, attempts + 1):
+                    await self._async_wait_available()
+                    if await api.upload(configuration, "OTA"):
+                        break
+                    if attempt == attempts:
+                        raise HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="error_uploading",
+                            translation_placeholders={
+                                "configuration": configuration,
+                            },
+                        )
             finally:
                 await self.coordinator.async_request_refresh()
 
@@ -242,7 +284,7 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
 
     @property
     @esphome_state_property
-    def installed_version(self) -> str | None:
+    def installed_version(self) -> str:
         """Return the installed version."""
         return self._state.current_version
 
@@ -260,19 +302,19 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
 
     @property
     @esphome_state_property
-    def release_summary(self) -> str | None:
+    def release_summary(self) -> str:
         """Return the release summary."""
         return self._state.release_summary
 
     @property
     @esphome_state_property
-    def release_url(self) -> str | None:
+    def release_url(self) -> str:
         """Return the release URL."""
         return self._state.release_url
 
     @property
     @esphome_state_property
-    def title(self) -> str | None:
+    def title(self) -> str:
         """Return the title of the update."""
         return self._state.title
 

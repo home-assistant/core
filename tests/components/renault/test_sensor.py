@@ -16,13 +16,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
-from . import check_device_registry, check_entities_unavailable
 from .conftest import _get_fixtures, patch_get_vehicle_data
-from .const import MOCK_VEHICLES
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -34,11 +32,10 @@ def override_platforms() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("fixtures_with_data")
+@pytest.mark.usefixtures("fixtures_with_data", "entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -46,34 +43,14 @@ async def test_sensors(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure devices are correctly registered
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    assert device_entries == snapshot
-
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    # Some entities are disabled, enable them and reload before checking states
-    for ent in entity_entries:
-        entity_registry.async_update_entity(ent.entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_no_data", "entity_registry_enabled_by_default")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_sensor_empty(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -81,47 +58,24 @@ async def test_sensor_empty(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure devices are correctly registered
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    assert device_entries == snapshot
-
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures(
     "fixtures_with_invalid_upstream_exception", "entity_registry_enabled_by_default"
 )
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_sensor_errors(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault sensors with temporary failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
-
-    expected_entities = mock_vehicle[Platform.SENSOR]
-    assert len(entity_registry.entities) == len(expected_entities)
-
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    check_entities_unavailable(hass, entity_registry, expected_entities)
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("fixtures_with_access_denied_exception")
@@ -129,16 +83,11 @@ async def test_sensor_errors(
 async def test_sensor_access_denied(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for Renault sensors with access denied failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
 
     assert len(entity_registry.entities) == 0
 
@@ -148,16 +97,11 @@ async def test_sensor_access_denied(
 async def test_sensor_not_supported(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for Renault sensors with access denied failure."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
 
     assert len(entity_registry.entities) == 0
 
@@ -181,7 +125,7 @@ async def test_sensor_throttling_during_setup(
         await hass.async_block_till_done()
 
     # Initial state
-    entity_id = "sensor.reg_number_battery"
+    entity_id = "sensor.reg_zoe_40_battery"
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # Test QuotaLimitException recovery, with new battery level
@@ -212,7 +156,7 @@ async def test_sensor_throttling_after_init(
         await hass.async_block_till_done()
 
     # Initial state
-    entity_id = "sensor.reg_number_battery"
+    entity_id = "sensor.reg_zoe_40_battery"
     assert hass.states.get(entity_id).state == "60"
     assert not hass.states.get(entity_id).attributes.get(ATTR_ASSUMED_STATE)
     assert "Renault API throttled: scan skipped" not in caplog.text
@@ -253,9 +197,9 @@ async def test_sensor_throttling_after_init(
 @pytest.mark.parametrize(
     ("vehicle_type", "vehicle_count", "scan_interval"),
     [
-        ("zoe_40", 1, 300),  # 5 coordinators => 5 minutes interval
+        ("zoe_50", 1, 420),  # 7 coordinators => 7 minutes interval
         ("captur_fuel", 1, 240),  # 4 coordinators => 4 minutes interval
-        ("multi", 2, 540),  # 9 coordinators => 9 minutes interval
+        ("multi", 2, 480),  # 8 coordinators => 8 minutes interval
     ],
     indirect=["vehicle_type"],
 )
@@ -292,9 +236,9 @@ async def test_dynamic_scan_interval(
 @pytest.mark.parametrize(
     ("vehicle_type", "vehicle_count", "scan_interval"),
     [
-        ("zoe_40", 1, 240),  # (5-1) coordinators => 4 minutes interval
+        ("zoe_50", 1, 300),  # (7-2) coordinators => 5 minutes interval
         ("captur_fuel", 1, 180),  # (4-1) coordinators => 3 minutes interval
-        ("multi", 2, 420),  # (9-2) coordinators => 7 minutes interval
+        ("multi", 2, 360),  # (8-2) coordinators => 6 minutes interval
     ],
     indirect=["vehicle_type"],
 )

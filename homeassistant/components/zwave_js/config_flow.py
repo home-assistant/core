@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import asyncio
+from contextlib import suppress
 from datetime import datetime
 import logging
 from pathlib import Path
 from typing import Any
 
 import aiohttp
+from awesomeversion import AwesomeVersion
 from serial.tools import list_ports
 import voluptuous as vol
 from zwave_js_server.client import Client
@@ -27,11 +28,9 @@ from homeassistant.components.hassio import (
 from homeassistant.config_entries import (
     SOURCE_USB,
     ConfigEntry,
-    ConfigEntryBaseFlow,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
 )
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -79,10 +78,8 @@ ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 CONF_EMULATE_HARDWARE = "emulate_hardware"
 CONF_LOG_LEVEL = "log_level"
+RESTORE_NVM_DRIVER_READY_TIMEOUT = 60
 SERVER_VERSION_TIMEOUT = 10
-
-OPTIONS_INTENT_MIGRATE = "intent_migrate"
-OPTIONS_INTENT_RECONFIGURE = "intent_reconfigure"
 
 ADDON_LOG_LEVELS = {
     "error": "Error",
@@ -105,6 +102,7 @@ ADDON_USER_INPUT_MAP = {
 }
 
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
+MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
@@ -177,8 +175,12 @@ async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     return await hass.async_add_executor_job(get_usb_ports)
 
 
-class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
-    """Represent the base config flow for Z-Wave JS."""
+class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Z-Wave JS."""
+
+    VERSION = 1
+
+    _title: str
 
     def __init__(self) -> None:
         """Set up flow instance."""
@@ -196,6 +198,16 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
         self.version_info: VersionInfo | None = None
+        self.original_addon_config: dict[str, Any] | None = None
+        self.revert_reason: str | None = None
+        self.backup_task: asyncio.Task | None = None
+        self.restore_backup_task: asyncio.Task | None = None
+        self.backup_data: bytes | None = None
+        self.backup_filepath: str | None = None
+        self.use_addon = False
+        self._migrating = False
+        self._reconfigure_config_entry: ConfigEntry | None = None
+        self._usb_discovery = False
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -257,6 +269,10 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add-on start failed."""
+        if self._migrating:
+            return self.async_abort(reason="addon_start_failed")
+        if self._reconfigure_config_entry:
+            return await self.async_revert_addon_config(reason="addon_start_failed")
         return self.async_abort(reason="addon_start_failed")
 
     async def _async_start_addon(self) -> None:
@@ -290,13 +306,14 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
         else:
             raise CannotConnect("Failed to start Z-Wave JS add-on: timeout")
 
-    @abstractmethod
     async def async_step_configure_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
+        if self._reconfigure_config_entry:
+            return await self.async_step_configure_addon_reconfigure(user_input)
+        return await self.async_step_configure_addon_user(user_input)
 
-    @abstractmethod
     async def async_step_finish_addon_setup(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -305,6 +322,11 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
         Get add-on discovery info and server version info.
         Set unique id and abort if already configured.
         """
+        if self._migrating:
+            return await self.async_step_finish_addon_setup_migrate(user_input)
+        if self._reconfigure_config_entry:
+            return await self.async_step_finish_addon_setup_reconfigure(user_input)
+        return await self.async_step_finish_addon_setup_user(user_input)
 
     async def _async_get_addon_info(self) -> AddonInfo:
         """Return and cache Z-Wave JS add-on info."""
@@ -317,11 +339,25 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
 
         return addon_info
 
-    async def _async_set_addon_config(self, config: dict) -> None:
+    async def _async_set_addon_config(self, config_updates: dict) -> None:
         """Set Z-Wave JS add-on config."""
+        addon_info = await self._async_get_addon_info()
+        addon_config = addon_info.options
+
+        new_addon_config = addon_config | config_updates
+
+        if new_addon_config == addon_config:
+            return
+
+        if addon_info.state == AddonState.RUNNING:
+            self.restart_addon = True
+        # Copy the add-on config to keep the objects separate.
+        self.original_addon_config = dict(addon_config)
+        # Remove legacy network_key
+        new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
-            await addon_manager.async_set_addon_options(config)
+            await addon_manager.async_set_addon_options(new_addon_config)
         except AddonError as err:
             _LOGGER.error(err)
             raise AbortFlow("addon_set_config_failed") from err
@@ -342,28 +378,6 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
 
         return discovery_info_config
 
-
-class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Z-Wave JS."""
-
-    VERSION = 1
-
-    _title: str
-
-    def __init__(self) -> None:
-        """Set up flow instance."""
-        super().__init__()
-        self.use_addon = False
-        self._usb_discovery = False
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlowHandler:
-        """Return the options flow."""
-        return OptionsFlowHandler()
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -372,6 +386,19 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             return await self.async_step_on_supervisor()
 
         return await self.async_step_manual()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm if we are migrating adapters or just re-configuring."""
+        self._reconfigure_config_entry = self._get_reconfigure_entry()
+        return self.async_show_menu(
+            step_id="reconfigure",
+            menu_options=[
+                "intent_reconfigure",
+                "intent_migrate",
+            ],
+        )
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -405,10 +432,27 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-        if self._async_in_progress():
+        if any(
+            flow
+            for flow in self._async_in_progress()
+            if flow["context"].get("source") != SOURCE_USB
+        ):
+            # Allow multiple USB discovery flows to be in progress.
+            # Migration requires more than one USB stick to be connected,
+            # which can cause more than one discovery flow to be in progress,
+            # at least for a short time.
             return self.async_abort(reason="already_in_progress")
+        if current_config_entries := self._async_current_entries(include_ignore=False):
+            config_entry = next(
+                (
+                    entry
+                    for entry in current_config_entries
+                    if entry.data.get(CONF_USE_ADDON)
+                ),
+                None,
+            )
+            if not config_entry:
+                return self.async_abort(reason="addon_required")
 
         vid = discovery_info.vid
         pid = discovery_info.pid
@@ -419,14 +463,28 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
         if vid == "10C4" and pid == "EA60" and description and "2652" in description:
             return self.async_abort(reason="not_zwave_device")
 
+        discovery_info.device = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
+        )
+
         addon_info = await self._async_get_addon_info()
-        if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.NOT_RUNNING):
+        if (
+            addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.INSTALLING)
+            and (addon_device := addon_info.options.get(CONF_ADDON_DEVICE)) is not None
+            and await self.hass.async_add_executor_job(
+                usb.get_serial_by_id, addon_device
+            )
+            == discovery_info.device
+        ):
             return self.async_abort(reason="already_configured")
 
         await self.async_set_unique_id(
             f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         )
-        self._abort_if_unique_id_configured()
+        # We don't need to check if the unique_id is already configured
+        # since we will update the unique_id before finishing the flow.
+        # The unique_id set above is just a temporary value to avoid
+        # duplicate discovery flows.
         dev_path = discovery_info.device
         self.usb_path = dev_path
         if manufacturer == "Nabu Casa" and description == "ZWA-2 - Nabu Casa ZWA-2":
@@ -456,6 +514,18 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             )
 
         self._usb_discovery = True
+        if current_config_entries := self._async_current_entries(include_ignore=False):
+            self._reconfigure_config_entry = next(
+                (
+                    entry
+                    for entry in current_config_entries
+                    if entry.data.get(CONF_USE_ADDON)
+                ),
+                None,
+            )
+            if not self._reconfigure_config_entry:
+                return self.async_abort(reason="addon_required")
+            return await self.async_step_intent_migrate()
 
         return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
 
@@ -568,14 +638,14 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             self.lr_s2_authenticated_key = addon_config.get(
                 CONF_ADDON_LR_S2_AUTHENTICATED_KEY, ""
             )
-            return await self.async_step_finish_addon_setup()
+            return await self.async_step_finish_addon_setup_user()
 
         if addon_info.state == AddonState.NOT_RUNNING:
-            return await self.async_step_configure_addon()
+            return await self.async_step_configure_addon_user()
 
         return await self.async_step_install_addon()
 
-    async def async_step_configure_addon(
+    async def async_step_configure_addon_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
@@ -592,8 +662,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             if not self._usb_discovery:
                 self.usb_path = user_input[CONF_USB_PATH]
 
-            new_addon_config = {
-                **addon_config,
+            addon_config_updates = {
                 CONF_ADDON_DEVICE: self.usb_path,
                 CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
                 CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
@@ -603,8 +672,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
                 CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
             }
 
-            if new_addon_config != addon_config:
-                await self._async_set_addon_config(new_addon_config)
+            await self._async_set_addon_config(addon_config_updates)
 
             return await self.async_step_start_addon()
 
@@ -659,9 +727,11 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(schema)
 
-        return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="configure_addon_user", data_schema=data_schema
+        )
 
-    async def async_step_finish_addon_setup(
+    async def async_step_finish_addon_setup_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Prepare info needed to complete the config entry.
@@ -723,54 +793,60 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             },
         )
 
-
-class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
-    """Handle an options flow for Z-Wave JS."""
-
-    def __init__(self) -> None:
-        """Set up the options flow."""
-        super().__init__()
-        self.original_addon_config: dict[str, Any] | None = None
-        self.revert_reason: str | None = None
-        self.backup_task: asyncio.Task | None = None
-        self.restore_backup_task: asyncio.Task | None = None
-        self.backup_data: bytes | None = None
-        self.backup_filepath: str | None = None
-
     @callback
-    def _async_update_entry(self, data: dict[str, Any]) -> None:
+    def _async_update_entry(
+        self, updates: dict[str, Any], *, schedule_reload: bool = True
+    ) -> None:
         """Update the config entry with new data."""
-        self.hass.config_entries.async_update_entry(self.config_entry, data=data)
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm if we are migrating adapters or just re-configuring."""
-        return self.async_show_menu(
-            step_id="init",
-            menu_options=[
-                OPTIONS_INTENT_RECONFIGURE,
-                OPTIONS_INTENT_MIGRATE,
-            ],
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        self.hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data | updates
         )
+        if schedule_reload:
+            self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         if is_hassio(self.hass):
-            return await self.async_step_on_supervisor()
+            return await self.async_step_on_supervisor_reconfigure()
 
-        return await self.async_step_manual()
+        return await self.async_step_manual_reconfigure()
 
     async def async_step_intent_migrate(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the user wants to reset their current controller."""
-        if not self.config_entry.data.get(CONF_USE_ADDON):
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        if not self._usb_discovery and not config_entry.data.get(CONF_USE_ADDON):
             return self.async_abort(reason="addon_required")
 
+        try:
+            driver = self._get_driver()
+        except AbortFlow:
+            return self.async_abort(reason="config_entry_not_loaded")
+        if (
+            sdk_version := driver.controller.sdk_version
+        ) is not None and sdk_version < MIN_MIGRATION_SDK_VERSION:
+            _LOGGER.warning(
+                "Migration from this controller that has SDK version %s "
+                "is not supported. If possible, update the firmware "
+                "of the controller to a firmware built using SDK version %s or higher",
+                sdk_version,
+                MIN_MIGRATION_SDK_VERSION,
+            )
+            return self.async_abort(
+                reason="migration_low_sdk_version",
+                description_placeholders={
+                    "ok_sdk_version": str(MIN_MIGRATION_SDK_VERSION)
+                },
+            )
+
         if user_input is not None:
+            self._migrating = True
             return await self.async_step_backup_nvm()
 
         return self.async_show_form(step_id="intent_migrate")
@@ -831,15 +907,24 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         """Reset the current controller, and instruct the user to unplug it."""
 
         if user_input is not None:
+            if self.usb_path:
+                # USB discovery was used, so the device is already known.
+                await self._async_set_addon_config({CONF_ADDON_DEVICE: self.usb_path})
+                return await self.async_step_start_addon()
             # Now that the old controller is gone, we can scan for serial ports again
             return await self.async_step_choose_serial_port()
 
         # reset the old controller
         try:
             await self._get_driver().async_hard_reset()
-        except FailedCommand as err:
+        except (AbortFlow, FailedCommand) as err:
             _LOGGER.error("Failed to reset controller: %s", err)
             return self.async_abort(reason="reset_failed")
+
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        # Unload the config entry before asking the user to unplug the controller.
+        await self.hass.config_entries.async_unload(config_entry.entry_id)
 
         return self.async_show_form(
             step_id="instruct_unplug",
@@ -848,16 +933,16 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             },
         )
 
-    async def async_step_manual(
+    async def async_step_manual_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a manual configuration."""
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
         if user_input is None:
             return self.async_show_form(
-                step_id="manual",
-                data_schema=get_manual_schema(
-                    {CONF_URL: self.config_entry.data[CONF_URL]}
-                ),
+                step_id="manual_reconfigure",
+                data_schema=get_manual_schema({CONF_URL: config_entry.data[CONF_URL]}),
             )
 
         errors = {}
@@ -870,43 +955,45 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            if self.config_entry.unique_id != str(version_info.home_id):
+            if config_entry.unique_id != str(version_info.home_id):
                 return self.async_abort(reason="different_device")
 
             # Make sure we disable any add-on handling
             # if the controller is reconfigured in a manual step.
             self._async_update_entry(
                 {
-                    **self.config_entry.data,
                     **user_input,
                     CONF_USE_ADDON: False,
                     CONF_INTEGRATION_CREATED_ADDON: False,
                 }
             )
 
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
-            return self.async_create_entry(title=TITLE, data={})
+            return self.async_abort(reason="reconfigure_successful")
 
         return self.async_show_form(
-            step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
+            step_id="manual_reconfigure",
+            data_schema=get_manual_schema(user_input),
+            errors=errors,
         )
 
-    async def async_step_on_supervisor(
+    async def async_step_on_supervisor_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle logic when on Supervisor host."""
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
         if user_input is None:
             return self.async_show_form(
-                step_id="on_supervisor",
+                step_id="on_supervisor_reconfigure",
                 data_schema=get_on_supervisor_schema(
-                    {CONF_USE_ADDON: self.config_entry.data.get(CONF_USE_ADDON, True)}
+                    {CONF_USE_ADDON: config_entry.data.get(CONF_USE_ADDON, True)}
                 ),
             )
 
         if not user_input[CONF_USE_ADDON]:
-            if self.config_entry.data.get(CONF_USE_ADDON):
+            if config_entry.data.get(CONF_USE_ADDON):
                 # Unload the config entry before stopping the add-on.
-                await self.hass.config_entries.async_unload(self.config_entry.entry_id)
+                await self.hass.config_entries.async_unload(config_entry.entry_id)
                 addon_manager = get_addon_manager(self.hass)
                 _LOGGER.debug("Stopping Z-Wave JS add-on")
                 try:
@@ -914,19 +1001,19 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 except AddonError as err:
                     _LOGGER.error(err)
                     self.hass.config_entries.async_schedule_reload(
-                        self.config_entry.entry_id
+                        config_entry.entry_id
                     )
                     raise AbortFlow("addon_stop_failed") from err
-            return await self.async_step_manual()
+            return await self.async_step_manual_reconfigure()
 
         addon_info = await self._async_get_addon_info()
 
         if addon_info.state == AddonState.NOT_INSTALLED:
             return await self.async_step_install_addon()
 
-        return await self.async_step_configure_addon()
+        return await self.async_step_configure_addon_reconfigure()
 
-    async def async_step_configure_addon(
+    async def async_step_configure_addon_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
@@ -942,8 +1029,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             self.lr_s2_authenticated_key = user_input[CONF_LR_S2_AUTHENTICATED_KEY]
             self.usb_path = user_input[CONF_USB_PATH]
 
-            new_addon_config = {
-                **addon_config,
+            addon_config_updates = {
                 CONF_ADDON_DEVICE: self.usb_path,
                 CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
                 CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
@@ -957,21 +1043,16 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 ),
             }
 
-            if new_addon_config != addon_config:
-                if addon_info.state == AddonState.RUNNING:
-                    self.restart_addon = True
-                # Copy the add-on config to keep the objects separate.
-                self.original_addon_config = dict(addon_config)
-                # Remove legacy network_key
-                new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
-                await self._async_set_addon_config(new_addon_config)
+            await self._async_set_addon_config(addon_config_updates)
 
             if addon_info.state == AddonState.RUNNING and not self.restart_addon:
-                return await self.async_step_finish_addon_setup()
+                return await self.async_step_finish_addon_setup_reconfigure()
 
-            if self.config_entry.data.get(CONF_USE_ADDON):
+            if (
+                config_entry := self._reconfigure_config_entry
+            ) and config_entry.data.get(CONF_USE_ADDON):
                 # Disconnect integration before restarting add-on.
-                await self.hass.config_entries.async_unload(self.config_entry.entry_id)
+                await self.hass.config_entries.async_unload(config_entry.entry_id)
 
             return await self.async_step_start_addon()
 
@@ -1029,25 +1110,17 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             }
         )
 
-        return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="configure_addon_reconfigure", data_schema=data_schema
+        )
 
     async def async_step_choose_serial_port(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose a serial port."""
         if user_input is not None:
-            addon_info = await self._async_get_addon_info()
-            addon_config = addon_info.options
             self.usb_path = user_input[CONF_USB_PATH]
-            new_addon_config = {
-                **addon_config,
-                CONF_ADDON_DEVICE: self.usb_path,
-            }
-            if addon_info.state == AddonState.RUNNING:
-                self.restart_addon = True
-            # Copy the add-on config to keep the objects separate.
-            self.original_addon_config = dict(addon_config)
-            await self._async_set_addon_config(new_addon_config)
+            await self._async_set_addon_config({CONF_ADDON_DEVICE: self.usb_path})
             return await self.async_step_start_addon()
 
         try:
@@ -1065,12 +1138,6 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             step_id="choose_serial_port", data_schema=data_schema
         )
 
-    async def async_step_start_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Add-on start failed."""
-        return await self.async_revert_addon_config(reason="addon_start_failed")
-
     async def async_step_backup_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -1081,15 +1148,54 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Restore failed."""
-        return self.async_abort(reason="restore_failed")
+        if user_input is not None:
+            return await self.async_step_restore_nvm()
+
+        return self.async_show_form(
+            step_id="restore_failed",
+            description_placeholders={
+                "file_path": str(self.backup_filepath),
+            },
+        )
 
     async def async_step_migration_done(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Migration done."""
-        return self.async_create_entry(title=TITLE, data={})
+        return self.async_abort(reason="migration_successful")
 
-    async def async_step_finish_addon_setup(
+    async def async_step_finish_addon_setup_migrate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Prepare info needed to complete the config entry update."""
+        ws_address = self.ws_address
+        assert ws_address is not None
+        version_info = self.version_info
+        assert version_info is not None
+
+        # We need to wait for the config entry to be reloaded,
+        # before restoring the backup.
+        # We will do this in the restore nvm progress task,
+        # to get a nicer user experience.
+        self._async_update_entry(
+            {
+                "unique_id": str(version_info.home_id),
+                CONF_URL: ws_address,
+                CONF_USB_PATH: self.usb_path,
+                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
+                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                CONF_USE_ADDON: True,
+                CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
+            },
+            schedule_reload=False,
+        )
+        return await self.async_step_restore_nvm()
+
+    async def async_step_finish_addon_setup_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Prepare info needed to complete the config entry update.
@@ -1097,6 +1203,8 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         Get add-on discovery info and server version info.
         Check for same unique id and abort if not the same unique id.
         """
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
         if self.revert_reason:
             self.original_addon_config = None
             reason = self.revert_reason
@@ -1115,16 +1223,11 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             except CannotConnect:
                 return await self.async_revert_addon_config(reason="cannot_connect")
 
-        if self.backup_data is None and self.config_entry.unique_id != str(
-            self.version_info.home_id
-        ):
+        if config_entry.unique_id != str(self.version_info.home_id):
             return await self.async_revert_addon_config(reason="different_device")
 
         self._async_update_entry(
             {
-                **self.config_entry.data,
-                # this will only be different in a migration flow
-                "unique_id": str(self.version_info.home_id),
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
                 CONF_S0_LEGACY_KEY: self.s0_legacy_key,
@@ -1137,12 +1240,8 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             }
         )
-        if self.backup_data:
-            return await self.async_step_restore_nvm()
 
-        # Always reload entry since we may have disconnected the client.
-        self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
-        return self.async_create_entry(title=TITLE, data={})
+        return self.async_abort(reason="reconfigure_successful")
 
     async def async_revert_addon_config(self, reason: str) -> ConfigFlowResult:
         """Abort the options flow.
@@ -1157,7 +1256,9 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             )
 
         if self.revert_reason or not self.original_addon_config:
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            config_entry = self._reconfigure_config_entry
+            assert config_entry is not None
+            self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
             return self.async_abort(reason=reason)
 
         self.revert_reason = reason
@@ -1167,7 +1268,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             if addon_key in ADDON_USER_INPUT_MAP
         }
         _LOGGER.debug("Reverting add-on options, reason: %s", reason)
-        return await self.async_step_configure_addon(addon_config_input)
+        return await self.async_step_configure_addon_reconfigure(addon_config_input)
 
     async def _async_backup_network(self) -> None:
         """Backup the current network."""
@@ -1201,9 +1302,11 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
     async def _async_restore_network_backup(self) -> None:
         """Restore the backup."""
         assert self.backup_data is not None
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
 
         # Reload the config entry to reconnect the client after the addon restart
-        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+        await self.hass.config_entries.async_reload(config_entry.entry_id)
 
         @callback
         def forward_progress(event: dict) -> None:
@@ -1217,23 +1320,39 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                     event["bytesWritten"] / event["total"] * 0.5 + 0.5
                 )
 
-        controller = self._get_driver().controller
+        @callback
+        def set_driver_ready(event: dict) -> None:
+            "Set the driver ready event."
+            wait_driver_ready.set()
+
+        driver = self._get_driver()
+        controller = driver.controller
+        wait_driver_ready = asyncio.Event()
         unsubs = [
             controller.on("nvm convert progress", forward_progress),
             controller.on("nvm restore progress", forward_progress),
+            driver.once("driver ready", set_driver_ready),
         ]
         try:
             await controller.async_restore_nvm(self.backup_data)
         except FailedCommand as err:
             raise AbortFlow(f"Failed to restore network: {err}") from err
+        else:
+            with suppress(TimeoutError):
+                async with asyncio.timeout(RESTORE_NVM_DRIVER_READY_TIMEOUT):
+                    await wait_driver_ready.wait()
+            await self.hass.config_entries.async_reload(config_entry.entry_id)
         finally:
             for unsub in unsubs:
                 unsub()
 
     def _get_driver(self) -> Driver:
-        if self.config_entry.state != ConfigEntryState.LOADED:
+        """Get the driver from the config entry."""
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        if config_entry.state != ConfigEntryState.LOADED:
             raise AbortFlow("Configuration entry is not loaded")
-        client: Client = self.config_entry.runtime_data[DATA_CLIENT]
+        client: Client = config_entry.runtime_data[DATA_CLIENT]
         assert client.driver is not None
         return client.driver
 
