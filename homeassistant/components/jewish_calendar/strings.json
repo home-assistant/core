@@ -1,12 +1,90 @@
 {
   "entity": {
+    "binary_sensor": {
+      "issur_melacha_in_effect": {
+        "name": "Issur Melacha in Effect"
+      },
+      "erev_shabbat_hag": {
+        "name": "Erev Shabbat/Hag"
+      },
+      "motzei_shabbat_hag": {
+        "name": "Motzei Shabbat/Hag"
+      }
+    },
     "sensor": {
       "hebrew_date": {
+        "name": "Hebrew Date",
         "state_attributes": {
           "hebrew_year": { "name": "Hebrew year" },
           "hebrew_month_name": { "name": "Hebrew month name" },
           "hebrew_day": { "name": "Hebrew day" }
         }
+      },
+      "weekly_portion": {
+        "name": "Weekly Torah Portion"
+      },
+      "holiday": {
+        "name": "Holiday"
+      },
+      "omer_count": {
+        "name": "Day of the Omer"
+      },
+      "daf_yomi": {
+        "name": "Daf Yomi"
+      },
+      "alot_hashachar": {
+        "name": "Halachic dawn (Alot Hashachar)"
+      },
+      "talit_and_tefillin": {
+        "name": "Earliest time for Talit and Tefillin"
+      },
+      "netz_hachama": {
+        "name": "Halachic sunrise (Netz Hachama)"
+      },
+      "sof_zman_shema_gra": {
+        "name": "Latest time for Shma according to Gr\"a"
+      },
+      "sof_zman_shema_mga": {
+        "name": "Latest time for Shma according to MG\"A"
+      },
+      "sof_zman_tfilla_gra": {
+        "name": "Latest time for Tefilla according to Gr\"a"
+      },
+      "sof_zman_tfilla_mga": {
+        "name": "Latest time for Tefilla according to MG\"A"
+      },
+      "chatzot_hayom": {
+        "name": "Halachic midday (Chatzot Hayom)"
+      },
+      "mincha_gedola": {
+        "name": "Mincha Gedola"
+      },
+      "mincha_ketana": {
+        "name": "Mincha Ketana"
+      },
+      "plag_hamincha": {
+        "name": "Plag Hamincha"
+      },
+      "shkia": {
+        "name": "Halachic Sunset (Shkia)"
+      },
+      "tset_hakohavim_tsom": {
+        "name": "Nightfall for fasts (T'set Hakochavim)"
+      },
+      "tset_hakohavim_shabbat": {
+        "name": "Nightfall for Shabbat (T'set Hakochavim)"
+      },
+      "upcoming_shabbat_candle_lighting": {
+        "name": "Upcoming Shabbat Candle Lighting"
+      },
+      "upcoming_shabbat_havdalah": {
+        "name": "Upcoming Shabbat Havdalah"
+      },
+      "upcoming_candle_lighting": {
+        "name": "Upcoming Candle Lighting"
+      },
+      "upcoming_havdalah": {
+        "name": "Upcoming Havdalah"
       }
     }
   },
