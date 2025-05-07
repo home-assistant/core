@@ -342,9 +342,6 @@ class RetentionConfig(BaseRetentionConfig):
                     agent_id: agent_config.retention
                     for agent_id, agent_config in manager.config.data.agents.items()
                 }
-                has_agents_retention = any(
-                    agent_retention for agent_retention in agents_retention.values()
-                )
                 has_agents_retention_days = any(
                     agent_retention and agent_retention.days is not None
                     for agent_retention in agents_retention.values()
@@ -354,15 +351,6 @@ class RetentionConfig(BaseRetentionConfig):
                     return {}
 
                 now = dt_util.utcnow()
-                if global_days is not None and not has_agents_retention:
-                    # Return early to avoid the longer filtering below.
-                    return {
-                        backup_id: backup
-                        for backup_id, backup in backups.items()
-                        if dt_util.parse_datetime(backup.date, raise_on_error=True)
-                        + timedelta(days=global_days)
-                        < now
-                    }
 
                 # If there are any agent retention settings, we need to check
                 # the retention settings, for every backup and agent combination.
@@ -694,9 +682,6 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
             agent_id: agent_config.retention
             for agent_id, agent_config in manager.config.data.agents.items()
         }
-        has_agents_retention = any(
-            agent_retention for agent_retention in agents_retention.values()
-        )
         has_agents_retention_copies = any(
             agent_retention and agent_retention.copies is not None
             for agent_retention in agents_retention.values()
@@ -708,14 +693,6 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
         ) is None and not has_agents_retention_copies:
             # No global retention copies and no agent retention copies
             return {}
-        if global_copies is not None and not has_agents_retention:
-            # Return early to avoid the longer filtering below.
-            return dict(
-                sorted(
-                    backups.items(),
-                    key=lambda backup_item: backup_item[1].date,
-                )[: max(len(backups) - global_copies, 0)]
-            )
 
         backups_by_agent: dict[str, dict[str, ManagerBackup]] = defaultdict(dict)
         for backup_id, backup in backups.items():
