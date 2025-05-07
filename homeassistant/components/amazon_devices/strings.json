@@ -1,0 +1,55 @@
+{
+  "common": {
+    "data_country": "The hostname or IP address of your FRITZ!Box router.",
+    "data_code": "One Time Password (OTP code)",
+    "data_description_country": "The country of your Amazon account.",
+    "data_description_username": "The email address of your Amazon account.",
+    "data_description_password": "The password of your Amazon account.",
+    "data_description_code": "The one-time password sent to your email address."
+  },
+  "config": {
+    "flow_title": "{username}",
+    "step": {
+      "reauth_confirm": {
+        "description": "Please enter the correct password for {username}",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "code": "[%key:component::amazon_devices::common::data_description_code%]"
+        }
+      },
+      "user": {
+        "data": {
+          "country": "[%key:component::amazon_devices::common::data_code%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "code": "[%key:component::amazon_devices::common::data_description_code%]"
+        },
+        "data_description": {
+          "country": "[%key:component::amazon_devices::common::data_description_country%]",
+          "username": "[%key:component::amazon_devices::common::data_description_username%]",
+          "password": "[%key:component::amazon_devices::common::data_description_password%]",
+          "code": "[%key:component::amazon_devices::common::data_description_code%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "bluetooth": {
+        "name": "Bluetooth state"
+      }
+    }
+  }
+}
