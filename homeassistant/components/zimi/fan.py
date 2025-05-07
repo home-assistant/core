@@ -52,7 +52,7 @@ class ZimiFan(ZimiEntity, FanEntity):
 
         super().__init__(device, api)
 
-        self._speed = self._device.fanspeed
+        self._speed = device.fanspeed
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the desired speed for the fan."""
