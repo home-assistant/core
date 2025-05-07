@@ -321,7 +321,7 @@ def clear_exception_traceback(request: pytest.FixtureRequest) -> Generator[None]
     exceptions: list[BaseException] = []
     raises_ctx: list[_pytest.python_api.RaisesContext] = []
     for fixture_name in request.fixturenames:
-        if fixture_name not in (
+        if fixture_name not in {
             "doorbell_state_side_effect",
             "error",
             "error_type",
@@ -329,13 +329,21 @@ def clear_exception_traceback(request: pytest.FixtureRequest) -> Generator[None]
             "exception",
             "expand_side_effect",
             "expectation",
+            "imap_wait_server_push_exception",
+            "go2rtc_error",
             "raise_error",
             "expected_result",
+            "p_error",
             "raises",
+            "set_active_program_option_side_effect",
+            "set_active_program_options_side_effect",
+            "set_selected_program_option_side_effect",
+            "set_selected_program_options_side_effect",
             "side_eff",
             "side_effect",
             "sideeffect",
-        ):
+            "subscriber_side_effect",
+        }:
             continue
         if isinstance(request.getfixturevalue(fixture_name), BaseException):
             exceptions.append(request.getfixturevalue(fixture_name))
