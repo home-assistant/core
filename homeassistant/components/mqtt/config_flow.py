@@ -526,8 +526,7 @@ def validate_light_platform_config(user_data: dict[str, Any]) -> dict[str, str]:
     if user_data.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN) >= user_data.get(
         CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN
     ):
-        errors[CONF_MAX_KELVIN] = "max_below_min_kelvin"
-        errors[CONF_MIN_KELVIN] = "max_below_min_kelvin"
+        errors["advanced_settings"] = "max_below_min_kelvin"
     return errors
 
 
@@ -1381,7 +1380,10 @@ def validate_user_input(
         try:
             validator(value)
         except (ValueError, vol.Error, vol.Invalid):
-            errors[field] = data_schema_fields[field].error or "invalid_input"
+            data_schema_field = data_schema_fields[field]
+            errors[data_schema_field.section or field] = (
+                data_schema_field.error or "invalid_input"
+            )
 
     if config_validator is not None:
         if TYPE_CHECKING:
