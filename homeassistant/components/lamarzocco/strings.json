@@ -147,6 +147,9 @@
       "steam_boiler_ready_time": {
         "name": "Steam boiler ready time"
       },
+      "brewing_start_time": {
+        "name": "Brewing start time"
+      },
       "total_coffees_made": {
         "name": "Total coffees made",
         "unit_of_measurement": "coffees"
