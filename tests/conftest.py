@@ -246,45 +246,6 @@ def pytest_runtest_setup() -> None:
             MySQLdb_converters.DateTime2literal
         )
 
-    import httpx  # pylint: disable=import-outside-toplevel
-    from respx.models import (  # pylint: disable=import-outside-toplevel
-        Route,
-        SideEffectError,
-    )
-    from respx.types import RouteResultTypes  # pylint: disable=import-outside-toplevel
-
-    def _resolve_side_effect(
-        self, request: httpx.Request, **kwargs: Any
-    ) -> RouteResultTypes:
-        effect = self._next_side_effect()
-
-        # Handle Exception `instance` side effect
-        if isinstance(effect, Exception):
-            import copy  # pylint: disable=import-outside-toplevel
-
-            raise SideEffectError(self, origin=copy.copy(effect))
-
-        # Handle Exception `type` side effect
-        if isinstance(effect, type):
-            assert issubclass(effect, Exception)
-            raise SideEffectError(
-                self,
-                origin=(
-                    effect("Mock Error", request=request)
-                    if issubclass(effect, httpx.RequestError)
-                    else effect()
-                ),
-            )
-
-        # Handle `Callable` side effect
-        if callable(effect):
-            return self._call_side_effect(effect, request, **kwargs)
-
-        # Resolved effect is a mocked response
-        return effect
-
-    Route._resolve_side_effect = _resolve_side_effect
-
 
 def ha_datetime_to_fakedatetime(datetime) -> freezegun.api.FakeDatetime:  # type: ignore[name-defined]
     """Convert datetime to FakeDatetime.
