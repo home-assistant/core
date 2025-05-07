@@ -8546,6 +8546,198 @@
     'state': '1642.2',
   })
 # ---
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_completion_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_completion_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Completion time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'completion_time',
+    'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_washerOperatingState_completionTime_completionTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_completion_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Washer Completion time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_completion_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-18T14:14:00+00:00',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_job_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'air_wash',
+        'ai_rinse',
+        'ai_spin',
+        'ai_wash',
+        'cooling',
+        'delay_wash',
+        'drying',
+        'finish',
+        'none',
+        'pre_wash',
+        'rinse',
+        'spin',
+        'wash',
+        'weight_sensing',
+        'wrinkle_prevent',
+        'freeze_protection',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_job_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Job state',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_job_state',
+    'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_washerOperatingState_washerJobState_washerJobState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_job_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Washer Job state',
+      'options': list([
+        'air_wash',
+        'ai_rinse',
+        'ai_spin',
+        'ai_wash',
+        'cooling',
+        'delay_wash',
+        'drying',
+        'finish',
+        'none',
+        'pre_wash',
+        'rinse',
+        'spin',
+        'wash',
+        'weight_sensing',
+        'wrinkle_prevent',
+        'freeze_protection',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_job_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_machine_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'pause',
+        'run',
+        'stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_machine_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Machine state',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_machine_state',
+    'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_washerOperatingState_machineState_machineState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_machine_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Washer Machine state',
+      'options': list([
+        'pause',
+        'run',
+        'stop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_machine_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stop',
+  })
+# ---
 # name: test_all_entities[ecobee_sensor][sensor.child_bedroom_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
