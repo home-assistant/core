@@ -490,6 +490,9 @@
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
       },
+      "credit_balance": {
+        "name": "Credits"
+      },
       "drive_state_active_route_destination": {
         "name": "Destination"
       },
