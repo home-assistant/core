@@ -7,6 +7,9 @@
       "battery_soc": {
         "default": "mdi:battery-charging-100"
       },
+      "battery_status": {
+        "default": "mdi:battery-alert"
+      },
       "battery_stored": {
         "default": "mdi:battery-arrow-up"
       },
