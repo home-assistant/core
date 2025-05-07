@@ -13,7 +13,7 @@
     },
     "sensor": {
       "hebrew_date": {
-        "name": "Hebrew Date",
+        "name": "Date",
         "state_attributes": {
           "hebrew_year": { "name": "Hebrew year" },
           "hebrew_month_name": { "name": "Hebrew month name" },
@@ -21,7 +21,7 @@
         }
       },
       "weekly_portion": {
-        "name": "Weekly Torah Portion"
+        "name": "Parshat Hashavua"
       },
       "holiday": {
         "name": "Holiday"
@@ -33,28 +33,28 @@
         "name": "Daf Yomi"
       },
       "alot_hashachar": {
-        "name": "Halachic dawn (Alot Hashachar)"
+        "name": "Alot Hashachar"
       },
       "talit_and_tefillin": {
-        "name": "Earliest time for Talit and Tefillin"
+        "name": "Talit and Tefillin"
       },
       "netz_hachama": {
-        "name": "Halachic sunrise (Netz Hachama)"
+        "name": "Hanetz Hachama"
       },
       "sof_zman_shema_gra": {
-        "name": "Latest time for Shma according to Gr\"a"
+        "name": "Latest time for Shma Gr\"a"
       },
       "sof_zman_shema_mga": {
-        "name": "Latest time for Shma according to MG\"A"
+        "name": "Latest time for Shma MG\"A"
       },
       "sof_zman_tfilla_gra": {
-        "name": "Latest time for Tefilla according to Gr\"a"
+        "name": "Latest time for Tefilla Gr\"a"
       },
       "sof_zman_tfilla_mga": {
-        "name": "Latest time for Tefilla according to MG\"A"
+        "name": "Latest time for Tefilla MG\"A"
       },
       "chatzot_hayom": {
-        "name": "Halachic midday (Chatzot Hayom)"
+        "name": "Chatzot Hayom"
       },
       "mincha_gedola": {
         "name": "Mincha Gedola"
@@ -66,13 +66,13 @@
         "name": "Plag Hamincha"
       },
       "shkia": {
-        "name": "Halachic Sunset (Shkia)"
+        "name": "Shkia"
       },
       "tset_hakohavim_tsom": {
-        "name": "Nightfall for fasts (T'set Hakochavim)"
+        "name": "T'set Hakochavim"
       },
       "tset_hakohavim_shabbat": {
-        "name": "Nightfall for Shabbat (T'set Hakochavim)"
+        "name": "T'set Hakochavim, 3 stars"
       },
       "upcoming_shabbat_candle_lighting": {
         "name": "Upcoming Shabbat Candle Lighting"
