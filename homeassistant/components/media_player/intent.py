@@ -60,30 +60,20 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
     intent.async_register(hass, MediaPauseHandler(last_paused))
     intent.async_register(
         hass,
-        intent.ServiceIntentHandler(
-            INTENT_MEDIA_NEXT,
-            DOMAIN,
-            SERVICE_MEDIA_NEXT_TRACK,
-            required_domains={DOMAIN},
+        MediaSkipHandler(
+            intent_type=INTENT_MEDIA_NEXT,
+            service=SERVICE_MEDIA_NEXT_TRACK,
             required_features=MediaPlayerEntityFeature.NEXT_TRACK,
-            required_states={MediaPlayerState.PLAYING},
-            description="Skips a media player to the next item",
-            platforms={DOMAIN},
-            device_classes={MediaPlayerDeviceClass},
+            description="Skips to the next item on a media player",
         ),
     )
     intent.async_register(
         hass,
-        intent.ServiceIntentHandler(
-            INTENT_MEDIA_PREVIOUS,
-            DOMAIN,
-            SERVICE_MEDIA_PREVIOUS_TRACK,
-            required_domains={DOMAIN},
+        MediaSkipHandler(
+            intent_type=INTENT_MEDIA_PREVIOUS,
+            service=SERVICE_MEDIA_PREVIOUS_TRACK,
             required_features=MediaPlayerEntityFeature.PREVIOUS_TRACK,
-            required_states={MediaPlayerState.PLAYING},
-            description="Replays the previous item for a media player",
-            platforms={DOMAIN},
-            device_classes={MediaPlayerDeviceClass},
+            description="Skips to the previous item on a media player",
         ),
     )
     intent.async_register(
@@ -203,6 +193,62 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
                     ]
 
             self.last_paused.clear()
+
+        return await super().async_handle_states(
+            intent_obj, match_result, match_constraints
+        )
+
+
+class MediaSkipHandler(intent.ServiceIntentHandler):
+    """Handler for media skip intents."""
+
+    def __init__(
+        self,
+        intent_type: str,
+        service: str,
+        required_features: int,
+        description: str,
+    ) -> None:
+        """Initialize handler."""
+        super().__init__(
+            intent_type=intent_type,
+            domain=DOMAIN,
+            service=service,
+            required_domains={DOMAIN},
+            required_features=required_features,
+            required_states={MediaPlayerState.PLAYING, MediaPlayerState.PAUSED},
+            description=description,
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
+        )
+
+    async def async_handle_states(
+        self,
+        intent_obj: intent.Intent,
+        match_result: intent.MatchTargetsResult,
+        match_constraints: intent.MatchTargetsConstraints,
+        match_preferences: intent.MatchTargetsPreferences | None = None,
+    ) -> intent.IntentResponse:
+        """Skip to previous/next media item."""
+        if match_result.is_match and (not match_constraints.name):
+            if len(match_result.states) == 1:
+                return await super().async_handle_states(
+                    intent_obj, match_result, match_constraints
+                )
+            if len(match_result.states) > 1:
+                playing_players = [
+                    state
+                    for state in match_result.states
+                    if state.state == MediaPlayerState.PLAYING
+                ]
+                if len(playing_players) == 1:
+                    match_result.states = playing_players
+                    return await super().async_handle_states(
+                        intent_obj, match_result, match_constraints
+                    )
+                raise intent.MatchFailedError(
+                    match_result, match_constraints, match_preferences
+                )
 
         return await super().async_handle_states(
             intent_obj, match_result, match_constraints
