@@ -365,6 +365,7 @@ def clear_exception_traceback(request: pytest.FixtureRequest) -> Generator[None]
             "error_type",
             "exc",
             "exception",
+            "expand_side_effect",
             "expectation",
             "raise_error",
             "expected_result",
