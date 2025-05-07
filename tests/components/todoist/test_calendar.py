@@ -366,6 +366,32 @@ async def test_create_task_service_call_with_missing_section_and_no_create(
         )
 
 
+async def test_create_task_service_call_with_section_name_none(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test creating a task with section set to None."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            CONTENT: "task",
+            PROJECT_NAME: "Name",
+            SECTION_NAME: None,  # Explicitly pass None
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify no section lookup or creation is performed
+    api.get_sections.assert_not_called()
+    api.add_section.assert_not_called()
+
+    # Verify task creation without section_id
+    api.add_task.assert_called_once_with(
+        "task",
+        project_id=PROJECT_ID,
+    )
+
+
 @pytest.mark.parametrize(
     ("due"),
     [

@@ -73,7 +73,7 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
         vol.Required(CONTENT): cv.string,
         vol.Optional(DESCRIPTION): cv.string,
         vol.Optional(PROJECT_NAME, default="inbox"): vol.All(cv.string, vol.Lower),
-        vol.Optional(SECTION_NAME): cv.string,
+        vol.Optional(SECTION_NAME): vol.Any(cv.string, None),
         vol.Optional(CREATE_SECTION, default=True): cv.boolean,
         vol.Optional(LABELS): cv.ensure_list_csv,
         vol.Optional(ASSIGNEE): cv.string,
@@ -242,33 +242,34 @@ def async_register_services(  # noqa: C901
         section_id: str | None = None
         if SECTION_NAME in call.data:
             section_name = call.data[SECTION_NAME]
-            sections = await coordinator.async_get_sections(project_id)
-            for section in sections:
-                if section_name.lower() == section.name.lower():
-                    section_id = section.id
-                    break
+            if section_name is not None:
+                sections = await coordinator.async_get_sections(project_id)
+                for section in sections:
+                    if section_name.lower() == section.name.lower():
+                        section_id = section.id
+                        break
 
-            # Handle section creation if it does not exist and create_section is True
-            if section_id is None and call.data.get(CREATE_SECTION, True):
-                new_section = await coordinator.api.add_section(
-                    section_name, project_id
-                )
-                section_id = new_section.id
-                _LOGGER.debug(
-                    "Created new section '%s' in project '%s'",
-                    section_name,
-                    project_name,
-                )
-
-            if section_id is None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="section_invalid",
-                    translation_placeholders={
-                        "section": section_name,
-                        "project": project_name,
-                    },
-                )
+                if section_id is None:
+                    # Handle section creation if it does not exist and create_section is True
+                    if call.data.get(CREATE_SECTION, True):
+                        new_section = await coordinator.api.add_section(
+                            section_name, project_id
+                        )
+                        section_id = new_section.id
+                        _LOGGER.debug(
+                            "Created new section '%s' in project '%s'",
+                            section_name,
+                            project_name,
+                        )
+                    else:
+                        raise ServiceValidationError(
+                            translation_domain=DOMAIN,
+                            translation_key="section_invalid",
+                            translation_placeholders={
+                                "section": section_name,
+                                "project": project_name,
+                            },
+                        )
 
         # Create the task
         content = call.data[CONTENT]
