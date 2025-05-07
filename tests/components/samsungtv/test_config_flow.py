@@ -84,7 +84,7 @@ MOCK_IMPORT_WSDATA = {
 MOCK_USER_DATA = {CONF_HOST: "fake_host"}
 
 MOCK_DHCP_DATA = DhcpServiceInfo(
-    ip="fake_host", macaddress="aabbccddeeff", hostname="fake_hostname"
+    ip="10.10.12.34", macaddress="aabbccddeeff", hostname="fake_hostname"
 )
 EXISTING_IP = "192.168.40.221"
 MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
@@ -102,7 +102,7 @@ MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     type="mock_type",
 )
 MOCK_OLD_ENTRY = {
-    CONF_HOST: "fake_host",
+    CONF_HOST: "10.10.12.34",
     CONF_IP_ADDRESS: EXISTING_IP,
     CONF_METHOD: "legacy",
     CONF_PORT: None,
@@ -895,7 +895,7 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "TV-UE48JU6470 (UE48JU6400)"
-    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_HOST] == "10.10.12.34"
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE48JU6400"
@@ -925,7 +925,7 @@ async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Samsung Frame (43) (UE43LS003)"
-    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_HOST] == "10.10.12.34"
     assert result["data"][CONF_MAC] == "aa:ee:tt:hh:ee:rr"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE43LS003"
@@ -1272,9 +1272,7 @@ async def test_autodetect_none(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
 async def test_update_old_entry(hass: HomeAssistant) -> None:
     """Test update of old entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={**MOCK_OLD_ENTRY, CONF_HOST: "10.10.12.34"}
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
     entry.add_to_hass(hass)
 
     config_entries_domain = hass.config_entries.async_entries(DOMAIN)
@@ -1379,7 +1377,7 @@ async def test_update_missing_model_added_from_ssdp(
     """Test missing model added via ssdp on legacy models."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_HOST: "10.10.12.34"},
+        data=MOCK_OLD_ENTRY,
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1402,9 +1400,7 @@ async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac, ssdp_location, and unique id added via ssdp."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={**MOCK_OLD_ENTRY, CONF_HOST: "10.10.12.34"}, unique_id=None
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -1457,7 +1453,6 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
         domain=DOMAIN,
         data={
             **MOCK_OLD_ENTRY,
-            CONF_HOST: "10.10.12.34",
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
         },
         unique_id=None,
@@ -1491,7 +1486,6 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
         domain=DOMAIN,
         data={
             **MOCK_OLD_ENTRY,
-            CONF_HOST: "10.10.12.34",
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
         },
         unique_id=None,
@@ -1526,7 +1520,6 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st
         domain=DOMAIN,
         data={
             **MOCK_OLD_ENTRY,
-            CONF_HOST: "10.10.12.34",
             CONF_SSDP_RENDERING_CONTROL_LOCATION: "https://1.2.3.4:555/test",
             CONF_SSDP_MAIN_TV_AGENT_LOCATION: "https://1.2.3.4:555/test",
         },
@@ -1937,7 +1930,7 @@ async def test_update_incorrect_udn_matching_upnp_udn_unique_id_added_from_ssdp(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_OLD_ENTRY,
-        unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
+        unique_id="068e7781-006e-1000-bbbf-84a4668d8423",
     )
     entry.add_to_hass(hass)
 
