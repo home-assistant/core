@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, NotRequired, TypedDict
+from typing import Any
 
 from hscloud.const import DEVICE_TYPE, FAN_DEVICE
 from hscloud.hscloud import HsCloud
@@ -21,19 +21,66 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-class DreoGenericDeviceData(TypedDict):
+class DreoGenericDeviceData:
     """Base data for all Dreo devices."""
 
-    available: bool
-    is_on: bool
+    available: bool = False
+    is_on: bool = False
+
+    def __init__(self, available: bool = False, is_on: bool = False) -> None:
+        """Initialize generic device data."""
+        self.available = available
+        self.is_on = is_on
 
 
 class DreoFanDeviceData(DreoGenericDeviceData):
     """Data specific to Dreo fan devices."""
 
-    mode: NotRequired[str]
-    oscillate: NotRequired[bool]
-    speed_percentage: NotRequired[int]
+    mode: str | None = None
+    oscillate: bool | None = None
+    speed_percentage: int | None = None
+
+    def __init__(
+        self,
+        available: bool = False,
+        is_on: bool = False,
+        mode: str | None = None,
+        oscillate: bool | None = None,
+        speed_percentage: int | None = None,
+    ) -> None:
+        """Initialize fan device data."""
+        super().__init__(available, is_on)
+        self.mode = mode
+        self.oscillate = oscillate
+        self.speed_percentage = speed_percentage
+
+    @staticmethod
+    def process_fan_data(
+        device_model: str, status: dict[str, Any]
+    ) -> DreoFanDeviceData:
+        """Process fan device specific data."""
+
+        fan_data = DreoFanDeviceData(
+            available=status.get("connected", False),
+            is_on=status.get("power_switch", False),
+        )
+
+        if (mode := status.get("mode")) is not None:
+            fan_data.mode = str(mode)
+
+        if (oscillate := status.get("oscillate")) is not None:
+            fan_data.oscillate = bool(oscillate)
+
+        if (speed := status.get("speed")) is not None:
+            speed_range = (
+                FAN_DEVICE.get("config", {}).get(device_model, {}).get("speed_range")
+            )
+            if speed_range:
+                fan_data.speed_percentage = int(
+                    ranged_value_to_percentage(speed_range, float(speed))
+                )
+
+        return fan_data
 
 
 DreoDeviceData = DreoFanDeviceData | DreoGenericDeviceData
@@ -45,7 +92,6 @@ class DeviceDataFactory:
     @staticmethod
     def create_data(
         coordinator: DreoDataUpdateCoordinator,
-        base_data: DreoGenericDeviceData,
         status: dict[str, Any],
     ) -> DreoDeviceData:
         """Create appropriate device data based on device type."""
@@ -53,46 +99,17 @@ class DeviceDataFactory:
             coordinator.device_type == FAN_DEVICE.get("type")
             and coordinator.device_model
         ):
-            return FanDataStrategy.process_data(
-                coordinator.device_model, base_data, status
-            )
-        return DreoFanDeviceData(**base_data)
+            return DreoFanDeviceData.process_fan_data(coordinator.device_model, status)
 
-
-class FanDataStrategy:
-    """Strategy for processing fan device data."""
-
-    @staticmethod
-    def process_data(
-        device_model: str, base_data: DreoGenericDeviceData, status: dict[str, Any]
-    ) -> DreoFanDeviceData:
-        """Process fan device specific data."""
-        # Initialize with required fields
-        fan_data = DreoFanDeviceData(
-            available=base_data["available"],
-            is_on=base_data["is_on"],
+        _LOGGER.warning(
+            "Unsupported device type: %s for model: %s - data will not be processed",
+            coordinator.device_type,
+            coordinator.device_model,
         )
 
-        if "mode" in status:
-            fan_data["mode"] = str(status.get("mode", ""))
-
-        if "oscillate" in status:
-            fan_data["oscillate"] = bool(status.get("oscillate", False))
-
-        if "speed" in status and status.get("speed") is not None:
-            speed_range = (
-                FAN_DEVICE.get("config", {}).get(device_model, {}).get("speed_range")
-            )
-            if speed_range:
-                speed_value = float(status.get("speed", 0))
-                fan_data["speed_percentage"] = int(
-                    ranged_value_to_percentage(speed_range, speed_value)
-                )
-
-        return fan_data
+        return DreoGenericDeviceData(available=False, is_on=False)
 
 
-# Use generic device data type
 class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData]):
     """Class to manage fetching Dreo data."""
 
@@ -114,30 +131,19 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData]):
         self.device_id = device_id
         self.device_model = model
         self.device_type = DEVICE_TYPE.get(model) if model else None
-        # Initialize with generic device data type
-        self.data = DreoGenericDeviceData(available=False, is_on=False)
+        self.data = DreoGenericDeviceData()
 
     async def _async_update_data(self) -> DreoDeviceData:
         """Get device status from Dreo API and process it."""
-
-        # Create base data structure
-        base_data = DreoGenericDeviceData(available=False, is_on=False)
-
         try:
-            # Get device status
             status = await self.hass.async_add_executor_job(
                 self.client.get_status, self.device_id
             )
 
             if status is None:
-                return base_data
+                return DreoGenericDeviceData()
 
-            # Set common properties
-            base_data["available"] = status.get("connected", False)
-            base_data["is_on"] = status.get("power_switch", False)
-
-            # Get device type and use factory to create appropriate data
-            return DeviceDataFactory.create_data(self, base_data, status)
+            return DeviceDataFactory.create_data(self, status)
         except HsCloudException as error:
             raise UpdateFailed(f"Error communicating with Dreo API: {error}") from error
         except Exception as error:
