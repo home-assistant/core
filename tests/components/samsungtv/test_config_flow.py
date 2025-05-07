@@ -39,7 +39,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
-    CONF_NAME,
     CONF_PIN,
     CONF_PORT,
     CONF_TOKEN,
@@ -68,19 +67,6 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 RESULT_ALREADY_CONFIGURED = "already_configured"
 RESULT_ALREADY_IN_PROGRESS = "already_in_progress"
 
-MOCK_IMPORT_DATA = {
-    CONF_HOST: "fake_host",
-    CONF_NAME: "fake",
-    CONF_PORT: 55000,
-}
-MOCK_IMPORT_DATA_WITHOUT_NAME = {
-    CONF_HOST: "fake_host",
-}
-MOCK_IMPORT_WSDATA = {
-    CONF_HOST: "fake_host",
-    CONF_NAME: "fake",
-    CONF_PORT: 8002,
-}
 MOCK_USER_DATA = {CONF_HOST: "fake_host"}
 
 MOCK_DHCP_DATA = DhcpServiceInfo(
