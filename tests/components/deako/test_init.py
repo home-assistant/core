@@ -21,6 +21,7 @@ async def test_deako_async_setup_entry(
         "id1": {},
         "id2": {},
     }
+    pydeako_deako_mock.return_value.get_name.return_value = "some device"
 
     mock_config_entry.add_to_hass(hass)
 

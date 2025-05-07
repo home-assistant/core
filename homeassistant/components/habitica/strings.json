@@ -526,31 +526,9 @@
     "deprecated_entity": {
       "title": "The Habitica {name} entity is deprecated",
       "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
-    },
-    "deprecated_api_call": {
-      "title": "The Habitica action habitica.api_call is deprecated",
-      "description": "The Habitica action `habitica.api_call` is deprecated and will be removed in Home Assistant 2025.5.0.\n\nPlease update your automations and scripts to use other Habitica actions and entities."
     }
   },
   "services": {
-    "api_call": {
-      "name": "API name",
-      "description": "Calls Habitica API.",
-      "fields": {
-        "name": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "description": "Habitica's username to call for."
-        },
-        "path": {
-          "name": "[%key:common::config_flow::data::path%]",
-          "description": "Items from API URL in form of an array with method attached at the end. Consult https://habitica.com/apidoc/. Example uses https://habitica.com/apidoc/#api-Task-CreateUserTasks."
-        },
-        "args": {
-          "name": "Args",
-          "description": "Any additional JSON or URL parameter arguments. See apidoc mentioned for path. Example uses same API endpoint."
-        }
-      }
-    },
     "cast_skill": {
       "name": "Cast a skill",
       "description": "Uses a skill or spell from your Habitica character on a specific task to affect its progress or status.",

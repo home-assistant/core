@@ -1,20 +1,4 @@
 # Describes the format for Habitica service
-api_call:
-  fields:
-    name:
-      required: true
-      example: "xxxNotAValidNickxxx"
-      selector:
-        text:
-    path:
-      required: true
-      example: '["tasks", "user", "post"]'
-      selector:
-        object:
-    args:
-      example: '{"text": "Use API from Home Assistant", "type": "todo"}'
-      selector:
-        object:
 cast_skill:
   fields:
     config_entry: &config_entry

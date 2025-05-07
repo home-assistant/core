@@ -2,6 +2,7 @@
 
 DOMAIN = "jewish_calendar"
 
+ATTR_AFTER_SUNSET = "after_sunset"
 ATTR_DATE = "date"
 ATTR_NUSACH = "nusach"
 

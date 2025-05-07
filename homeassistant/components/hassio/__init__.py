@@ -385,18 +385,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     )
 
     last_timezone = None
+    last_country = None
 
     async def push_config(_: Event | None) -> None:
         """Push core config to Hass.io."""
         nonlocal last_timezone
+        nonlocal last_country
 
         new_timezone = str(hass.config.time_zone)
+        new_country = str(hass.config.country)
 
-        if new_timezone == last_timezone:
-            return
-
-        last_timezone = new_timezone
-        await hassio.update_hass_timezone(new_timezone)
+        if new_timezone != last_timezone or new_country != last_country:
+            last_timezone = new_timezone
+            last_country = new_country
+            await hassio.update_hass_config(new_timezone, new_country)
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config)
 

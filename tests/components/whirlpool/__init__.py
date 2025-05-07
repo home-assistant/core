@@ -1,5 +1,7 @@
 """Tests for the Whirlpool Sixth Sense integration."""
 
+from unittest.mock import MagicMock
+
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.whirlpool.const import CONF_BRAND, DOMAIN
@@ -49,3 +51,14 @@ def snapshot_whirlpool_entities(
         entity_entry = entity_registry.async_get(entity_state.entity_id)
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")
+
+
+async def trigger_attr_callback(
+    hass: HomeAssistant, mock_api_instance: MagicMock
+) -> None:
+    """Simulate an update trigger from the API."""
+
+    for call in mock_api_instance.register_attr_callback.call_args_list:
+        update_ha_state_cb = call[0][0]
+        update_ha_state_cb()
+    await hass.async_block_till_done()

@@ -208,7 +208,6 @@ EXCEPTIONS = {
     # https://github.com/jaraco/skeleton/pull/170
     # https://github.com/jaraco/skeleton/pull/171
     "jaraco.itertools",  # MIT - https://github.com/jaraco/jaraco.itertools/issues/21
-    "setuptools",  # MIT
 }
 
 TODO = {

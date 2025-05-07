@@ -209,7 +209,7 @@ async def test_action(
         cluster_handler = (
             gateway.get_device(zigpy_device.ieee)
             .endpoints[1]
-            .client_cluster_handlers["1:0x0006"]
+            .client_cluster_handlers["1:0x0006_client"]
         )
         cluster_handler.zha_send_event(COMMAND_SINGLE, [])
         await hass.async_block_till_done()
@@ -252,7 +252,7 @@ async def test_invalid_zha_event_type(
     cluster_handler = (
         gateway.get_device(zigpy_device.ieee)
         .endpoints[1]
-        .client_cluster_handlers["1:0x0006"]
+        .client_cluster_handlers["1:0x0006_client"]
     )
 
     # `zha_send_event` accepts only zigpy responses, lists, and dicts

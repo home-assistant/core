@@ -40,11 +40,11 @@
     },
     "update_item": {
       "name": "Update item",
-      "description": "Updates an existing to-do list item based on its name.",
+      "description": "Updates an existing to-do list item based on its name or UID.",
       "fields": {
         "item": {
-          "name": "Item name",
-          "description": "The current name of the to-do item."
+          "name": "Item name or UID",
+          "description": "The name/summary of the to-do item. If you have items with duplicate names, you can reference specific ones using their UID instead."
         },
         "rename": {
           "name": "Rename item",
@@ -74,11 +74,11 @@
     },
     "remove_item": {
       "name": "Remove item",
-      "description": "Removes an existing to-do list item by its name.",
+      "description": "Removes an existing to-do list item by its name or UID.",
       "fields": {
         "item": {
-          "name": "Item name",
-          "description": "The name for the to-do list item."
+          "name": "[%key:component::todo::services::update_item::fields::item::name%]",
+          "description": "[%key:component::todo::services::update_item::fields::item::description%]"
         }
       }
     }

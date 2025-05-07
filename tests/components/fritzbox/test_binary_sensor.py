@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest import mock
 from unittest.mock import Mock, patch
 
+import pytest
 from requests.exceptions import HTTPError
 from syrupy import SnapshotAssertion
 
@@ -23,6 +24,7 @@ from tests.common import async_fire_time_changed, snapshot_platform
 ENTITY_ID = f"{BINARY_SENSOR_DOMAIN}.{CONF_FAKE_NAME}"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

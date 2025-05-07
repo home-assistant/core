@@ -47,6 +47,54 @@
     'state': 'on',
   })
 # ---
+# name: test_setup[binary_sensor.fake_name_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.fake_name_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12345 1234567_battery_low',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'fake_name Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.fake_name_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_setup[binary_sensor.fake_name_button_lock_on_device-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -141,5 +189,146 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_holiday_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.fake_name_holiday_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Holiday mode',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'holiday_active',
+    'unique_id': '12345 1234567_holiday_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_holiday_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'fake_name Holiday mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.fake_name_holiday_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_open_window_detected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.fake_name_open_window_detected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Open window detected',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_open',
+    'unique_id': '12345 1234567_window_open',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_open_window_detected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'fake_name Open window detected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.fake_name_open_window_detected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_summer_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.fake_name_summer_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Summer mode',
+    'platform': 'fritzbox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'summer_active',
+    'unique_id': '12345 1234567_summer_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[binary_sensor.fake_name_summer_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'fake_name Summer mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.fake_name_summer_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---

@@ -28,7 +28,7 @@ async def test_hmip_load_all_supported_devices(
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 310
+    assert len(mock_hap.hmip_device_by_entity_id) == 325
 
 
 async def test_hmip_remove_device(

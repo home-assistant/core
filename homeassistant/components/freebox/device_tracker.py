@@ -6,22 +6,21 @@ from datetime import datetime
 from typing import Any
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEFAULT_DEVICE_NAME, DEVICE_ICONS, DOMAIN
-from .router import FreeboxRouter
+from .const import DEFAULT_DEVICE_NAME, DEVICE_ICONS
+from .router import FreeboxConfigEntry, FreeboxRouter
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FreeboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Freebox component."""
-    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
+    router = entry.runtime_data
     tracked: set[str] = set()
 
     @callback

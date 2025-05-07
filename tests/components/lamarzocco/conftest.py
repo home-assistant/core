@@ -128,3 +128,13 @@ def mock_ble_device() -> BLEDevice:
     return BLEDevice(
         "00:00:00:00:00:00", "GS_GS012345", details={"path": "path"}, rssi=50
     )
+
+
+@pytest.fixture
+def mock_websocket_terminated() -> Generator[bool]:
+    """Mock websocket terminated."""
+    with patch(
+        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoUpdateCoordinator.websocket_terminated",
+        new=False,
+    ) as mock_websocket_terminated:
+        yield mock_websocket_terminated

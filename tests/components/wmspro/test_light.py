@@ -28,7 +28,7 @@ async def test_light_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod: AsyncMock,
+    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
     mock_hub_status_prod_dimmer: AsyncMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
@@ -36,7 +36,7 @@ async def test_light_device(
     """Test that a light device is created correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod.mock_calls) == 1
+    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_dimmer.mock_calls) == 2
 
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "97358")})
@@ -48,7 +48,7 @@ async def test_light_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod: AsyncMock,
+    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
     mock_hub_status_prod_dimmer: AsyncMock,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
@@ -56,7 +56,7 @@ async def test_light_update(
     """Test that a light entity is created and updated correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod.mock_calls) == 1
+    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_dimmer.mock_calls) == 2
 
     entity = hass.states.get("light.licht")
@@ -75,14 +75,14 @@ async def test_light_turn_on_and_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod: AsyncMock,
+    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
     mock_hub_status_prod_dimmer: AsyncMock,
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a light entity is turned on and off correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod.mock_calls) == 1
+    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_dimmer.mock_calls) >= 1
 
     entity = hass.states.get("light.licht")
@@ -133,14 +133,14 @@ async def test_light_dimm_on_and_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod: AsyncMock,
+    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
     mock_hub_status_prod_dimmer: AsyncMock,
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a light entity is dimmed on and off correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod.mock_calls) == 1
+    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_dimmer.mock_calls) >= 1
 
     entity = hass.states.get("light.licht")

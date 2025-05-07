@@ -54,7 +54,7 @@ async def test_config_entry_not_ready(
     """Test that when coordinator update fails, entry retries."""
     with (
         patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         ),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
@@ -71,7 +71,7 @@ async def test_config_entry_not_ready_home_data(
     """Test that when we fail to get home data, entry retries."""
     with (
         patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
             side_effect=RoborockException(),
         ),
         patch(
@@ -164,7 +164,7 @@ async def test_reauth_started(
 ) -> None:
     """Test reauth flow started."""
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         side_effect=RoborockInvalidCredentials(),
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -249,7 +249,7 @@ async def test_not_supported_protocol(
     home_data_copy = deepcopy(HOME_DATA)
     home_data_copy.received_devices[0].pv = "random"
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         return_value=home_data_copy,
     ):
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
@@ -267,7 +267,7 @@ async def test_not_supported_a01_device(
     home_data_copy = deepcopy(HOME_DATA)
     home_data_copy.products[2].category = "random"
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         return_value=home_data_copy,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -282,7 +282,7 @@ async def test_invalid_user_agreement(
 ) -> None:
     """Test that we fail setting up if the user agreement is out of date."""
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         side_effect=RoborockInvalidUserAgreement(),
     ):
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
@@ -299,7 +299,7 @@ async def test_no_user_agreement(
 ) -> None:
     """Test that we fail setting up if the user has no agreement."""
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         side_effect=RoborockNoUserAgreement(),
     ):
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
@@ -330,7 +330,7 @@ async def test_stale_device(
 
     with (
         patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
             return_value=hd,
         ),
         patch(

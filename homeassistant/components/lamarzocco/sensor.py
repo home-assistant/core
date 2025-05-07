@@ -11,6 +11,7 @@ from pylamarzocco.models import (
     BaseWidgetOutput,
     CoffeeAndFlushCounter,
     CoffeeBoiler,
+    MachineStatus,
     SteamBoilerLevel,
     SteamBoilerTemperature,
 )
@@ -71,6 +72,18 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
             lambda coordinator: coordinator.device.dashboard.model_name
             in (ModelName.LINEA_MICRA, ModelName.LINEA_MINI_R)
         ),
+    ),
+    LaMarzoccoSensorEntityDescription(
+        key="brewing_start_time",
+        translation_key="brewing_start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=(
+            lambda config: cast(
+                MachineStatus, config[WidgetType.CM_MACHINE_STATUS]
+            ).brewing_start_time
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        available_fn=(lambda coordinator: not coordinator.websocket_terminated),
     ),
     LaMarzoccoSensorEntityDescription(
         key="steam_boiler_ready_time",

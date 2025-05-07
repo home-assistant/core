@@ -9,10 +9,10 @@ from typing import Any
 
 from homematicip.async_home import AsyncHome
 from homematicip.auth import Auth
-from homematicip.base.base_connection import HmipConnectionError
 from homematicip.base.enums import EventType
 from homematicip.connection.connection_context import ConnectionContextBuilder
 from homematicip.connection.rest_connection import RestConnection
+from homematicip.exceptions.connection_exceptions import HmipConnectionError
 
 import homeassistant
 from homeassistant.config_entries import ConfigEntry

@@ -324,6 +324,13 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             + [follower.device.uuid for follower in multiroom.followers]
         ]
 
+    @property
+    def media_image_url(self) -> str | None:
+        """Image url of playing media."""
+        if self._bridge.player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
+            return str(self._bridge.player.album_art)
+        return None
+
     @exception_wrap
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""

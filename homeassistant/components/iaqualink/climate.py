@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import refresh_system
-from .const import DOMAIN as AQUALINK_DOMAIN
+from .const import DOMAIN
 from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
@@ -37,10 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered switches."""
     async_add_entities(
-        (
-            HassAqualinkThermostat(dev)
-            for dev in hass.data[AQUALINK_DOMAIN][CLIMATE_DOMAIN]
-        ),
+        (HassAqualinkThermostat(dev) for dev in hass.data[DOMAIN][CLIMATE_DOMAIN]),
         True,
     )
 

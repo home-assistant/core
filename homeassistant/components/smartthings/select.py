@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,10 +22,11 @@ class SmartThingsSelectDescription(SelectEntityDescription):
     """Class describing SmartThings select entities."""
 
     key: Capability
-    requires_remote_control_status: bool
+    requires_remote_control_status: bool = False
     options_attribute: Attribute
     status_attribute: Attribute
     command: Command
+    default_options: list[str] | None = None
 
 
 CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
@@ -45,6 +47,7 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         options_attribute=Attribute.SUPPORTED_MACHINE_STATES,
         status_attribute=Attribute.MACHINE_STATE,
         command=Command.SET_MACHINE_STATE,
+        default_options=["run", "pause", "stop"],
     ),
     Capability.WASHER_OPERATING_STATE: SmartThingsSelectDescription(
         key=Capability.WASHER_OPERATING_STATE,
@@ -54,6 +57,23 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         options_attribute=Attribute.SUPPORTED_MACHINE_STATES,
         status_attribute=Attribute.MACHINE_STATE,
         command=Command.SET_MACHINE_STATE,
+        default_options=["run", "pause", "stop"],
+    ),
+    Capability.SAMSUNG_CE_AUTO_DISPENSE_DETERGENT: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_AUTO_DISPENSE_DETERGENT,
+        translation_key="detergent_amount",
+        options_attribute=Attribute.SUPPORTED_AMOUNT,
+        status_attribute=Attribute.AMOUNT,
+        command=Command.SET_AMOUNT,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT,
+        translation_key="flexible_detergent_amount",
+        options_attribute=Attribute.SUPPORTED_AMOUNT,
+        status_attribute=Attribute.AMOUNT,
+        command=Command.SET_AMOUNT,
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 
@@ -97,8 +117,12 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return the list of options."""
-        return self.get_attribute_value(
-            self.entity_description.key, self.entity_description.options_attribute
+        return (
+            self.get_attribute_value(
+                self.entity_description.key, self.entity_description.options_attribute
+            )
+            or self.entity_description.default_options
+            or []
         )
 
     @property

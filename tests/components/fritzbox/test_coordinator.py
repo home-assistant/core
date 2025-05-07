@@ -105,7 +105,7 @@ async def test_coordinator_automatic_registry_cleanup(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 11
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 19
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
 
     fritz().get_devices.return_value = [
@@ -119,5 +119,5 @@ async def test_coordinator_automatic_registry_cleanup(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 8
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 12
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1

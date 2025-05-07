@@ -1523,6 +1523,45 @@ async def test_fetching_in_async(
 
 
 @pytest.mark.parametrize(
+    ("setup", "engine_id"),
+    [
+        ("mock_setup", "test"),
+    ],
+    indirect=["setup"],
+)
+async def test_ws_list_engines_filter_deprecated(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup: str,
+    engine_id: str,
+) -> None:
+    """Test listing tts engines and supported languages."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [
+            {
+                "name": "Test",
+                "engine_id": engine_id,
+                "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
+            }
+        ]
+    }
+
+    hass.data[tts.DATA_TTS_MANAGER].providers[engine_id].has_entity = True
+
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"providers": []}
+
+
+@pytest.mark.parametrize(
     ("setup", "engine_id", "extra_data"),
     [
         ("mock_setup", "test", {"name": "Test"}),

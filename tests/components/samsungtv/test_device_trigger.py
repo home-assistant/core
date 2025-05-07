@@ -54,7 +54,7 @@ async def test_if_fires_on_turn_on_request(
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
-    entity_id = "media_player.fake"
+    entity_id = "media_player.mock_title"
 
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "be9554b9-c9fb-41f4-8920-22da015376a4")}

@@ -1212,6 +1212,9 @@ def websocket_list_engines(
         if entity.platform:
             entity_domains.add(entity.platform.platform_name)
     for engine_id, provider in hass.data[DATA_TTS_MANAGER].providers.items():
+        if provider.has_entity:
+            continue
+
         provider_info = {
             "engine_id": engine_id,
             "name": provider.name,

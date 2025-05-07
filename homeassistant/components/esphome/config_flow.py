@@ -22,6 +22,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -31,6 +32,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -302,7 +304,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         ):
             return
+        if entry.source == SOURCE_IGNORE:
+            # Don't call _fetch_device_info() for ignored entries
+            raise AbortFlow("already_configured")
+        configured_host: str | None = entry.data.get(CONF_HOST)
         configured_port: int | None = entry.data.get(CONF_PORT)
+        if configured_host == host and configured_port == port:
+            # Don't probe to verify the mac is correct since
+            # the host and port matches.
+            raise AbortFlow("already_configured")
         configured_psk: str | None = entry.data.get(CONF_NOISE_PSK)
         await self._fetch_device_info(host, port or configured_port, configured_psk)
         updates: dict[str, Any] = {}

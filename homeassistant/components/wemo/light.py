@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from . import async_wemo_dispatcher_connect
-from .const import DOMAIN as WEMO_DOMAIN
+from .const import DOMAIN
 from .coordinator import DeviceCoordinator
 from .entity import WemoBinaryStateEntity, WemoEntity
 
@@ -110,7 +110,7 @@ class WemoLight(WemoEntity, LightEntity):
         """Return the device info."""
         return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, self._unique_id)},
-            identifiers={(WEMO_DOMAIN, self._unique_id)},
+            identifiers={(DOMAIN, self._unique_id)},
             manufacturer="Belkin",
             model=self._model_name,
             name=self.name,

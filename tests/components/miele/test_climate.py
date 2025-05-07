@@ -26,7 +26,7 @@ pytestmark = [
     ),
 ]
 
-ENTITY_ID = "climate.freezer_freezer"
+ENTITY_ID = "climate.freezer"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 
 
