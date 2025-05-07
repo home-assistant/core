@@ -1,10 +1,9 @@
 {
   "entity": {
-    "switch": {
+    "lock": {
       "secure_mode": {
-        "default": "mdi:shield-lock",
         "state": {
-          "off": "mdi:lock-open"
+          "locked": "mdi:shield-lock"
         }
       }
     }

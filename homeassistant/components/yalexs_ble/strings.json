@@ -52,7 +52,7 @@
         "name": "Battery voltage"
       }
     },
-    "switch": {
+    "lock": {
       "secure_mode": {
         "name": "Secure mode"
       }

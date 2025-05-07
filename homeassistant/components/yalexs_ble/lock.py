@@ -20,13 +20,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up locks."""
-    async_add_entities([YaleXSBLELock(entry.runtime_data)])
+    async_add_entities(
+        [YaleXSBLELock(entry.runtime_data), YaleXSBLESecureModeLock(entry.runtime_data)]
+    )
 
 
-class YaleXSBLELock(YALEXSBLEEntity, LockEntity):
+class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     """A yale xs ble lock."""
 
-    _attr_name = None
+    _secure_mode: bool = False
 
     @callback
     def _async_update_state(
@@ -39,7 +41,7 @@ class YaleXSBLELock(YALEXSBLEEntity, LockEntity):
         self._attr_is_jammed = False
         lock_state = new_state.lock
         if lock_state is LockStatus.LOCKED:
-            self._attr_is_locked = True
+            self._attr_is_locked = not self._secure_mode
         elif lock_state is LockStatus.LOCKING:
             self._attr_is_locking = True
         elif lock_state is LockStatus.UNLOCKING:
@@ -59,6 +61,24 @@ class YaleXSBLELock(YALEXSBLEEntity, LockEntity):
         """Unlock the lock."""
         await self._device.unlock()
 
+
+class YaleXSBLELock(YaleXSBLEBaseLock, LockEntity):
+    """A yale xs ble lock not in secure mode."""
+
+    _attr_name = None
+
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._device.lock()
+
+
+class YaleXSBLESecureModeLock(YaleXSBLEBaseLock):
+    """A yale xs ble lock in secure mode."""
+
+    _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "secure_mode"
+    _secure_mode = True
+
+    async def async_lock(self, **kwargs: Any) -> None:
+        """Lock the lock."""
+        await self._device.securemode()
