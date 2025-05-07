@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import datetime
 import logging
 from pathlib import Path
 from typing import Any
 
 import aiohttp
+from awesomeversion import AwesomeVersion
 from serial.tools import list_ports
 import voluptuous as vol
 from zwave_js_server.client import Client
@@ -76,6 +78,7 @@ ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 CONF_EMULATE_HARDWARE = "emulate_hardware"
 CONF_LOG_LEVEL = "log_level"
+RESTORE_NVM_DRIVER_READY_TIMEOUT = 60
 SERVER_VERSION_TIMEOUT = 10
 
 ADDON_LOG_LEVELS = {
@@ -99,6 +102,7 @@ ADDON_USER_INPUT_MAP = {
 }
 
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
+MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
@@ -428,7 +432,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
-        if self._async_in_progress():
+        if any(
+            flow
+            for flow in self._async_in_progress()
+            if flow["context"].get("source") != SOURCE_USB
+        ):
+            # Allow multiple USB discovery flows to be in progress.
+            # Migration requires more than one USB stick to be connected,
+            # which can cause more than one discovery flow to be in progress,
+            # at least for a short time.
             return self.async_abort(reason="already_in_progress")
         if current_config_entries := self._async_current_entries(include_ignore=False):
             config_entry = next(
@@ -451,10 +463,18 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if vid == "10C4" and pid == "EA60" and description and "2652" in description:
             return self.async_abort(reason="not_zwave_device")
 
+        discovery_info.device = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
+        )
+
         addon_info = await self._async_get_addon_info()
         if (
             addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.INSTALLING)
-            and addon_info.options.get(CONF_ADDON_DEVICE) == discovery_info.device
+            and (addon_device := addon_info.options.get(CONF_ADDON_DEVICE)) is not None
+            and await self.hass.async_add_executor_job(
+                usb.get_serial_by_id, addon_device
+            )
+            == discovery_info.device
         ):
             return self.async_abort(reason="already_configured")
 
@@ -707,7 +727,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(schema)
 
-        return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="configure_addon_user", data_schema=data_schema
+        )
 
     async def async_step_finish_addon_setup_user(
         self, user_input: dict[str, Any] | None = None
@@ -802,6 +824,27 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._usb_discovery and not config_entry.data.get(CONF_USE_ADDON):
             return self.async_abort(reason="addon_required")
 
+        try:
+            driver = self._get_driver()
+        except AbortFlow:
+            return self.async_abort(reason="config_entry_not_loaded")
+        if (
+            sdk_version := driver.controller.sdk_version
+        ) is not None and sdk_version < MIN_MIGRATION_SDK_VERSION:
+            _LOGGER.warning(
+                "Migration from this controller that has SDK version %s "
+                "is not supported. If possible, update the firmware "
+                "of the controller to a firmware built using SDK version %s or higher",
+                sdk_version,
+                MIN_MIGRATION_SDK_VERSION,
+            )
+            return self.async_abort(
+                reason="migration_low_sdk_version",
+                description_placeholders={
+                    "ok_sdk_version": str(MIN_MIGRATION_SDK_VERSION)
+                },
+            )
+
         if user_input is not None:
             self._migrating = True
             return await self.async_step_backup_nvm()
@@ -864,10 +907,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Reset the current controller, and instruct the user to unplug it."""
 
         if user_input is not None:
-            config_entry = self._reconfigure_config_entry
-            assert config_entry is not None
-            # Unload the config entry before stopping the add-on.
-            await self.hass.config_entries.async_unload(config_entry.entry_id)
             if self.usb_path:
                 # USB discovery was used, so the device is already known.
                 await self._async_set_addon_config({CONF_ADDON_DEVICE: self.usb_path})
@@ -881,6 +920,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         except (AbortFlow, FailedCommand) as err:
             _LOGGER.error("Failed to reset controller: %s", err)
             return self.async_abort(reason="reset_failed")
+
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        # Unload the config entry before asking the user to unplug the controller.
+        await self.hass.config_entries.async_unload(config_entry.entry_id)
 
         return self.async_show_form(
             step_id="instruct_unplug",
@@ -1066,7 +1110,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="configure_addon_reconfigure", data_schema=data_schema
+        )
 
     async def async_step_choose_serial_port(
         self, user_input: dict[str, Any] | None = None
@@ -1102,7 +1148,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Restore failed."""
-        return self.async_abort(reason="restore_failed")
+        if user_input is not None:
+            return await self.async_step_restore_nvm()
+
+        return self.async_show_form(
+            step_id="restore_failed",
+            description_placeholders={
+                "file_path": str(self.backup_filepath),
+            },
+        )
 
     async def async_step_migration_done(
         self, user_input: dict[str, Any] | None = None
@@ -1266,15 +1320,28 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     event["bytesWritten"] / event["total"] * 0.5 + 0.5
                 )
 
-        controller = self._get_driver().controller
+        @callback
+        def set_driver_ready(event: dict) -> None:
+            "Set the driver ready event."
+            wait_driver_ready.set()
+
+        driver = self._get_driver()
+        controller = driver.controller
+        wait_driver_ready = asyncio.Event()
         unsubs = [
             controller.on("nvm convert progress", forward_progress),
             controller.on("nvm restore progress", forward_progress),
+            driver.once("driver ready", set_driver_ready),
         ]
         try:
             await controller.async_restore_nvm(self.backup_data)
         except FailedCommand as err:
             raise AbortFlow(f"Failed to restore network: {err}") from err
+        else:
+            with suppress(TimeoutError):
+                async with asyncio.timeout(RESTORE_NVM_DRIVER_READY_TIMEOUT):
+                    await wait_driver_ready.wait()
+            await self.hass.config_entries.async_reload(config_entry.entry_id)
         finally:
             for unsub in unsubs:
                 unsub()
