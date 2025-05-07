@@ -20,6 +20,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
+from . import EnergyIDConfigEntry
 from .const import CONF_ENERGYID_KEY, CONF_HA_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,10 +100,10 @@ def _get_suggested_entities(
             if (
                 entity.domain == Platform.SENSOR
                 and entity.entity_id not in mapped_entity_ids
-                and (
-                    entity.device_class in SUGGESTED_DEVICE_CLASSES
-                    or entity.original_device_class in SUGGESTED_DEVICE_CLASSES
-                )
+                # and (
+                #     entity.device_class in SUGGESTED_DEVICE_CLASSES
+                #     or entity.original_device_class in SUGGESTED_DEVICE_CLASSES
+                # )
             )
         ]
     )
@@ -159,6 +160,7 @@ class EnergyIDSubentryFlowHandler(OptionsFlow):
     """Handle EnergyID options flow for managing entity mappings."""
 
     _current_ha_entity_id: str | None = None
+    config_entry: EnergyIDConfigEntry
 
     @callback
     def _get_current_mappings(self) -> dict[str, dict[str, str]]:
@@ -214,7 +216,7 @@ class EnergyIDSubentryFlowHandler(OptionsFlow):
             ),
             description_placeholders={
                 "device_name": self.config_entry.title,
-                "entity_count": len(current_mappings),
+                "entity_count": str(len(current_mappings)),
             },
             last_step=False,
         )
@@ -245,10 +247,11 @@ class EnergyIDSubentryFlowHandler(OptionsFlow):
 
             if not errors:
                 new_options = dict(self.config_entry.options)
-                new_options[ha_entity_id] = {
-                    CONF_HA_ENTITY_ID: ha_entity_id,
-                    CONF_ENERGYID_KEY: energyid_key,
-                }
+                if ha_entity_id is not None:
+                    new_options[ha_entity_id] = {
+                        CONF_HA_ENTITY_ID: ha_entity_id,
+                        CONF_ENERGYID_KEY: energyid_key,
+                    }
                 _LOGGER.info("Added new mapping: %s → %s", ha_entity_id, energyid_key)
                 return self.async_create_entry(title=None, data=new_options)
 
@@ -264,7 +267,7 @@ class EnergyIDSubentryFlowHandler(OptionsFlow):
 
         # Add helpful suggestions in description
         description_placeholders = {
-            "suggestion_count": len(suggested_entities),
+            "suggestion_count": str(len(suggested_entities)),
             "common_keys": "Common keys: el (electricity), pv (solar), gas, temp (temperature)",
         }
 
@@ -303,7 +306,7 @@ class EnergyIDSubentryFlowHandler(OptionsFlow):
                     )
                 }
             ),
-            description_placeholders={"mapping_count": len(current_mappings)},
+            description_placeholders={"mapping_count": str(len(current_mappings))},
             last_step=False,
         )
 
