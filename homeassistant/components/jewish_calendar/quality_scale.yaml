@@ -1,0 +1,92 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: todo
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: Local calculation does not require configuration.
+  test-before-setup:
+    status: exempt
+    comment: Local calculation does not require setup.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: This integration cannot be unavailable since it's a local calculation.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: This integration cannot be unavailable since it's a local calculation.
+  parallel-updates: todo
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not require reauthentication, since it is a local calculation.
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: This integration does not represent physical devices.
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: This is a local calculation and does not require discovery.
+  discovery:
+    status: exempt
+    comment: This is a local calculation and does not require discovery.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations:
+    status: exempt
+    comment: No known limitations.
+  docs-supported-devices:
+    status: exempt
+    comment: This integration does not support physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: exempt
+    comment: There are no more detailed troubleshooting instructions available.
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: This integration does not have devices.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: There are no issues which can be repaired.
+  stale-devices:
+    status: exempt
+    comment: This integration does not have devices.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession:
+    status: exempt
+    comment: This integration does not require a web session.
+  strict-typing: done
