@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import PterodactylConfigEntry, PterodactylCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
+_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PterodactylConfigEntry) -> bool:

@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import calendar
+from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script.config import ScriptConfig
@@ -25,6 +25,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonObjectType
 
 from tests.common import MockConfigEntry, async_mock_service
 
@@ -45,9 +46,12 @@ def llm_context() -> llm.LLMContext:
 class MyAPI(llm.API):
     """Test API."""
 
+    prompt: str = ""
+    tools: list[llm.Tool] = []
+
     async def async_get_api_instance(self, _: llm.ToolInput) -> llm.APIInstance:
         """Return a list of tools."""
-        return llm.APIInstance(self, "", [], llm_context)
+        return llm.APIInstance(self, self.prompt, llm_context, self.tools)
 
 
 async def test_get_api_no_existing(
@@ -576,6 +580,10 @@ async def test_assist_api_prompt(
         )
     )
     exposed_entities_prompt = """Live Context: An overview of the areas and the devices in this smart home:
+- names: '1'
+  domain: light
+  state: unavailable
+  areas: Test Area 2
 - names: Kitchen
   domain: light
   state: 'on'
@@ -590,18 +598,6 @@ async def test_assist_api_prompt(
   domain: light
   state: unavailable
   areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
   state: unavailable
@@ -614,16 +610,27 @@ async def test_assist_api_prompt(
   domain: light
   state: unavailable
   areas: Test Area 2
-- names: Unnamed Device
+- names: Test Service
   domain: light
   state: unavailable
-  areas: Test Area 2
-- names: '1'
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Unnamed Device
   domain: light
   state: unavailable
   areas: Test Area 2
 """
     stateless_exposed_entities_prompt = """Static Context: An overview of the areas and the devices in this smart home:
+- names: '1'
+  domain: light
+  areas: Test Area 2
 - names: Kitchen
   domain: light
 - names: Living Room
@@ -632,15 +639,6 @@ async def test_assist_api_prompt(
 - names: Test Device, my test light
   domain: light
   areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
   areas: Test Area 2
@@ -650,10 +648,16 @@ async def test_assist_api_prompt(
 - names: Test Device 4
   domain: light
   areas: Test Area 2
-- names: Unnamed Device
+- names: Test Service
   domain: light
-  areas: Test Area 2
-- names: '1'
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  areas: Test Area, Alternative name
+- names: Unnamed Device
   domain: light
   areas: Test Area 2
 """
@@ -1328,6 +1332,118 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     }
 
 
+async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
+    """Test the todo get items tool."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "todo", {})
+    hass.states.async_set(
+        "todo.test_list", "0", {"friendly_name": "Mock Todo List Name"}
+    )
+    async_expose_entity(hass, "conversation", "todo.test_list", True)
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        user_prompt="test_text",
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool = next((tool for tool in api.tools if tool.name == "todo_get_items"), None)
+    assert tool is not None
+    assert tool.parameters.schema["todo_list"].container == ["Mock Todo List Name"]
+
+    calls = async_mock_service(
+        hass,
+        domain=todo.DOMAIN,
+        service=todo.TodoServices.GET_ITEMS,
+        schema=cv.make_entity_service_schema(todo.TODO_SERVICE_GET_ITEMS_SCHEMA),
+        response={
+            "todo.test_list": {
+                "items": [
+                    {
+                        "uid": "1234",
+                        "summary": "Buy milk",
+                        "status": "needs_action",
+                    },
+                    {
+                        "uid": "5678",
+                        "summary": "Call mom",
+                        "status": "needs_action",
+                        "due": "2025-09-17",
+                        "description": "Remember birthday",
+                    },
+                ]
+            }
+        },
+    )
+
+    # Test without status filter (defaults to needs_action)
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput("todo_get_items", {"todo_list": "Mock Todo List Name"}),
+        llm_context,
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": ["todo.test_list"],
+        "status": ["needs_action"],
+    }
+    assert result == {
+        "success": True,
+        "result": [
+            {
+                "uid": "1234",
+                "status": "needs_action",
+                "summary": "Buy milk",
+            },
+            {
+                "uid": "5678",
+                "status": "needs_action",
+                "summary": "Call mom",
+                "due": "2025-09-17",
+                "description": "Remember birthday",
+            },
+        ],
+    }
+
+    # Test that the status filter is passed correctly to the service call.
+    # We don't assert on the response since it is fixed above.
+    calls.clear()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            "todo_get_items",
+            {"todo_list": "Mock Todo List Name", "status": "completed"},
+        ),
+        llm_context,
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": ["todo.test_list"],
+        "status": ["completed"],
+    }
+
+    # Test that the status filter is passed correctly to the service call.
+    # We don't assert on the response since it is fixed above.
+    calls.clear()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            "todo_get_items",
+            {"todo_list": "Mock Todo List Name", "status": "all"},
+        ),
+        llm_context,
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": ["todo.test_list"],
+        "status": ["needs_action", "completed"],
+    }
+
+
 async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     """Test that tools are not exposed when no entities are exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1342,3 +1458,57 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.tools == []
+
+
+async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test an API instance that merges multiple llm apis."""
+
+    class MyTool(llm.Tool):
+        def __init__(self, name: str, description: str) -> None:
+            self.name = name
+            self.description = description
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> JsonObjectType:
+            return {"result": {tool_input.tool_name: tool_input.tool_args}}
+
+    api1 = MyAPI(hass=hass, id="api-1", name="API 1")
+    api1.prompt = "This is prompt 1"
+    api1.tools = [MyTool(name="Tool_1", description="Description 1")]
+    llm.async_register_api(hass, api1)
+
+    api2 = MyAPI(hass=hass, id="api-2", name="API 2")
+    api2.prompt = "This is prompt 2"
+    api2.tools = [MyTool(name="Tool_2", description="Description 2")]
+    llm.async_register_api(hass, api2)
+
+    instance = await llm.async_get_api(hass, ["api-1", "api-2"], llm_context)
+    assert instance.api.id == "api-1|api-2"
+
+    assert (
+        instance.api_prompt
+        == """Follow these instructions for tools from "api-1":
+This is prompt 1
+
+Follow these instructions for tools from "api-2":
+This is prompt 2
+
+"""
+    )
+    assert [(tool.name, tool.description) for tool in instance.tools] == [
+        ("api-1.Tool_1", "Description 1"),
+        ("api-2.Tool_2", "Description 2"),
+    ]
+
+    # The test tool returns back the provided arguments so we can verify
+    # the original tool is invoked with the correct tool name and args.
+    result = await instance.async_call_tool(
+        llm.ToolInput(tool_name="api-1.Tool_1", tool_args={"arg1": "value1"})
+    )
+    assert result == {"result": {"Tool_1": {"arg1": "value1"}}}
+
+    result = await instance.async_call_tool(
+        llm.ToolInput(tool_name="api-2.Tool_2", tool_args={"arg2": "value2"})
+    )
+    assert result == {"result": {"Tool_2": {"arg2": "value2"}}}

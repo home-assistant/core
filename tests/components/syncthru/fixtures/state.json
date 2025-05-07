@@ -1,0 +1,182 @@
+{
+  "status": {
+    "hrDeviceStatus": 3,
+    "status1": "",
+    "status2": "",
+    "status3": "",
+    "status4": ""
+  },
+  "identity": {
+    "model_name": "C430W",
+    "device_name": "Samsung C430W",
+    "host_name": "SEC84251907C415",
+    "location": "Living room",
+    "serial_num": "08HRB8GJ3F019DD",
+    "ip_addr": "192.168.0.251",
+    "ipv6_link_addr": "",
+    "mac_addr": "84:25:19:07:C4:15",
+    "admin_email": "",
+    "admin_name": "",
+    "admin_phone": "",
+    "customer_support": ""
+  },
+  "toner_black": {
+    "opt": 1,
+    "remaining": 8,
+    "cnt": 1176,
+    "newError": "C1-5110"
+  },
+  "toner_cyan": {
+    "opt": 1,
+    "remaining": 98,
+    "cnt": 25,
+    "newError": ""
+  },
+  "toner_magenta": {
+    "opt": 1,
+    "remaining": 98,
+    "cnt": 25,
+    "newError": ""
+  },
+  "toner_yellow": {
+    "opt": 1,
+    "remaining": 97,
+    "cnt": 27,
+    "newError": ""
+  },
+  "drum_black": {
+    "opt": 0,
+    "remaining": 44,
+    "newError": ""
+  },
+  "drum_cyan": {
+    "opt": 0,
+    "remaining": 100,
+    "newError": ""
+  },
+  "drum_magenta": {
+    "opt": 0,
+    "remaining": 100,
+    "newError": ""
+  },
+  "drum_yellow": {
+    "opt": 0,
+    "remaining": 100,
+    "newError": ""
+  },
+  "drum_color": {
+    "opt": 1,
+    "remaining": 44,
+    "newError": ""
+  },
+  "tray1": {
+    "opt": 1,
+    "paper_size1": 4,
+    "paper_size2": 0,
+    "paper_type1": 2,
+    "paper_type2": 0,
+    "paper_level": 0,
+    "capa": 150,
+    "newError": ""
+  },
+  "tray2": {
+    "opt": 0,
+    "paper_size1": 0,
+    "paper_size2": 0,
+    "paper_type1": 2,
+    "paper_type2": 0,
+    "paper_level": 0,
+    "capa": 0,
+    "newError": ""
+  },
+  "tray3": {
+    "opt": 0,
+    "paper_size1": 0,
+    "paper_size2": 0,
+    "paper_type1": 2,
+    "paper_type2": 0,
+    "paper_level": 0,
+    "capa": 0,
+    "newError": ""
+  },
+  "tray4": {
+    "opt": 0,
+    "paper_size1": 0,
+    "paper_size2": 0,
+    "paper_type1": 2,
+    "paper_type2": 0,
+    "paper_level": 0,
+    "capa": 0,
+    "newError": ""
+  },
+  "tray5": {
+    "opt": 0,
+    "paper_size1": 0,
+    "paper_size2": 0,
+    "paper_type1": 2,
+    "paper_type2": 0,
+    "paper_level": 0,
+    "capa": 0,
+    "newError": "0"
+  },
+  "mp": {
+    "opt": 0,
+    "paper_size1": 0,
+    "paper_size2": 0,
+    "paper_type1": 2,
+    "paper_type2": 0,
+    "paper_level": 0,
+    "capa": 0,
+    "newError": ""
+  },
+  "manual": {
+    "opt": 0,
+    "paper_size1": 0,
+    "paper_size2": 0,
+    "paper_type1": 2,
+    "paper_type2": 0,
+    "capa": 0,
+    "newError": ""
+  },
+  "GXI_INTRAY_MANUALFEEDING_TRAY_SUPPORT": 0,
+  "GXI_INSTALL_OPTION_MULTIBIN": 0,
+  "multibin": [0],
+  "outputTray": [[1, 50, ""]],
+  "capability": {
+    "hdd": {
+      "opt": 2,
+      "capa": 40
+    },
+    "ram": {
+      "opt": 65536,
+      "capa": 65536
+    },
+    "scanner": {
+      "opt": 0,
+      "capa": 0
+    }
+  },
+  "options": {
+    "hdd": 0,
+    "wlan": 1
+  },
+  "GXI_ACTIVE_ALERT_TOTAL": 2,
+  "GXI_ADMIN_WUI_HAS_DEFAULT_PASS": 0,
+  "GXI_SUPPORT_COLOR": 1,
+  "GXI_SYS_LUI_SUPPORT": 0,
+  "GXI_A3_SUPPORT": 0,
+  "GXI_TRAY2_MANDATORY_SUPPORT": 0,
+  "GXI_SWS_ADMIN_USE_AAA": 0,
+  "GXI_TONER_BLACK_VALID": 1,
+  "GXI_TONER_CYAN_VALID": 1,
+  "GXI_TONER_MAGENTA_VALID": 1,
+  "GXI_TONER_YELLOW_VALID": 1,
+  "GXI_IMAGING_BLACK_VALID": 1,
+  "GXI_IMAGING_CYAN_VALID": 1,
+  "GXI_IMAGING_MAGENTA_VALID": 1,
+  "GXI_IMAGING_YELLOW_VALID": 1,
+  "GXI_IMAGING_COLOR_VALID": 1,
+  "GXI_SUPPORT_PAPER_SETTING": 1,
+  "GXI_SUPPORT_PAPER_LEVEL": 0,
+  "GXI_SUPPORT_MULTI_PASS": 1
+}
