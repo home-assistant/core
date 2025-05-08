@@ -42,7 +42,6 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 # Custom type for the EnergyID config entry
 EnergyIDClientT = TypeVar("EnergyIDClientT", bound=WebhookClient)
 EnergyIDConfigEntry = ConfigEntry[EnergyIDClientT]
-
 # Listener keys
 LISTENER_KEY_STATE: Final = "state_listener"
 LISTENER_KEY_STOP: Final = "stop_listener"
@@ -124,7 +123,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
             err,
         )
         raise ConfigEntryNotReady(
-            f"Failed to authenticate EnergyID for {entry.runtime_data.device_name}: {err}"
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_on_setup",
+            translation_placeholders={
+                "device_name": entry.runtime_data.device_name,
+                "error_details": str(err),
+            },
         ) from err
 
     await async_update_listeners(hass, entry)
