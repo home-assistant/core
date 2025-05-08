@@ -219,6 +219,7 @@ from .const import (
     DOMAIN,
     SUPPORTED_PROTOCOLS,
     TRANSPORT_TCP,
+    TRANSPORT_UNIX,
     TRANSPORT_WEBSOCKETS,
     VALUES_ON_COMMAND_TYPE,
     Platform,
@@ -275,6 +276,7 @@ PROTOCOL_SELECTOR = SelectSelector(
 SUPPORTED_TRANSPORTS = [
     SelectOptionDict(value=TRANSPORT_TCP, label="TCP"),
     SelectOptionDict(value=TRANSPORT_WEBSOCKETS, label="WebSocket"),
+    SelectOptionDict(value=TRANSPORT_UNIX, label="UNIX"),
 ]
 TRANSPORT_SELECTOR = SelectSelector(
     SelectSelectorConfig(
