@@ -172,6 +172,12 @@
           "tested": "Tested"
         }
       },
+      "manual_level": {
+        "name": "Burner {burner_id} level"
+      },
+      "heating_mode": {
+        "name": "Burner {burner_id} heating mode"
+      },
       "dishwasher_machine_state": {
         "name": "Machine state",
         "state": {
