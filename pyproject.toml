@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.13.2"
 dependencies = [
-  "aiodns==3.3.0",
+  "aiodns==3.4.0",
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
