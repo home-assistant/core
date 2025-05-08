@@ -2,7 +2,7 @@
   "entity": {
     "binary_sensor": {
       "issur_melacha_in_effect": {
-        "name": "Issur Melacha in Effect"
+        "name": "Issur Melacha in effect"
       },
       "erev_shabbat_hag": {
         "name": "Erev Shabbat/Hag"
@@ -75,13 +75,13 @@
         "name": "T'set Hakochavim, 3 stars"
       },
       "upcoming_shabbat_candle_lighting": {
-        "name": "Upcoming Shabbat Candle Lighting"
+        "name": "Upcoming Shabbat candle lighting"
       },
       "upcoming_shabbat_havdalah": {
         "name": "Upcoming Shabbat Havdalah"
       },
       "upcoming_candle_lighting": {
-        "name": "Upcoming Candle Lighting"
+        "name": "Upcoming candle lighting"
       },
       "upcoming_havdalah": {
         "name": "Upcoming Havdalah"
