@@ -270,7 +270,9 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
     """A update implementation for esphome."""
 
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
 
     @callback
@@ -300,11 +302,11 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
         """Return the latest version."""
         return self._state.latest_version
 
-    @property
-    @esphome_state_property
-    def release_summary(self) -> str:
-        """Return the release summary."""
-        return self._state.release_summary
+    async def async_release_notes(self) -> str | None:
+        """Return the release notes."""
+        if self._state.release_summary:
+            return self._state.release_summary
+        return None
 
     @property
     @esphome_state_property
