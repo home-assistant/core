@@ -10,7 +10,6 @@ from homeassistant.components.openweathermap.const import (
     OWM_MODE_FREE_CURRENT,
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
-    OWM_MODES,
 )
 from homeassistant.components.openweathermap.weather import SERVICE_GET_MINUTE_FORECAST
 from homeassistant.const import Platform
@@ -72,7 +71,9 @@ async def test_get_minute_forecast_unavailable(
         )
 
 
-@pytest.mark.parametrize("mode", OWM_MODES, indirect=True)
+@pytest.mark.parametrize(
+    "mode", [OWM_MODE_V30, OWM_MODE_FREE_CURRENT, OWM_MODE_FREE_FORECAST], indirect=True
+)
 async def test_weather_states(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
