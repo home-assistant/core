@@ -311,7 +311,7 @@
         "state": {
           "offline": "Offline",
           "online": "Online",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "power_adjust_active": "Power adjust",
           "paused": "[%key:common::state::paused%]"
         }
