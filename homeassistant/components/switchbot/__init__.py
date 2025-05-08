@@ -90,6 +90,7 @@ PLATFORMS_BY_TYPE = {
         Platform.LOCK,
         Platform.SENSOR,
     ],
+    SupportedModels.AIR_PURIFIER.value: [Platform.FAN, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -113,6 +114,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.K10_PRO_COMBO_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.LOCK_LITE.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLock,
+    SupportedModels.AIR_PURIFIER.value: switchbot.SwitchbotAirPurifier,
 }
 
 
