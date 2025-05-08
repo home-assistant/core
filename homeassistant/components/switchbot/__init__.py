@@ -73,6 +73,7 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.HUBMINI_MATTER.value: [Platform.SENSOR],
     SupportedModels.CIRCULATOR_FAN.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.AIR_PURIFIER.value: [Platform.FAN, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -89,6 +90,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.RELAY_SWITCH_1.value: switchbot.SwitchbotRelaySwitch,
     SupportedModels.ROLLER_SHADE.value: switchbot.SwitchbotRollerShade,
     SupportedModels.CIRCULATOR_FAN.value: switchbot.SwitchbotFan,
+    SupportedModels.AIR_PURIFIER.value: switchbot.SwitchbotAirPurifier,
 }
 
 
