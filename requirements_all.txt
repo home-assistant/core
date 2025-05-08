@@ -220,7 +220,7 @@ aiodhcpwatcher==1.1.1
 aiodiscover==2.6.1
 
 # homeassistant.components.dnsip
-aiodns==3.3.0
+aiodns==3.4.0
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
