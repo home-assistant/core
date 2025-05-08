@@ -168,7 +168,12 @@ async def test_api_push(
     device_fixture: MieleDevices,
     action_fixture: MieleAction,
 ) -> None:
-    """Test device registry integration."""
+    """Test the processing of pushed data updates."""
+    # We test that data updates pushed by SSE stream are processed
+    # properly in the integration. This is asserted by checking that two randomly selected
+    # entity attributes (ATTR_MIN_TEMP and ATTR_MAX_TEMP on a climate entity are changed as
+    # expected.
+
     await setup_integration(hass, mock_config_entry)
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "Dummy_Appliance_1")}
