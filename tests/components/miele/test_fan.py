@@ -7,7 +7,11 @@ from aiohttp import ClientResponseError
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.fan import ATTR_PERCENTAGE, DOMAIN as FAN_DOMAIN
+from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -101,7 +105,7 @@ async def test_fan_turn_on_w_percentage(
 
     await hass.services.async_call(
         TEST_PLATFORM,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
         blocking=True,
     )
@@ -144,8 +148,8 @@ async def test_set_percentage(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             TEST_PLATFORM,
-            "set_percentage",
-            {ATTR_ENTITY_ID: ENTITY_ID, "percentage": 50},
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
             blocking=True,
         )
     mock_miele_client.send_action.assert_called_once()
