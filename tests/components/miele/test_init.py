@@ -11,13 +11,12 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP
 from homeassistant.components.miele.const import DOMAIN
-from homeassistant.components.miele.coordinator import MieleDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration
+from . import get_callback, setup_integration
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -182,13 +181,13 @@ async def test_api_push(
     assert state.attributes.get(ATTR_MIN_TEMP) == -28
     assert state.attributes.get(ATTR_MAX_TEMP) == 28
 
-    await MieleDataUpdateCoordinator.callback_update_data(
-        mock_config_entry.runtime_data, device_fixture
-    )
+    data_callback = get_callback(mock_miele_client, "data_callback")
+    await data_callback(device_fixture)
+    await hass.async_block_till_done()
+
     act_file = load_json_object_fixture("4_actions.json", DOMAIN)
-    await MieleDataUpdateCoordinator.callback_update_actions(
-        mock_config_entry.runtime_data, act_file
-    )
+    action_callback = get_callback(mock_miele_client, "actions_callback")
+    await action_callback(act_file)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
