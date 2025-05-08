@@ -1708,7 +1708,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.0
+pylamarzocco==2.0.1
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2169,9 +2169,6 @@ rova==0.4.1
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
-
-# homeassistant.components.rtsp_to_webrtc
-rtsp-to-webrtc==0.5.1
 
 # homeassistant.components.ruuvitag_ble
 ruuvitag-ble==0.1.2

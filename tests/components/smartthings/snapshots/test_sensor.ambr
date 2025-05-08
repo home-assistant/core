@@ -3002,6 +3002,65 @@
     'state': '0',
   })
 # ---
+# name: test_all_entities[da_ks_cooktop_31001][sensor.induction_hob_operating_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ready',
+        'run',
+        'paused',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.induction_hob_operating_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operating state',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooktop_operating_state',
+    'unique_id': '808dbd84-f357-47e2-a0cd-3b66fa22d584_main_custom.cooktopOperatingState_cooktopOperatingState_cooktopOperatingState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_cooktop_31001][sensor.induction_hob_operating_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Induction Hob Operating state',
+      'options': list([
+        'ready',
+        'run',
+        'paused',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.induction_hob_operating_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
+  })
+# ---
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_completion_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3990,6 +4049,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'running',
+  })
+# ---
+# name: test_all_entities[da_ks_range_0101x][sensor.vulcan_operating_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'run',
+        'ready',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.vulcan_operating_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operating state',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooktop_operating_state',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_custom.cooktopOperatingState_cooktopOperatingState_cooktopOperatingState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_range_0101x][sensor.vulcan_operating_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Vulcan Operating state',
+      'options': list([
+        'run',
+        'ready',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vulcan_operating_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready',
   })
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_oven_mode-entry]

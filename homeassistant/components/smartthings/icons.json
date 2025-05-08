@@ -49,6 +49,15 @@
       }
     },
     "sensor": {
+      "cooktop_operating_state": {
+        "default": "mdi:stove",
+        "state": {
+          "ready": "mdi:play-speed",
+          "run": "mdi:play",
+          "paused": "mdi:pause",
+          "finished": "mdi:food-turkey"
+        }
+      },
       "manual_level": {
         "default": "mdi:radiator",
         "state": {

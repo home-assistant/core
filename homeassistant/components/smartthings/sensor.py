@@ -304,6 +304,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.CUSTOM_COOKTOP_OPERATING_STATE: {
+        Attribute.COOKTOP_OPERATING_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COOKTOP_OPERATING_STATE,
+                translation_key="cooktop_operating_state",
+                device_class=SensorDeviceClass.ENUM,
+                options_attribute=Attribute.SUPPORTED_COOKTOP_OPERATING_STATE,
+            )
+        ]
+    },
     Capability.DISHWASHER_OPERATING_STATE: {
         Attribute.MACHINE_STATE: [
             SmartThingsSensorEntityDescription(
