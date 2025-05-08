@@ -5,11 +5,13 @@ import time
 from unittest.mock import MagicMock
 
 from aiohttp import ClientConnectionError
-from pymiele import OAUTH2_TOKEN
+from pymiele import OAUTH2_TOKEN, MieleAction, MieleDevices
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP
 from homeassistant.components.miele.const import DOMAIN
+from homeassistant.components.miele.coordinator import MieleDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -17,7 +19,7 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -157,3 +159,39 @@ async def test_device_remove_devices(
         old_device_entry.id, mock_config_entry.entry_id
     )
     assert response["success"]
+
+
+async def test_api_push(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    device_fixture: MieleDevices,
+    action_fixture: MieleAction,
+) -> None:
+    """Test device registry integration."""
+    await setup_integration(hass, mock_config_entry)
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "Dummy_Appliance_1")}
+    )
+    assert device_entry is not None
+
+    entity_id = "climate.refrigerator"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_MIN_TEMP) == -28
+    assert state.attributes.get(ATTR_MAX_TEMP) == 28
+
+    await MieleDataUpdateCoordinator.callback_update_data(
+        mock_config_entry.runtime_data, device_fixture
+    )
+    act_file = load_json_object_fixture("4_actions.json", DOMAIN)
+    await MieleDataUpdateCoordinator.callback_update_actions(
+        mock_config_entry.runtime_data, act_file
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_MIN_TEMP) == 1
+    assert state.attributes.get(ATTR_MAX_TEMP) == 9

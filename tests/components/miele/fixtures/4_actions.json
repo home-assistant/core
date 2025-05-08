@@ -1,0 +1,86 @@
+{
+  "Dummy_Appliance_1": {
+    "processAction": [4],
+    "light": [],
+    "ambientLight": [],
+    "startTime": [],
+    "ventilationStep": [],
+    "programId": [],
+    "targetTemperature": [
+      {
+        "zone": 1,
+        "min": -28,
+        "max": -14
+      }
+    ],
+    "deviceName": true,
+    "powerOn": false,
+    "powerOff": false,
+    "colors": [],
+    "modes": [1],
+    "runOnTime": []
+  },
+  "Dummy_Appliance_2": {
+    "processAction": [6],
+    "light": [],
+    "ambientLight": [],
+    "startTime": [],
+    "ventilationStep": [],
+    "programId": [],
+    "targetTemperature": [
+      {
+        "zone": 1,
+        "min": 1,
+        "max": 9
+      }
+    ],
+    "deviceName": true,
+    "powerOn": false,
+    "powerOff": false,
+    "colors": [],
+    "modes": [1],
+    "runOnTime": []
+  },
+  "Dummy_Appliance_3": {
+    "processAction": [1, 2, 3],
+    "light": [],
+    "ambientLight": [],
+    "startTime": [],
+    "ventilationStep": [],
+    "programId": [],
+    "targetTemperature": [
+      {
+        "zone": 1,
+        "min": 1,
+        "max": 9
+      }
+    ],
+    "deviceName": true,
+    "powerOn": true,
+    "powerOff": false,
+    "colors": [],
+    "modes": [],
+    "runOnTime": []
+  },
+  "DummyAppliance_18": {
+    "processAction": [],
+    "light": [],
+    "ambientLight": [],
+    "startTime": [],
+    "ventilationStep": [],
+    "programId": [],
+    "targetTemperature": [
+      {
+        "zone": 1,
+        "min": 1,
+        "max": 9
+      }
+    ],
+    "deviceName": true,
+    "powerOn": true,
+    "powerOff": false,
+    "colors": [],
+    "modes": [],
+    "runOnTime": []
+  }
+}
