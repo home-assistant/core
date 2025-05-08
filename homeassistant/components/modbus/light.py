@@ -98,28 +98,24 @@ class ModbusLight(BaseSwitch, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on and set brightness if provided."""
-        if ATTR_BRIGHTNESS in kwargs:
-            await self.async_set_brightness(
-                kwargs.get(ATTR_BRIGHTNESS)
-            )
-
-        if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            await self.async_set_color_temp(
-                kwargs.get(ATTR_COLOR_TEMP_KELVIN)
-            )
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        if brightness and isinstance(brightness, int):
+            await self.async_set_brightness(brightness)
+        color_temp = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
+        if color_temp and isinstance(color_temp, int):
+            await self.async_set_color_temp(color_temp)
         await self.async_turn(self.command_on)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.async_turn(self._command_off)
 
-    async def async_set_brightness(self, brightness: int | Any) -> None:
+    async def async_set_brightness(self, brightness: int) -> None:
         """Set the brightness of the light."""
         if not self._brightness_address:
             return
+
         conv_brightness = self._convert_brightness_to_modbus(brightness)
-        if conv_brightness is None:
-            return
 
         await self._hub.async_pb_call(
             unit=self._slave,
@@ -130,20 +126,20 @@ class ModbusLight(BaseSwitch, LightEntity):
         if not self._verify_active:
             self._attr_brightness = brightness
 
-    async def async_set_color_temp(self, color_temp_kelvin: int | Any) -> None:
+    async def async_set_color_temp(self, color_temp_kelvin: int) -> None:
         """Send Modbus command to set color temperature."""
         if not self._color_temp_address:
             return
-        conv_color_temp_kelvin = self._convert_color_temp_to_modbus(color_temp_kelvin)
-        if conv_color_temp_kelvin is None:
-            return
 
-        await self._hub.async_pb_call(
-            unit=self._slave,
-            address=self._color_temp_address,
-            value=conv_color_temp_kelvin,
-            use_call=CALL_TYPE_WRITE_REGISTER,
-        )
+        conv_color_temp_kelvin = self._convert_color_temp_to_modbus(color_temp_kelvin)
+
+        if conv_color_temp_kelvin is not None:
+            await self._hub.async_pb_call(
+                unit=self._slave,
+                address=self._color_temp_address,
+                value=conv_color_temp_kelvin,
+                use_call=CALL_TYPE_WRITE_REGISTER,
+            )
         if not self._verify_active:
             self._attr_color_temp_kelvin = color_temp_kelvin
 
@@ -220,22 +216,18 @@ class ModbusLight(BaseSwitch, LightEntity):
         )
 
     @staticmethod
-    def _convert_brightness_to_modbus(brightness: int | Any) -> int | None:
+    def _convert_brightness_to_modbus(brightness: int) -> int:
         """Convert brightness (0-255) to Modbus scale (0-100)."""
-        if isinstance(brightness, int):
-            return round(
-                brightness
-                / LIGHT_MAX_BRIGHTNESS
-                * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
-            )
-        return None
+        return round(
+            brightness
+            / LIGHT_MAX_BRIGHTNESS
+            * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+        )
 
-    def _convert_color_temp_to_modbus(self, kelvin: int | Any) -> int | None:
+    def _convert_color_temp_to_modbus(self, kelvin: int) -> int | None:
         """Convert color temperature from Kelvin to the Modbus scale (0-100)."""
-        if (
-            not isinstance(self._attr_min_color_temp_kelvin, int)
-            or not isinstance(self._attr_max_color_temp_kelvin, int)
-            or not isinstance(kelvin, int)
+        if not isinstance(self._attr_min_color_temp_kelvin, int) or not isinstance(
+            self._attr_max_color_temp_kelvin, int
         ):
             _LOGGER.error(
                 "Invalid color temp bounds or value from switch: min=%s, max=%s, temp_value=%s",
