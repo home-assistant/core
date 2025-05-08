@@ -48,6 +48,26 @@
         "default": "mdi:car-coolant-level"
       }
     },
+    "sensor": {
+      "manual_level": {
+        "default": "mdi:radiator",
+        "state": {
+          "off": "mdi:radiator-off"
+        }
+      },
+      "heating_mode": {
+        "state": {
+          "off": "mdi:power",
+          "manual": "mdi:cog",
+          "boost": "mdi:flash",
+          "keep_warm": "mdi:fire",
+          "quick_preheat": "mdi:heat-wave",
+          "defrost": "mdi:car-defrost-rear",
+          "melt": "mdi:snowflake-melt",
+          "simmer": "mdi:fire"
+        }
+      }
+    },
     "switch": {
       "bubble_soak": {
         "default": "mdi:water-off",
