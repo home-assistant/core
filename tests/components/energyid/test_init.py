@@ -10,7 +10,6 @@ import pytest
 from homeassistant.components.energyid import (
     _async_handle_state_change,
     async_update_listeners,
-    # LISTENER_TYPE_* constants are internal to __init__.py
 )
 from homeassistant.components.energyid.const import (
     CONF_ENERGYID_KEY,
@@ -48,8 +47,6 @@ async def test_async_setup_entry_success_claimed(
 ) -> None:
     """Test successful setup of a claimed device."""
     mock_config_entry.add_to_hass(hass)
-
-    # --- FIX: Patch where the function is *used* ---
     with (
         patch(
             "homeassistant.components.energyid.WebhookClient",
@@ -59,10 +56,8 @@ async def test_async_setup_entry_success_claimed(
             "homeassistant.components.energyid.async_track_state_change_event"
         ) as mock_track_event,
     ):
-        # --- End Fix ---
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-
         if mock_config_entry.options:
             mock_track_event.assert_called_once()
         else:
@@ -82,13 +77,9 @@ async def test_async_setup_entry_success_claimed(
     )
 
     listeners_dict = hass.data[DOMAIN][mock_config_entry.entry_id][DATA_LISTENERS]
-    assert (
-        listeners_dict.get("stop_listener") is not None
-    )  # Using key defined in __init__.py
+    assert listeners_dict.get("stop_listener") is not None
     if mock_config_entry.options:
-        assert (
-            listeners_dict.get("state_listener") is not None
-        )  # Using key defined in __init__.py
+        assert listeners_dict.get("state_listener") is not None
     else:
         assert listeners_dict.get("state_listener") is None
 
@@ -115,7 +106,6 @@ async def test_async_setup_entry_success_unclaimed(
     unclaimed_client.webhook_policy = {}
     unclaimed_client.device_name = CONTEXT_TEST_DEVICE_NAME
 
-    # --- FIX: Patch where the function is *used* ---
     with (
         patch(
             "homeassistant.components.energyid.WebhookClient",
@@ -125,10 +115,8 @@ async def test_async_setup_entry_success_unclaimed(
             "homeassistant.components.energyid.async_track_state_change_event"
         ) as mock_track_event_unclaimed,
     ):
-        # --- End Fix ---
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-
         if mock_config_entry.options:
             mock_track_event_unclaimed.assert_called_once()
         else:
@@ -167,9 +155,10 @@ async def test_async_setup_entry_auth_failure(
 
     assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
     assert (
-        f"Failed to authenticate EnergyID for {CONTEXT_TEST_DEVICE_NAME}: API Error"
-        in caplog.text
-    )
+        f"Config entry 'My Test Site' for energyid integration not ready yet: "
+        f"Failed to authenticate with EnergyID for device '{CONTEXT_TEST_DEVICE_NAME}'. "
+        f"Setup will be retried. Details: API Error"
+    ) in caplog.text
 
 
 async def test_async_unload_entry(
@@ -262,7 +251,6 @@ async def test_async_update_listeners_no_options(
     entry_no_opts.add_to_hass(hass)
     mock_webhook_client.device_name = CONTEXT_TEST_DEVICE_NAME
 
-    # --- FIX: Patch where the function is *used* ---
     with (
         patch(
             "homeassistant.components.energyid.WebhookClient",
@@ -272,7 +260,6 @@ async def test_async_update_listeners_no_options(
             "homeassistant.components.energyid.async_track_state_change_event"
         ) as mock_track_event,
     ):
-        # --- End Fix ---
         assert await hass.config_entries.async_setup(entry_no_opts.entry_id)
         await hass.async_block_till_done()
         mock_track_event.assert_not_called()
@@ -296,7 +283,6 @@ async def test_async_update_listeners_with_options(
     mock_config_entry.add_to_hass(hass)
     mock_webhook_client.device_name = CONTEXT_TEST_DEVICE_NAME
 
-    # --- FIX: Patch where the function is *used* ---
     with (
         patch(
             "homeassistant.components.energyid.WebhookClient",
@@ -306,7 +292,6 @@ async def test_async_update_listeners_with_options(
             "homeassistant.components.energyid.async_track_state_change_event"
         ) as mock_track_event,
     ):
-        # --- End Fix ---
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -346,7 +331,6 @@ async def test_async_update_listeners_invalid_options(
     entry_invalid_opts.add_to_hass(hass)
     mock_webhook_client.device_name = CONTEXT_TEST_DEVICE_NAME
 
-    # --- FIX: Patch where the function is *used* ---
     with (
         patch(
             "homeassistant.components.energyid.WebhookClient",
@@ -356,7 +340,6 @@ async def test_async_update_listeners_invalid_options(
             "homeassistant.components.energyid.async_track_state_change_event"
         ) as mock_track_event,
     ):
-        # --- End Fix ---
         assert await hass.config_entries.async_setup(entry_invalid_opts.entry_id)
         await hass.async_block_till_done()
 
@@ -623,7 +606,6 @@ async def test_async_handle_state_change_timestamp_handling(
     await hass.async_block_till_done()
     mock_webhook_client.update_sensor.reset_mock()
 
-    # Case 1: Timestamp is already UTC
     state_utc = State(TEST_HA_ENTITY_ID, "1.0", last_updated=now_utc)
     _async_handle_state_change(
         hass,
@@ -639,7 +621,6 @@ async def test_async_handle_state_change_timestamp_handling(
     )
     mock_webhook_client.update_sensor.reset_mock()
 
-    # Case 2: Timestamp is naive
     state_naive = State(TEST_HA_ENTITY_ID, "2.0", last_updated=now_naive)
     _async_handle_state_change(
         hass,
@@ -655,7 +636,6 @@ async def test_async_handle_state_change_timestamp_handling(
     )
     mock_webhook_client.update_sensor.reset_mock()
 
-    # Case 3: Timestamp has a non-UTC timezone
     state_local_tz = State(TEST_HA_ENTITY_ID, "3.0", last_updated=now_local_tz)
     _async_handle_state_change(
         hass,
@@ -671,7 +651,6 @@ async def test_async_handle_state_change_timestamp_handling(
     )
     mock_webhook_client.update_sensor.reset_mock()
 
-    # Case 4: Timestamp is not a datetime object
     mock_state_invalid_ts = Mock(spec=State)
     mock_state_invalid_ts.state = "4.0"
     mock_state_invalid_ts.last_updated = "this_is_a_string"
@@ -701,3 +680,70 @@ async def test_async_handle_state_change_timestamp_handling(
             "str",
             TEST_HA_ENTITY_ID,
         )
+
+
+async def test_async_handle_state_change_entry_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test state change handling logs error if config entry is not found."""
+    now = dt.datetime(2023, 1, 1, 12, 0, 0, tzinfo=dt.UTC)
+    freezer.move_to(now)
+    entry_id_to_test = mock_config_entry.entry_id
+
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.energyid.WebhookClient",
+        return_value=mock_webhook_client,
+    ):
+        assert await hass.config_entries.async_setup(entry_id_to_test)
+        await hass.async_block_till_done()
+
+    mock_webhook_client.update_sensor.reset_mock()
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_get_entry", return_value=None
+    ) as mock_get_entry:
+        new_state = State(TEST_HA_ENTITY_ID, "30.0", last_updated=now)
+        event_data = {"entity_id": TEST_HA_ENTITY_ID, "new_state": new_state}
+        mock_event = Event("state_changed", data=event_data)
+
+        _async_handle_state_change(hass, entry_id_to_test, mock_event)
+        await hass.async_block_till_done()
+
+        mock_get_entry.assert_called_once_with(entry_id_to_test)
+
+    assert f"Failed to get config entry for {entry_id_to_test}" in caplog.text
+    mock_webhook_client.update_sensor.assert_not_called()
+
+
+async def test_async_unload_entry_platform_unload_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unload entry logs error if platform unload fails."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.energyid.WebhookClient",
+        return_value=mock_webhook_client,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ) as mock_unload_platforms:
+        unload_result = await hass.config_entries.async_unload(
+            mock_config_entry.entry_id
+        )
+        await hass.async_block_till_done()
+        mock_unload_platforms.assert_called_once()
+
+    assert not unload_result
+    assert f"Failed to unload platforms for {mock_config_entry.entry_id}" in caplog.text
