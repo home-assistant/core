@@ -17,14 +17,13 @@ from tests.common import MockConfigEntry, snapshot_platform
 async def test_sensor_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
 ) -> None:
     """Test sensor state."""
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
 @pytest.mark.parametrize("load_device_file", ["hob.json"])
@@ -33,11 +32,10 @@ async def test_sensor_states(
 async def test_hob_sensor_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: None,
 ) -> None:
     """Test sensor state."""
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
