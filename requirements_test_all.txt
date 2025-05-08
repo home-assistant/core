@@ -198,7 +198,7 @@ aioazuredevops==2.2.1
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-# homeassistant.components.s3
+# homeassistant.components.aws_s3
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
@@ -232,7 +232,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==30.1.0
+aioesphomeapi==30.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -268,7 +268,7 @@ aioimaplib==2.0.1
 aiokafka==0.10.0
 
 # homeassistant.components.rehlko
-aiokem==0.5.9
+aiokem==0.5.10
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
@@ -556,7 +556,7 @@ blinkpy==0.23.0
 bluecurrent-api==1.2.3
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.4.0
+bluemaestro-ble==0.4.1
 
 # homeassistant.components.bluetooth
 bluetooth-adapters==0.21.4
@@ -653,7 +653,7 @@ dbus-fast==2.43.0
 debugpy==1.8.13
 
 # homeassistant.components.ecovacs
-deebot-client==13.0.1
+deebot-client==13.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -667,13 +667,13 @@ deluge-client==1.10.2
 demetriek==1.2.0
 
 # homeassistant.components.denonavr
-denonavr==1.0.1
+denonavr==1.1.0
 
 # homeassistant.components.devialet
 devialet==1.5.7
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.18.3
+devolo-home-control-api==0.19.0
 
 # homeassistant.components.devolo_home_network
 devolo-plc-api==1.5.1
@@ -963,7 +963,7 @@ habiticalib==0.3.7
 habluetooth==3.48.2
 
 # homeassistant.components.cloud
-hass-nabucasa==0.96.0
+hass-nabucasa==0.100.0
 
 # homeassistant.components.conversation
 hassil==2.2.3
@@ -991,13 +991,13 @@ hole==0.8.0
 holidays==0.70
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250502.0
+home-assistant-frontend==20250507.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.4.30
+home-assistant-intents==2025.5.7
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.1
+homematicip==2.0.1.1
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1021,7 +1021,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.1.0
+ical==9.2.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1260,7 +1260,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==4.1.0
 
 # homeassistant.components.nexia
-nexia==2.7.0
+nexia==2.10.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1708,7 +1708,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.0b7
+pylamarzocco==2.0.0
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1747,7 +1747,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.4.1
+pymiele==0.4.3
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -1899,7 +1899,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.0
+pysmartthings==3.2.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2017,7 +2017,7 @@ python-picnic-api2==1.2.4
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.16.1
+python-roborock==2.18.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
@@ -2138,7 +2138,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.3.0
+renault-api==0.3.1
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2404,7 +2404,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.5.5
+uiprotect==7.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2430,7 +2430,7 @@ url-normalize==2.2.1
 uvcclient==0.12.1
 
 # homeassistant.components.roborock
-vacuum-map-parser-roborock==0.1.2
+vacuum-map-parser-roborock==0.1.4
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.3.0
@@ -2448,7 +2448,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.5.0
 
 # homeassistant.components.voip
-voip-utils==0.3.1
+voip-utils==0.3.2
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
@@ -2485,7 +2485,7 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.3.7
+weheat==2025.4.29
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.20.0
@@ -2509,7 +2509,7 @@ wyoming==1.5.4
 xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.37.0
+xiaomi-ble==0.38.0
 
 # homeassistant.components.knx
 xknx==3.6.0
@@ -2553,6 +2553,9 @@ yt-dlp[default]==2025.03.31
 
 # homeassistant.components.zamg
 zamg==0.3.6
+
+# homeassistant.components.zimi
+zcc-helper==3.5
 
 # homeassistant.components.zeroconf
 zeroconf==0.147.0

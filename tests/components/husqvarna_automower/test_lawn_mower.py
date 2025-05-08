@@ -32,6 +32,11 @@ from tests.common import MockConfigEntry, async_fire_time_changed
             MowerStates.IN_OPERATION,
             LawnMowerActivity.RETURNING,
         ),
+        (
+            MowerActivities.NOT_APPLICABLE,
+            MowerStates.IN_OPERATION,
+            LawnMowerActivity.MOWING,
+        ),
     ],
 )
 async def test_lawn_mower_states(
