@@ -35,7 +35,7 @@ from .const import (
     SERVICE_GET_PACKAGES,
 )
 
-SERVICE_ADD_PACKAGES_SCHEMA: Final = vol.Schema(
+SERVICE_GET_PACKAGES_SCHEMA: Final = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_PACKAGE_STATE): selector.SelectSelector(
@@ -138,7 +138,7 @@ def setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_GET_PACKAGES,
         get_packages,
-        schema=SERVICE_ADD_PACKAGES_SCHEMA,
+        schema=SERVICE_GET_PACKAGES_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
 
