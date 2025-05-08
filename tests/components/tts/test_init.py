@@ -1,6 +1,7 @@
 """The tests for the TTS component."""
 
 import asyncio
+from collections.abc import Callable
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
@@ -48,7 +49,7 @@ ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 async def test_config_entry_unload(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_tts_entity: MockTTSEntity,
+    mock_tts_entity: Callable[[], MockTTSEntity],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we can unload config entry."""
@@ -56,7 +57,7 @@ async def test_config_entry_unload(
     state = hass.states.get(entity_id)
     assert state is None
 
-    config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
+    config_entry = await mock_config_entry_setup(hass, mock_tts_entity())
     assert config_entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state is not None
@@ -178,7 +179,7 @@ async def test_service(
 
 @pytest.mark.parametrize(
     ("mock_provider", "mock_tts_entity"),
-    [(MockTTSProvider("de_DE"), MockTTSEntity("de_DE"))],
+    [(lambda: MockTTSProvider("de_DE"), lambda: MockTTSEntity("de_DE"))],
 )
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data", "expected_url_suffix"),
@@ -242,7 +243,7 @@ async def test_service_default_language(
 
 @pytest.mark.parametrize(
     ("mock_provider", "mock_tts_entity"),
-    [(MockTTSProvider("en_US"), MockTTSEntity("en_US"))],
+    [(lambda: MockTTSProvider("en_US"), lambda: MockTTSEntity("en_US"))],
 )
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data", "expected_url_suffix"),
@@ -498,7 +499,12 @@ class MockEntityWithDefaults(MockTTSEntity):
 
 @pytest.mark.parametrize(
     ("mock_provider", "mock_tts_entity"),
-    [(MockProviderWithDefaults(DEFAULT_LANG), MockEntityWithDefaults(DEFAULT_LANG))],
+    [
+        (
+            lambda: MockProviderWithDefaults(DEFAULT_LANG),
+            lambda: MockEntityWithDefaults(DEFAULT_LANG),
+        )
+    ],
 )
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data", "expected_url_suffix"),
@@ -567,7 +573,12 @@ async def test_service_default_options(
 
 @pytest.mark.parametrize(
     ("mock_provider", "mock_tts_entity"),
-    [(MockProviderWithDefaults(DEFAULT_LANG), MockEntityWithDefaults(DEFAULT_LANG))],
+    [
+        (
+            lambda: MockProviderWithDefaults(DEFAULT_LANG),
+            lambda: MockEntityWithDefaults(DEFAULT_LANG),
+        )
+    ],
 )
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data", "expected_url_suffix"),
@@ -830,7 +841,7 @@ async def test_service_receive_voice(
 
 @pytest.mark.parametrize(
     ("mock_provider", "mock_tts_entity"),
-    [(MockTTSProvider("de_DE"), MockTTSEntity("de_DE"))],
+    [(lambda: MockTTSProvider("de_DE"), lambda: MockTTSEntity("de_DE"))],
 )
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data", "expected_url_suffix"),
@@ -1013,11 +1024,11 @@ class MockEntityBoom(MockTTSEntity):
         raise Exception("Boom!")  # noqa: TRY002
 
 
-@pytest.mark.parametrize("mock_provider", [MockProviderBoom(DEFAULT_LANG)])
+@pytest.mark.parametrize("mock_provider", [lambda: MockProviderBoom(DEFAULT_LANG)])
 async def test_setup_legacy_cache_dir(
     hass: HomeAssistant,
     mock_tts_cache_dir: Path,
-    mock_provider: MockTTSProvider,
+    mock_provider: Callable[[], MockTTSProvider],
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
@@ -1028,7 +1039,7 @@ async def test_setup_legacy_cache_dir(
     )
 
     await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
-    await mock_setup(hass, mock_provider)
+    await mock_setup(hass, mock_provider())
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -1051,11 +1062,11 @@ async def test_setup_legacy_cache_dir(
         await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("mock_tts_entity", [MockEntityBoom(DEFAULT_LANG)])
+@pytest.mark.parametrize("mock_tts_entity", [lambda: MockEntityBoom(DEFAULT_LANG)])
 async def test_setup_cache_dir(
     hass: HomeAssistant,
     mock_tts_cache_dir: Path,
-    mock_tts_entity: MockTTSEntity,
+    mock_tts_entity: Callable[[], MockTTSEntity],
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
@@ -1066,7 +1077,7 @@ async def test_setup_cache_dir(
     )
 
     await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
-    await mock_config_entry_setup(hass, mock_tts_entity)
+    await mock_config_entry_setup(hass, mock_tts_entity())
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -1111,7 +1122,7 @@ class MockEntityEmpty(MockTTSEntity):
 
 @pytest.mark.parametrize(
     ("mock_provider", "mock_tts_entity"),
-    [(MockProviderEmpty(DEFAULT_LANG), MockEntityEmpty(DEFAULT_LANG))],
+    [(lambda: MockProviderEmpty(DEFAULT_LANG), lambda: MockEntityEmpty(DEFAULT_LANG))],
 )
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data"),
@@ -1161,7 +1172,7 @@ async def test_service_get_tts_error(
 
 async def test_legacy_cannot_retrieve_without_token(
     hass: HomeAssistant,
-    mock_provider: MockTTSProvider,
+    mock_provider: Callable[[], MockTTSProvider],
     mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
@@ -1172,7 +1183,7 @@ async def test_legacy_cannot_retrieve_without_token(
     )
 
     await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
-    await mock_setup(hass, mock_provider)
+    await mock_setup(hass, mock_provider())
 
     client = await hass_client()
 
@@ -1184,7 +1195,7 @@ async def test_legacy_cannot_retrieve_without_token(
 
 async def test_cannot_retrieve_without_token(
     hass: HomeAssistant,
-    mock_tts_entity: MockTTSEntity,
+    mock_tts_entity: Callable[[], MockTTSEntity],
     mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
@@ -1195,7 +1206,7 @@ async def test_cannot_retrieve_without_token(
     )
 
     await hass.async_add_executor_job(Path(cache_file).write_bytes, tts_data)
-    await mock_config_entry_setup(hass, mock_tts_entity)
+    await mock_config_entry_setup(hass, mock_tts_entity())
 
     client = await hass_client()
 
@@ -1651,7 +1662,7 @@ async def test_ws_list_engines(
 async def test_ws_list_engines_deprecated(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_tts_entity: MockTTSEntity,
+    mock_tts_entity: Callable[[], MockTTSEntity],
 ) -> None:
     """Test listing tts engines.
 
@@ -1668,7 +1679,7 @@ async def test_ws_list_engines_deprecated(
     await async_setup_component(
         hass, "tts", {"tts": [{"platform": "test"}, {"platform": "test_2"}]}
     )
-    await mock_config_entry_setup(hass, mock_tts_entity)
+    await mock_config_entry_setup(hass, mock_tts_entity())
 
     client = await hass_ws_client()
 
@@ -1822,18 +1833,19 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
 
 async def test_default_engine_prefer_entity(
     hass: HomeAssistant,
-    mock_tts_entity: MockTTSEntity,
-    mock_provider: MockTTSProvider,
+    mock_tts_entity: Callable[[], MockTTSEntity],
+    mock_provider: Callable[[], MockTTSProvider],
 ) -> None:
     """Test async_default_engine.
 
     In this tests there's an entity and a legacy provider.
     The test asserts async_default_engine returns the entity.
     """
-    mock_tts_entity._attr_name = "New test"
+    tts_entity = mock_tts_entity()
+    tts_entity._attr_name = "New test"
 
-    await mock_setup(hass, mock_provider)
-    await mock_config_entry_setup(hass, mock_tts_entity)
+    await mock_setup(hass, mock_provider())
+    await mock_config_entry_setup(hass, tts_entity)
     await hass.async_block_till_done()
 
     entity_engine = tts.async_resolve_engine(hass, "tts.new_test")
@@ -1854,7 +1866,7 @@ async def test_default_engine_prefer_entity(
 )
 async def test_default_engine_prefer_cloud_entity(
     hass: HomeAssistant,
-    mock_provider: MockTTSProvider,
+    mock_provider: Callable[[], MockTTSProvider],
     config_flow_test_domains: str,
 ) -> None:
     """Test async_default_engine.
@@ -1863,7 +1875,7 @@ async def test_default_engine_prefer_cloud_entity(
     and a legacy provider.
     The test asserts async_default_engine returns the entity from domain cloud.
     """
-    await mock_setup(hass, mock_provider)
+    await mock_setup(hass, mock_provider())
     for domain in config_flow_test_domains:
         entity = MockTTSEntity(DEFAULT_LANG)
         entity._attr_name = f"{domain} TTS entity"
@@ -1878,13 +1890,16 @@ async def test_default_engine_prefer_cloud_entity(
     assert tts.async_default_engine(hass) == "tts.cloud_tts_entity"
 
 
-async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> None:
+async def test_stream(
+    hass: HomeAssistant, mock_tts_entity: Callable[[], MockTTSEntity]
+) -> None:
     """Test creating streams."""
-    await mock_config_entry_setup(hass, mock_tts_entity)
+    tts_entity = mock_tts_entity()
+    await mock_config_entry_setup(hass, tts_entity)
 
-    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
-    assert stream.language == mock_tts_entity.default_language
-    assert stream.options == (mock_tts_entity.default_options or {})
+    stream = tts.async_create_stream(hass, tts_entity.entity_id)
+    assert stream.language == tts_entity.default_language
+    assert stream.options == (tts_entity.default_options or {})
     assert tts.async_get_stream(hass, stream.token) is stream
     stream.async_set_message("beer")
     result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
@@ -1904,7 +1919,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
             data_gen=gen_data(),
         )
 
-    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    tts_entity.async_stream_tts_audio = async_stream_tts_audio
 
     async def stream_message():
         """Mock stream message."""
@@ -1912,7 +1927,7 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
         yield "ll"
         yield "o"
 
-    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream = tts.async_create_stream(hass, tts_entity.entity_id)
     stream.async_set_message_stream(stream_message())
     result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
     assert result_data == b"hello"

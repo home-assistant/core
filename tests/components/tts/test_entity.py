@@ -1,5 +1,7 @@
 """Tests for the TTS entity."""
 
+from collections.abc import Callable
+
 import pytest
 
 from homeassistant.components import tts
@@ -38,14 +40,14 @@ async def test_default_entity_attributes() -> None:
 
 async def test_restore_state(
     hass: HomeAssistant,
-    mock_tts_entity: MockTTSEntity,
+    mock_tts_entity: Callable[[], MockTTSEntity],
 ) -> None:
     """Test we restore state in the integration."""
     entity_id = f"{tts.DOMAIN}.{TEST_DOMAIN}"
     timestamp = "2023-01-01T23:59:59+00:00"
     mock_restore_cache(hass, (State(entity_id, timestamp),))
 
-    config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
+    config_entry = await mock_config_entry_setup(hass, mock_tts_entity())
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED

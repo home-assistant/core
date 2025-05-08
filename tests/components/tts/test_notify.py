@@ -1,5 +1,6 @@
 """The tests for the TTS component."""
 
+from collections.abc import Callable
 from unittest.mock import patch
 
 import pytest
@@ -127,7 +128,7 @@ async def test_setup_legacy_service(hass: HomeAssistant) -> None:
 
 
 async def test_setup_service(
-    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+    hass: HomeAssistant, mock_tts_entity: Callable[[], MockTTSEntity]
 ) -> None:
     """Set up platform and call service."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
@@ -142,7 +143,7 @@ async def test_setup_service(
         },
     }
 
-    await mock_config_entry_setup(hass, mock_tts_entity)
+    await mock_config_entry_setup(hass, mock_tts_entity())
 
     with assert_setup_component(1, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)

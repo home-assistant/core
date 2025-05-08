@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
@@ -207,7 +207,7 @@ class MockTTS(MockPlatform):
 
 async def mock_setup(
     hass: HomeAssistant,
-    mock_provider: MockTTSProvider,
+    mock_provider: Callable[[], MockTTSProvider],
 ) -> None:
     """Set up a test provider."""
     mock_integration(hass, MockModule(domain=TEST_DOMAIN))

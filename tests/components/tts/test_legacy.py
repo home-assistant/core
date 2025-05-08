@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -77,7 +78,7 @@ async def test_invalid_platform(
 async def test_platform_setup_without_provider(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_provider: MockTTSProvider,
+    mock_provider: Callable[[], MockTTSProvider],
 ) -> None:
     """Test platform setup without provider returned."""
 
@@ -94,7 +95,7 @@ async def test_platform_setup_without_provider(
             return None
 
     mock_integration(hass, MockModule(domain="bad_tts"))
-    mock_platform(hass, "bad_tts.tts", BadPlatform(mock_provider))
+    mock_platform(hass, "bad_tts.tts", BadPlatform(mock_provider()))
 
     await async_load_platform(
         hass,
@@ -111,7 +112,7 @@ async def test_platform_setup_without_provider(
 async def test_platform_setup_with_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_provider: MockTTSProvider,
+    mock_provider: Callable[[], MockTTSProvider],
 ) -> None:
     """Test platform setup with an error during setup."""
 
@@ -128,7 +129,7 @@ async def test_platform_setup_with_error(
             raise Exception("Setup error")  # noqa: TRY002
 
     mock_integration(hass, MockModule(domain="bad_tts"))
-    mock_platform(hass, "bad_tts.tts", BadPlatform(mock_provider))
+    mock_platform(hass, "bad_tts.tts", BadPlatform(mock_provider()))
 
     await async_load_platform(
         hass,
