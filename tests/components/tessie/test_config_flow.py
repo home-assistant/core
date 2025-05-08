@@ -11,11 +11,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .common import (
-    ERROR_AUTH,
-    ERROR_CONNECTION,
-    ERROR_UNKNOWN,
     TEST_CONFIG,
     TEST_STATE_OF_ALL_VEHICLES,
+    error_auth,
+    error_connection,
+    error_unknown,
 )
 
 from tests.common import MockConfigEntry
@@ -97,9 +97,9 @@ async def test_abort(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (ERROR_AUTH, {CONF_ACCESS_TOKEN: "invalid_access_token"}),
-        (ERROR_UNKNOWN, {"base": "unknown"}),
-        (ERROR_CONNECTION, {"base": "cannot_connect"}),
+        (error_auth(), {CONF_ACCESS_TOKEN: "invalid_access_token"}),
+        (error_unknown(), {"base": "unknown"}),
+        (error_connection(), {"base": "cannot_connect"}),
     ],
 )
 async def test_form_errors(
@@ -165,9 +165,9 @@ async def test_reauth(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (ERROR_AUTH, {CONF_ACCESS_TOKEN: "invalid_access_token"}),
-        (ERROR_UNKNOWN, {"base": "unknown"}),
-        (ERROR_CONNECTION, {"base": "cannot_connect"}),
+        (error_auth(), {CONF_ACCESS_TOKEN: "invalid_access_token"}),
+        (error_unknown(), {"base": "unknown"}),
+        (error_connection(), {"base": "cannot_connect"}),
     ],
 )
 async def test_reauth_errors(

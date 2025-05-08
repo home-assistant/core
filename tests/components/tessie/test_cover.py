@@ -17,10 +17,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
-    ERROR_UNKNOWN,
     TEST_RESPONSE,
     TEST_RESPONSE_ERROR,
     assert_entities,
+    error_unknown,
     setup_platform,
 )
 
@@ -81,10 +81,11 @@ async def test_errors(hass: HomeAssistant) -> None:
     entity_id = "cover.test_charge_port_door"
 
     # Test setting cover open with unknown error
+    exc = error_unknown()
     with (
         patch(
             "homeassistant.components.tessie.cover.open_unlock_charge_port",
-            side_effect=ERROR_UNKNOWN,
+            side_effect=exc,
         ) as mock_set,
         pytest.raises(HomeAssistantError) as error,
     ):
@@ -95,7 +96,7 @@ async def test_errors(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_set.assert_called_once()
-    assert error.value.__cause__ == ERROR_UNKNOWN
+    assert error.value.__cause__ == exc
 
     # Test setting cover open with unknown error
     with (
