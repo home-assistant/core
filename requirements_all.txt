@@ -69,9 +69,6 @@ PyMetno==0.13.0
 # homeassistant.components.keymitt_ble
 PyMicroBot==0.0.17
 
-# homeassistant.components.nina
-PyNINA==0.3.5
-
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
 PyNaCl==1.5.0
@@ -2163,6 +2160,9 @@ pynetgear==0.10.10
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
+
+# homeassistant.components.nina
+pynina==0.3.6
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
