@@ -192,7 +192,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 hw_version=self._host.api.camera_hardware_version(dev_ch),
                 sw_version=self._host.api.camera_sw_version(dev_ch),
                 serial_number=self._host.api.camera_uid(dev_ch),
-                configuration_url=self._conf_url,
+                configuration_url=f"{self._conf_url}/?ch={dev_ch}",
             )
 
     @property

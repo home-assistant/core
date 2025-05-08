@@ -97,6 +97,7 @@ async def integration_fixture(
         "leak_sensor",
         "light_sensor",
         "microwave_oven",
+        "mounted_dimmable_load_control_fixture",
         "multi_endpoint_light",
         "occupancy_sensor",
         "on_off_plugin_unit",
