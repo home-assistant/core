@@ -181,6 +181,22 @@
           "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]"
         }
       },
+      "manual_level": {
+        "name": "Burner {burner_id} level"
+      },
+      "heating_mode": {
+        "name": "Burner {burner_id} heating mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "manual": "[%key:common::state::manual%]",
+          "boost": "Boost",
+          "keep_warm": "Keep warm",
+          "quick_preheat": "Quick preheat",
+          "defrost": "Defrost",
+          "melt": "Melt",
+          "simmer": "Simmer"
+        }
+      },
       "dishwasher_machine_state": {
         "name": "Machine state",
         "state": {
