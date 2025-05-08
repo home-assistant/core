@@ -27,6 +27,7 @@ from .const import (
     DESCRIPTION_AWS_S3_DOCS_URL,
     DESCRIPTION_BOTO3_DOCS_URL,
     DOMAIN,
+    R2_DOMAIN,
 )
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -61,7 +62,7 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not urlparse(user_input[CONF_ENDPOINT_URL]).hostname.endswith(
-                AWS_DOMAIN
+                (AWS_DOMAIN, R2_DOMAIN)
             ):
                 errors[CONF_ENDPOINT_URL] = "invalid_endpoint_url"
             else:
