@@ -818,7 +818,7 @@ fnv-hash-fast==1.5.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==4.1.0
+forecast-solar==4.2.0
 
 # homeassistant.components.freebox
 freebox-api==1.2.2
