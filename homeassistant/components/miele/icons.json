@@ -32,6 +32,9 @@
       "core_target_temperature": {
         "default": "mdi:thermometer-probe"
       },
+      "target_temperature": {
+        "default": "mdi:thermometer-check"
+      },
       "program_id": {
         "default": "mdi:selection-ellipse-arrow-inside"
       },
