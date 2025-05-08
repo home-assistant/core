@@ -31,7 +31,6 @@ ciso8601==2.3.2
 cronsim==2.6
 cryptography==45.0.3
 dbus-fast==2.43.0
-energyid-webhooks>=0.0.14
 fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
