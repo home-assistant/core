@@ -27,22 +27,48 @@
         "data_description": {
           "device_name": "This friendly name identifies this Home Assistant connection in your EnergyID portal's webhook list."
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure EnergyID Connection",
+        "description": "Update your EnergyID provisioning credentials or the device name used for this connection.",
+        "data": {
+          "provisioning_key": "[%key:component::energyid::config::step::user::data::provisioning_key%]",
+          "provisioning_secret": "[%key:component::energyid::config::step::user::data::provisioning_secret%]",
+          "device_name": "[%key:component::energyid::config::step::finalize::data::device_name%]"
+        },
+        "data_description": {
+          "provisioning_key": "[%key:component::energyid::config::step::user::data_description::provisioning_key%]",
+          "provisioning_secret": "[%key:component::energyid::config::step::user::data_description::provisioning_secret%]",
+          "device_name": "[%key:component::energyid::config::step::finalize::data_description::device_name%]"
+        }
       }
     },
     "error": {
-      "cannot_retrieve_claim_info_format": "Could not retrieve valid device claim information from EnergyID in the expected format. Please check credentials and try again.",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown_auth_error": "An unexpected error occurred during authentication with EnergyID. Please check logs.",
-      "missing_record_number": "Authenticated, but EnergyID did not provide a site identifier (Record Number). Setup cannot continue.",
-      "claim_failed_or_timed_out": "Device claiming failed or the code may have expired. Please ensure you've claimed it correctly in EnergyID and try submitting again. The claim details below might have updated if the code expired.",
-      "cannot_retrieve_claim_info": "Could not retrieve valid device claim information from EnergyID. Please check credentials and try again.",
-      "missing_credentials": "Internal error: provisioning credentials missing.",
-      "internal_flow_data_missing": "Internal error: Required data for this step is missing. Please restart the setup."
+      "None": "Unknown error occurred during authentication.",
+      "needs_claim": "This device needs to be claimed in EnergyID before continuing.",
+      "missing_record_number": "Authentication succeeded but no record number was returned.",
+      "cannot_connect": "Failed to connect to EnergyID API.",
+      "unknown_auth_error": "Unexpected error occurred during authentication.",
+      "cannot_retrieve_claim_info": "Could not retrieve claim information from EnergyID.",
+      "cannot_retrieve_claim_info_format": "Invalid claim information format received from EnergyID.",
+      "claim_failed_or_timed_out": "Claiming the device failed or the code expired.",
+      "missing_credentials": "Provisioning credentials are missing.",
+      "internal_flow_data_missing": "Configuration data is incomplete. Please restart setup.",
+      "wrong_account": "The credentials belong to a different EnergyID account."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "internal_error_no_claim_info": "Internal error: Claim information was unexpectedly missing. Cannot proceed."
+      "already_configured": "This EnergyID site is already configured.",
+      "reauth_successful": "Re-authentication was successful.",
+      "reconfigure_successful": "Reconfiguration was successful.",
+      "reconfigure_wrong_account": "Reconfiguration failed: The credentials belong to a different site.",
+      "reconfigure_reclaim_needed": "Reconfiguration failed: Device needs to be reclaimed.",
+      "internal_error_no_claim_info": "Internal error: Claim information is missing.",
+      "no_mappings_to_manage": "No mappings are configured yet to manage.",
+      "no_mapping_selected": "No mapping was selected.",
+      "mapping_not_found": "Selected mapping was not found.",
+      "menu_render_error": "Failed to display menu.",
+      "unknown_error": "An unexpected error occurred.",
+      "internal_flow_data_missing": "Internal error: Required data for this step is missing. Please restart the setup."
     }
   },
   "options": {
@@ -115,6 +141,11 @@
       "no_mapping_selected": "No mapping was selected.",
       "mapping_not_found": "The selected mapping could not be found or was removed.",
       "menu_render_error": "Failed to display the management menu. Please try again."
+    }
+  },
+  "exceptions": {
+    "auth_failed_on_setup": {
+      "message": "Failed to authenticate with EnergyID for device {device_name}. Setup will be retried. Details: {error_details}"
     }
   }
 }
