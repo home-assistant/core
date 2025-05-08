@@ -675,7 +675,7 @@ async def websocket_node_alerts(
         return
 
     comments = node.device_config.metadata.comments
-    if not node.in_interview:
+    if node.in_interview:
         comments.append(
             {
                 "level": "warning",
