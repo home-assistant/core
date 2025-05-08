@@ -7,7 +7,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -21,7 +21,6 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from . import EnergyIDConfigEntry
 from .const import CONF_ENERGYID_KEY, CONF_HA_ENTITY_ID, DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +79,6 @@ SUGGESTED_DEVICE_CLASSES = {
     SensorDeviceClass.WIND_SPEED,
 }
 
-# Define numeric state classes for sensors
 NUMERIC_SENSOR_STATE_CLASSES = {
     SensorStateClass.MEASUREMENT,
     SensorStateClass.TOTAL,
@@ -92,7 +90,7 @@ NUMERIC_SENSOR_STATE_CLASSES = {
 def _get_suggested_entities(
     hass: HomeAssistant, current_mappings: dict[str, Any]
 ) -> list[str]:
-    """Return entity IDs of suitable sensors, excluding already mapped ones."""
+    """Return entity IDs of suitable sensors, excluding already mapped ones and those from the same integration."""
     ent_reg = er.async_get(hass)
     mapped_entity_ids = {
         data.get(CONF_HA_ENTITY_ID)
@@ -102,9 +100,11 @@ def _get_suggested_entities(
 
     suitable_entities: list[str] = []
     for entity_entry in ent_reg.entities.values():
+        # Basic filtering
         if not (
             entity_entry.domain == Platform.SENSOR
             and entity_entry.entity_id not in mapped_entity_ids
+            and entity_entry.platform != DOMAIN
         ):
             continue
 
@@ -119,36 +119,31 @@ def _get_suggested_entities(
             is_likely_numeric_by_property = True
 
         current_state = hass.states.get(entity_entry.entity_id)
+        # Decision logic based on current state availability and value
         if current_state and current_state.state not in (
             STATE_UNKNOWN,
             STATE_UNAVAILABLE,
         ):
             try:
                 float(current_state.state)
+                # State is actively numeric, definitely include
                 if entity_entry.entity_id not in suitable_entities:
                     suitable_entities.append(entity_entry.entity_id)
-                continue
             except (ValueError, TypeError):
+                # State is actively NON-numeric, definitely exclude
                 _LOGGER.debug(
-                    "Skipping entity %s for suggestion: current state '%s' is non-numeric, despite properties",
+                    "Excluding entity %s: current state '%s' is non-numeric",
                     entity_entry.entity_id,
                     current_state.state,
                 )
                 continue
+        elif is_likely_numeric_by_property:
+            # State is Unknown/Unavailable/None, but properties suggest numeric
+            if entity_entry.entity_id not in suitable_entities:
+                suitable_entities.append(entity_entry.entity_id)
 
-        # If current state is unknown/unavailable, rely on properties
-        if (
-            is_likely_numeric_by_property
-            and entity_entry.entity_id not in suitable_entities
-        ):
-            suitable_entities.append(entity_entry.entity_id)
-        else:
-            _LOGGER.debug(
-                "Skipping entity %s for suggestion: current state is %s, and properties are not conclusively numeric",
-                entity_entry.entity_id,
-                current_state.state if current_state else "None",
-            )
-    return sorted(suitable_entities)
+    # Use set to handle potential duplicates if logic were complex, then sort
+    return sorted(set(suitable_entities))
 
 
 @callback
@@ -157,6 +152,12 @@ def _suggest_energyid_key(entity_id: str | None) -> str:
     if not entity_id:
         return ""
     entity_id_lower = entity_id.lower()
+    if "battery" in entity_id_lower and (
+        "level" in entity_id_lower or "soc" in entity_id_lower
+    ):
+        return "bat-soc"
+    if "battery" in entity_id_lower:
+        return "bat"
     if (
         "electricity" in entity_id_lower
         or "energy" in entity_id_lower
@@ -169,10 +170,6 @@ def _suggest_energyid_key(entity_id: str | None) -> str:
         return "gas"
     if "power" in entity_id_lower and "solar" not in entity_id_lower:
         return "pwr"
-    if "battery" in entity_id_lower and "level" in entity_id_lower:
-        return "bat-soc"
-    if "battery" in entity_id_lower:
-        return "bat"
     if "water" in entity_id_lower:
         return "dw"
     if "temperature" in entity_id_lower:
@@ -197,11 +194,7 @@ def _create_mapping_option(
 def _validate_mapping_input(
     ha_entity_id: str | None, energyid_key: str, current_mappings: dict[str, Any]
 ) -> dict[str, str]:
-    """Validate entity mapping input and return any validation errors.
-
-    Checks that entity ID is provided, key is not empty, has no spaces,
-    and entity isn't already mapped.
-    """
+    """Validate entity mapping input and return any validation errors."""
     errors: dict[str, str] = {}
     if not ha_entity_id:
         errors[CONF_HA_ENTITY_ID] = "entity_required"
@@ -218,40 +211,26 @@ async def _send_initial_state(
     hass: HomeAssistant,
     ha_entity_id: str,
     energyid_key: str,
-    config_entry: EnergyIDConfigEntry,
+    config_entry: ConfigEntry,
 ) -> None:
     """Send the initial state of the entity to the EnergyID client."""
     entry_data = hass.data.get(DOMAIN, {}).get(config_entry.entry_id)
     if not entry_data:
         raise ValueError(
-            f"Integration data not found in hass.data for entry {config_entry.entry_id}"
+            f"Integration data not found for entry {config_entry.entry_id}"
         )
 
     client = entry_data.get(DATA_CLIENT)
     if not client:
-        raise ValueError(
-            f"Webhook client not found in hass.data for entry {config_entry.entry_id}"
-        )
-
+        raise ValueError(f"Webhook client not found for entry {config_entry.entry_id}")
     current_state = hass.states.get(ha_entity_id)
-    if current_state and current_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-        try:
-            value = float(current_state.state)
-            timestamp = current_state.last_updated
-            # Ensure timestamp is a timezone-aware UTC datetime object
-            if timestamp.tzinfo is None:
-                timestamp = timestamp.replace(tzinfo=dt.UTC)
-            elif timestamp.tzinfo != dt.UTC:
-                timestamp = timestamp.astimezone(dt.UTC)
 
-            await client.update_sensor(energyid_key, value, timestamp)
-            _LOGGER.info(
-                "Added new mapping: %s → %s. Queued initial state for send (Value: %s, Timestamp: %s)",
-                ha_entity_id,
-                energyid_key,
-                value,
-                timestamp.isoformat(),
-            )
+    if current_state and current_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+        value_float: float | None = None
+        timestamp_utc: dt.datetime | None = None
+
+        try:
+            value_float = float(current_state.state)
         except (ValueError, TypeError):
             _LOGGER.warning(
                 "Added new mapping: %s → %s, but initial send failed: Cannot convert current state '%s' to float",
@@ -259,20 +238,62 @@ async def _send_initial_state(
                 energyid_key,
                 current_state.state,
             )
+            return
+
+        timestamp = current_state.last_updated
+        if not isinstance(timestamp, dt.datetime):
+            _LOGGER.warning(  # type: ignore[unreachable]
+                "Invalid timestamp type for %s, using current time", ha_entity_id
+            )
+            timestamp_utc = dt.datetime.now(dt.UTC)
+        elif timestamp.tzinfo is None:
+            timestamp_utc = timestamp.replace(tzinfo=dt.UTC)
+        elif timestamp.tzinfo != dt.UTC:
+            timestamp_utc = timestamp.astimezone(dt.UTC)
+        else:  # Already timezone-aware UTC
+            timestamp_utc = timestamp
+
+        # --- Step 3: Attempt to send ---
+        try:
+            # Ensure values are not None before calling client
+            if value_float is not None and timestamp_utc is not None:
+                await client.update_sensor(energyid_key, value_float, timestamp_utc)
+                _LOGGER.info(
+                    "Added new mapping: %s → %s. Queued initial state for send (Value: %s, Timestamp: %s)",
+                    ha_entity_id,
+                    energyid_key,
+                    value_float,
+                    timestamp_utc.isoformat(),
+                )
+            else:
+                _LOGGER.error(  # type: ignore[unreachable]
+                    "Internal error preparing initial state for %s: value or timestamp invalid",
+                    ha_entity_id,
+                )
+
+        except Exception:
+            _LOGGER.exception(
+                "Added new mapping: %s → %s, but initial send failed",
+                ha_entity_id,
+                energyid_key,
+            )
+
     else:
         _LOGGER.warning(
-            "Added new mapping: %s → %s, but initial send failed: Current state is unknown, unavailable, or entity not found. State: %s",
+            "Added new mapping: %s → %s, but initial send failed: Current state is %s",
             ha_entity_id,
             energyid_key,
-            current_state.state if current_state else "None",
+            current_state.state if current_state else "None (entity not found)",
         )
 
 
 class EnergyIDSubentryFlowHandler(OptionsFlow):
     """Handle EnergyID options flow for managing entity mappings."""
 
-    _current_ha_entity_id: str | None = None
-    config_entry: EnergyIDConfigEntry
+    def __init__(self) -> None:
+        """Initialize the options flow handler."""
+        super().__init__()
+        self._current_ha_entity_id: str | None = None
 
     @callback
     def _get_current_mappings(self) -> dict[str, dict[str, str]]:
