@@ -1,8 +1,7 @@
 """Define a data update coordinator for Point."""
 
 from collections.abc import Callable
-from datetime import datetime
-from datetime.datetime import fromtimestamp
+from datetime import datetime as dt
 import logging
 from typing import Any
 
@@ -29,7 +28,7 @@ class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             update_interval=SCAN_INTERVAL,
         )
         self.point = point
-        self.device_updates: dict[str, datetime] = {}
+        self.device_updates: dict[str, dt] = {}
         self._known_devices: set[str] = set()
         self._known_homes: set[str] = set()
         self.new_home_callback: Callable[[str], None] | None = None
@@ -62,7 +61,9 @@ class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
                 or device.device_id not in self.device_updates
                 or self.device_updates[device.device_id] < last_updated
             ):
-                self.device_updates[device.device_id] = last_updated or fromtimestamp(0)
+                self.device_updates[device.device_id] = (
+                    last_updated or dt.fromtimestamp(0)
+                )
                 self.data[device.device_id] = {
                     k: await device.sensor(k)
                     for k in ("temperature", "humidity", "sound_pressure")
