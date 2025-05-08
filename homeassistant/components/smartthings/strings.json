@@ -172,6 +172,15 @@
           "tested": "Tested"
         }
       },
+      "cooktop_operating_state": {
+        "name": "Operating state",
+        "state": {
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
+          "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "paused": "[%key:common::state::paused%]",
+          "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]"
+        }
+      },
       "dishwasher_machine_state": {
         "name": "Machine state",
         "state": {

@@ -48,6 +48,17 @@
         "default": "mdi:car-coolant-level"
       }
     },
+    "sensor": {
+      "cooktop_operating_state": {
+        "default": "mdi:stove",
+        "state": {
+          "ready": "mdi:play-speed",
+          "run": "mdi:play",
+          "paused": "mdi:pause",
+          "finished": "mdi:food-turkey"
+        }
+      }
+    },
     "switch": {
       "bubble_soak": {
         "default": "mdi:water-off",
