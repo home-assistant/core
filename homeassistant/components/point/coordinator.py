@@ -2,11 +2,11 @@
 
 from collections.abc import Callable
 from datetime import datetime
+from datetime.datetime import fromtimestamp
 import logging
 from typing import Any
 
 from pypoint import PointSession
-from tempora.utc import fromtimestamp
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
