@@ -378,9 +378,13 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
     ),
     MieleSensorDefinition(
         types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
             MieleAppliance.OVEN,
             MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN_MICRO,
             MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MK2,
         ),
         description=MieleSensorDescription(
             key="state_core_target_temperature",
