@@ -11,6 +11,7 @@ from homeassistant.components.homekit.accessories import (
     HomeAccessory,
     HomeBridge,
     HomeDriver,
+    LinkedEntityStateTracking,
 )
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
@@ -24,6 +25,7 @@ from homeassistant.components.homekit.const import (
     CHAR_MANUFACTURER,
     CHAR_MODEL,
     CHAR_NAME,
+    CHAR_ON,
     CHAR_SERIAL_NUMBER,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
@@ -31,6 +33,7 @@ from homeassistant.components.homekit.const import (
     EMPTY_MAC,
     MANUFACTURER,
     SERV_ACCESSORY_INFO,
+    SERV_SWITCH,
 )
 from homeassistant.components.homekit.util import format_version
 from homeassistant.const import (
@@ -188,6 +191,31 @@ async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
 
     with pytest.raises(NotImplementedError):
         acc.async_update_state("new_state")
+
+    # Test linked entity
+    linked_entity_id = "binary_sensor.linked_entity"
+    hass.states.async_set(linked_entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    serv = acc.services[0]  # SERV_ACCESSORY_INFO
+    linked_serv = acc.add_preload_service(SERV_SWITCH, [CHAR_ON])
+    serv.add_linked_service(serv)
+    char = linked_serv.configure_char(CHAR_ON, value=0)
+    post_processor_called_with = None
+
+    def post_processor(value: float):
+        nonlocal post_processor_called_with
+        post_processor_called_with = value
+
+    acc.track_linked_entity(
+        LinkedEntityStateTracking(
+            linked_entity_id, char, lambda x: x == STATE_ON, post_processor
+        )
+    )
+
+    hass.states.async_set(linked_entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert post_processor_called_with
+    assert char.value == 1
 
     # Test model name from domain
     entity_id = "test_model.demo"
