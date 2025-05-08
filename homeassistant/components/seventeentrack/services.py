@@ -23,6 +23,7 @@ from .const import (
     ATTR_DESTINATION_COUNTRY,
     ATTR_INFO_TEXT,
     ATTR_ORIGIN_COUNTRY,
+    ATTR_PACKAGE_FRIENDLY_NAME,
     ATTR_PACKAGE_STATE,
     ATTR_PACKAGE_TRACKING_NUMBER,
     ATTR_PACKAGE_TYPE,
@@ -31,6 +32,7 @@ from .const import (
     ATTR_TRACKING_INFO_LANGUAGE,
     ATTR_TRACKING_NUMBER,
     DOMAIN,
+    SERVICE_ADD_PACKAGE,
     SERVICE_ARCHIVE_PACKAGE,
     SERVICE_GET_PACKAGES,
 )
@@ -49,6 +51,14 @@ SERVICE_GET_PACKAGES_SCHEMA: Final = vol.Schema(
                 translation_key=ATTR_PACKAGE_STATE,
             )
         ),
+    }
+)
+
+SERVICE_ADD_PACKAGE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        vol.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
+        vol.Required(ATTR_PACKAGE_FRIENDLY_NAME): cv.string,
     }
 )
 
@@ -86,6 +96,22 @@ def setup_services(hass: HomeAssistant) -> None:
                 if slugify(package.status) in package_states or package_states == []
             ]
         }
+
+    async def add_package(call: ServiceCall) -> None:
+        """Add a new package to 17Track."""
+        config_entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        tracking_number = call.data[ATTR_PACKAGE_TRACKING_NUMBER]
+        friendly_name = call.data[ATTR_PACKAGE_FRIENDLY_NAME]
+
+        await _validate_service(config_entry_id)
+
+        seventeen_coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][
+            config_entry_id
+        ]
+
+        await seventeen_coordinator.client.profile.add_package(
+            tracking_number, friendly_name
+        )
 
     async def archive_package(call: ServiceCall) -> None:
         config_entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
@@ -140,6 +166,13 @@ def setup_services(hass: HomeAssistant) -> None:
         get_packages,
         schema=SERVICE_GET_PACKAGES_SCHEMA,
         supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADD_PACKAGE,
+        add_package,
+        schema=SERVICE_ADD_PACKAGE_SCHEMA,
     )
 
     hass.services.async_register(

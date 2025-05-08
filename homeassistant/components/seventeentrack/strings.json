@@ -80,6 +80,24 @@
         }
       }
     },
+    "add_package": {
+      "name": "Add a package",
+      "description": "Add a package using the 17track API.",
+      "fields": {
+        "package_tracking_number": {
+          "name": "Package tracking number to add",
+          "description": "The package will the specified tracking number will be added."
+        },
+        "package_friendly_name": {
+          "name": "Package friendly name",
+          "description": "The friendly name of the package to be added."
+        },
+        "config_entry_id": {
+          "name": "17Track service",
+          "description": "The selected service which to add the package."
+        }
+      }
+    },
     "archive_package": {
       "name": "Archive package",
       "description": "Archives a package using the 17track API.",
