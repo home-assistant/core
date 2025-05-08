@@ -44,7 +44,6 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
     @property
     def device(self) -> MieleDevice:
         """Return the device object."""
-        # print(">>> entity.device: ", self.coordinator.data.devices)
         return self.coordinator.data.devices[self._device_id]
 
     @property
