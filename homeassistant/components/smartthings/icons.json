@@ -61,7 +61,7 @@
       "manual_level": {
         "default": "mdi:radiator",
         "state": {
-          "off": "mdi:radiator-off"
+          "0": "mdi:radiator-off"
         }
       },
       "heating_mode": {
