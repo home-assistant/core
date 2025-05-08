@@ -31,6 +31,7 @@ from .coordinator import ESPHomeDashboardCoordinator
 from .dashboard import async_get_dashboard
 from .entity import (
     EsphomeEntity,
+    async_esphome_state_property,
     convert_api_error_ha_error,
     esphome_state_property,
     platform_async_setup_entry,
@@ -302,6 +303,7 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
         """Return the latest version."""
         return self._state.latest_version
 
+    @async_esphome_state_property
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         if self._state.release_summary:
