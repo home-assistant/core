@@ -29,6 +29,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
+from tests.typing import WebSocketGenerator
+
 
 @pytest.fixture(autouse=True)
 def enable_entity(entity_registry_enabled_by_default: None) -> None:
@@ -481,6 +483,7 @@ async def test_generic_device_update_entity_has_update(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test a generic device update entity with an update."""
     entity_info = [
@@ -491,14 +494,18 @@ async def test_generic_device_update_entity_has_update(
             unique_id="my_update",
         )
     ]
+
+    release_summary = "This is a release summary"
+    release_url = "https://esphome.io/changelog"
+
     states = [
         UpdateState(
             key=1,
             current_version="2024.6.0",
             latest_version="2024.6.1",
             title="ESPHome Project",
-            release_summary="This is a release summary",
-            release_url="https://esphome.io/changelog",
+            release_summary=release_summary,
+            release_url=release_url,
         )
     ]
     user_service = []
@@ -508,14 +515,31 @@ async def test_generic_device_update_entity_has_update(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("update.test_myupdate")
+
+    entity_id = "update.test_myupdate"
+
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
+
+    # release notes
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": entity_id,
+        }
+    )
+    result = await client.receive_json()
+    assert result["result"] == release_summary
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.test_myupdate"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -528,12 +552,12 @@ async def test_generic_device_update_entity_has_update(
             current_version="2024.6.0",
             latest_version="2024.6.1",
             title="ESPHome Project",
-            release_summary="This is a release summary",
-            release_url="https://esphome.io/changelog",
+            release_summary=release_summary,
+            release_url=release_url,
         )
     )
 
-    state = hass.states.get("update.test_myupdate")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes["in_progress"] is True
@@ -542,7 +566,7 @@ async def test_generic_device_update_entity_has_update(
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "update.test_myupdate"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
