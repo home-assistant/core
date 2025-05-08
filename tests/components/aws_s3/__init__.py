@@ -1,4 +1,4 @@
-"""Tests for the S3 integration."""
+"""Tests for the AWS S3 integration."""
 
 from homeassistant.core import HomeAssistant
 

@@ -1,4 +1,4 @@
-"""The S3 integration."""
+"""The AWS S3 integration."""
 
 from __future__ import annotations
 

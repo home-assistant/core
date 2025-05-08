@@ -12,5 +12,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/bluemaestro",
   "iot_class": "local_push",
-  "requirements": ["bluemaestro-ble==0.4.0"]
+  "requirements": ["bluemaestro-ble==0.4.1"]
 }
