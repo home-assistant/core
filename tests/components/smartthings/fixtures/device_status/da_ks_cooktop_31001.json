@@ -95,7 +95,7 @@
     "main": {
       "custom.disabledComponents": {
         "disabledComponents": {
-          "value": ["burner-6"],
+          "value": ["burner-05", "burner-6"],
           "timestamp": "2025-03-25T18:18:28.464Z"
         }
       },
