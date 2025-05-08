@@ -188,7 +188,7 @@
         "name": "Burner {burner_id} heating mode",
         "state": {
           "off": "[%key:common::state::off%]",
-          "manual": "Manual",
+          "manual": "[%key:common::state::manual%]",
           "boost": "Boost",
           "keep_warm": "Keep warm",
           "quick_preheat": "Quick preheat",
