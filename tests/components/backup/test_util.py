@@ -174,7 +174,10 @@ async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
     )
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -218,7 +221,10 @@ async def test_decrypted_backup_streamer_interrupt_stuck_reader(
     """Test the decrypted backup streamer."""
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -253,7 +259,10 @@ async def test_decrypted_backup_streamer_interrupt_stuck_writer(
     """Test the decrypted backup streamer."""
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -283,7 +292,10 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
     """Test the decrypted backup streamer with wrong password."""
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -320,7 +332,10 @@ async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
     )
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -353,15 +368,16 @@ async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
             bytes.fromhex("00000000000000000000000000000000"),
         )
         encryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
-    assert encryptor.backup() == dataclasses.replace(
-        backup, protected=True, size=backup.size + len(expected_padding)
-    )
 
-    encrypted_stream = await encryptor.open_stream()
-    encrypted_output = b""
-    async for chunk in encrypted_stream:
-        encrypted_output += chunk
-    await encryptor.wait()
+        assert encryptor.backup() == dataclasses.replace(
+            backup, protected=True, size=backup.size + len(expected_padding)
+        )
+
+        encrypted_stream = await encryptor.open_stream()
+        encrypted_output = b""
+        async for chunk in encrypted_stream:
+            encrypted_output += chunk
+        await encryptor.wait()
 
     # Expect the output to match the stored encrypted backup file, with additional
     # padding.
@@ -377,7 +393,10 @@ async def test_encrypted_backup_streamer_interrupt_stuck_reader(
         "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -414,7 +433,10 @@ async def test_encrypted_backup_streamer_interrupt_stuck_writer(
         "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -447,7 +469,10 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     )
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -490,7 +515,7 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     await encryptor1.wait()
     await encryptor2.wait()
 
-    # Output from the two streames should differ but have the same length.
+    # Output from the two streams should differ but have the same length.
     assert encrypted_output1 != encrypted_output3
     assert len(encrypted_output1) == len(encrypted_output3)
 
@@ -508,7 +533,10 @@ async def test_encrypted_backup_streamer_error(hass: HomeAssistant) -> None:
         "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
     backup = AgentBackup(
-        addons=["addon_1", "addon_2"],
+        addons=[
+            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+        ],
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
