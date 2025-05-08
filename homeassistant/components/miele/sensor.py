@@ -43,30 +43,30 @@ _LOGGER = logging.getLogger(__name__)
 DISABLED_TEMPERATURE = -32768
 
 PLATE_POWERS = [
-    "p_0",
-    "p_110",
-    "p_220",
-    "p_1",
-    "p_2",
-    "p_3",
-    "p_4",
-    "p_5",
-    "p_6",
-    "p_7",
-    "p_8",
-    "p_9",
-    "p_10",
-    "p_11",
-    "p_12",
-    "p_13",
-    "p_14",
-    "p_15",
-    "p_16",
-    "p_17",
-    "p_18",
-    "p_117",
-    "p_118",
-    "p_217",
+    "0",
+    "110",
+    "220",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "117",
+    "118",
+    "217",
 ]
 
 
@@ -592,7 +592,7 @@ class MielePlateSensor(MieleSensor):
             if self.device.state_plate_step
             else 0
         )
-        return f"p_{plate_power}"
+        return str(plate_power)
 
 
 class MieleStatusSensor(MieleSensor):

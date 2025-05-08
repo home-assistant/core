@@ -89,7 +89,7 @@
     'state': 'in_use',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_1-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -129,7 +129,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_1',
+    'entity_id': 'sensor.hob_with_extraction_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -141,7 +141,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Plate 1',
+    'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -150,11 +150,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_1-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 1',
+      'friendly_name': 'Hob with extraction None',
       'options': list([
         'p_0',
         'p_110',
@@ -183,14 +183,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_1',
+    'entity_id': 'sensor.hob_with_extraction_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'p_0',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_2-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -230,7 +230,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_2',
+    'entity_id': 'sensor.hob_with_extraction_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -242,7 +242,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Plate 2',
+    'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -251,11 +251,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_2-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 2',
+      'friendly_name': 'Hob with extraction None',
       'options': list([
         'p_0',
         'p_110',
@@ -284,14 +284,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_2',
+    'entity_id': 'sensor.hob_with_extraction_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'p_110',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_3-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_none_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -331,7 +331,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_3',
+    'entity_id': 'sensor.hob_with_extraction_none_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -343,7 +343,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Plate 3',
+    'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -352,11 +352,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_3-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_none_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 3',
+      'friendly_name': 'Hob with extraction None',
       'options': list([
         'p_0',
         'p_110',
@@ -385,14 +385,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_3',
+    'entity_id': 'sensor.hob_with_extraction_none_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'p_8',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_4-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_none_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -432,7 +432,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_4',
+    'entity_id': 'sensor.hob_with_extraction_none_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -444,7 +444,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Plate 4',
+    'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -453,11 +453,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_4-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_none_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 4',
+      'friendly_name': 'Hob with extraction None',
       'options': list([
         'p_0',
         'p_110',
@@ -486,14 +486,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_4',
+    'entity_id': 'sensor.hob_with_extraction_none_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'p_15',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_5-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_none_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -533,7 +533,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_5',
+    'entity_id': 'sensor.hob_with_extraction_none_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -545,7 +545,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Plate 5',
+    'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -554,11 +554,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_5-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_none_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 5',
+      'friendly_name': 'Hob with extraction None',
       'options': list([
         'p_0',
         'p_110',
@@ -587,7 +587,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_5',
+    'entity_id': 'sensor.hob_with_extraction_none_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
