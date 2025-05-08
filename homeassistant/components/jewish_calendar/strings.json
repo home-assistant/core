@@ -21,7 +21,7 @@
         }
       },
       "weekly_portion": {
-        "name": "Parshat Hashavua"
+        "name": "Weekly Torah portion"
       },
       "holiday": {
         "name": "Holiday"
@@ -33,13 +33,13 @@
         "name": "Daf Yomi"
       },
       "alot_hashachar": {
-        "name": "Alot Hashachar"
+        "name": "Halachic dawn (Alot Hashachar)"
       },
       "talit_and_tefillin": {
-        "name": "Talit and Tefillin"
+        "name": "Earliest time for Talit and Tefillin"
       },
       "netz_hachama": {
-        "name": "Hanetz Hachama"
+        "name": "Halachic sunrise (Netz Hachama)"
       },
       "sof_zman_shema_gra": {
         "name": "Latest time for Shma Gr\"a"
@@ -54,7 +54,7 @@
         "name": "Latest time for Tefilla MG\"A"
       },
       "chatzot_hayom": {
-        "name": "Chatzot Hayom"
+        "name": "Halachic midday (Chatzot Hayom)"
       },
       "mincha_gedola": {
         "name": "Mincha Gedola"
@@ -66,13 +66,13 @@
         "name": "Plag Hamincha"
       },
       "shkia": {
-        "name": "Shkia"
+        "name": "Sunset (Shkia)"
       },
       "tset_hakohavim_tsom": {
-        "name": "T'set Hakochavim"
+        "name": "Nightfall (T'set Hakochavim)"
       },
       "tset_hakohavim_shabbat": {
-        "name": "T'set Hakochavim, 3 stars"
+        "name": "Nightfall (T'set Hakochavim, 3 stars)"
       },
       "upcoming_shabbat_candle_lighting": {
         "name": "Upcoming Shabbat candle lighting"
