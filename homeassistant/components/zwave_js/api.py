@@ -674,10 +674,18 @@ async def websocket_node_alerts(
             connection.send_error(msg[ID], ERR_NOT_LOADED, str(err))
         return
 
+    comments = node.device_config.metadata.comments
+    if not node.in_interview:
+        comments.append(
+            {
+                "level": "warning",
+                "text": "This device is currently being interviewed and may not be fully operational.",
+            }
+        )
     connection.send_result(
         msg[ID],
         {
-            "comments": node.device_config.metadata.comments,
+            "comments": comments,
             "is_embedded": node.device_config.is_embedded,
         },
     )
