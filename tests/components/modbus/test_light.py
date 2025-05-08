@@ -233,6 +233,11 @@ async def test_all_light(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                     ATTR_COLOR_TEMP_KELVIN: 4000,
                 },
             ),
+            State(
+                ENTITY_ID2,
+                STATE_ON,
+                {},
+            ),
         )
     ],
     indirect=True,
@@ -248,22 +253,33 @@ async def test_all_light(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                     CONF_SCAN_INTERVAL: 0,
                     CONF_BRIGHTNESS_REGISTER: 1,
                     CONF_COLOR_TEMP_REGISTER: 2,
-                }
+                },
+                {
+                    CONF_NAME: f"{TEST_ENTITY_NAME} 2",
+                    CONF_ADDRESS: 1235,
+                    CONF_SCAN_INTERVAL: 0,
+                },
             ]
-        },
+        }
     ],
 )
 async def test_restore_state_light(
     hass: HomeAssistant, mock_test_state, mock_modbus
 ) -> None:
     """Test Modbus Light restore state with brightness and color_temp."""
-    assert hass.states.get(ENTITY_ID).state == mock_test_state[0].state
-    assert hass.states.get(ENTITY_ID).attributes.get(
+
+    state_1 = hass.states.get(ENTITY_ID)
+    state_2 = hass.states.get(ENTITY_ID2)
+
+    assert state_1.state == STATE_ON
+    assert state_1.attributes.get(ATTR_BRIGHTNESS) == mock_test_state[0].attributes.get(
         ATTR_BRIGHTNESS
-    ) == mock_test_state[0].attributes.get(ATTR_BRIGHTNESS)
-    assert hass.states.get(ENTITY_ID).attributes.get(
-        ATTR_COLOR_TEMP_KELVIN
-    ) == mock_test_state[0].attributes.get(ATTR_COLOR_TEMP_KELVIN)
+    )
+    assert state_1.attributes.get(ATTR_COLOR_TEMP_KELVIN) == mock_test_state[
+        0
+    ].attributes.get(ATTR_COLOR_TEMP_KELVIN)
+
+    assert state_2.state == STATE_ON
 
 
 @pytest.mark.parametrize(
