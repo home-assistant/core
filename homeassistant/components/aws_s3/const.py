@@ -13,6 +13,7 @@ CONF_ENDPOINT_URL = "endpoint_url"
 CONF_BUCKET = "bucket"
 
 AWS_DOMAIN = "amazonaws.com"
+BACKBLAZE_DOMAIN = "backblazeb2.com"
 DEFAULT_ENDPOINT_URL = f"https://s3.eu-central-1.{AWS_DOMAIN}/"
 
 DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(

@@ -19,6 +19,7 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     AWS_DOMAIN,
+    BACKBLAZE_DOMAIN,
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
@@ -60,9 +61,8 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            if not urlparse(user_input[CONF_ENDPOINT_URL]).hostname.endswith(
-                AWS_DOMAIN
-            ):
+            url_hostname = urlparse(user_input[CONF_ENDPOINT_URL]).hostname
+            if not (url_hostname.endswith((AWS_DOMAIN, BACKBLAZE_DOMAIN))):
                 errors[CONF_ENDPOINT_URL] = "invalid_endpoint_url"
             else:
                 try:
