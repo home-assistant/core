@@ -1,5 +1,6 @@
 """Tests for unifiprotect.media_source."""
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, Mock, patch
@@ -662,10 +663,10 @@ async def test_browse_media_recent_truncated(
 
 
 @pytest.mark.parametrize(
-    ("event", "expected_title"),
+    ("make_event", "expected_title"),
     [
         (
-            Event(
+            lambda: Event(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.RING,
@@ -679,7 +680,7 @@ async def test_browse_media_recent_truncated(
             "Ring Event",
         ),
         (
-            Event(
+            lambda: Event(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.MOTION,
@@ -693,7 +694,7 @@ async def test_browse_media_recent_truncated(
             "Motion Event",
         ),
         (
-            Event(
+            lambda: Event(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
@@ -716,7 +717,7 @@ async def test_browse_media_recent_truncated(
             "Object Detection - Person",
         ),
         (
-            Event(
+            lambda: Event(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
@@ -730,7 +731,7 @@ async def test_browse_media_recent_truncated(
             "Object Detection - Person, Vehicle",
         ),
         (
-            Event(
+            lambda: Event(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
@@ -744,7 +745,7 @@ async def test_browse_media_recent_truncated(
             "Object Detection - License Plate, Vehicle",
         ),
         (
-            Event(
+            lambda: Event(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
@@ -768,7 +769,7 @@ async def test_browse_media_recent_truncated(
             "Object Detection - Vehicle: ABC1234",
         ),
         (
-            Event(
+            lambda: Event(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
@@ -798,7 +799,7 @@ async def test_browse_media_recent_truncated(
             "Object Detection - Car: ABC1234",
         ),
         (
-            Event(
+            lambda: Event(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
@@ -833,7 +834,7 @@ async def test_browse_media_recent_truncated(
             "Object Detection - Black Vehicle: ABC1234",
         ),
         (
-            Event(
+            lambda: Event(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
@@ -866,7 +867,7 @@ async def test_browse_media_recent_truncated(
             "Object Detection - Black Car",
         ),
         (
-            Event(
+            lambda: Event(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_AUDIO_DETECT,
@@ -886,7 +887,7 @@ async def test_browse_media_event(
     ufp: MockUFPFixture,
     doorbell: Camera,
     fixed_now: datetime,
-    event: Event,
+    make_event: Callable[[], Event],
     expected_title: str,
 ) -> None:
     """Test browsing specific event."""
@@ -894,6 +895,7 @@ async def test_browse_media_event(
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
+    event = make_event()
     event.start = fixed_now - timedelta(seconds=20)
     event.end = fixed_now
     event.camera_id = doorbell.id
