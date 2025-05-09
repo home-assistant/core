@@ -513,7 +513,7 @@ async def test_migration(
     }
     assert mock_old_config_entry.unique_id == "397678e5-9995-4a39-9d9f-ae6ba310236c"
     assert mock_old_config_entry.version == 3
-    assert mock_old_config_entry.minor_version == 1
+    assert mock_old_config_entry.minor_version == 2
 
 
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud")
@@ -586,7 +586,7 @@ async def test_migration_wrong_location(
         == "appid123-2be1-4e40-b257-e4ef59083324_397678e5-9995-4a39-9d9f-ae6ba310236c"
     )
     assert mock_old_config_entry.version == 3
-    assert mock_old_config_entry.minor_version == 1
+    assert mock_old_config_entry.minor_version == 2
 
 
 @pytest.mark.usefixtures("current_request_with_host")

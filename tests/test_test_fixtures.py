@@ -9,9 +9,9 @@ from aiohttp import web
 import pytest
 import pytest_socket
 
-from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.helpers import translation
+from homeassistant.helpers.http import HomeAssistantView
 from homeassistant.setup import async_setup_component
 
 from .common import MockModule, mock_integration

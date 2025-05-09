@@ -1,6 +1,7 @@
 """Tests for emulated_roku library bindings."""
 
 from unittest.mock import AsyncMock, Mock, patch
+from uuid import uuid4
 
 from homeassistant.components.emulated_roku.binding import (
     ATTR_APP_ID,
@@ -14,14 +15,15 @@ from homeassistant.components.emulated_roku.binding import (
     ROKU_COMMAND_LAUNCH,
     EmulatedRoku,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 
 
 async def test_events_fired_properly(hass: HomeAssistant) -> None:
     """Test that events are fired correctly."""
-    binding = EmulatedRoku(
-        hass, "Test Emulated Roku", "1.2.3.4", 8060, None, None, None
-    )
+    random_name = uuid4().hex
+    # Note that this test is accessing the internal EmulatedRoku class
+    # and should be refactored in the future not to do so.
+    binding = EmulatedRoku(hass, "x", random_name, "1.2.3.4", 8060, None, None, None)
 
     events = []
     roku_event_handler = None
@@ -41,8 +43,9 @@ async def test_events_fired_properly(hass: HomeAssistant) -> None:
 
         return Mock(start=AsyncMock(), close=AsyncMock())
 
-    def listener(event):
-        events.append(event)
+    def listener(event: Event) -> None:
+        if event.data[ATTR_SOURCE_NAME] == random_name:
+            events.append(event)
 
     with patch(
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer", instantiate
@@ -53,10 +56,10 @@ async def test_events_fired_properly(hass: HomeAssistant) -> None:
 
         assert roku_event_handler is not None
 
-        roku_event_handler.on_keydown("Test Emulated Roku", "A")
-        roku_event_handler.on_keyup("Test Emulated Roku", "A")
-        roku_event_handler.on_keypress("Test Emulated Roku", "C")
-        roku_event_handler.launch("Test Emulated Roku", "1")
+        roku_event_handler.on_keydown(random_name, "A")
+        roku_event_handler.on_keyup(random_name, "A")
+        roku_event_handler.on_keypress(random_name, "C")
+        roku_event_handler.launch(random_name, "1")
 
     await hass.async_block_till_done()
 
@@ -64,20 +67,20 @@ async def test_events_fired_properly(hass: HomeAssistant) -> None:
 
     assert events[0].event_type == EVENT_ROKU_COMMAND
     assert events[0].data[ATTR_COMMAND_TYPE] == ROKU_COMMAND_KEYDOWN
-    assert events[0].data[ATTR_SOURCE_NAME] == "Test Emulated Roku"
+    assert events[0].data[ATTR_SOURCE_NAME] == random_name
     assert events[0].data[ATTR_KEY] == "A"
 
     assert events[1].event_type == EVENT_ROKU_COMMAND
     assert events[1].data[ATTR_COMMAND_TYPE] == ROKU_COMMAND_KEYUP
-    assert events[1].data[ATTR_SOURCE_NAME] == "Test Emulated Roku"
+    assert events[1].data[ATTR_SOURCE_NAME] == random_name
     assert events[1].data[ATTR_KEY] == "A"
 
     assert events[2].event_type == EVENT_ROKU_COMMAND
     assert events[2].data[ATTR_COMMAND_TYPE] == ROKU_COMMAND_KEYPRESS
-    assert events[2].data[ATTR_SOURCE_NAME] == "Test Emulated Roku"
+    assert events[2].data[ATTR_SOURCE_NAME] == random_name
     assert events[2].data[ATTR_KEY] == "C"
 
     assert events[3].event_type == EVENT_ROKU_COMMAND
     assert events[3].data[ATTR_COMMAND_TYPE] == ROKU_COMMAND_LAUNCH
-    assert events[3].data[ATTR_SOURCE_NAME] == "Test Emulated Roku"
+    assert events[3].data[ATTR_SOURCE_NAME] == random_name
     assert events[3].data[ATTR_APP_ID] == "1"

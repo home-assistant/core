@@ -12,6 +12,7 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, history, statistics
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import (
+    StatisticMeanType,
     datetime_to_timestamp_or_none,
     process_timestamp,
 )
@@ -123,32 +124,38 @@ async def test_compile_hourly_statistics(
         stats = get_latest_short_term_statistics_with_session(
             hass,
             session,
-            {"sensor.test1"},
+            {"sensor.test1", "sensor.wind_direction"},
             {"last_reset", "max", "mean", "min", "state", "sum"},
         )
     assert stats == {}
 
-    for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
+    for kwargs in ({}, {"statistic_ids": ["sensor.test1", "sensor.wind_direction"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_short_term_statistics(
-        hass,
-        0,
-        "sensor.test1",
-        True,
-        {"last_reset", "max", "mean", "min", "state", "sum"},
-    )
-    assert stats == {}
+    for sensor in ("sensor.test1", "sensor.wind_direction"):
+        stats = get_last_short_term_statistics(
+            hass,
+            0,
+            sensor,
+            True,
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+        assert stats == {}
 
     do_adhoc_statistics(hass, start=zero)
     do_adhoc_statistics(hass, start=four)
     await async_wait_recording_done(hass)
 
-    metadata = get_metadata(hass, statistic_ids={"sensor.test1", "sensor.test2"})
-    assert metadata["sensor.test1"][1]["has_mean"] is True
-    assert metadata["sensor.test1"][1]["has_sum"] is False
-    assert metadata["sensor.test2"][1]["has_mean"] is True
-    assert metadata["sensor.test2"][1]["has_sum"] is False
+    metadata = get_metadata(
+        hass, statistic_ids={"sensor.test1", "sensor.test2", "sensor.wind_direction"}
+    )
+    for sensor, mean_type in (
+        ("sensor.test1", StatisticMeanType.ARITHMETIC),
+        ("sensor.test2", StatisticMeanType.ARITHMETIC),
+        ("sensor.wind_direction", StatisticMeanType.CIRCULAR),
+    ):
+        assert metadata[sensor][1]["mean_type"] is mean_type
+        assert metadata[sensor][1]["has_sum"] is False
     expected_1 = {
         "start": process_timestamp(zero).timestamp(),
         "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
@@ -168,11 +175,39 @@ async def test_compile_hourly_statistics(
     expected_stats1 = [expected_1, expected_2]
     expected_stats2 = [expected_1, expected_2]
 
+    expected_stats_wind_direction1 = {
+        "start": process_timestamp(zero).timestamp(),
+        "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+        "mean": pytest.approx(358.6387003873801),
+        "min": None,
+        "max": None,
+        "last_reset": None,
+    }
+    expected_stats_wind_direction2 = {
+        "start": process_timestamp(four).timestamp(),
+        "end": process_timestamp(four + timedelta(minutes=5)).timestamp(),
+        "mean": pytest.approx(5),
+        "min": None,
+        "max": None,
+        "last_reset": None,
+    }
+    expected_stats_wind_direction = [
+        expected_stats_wind_direction1,
+        expected_stats_wind_direction2,
+    ]
+
     # Test statistics_during_period
     stats = statistics_during_period(
-        hass, zero, period="5minute", statistic_ids={"sensor.test1", "sensor.test2"}
+        hass,
+        zero,
+        period="5minute",
+        statistic_ids={"sensor.test1", "sensor.test2", "sensor.wind_direction"},
     )
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     # Test statistics_during_period with a far future start and end date
     future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
@@ -181,7 +216,7 @@ async def test_compile_hourly_statistics(
         future,
         end_time=future,
         period="5minute",
-        statistic_ids={"sensor.test1", "sensor.test2"},
+        statistic_ids={"sensor.test1", "sensor.test2", "sensor.wind_direction"},
     )
     assert stats == {}
 
@@ -191,9 +226,13 @@ async def test_compile_hourly_statistics(
         zero,
         end_time=future,
         period="5minute",
-        statistic_ids={"sensor.test1", "sensor.test2"},
+        statistic_ids={"sensor.test1", "sensor.test2", "sensor.wind_direction"},
     )
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     stats = statistics_during_period(
         hass, zero, statistic_ids={"sensor.test2"}, period="5minute"
@@ -206,32 +245,39 @@ async def test_compile_hourly_statistics(
     assert stats == {}
 
     # Test get_last_short_term_statistics and get_latest_short_term_statistics
-    stats = get_last_short_term_statistics(
-        hass,
-        0,
-        "sensor.test1",
-        True,
-        {"last_reset", "max", "mean", "min", "state", "sum"},
-    )
-    assert stats == {}
+    for sensor, expected in (
+        ("sensor.test1", expected_2),
+        ("sensor.wind_direction", expected_stats_wind_direction2),
+    ):
+        stats = get_last_short_term_statistics(
+            hass,
+            0,
+            sensor,
+            True,
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+        assert stats == {}
 
-    stats = get_last_short_term_statistics(
-        hass,
-        1,
-        "sensor.test1",
-        True,
-        {"last_reset", "max", "mean", "min", "state", "sum"},
-    )
-    assert stats == {"sensor.test1": [expected_2]}
+        stats = get_last_short_term_statistics(
+            hass,
+            1,
+            sensor,
+            True,
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+        assert stats == {sensor: [expected]}
 
     with session_scope(hass=hass, read_only=True) as session:
         stats = get_latest_short_term_statistics_with_session(
             hass,
             session,
-            {"sensor.test1"},
+            {"sensor.test1", "sensor.wind_direction"},
             {"last_reset", "max", "mean", "min", "state", "sum"},
         )
-    assert stats == {"sensor.test1": [expected_2]}
+    assert stats == {
+        "sensor.test1": [expected_2],
+        "sensor.wind_direction": [expected_stats_wind_direction2],
+    }
 
     # Now wipe the latest_short_term_statistics_ids table and test again
     # to make sure we can rebuild the missing data
@@ -241,13 +287,15 @@ async def test_compile_hourly_statistics(
         stats = get_latest_short_term_statistics_with_session(
             hass,
             session,
-            {"sensor.test1"},
+            {"sensor.test1", "sensor.wind_direction"},
             {"last_reset", "max", "mean", "min", "state", "sum"},
         )
-    assert stats == {"sensor.test1": [expected_2]}
+    assert stats == {
+        "sensor.test1": [expected_2],
+        "sensor.wind_direction": [expected_stats_wind_direction2],
+    }
 
     metadata = get_metadata(hass, statistic_ids={"sensor.test1"})
-
     with session_scope(hass=hass, read_only=True) as session:
         stats = get_latest_short_term_statistics_with_session(
             hass,
@@ -258,23 +306,44 @@ async def test_compile_hourly_statistics(
         )
     assert stats == {"sensor.test1": [expected_2]}
 
-    stats = get_last_short_term_statistics(
-        hass,
-        2,
-        "sensor.test1",
-        True,
-        {"last_reset", "max", "mean", "min", "state", "sum"},
+    # Test with multiple metadata ids
+    metadata = get_metadata(
+        hass, statistic_ids={"sensor.test1", "sensor.wind_direction"}
     )
-    assert stats == {"sensor.test1": expected_stats1[::-1]}
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test1", "sensor.wind_direction"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+            metadata=metadata,
+        )
+    assert stats == {
+        "sensor.test1": [expected_2],
+        "sensor.wind_direction": [expected_stats_wind_direction2],
+    }
 
-    stats = get_last_short_term_statistics(
-        hass,
-        3,
-        "sensor.test1",
-        True,
-        {"last_reset", "max", "mean", "min", "state", "sum"},
-    )
-    assert stats == {"sensor.test1": expected_stats1[::-1]}
+    for sensor, expected in (
+        ("sensor.test1", expected_stats1[::-1]),
+        ("sensor.wind_direction", expected_stats_wind_direction[::-1]),
+    ):
+        stats = get_last_short_term_statistics(
+            hass,
+            2,
+            sensor,
+            True,
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+        assert stats == {sensor: expected}
+
+        stats = get_last_short_term_statistics(
+            hass,
+            3,
+            sensor,
+            True,
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+        assert stats == {sensor: expected}
 
     stats = get_last_short_term_statistics(
         hass,
@@ -291,7 +360,7 @@ async def test_compile_hourly_statistics(
         stats = get_latest_short_term_statistics_with_session(
             hass,
             session,
-            {"sensor.test1"},
+            {"sensor.test1", "sensor.wind_direction"},
             {"last_reset", "max", "mean", "min", "state", "sum"},
         )
         assert stats == {}
@@ -306,7 +375,7 @@ async def test_compile_hourly_statistics(
         stats = get_latest_short_term_statistics_with_session(
             hass,
             session,
-            {"sensor.test1"},
+            {"sensor.test1", "sensor.wind_direction"},
             {"last_reset", "max", "mean", "min", "state", "sum"},
         )
     assert stats == {}
@@ -460,15 +529,35 @@ async def test_rename_entity(
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
     expected_stats99 = [expected_1]
+    expected_stats_wind_direction = [
+        {
+            "start": process_timestamp(zero).timestamp(),
+            "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+            "mean": pytest.approx(358.6387003873801),
+            "min": None,
+            "max": None,
+            "last_reset": None,
+            "state": None,
+            "sum": None,
+        }
+    ]
 
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     entity_registry.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
     await async_wait_recording_done(hass)
 
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test99": expected_stats99, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test99": expected_stats99,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
 
 async def test_statistics_during_period_set_back_compat(
@@ -544,9 +633,25 @@ async def test_rename_entity_collision(
     }
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
+    expected_stats_wind_direction = [
+        {
+            "start": process_timestamp(zero).timestamp(),
+            "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+            "mean": pytest.approx(358.6387003873801),
+            "min": None,
+            "max": None,
+            "last_reset": None,
+            "state": None,
+            "sum": None,
+        }
+    ]
 
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     # Insert metadata for sensor.test99
     metadata_1 = {
@@ -567,7 +672,11 @@ async def test_rename_entity_collision(
 
     # Statistics failed to migrate due to the collision
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     # Verify the safeguard in the states meta manager was hit
     assert (
@@ -631,9 +740,25 @@ async def test_rename_entity_collision_states_meta_check_disabled(
     }
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
+    expected_stats_wind_direction = [
+        {
+            "start": process_timestamp(zero).timestamp(),
+            "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+            "mean": pytest.approx(358.6387003873801),
+            "min": None,
+            "max": None,
+            "last_reset": None,
+            "state": None,
+            "sum": None,
+        }
+    ]
 
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     # Insert metadata for sensor.test99
     metadata_1 = {
@@ -660,7 +785,11 @@ async def test_rename_entity_collision_states_meta_check_disabled(
 
     # Statistics failed to migrate due to the collision
     stats = statistics_during_period(hass, zero, period="5minute")
-    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.wind_direction": expected_stats_wind_direction,
+    }
 
     # Verify the filter_unique_constraint_integrity_error safeguard was hit
     assert "Blocked attempt to insert duplicated statistic rows" in caplog.text
@@ -786,6 +915,7 @@ async def test_import_statistics(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": StatisticMeanType.NONE,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
@@ -800,6 +930,7 @@ async def test_import_statistics(
             1,
             {
                 "has_mean": False,
+                "mean_type": StatisticMeanType.NONE,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
@@ -876,6 +1007,7 @@ async def test_import_statistics(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": StatisticMeanType.NONE,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy renamed",
@@ -890,6 +1022,7 @@ async def test_import_statistics(
             1,
             {
                 "has_mean": False,
+                "mean_type": StatisticMeanType.NONE,
                 "has_sum": True,
                 "name": "Total imported energy renamed",
                 "source": source,

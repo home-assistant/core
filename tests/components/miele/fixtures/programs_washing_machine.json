@@ -1,0 +1,117 @@
+[
+  {
+    "programId": 146,
+    "program": "QuickPowerWash",
+    "parameters": {}
+  },
+  {
+    "programId": 123,
+    "program": "Dark garments / Denim",
+    "parameters": {}
+  },
+  {
+    "programId": 190,
+    "program": "ECO 40-60 ",
+    "parameters": {}
+  },
+  {
+    "programId": 27,
+    "program": "Proofing",
+    "parameters": {}
+  },
+  {
+    "programId": 23,
+    "program": "Shirts",
+    "parameters": {}
+  },
+  {
+    "programId": 9,
+    "program": "Silks ",
+    "parameters": {}
+  },
+  {
+    "programId": 8,
+    "program": "Woollens ",
+    "parameters": {}
+  },
+  {
+    "programId": 4,
+    "program": "Delicates",
+    "parameters": {}
+  },
+  {
+    "programId": 3,
+    "program": "Minimum iron",
+    "parameters": {}
+  },
+  {
+    "programId": 1,
+    "program": "Cottons",
+    "parameters": {}
+  },
+  {
+    "programId": 69,
+    "program": "Cottons hygiene",
+    "parameters": {}
+  },
+  {
+    "programId": 37,
+    "program": "Outerwear",
+    "parameters": {}
+  },
+  {
+    "programId": 122,
+    "program": "Express 20",
+    "parameters": {}
+  },
+  {
+    "programId": 29,
+    "program": "Sportswear",
+    "parameters": {}
+  },
+  {
+    "programId": 31,
+    "program": "Automatic plus",
+    "parameters": {}
+  },
+  {
+    "programId": 39,
+    "program": "Pillows",
+    "parameters": {}
+  },
+  {
+    "programId": 22,
+    "program": "Curtains",
+    "parameters": {}
+  },
+  {
+    "programId": 129,
+    "program": "Down filled items",
+    "parameters": {}
+  },
+  {
+    "programId": 53,
+    "program": "First wash",
+    "parameters": {}
+  },
+  {
+    "programId": 95,
+    "program": "Down duvets",
+    "parameters": {}
+  },
+  {
+    "programId": 52,
+    "program": "Separate rinse / Starch",
+    "parameters": {}
+  },
+  {
+    "programId": 21,
+    "program": "Drain / Spin",
+    "parameters": {}
+  },
+  {
+    "programId": 91,
+    "program": "Clean machine",
+    "parameters": {}
+  }
+]

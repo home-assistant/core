@@ -36,7 +36,7 @@
     },
     "request_channel_level": {
       "name": "Request channel level",
-      "description": "Requests Dynalite to report the level of a specific channel.",
+      "description": "Requests Dynalite to report the brightness level of a specific channel.",
       "fields": {
         "host": {
           "name": "[%key:common::config_flow::data::host%]",
@@ -48,7 +48,7 @@
         },
         "channel": {
           "name": "Channel",
-          "description": "Channel to request the level for."
+          "description": "Channel to request the brightness level for."
         }
       }
     }
