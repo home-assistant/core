@@ -68,15 +68,6 @@ async def async_setup(
     hass.http.register_view(RestoreBackupView(data))
     hass.http.register_view(UploadBackupView(data))
 
-    # ───────────────────────────────────────────────────────
-    # After onboarding views, listen for Home Assistant start:
-    # ───────────────────────────────────────────────────────
-    @callback
-    def _on_ha_started(event):
-        # Schedule our background task without blocking
-        hass.async_create_task(_update_internal_url(hass))
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _on_ha_started)
-
 class OnboardingView(HomeAssistantView):
     """Return the onboarding status."""
 
@@ -494,32 +485,3 @@ def _async_get_hass_provider(hass: HomeAssistant) -> HassAuthProvider:
             return cast(HassAuthProvider, prv)
 
     raise RuntimeError("No Home Assistant provider found")
-
-async def _update_internal_url(hass: HomeAssistant) -> None:
-    """Background task to POST the internal URL to Firebase on every restart."""
-    # 1. Compute your internal URL. This mirrors what onboarding returns:
-    print(hass.http)
-    scheme = hass.http.api.base_url.split("://")[0]
-    host = hass.http.api.base_url.split("://")[1]
-    internal_url = f"{scheme}://{host}/api/onboarding/users"
-    hass.logger.debug("Computed internal URL: %s", internal_url)
-
-    # 2. Build your function endpoint. Adjust to your region/project:
-    firebase_url = f"{msh_utils.FIREBASE_FUNCTIONS_URL}/updateInternalUrl"
-    hass.logger.debug("Firebase URL: %s", firebase_url)
-
-    # 3. Send the POST request
-    session = async_get_clientsession(hass)
-    try:
-        response = await session.post(firebase_url, json={"internalUrl": internal_url})
-        response_text = await response.text()
-        hass.logger.debug("Firebase response status: %s", response.status)
-        hass.logger.debug("Firebase response text: %s", response_text)
-        if response.status != 200:
-            hass.logger.error(
-                "Failed to update internalUrl on Firebase (%s): %s",
-                response.status,
-                response_text,
-            )
-    except Exception as err:
-        hass.logger.error("Error sending internalUrl to Firebase: %s", err)
