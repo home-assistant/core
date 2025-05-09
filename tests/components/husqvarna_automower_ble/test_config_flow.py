@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID
+from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -48,14 +48,10 @@ async def test_user_selection(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_ADDRESS: "00000000-0000-0000-0000-000000000001"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
+        user_input={
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_PIN: "1234",
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Husqvarna Automower"
@@ -64,7 +60,59 @@ async def test_user_selection(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
         CONF_CLIENT_ID: 1197489078,
+        CONF_PIN: "1234",
     }
+
+
+async def test_user_selection_incorrect_pin(
+    hass: HomeAssistant,
+    mock_automower_client: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we can select a device."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_automower_client.connect.return_value = False
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_PIN: "1234",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_automower_client.connect.return_value = True
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_PIN: "1234",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_bluetooth(hass: HomeAssistant) -> None:
@@ -74,13 +122,13 @@ async def test_bluetooth(hass: HomeAssistant) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
-    assert result["step_id"] == "confirm"
-    assert result["context"]["unique_id"] == "00000000-0000-0000-0000-000000000003"
+    assert result["step_id"] == "bluetooth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={},
+        user_input={CONF_PIN: "1234"},
     )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Husqvarna Automower"
     assert result["result"].unique_id == "00000000-0000-0000-0000-000000000003"
@@ -88,6 +136,7 @@ async def test_bluetooth(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
         CONF_CLIENT_ID: 1197489078,
+        CONF_PIN: "1234",
     }
 
 
@@ -106,17 +155,19 @@ async def test_bluetooth_invalid(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_devices_found"
 
 
-async def test_failed_connect(
+async def test_successful_reauth(
     hass: HomeAssistant,
     mock_automower_client: Mock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we can select a device."""
 
-    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
-    inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
+    mock_config_entry.add_to_hass(hass)
+
+    # inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_automower_client.connect.side_effect = False
+    mock_automower_client.connect.return_value = False
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -124,25 +175,69 @@ async def test_failed_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    result = await mock_config_entry.start_reauth_flow(hass)
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_ADDRESS: "00000000-0000-0000-0000-000000000001"},
+        user_input={
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
+            CONF_PIN: "5678",
+        },
+    )
+
+    mock_automower_client.connect.return_value = True
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_PIN: "1234",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_failed_reauth(
+    hass: HomeAssistant,
+    mock_automower_client: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we can select a device."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    # inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_automower_client.connect.return_value = False
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    assert result["step_id"] == "user"
+
+    mock_automower_client.connect.side_effect = BleakError
+
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={},
+        user_input={
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
+            CONF_PIN: "5678",
+        },
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Husqvarna Automower"
-    assert result["result"].unique_id == "00000000-0000-0000-0000-000000000001"
-
-    assert result["data"] == {
-        CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
-        CONF_CLIENT_ID: 1197489078,
-    }
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_duplicate_entry(
@@ -169,13 +264,16 @@ async def test_duplicate_entry(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_ADDRESS: "00000000-0000-0000-0000-000000000003"},
+        user_input={
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
+            CONF_PIN: "1234",
+        },
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_exception_connect(
+async def test_exception_probe(
     hass: HomeAssistant,
     mock_automower_client: Mock,
 ) -> None:
@@ -188,11 +286,44 @@ async def test_exception_connect(
     mock_automower_client.probe_gatts.side_effect = BleakError
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
-    assert result["step_id"] == "confirm"
+    assert result["step_id"] == "bluetooth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={},
+        user_input={CONF_PIN: "1234"},
     )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_exception_connect(
+    hass: HomeAssistant,
+    mock_automower_client: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we can select a device."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_automower_client.connect.side_effect = BleakError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_PIN: "1234",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
