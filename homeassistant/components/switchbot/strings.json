@@ -107,7 +107,13 @@
         "name": "Light level"
       },
       "aqi_level": {
-        "name": "Air Quilty Level"
+        "name": "Air Quality Level",
+        "state": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "moderate": "Moderate",
+          "unhealthy": "Unhealthy"
+        }
       }
     },
     "cover": {

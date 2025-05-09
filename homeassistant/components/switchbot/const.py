@@ -46,7 +46,7 @@ class SupportedModels(StrEnum):
     HUB3 = "hub3"
     LOCK_LITE = "lock_lite"
     LOCK_ULTRA = "lock_ultra"
-    AIR_PURIFIER = "Air_Purifier"
+    AIR_PURIFIER = "air_purifier"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
