@@ -303,6 +303,9 @@
       "current_phase": {
         "name": "Current phase"
       },
+      "energy_exported": {
+        "name": "Energy exported"
+      },
       "evse_fault_state": {
         "name": "Fault state",
         "state": {
