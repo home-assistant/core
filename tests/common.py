@@ -656,6 +656,7 @@ class RegistryEntryWithDefaults(er.RegistryEntry):
     """Helper to create a registry entry with defaults."""
 
     capabilities: Mapping[str, Any] | None = attr.ib(default=None)
+    calculated_object_id: str | None = attr.ib(default=None)
     config_entry_id: str | None = attr.ib(default=None)
     config_subentry_id: str | None = attr.ib(default=None)
     created_at: datetime = attr.ib(factory=dt_util.utcnow)

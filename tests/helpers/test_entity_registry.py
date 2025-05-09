@@ -126,6 +126,7 @@ def test_get_or_create_updates_data(
         entity_id="light.hue_5678",
         unique_id="5678",
         platform="hue",
+        calculated_object_id=None,
         capabilities={"max": 100},
         config_entry_id=orig_config_entry.entry_id,
         config_subentry_id=config_subentry_id,
@@ -185,6 +186,7 @@ def test_get_or_create_updates_data(
         platform="hue",
         aliases=set(),
         area_id=None,
+        calculated_object_id=None,
         capabilities={"new-max": 150},
         config_entry_id=new_config_entry.entry_id,
         config_subentry_id=None,
@@ -238,6 +240,7 @@ def test_get_or_create_updates_data(
         platform="hue",
         aliases=set(),
         area_id=None,
+        calculated_object_id=None,
         capabilities=None,
         config_entry_id=None,
         config_subentry_id=None,
@@ -517,6 +520,7 @@ async def test_load_bad_data(
                 {
                     "aliases": [],
                     "area_id": None,
+                    "calculated_object_id": None,
                     "capabilities": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -549,6 +553,7 @@ async def test_load_bad_data(
                 {
                     "aliases": [],
                     "area_id": None,
+                    "calculated_object_id": None,
                     "capabilities": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -905,6 +910,7 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
                 {
                     "aliases": [],
                     "area_id": None,
+                    "calculated_object_id": None,
                     "capabilities": {},
                     "categories": {},
                     "config_entry_id": None,
@@ -1085,6 +1091,7 @@ async def test_migration_1_11(
                 {
                     "aliases": [],
                     "area_id": None,
+                    "calculated_object_id": None,
                     "capabilities": {},
                     "categories": {},
                     "config_entry_id": None,
