@@ -14,9 +14,12 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import BAFConfigEntry
 from .entity import BAFEntity
+
+BRIGHTNESS_SCALE = (1, 100)
 
 
 async def async_setup_entry(
@@ -40,15 +43,17 @@ class BAFLight(BAFEntity, LightEntity):
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         self._attr_is_on = self._device.light_mode == OffOnAuto.ON
-        if self._device.light_brightness_level is not None:
-            self._attr_brightness = round(
-                self._device.light_brightness_level / 16 * 255
+        if self._device.light_brightness_percent is not None:
+            self._attr_brightness = value_to_brightness(
+                BRIGHTNESS_SCALE, self._device.light_brightness_percent
             )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
-            self._device.light_brightness_level = max(int(brightness / 255 * 16), 1)
+            self._device.light_brightness_percent = brightness_to_value(
+                BRIGHTNESS_SCALE, brightness
+            )
         else:
             self._device.light_mode = OffOnAuto.ON
 
