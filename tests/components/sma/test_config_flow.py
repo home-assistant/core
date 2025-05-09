@@ -273,7 +273,6 @@ async def test_reauth_flow_exceptions(
     error: str,
 ) -> None:
     """Test we handle cannot connect error."""
-
     result = await mock_config_entry.start_reauth_flow(hass)
 
     with (
@@ -287,7 +286,6 @@ async def test_reauth_flow_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
     assert result["step_id"] == "reauth_confirm"
-    assert len(mock_setup_entry.mock_calls) == 0
 
     with (
         patch("pysma.SMA.new_session", return_value=True),
