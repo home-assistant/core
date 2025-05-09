@@ -103,7 +103,6 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
         key="water_running",
         translation_key="water_running",
-        device_class=BinarySensorDeviceClass.RUNNING,
         value=lambda state: state.get("waterFlowing") if state is not None else None,
         should_update_entity=lambda value: value is not None,
         exists_fn=lambda device: (
