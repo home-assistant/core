@@ -153,10 +153,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             reauth_entry = self._get_reauth_entry()
             errors, device_info = await self._handle_user_input(
                 user_input={
-                    CONF_HOST: reauth_entry.data[CONF_HOST],
-                    CONF_SSL: reauth_entry.data[CONF_SSL],
-                    CONF_VERIFY_SSL: reauth_entry.data[CONF_VERIFY_SSL],
-                    CONF_GROUP: reauth_entry.data[CONF_GROUP],
+                    **reauth_entry.data,
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                 }
             )
