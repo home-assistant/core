@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_DEVICE_STATE, DOMAIN, YOLINK_OFFLINE_TIME
+from .const import ATTR_DEVICE_STATE, ATTR_LORA_INFO, DOMAIN, YOLINK_OFFLINE_TIME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         self.device = device
         self.paired_device = paired_device
         self.dev_online = True
+        self.dev_net_type = None
 
     async def _async_update_data(self) -> dict:
         """Fetch device state."""
@@ -78,5 +79,8 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         except YoLinkClientError as yl_client_err:
             raise UpdateFailed from yl_client_err
         if device_state is not None:
+            dev_lora_info = device_state.get(ATTR_LORA_INFO)
+            if dev_lora_info is not None:
+                self.dev_net_type = dev_lora_info.get("devNetType")
             return device_state
         return {}
