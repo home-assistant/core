@@ -1,6 +1,6 @@
 """Test the Lutron Caseta diagnostics."""
 
-from unittest.mock import ANY, patch
+from unittest.mock import ANY
 
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
@@ -11,7 +11,7 @@ from homeassistant.components.lutron_caseta.const import (
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from . import MockBridge
+from . import MockBridge, async_setup_integration
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -34,12 +34,7 @@ async def test_diagnostics(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.lutron_caseta.Smartbridge.create_tls",
-        return_value=MockBridge(can_connect=True),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await async_setup_integration(hass, MockBridge, config_entry.entry_id)
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag == {

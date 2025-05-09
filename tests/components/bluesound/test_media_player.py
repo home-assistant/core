@@ -17,12 +17,14 @@ from homeassistant.components.bluesound.media_player import (
     SERVICE_SET_TIMER,
 )
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_SELECT_SOURCE,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
@@ -117,6 +119,32 @@ async def test_volume_down(
     )
 
     player_mocks.player_data.player.volume.assert_called_once_with(level=9)
+
+
+async def test_select_input_source(
+    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
+) -> None:
+    """Test the media player select input source."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_INPUT_SOURCE: "input1"},
+    )
+
+    player_mocks.player_data.player.play_url.assert_called_once_with("url1")
+
+
+async def test_select_preset_source(
+    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
+) -> None:
+    """Test the media player select preset source."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_INPUT_SOURCE: "preset1"},
+    )
+
+    player_mocks.player_data.player.load_preset.assert_called_once_with(1)
 
 
 async def test_attributes_set(

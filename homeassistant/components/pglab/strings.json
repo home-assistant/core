@@ -15,9 +15,25 @@
     }
   },
   "entity": {
+    "cover": {
+      "shutter": {
+        "name": "Shutter {shutter_id}"
+      }
+    },
     "switch": {
       "relay": {
         "name": "Relay {relay_id}"
+      }
+    },
+    "sensor": {
+      "temperature": {
+        "name": "Temperature"
+      },
+      "runtime": {
+        "name": "Run time"
+      },
+      "mpu_voltage": {
+        "name": "MPU voltage"
       }
     }
   }

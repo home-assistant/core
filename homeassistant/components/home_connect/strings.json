@@ -14,13 +14,15 @@
       }
     },
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "wrong_account": "Please ensure you reconfigure against the same account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -110,17 +112,71 @@
     }
   },
   "issues": {
-    "deprecated_binary_common_door_sensor": {
-      "title": "Deprecated binary door sensor detected in some automations or scripts",
-      "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
+    "home_connect_too_many_connected_paired_events": {
+      "title": "{appliance_name} sent too many connected or paired events",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::home_connect_too_many_connected_paired_events::title%]",
+            "description": "The appliance \"{appliance_name}\" has been reported as connected or paired {times} times in less than {time_window} minutes, so refreshes on connected or paired events has been disabled to avoid exceeding the API rate limit.\n\nPlease refer to the [Home Connect Wi-Fi requirements and recommendations]({home_connect_resource_url}). If everything seems right with your network configuration, restart the appliance.\n\nClick \"submit\" to re-enable the updates.\nIf the issue persists, please create an issue in the [Home Assistant core repository]({home_assistant_core_new_issue_url})."
+          }
+        }
+      }
+    },
+    "deprecated_time_alarm_clock_in_automations_scripts": {
+      "title": "Deprecated alarm clock entity detected in some automations or scripts",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock_in_automations_scripts::title%]",
+            "description": "The alarm clock entity `{entity_id}`, which is deprecated because it's being moved to the `number` platform, is used in the following automations or scripts:\n{items}\n\nPlease, fix this issue by updating your automations or scripts to use the new `number` entity."
+          }
+        }
+      }
+    },
+    "deprecated_time_alarm_clock": {
+      "title": "Deprecated alarm clock entity",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock::title%]",
+            "description": "The alarm clock entity `{entity_id}` is deprecated because it's being moved to the `number` platform.\n\nPlease use the new `number` entity."
+          }
+        }
+      }
     },
     "deprecated_command_actions": {
       "title": "The command related actions are deprecated in favor of the new buttons",
-      "description": "The `pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please update your automations, scripts and panels that use this action to use the button entities instead, and press on submit to fix the issue."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_command_actions::title%]",
+            "description": "The `pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please update your automations, scripts and panels that use this action to use the button entities instead, and press on submit to fix the issue."
+          }
+        }
+      }
+    },
+    "deprecated_program_switch_in_automations_scripts": {
+      "title": "Deprecated program switch detected in some automations or scripts",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_program_switch_in_automations_scripts::title%]",
+            "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
+          }
+        }
+      }
     },
     "deprecated_program_switch": {
-      "title": "Deprecated program switch detected in some automations or scripts",
-      "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
+      "title": "Deprecated program switch entities",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_program_switch::title%]",
+            "description": "The switch entity `{entity_id}` and all the other program switches are deprecated.\n\nPlease use the active program select entity instead."
+          }
+        }
+      }
     },
     "deprecated_set_program_and_option_actions": {
       "title": "The executed action is deprecated",
@@ -354,7 +410,7 @@
       "options": {
         "consumer_products_coffee_maker_enum_type_flow_rate_normal": "Normal",
         "consumer_products_coffee_maker_enum_type_flow_rate_intense": "Intense",
-        "consumer_products_coffee_maker_enum_type_flow_rate_intense_plus": "Intense plus"
+        "consumer_products_coffee_maker_enum_type_flow_rate_intense_plus": "Intense +"
       }
     },
     "coffee_milk_ratio": {
@@ -410,18 +466,18 @@
         "laundry_care_dryer_enum_type_drying_target_iron_dry": "Iron dry",
         "laundry_care_dryer_enum_type_drying_target_gentle_dry": "Gentle dry",
         "laundry_care_dryer_enum_type_drying_target_cupboard_dry": "Cupboard dry",
-        "laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus": "Cupboard dry plus",
+        "laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus": "Cupboard dry +",
         "laundry_care_dryer_enum_type_drying_target_extra_dry": "Extra dry"
       }
     },
     "venting_level": {
       "options": {
         "cooking_hood_enum_type_stage_fan_off": "Fan off",
-        "cooking_hood_enum_type_stage_fan_stage01": "Fan stage 1",
-        "cooking_hood_enum_type_stage_fan_stage02": "Fan stage 2",
-        "cooking_hood_enum_type_stage_fan_stage03": "Fan stage 3",
-        "cooking_hood_enum_type_stage_fan_stage04": "Fan stage 4",
-        "cooking_hood_enum_type_stage_fan_stage05": "Fan stage 5"
+        "cooking_hood_enum_type_stage_fan_stage_01": "Fan stage 1",
+        "cooking_hood_enum_type_stage_fan_stage_02": "Fan stage 2",
+        "cooking_hood_enum_type_stage_fan_stage_03": "Fan stage 3",
+        "cooking_hood_enum_type_stage_fan_stage_04": "Fan stage 4",
+        "cooking_hood_enum_type_stage_fan_stage_05": "Fan stage 5"
       }
     },
     "intensive_level": {
@@ -433,22 +489,22 @@
     },
     "warming_level": {
       "options": {
-        "cooking_oven_enum_type_warming_level_low": "Low",
-        "cooking_oven_enum_type_warming_level_medium": "Medium",
-        "cooking_oven_enum_type_warming_level_high": "High"
+        "cooking_oven_enum_type_warming_level_low": "[%key:common::state::low%]",
+        "cooking_oven_enum_type_warming_level_medium": "[%key:common::state::medium%]",
+        "cooking_oven_enum_type_warming_level_high": "[%key:common::state::high%]"
       }
     },
     "washer_temperature": {
       "options": {
         "laundry_care_washer_enum_type_temperature_cold": "Cold",
-        "laundry_care_washer_enum_type_temperature_g_c20": "20ºC clothes",
-        "laundry_care_washer_enum_type_temperature_g_c30": "30ºC clothes",
-        "laundry_care_washer_enum_type_temperature_g_c40": "40ºC clothes",
-        "laundry_care_washer_enum_type_temperature_g_c50": "50ºC clothes",
-        "laundry_care_washer_enum_type_temperature_g_c60": "60ºC clothes",
-        "laundry_care_washer_enum_type_temperature_g_c70": "70ºC clothes",
-        "laundry_care_washer_enum_type_temperature_g_c80": "80ºC clothes",
-        "laundry_care_washer_enum_type_temperature_g_c90": "90ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_20": "20ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_30": "30ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_40": "40ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_50": "50ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_60": "60ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_70": "70ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_80": "80ºC clothes",
+        "laundry_care_washer_enum_type_temperature_g_c_90": "90ºC clothes",
         "laundry_care_washer_enum_type_temperature_ul_cold": "Cold",
         "laundry_care_washer_enum_type_temperature_ul_warm": "Warm",
         "laundry_care_washer_enum_type_temperature_ul_hot": "Hot",
@@ -457,23 +513,25 @@
     },
     "spin_speed": {
       "options": {
-        "laundry_care_washer_enum_type_spin_speed_off": "Off",
-        "laundry_care_washer_enum_type_spin_speed_r_p_m400": "400 rpm",
-        "laundry_care_washer_enum_type_spin_speed_r_p_m600": "600 rpm",
-        "laundry_care_washer_enum_type_spin_speed_r_p_m800": "800 rpm",
-        "laundry_care_washer_enum_type_spin_speed_r_p_m1000": "1000 rpm",
-        "laundry_care_washer_enum_type_spin_speed_r_p_m1200": "1200 rpm",
-        "laundry_care_washer_enum_type_spin_speed_r_p_m1400": "1400 rpm",
-        "laundry_care_washer_enum_type_spin_speed_r_p_m1600": "1600 rpm",
-        "laundry_care_washer_enum_type_spin_speed_ul_off": "Off",
-        "laundry_care_washer_enum_type_spin_speed_ul_low": "Low",
-        "laundry_care_washer_enum_type_spin_speed_ul_medium": "Medium",
-        "laundry_care_washer_enum_type_spin_speed_ul_high": "High"
+        "laundry_care_washer_enum_type_spin_speed_off": "[%key:common::state::off%]",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_400": "400 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_600": "600 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_700": "700 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_800": "800 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_900": "900 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_1000": "1000 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_1200": "1200 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_1400": "1400 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m_1600": "1600 rpm",
+        "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]",
+        "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:common::state::low%]",
+        "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:common::state::medium%]",
+        "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:common::state::high%]"
       }
     },
     "vario_perfect": {
       "options": {
-        "laundry_care_common_enum_type_vario_perfect_off": "Off",
+        "laundry_care_common_enum_type_vario_perfect_off": "[%key:common::state::off%]",
         "laundry_care_common_enum_type_vario_perfect_eco_perfect": "Eco perfect",
         "laundry_care_common_enum_type_vario_perfect_speed_perfect": "Speed perfect"
       }
@@ -592,7 +650,7 @@
           "description": "Defines if the program sequence is optimized with a special drying cycle to ensure more shine on glasses and plastic items."
         },
         "dishcare_dishwasher_option_vario_speed_plus": {
-          "name": "Vario speed plus",
+          "name": "Vario speed +",
           "description": "Defines if the program run time is reduced by up to 66% with the usual optimum cleaning and drying."
         },
         "dishcare_dishwasher_option_silence_on_demand": {
@@ -608,7 +666,7 @@
           "description": "Defines if improved drying for glasses and plasticware is enabled."
         },
         "dishcare_dishwasher_option_hygiene_plus": {
-          "name": "Hygiene plus",
+          "name": "Hygiene +",
           "description": "Defines if the cleaning is done with increased temperature. This ensures maximum hygienic cleanliness for regular use."
         },
         "dishcare_dishwasher_option_eco_dry": {
@@ -809,8 +867,17 @@
       "bottle_cooler_door": {
         "name": "Bottle cooler door"
       },
+      "common_chiller_door": {
+        "name": "Common chiller door"
+      },
       "chiller_door": {
         "name": "Chiller door"
+      },
+      "left_chiller_door": {
+        "name": "Left chiller door"
+      },
+      "right_chiller_door": {
+        "name": "Right chiller door"
       },
       "flex_compartment_door": {
         "name": "Flex compartment door"
@@ -857,6 +924,9 @@
       }
     },
     "number": {
+      "alarm_clock": {
+        "name": "Alarm clock"
+      },
       "refrigerator_setpoint_temperature": {
         "name": "Refrigerator temperature"
       },
@@ -1382,11 +1452,11 @@
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_hood_option_venting_level::name%]",
         "state": {
           "cooking_hood_enum_type_stage_fan_off": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_off%]",
-          "cooking_hood_enum_type_stage_fan_stage01": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage01%]",
-          "cooking_hood_enum_type_stage_fan_stage02": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage02%]",
-          "cooking_hood_enum_type_stage_fan_stage03": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage03%]",
-          "cooking_hood_enum_type_stage_fan_stage04": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage04%]",
-          "cooking_hood_enum_type_stage_fan_stage05": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage05%]"
+          "cooking_hood_enum_type_stage_fan_stage_01": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_01%]",
+          "cooking_hood_enum_type_stage_fan_stage_02": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_02%]",
+          "cooking_hood_enum_type_stage_fan_stage_03": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_03%]",
+          "cooking_hood_enum_type_stage_fan_stage_04": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_04%]",
+          "cooking_hood_enum_type_stage_fan_stage_05": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_05%]"
         }
       },
       "intensive_level": {
@@ -1400,23 +1470,23 @@
       "warming_level": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_oven_option_warming_level::name%]",
         "state": {
-          "cooking_oven_enum_type_warming_level_low": "[%key:component::home_connect::selector::warming_level::options::cooking_oven_enum_type_warming_level_low%]",
-          "cooking_oven_enum_type_warming_level_medium": "[%key:component::home_connect::selector::warming_level::options::cooking_oven_enum_type_warming_level_medium%]",
-          "cooking_oven_enum_type_warming_level_high": "[%key:component::home_connect::selector::warming_level::options::cooking_oven_enum_type_warming_level_high%]"
+          "cooking_oven_enum_type_warming_level_low": "[%key:common::state::low%]",
+          "cooking_oven_enum_type_warming_level_medium": "[%key:common::state::medium%]",
+          "cooking_oven_enum_type_warming_level_high": "[%key:common::state::high%]"
         }
       },
       "washer_temperature": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_temperature::name%]",
         "state": {
           "laundry_care_washer_enum_type_temperature_cold": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_cold%]",
-          "laundry_care_washer_enum_type_temperature_g_c20": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c20%]",
-          "laundry_care_washer_enum_type_temperature_g_c30": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c30%]",
-          "laundry_care_washer_enum_type_temperature_g_c40": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c40%]",
-          "laundry_care_washer_enum_type_temperature_g_c50": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c50%]",
-          "laundry_care_washer_enum_type_temperature_g_c60": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c60%]",
-          "laundry_care_washer_enum_type_temperature_g_c70": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c70%]",
-          "laundry_care_washer_enum_type_temperature_g_c80": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c80%]",
-          "laundry_care_washer_enum_type_temperature_g_c90": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c90%]",
+          "laundry_care_washer_enum_type_temperature_g_c_20": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_20%]",
+          "laundry_care_washer_enum_type_temperature_g_c_30": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_30%]",
+          "laundry_care_washer_enum_type_temperature_g_c_40": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_40%]",
+          "laundry_care_washer_enum_type_temperature_g_c_50": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_50%]",
+          "laundry_care_washer_enum_type_temperature_g_c_60": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_60%]",
+          "laundry_care_washer_enum_type_temperature_g_c_70": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_70%]",
+          "laundry_care_washer_enum_type_temperature_g_c_80": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_80%]",
+          "laundry_care_washer_enum_type_temperature_g_c_90": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_g_c_90%]",
           "laundry_care_washer_enum_type_temperature_ul_cold": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_ul_cold%]",
           "laundry_care_washer_enum_type_temperature_ul_warm": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_ul_warm%]",
           "laundry_care_washer_enum_type_temperature_ul_hot": "[%key:component::home_connect::selector::washer_temperature::options::laundry_care_washer_enum_type_temperature_ul_hot%]",
@@ -1426,24 +1496,26 @@
       "spin_speed": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_spin_speed::name%]",
         "state": {
-          "laundry_care_washer_enum_type_spin_speed_off": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_off%]",
-          "laundry_care_washer_enum_type_spin_speed_r_p_m400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m400%]",
-          "laundry_care_washer_enum_type_spin_speed_r_p_m600": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m600%]",
-          "laundry_care_washer_enum_type_spin_speed_r_p_m800": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m800%]",
-          "laundry_care_washer_enum_type_spin_speed_r_p_m1000": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m1000%]",
-          "laundry_care_washer_enum_type_spin_speed_r_p_m1200": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m1200%]",
-          "laundry_care_washer_enum_type_spin_speed_r_p_m1400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m1400%]",
-          "laundry_care_washer_enum_type_spin_speed_r_p_m1600": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m1600%]",
-          "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_off%]",
-          "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_low%]",
-          "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_medium%]",
-          "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_high%]"
+          "laundry_care_washer_enum_type_spin_speed_off": "[%key:common::state::off%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_400%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_600": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_600%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_700": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_700%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_800": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_800%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_900": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_900%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_1000": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1000%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_1200": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1200%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_1400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1400%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m_1600": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1600%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:common::state::low%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:common::state::medium%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:common::state::high%]"
         }
       },
       "vario_perfect": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_vario_perfect::name%]",
         "state": {
-          "laundry_care_common_enum_type_vario_perfect_off": "[%key:component::home_connect::selector::vario_perfect::options::laundry_care_common_enum_type_vario_perfect_off%]",
+          "laundry_care_common_enum_type_vario_perfect_off": "[%key:common::state::off%]",
           "laundry_care_common_enum_type_vario_perfect_eco_perfect": "[%key:component::home_connect::selector::vario_perfect::options::laundry_care_common_enum_type_vario_perfect_eco_perfect%]",
           "laundry_care_common_enum_type_vario_perfect_speed_perfect": "[%key:component::home_connect::selector::vario_perfect::options::laundry_care_common_enum_type_vario_perfect_speed_perfect%]"
         }
@@ -1462,11 +1534,11 @@
           "inactive": "Inactive",
           "ready": "Ready",
           "delayedstart": "Delayed start",
-          "run": "Run",
+          "run": "Running",
           "pause": "[%key:common::state::paused%]",
           "actionrequired": "Action required",
           "finished": "Finished",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "aborting": "Aborting"
         }
       },
@@ -1479,34 +1551,39 @@
         }
       },
       "coffee_counter": {
-        "name": "Coffees"
+        "name": "Coffees",
+        "unit_of_measurement": "coffees"
       },
       "powder_coffee_counter": {
-        "name": "Powder coffees"
+        "name": "Powder coffees",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::coffee_counter::unit_of_measurement%]"
       },
       "hot_water_counter": {
         "name": "Hot water"
       },
       "hot_water_cups_counter": {
-        "name": "Hot water cups"
+        "name": "Hot water cups",
+        "unit_of_measurement": "cups"
       },
       "hot_milk_counter": {
-        "name": "Hot milk cups"
+        "name": "Hot milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "frothy_milk_counter": {
-        "name": "Frothy milk cups"
+        "name": "Frothy milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "milk_counter": {
-        "name": "Milk cups"
+        "name": "Milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "coffee_and_milk_counter": {
-        "name": "Coffee and milk cups"
+        "name": "Coffee and milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "ristretto_espresso_counter": {
-        "name": "Ristretto espresso cups"
-      },
-      "battery_level": {
-        "name": "Battery level"
+        "name": "Ristretto espresso cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "camera_state": {
         "name": "Camera state",
@@ -1517,7 +1594,7 @@
           "streaminglocal": "Streaming local",
           "streamingcloud": "Streaming cloud",
           "streaminglocal_and_cloud": "Streaming local and cloud",
-          "error": "Error"
+          "error": "[%key:common::state::error%]"
         }
       },
       "last_selected_map": {
@@ -1529,26 +1606,67 @@
           "map3": "Map 3"
         }
       },
-      "current_cavity_temperature": {
-        "name": "Current cavity temperature"
+      "oven_current_cavity_temperature": {
+        "name": "Current oven cavity temperature"
       },
-      "freezer_door_alarm": {
-        "name": "Freezer door alarm",
-        "state": {
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
-      "refrigerator_door_alarm": {
-        "name": "Refrigerator door alarm",
+      "program_aborted": {
+        "name": "Program aborted",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "freezer_temperature_alarm": {
-        "name": "Freezer temperature alarm",
+      "program_finished": {
+        "name": "Program finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "alarm_clock_elapsed": {
+        "name": "Alarm clock elapsed",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "preheat_finished": {
+        "name": "Pre-heat finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "regular_preheat_finished": {
+        "name": "Regular pre-heat finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "drying_process_finished": {
+        "name": "Drying process finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "salt_nearly_empty": {
+        "name": "Salt nearly empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "rinse_aid_nearly_empty": {
+        "name": "Rinse aid nearly empty",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
@@ -1579,16 +1697,216 @@
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "salt_nearly_empty": {
-        "name": "Salt nearly empty",
+      "keep_milk_tank_cool": {
+        "name": "Keep milk tank cool",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "rinse_aid_nearly_empty": {
-        "name": "Rinse aid nearly empty",
+      "descaling_in_20_cups": {
+        "name": "Descaling in 20 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "descaling_in_15_cups": {
+        "name": "Descaling in 15 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "descaling_in_10_cups": {
+        "name": "Descaling in 10 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "descaling_in_5_cups": {
+        "name": "Descaling in 5 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_should_be_descaled": {
+        "name": "Device should be descaled",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_descaling_overdue": {
+        "name": "Device descaling overdue",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_descaling_blockage": {
+        "name": "Device descaling blockage",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_should_be_cleaned": {
+        "name": "Device should be cleaned",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_cleaning_overdue": {
+        "name": "Device cleaning overdue",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in20cups": {
+        "name": "Calc'N'Clean in 20 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in15cups": {
+        "name": "Calc'N'Clean in 15 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in10cups": {
+        "name": "Calc'N'Clean in 10 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in5cups": {
+        "name": "Calc'N'Clean in 5 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_should_be_calc_n_cleaned": {
+        "name": "Device should be Calc'N'Cleaned",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_calc_n_clean_overdue": {
+        "name": "Device Calc'N'Clean overdue",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_calc_n_clean_blockage": {
+        "name": "Device Calc'N'Clean blockage",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "freezer_door_alarm": {
+        "name": "Freezer door alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "refrigerator_door_alarm": {
+        "name": "Refrigerator door alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "freezer_temperature_alarm": {
+        "name": "Freezer temperature alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "empty_dust_box_and_clean_filter": {
+        "name": "Empty dust box and clean filter",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "robot_is_stuck": {
+        "name": "Robot is stuck",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "docking_station_not_found": {
+        "name": "Docking station not found",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "poor_i_dos_1_fill_level": {
+        "name": "Poor i-Dos 1 fill level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "poor_i_dos_2_fill_level": {
+        "name": "Poor i-Dos 2 fill level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "grease_filter_max_saturation_nearly_reached": {
+        "name": "Grease filter max saturation nearly reached",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "grease_filter_max_saturation_reached": {
+        "name": "Grease filter max saturation reached",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",

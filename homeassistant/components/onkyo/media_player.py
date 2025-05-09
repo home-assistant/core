@@ -8,32 +8,18 @@ from functools import cache
 import logging
 from typing import Any, Literal
 
-import voluptuous as vol
-
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OnkyoConfigEntry
 from .const import (
-    CONF_RECEIVER_MAX_VOLUME,
-    CONF_SOURCES,
     DOMAIN,
     OPTION_MAX_VOLUME,
     OPTION_VOLUME_RESOLUTION,
@@ -43,45 +29,10 @@ from .const import (
     ListeningMode,
     VolumeResolution,
 )
-from .receiver import Receiver, async_discover
+from .receiver import Receiver
 from .services import DATA_MP_ENTITIES
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_MAX_VOLUME_DEFAULT = 100
-CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
-CONF_SOURCES_DEFAULT = {
-    "tv": "TV",
-    "bd": "Bluray",
-    "game": "Game",
-    "aux1": "Aux1",
-    "video1": "Video 1",
-    "video2": "Video 2",
-    "video3": "Video 3",
-    "video4": "Video 4",
-    "video5": "Video 5",
-    "video6": "Video 6",
-    "video7": "Video 7",
-    "fm": "Radio",
-}
-
-ISSUE_URL_PLACEHOLDER = "/config/integrations/dashboard/add?domain=onkyo"
-
-PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(OPTION_MAX_VOLUME, default=CONF_MAX_VOLUME_DEFAULT): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=100)
-        ),
-        vol.Optional(
-            CONF_RECEIVER_MAX_VOLUME, default=CONF_RECEIVER_MAX_VOLUME_DEFAULT
-        ): cv.positive_int,
-        vol.Optional(CONF_SOURCES, default=CONF_SOURCES_DEFAULT): {
-            cv.string: cv.string
-        },
-    }
-)
 
 
 SUPPORTED_FEATURES_BASE = (
@@ -194,122 +145,6 @@ def _rev_listening_mode_lib_mappings(zone: str) -> dict[LibValue, ListeningMode]
     return {value: key for key, value in _listening_mode_lib_mappings(zone).items()}
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import config from yaml."""
-    host = config.get(CONF_HOST)
-
-    source_mapping: dict[str, InputSource] = {}
-    for zone in ZONES:
-        for source, source_lib in _input_source_lib_mappings(zone).items():
-            if isinstance(source_lib, str):
-                source_mapping.setdefault(source_lib, source)
-            else:
-                for source_lib_single in source_lib:
-                    source_mapping.setdefault(source_lib_single, source)
-
-    sources: dict[InputSource, str] = {}
-    for source_lib_single, source_name in config[CONF_SOURCES].items():
-        user_source = source_mapping.get(source_lib_single.lower())
-        if user_source is not None:
-            sources[user_source] = source_name
-
-    config[CONF_SOURCES] = sources
-
-    results = []
-    if host is not None:
-        _LOGGER.debug("Importing yaml single: %s", host)
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-        results.append((host, result))
-    else:
-        for info in await async_discover():
-            host = info.host
-
-            # Migrate legacy entities.
-            registry = er.async_get(hass)
-            old_unique_id = f"{info.model_name}_{info.identifier}"
-            new_unique_id = f"{info.identifier}_main"
-            entity_id = registry.async_get_entity_id(
-                "media_player", DOMAIN, old_unique_id
-            )
-            if entity_id is not None:
-                _LOGGER.debug(
-                    "Migrating unique_id from [%s] to [%s] for entity %s",
-                    old_unique_id,
-                    new_unique_id,
-                    entity_id,
-                )
-                registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-            _LOGGER.debug("Importing yaml discover: %s", info.host)
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config | {CONF_HOST: info.host} | {"info": info},
-            )
-            results.append((host, result))
-
-    _LOGGER.debug("Importing yaml results: %s", results)
-    if not results:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_import_issue_no_discover",
-            breaks_in_ha_version="2025.5.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_import_issue_no_discover",
-            translation_placeholders={"url": ISSUE_URL_PLACEHOLDER},
-        )
-
-    all_successful = True
-    for host, result in results:
-        if (
-            result.get("type") == FlowResultType.CREATE_ENTRY
-            or result.get("reason") == "already_configured"
-        ):
-            continue
-        if error := result.get("reason"):
-            all_successful = False
-            async_create_issue(
-                hass,
-                DOMAIN,
-                f"deprecated_yaml_import_issue_{host}_{error}",
-                breaks_in_ha_version="2025.5.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key=f"deprecated_yaml_import_issue_{error}",
-                translation_placeholders={
-                    "host": host,
-                    "url": ISSUE_URL_PLACEHOLDER,
-                },
-            )
-
-    if all_successful:
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            breaks_in_ha_version="2025.5.0",
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "onkyo",
-            },
-        )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OnkyoConfigEntry,
@@ -398,6 +233,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._volume_resolution = volume_resolution
         self._max_volume = max_volume
 
+        self._options_sources = sources
         self._source_lib_mapping = _input_source_lib_mappings(zone)
         self._rev_source_lib_mapping = _rev_input_source_lib_mappings(zone)
         self._source_mapping = {
@@ -409,6 +245,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             value: key for key, value in self._source_mapping.items()
         }
 
+        self._options_sound_modes = sound_modes
         self._sound_mode_lib_mapping = _listening_mode_lib_mappings(zone)
         self._rev_sound_mode_lib_mapping = _rev_listening_mode_lib_mappings(zone)
         self._sound_mode_mapping = {
@@ -586,7 +423,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             self._attr_volume_level = min(1, volume_level)
         elif command in ["muting", "audio-muting"]:
             self._attr_is_volume_muted = bool(value == "on")
-        elif command in ["selector", "input-selector"]:
+        elif command in ["selector", "input-selector"] and value != "N/A":
             self._parse_source(value)
             self._query_av_info_delayed()
         elif command == "hdmi-output-selector":
@@ -623,11 +460,20 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             return
 
         source_meaning = source.value_meaning
-        _LOGGER.error(
-            'Input source "%s" is invalid for entity: %s',
-            source_meaning,
-            self.entity_id,
-        )
+
+        if source not in self._options_sources:
+            _LOGGER.warning(
+                'Input source "%s" for entity: %s is not in the list. Check integration options',
+                source_meaning,
+                self.entity_id,
+            )
+        else:
+            _LOGGER.error(
+                'Input source "%s" is invalid for entity: %s',
+                source_meaning,
+                self.entity_id,
+            )
+
         self._attr_source = source_meaning
 
     @callback
@@ -638,11 +484,20 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             return
 
         sound_mode_meaning = sound_mode.value_meaning
-        _LOGGER.error(
-            'Listening mode "%s" is invalid for entity: %s',
-            sound_mode_meaning,
-            self.entity_id,
-        )
+
+        if sound_mode not in self._options_sound_modes:
+            _LOGGER.warning(
+                'Listening mode "%s" for entity: %s is not in the list. Check integration options',
+                sound_mode_meaning,
+                self.entity_id,
+            )
+        else:
+            _LOGGER.error(
+                'Listening mode "%s" is invalid for entity: %s',
+                sound_mode_meaning,
+                self.entity_id,
+            )
+
         self._attr_sound_mode = sound_mode_meaning
 
     @callback

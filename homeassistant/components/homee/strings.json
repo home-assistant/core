@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Homee {name} ({host})",
+    "flow_title": "homee {name} ({host})",
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
@@ -18,14 +18,84 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The IP address of your Homee.",
-          "username": "The username for your Homee.",
-          "password": "The password for your Homee."
+          "host": "The IP address of your homee.",
+          "username": "The username for your homee.",
+          "password": "The password for your homee."
         }
       }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "blackout_alarm": {
+        "name": "Blackout"
+      },
+      "carbon_dioxide": {
+        "name": "Carbon dioxide"
+      },
+      "flood": {
+        "name": "Flood"
+      },
+      "high_temperature": {
+        "name": "High temperature"
+      },
+      "leak_alarm": {
+        "name": "Leak"
+      },
+      "load_alarm": {
+        "name": "Load",
+        "state": {
+          "off": "[%key:common::state::normal%]",
+          "on": "Overload"
+        }
+      },
+      "low_temperature": {
+        "name": "Low temperature"
+      },
+      "malfunction": {
+        "name": "Malfunction"
+      },
+      "maximum": {
+        "name": "Maximum level"
+      },
+      "minimum": {
+        "name": "Minimum level"
+      },
+      "motor_blocked": {
+        "name": "Motor blocked"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "replace_filter": {
+        "name": "Replace filter",
+        "state": {
+          "on": "Replace"
+        }
+      },
+      "storage": {
+        "name": "Storage",
+        "state": {
+          "off": "Space available",
+          "on": "Storage full"
+        }
+      },
+      "surge": {
+        "name": "Surge"
+      },
+      "voltage_drop": {
+        "name": "Voltage drop"
+      },
+      "water": {
+        "name": "Water"
+      }
+    },
     "button": {
       "automatic_mode": {
         "name": "Automatic mode"
@@ -59,6 +129,17 @@
       },
       "ventilate": {
         "name": "Ventilate"
+      }
+    },
+    "climate": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
       }
     },
     "light": {
@@ -108,9 +189,25 @@
       },
       "wake_up_interval": {
         "name": "Wake-up interval"
+      },
+      "wind_monitoring_state": {
+        "name": "Threshold for wind trigger"
+      }
+    },
+    "select": {
+      "repeater_mode": {
+        "name": "Repeater mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "Level 1",
+          "level2": "Level 2"
+        }
       }
     },
     "sensor": {
+      "brightness": {
+        "name": "Illuminance"
+      },
       "brightness_instance": {
         "name": "Illuminance {instance}"
       },
@@ -214,8 +311,8 @@
           "open": "[%key:common::state::open%]",
           "closed": "[%key:common::state::closed%]",
           "partial": "Partially open",
-          "opening": "Opening",
-          "closing": "Closing"
+          "opening": "[%key:common::state::opening%]",
+          "closing": "[%key:common::state::closing%]"
         }
       },
       "uv": {
@@ -258,7 +355,13 @@
   },
   "exceptions": {
     "connection_closed": {
-      "message": "Could not connect to Homee while setting attribute."
+      "message": "Could not connect to homee while setting attribute."
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "title": "The Homee {name} entity is deprecated",
+      "description": "The Homee entity `{entity}` is deprecated and will be removed in release 2025.12.\nThe valve is available directly in the respective climate entity.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
     }
   }
 }

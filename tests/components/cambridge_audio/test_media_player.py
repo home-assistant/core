@@ -11,6 +11,7 @@ from aiostreammagic import (
 import pytest
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_REPEAT,
@@ -513,3 +514,41 @@ async def test_play_media_unknown_type(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("source_id", "artist", "station", "display"),
+    [
+        ("MEDIA_PLAYER", "Metallica", None, "Metallica"),
+        ("USB_AUDIO", "Iron Maiden", "Radio BOB!", "Iron Maiden"),
+        ("IR", "In Flames", "Radio BOB!", "In Flames"),
+        ("IR", None, "Radio BOB!", "Radio BOB!"),
+        ("IR", None, None, None),
+        ("MEDIA_PLAYER", None, "Radio BOB!", None),
+    ],
+)
+async def test_media_artist(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    source_id: str,
+    artist: str,
+    station: str,
+    display: str,
+) -> None:
+    """Test media player state."""
+    await setup_integration(hass, mock_config_entry)
+    mock_stream_magic_client.play_state.metadata.artist = artist
+    mock_stream_magic_client.play_state.metadata.station = station
+    mock_stream_magic_client.state.source = source_id
+
+    await mock_state_update(mock_stream_magic_client)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    if (artist is None and source_id != "IR") or (
+        source_id == "IR" and station is None
+    ):
+        assert ATTR_MEDIA_ARTIST not in state.attributes
+    else:
+        assert state.attributes[ATTR_MEDIA_ARTIST] == display

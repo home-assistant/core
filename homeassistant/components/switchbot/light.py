@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
-from switchbot import ColorMode as SwitchBotColorMode, SwitchbotBaseLight
+import switchbot
+from switchbot import ColorMode as SwitchBotColorMode
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity
+from .entity import SwitchbotEntity, exception_handler
 
 SWITCHBOT_COLOR_MODE_TO_HASS = {
     SwitchBotColorMode.RGB: ColorMode.RGB,
@@ -39,7 +40,7 @@ async def async_setup_entry(
 class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
     """Representation of switchbot light bulb."""
 
-    _device: SwitchbotBaseLight
+    _device: switchbot.SwitchbotBaseLight
     _attr_name = None
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
@@ -66,9 +67,12 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
         self._attr_rgb_color = device.rgb
         self._attr_color_mode = ColorMode.RGB
 
+    @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        brightness = round(kwargs.get(ATTR_BRIGHTNESS, self.brightness) / 255 * 100)
+        brightness = round(
+            cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness)) / 255 * 100
+        )
 
         if (
             self.supported_color_modes
@@ -87,6 +91,7 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
             return
         await self._device.turn_on()
 
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._device.turn_off()
