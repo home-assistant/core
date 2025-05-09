@@ -1,7 +1,5 @@
 """Tests for the sma integration."""
 
-from unittest.mock import patch
-
 from homeassistant.components.sma.const import CONF_GROUP
 from homeassistant.const import (
     CONF_HOST,
@@ -55,18 +53,5 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "pysma.SMA.device_info",
-            return_value={
-                "manufacturer": "SMA",
-                "name": "SMA Device Name",
-                "type": "Sunny Boy 3.6",
-                "serial": 123456789,
-                "sw_version": "1.0.0",
-            },
-        ),
-        patch("pysma.SMA.read", return_value=True),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
