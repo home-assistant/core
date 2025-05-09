@@ -39,7 +39,7 @@
           "camera_copy": "Cameras that support native H.264 streams",
           "camera_audio": "Cameras that support audio"
         },
-        "description": "Check all cameras that support native H.264 streams. If the camera does not output a H.264 stream, the system will transcode the video to H.264 for HomeKit. Transcoding requires a performant CPU and is unlikely to work on single board computers.",
+        "description": "Check all cameras that support native H.264 streams. If the camera does not output a H.264 stream, the system will transcode the video to H.264 for HomeKit. Transcoding requires a performant CPU and is unlikely to work on single-board computers.",
         "title": "Camera configuration"
       },
       "advanced": {
