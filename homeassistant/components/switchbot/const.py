@@ -38,6 +38,7 @@ class SupportedModels(StrEnum):
     ROLLER_SHADE = "roller_shade"
     HUBMINI_MATTER = "hubmini_matter"
     CIRCULATOR_FAN = "circulator_fan"
+    AIR_PURIFIER = "air_purifier"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -56,6 +57,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.RELAY_SWITCH_1: SupportedModels.RELAY_SWITCH_1,
     SwitchbotModel.ROLLER_SHADE: SupportedModels.ROLLER_SHADE,
     SwitchbotModel.CIRCULATOR_FAN: SupportedModels.CIRCULATOR_FAN,
+    SwitchbotModel.AIR_PURIFIER: SupportedModels.AIR_PURIFIER,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -79,6 +81,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.RELAY_SWITCH_1PM,
     SwitchbotModel.LOCK,
     SwitchbotModel.LOCK_PRO,
+    SwitchbotModel.AIR_PURIFIER,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -88,6 +91,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.LOCK_PRO: switchbot.SwitchbotLock,
     SwitchbotModel.RELAY_SWITCH_1PM: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.RELAY_SWITCH_1: switchbot.SwitchbotRelaySwitch,
+    SwitchbotModel.AIR_PURIFIER: switchbot.SwitchbotAirPurifier,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {

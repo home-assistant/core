@@ -102,6 +102,10 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
+    "aqi_level": SensorEntityDescription(
+        key="aqi_level",
+        translation_key="aqi_level",
+    ),
 }
 
 
