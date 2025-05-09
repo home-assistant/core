@@ -167,17 +167,37 @@ def test_validate_password_no_homeassistant() -> None:
         assert validate_password(mock_path, "hunter2") is False
 
 
-async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("addons", "padding_size", "decrypted_backup"),
+    [
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+                AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+            ],
+            40960,  # 4 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.decrypted",
+        ),
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            ],
+            30720,  # 3 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.decrypted_skip_core2",
+        ),
+    ],
+)
+async def test_decrypted_backup_streamer(
+    hass: HomeAssistant,
+    addons: list[AddonInfo],
+    padding_size: int,
+    decrypted_backup: str,
+) -> None:
     """Test the decrypted backup streamer."""
-    decrypted_backup_path = get_fixture_path(
-        "test_backups/c0cb53bd.tar.decrypted", DOMAIN
-    )
+    decrypted_backup_path = get_fixture_path(decrypted_backup, DOMAIN)
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
-        addons=[
-            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
-            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
-        ],
+        addons=addons,
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -189,7 +209,7 @@ async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
         protected=True,
         size=encrypted_backup_path.stat().st_size,
     )
-    expected_padding = b"\0" * 40960  # 4 x 10240 byte of padding
+    expected_padding = b"\0" * padding_size
 
     async def send_backup() -> AsyncIterator[bytes]:
         f = encrypted_backup_path.open("rb")
@@ -325,17 +345,39 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
     assert isinstance(decryptor._workers[0].error, securetar.SecureTarReadError)
 
 
-async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("addons", "padding_size", "encrypted_backup"),
+    [
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+                AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+            ],
+            40960,  # 4 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar",
+        ),
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+            ],
+            30720,  # 3 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.encrypted_skip_core2",
+        ),
+    ],
+)
+async def test_encrypted_backup_streamer(
+    hass: HomeAssistant,
+    addons: list[AddonInfo],
+    padding_size: int,
+    encrypted_backup: str,
+) -> None:
     """Test the encrypted backup streamer."""
     decrypted_backup_path = get_fixture_path(
         "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
-    encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
+    encrypted_backup_path = get_fixture_path(encrypted_backup, DOMAIN)
     backup = AgentBackup(
-        addons=[
-            AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
-            AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
-        ],
+        addons=addons,
         backup_id="1234",
         date="2024-12-02T07:23:58.261875-05:00",
         database_included=False,
@@ -347,7 +389,7 @@ async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
         protected=False,
         size=decrypted_backup_path.stat().st_size,
     )
-    expected_padding = b"\0" * 40960  # 4 x 10240 byte of padding
+    expected_padding = b"\0" * padding_size
 
     async def send_backup() -> AsyncIterator[bytes]:
         f = decrypted_backup_path.open("rb")
