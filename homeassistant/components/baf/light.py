@@ -51,8 +51,8 @@ class BAFLight(BAFEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
-            self._device.light_brightness_percent = brightness_to_value(
-                BRIGHTNESS_SCALE, brightness
+            self._device.light_brightness_percent = round(
+                brightness_to_value(BRIGHTNESS_SCALE, brightness)
             )
         else:
             self._device.light_mode = OffOnAuto.ON
