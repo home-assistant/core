@@ -161,6 +161,8 @@ async def async_setup_entry(
     """Set up OpenWeatherMap sensor entities based on a config entry."""
     domain_data = config_entry.runtime_data
     name = domain_data.name
+    unique_id = config_entry.unique_id
+    assert unique_id is not None
     weather_coordinator = domain_data.coordinator
 
     if domain_data.mode == OWM_MODE_FREE_FORECAST:
@@ -174,7 +176,7 @@ async def async_setup_entry(
         async_add_entities(
             OpenWeatherMapSensor(
                 name,
-                f"{config_entry.unique_id}",
+                unique_id,
                 description,
                 weather_coordinator,
             )
