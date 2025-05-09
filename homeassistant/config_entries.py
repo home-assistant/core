@@ -2603,46 +2603,6 @@ class ConfigEntries:
             )
         )
 
-    async def async_forward_entry_setup(
-        self, entry: ConfigEntry, domain: Platform | str
-    ) -> bool:
-        """Forward the setup of an entry to a different component.
-
-        By default an entry is setup with the component it belongs to. If that
-        component also has related platforms, the component will have to
-        forward the entry to be setup by that component.
-
-        This method is deprecated and will stop working in Home Assistant 2025.6.
-
-        Instead, await async_forward_entry_setups as it can load
-        multiple platforms at once and is more efficient since it
-        does not require a separate import executor job for each platform.
-        """
-        report_usage(
-            "calls async_forward_entry_setup for "
-            f"integration, {entry.domain} with title: {entry.title} "
-            f"and entry_id: {entry.entry_id}, which is deprecated, "
-            "await async_forward_entry_setups instead",
-            core_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.6",
-        )
-        if not entry.setup_lock.locked():
-            async with entry.setup_lock:
-                if entry.state is not ConfigEntryState.LOADED:
-                    raise OperationNotAllowed(
-                        f"The config entry '{entry.title}' ({entry.domain}) with "
-                        f"entry_id '{entry.entry_id}' cannot forward setup for "
-                        f"{domain} because it is in state {entry.state}, but needs "
-                        f"to be in the {ConfigEntryState.LOADED} state"
-                    )
-                return await self._async_forward_entry_setup(entry, domain, True)
-        result = await self._async_forward_entry_setup(entry, domain, True)
-        # If the lock was held when we stated, and it was released during
-        # the platform setup, it means they did not await the setup call.
-        if not entry.setup_lock.locked():
-            _report_non_awaited_platform_forwards(entry, "async_forward_entry_setup")
-        return result
-
     async def _async_forward_entry_setup(
         self,
         entry: ConfigEntry,
