@@ -50,7 +50,6 @@ async def async_setup_entry(
 class BluesoundButtonEntityDescription(ButtonEntityDescription):
     """Description for Bluesound button entities."""
 
-    has_entity_name: bool = True
     press_fn: Callable[[Player], Awaitable[None]]
 
 
@@ -85,6 +84,7 @@ BUTTON_DESCRIPTIONS = [
 class BluesoundButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntity):
     """Base class for Bluesound buttons."""
 
+    _attr_has_entity_name = True
     entity_description: BluesoundButtonEntityDescription
 
     def __init__(
