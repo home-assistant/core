@@ -62,6 +62,12 @@ CP2652_ZIGBEE_DISCOVERY_INFO = UsbServiceInfo(
 )
 
 
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return []
+
+
 @pytest.fixture(name="setup_entry")
 def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
