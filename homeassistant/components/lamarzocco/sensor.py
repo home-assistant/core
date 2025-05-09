@@ -132,17 +132,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor entities."""
-    coordinator = entry.runtime_data.config_coordinator
+    config_coordinator = entry.runtime_data.config_coordinator
+    statistic_coordinators = entry.runtime_data.statistics_coordinator
 
     entities = [
-        LaMarzoccoSensorEntity(coordinator, description)
+        LaMarzoccoSensorEntity(config_coordinator, description)
         for description in ENTITIES
-        if description.supported_fn(coordinator)
+        if description.supported_fn(config_coordinator)
     ]
     entities.extend(
-        LaMarzoccoStatisticSensorEntity(coordinator, description)
+        LaMarzoccoStatisticSensorEntity(statistic_coordinators, description)
         for description in STATISTIC_ENTITIES
-        if description.supported_fn(coordinator)
+        if description.supported_fn(statistic_coordinators)
     )
     async_add_entities(entities)
 
