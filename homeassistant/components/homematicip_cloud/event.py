@@ -49,20 +49,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
     hap = hass.data[DOMAIN][config_entry.unique_id]
+    entities: list[HomematicipGenericEntity] = []
 
-    for description in EVENT_DESCRIPTIONS.values():
-        async_add_entities(
-            HomematicipDoorBellEvent(
-                hap,
-                device,
-                channel.index,
-                description,
-            )
-            for device in hap.home.devices
-            for channel in device.functionalChannels
-            if description.channel_selector_fn
-            and description.channel_selector_fn(channel)
+    entities.extend(
+        HomematicipDoorBellEvent(
+            hap,
+            device,
+            channel.index,
+            description,
         )
+        for description in EVENT_DESCRIPTIONS.values()
+        for device in hap.home.devices
+        for channel in device.functionalChannels
+        if description.channel_selector_fn and description.channel_selector_fn(channel)
+    )
+
+    async_add_entities(entities)
 
 
 class HomematicipDoorBellEvent(HomematicipGenericEntity, EventEntity):
@@ -117,12 +119,6 @@ class HomematicipDoorBellEvent(HomematicipGenericEntity, EventEntity):
 
     def _get_channel_event_from_args(self, *args) -> str:
         """Get the channel event."""
-        if not args:
-            return ""
-
-        if len(args) == 0:
-            return ""
-
         if isinstance(args[0], ChannelEvent):
             return args[0].channelEventType
 
