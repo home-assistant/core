@@ -255,3 +255,55 @@ async def test_full_flow_reauth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (SmaConnectionException, "cannot_connect"),
+        (SmaAuthenticationException, "invalid_auth"),
+        (SmaReadException, "cannot_retrieve_device_info"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reauth_flow_exceptions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with (
+        patch("pysma.SMA.new_session", side_effect=exception),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_REAUTH,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    assert result["step_id"] == "reauth_confirm"
+    assert len(mock_setup_entry.mock_calls) == 0
+
+    with (
+        patch("pysma.SMA.new_session", return_value=True),
+        patch("pysma.SMA.device_info", return_value=MOCK_DEVICE),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_REAUTH,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert len(mock_setup_entry.mock_calls) == 1

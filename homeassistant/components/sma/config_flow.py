@@ -161,13 +161,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data={
-                        CONF_HOST: reauth_entry.data[CONF_HOST],
-                        CONF_SSL: reauth_entry.data[CONF_SSL],
-                        CONF_VERIFY_SSL: reauth_entry.data[CONF_VERIFY_SSL],
-                        CONF_GROUP: reauth_entry.data[CONF_GROUP],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    },
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
                 )
 
         return self.async_show_form(
