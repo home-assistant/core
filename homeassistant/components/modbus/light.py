@@ -112,36 +112,32 @@ class ModbusLight(BaseSwitch, LightEntity):
 
     async def async_set_brightness(self, brightness: int) -> None:
         """Set the brightness of the light."""
-        if not self._brightness_address:
-            return
+        if self._brightness_address:
+            conv_brightness = self._convert_brightness_to_modbus(brightness)
 
-        conv_brightness = self._convert_brightness_to_modbus(brightness)
-
-        await self._hub.async_pb_call(
-            unit=self._slave,
-            address=self._brightness_address,
-            value=conv_brightness,
-            use_call=CALL_TYPE_WRITE_REGISTER,
-        )
-        if not self._verify_active:
-            self._attr_brightness = brightness
+            await self._hub.async_pb_call(
+                unit=self._slave,
+                address=self._brightness_address,
+                value=conv_brightness,
+                use_call=CALL_TYPE_WRITE_REGISTER,
+            )
+            if not self._verify_active:
+                self._attr_brightness = brightness
 
     async def async_set_color_temp(self, color_temp_kelvin: int) -> None:
         """Send Modbus command to set color temperature."""
-        if not self._color_temp_address:
-            return
+        if self._color_temp_address:
+            conv_color_temp_kelvin = self._convert_color_temp_to_modbus(color_temp_kelvin)
 
-        conv_color_temp_kelvin = self._convert_color_temp_to_modbus(color_temp_kelvin)
-
-        if conv_color_temp_kelvin is not None:
-            await self._hub.async_pb_call(
-                unit=self._slave,
-                address=self._color_temp_address,
-                value=conv_color_temp_kelvin,
-                use_call=CALL_TYPE_WRITE_REGISTER,
-            )
-        if not self._verify_active:
-            self._attr_color_temp_kelvin = color_temp_kelvin
+            if conv_color_temp_kelvin is not None:
+                await self._hub.async_pb_call(
+                    unit=self._slave,
+                    address=self._color_temp_address,
+                    value=conv_color_temp_kelvin,
+                    use_call=CALL_TYPE_WRITE_REGISTER,
+                )
+            if not self._verify_active:
+                self._attr_color_temp_kelvin = color_temp_kelvin
 
     async def _async_update(self) -> None:
         """Update the entity state, including brightness and color temperature."""
