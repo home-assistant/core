@@ -11,6 +11,7 @@ ACTIONS = "actions"
 POWER_ON = "powerOn"
 POWER_OFF = "powerOff"
 PROCESS_ACTION = "processAction"
+PROGRAM_ID = "programId"
 VENTILATION_STEP = "ventilationStep"
 TARGET_TEMPERATURE = "targetTemperature"
 AMBIENT_LIGHT = "ambientLight"
@@ -336,6 +337,20 @@ class StateProgramType(MieleEnum):
     automatic_program = 2
     cleaning_care_program = 3
     maintenance_program = 4
+    unknown = -9999
+
+
+class StateDryingStep(MieleEnum):
+    """Defines drying steps."""
+
+    extra_dry = 0
+    normal_plus = 1
+    normal = 2
+    slightly_dry = 3
+    hand_iron_1 = 4
+    hand_iron_2 = 5
+    machine_iron = 6
+    smoothing = 7
     unknown = -9999
 
 

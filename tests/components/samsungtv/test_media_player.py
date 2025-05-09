@@ -53,7 +53,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
-    CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
@@ -111,7 +110,6 @@ MOCK_CALLS_WS = {
 }
 
 MOCK_ENTRY_WS = {
-    CONF_IP_ADDRESS: "test",
     CONF_HOST: "fake_host",
     CONF_METHOD: "websocket",
     CONF_NAME: "fake",

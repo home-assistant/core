@@ -69,9 +69,6 @@ PyMetno==0.13.0
 # homeassistant.components.keymitt_ble
 PyMicroBot==0.0.17
 
-# homeassistant.components.nina
-PyNINA==0.3.5
-
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
 PyNaCl==1.5.0
@@ -84,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.60.1
+PySwitchbot==0.62.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -220,10 +217,10 @@ aiocomelit==0.12.0
 aiodhcpwatcher==1.1.1
 
 # homeassistant.components.dhcp
-aiodiscover==2.6.1
+aiodiscover==2.7.0
 
 # homeassistant.components.dnsip
-aiodns==3.3.0
+aiodns==3.4.0
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -762,7 +759,7 @@ debugpy==1.8.13
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==13.0.1
+deebot-client==13.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -782,7 +779,7 @@ denonavr==1.1.0
 devialet==1.5.7
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.18.3
+devolo-home-control-api==0.19.0
 
 # homeassistant.components.devolo_home_network
 devolo-plc-api==1.5.1
@@ -958,7 +955,7 @@ fnv-hash-fast==1.5.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==4.1.0
+forecast-solar==4.2.0
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -1121,7 +1118,7 @@ habiticalib==0.3.7
 habluetooth==3.48.2
 
 # homeassistant.components.cloud
-hass-nabucasa==0.96.0
+hass-nabucasa==0.100.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1161,10 +1158,10 @@ hole==0.8.0
 holidays==0.70
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250506.0
+home-assistant-frontend==20250509.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.4.30
+home-assistant-intents==2025.5.7
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.0.1.1
@@ -1294,7 +1291,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.3.8.214559
+knx-frontend==2025.4.1.91934
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1496,7 +1493,7 @@ nettigo-air-monitor==4.1.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.9.0
+nexia==2.10.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1970,7 +1967,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.1.2
+pyezvizapi==1.0.0.7
 
 # homeassistant.components.fibaro
 pyfibaro==0.8.2
@@ -2093,7 +2090,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.0
+pylamarzocco==2.0.1
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2163,6 +2160,9 @@ pynetgear==0.10.10
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
+
+# homeassistant.components.nina
+pynina==0.3.6
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -2326,7 +2326,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.0
+pysmartthings==3.2.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2631,7 +2631,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.3.0
+renault-api==0.3.1
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2674,9 +2674,6 @@ rova==0.4.1
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
-
-# homeassistant.components.rtsp_to_webrtc
-rtsp-to-webrtc==0.5.1
 
 # homeassistant.components.russound_rnet
 russound==0.2.0
@@ -2975,7 +2972,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.5.5
+uiprotect==7.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3074,7 +3071,7 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.3.7
+weheat==2025.4.29
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.20.0

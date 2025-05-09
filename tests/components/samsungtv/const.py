@@ -8,7 +8,6 @@ from homeassistant.components.samsungtv.const import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
@@ -33,21 +32,19 @@ MOCK_CONFIG_ENCRYPTED_WS = {
 }
 MOCK_ENTRYDATA_ENCRYPTED_WS = {
     **MOCK_CONFIG_ENCRYPTED_WS,
-    CONF_IP_ADDRESS: "test",
     CONF_METHOD: "encrypted",
     CONF_MAC: "aa:bb:cc:dd:ee:ff",
     CONF_TOKEN: "037739871315caef138547b03e348b72",
     CONF_SESSION_ID: "2",
 }
 MOCK_ENTRYDATA_WS = {
-    CONF_HOST: "fake_host",
+    CONF_HOST: "10.10.12.34",
     CONF_METHOD: METHOD_WEBSOCKET,
     CONF_PORT: 8002,
     CONF_MODEL: "any",
     CONF_NAME: "any",
 }
 MOCK_ENTRY_WS_WITH_MAC = {
-    CONF_IP_ADDRESS: "test",
     CONF_HOST: "fake_host",
     CONF_METHOD: "websocket",
     CONF_MAC: "aa:bb:cc:dd:ee:ff",
