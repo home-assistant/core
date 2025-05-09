@@ -1,6 +1,6 @@
 """Test the SMA sensor platform."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_sma_client: AsyncGenerator,
+    mock_sma_client: Generator,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
