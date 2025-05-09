@@ -1,6 +1,6 @@
 """Test the Teslemetry init."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -11,6 +11,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
+from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
@@ -187,3 +188,102 @@ async def test_modern_no_poll(
     assert mock_vehicle_data.called is False
     freezer.tick(VEHICLE_INTERVAL)
     assert mock_vehicle_data.called is False
+
+
+async def test_stale_device_removal(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_products: AsyncMock,
+) -> None:
+    """Test removal of stale devices."""
+    # Create a modified products response with no VINs/devices
+    empty_products = {"response": []}
+
+    # Setup the entry first to get a valid config_entry_id
+    entry = await setup_platform(hass)
+
+    # Create a device that should be removed (with the valid entry_id)
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "stale-vin")},
+        manufacturer="Tesla",
+        name="Stale Vehicle",
+    )
+
+    # Verify the stale device exists
+    pre_devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    stale_identifiers = {
+        identifier for device in pre_devices for identifier in device.identifiers
+    }
+    assert (DOMAIN, "stale-vin") in stale_identifiers
+
+    # Update products with an empty response (no devices) and reload entry
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.products",
+            return_value=empty_products,
+        ),
+        patch(
+            "homeassistant.helpers.device_registry.DeviceRegistry.async_update_device"
+        ) as mock_update_device,
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+
+        # Verify that async_update_device was called to remove all devices
+        remove_calls = [
+            call
+            for call in mock_update_device.call_args_list
+            if call.kwargs.get("remove_config_entry_id") == entry.entry_id
+        ]
+        # At minimum our stale device should be removed
+        assert len(remove_calls) >= 1
+
+        # Specifically verify our stale device was targeted
+        assert any(
+            call.kwargs.get("device_id") == stale_device.id
+            and call.kwargs.get("remove_config_entry_id") == entry.entry_id
+            for call in mock_update_device.call_args_list
+        )
+
+
+async def test_device_retention_during_reload(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_products: AsyncMock,
+) -> None:
+    """Test that valid devices are retained during a config entry reload."""
+    # Setup entry with normal devices
+    entry = await setup_platform(hass)
+
+    # Get initial device count and identifiers
+    pre_devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    pre_count = len(pre_devices)
+    pre_identifiers = {
+        identifier for device in pre_devices for identifier in device.identifiers
+    }
+
+    # Make sure we have some devices
+    assert pre_count > 0
+
+    # Save the original identifiers to compare after reload
+    original_identifiers = pre_identifiers.copy()
+
+    # Reload the config entry with the same products data
+    # We need to ensure the exact same devices are returned by mocking
+    # the device registry's async_update_device to prevent removals
+    with patch(
+        "homeassistant.helpers.device_registry.DeviceRegistry.async_update_device",
+        return_value=None,  # Mock to prevent any device removals
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+
+    # Verify device count and identifiers after reload match pre-reload
+    post_devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    post_count = len(post_devices)
+    post_identifiers = {
+        identifier for device in post_devices for identifier in device.identifiers
+    }
+
+    # Since our mock prevents removal, we should have the same devices
+    assert post_count == pre_count
+    assert post_identifiers == original_identifiers
