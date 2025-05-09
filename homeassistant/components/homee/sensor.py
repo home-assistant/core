@@ -321,7 +321,7 @@ async def async_setup_entry(
                         hass,
                         DOMAIN,
                         f"deprecated_entity_{entity_uid}",
-                        breaks_in_ha_version="2025.9.0",
+                        breaks_in_ha_version="2025.12.0",
                         is_fixable=False,
                         severity=IssueSeverity.WARNING,
                         translation_key="deprecated_entity",
