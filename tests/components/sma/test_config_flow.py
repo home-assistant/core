@@ -225,8 +225,7 @@ async def test_dhcp_exceptions(
 
 
 async def test_full_flow_reauth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the full flow of the config flow."""
     result = await hass.config_entries.flow.async_init(
