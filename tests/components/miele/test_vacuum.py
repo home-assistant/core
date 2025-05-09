@@ -6,7 +6,16 @@ from aiohttp import ClientResponseError
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.miele.const import PROCESS_ACTION, PROGRAM_ID
+from homeassistant.components.vacuum import (
+    ATTR_FAN_SPEED,
+    DOMAIN as VACUUM_DOMAIN,
+    SERVICE_CLEAN_SPOT,
+    SERVICE_PAUSE,
+    SERVICE_SET_FAN_SPEED,
+    SERVICE_START,
+    SERVICE_STOP,
+)
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -40,10 +49,10 @@ async def test_sensor_states(
 @pytest.mark.parametrize(
     ("service", "action_command", "vacuum_power"),
     [
-        ("start", "processAction", 1),
-        ("stop", "processAction", 2),
-        ("pause", "processAction", 3),
-        ("clean_spot", "programId", 2),
+        (SERVICE_START, PROCESS_ACTION, 1),
+        (SERVICE_STOP, PROCESS_ACTION, 2),
+        (SERVICE_PAUSE, PROCESS_ACTION, 3),
+        (SERVICE_CLEAN_SPOT, PROGRAM_ID, 2),
     ],
 )
 async def test_vacuum_program(
@@ -78,8 +87,8 @@ async def test_vacuum_fan_speed(
 
     await hass.services.async_call(
         TEST_PLATFORM,
-        "set_fan_speed",
-        {ATTR_ENTITY_ID: ENTITY_ID, "fan_speed": fan_speed},
+        SERVICE_SET_FAN_SPEED,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: fan_speed},
         blocking=True,
     )
     mock_miele_client.send_action.assert_called_once_with(
@@ -90,8 +99,8 @@ async def test_vacuum_fan_speed(
 @pytest.mark.parametrize(
     ("service"),
     [
-        ("start"),
-        ("stop"),
+        (SERVICE_START),
+        (SERVICE_STOP),
     ],
 )
 async def test_api_failure(

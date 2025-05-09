@@ -173,11 +173,6 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
         )
 
     @property
-    def status(self) -> str:
-        """Map status text."""
-        return MieleVacuumStateCode(self.device.state_program_phase).name
-
-    @property
     def battery_level(self) -> int | None:
         """Return the battery level."""
         return self.device.state_battery_level
