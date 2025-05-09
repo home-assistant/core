@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_component,
     entity_registry as er,
 )
 from homeassistant.helpers.json import json_dumps
@@ -345,7 +346,8 @@ def websocket_get_automatic_entity_ids(
             continue
         automatic_entity_ids[entity_id] = registry.async_generate_entity_id(
             entry.domain,
-            entry.suggested_object_id or f"{entry.platform}_{entry.unique_id}",
+            entity_component.async_get_entity_suggested_object_id(hass, entity_id)
+            or f"{entry.platform}_{entry.unique_id}",
         )
 
     connection.send_message(
