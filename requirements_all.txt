@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.60.1
+PySwitchbot==0.62.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -1158,7 +1158,7 @@ hole==0.8.0
 holidays==0.70
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250507.0
+home-assistant-frontend==20250509.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.5.7
@@ -1291,7 +1291,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.3.8.214559
+knx-frontend==2025.4.1.91934
 
 # homeassistant.components.konnected
 konnected==1.2.0

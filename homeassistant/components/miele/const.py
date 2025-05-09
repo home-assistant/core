@@ -339,6 +339,20 @@ class StateProgramType(MieleEnum):
     unknown = -9999
 
 
+class StateDryingStep(MieleEnum):
+    """Defines drying steps."""
+
+    extra_dry = 0
+    normal_plus = 1
+    normal = 2
+    slightly_dry = 3
+    hand_iron_1 = 4
+    hand_iron_2 = 5
+    machine_iron = 6
+    smoothing = 7
+    unknown = -9999
+
+
 WASHING_MACHINE_PROGRAM_ID: dict[int, str] = {
     -1: "no_program",  # Extrapolated from other device types.
     0: "no_program",  # Returned by the API when no program is selected.
