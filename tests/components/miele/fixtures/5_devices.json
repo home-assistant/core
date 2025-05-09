@@ -577,7 +577,7 @@
     },
     "state": {
       "ProgramID": {
-        "value_raw": 99938,
+        "value_raw": 38,
         "value_localized": "QuickPowerWash",
         "key_localized": "Program name"
       },
@@ -587,12 +587,12 @@
         "key_localized": "status"
       },
       "programType": {
-        "value_raw": 9992,
+        "value_raw": 2,
         "value_localized": "Automatic programme",
         "key_localized": "Program type"
       },
       "programPhase": {
-        "value_raw": 9991799,
+        "value_raw": 1799,
         "value_localized": "Drying",
         "key_localized": "Program phase"
       },
