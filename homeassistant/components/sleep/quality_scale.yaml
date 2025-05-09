@@ -7,9 +7,7 @@ rules:
     status: exempt
     comment: does not poll
   brands: done
-  common-modules:
-    status: exempt
-    comment: has no coordinator, only 1 platform
+  common-modules: done
   config-flow-test-coverage:
     status: done
     comment: uses webhook flow helper, already covered
@@ -28,7 +26,7 @@ rules:
   has-entity-name: done
   runtime-data:
     status: exempt
-    comment: nothing to store in runtime data
+    comment: has no runtime data
   test-before-configure:
     status: exempt
     comment: nothing to test
@@ -76,8 +74,8 @@ rules:
   docs-examples: todo
   docs-known-limitations: todo
   docs-supported-devices:
-    status: done
-    comment: It is mentioned that the app is only available for Android devices
+    status: exempt
+    comment: has no devices
   docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: done
