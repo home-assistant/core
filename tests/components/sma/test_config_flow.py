@@ -273,9 +273,6 @@ async def test_reauth_flow_exceptions(
     error: str,
 ) -> None:
     """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
