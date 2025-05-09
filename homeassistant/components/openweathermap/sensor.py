@@ -50,7 +50,6 @@ from .const import (
     MANUFACTURER,
     OWM_MODE_FREE_FORECAST,
 )
-from .coordinator import WeatherUpdateCoordinator
 
 WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -229,20 +228,7 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
 class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
     """Implementation of an OpenWeatherMap sensor."""
 
-    def __init__(
-        self,
-        name: str,
-        unique_id: str,
-        description: SensorEntityDescription,
-        weather_coordinator: WeatherUpdateCoordinator,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(name, unique_id, description, weather_coordinator)
-        self._weather_coordinator = weather_coordinator
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
-        return self._weather_coordinator.data[ATTR_API_CURRENT].get(
-            self.entity_description.key
-        )
+        return self._coordinator.data[ATTR_API_CURRENT].get(self.entity_description.key)
