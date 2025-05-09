@@ -34,7 +34,7 @@
       "fields": {
         "config_entry_id": {
           "name": "Stookwijzer instance",
-          "description": "The Stookwijzer instance to get requests from."
+          "description": "The Stookwijzer instance to get the forecast from."
         }
       }
     }
