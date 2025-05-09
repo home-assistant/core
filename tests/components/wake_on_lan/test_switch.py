@@ -61,6 +61,46 @@ async def test_valid_hostname(
         assert state.state == STATE_ON
 
 
+async def test_broadcast_config_ip_and_port_and_interface(
+    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+) -> None:
+    """Test with broadcast address , broadcast port and interface ip config."""
+    mac = "00:01:02:03:04:05"
+    broadcast_address = "255.255.255.255"
+    port = 999
+    interface_ip = "192.168.0.10"
+
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": mac,
+                "broadcast_address": broadcast_address,
+                "broadcast_port": port,
+                "if": interface_ip,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+        blocking=True,
+    )
+
+    mac = dr.format_mac(mac)
+    mock_send_magic_packet.assert_called_with(
+        mac, ip_address=broadcast_address, port=port, interface=interface_ip
+    )
+
+
 async def test_broadcast_config_ip_and_port(
     hass: HomeAssistant, mock_send_magic_packet: AsyncMock
 ) -> None:

@@ -6,11 +6,16 @@ from unittest.mock import AsyncMock
 
 from homeassistant import config_entries
 from homeassistant.components.wake_on_lan.const import DOMAIN
-from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
+from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
+    CONF_BROADCAST_PORT,
+    CONF_IF,
+    CONF_MAC,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import DEFAULT_MAC
+from .conftest import DEFAULT_IF, DEFAULT_MAC
 
 from tests.common import MockConfigEntry
 
@@ -30,6 +35,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
             CONF_MAC: DEFAULT_MAC,
             CONF_BROADCAST_ADDRESS: "255.255.255.255",
             CONF_BROADCAST_PORT: 9,
+            CONF_IF: DEFAULT_IF,
         },
     )
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -40,6 +46,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         CONF_MAC: DEFAULT_MAC,
         CONF_BROADCAST_ADDRESS: "255.255.255.255",
         CONF_BROADCAST_PORT: 9,
+        CONF_IF: DEFAULT_IF,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1

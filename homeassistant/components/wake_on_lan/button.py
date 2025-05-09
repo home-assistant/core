@@ -10,7 +10,12 @@ import wakeonlan
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
+from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
+    CONF_BROADCAST_PORT,
+    CONF_IF,
+    CONF_MAC,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -26,6 +31,7 @@ async def async_setup_entry(
     """Set up the Wake on LAN button entry."""
     broadcast_address: str | None = entry.options.get(CONF_BROADCAST_ADDRESS)
     broadcast_port: int | None = entry.options.get(CONF_BROADCAST_PORT)
+    interface: str | None = entry.options.get(CONF_IF)
     mac_address: str = entry.options[CONF_MAC]
     name: str = entry.title
 
@@ -36,6 +42,7 @@ async def async_setup_entry(
                 mac_address,
                 broadcast_address,
                 broadcast_port,
+                interface,
             )
         ]
     )
@@ -52,11 +59,13 @@ class WolButton(ButtonEntity):
         mac_address: str,
         broadcast_address: str | None,
         broadcast_port: int | None,
+        interface: str | None,
     ) -> None:
         """Initialize the WOL button."""
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
         self._broadcast_port = broadcast_port
+        self._interface = interface
         self._attr_unique_id = dr.format_mac(mac_address)
         self._attr_device_info = dr.DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._attr_unique_id)},
@@ -70,12 +79,15 @@ class WolButton(ButtonEntity):
             service_kwargs["ip_address"] = self._broadcast_address
         if self._broadcast_port is not None:
             service_kwargs["port"] = self._broadcast_port
+        if self._interface is not None:
+            service_kwargs["interface"] = self._interface
 
         _LOGGER.debug(
-            "Send magic packet to mac %s (broadcast: %s, port: %s)",
+            "Send magic packet to mac %s (broadcast: %s, port: %s, interface: %s)",
             self._mac_address,
             self._broadcast_address,
             self._broadcast_port,
+            self._interface,
         )
 
         await self.hass.async_add_executor_job(
