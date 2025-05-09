@@ -34,6 +34,7 @@ DATA_NESS = "ness_alarm"
 CONF_DEVICE_PORT = "port"
 CONF_INFER_ARMING_STATE = "infer_arming_state"
 CONF_ZONES = "zones"
+CONF_PANEL_NAME = "name"
 CONF_ZONE_NAME = "name"
 CONF_ZONE_TYPE = "type"
 CONF_ZONE_ID = "id"
@@ -63,6 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_DEVICE_PORT): cv.port,
+                vol.Optional(CONF_PANEL_NAME, default="Alarm Panel"): cv.string,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.positive_time_period,
@@ -98,6 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     zones = conf[CONF_ZONES]
     host = conf[CONF_HOST]
     port = conf[CONF_DEVICE_PORT]
+    panel_name = conf[CONF_PANEL_NAME]
     scan_interval = conf[CONF_SCAN_INTERVAL]
     infer_arming_state = conf[CONF_INFER_ARMING_STATE]
 
@@ -128,7 +131,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
     )
     hass.async_create_task(
-        async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, {}, config)
+        async_load_platform(
+            hass,
+            Platform.ALARM_CONTROL_PANEL,
+            DOMAIN,
+            {CONF_PANEL_NAME: panel_name},
+            config,
+        )
     )
 
     def on_zone_change(zone_id: int, state: bool):

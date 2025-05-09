@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
+from . import CONF_PANEL_NAME, DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    device = NessAlarmPanel(hass.data[DATA_NESS], "Alarm Panel")
+    device = NessAlarmPanel(hass.data[DATA_NESS], discovery_info[CONF_PANEL_NAME])
     async_add_entities([device])
 
 
