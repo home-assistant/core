@@ -76,6 +76,11 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
+            _LOGGER.error(
+                "Failed to obtain device status, device: %s, error: %s ",
+                self.device.device_id,
+                yl_client_err,
+            )
             raise UpdateFailed from yl_client_err
         if device_state is not None:
             return device_state
