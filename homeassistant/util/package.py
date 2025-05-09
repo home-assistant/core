@@ -27,6 +27,7 @@ def is_virtual_env() -> bool:
         sys, "real_prefix"
     )
 
+
 @cache
 def is_docker_env() -> bool:
     """Return True if we run in a container env, unless CONTAINER_NON_PRIVILEGED=True."""
@@ -39,6 +40,7 @@ def is_docker_env() -> bool:
         or "KUBERNETES_SERVICE_HOST" in os.environ
         or is_official_image()
     )
+
 
 def get_installed_versions(specifiers: set[str]) -> set[str]:
     """Return a set of installed packages and versions."""
