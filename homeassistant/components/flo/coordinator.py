@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -15,7 +16,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN as FLO_DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
+
+type FloConfigEntry = ConfigEntry[FloRuntimeData]
+
+
+@dataclass
+class FloRuntimeData:
+    """Flo runtime data."""
+
+    client: API
+    devices: list[FloDeviceDataUpdateCoordinator]
 
 
 class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
@@ -44,7 +55,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=f"{FLO_DOMAIN}-{device_id}",
+            name=f"{DOMAIN}-{device_id}",
             update_interval=timedelta(seconds=60),
         )
 

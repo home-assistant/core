@@ -48,18 +48,18 @@ def location_status_fixture(install: str, loc_id: str | None = None) -> JsonObje
     return load_json_object_fixture(f"{install}/status_{loc_id}.json", DOMAIN)
 
 
-def dhw_schedule_fixture(install: str) -> JsonObjectType:
+def dhw_schedule_fixture(install: str, dhw_id: str | None = None) -> JsonObjectType:
     """Load JSON for the schedule of a domesticHotWater zone."""
     try:
-        return load_json_object_fixture(f"{install}/schedule_dhw.json", DOMAIN)
+        return load_json_object_fixture(f"{install}/schedule_{dhw_id}.json", DOMAIN)
     except FileNotFoundError:
         return load_json_object_fixture("default/schedule_dhw.json", DOMAIN)
 
 
-def zone_schedule_fixture(install: str) -> JsonObjectType:
+def zone_schedule_fixture(install: str, zon_id: str | None = None) -> JsonObjectType:
     """Load JSON for the schedule of a temperatureZone zone."""
     try:
-        return load_json_object_fixture(f"{install}/schedule_zone.json", DOMAIN)
+        return load_json_object_fixture(f"{install}/schedule_{zon_id}.json", DOMAIN)
     except FileNotFoundError:
         return load_json_object_fixture("default/schedule_zone.json", DOMAIN)
 
@@ -120,9 +120,9 @@ def mock_make_request(install: str) -> Callable:
 
         elif "schedule" in url:
             if url.startswith("domesticHotWater"):  # /v2/domesticHotWater/{id}/schedule
-                return dhw_schedule_fixture(install)
+                return dhw_schedule_fixture(install, url[16:23])
             if url.startswith("temperatureZone"):  # /v2/temperatureZone/{id}/schedule
-                return zone_schedule_fixture(install)
+                return zone_schedule_fixture(install, url[16:23])
 
         pytest.fail(f"Unexpected request: {HTTPMethod.GET} {url}")
 

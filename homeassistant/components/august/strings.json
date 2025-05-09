@@ -18,7 +18,7 @@
     },
     "step": {
       "validation": {
-        "title": "Two factor authentication",
+        "title": "Two-factor authentication",
         "data": {
           "verification_code": "Verification code"
         },

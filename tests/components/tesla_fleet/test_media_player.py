@@ -88,7 +88,7 @@ async def test_media_player_services(
     entity_id = "media_player.test_media_player"
 
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.adjust_volume",
+        "tesla_fleet_api.tesla.VehicleFleet.adjust_volume",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -102,7 +102,7 @@ async def test_media_player_services(
         call.assert_called_once()
 
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.media_toggle_playback",
+        "tesla_fleet_api.tesla.VehicleFleet.media_toggle_playback",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -117,7 +117,7 @@ async def test_media_player_services(
 
     # This test will fail without the previous call to pause playback
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.media_toggle_playback",
+        "tesla_fleet_api.tesla.VehicleFleet.media_toggle_playback",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -131,7 +131,7 @@ async def test_media_player_services(
         call.assert_called_once()
 
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.media_next_track",
+        "tesla_fleet_api.tesla.VehicleFleet.media_next_track",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -144,7 +144,7 @@ async def test_media_player_services(
         call.assert_called_once()
 
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.media_prev_track",
+        "tesla_fleet_api.tesla.VehicleFleet.media_prev_track",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(

@@ -132,6 +132,7 @@ async def test_update_firmware(
 
     event_function(MOCK_FIRMWARE_DONE)
 
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
         sw_version="v2.7.5",
     )
@@ -153,9 +154,9 @@ async def test_update_zigbee2_firmware(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test update of zigbee2 firmware where available."""
-    mock_smlight_client.get_info.return_value = Info.from_dict(
-        load_json_object_fixture("info-MR1.json", DOMAIN)
-    )
+    mock_info = Info.from_dict(load_json_object_fixture("info-MR1.json", DOMAIN))
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = mock_info
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_zigbee_firmware_2"
     state = hass.states.get(entity_id)
@@ -175,17 +176,17 @@ async def test_update_zigbee2_firmware(
     event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
 
     event_function(MOCK_FIRMWARE_DONE)
-    with patch(
-        "homeassistant.components.smlight.update.get_radio", return_value=MOCK_RADIO
-    ):
-        freezer.tick(timedelta(seconds=5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
 
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_OFF
-        assert state.attributes[ATTR_INSTALLED_VERSION] == "20240716"
-        assert state.attributes[ATTR_LATEST_VERSION] == "20240716"
+    mock_info.radios[1] = MOCK_RADIO
+
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "20240716"
+    assert state.attributes[ATTR_LATEST_VERSION] == "20240716"
 
 
 async def test_update_legacy_firmware_v2(
@@ -195,6 +196,7 @@ async def test_update_legacy_firmware_v2(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test firmware update for legacy v2 firmware."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
         sw_version="v2.0.18",
         legacy_api=1,
@@ -220,6 +222,7 @@ async def test_update_legacy_firmware_v2(
 
     event_function(MOCK_FIRMWARE_DONE)
 
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
         sw_version="v2.7.5",
     )
@@ -333,6 +336,7 @@ async def test_update_release_notes(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test firmware release notes."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info.from_dict(
         load_json_object_fixture("info-MR1.json", DOMAIN)
     )

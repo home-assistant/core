@@ -171,6 +171,7 @@
       'models': list([
         'LV-PUR131S',
         'LV-RH131S',
+        'LV-RH131S-WM',
       ]),
       'modes': list([
         'manual',
@@ -288,6 +289,30 @@
             'state': 'unavailable',
           }),
           'unit_of_measurement': '%',
+        }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'domain': 'switch',
+          'entity_category': None,
+          'entity_id': 'switch.fan_display',
+          'icon': None,
+          'name': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'original_name': 'Display',
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Fan Display',
+            }),
+            'entity_id': 'switch.fan_display',
+            'last_changed': str,
+            'last_reported': str,
+            'last_updated': str,
+            'state': 'unavailable',
+          }),
+          'unit_of_measurement': None,
         }),
       ]),
       'name': 'Fan',

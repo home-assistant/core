@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Eq3ConfigEntry
 from .const import ENTITY_KEY_AWAY_UNTIL, ENTITY_KEY_VALVE
@@ -51,7 +51,7 @@ SENSOR_ENTITY_DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: Eq3ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the entry."""
 

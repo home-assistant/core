@@ -4,13 +4,22 @@ from __future__ import annotations
 
 import codecs
 from collections.abc import Callable
+from dataclasses import replace
 from typing import Any, Literal, cast
 
-from google.api_core.exceptions import GoogleAPIError
-import google.generativeai as genai
-from google.generativeai import protos
-import google.generativeai.types as genai_types
-from google.protobuf.json_format import MessageToDict
+from google.genai.errors import APIError
+from google.genai.types import (
+    AutomaticFunctionCallingConfig,
+    Content,
+    FunctionDeclaration,
+    GenerateContentConfig,
+    GoogleSearch,
+    HarmCategory,
+    Part,
+    SafetySetting,
+    Schema,
+    Tool,
+)
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
@@ -18,8 +27,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, device_registry as dr, intent, llm
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import device_registry as dr, intent, llm
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_CHAT_MODEL,
@@ -32,6 +41,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -45,11 +55,15 @@ from .const import (
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
 
+ERROR_GETTING_RESPONSE = (
+    "Sorry, I had a problem getting a response from Google Generative AI."
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
     agent = GoogleGenerativeAIConversationEntity(config_entry)
@@ -57,21 +71,30 @@ async def async_setup_entry(
 
 
 SUPPORTED_SCHEMA_KEYS = {
+    # Gemini API does not support all of the OpenAPI schema
+    # SoT: https://ai.google.dev/api/caching#Schema
     "type",
     "format",
     "description",
     "nullable",
     "enum",
-    "items",
+    "max_items",
+    "min_items",
     "properties",
     "required",
+    "items",
 }
 
 
-def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
-    """Format the schema to protobuf."""
-    if (subschemas := schema.get("anyOf")) or (subschemas := schema.get("allOf")):
-        for subschema in subschemas:  # Gemini API does not support anyOf and allOf keys
+def _camel_to_snake(name: str) -> str:
+    """Convert camel case to snake case."""
+    return "".join(["_" + c.lower() if c.isupper() else c for c in name]).lstrip("_")
+
+
+def _format_schema(schema: dict[str, Any]) -> Schema:
+    """Format the schema to be compatible with Gemini API."""
+    if subschemas := schema.get("allOf"):
+        for subschema in subschemas:  # Gemini API does not support allOf keys
             if "type" in subschema:  # Fallback to first subschema with 'type' field
                 return _format_schema(subschema)
         return _format_schema(
@@ -80,42 +103,47 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
 
     result = {}
     for key, val in schema.items():
+        key = _camel_to_snake(key)
         if key not in SUPPORTED_SCHEMA_KEYS:
             continue
         if key == "type":
-            key = "type_"
             val = val.upper()
         elif key == "format":
-            if schema.get("type") == "string" and val != "enum":
+            # Gemini API does not support all formats, see: https://ai.google.dev/api/caching#Schema
+            # formats that are not supported are ignored
+            if schema.get("type") == "string" and val not in ("enum", "date-time"):
                 continue
-            if schema.get("type") not in ("number", "integer", "string"):
+            if schema.get("type") == "number" and val not in ("float", "double"):
                 continue
-            key = "format_"
+            if schema.get("type") == "integer" and val not in ("int32", "int64"):
+                continue
+            if schema.get("type") not in ("string", "number", "integer"):
+                continue
         elif key == "items":
             val = _format_schema(val)
         elif key == "properties":
             val = {k: _format_schema(v) for k, v in val.items()}
         result[key] = val
 
-    if result.get("enum") and result.get("type_") != "STRING":
+    if result.get("enum") and result.get("type") != "STRING":
         # enum is only allowed for STRING type. This is safe as long as the schema
         # contains vol.Coerce for the respective type, for example:
         # vol.All(vol.Coerce(int), vol.In([1, 2, 3]))
-        result["type_"] = "STRING"
+        result["type"] = "STRING"
         result["enum"] = [str(item) for item in result["enum"]]
 
-    if result.get("type_") == "OBJECT" and not result.get("properties"):
+    if result.get("type") == "OBJECT" and not result.get("properties"):
         # An object with undefined properties is not supported by Gemini API.
         # Fallback to JSON string. This will probably fail for most tools that want it,
         # but we don't have a better fallback strategy so far.
-        result["properties"] = {"json": {"type_": "STRING"}}
+        result["properties"] = {"json": {"type": "STRING"}}
         result["required"] = []
-    return result
+    return cast(Schema, result)
 
 
 def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
-) -> dict[str, Any]:
+) -> Tool:
     """Format tool specification."""
 
     if tool.parameters.schema:
@@ -125,16 +153,14 @@ def _format_tool(
     else:
         parameters = None
 
-    return protos.Tool(
-        {
-            "function_declarations": [
-                {
-                    "name": tool.name,
-                    "description": tool.description,
-                    "parameters": parameters,
-                }
-            ]
-        }
+    return Tool(
+        function_declarations=[
+            FunctionDeclaration(
+                name=tool.name,
+                description=tool.description,
+                parameters=parameters,
+            )
+        ]
     )
 
 
@@ -149,19 +175,25 @@ def _escape_decode(value: Any) -> Any:
     return value
 
 
+def _create_google_tool_response_parts(
+    parts: list[conversation.ToolResultContent],
+) -> list[Part]:
+    """Create Google tool response parts."""
+    return [
+        Part.from_function_response(
+            name=tool_result.tool_name, response=tool_result.tool_result
+        )
+        for tool_result in parts
+    ]
+
+
 def _create_google_tool_response_content(
     content: list[conversation.ToolResultContent],
-) -> protos.Content:
+) -> Content:
     """Create a Google tool response content."""
-    return protos.Content(
-        parts=[
-            protos.Part(
-                function_response=protos.FunctionResponse(
-                    name=tool_result.tool_name, response=tool_result.tool_result
-                )
-            )
-            for tool_result in content
-        ]
+    return Content(
+        role="user",
+        parts=_create_google_tool_response_parts(content),
     )
 
 
@@ -169,33 +201,36 @@ def _convert_content(
     content: conversation.UserContent
     | conversation.AssistantContent
     | conversation.SystemContent,
-) -> genai_types.ContentDict:
+) -> Content:
     """Convert HA content to Google content."""
-    if content.role != "assistant" or not content.tool_calls:  # type: ignore[union-attr]
+    if content.role != "assistant" or not content.tool_calls:
         role = "model" if content.role == "assistant" else content.role
-        return {"role": role, "parts": content.content}
+        return Content(
+            role=role,
+            parts=[
+                Part.from_text(text=content.content if content.content else ""),
+            ],
+        )
 
     # Handle the Assistant content with tool calls.
     assert type(content) is conversation.AssistantContent
-    parts = []
+    parts: list[Part] = []
 
     if content.content:
-        parts.append(protos.Part(text=content.content))
+        parts.append(Part.from_text(text=content.content))
 
     if content.tool_calls:
         parts.extend(
             [
-                protos.Part(
-                    function_call=protos.FunctionCall(
-                        name=tool_call.tool_name,
-                        args=_escape_decode(tool_call.tool_args),
-                    )
+                Part.from_function_call(
+                    name=tool_call.tool_name,
+                    args=_escape_decode(tool_call.tool_args),
                 )
                 for tool_call in content.tool_calls
             ]
         )
 
-    return protos.Content({"role": "model", "parts": parts})
+    return Content(role="model", parts=parts)
 
 
 class GoogleGenerativeAIConversationEntity(
@@ -209,6 +244,7 @@ class GoogleGenerativeAIConversationEntity(
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the agent."""
         self.entry = entry
+        self._genai_client = entry.runtime_data
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -243,17 +279,12 @@ class GoogleGenerativeAIConversationEntity(
         conversation.async_unset_agent(self.hass, self.entry)
         await super().async_will_remove_from_hass()
 
-    async def async_process(
-        self, user_input: conversation.ConversationInput
-    ) -> conversation.ConversationResult:
-        """Process a sentence."""
-        with (
-            chat_session.async_get_chat_session(
-                self.hass, user_input.conversation_id
-            ) as session,
-            conversation.async_get_chat_log(self.hass, session, user_input) as chat_log,
-        ):
-            return await self._async_handle_message(user_input, chat_log)
+    def _fix_tool_name(self, tool_name: str) -> str:
+        """Fix tool name if needed."""
+        # The Gemini 2.0+ tokenizer seemingly has a issue with the HassListAddItem tool
+        # name. This makes sure when it incorrectly changes the name, that we change it
+        # back for HA to call.
+        return tool_name if tool_name != "HasListAddItem" else "HassListAddItem"
 
     async def _async_handle_message(
         self,
@@ -273,12 +304,19 @@ class GoogleGenerativeAIConversationEntity(
         except conversation.ConverseError as err:
             return err.as_conversation_result()
 
-        tools: list[dict[str, Any]] | None = None
+        tools: list[Tool | Callable[..., Any]] | None = None
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
                 for tool in chat_log.llm_api.tools
             ]
+
+        # Using search grounding allows the model to retrieve information from the web,
+        # however, it may interfere with how the model decides to use some tools, or entities
+        # for example weather entity may be disregarded if the model chooses to Google it.
+        if options.get(CONF_USE_GOOGLE_SEARCH_TOOL) is True:
+            tools = tools or []
+            tools.append(Tool(google_search=GoogleSearch()))
 
         model_name = self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
         # Gemini 1.0 doesn't support system_instruction while 1.5 does.
@@ -288,119 +326,162 @@ class GoogleGenerativeAIConversationEntity(
             "gemini-1.0" not in model_name and "gemini-pro" not in model_name
         )
 
-        prompt = chat_log.content[0].content  # type: ignore[union-attr]
-        messages: list[genai_types.ContentDict] = []
+        prompt_content = cast(
+            conversation.SystemContent,
+            chat_log.content[0],
+        )
+
+        if prompt_content.content:
+            prompt = prompt_content.content
+        else:
+            raise HomeAssistantError("Invalid prompt content")
+
+        messages: list[Content] = []
 
         # Google groups tool results, we do not. Group them before sending.
         tool_results: list[conversation.ToolResultContent] = []
 
-        for chat_content in chat_log.content[1:]:
+        for chat_content in chat_log.content[1:-1]:
             if chat_content.role == "tool_result":
-                # mypy doesn't like picking a type based on checking shared property 'role'
-                tool_results.append(cast(conversation.ToolResultContent, chat_content))
+                tool_results.append(chat_content)
                 continue
+
+            if (
+                not isinstance(chat_content, conversation.ToolResultContent)
+                and chat_content.content == ""
+            ):
+                # Skipping is not possible since the number of function calls need to match the number of function responses
+                # and skipping one would mean removing the other and hence this would prevent a proper chat log
+                chat_content = replace(chat_content, content=" ")
 
             if tool_results:
                 messages.append(_create_google_tool_response_content(tool_results))
                 tool_results.clear()
 
-            messages.append(
-                _convert_content(
-                    cast(
-                        conversation.UserContent
-                        | conversation.SystemContent
-                        | conversation.AssistantContent,
-                        chat_content,
-                    )
-                )
+            messages.append(_convert_content(chat_content))
+
+        # The SDK requires the first message to be a user message
+        # This is not the case if user used `start_conversation`
+        # Workaround from https://github.com/googleapis/python-genai/issues/529#issuecomment-2740964537
+        if messages and messages[0].role != "user":
+            messages.insert(
+                0,
+                Content(role="user", parts=[Part.from_text(text=" ")]),
             )
 
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
-
-        model = genai.GenerativeModel(
-            model_name=model_name,
-            generation_config={
-                "temperature": self.entry.options.get(
-                    CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+        generateContentConfig = GenerateContentConfig(
+            temperature=self.entry.options.get(
+                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+            ),
+            top_k=self.entry.options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
+            top_p=self.entry.options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+            max_output_tokens=self.entry.options.get(
+                CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
+            ),
+            safety_settings=[
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold=self.entry.options.get(
+                        CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                    ),
                 ),
-                "top_p": self.entry.options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-                "top_k": self.entry.options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
-                "max_output_tokens": self.entry.options.get(
-                    CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_HARASSMENT,
+                    threshold=self.entry.options.get(
+                        CONF_HARASSMENT_BLOCK_THRESHOLD,
+                        RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                    ),
                 ),
-            },
-            safety_settings={
-                "HARASSMENT": self.entry.options.get(
-                    CONF_HARASSMENT_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold=self.entry.options.get(
+                        CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                    ),
                 ),
-                "HATE": self.entry.options.get(
-                    CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                    threshold=self.entry.options.get(
+                        CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                    ),
                 ),
-                "SEXUAL": self.entry.options.get(
-                    CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
-                ),
-                "DANGEROUS": self.entry.options.get(
-                    CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
-                ),
-            },
+            ],
             tools=tools or None,
             system_instruction=prompt if supports_system_instruction else None,
+            automatic_function_calling=AutomaticFunctionCallingConfig(
+                disable=True, maximum_remote_calls=None
+            ),
         )
 
         if not supports_system_instruction:
             messages = [
-                {"role": "user", "parts": prompt},
-                {"role": "model", "parts": "Ok"},
+                Content(role="user", parts=[Part.from_text(text=prompt)]),
+                Content(role="model", parts=[Part.from_text(text="Ok")]),
                 *messages,
             ]
-
-        chat = model.start_chat(history=messages)
-        chat_request = user_input.text
+        chat = self._genai_client.aio.chats.create(
+            model=model_name, history=messages, config=generateContentConfig
+        )
+        chat_request: str | list[Part] = user_input.text
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
-                chat_response = await chat.send_message_async(chat_request)
+                chat_response = await chat.send_message(message=chat_request)
+
+                if chat_response.prompt_feedback:
+                    raise HomeAssistantError(
+                        f"The message got blocked due to content violations, reason: {chat_response.prompt_feedback.block_reason_message}"
+                    )
+                if not chat_response.candidates:
+                    LOGGER.error(
+                        "No candidates found in the response: %s",
+                        chat_response,
+                    )
+                    raise HomeAssistantError(ERROR_GETTING_RESPONSE)
+
             except (
-                GoogleAPIError,
+                APIError,
                 ValueError,
-                genai_types.BlockedPromptException,
-                genai_types.StopCandidateException,
             ) as err:
                 LOGGER.error("Error sending message: %s %s", type(err), err)
-
-                if isinstance(
-                    err, genai_types.StopCandidateException
-                ) and "finish_reason: SAFETY\n" in str(err):
-                    error = "The message got blocked by your safety settings"
-                else:
-                    error = (
-                        f"Sorry, I had a problem talking to Google Generative AI: {err}"
-                    )
-
+                error = f"Sorry, I had a problem talking to Google Generative AI: {err}"
                 raise HomeAssistantError(error) from err
 
-            LOGGER.debug("Response: %s", chat_response.parts)
-            if not chat_response.parts:
-                raise HomeAssistantError(
-                    "Sorry, I had a problem getting a response from Google Generative AI."
+            if (usage_metadata := chat_response.usage_metadata) is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": usage_metadata.prompt_token_count,
+                            "cached_input_tokens": usage_metadata.cached_content_token_count
+                            or 0,
+                            "output_tokens": usage_metadata.candidates_token_count,
+                        }
+                    }
                 )
+
+            response_parts = chat_response.candidates[0].content.parts
+            if not response_parts:
+                raise HomeAssistantError(ERROR_GETTING_RESPONSE)
             content = " ".join(
-                [part.text.strip() for part in chat_response.parts if part.text]
+                [part.text.strip() for part in response_parts if part.text]
             )
 
             tool_calls = []
-            for part in chat_response.parts:
+            for part in response_parts:
                 if not part.function_call:
                     continue
-                tool_call = MessageToDict(part.function_call._pb)  # noqa: SLF001
-                tool_name = tool_call["name"]
-                tool_args = _escape_decode(tool_call["args"])
+                tool_call = part.function_call
+                tool_name = tool_call.name
+                tool_args = _escape_decode(tool_call.args)
                 tool_calls.append(
-                    llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
+                    llm.ToolInput(
+                        tool_name=self._fix_tool_name(tool_name),
+                        tool_args=tool_args,
+                    )
                 )
 
-            chat_request = _create_google_tool_response_content(
+            chat_request = _create_google_tool_response_parts(
                 [
                     tool_response
                     async for tool_response in chat_log.async_add_assistant_content(
@@ -418,10 +499,12 @@ class GoogleGenerativeAIConversationEntity(
 
         response = intent.IntentResponse(language=user_input.language)
         response.async_set_speech(
-            " ".join([part.text.strip() for part in chat_response.parts if part.text])
+            " ".join([part.text.strip() for part in response_parts if part.text])
         )
         return conversation.ConversationResult(
-            response=response, conversation_id=chat_log.conversation_id
+            response=response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
         )
 
     async def _async_entry_update_listener(

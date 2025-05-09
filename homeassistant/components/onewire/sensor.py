@@ -7,7 +7,6 @@ import dataclasses
 from datetime import timedelta
 import logging
 import os
-from types import MappingProxyType
 from typing import Any
 
 from pyownet import protocol
@@ -27,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
@@ -388,7 +387,7 @@ def get_sensor_types(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OneWireConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
 
@@ -415,7 +414,7 @@ async def async_setup_entry(
 def get_entities(
     onewire_hub: OneWireHub,
     devices: list[OWDeviceDescription],
-    options: MappingProxyType[str, Any],
+    options: Mapping[str, Any],
 ) -> list[OneWireSensorEntity]:
     """Get a list of entities."""
     entities: list[OneWireSensorEntity] = []

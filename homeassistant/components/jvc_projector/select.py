@@ -10,7 +10,7 @@ from jvcprojector import JvcProjector, const
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
@@ -40,7 +40,7 @@ SELECTS: Final[list[JvcProjectorSelectDescription]] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: JVCConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
     coordinator = entry.runtime_data

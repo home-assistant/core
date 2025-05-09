@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from pyezviz.exceptions import HTTPError, InvalidHost, PyEzvizError
+from pyezvizapi.exceptions import HTTPError, InvalidHost, PyEzvizError
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -15,7 +15,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 
@@ -36,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EzvizConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ cameras based on a config entry."""
 
@@ -140,11 +140,6 @@ class EzvizCamera(EzvizEntity, Camera):
         self._attr_unique_id = serial
         if camera_password:
             self._attr_supported_features = CameraEntityFeature.STREAM
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.data["status"] != 2
 
     @property
     def is_on(self) -> bool:

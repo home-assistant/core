@@ -32,6 +32,28 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "low_nutrients": {
+        "name": "Low nutrients"
+      },
+      "low_water": {
+        "name": "Low water"
+      },
+      "pump": {
+        "name": "Pump"
+      },
+      "pump_error": {
+        "name": "Pump error"
+      },
+      "refill_error": {
+        "name": "Refill error"
+      }
+    },
+    "sensor": {
+      "water_level": {
+        "name": "Water level"
+      }
+    },
     "switch": {
       "alarm_sound": {
         "name": "Alarm sound"

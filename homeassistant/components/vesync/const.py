@@ -22,12 +22,21 @@ exceeds the quota of 7700.
 VS_DEVICES = "devices"
 VS_COORDINATOR = "coordinator"
 VS_MANAGER = "manager"
+VS_LISTENERS = "listeners"
 VS_NUMBERS = "numbers"
 
 VS_HUMIDIFIER_MODE_AUTO = "auto"
 VS_HUMIDIFIER_MODE_HUMIDITY = "humidity"
 VS_HUMIDIFIER_MODE_MANUAL = "manual"
 VS_HUMIDIFIER_MODE_SLEEP = "sleep"
+
+FAN_NIGHT_LIGHT_LEVEL_DIM = "dim"
+FAN_NIGHT_LIGHT_LEVEL_OFF = "off"
+FAN_NIGHT_LIGHT_LEVEL_ON = "on"
+
+HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
+HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM = "dim"
+HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF = "off"
 
 VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
 """Humidifier device types"""
@@ -59,6 +68,7 @@ SKU_TO_BASE_DEVICE = {
     # Air Purifiers
     "LV-PUR131S": "LV-PUR131S",
     "LV-RH131S": "LV-PUR131S",  # Alt ID Model LV-PUR131S
+    "LV-RH131S-WM": "LV-PUR131S",  # Alt ID Model LV-PUR131S
     "Core200S": "Core200S",
     "LAP-C201S-AUSR": "Core200S",  # Alt ID Model Core200S
     "LAP-C202S-WUSR": "Core200S",  # Alt ID Model Core200S
@@ -87,6 +97,7 @@ SKU_TO_BASE_DEVICE = {
     "LAP-V102S-AASR": "Vital100S",  # Alt ID Model Vital100S
     "LAP-V102S-WEU": "Vital100S",  # Alt ID Model Vital100S
     "LAP-V102S-WUK": "Vital100S",  # Alt ID Model Vital100S
+    "LAP-V102S-AUSR": "Vital100S",  # Alt ID Model Vital100S
     "EverestAir": "EverestAir",
     "LAP-EL551S-AUS": "EverestAir",  # Alt ID Model EverestAir
     "LAP-EL551S-AEUR": "EverestAir",  # Alt ID Model EverestAir

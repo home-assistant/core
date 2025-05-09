@@ -10,7 +10,7 @@ from requests.exceptions import RequestException
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
 from .coordinator import AvmWrapper, FritzConfigEntry
@@ -18,11 +18,14 @@ from .entity import FritzBoxBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up guest WiFi QR code for device."""
     avm_wrapper = entry.runtime_data

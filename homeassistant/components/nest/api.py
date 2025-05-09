@@ -50,13 +50,14 @@ class AsyncConfigEntryAuth(AbstractAuth):
         return cast(str, self._oauth_session.token["access_token"])
 
     async def async_get_creds(self) -> Credentials:
-        """Return an OAuth credential for Pub/Sub Subscriber."""
-        # We don't have a way for Home Assistant to refresh creds on behalf
-        # of the google pub/sub subscriber. Instead, build a full
-        # Credentials object with enough information for the subscriber to
-        # handle this on its own. We purposely don't refresh the token here
-        # even when it is expired to fully hand off this responsibility and
-        # know it is working at startup (then if not, fail loudly).
+        """Return an OAuth credential for Pub/Sub Subscriber.
+
+        The subscriber will call this when connecting to the stream to refresh
+        the token. We construct a credentials object using the underlying
+        OAuth2Session since the subscriber may expect the expiry fields to
+        be present.
+        """
+        await self.async_get_access_token()
         token = self._oauth_session.token
         creds = Credentials(  # type: ignore[no-untyped-call]
             token=token["access_token"],

@@ -10,7 +10,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import TouchlineSLConfigEntry, TouchlineSLModuleCoordinator
 from .entity import TouchlineSLZoneEntity
@@ -19,7 +19,7 @@ from .entity import TouchlineSLZoneEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TouchlineSLConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Touchline devices."""
     coordinators = entry.runtime_data

@@ -61,7 +61,7 @@ reload_config_entry:
       required: false
       example: 8955375327824e14ba89e4b29cc3ec9a
       selector:
-        text:
+        config_entry:
 
 save_persistent_states:
 

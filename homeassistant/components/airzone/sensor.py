@@ -9,6 +9,8 @@ from aioairzone.const import (
     AZD_HUMIDITY,
     AZD_TEMP,
     AZD_TEMP_UNIT,
+    AZD_THERMOSTAT_BATTERY,
+    AZD_THERMOSTAT_SIGNAL,
     AZD_WEBSERVER,
     AZD_WIFI_RSSI,
     AZD_ZONES,
@@ -28,7 +30,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
@@ -73,13 +75,27 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.BATTERY,
+        key=AZD_THERMOSTAT_BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        key=AZD_THERMOSTAT_SIGNAL,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="thermostat_signal",
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirzoneConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Airzone sensors from a config_entry."""
     coordinator = entry.runtime_data

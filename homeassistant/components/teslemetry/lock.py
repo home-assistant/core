@@ -6,18 +6,19 @@ from itertools import chain
 from typing import Any
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
 from .const import DOMAIN
 from .entity import (
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
@@ -31,14 +32,14 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry lock platform from a config entry."""
 
     async_add_entities(
         chain(
             (
-                TeslemetryPollingVehicleLockEntity(
+                TeslemetryVehiclePollingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
                 if vehicle.api.pre2021 or vehicle.firmware < "2024.26"
@@ -48,7 +49,7 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
             ),
             (
-                TeslemetryPollingCableLockEntity(
+                TeslemetryVehiclePollingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
                 if vehicle.api.pre2021 or vehicle.firmware < "2024.26"
@@ -63,6 +64,8 @@ async def async_setup_entry(
 
 class TeslemetryVehicleLockEntity(TeslemetryRootEntity, LockEntity):
     """Base vehicle lock entity for Teslemetry."""
+
+    api: Vehicle
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the doors."""
@@ -81,8 +84,8 @@ class TeslemetryVehicleLockEntity(TeslemetryRootEntity, LockEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingVehicleLockEntity(
-    TeslemetryVehicleEntity, TeslemetryVehicleLockEntity
+class TeslemetryVehiclePollingVehicleLockEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryVehicleLockEntity
 ):
     """Polling vehicle lock entity for Teslemetry."""
 
@@ -135,6 +138,8 @@ class TeslemetryStreamingVehicleLockEntity(
 class TeslemetryCableLockEntity(TeslemetryRootEntity, LockEntity):
     """Base cable Lock entity for Teslemetry."""
 
+    api: Vehicle
+
     async def async_lock(self, **kwargs: Any) -> None:
         """Charge cable Lock cannot be manually locked."""
         raise ServiceValidationError(
@@ -152,8 +157,8 @@ class TeslemetryCableLockEntity(TeslemetryRootEntity, LockEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingCableLockEntity(
-    TeslemetryVehicleEntity, TeslemetryCableLockEntity
+class TeslemetryVehiclePollingCableLockEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryCableLockEntity
 ):
     """Polling cable lock entity for Teslemetry."""
 

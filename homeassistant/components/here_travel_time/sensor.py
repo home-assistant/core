@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -24,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -40,6 +39,7 @@ from .const import (
     ICONS,
 )
 from .coordinator import (
+    HereConfigEntry,
     HERERoutingDataUpdateCoordinator,
     HERETransitDataUpdateCoordinator,
 )
@@ -77,14 +77,14 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: HereConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add HERE travel time entities from a config_entry."""
 
     entry_id = config_entry.entry_id
     name = config_entry.data[CONF_NAME]
-    coordinator = hass.data[DOMAIN][entry_id]
+    coordinator = config_entry.runtime_data
 
     sensors: list[HERETravelTimeSensor] = [
         HERETravelTimeSensor(
@@ -164,7 +164,8 @@ class OriginSensor(HERETravelTimeSensor):
         self,
         unique_id_prefix: str,
         name: str,
-        coordinator: HERERoutingDataUpdateCoordinator,
+        coordinator: HERERoutingDataUpdateCoordinator
+        | HERETransitDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         sensor_description = SensorEntityDescription(
@@ -192,7 +193,8 @@ class DestinationSensor(HERETravelTimeSensor):
         self,
         unique_id_prefix: str,
         name: str,
-        coordinator: HERERoutingDataUpdateCoordinator,
+        coordinator: HERERoutingDataUpdateCoordinator
+        | HERETransitDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         sensor_description = SensorEntityDescription(

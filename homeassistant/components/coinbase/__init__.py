@@ -140,8 +140,10 @@ def get_accounts(client, version):
             API_ACCOUNT_ID: account[API_V3_ACCOUNT_ID],
             API_ACCOUNT_NAME: account[API_ACCOUNT_NAME],
             API_ACCOUNT_CURRENCY: account[API_ACCOUNT_CURRENCY],
-            API_ACCOUNT_AMOUNT: account[API_ACCOUNT_AVALIABLE][API_ACCOUNT_VALUE]
-            + account[API_ACCOUNT_HOLD][API_ACCOUNT_VALUE],
+            API_ACCOUNT_AMOUNT: (
+                float(account[API_ACCOUNT_AVALIABLE][API_ACCOUNT_VALUE])
+                + float(account[API_ACCOUNT_HOLD][API_ACCOUNT_VALUE])
+            ),
             ACCOUNT_IS_VAULT: account[API_RESOURCE_TYPE] == API_V3_TYPE_VAULT,
         }
         for account in accounts

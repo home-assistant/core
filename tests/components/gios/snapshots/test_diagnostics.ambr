@@ -17,6 +17,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Home',
       'unique_id': '123',
       'version': 1,

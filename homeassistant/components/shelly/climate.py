@@ -27,7 +27,7 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -36,7 +36,6 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     BLU_TRV_TEMPERATURE_SETTINGS,
-    BLU_TRV_TIMEOUT,
     DOMAIN,
     LOGGER,
     NOT_CALIBRATED_ISSUE_ID,
@@ -44,7 +43,7 @@ from .const import (
     SHTRV_01_TEMPERATURE_SETTINGS,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import ShellyRpcEntity
+from .entity import ShellyRpcEntity, rpc_call
 from .utils import (
     async_remove_shelly_entity,
     get_device_entry_gen,
@@ -52,11 +51,13 @@ from .utils import (
     is_rpc_thermostat_internal_actuator,
 )
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -75,7 +76,7 @@ async def async_setup_entry(
 
 @callback
 def async_setup_climate_entities(
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: ShellyBlockCoordinator,
 ) -> None:
     """Set up online climate devices."""
@@ -102,7 +103,7 @@ def async_setup_climate_entities(
 def async_restore_climate_entities(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: ShellyBlockCoordinator,
 ) -> None:
     """Restore sleeping climate devices."""
@@ -124,7 +125,7 @@ def async_restore_climate_entities(
 def async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
     coordinator = config_entry.runtime_data.rpc
@@ -322,8 +323,12 @@ class BlockSleepingClimate(
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Setting state for entity {self.name} failed, state: {kwargs}, error:"
-                f" {err!r}"
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
@@ -593,17 +598,12 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
 
         return HVACAction.HEATING
 
+    @rpc_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
-        await self.call_rpc(
-            "BluTRV.Call",
-            {
-                "id": self._id,
-                "method": "Trv.SetTarget",
-                "params": {"id": 0, "target_C": target_temp},
-            },
-            timeout=BLU_TRV_TIMEOUT,
+        await self.coordinator.device.blu_trv_set_target_temperature(
+            self._id, target_temp
         )

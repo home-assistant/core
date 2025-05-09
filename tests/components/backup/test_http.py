@@ -18,18 +18,27 @@ from homeassistant.components.backup import (
     BackupNotFound,
     Folder,
 )
-from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
+from homeassistant.components.backup.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    TEST_BACKUP_ABC123,
-    BackupAgentTest,
-    aiter_from_iter,
-    setup_backup_integration,
-)
+from .common import TEST_BACKUP_ABC123, aiter_from_iter, setup_backup_integration
 
 from tests.common import MockUser, get_fixture_path
 from tests.typing import ClientSessionGenerator
+
+PROTECTED_BACKUP = AgentBackup(
+    addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
+    backup_id="c0cb53bd",
+    database_included=True,
+    date="1970-01-01T00:00:00Z",
+    extra_metadata={},
+    folders=[Folder.MEDIA, Folder.SHARE],
+    homeassistant_included=True,
+    homeassistant_version="2024.12.0",
+    name="Test",
+    protected=True,
+    size=13,
+)
 
 
 async def test_downloading_local_backup(
@@ -64,19 +73,16 @@ async def test_downloading_remote_backup(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test downloading a remote backup."""
+
     await setup_backup_integration(
-        hass, backups={"test.test": [TEST_BACKUP_ABC123]}, remote_agents=["test"]
+        hass, backups={"test.test": [TEST_BACKUP_ABC123]}, remote_agents=["test.test"]
     )
 
     client = await hass_client()
 
-    with (
-        patch.object(BackupAgentTest, "async_download_backup") as download_mock,
-    ):
-        download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
-        resp = await client.get("/api/backup/download/abc123?agent_id=test.test")
-        assert resp.status == 200
-        assert await resp.content.read() == b"backup data"
+    resp = await client.get("/api/backup/download/abc123?agent_id=test.test")
+    assert resp.status == 200
+    assert await resp.content.read() == b"backup data"
 
 
 async def test_downloading_local_encrypted_backup_file_not_found(
@@ -112,39 +118,21 @@ async def test_downloading_local_encrypted_backup(
     await _test_downloading_encrypted_backup(hass_client, "backup.local")
 
 
-@patch.object(BackupAgentTest, "async_download_backup")
 async def test_downloading_remote_encrypted_backup(
-    download_mock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test downloading a local backup file."""
     backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
-    await setup_backup_integration(hass)
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest(
-        "test",
-        [
-            AgentBackup(
-                addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
-                backup_id="c0cb53bd",
-                database_included=True,
-                date="1970-01-01T00:00:00Z",
-                extra_metadata={},
-                folders=[Folder.MEDIA, Folder.SHARE],
-                homeassistant_included=True,
-                homeassistant_version="2024.12.0",
-                name="Test",
-                protected=True,
-                size=13,
-            )
-        ],
+    mock_agents = await setup_backup_integration(
+        hass, remote_agents=["test.test"], backups={"test.test": [PROTECTED_BACKUP]}
     )
 
     async def download_backup(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
         return aiter_from_iter((backup_path.read_bytes(),))
 
-    download_mock.side_effect = download_backup
-    await _test_downloading_encrypted_backup(hass_client, "domain.test")
+    mock_agents["test.test"].async_download_backup.side_effect = download_backup
+    await _test_downloading_encrypted_backup(hass_client, "test.test")
 
 
 @pytest.mark.parametrize(
@@ -154,39 +142,21 @@ async def test_downloading_remote_encrypted_backup(
         (BackupNotFound, 404),
     ],
 )
-@patch.object(BackupAgentTest, "async_download_backup")
 async def test_downloading_remote_encrypted_backup_with_error(
-    download_mock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     error: Exception,
     status: int,
 ) -> None:
     """Test downloading a local backup file."""
-    await setup_backup_integration(hass)
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest(
-        "test",
-        [
-            AgentBackup(
-                addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
-                backup_id="abc123",
-                database_included=True,
-                date="1970-01-01T00:00:00Z",
-                extra_metadata={},
-                folders=[Folder.MEDIA, Folder.SHARE],
-                homeassistant_included=True,
-                homeassistant_version="2024.12.0",
-                name="Test",
-                protected=True,
-                size=13,
-            )
-        ],
+    mock_agents = await setup_backup_integration(
+        hass, remote_agents=["test.test"], backups={"test.test": [PROTECTED_BACKUP]}
     )
 
-    download_mock.side_effect = error
+    mock_agents["test.test"].async_download_backup.side_effect = error
     client = await hass_client()
     resp = await client.get(
-        "/api/backup/download/abc123?agent_id=domain.test&password=blah"
+        f"/api/backup/download/{PROTECTED_BACKUP.backup_id}?agent_id=test.test&password=blah"
     )
     assert resp.status == status
 
@@ -207,7 +177,7 @@ async def _test_downloading_encrypted_backup(
         enc_metadata = json.loads(outer_tar.extractfile("./backup.json").read())
         assert enc_metadata["protected"] is True
         with (
-            outer_tar.extractfile("core.tar.gz") as inner_tar_file,
+            outer_tar.extractfile("homeassistant.tar.gz") as inner_tar_file,
             pytest.raises(tarfile.ReadError, match="file could not be opened"),
         ):
             # pylint: disable-next=consider-using-with
@@ -239,7 +209,7 @@ async def _test_downloading_encrypted_backup(
         dec_metadata = json.loads(outer_tar.extractfile("./backup.json").read())
         assert dec_metadata == enc_metadata | {"protected": False}
         with (
-            outer_tar.extractfile("core.tar.gz") as inner_tar_file,
+            outer_tar.extractfile("homeassistant.tar.gz") as inner_tar_file,
             tarfile.open(fileobj=inner_tar_file, mode="r") as inner_tar,
         ):
             assert inner_tar.getnames() == [
@@ -262,6 +232,26 @@ async def test_downloading_backup_not_found(
 
     resp = await client.get("/api/backup/download/abc123?agent_id=backup.local")
     assert resp.status == 404
+
+
+async def test_downloading_backup_not_found_get_backup_returns_none(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test downloading a backup file that does not exist."""
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.test"])
+    mock_agents["test.test"].async_get_backup.return_value = None
+    mock_agents["test.test"].async_get_backup.side_effect = None
+
+    client = await hass_client()
+
+    resp = await client.get("/api/backup/download/abc123?agent_id=test.test")
+    assert resp.status == 404
+    assert (
+        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
+        in caplog.text
+    )
 
 
 async def test_downloading_as_non_admin(

@@ -153,7 +153,7 @@ async def test_process_health(health: int, expected: str) -> None:
     ("uid", "name", "expected"),
     [
         ("12:34:56:03:1b:e4-reachable", "villa_garden_reachable", "True"),
-        ("12:34:56:03:1b:e4-rf_status", "villa_garden_radio", "Full"),
+        ("12:34:56:03:1b:e4-rf_status", "villa_garden_rf_strength", "Full"),
         (
             "12:34:56:80:bb:26-wifi_status",
             "villa_wifi_strength",
@@ -205,7 +205,7 @@ async def test_process_health(health: int, expected: str) -> None:
         ),
         (
             "12:34:56:26:68:92-wifi_status",
-            "baby_bedroom_wifi",
+            "baby_bedroom_wifi_strength",
             "High",
         ),
         ("Home-max-windangle_value", "home_max_wind_angle", "17"),

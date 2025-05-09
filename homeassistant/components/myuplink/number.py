@@ -7,7 +7,7 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, F_SERIES
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
@@ -63,7 +63,7 @@ def get_description(device_point: DevicePoint) -> NumberEntityDescription | None
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyUplinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink number."""
     entities: list[NumberEntity] = []

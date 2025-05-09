@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import cast
 
-from python_picnic_api import PicnicAPI
+from python_picnic_api2 import PicnicAPI
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall

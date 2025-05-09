@@ -1,0 +1,111 @@
+# serializer version: 1
+# name: test_event[event.sonic_duration_auto_shut_off-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'duration_threshold',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sonic_duration_auto_shut_off',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Duration auto shut-off',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_shut_off_duration',
+    'unique_id': 'a63182948ce2896a.auto_shut_off_duration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event[event.sonic_duration_auto_shut_off-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'duration_threshold',
+      ]),
+      'friendly_name': 'Sonic Duration auto shut-off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sonic_duration_auto_shut_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event[event.sonic_volume_auto_shut_off-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'volume_threshold',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sonic_volume_auto_shut_off',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume auto shut-off',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_shut_off_volume',
+    'unique_id': 'a63182948ce2896a.auto_shut_off_volume',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event[event.sonic_volume_auto_shut_off-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'volume_threshold',
+      ]),
+      'friendly_name': 'Sonic Volume auto shut-off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sonic_volume_auto_shut_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

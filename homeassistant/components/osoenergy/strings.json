@@ -55,12 +55,12 @@
       "heater_mode": {
         "name": "Heater mode",
         "state": {
-          "auto": "Auto",
+          "off": "[%key:common::state::off%]",
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
           "extraenergy": "Extra energy",
           "ffr": "Fast frequency reserve",
           "legionella": "Legionella",
-          "manual": "Manual",
-          "off": "Off",
           "powersave": "Power save",
           "voltage": "Voltage"
         }
@@ -70,7 +70,7 @@
         "state": {
           "advanced": "Advanced",
           "gridcompany": "Grid company",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "oso": "OSO",
           "smartcompany": "Smart company"
         }
@@ -215,7 +215,7 @@
       "fields": {
         "until_temp_limit": {
           "name": "Until temperature limit",
-          "description": "Choose if heating should be off until min temperature (True) is reached or for one hour (False)"
+          "description": "Whether heating should be off until the minimum temperature is reached instead of for one hour."
         }
       }
     },
@@ -225,7 +225,7 @@
       "fields": {
         "until_temp_limit": {
           "name": "Until temperature limit",
-          "description": "Choose if heating should be on until max temperature (True) is reached or for one hour (False)"
+          "description": "Whether heating should be on until the maximum temperature is reached instead of for one hour."
         }
       }
     }

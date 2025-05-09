@@ -4,25 +4,24 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DATA_CLIENT, DOMAIN as FIRESERVICEROTA_DOMAIN
-from .coordinator import FireServiceRotaClient
+from .const import DOMAIN
+from .coordinator import FireServiceConfigEntry, FireServiceRotaClient
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FireServiceConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up FireServiceRota sensor based on a config entry."""
-    client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
-
-    async_add_entities([IncidentsSensor(client)])
+    async_add_entities([IncidentsSensor(entry.runtime_data.client)])
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -107,7 +106,7 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{FIRESERVICEROTA_DOMAIN}_{self._entry_id}_update",
+                f"{DOMAIN}_{self._entry_id}_update",
                 self.client_update,
             )
         )

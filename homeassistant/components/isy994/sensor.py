@@ -33,7 +33,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     _LOGGER,
@@ -97,9 +97,9 @@ ISY_CONTROL_TO_DEVICE_CLASS = {
     "WEIGHT": SensorDeviceClass.WEIGHT,
     "WINDCH": SensorDeviceClass.TEMPERATURE,
 }
-ISY_CONTROL_TO_STATE_CLASS = {
-    control: SensorStateClass.MEASUREMENT for control in ISY_CONTROL_TO_DEVICE_CLASS
-}
+ISY_CONTROL_TO_STATE_CLASS = dict.fromkeys(
+    ISY_CONTROL_TO_DEVICE_CLASS, SensorStateClass.MEASUREMENT
+)
 ISY_CONTROL_TO_ENTITY_CATEGORY = {
     PROP_RAMP_RATE: EntityCategory.DIAGNOSTIC,
     PROP_ON_LEVEL: EntityCategory.DIAGNOSTIC,
@@ -108,7 +108,9 @@ ISY_CONTROL_TO_ENTITY_CATEGORY = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ISY sensor platform."""
     isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]

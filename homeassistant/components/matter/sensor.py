@@ -37,10 +37,11 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from .entity import MatterEntity, MatterEntityDescription
@@ -65,7 +66,6 @@ CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kCritical: "critical",
 }
 
-
 OPERATIONAL_STATE_MAP = {
     # enum with known Operation state values which we can translate
     clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "stopped",
@@ -77,11 +77,36 @@ OPERATIONAL_STATE_MAP = {
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kDocked: "docked",
 }
 
+BOOST_STATE_MAP = {
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive: "inactive",
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive: "active",
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kUnknownEnumValue: None,
+}
+
+EVSE_FAULT_STATE_MAP = {
+    clusters.EnergyEvse.Enums.FaultStateEnum.kNoError: "no_error",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kMeterFailure: "meter_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverVoltage: "over_voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kUnderVoltage: "under_voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverCurrent: "over_current",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactWetFailure: "contact_wet_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactDryFailure: "contact_dry_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerLoss: "power_loss",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerQuality: "power_quality",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPilotShortCircuit: "pilot_short_circuit",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEmergencyStop: "emergency_stop",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEVDisconnected: "ev_disconnected",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kWrongPowerSupply: "wrong_power_supply",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kLiveNeutralSwap: "live_neutral_swap",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverTemperature: "over_temperature",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOther: "other",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter sensors from Config Entry."""
     matter = get_matter(hass)
@@ -722,6 +747,25 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="ElectricalEnergyMeasurementCumulativeEnergyExported",
+            translation_key="energy_exported",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=3,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            # id 0 of the EnergyMeasurementStruct is the cumulative energy (in mWh)
+            measurement_to_ha=lambda x: x.energy,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyExported,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="ElectricalMeasurementActivePower",
             device_class=SensorDeviceClass.POWER,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -903,5 +947,118 @@ DISCOVERY_SCHEMAS = [
         ),
         # don't discover this entry if the supported state list is empty
         secondary_value_is_not=[],
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseFaultState",
+            translation_key="evse_fault_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(EVSE_FAULT_STATE_MAP.values()),
+            measurement_to_ha=EVSE_FAULT_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.FaultState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseCircuitCapacity",
+            translation_key="evse_circuit_capacity",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.CircuitCapacity,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseMinimumChargeCurrent",
+            translation_key="evse_min_charge_current",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.MinimumChargeCurrent,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseMaximumChargeCurrent",
+            translation_key="evse_max_charge_current",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.MaximumChargeCurrent,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseUserMaximumChargeCurrent",
+            translation_key="evse_user_max_charge_current",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.UserMaximumChargeCurrent,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WaterHeaterManagementTankVolume",
+            translation_key="tank_volume",
+            device_class=SensorDeviceClass.VOLUME_STORAGE,
+            native_unit_of_measurement=UnitOfVolume.LITERS,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.WaterHeaterManagement.Attributes.TankVolume,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WaterHeaterManagementTankPercentage",
+            translation_key="tank_percentage",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.WaterHeaterManagement.Attributes.TankPercentage,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WaterHeaterManagementEstimatedHeatRequired",
+            translation_key="estimated_heat_required",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=3,
+            state_class=SensorStateClass.TOTAL,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.WaterHeaterManagement.Attributes.EstimatedHeatRequired,
+        ),
     ),
 ]

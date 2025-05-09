@@ -5,7 +5,7 @@ from pyfritzhome.devicetypes import FritzhomeTemplate
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import FritzboxConfigEntry
@@ -15,7 +15,7 @@ from .entity import FritzBoxEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzboxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome template from ConfigEntry."""
     coordinator = entry.runtime_data

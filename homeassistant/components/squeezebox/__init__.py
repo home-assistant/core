@@ -53,8 +53,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.MEDIA_PLAYER,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
 
 
@@ -129,10 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
     server_coordinator = LMSStatusDataUpdateCoordinator(hass, entry, lms)
 
-    entry.runtime_data = SqueezeboxData(
-        coordinator=server_coordinator,
-        server=lms,
-    )
+    entry.runtime_data = SqueezeboxData(coordinator=server_coordinator, server=lms)
 
     # set up player discovery
     known_servers = hass.data.setdefault(DOMAIN, {}).setdefault(KNOWN_SERVERS, {})

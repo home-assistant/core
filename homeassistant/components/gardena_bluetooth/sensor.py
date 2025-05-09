@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
@@ -95,7 +95,7 @@ DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GardenaBluetoothConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Gardena Bluetooth sensor based on a config entry."""
     coordinator = entry.runtime_data

@@ -14,7 +14,7 @@ from pydeconz.models.sensor.presence import (
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DeconzConfigEntry
 from .entity import DeconzDevice
@@ -30,7 +30,7 @@ DECONZ_TO_SENSITIVITY = {value: key for key, value in SENSITIVITY_TO_DECONZ.item
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DeconzConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ button entity."""
     hub = config_entry.runtime_data

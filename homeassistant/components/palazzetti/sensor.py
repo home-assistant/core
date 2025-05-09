@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfLength, UnitOfMass, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import STATUS_TO_HA
@@ -59,7 +59,7 @@ PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PalazzettiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Palazzetti sensor entities based on a config entry."""
 

@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -26,7 +26,7 @@ from . import subscription
 from .config import DEFAULT_RETAIN, MQTT_RO_SCHEMA
 from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC, PAYLOAD_EMPTY_JSON
 from .entity import MqttEntity, async_setup_entity_entry_helper
-from .models import MqttValueTemplate, ReceiveMessage
+from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
@@ -82,7 +82,7 @@ MQTT_JSON_UPDATE_SCHEMA = vol.Schema(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT update entity through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -136,7 +136,18 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     @callback
     def _handle_state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving state message via MQTT."""
-        payload = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
+        payload = self._templates[CONF_VALUE_TEMPLATE](
+            msg.payload, PayloadSentinel.DEFAULT
+        )
+
+        if payload is PayloadSentinel.DEFAULT:
+            _LOGGER.warning(
+                "Unable to process payload '%s' for topic %s, with value template '%s'",
+                msg.payload,
+                msg.topic,
+                self._config.get(CONF_VALUE_TEMPLATE),
+            )
+            return
 
         if not payload or payload == PAYLOAD_EMPTY_JSON:
             _LOGGER.debug(

@@ -7,7 +7,6 @@ from random import randint
 from time import time
 from typing import TYPE_CHECKING, Any
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InvalidToken,
@@ -17,7 +16,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     VehicleOffline,
 )
-from tesla_fleet_api.ratecalculator import RateCalculator
+from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -28,7 +27,7 @@ if TYPE_CHECKING:
 
 from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
 
-VEHICLE_INTERVAL_SECONDS = 300
+VEHICLE_INTERVAL_SECONDS = 600
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
 VEHICLE_WAIT = timedelta(minutes=15)
 
@@ -66,13 +65,12 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     updated_once: bool
     pre2021: bool
     last_active: datetime
-    rate: RateCalculator
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: VehicleSpecific,
+        api: VehicleFleet,
         product: dict,
     ) -> None:
         """Initialize TeslaFleet Vehicle Update Coordinator."""
@@ -87,44 +85,36 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data = flatten(product)
         self.updated_once = False
         self.last_active = datetime.now()
-        self.rate = RateCalculator(100, 86400, VEHICLE_INTERVAL_SECONDS, 3600, 5)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
 
         try:
-            # Check if the vehicle is awake using a non-rate limited API call
-            if self.data["state"] != TeslaFleetState.ONLINE:
-                response = await self.api.vehicle()
-                self.data["state"] = response["response"]["state"]
+            # Check if the vehicle is awake using a free API call
+            response = await self.api.vehicle()
+            self.data["state"] = response["response"]["state"]
 
             if self.data["state"] != TeslaFleetState.ONLINE:
                 return self.data
 
-            # This is a rated limited API call
-            self.rate.consume()
             response = await self.api.vehicle_data(endpoints=ENDPOINTS)
             data = response["response"]
 
         except VehicleOffline:
             self.data["state"] = TeslaFleetState.ASLEEP
             return self.data
-        except RateLimited as e:
+        except RateLimited:
             LOGGER.warning(
-                "%s rate limited, will retry in %s seconds",
+                "%s rate limited, will skip refresh",
                 self.name,
-                e.data.get("after"),
             )
-            if "after" in e.data:
-                self.update_interval = timedelta(seconds=int(e.data["after"]))
             return self.data
         except (InvalidToken, OAuthExpired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
-        # Calculate ideal refresh interval
-        self.update_interval = timedelta(seconds=self.rate.calculate())
+        self.update_interval = VEHICLE_INTERVAL
 
         self.updated_once = True
 
@@ -159,7 +149,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
     ) -> None:
         """Initialize TeslaFleet Energy Site Live coordinator."""
         super().__init__(
@@ -212,7 +202,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
     ) -> None:
         """Initialize Tesla Fleet Energy Site History coordinator."""
         super().__init__(
@@ -258,7 +248,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self.updated_once = True
 
         # Add all time periods together
-        output = {key: 0 for key in ENERGY_HISTORY_FIELDS}
+        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
         for period in data.get("time_series", []):
             for key in ENERGY_HISTORY_FIELDS:
                 output[key] += period.get(key, 0)
@@ -276,7 +266,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
         product: dict,
     ) -> None:
         """Initialize TeslaFleet Energy Info coordinator."""

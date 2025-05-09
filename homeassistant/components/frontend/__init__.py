@@ -52,10 +52,9 @@ CONF_JS_VERSION = "javascript_version"
 DEFAULT_THEME_COLOR = "#03A9F4"
 
 
-DATA_PANELS = "frontend_panels"
-DATA_JS_VERSION = "frontend_js_version"
-DATA_EXTRA_MODULE_URL = "frontend_extra_module_url"
-DATA_EXTRA_JS_URL_ES5 = "frontend_extra_js_url_es5"
+DATA_PANELS: HassKey[dict[str, Panel]] = HassKey("frontend_panels")
+DATA_EXTRA_MODULE_URL: HassKey[UrlManager] = HassKey("frontend_extra_module_url")
+DATA_EXTRA_JS_URL_ES5: HassKey[UrlManager] = HassKey("frontend_extra_js_url_es5")
 
 DATA_WS_SUBSCRIBERS: HassKey[set[tuple[websocket_api.ActiveConnection, int]]] = HassKey(
     "frontend_ws_subscribers"
@@ -64,8 +63,8 @@ DATA_WS_SUBSCRIBERS: HassKey[set[tuple[websocket_api.ActiveConnection, int]]] = 
 THEMES_STORAGE_KEY = f"{DOMAIN}_theme"
 THEMES_STORAGE_VERSION = 1
 THEMES_SAVE_DELAY = 60
-DATA_THEMES_STORE = "frontend_themes_store"
-DATA_THEMES = "frontend_themes"
+DATA_THEMES_STORE: HassKey[Store] = HassKey("frontend_themes_store")
+DATA_THEMES: HassKey[dict[str, Any]] = HassKey("frontend_themes")
 DATA_DEFAULT_THEME = "frontend_default_theme"
 DATA_DEFAULT_DARK_THEME = "frontend_default_dark_theme"
 DEFAULT_THEME = "default"
@@ -242,7 +241,7 @@ class Panel:
     sidebar_title: str | None = None
 
     # Url to show the panel in the frontend
-    frontend_url_path: str | None = None
+    frontend_url_path: str
 
     # Config to pass to the webcomponent
     config: dict[str, Any] | None = None
@@ -273,7 +272,7 @@ class Panel:
         self.config_panel_domain = config_panel_domain
 
     @callback
-    def to_response(self) -> PanelRespons:
+    def to_response(self) -> PanelResponse:
         """Panel as dictionary."""
         return {
             "component_name": self.component_name,
@@ -631,7 +630,8 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     def get_info(self) -> dict[str, list[str]]:  # type: ignore[override]
         """Return a dict with additional info useful for introspection."""
-        return {"panels": list(self.hass.data[DATA_PANELS])}
+        panels = self.hass.data[DATA_PANELS]
+        return {"panels": list(panels)}
 
     def raw_match(self, path: str) -> bool:
         """Perform a raw match against path."""
@@ -841,13 +841,13 @@ def websocket_subscribe_extra_js(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-class PanelRespons(TypedDict):
+class PanelResponse(TypedDict):
     """Represent the panel response type."""
 
     component_name: str
     icon: str | None
     title: str | None
     config: dict[str, Any] | None
-    url_path: str | None
+    url_path: str
     require_admin: bool
     config_panel_domain: str | None

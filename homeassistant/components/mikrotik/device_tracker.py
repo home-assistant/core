@@ -10,7 +10,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -20,7 +20,7 @@ from .coordinator import Device, MikrotikConfigEntry, MikrotikDataUpdateCoordina
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MikrotikConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Mikrotik component."""
     coordinator = config_entry.runtime_data
@@ -54,7 +54,7 @@ async def async_setup_entry(
 @callback
 def update_items(
     coordinator: MikrotikDataUpdateCoordinator,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: dict[str, MikrotikDataUpdateCoordinatorTracker],
 ) -> None:
     """Update tracked device state from the hub."""

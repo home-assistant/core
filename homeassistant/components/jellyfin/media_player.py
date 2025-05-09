@@ -12,12 +12,12 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
 from .browse_media import build_item_response, build_root_response
 from .client_wrapper import get_artwork_url
-from .const import CONTENT_TYPE_MAP, LOGGER
+from .const import CONTENT_TYPE_MAP, LOGGER, MAX_IMAGE_WIDTH
 from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .entity import JellyfinClientEntity
 
@@ -25,7 +25,7 @@ from .entity import JellyfinClientEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: JellyfinConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Jellyfin media_player from a config entry."""
     coordinator = entry.runtime_data
@@ -169,7 +169,9 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         if self.now_playing is None:
             return None
 
-        return get_artwork_url(self.coordinator.api_client, self.now_playing, 150)
+        return get_artwork_url(
+            self.coordinator.api_client, self.now_playing, MAX_IMAGE_WIDTH
+        )
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:

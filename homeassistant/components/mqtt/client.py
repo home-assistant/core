@@ -15,6 +15,7 @@ import socket
 import ssl
 import time
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 import certifi
 
@@ -292,27 +293,44 @@ class MqttClientSetup:
         """
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+        from paho.mqtt import client as mqtt  # pylint: disable=import-outside-toplevel
 
         # pylint: disable-next=import-outside-toplevel
         from .async_client import AsyncMQTTClient
 
         config = self._config
+        clean_session: bool | None = None
         if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
+            clean_session = True
         elif protocol == PROTOCOL_5:
             proto = mqtt.MQTTv5
         else:
             proto = mqtt.MQTTv311
+            clean_session = True
 
         if (client_id := config.get(CONF_CLIENT_ID)) is None:
-            # PAHO MQTT relies on the MQTT server to generate random client IDs.
-            # However, that feature is not mandatory so we generate our own.
-            client_id = None
+            # PAHO MQTT relies on the MQTT server to generate random client ID
+            # for protocol version 3.1, however, that feature is not mandatory
+            # so we generate our own.
+            client_id = mqtt._base62(uuid4().int, padding=22)  # noqa: SLF001
         transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
         self._client = AsyncMQTTClient(
-            mqtt.CallbackAPIVersion.VERSION1,
-            client_id,
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+            client_id=client_id,
+            # See: https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
+            # clean_session (bool defaults to None)
+            # a boolean that determines the client type.
+            # If True, the broker will remove all information about this client when it
+            # disconnects. If False, the client is a persistent client and subscription
+            # information and queued messages will be retained when the client
+            # disconnects. Note that a client will never discard its own outgoing
+            # messages on disconnect. Calling connect() or reconnect() will cause the
+            # messages to be resent. Use reinitialise() to reset a client to its
+            # original state. The clean_session argument only applies to MQTT versions
+            # v3.1.1 and v3.1. It is not accepted if the MQTT version is v5.0 - use the
+            # clean_start argument on connect() instead.
+            clean_session=clean_session,
             protocol=proto,
             transport=transport,  # type: ignore[arg-type]
             reconnect_on_failure=False,
@@ -371,6 +389,7 @@ class MQTT:
         self.loop = hass.loop
         self.config_entry = config_entry
         self.conf = conf
+        self.is_mqttv5 = conf.get(CONF_PROTOCOL, DEFAULT_PROTOCOL) == PROTOCOL_5
 
         self._simple_subscriptions: defaultdict[str, set[Subscription]] = defaultdict(
             set
@@ -476,9 +495,9 @@ class MQTT:
         mqttc.on_connect = self._async_mqtt_on_connect
         mqttc.on_disconnect = self._async_mqtt_on_disconnect
         mqttc.on_message = self._async_mqtt_on_message
-        mqttc.on_publish = self._async_mqtt_on_callback
-        mqttc.on_subscribe = self._async_mqtt_on_callback
-        mqttc.on_unsubscribe = self._async_mqtt_on_callback
+        mqttc.on_publish = self._async_mqtt_on_publish
+        mqttc.on_subscribe = self._async_mqtt_on_subscribe_unsubscribe
+        mqttc.on_unsubscribe = self._async_mqtt_on_subscribe_unsubscribe
 
         # suppress exceptions at callback
         mqttc.suppress_exceptions = True
@@ -498,7 +517,7 @@ class MQTT:
     def _async_reader_callback(self, client: mqtt.Client) -> None:
         """Handle reading data from the socket."""
         if (status := client.loop_read(MAX_PACKETS_TO_READ)) != 0:
-            self._async_on_disconnect(status)
+            self._async_handle_callback_exception(status)
 
     @callback
     def _async_start_misc_periodic(self) -> None:
@@ -593,7 +612,7 @@ class MQTT:
     def _async_writer_callback(self, client: mqtt.Client) -> None:
         """Handle writing data to the socket."""
         if (status := client.loop_write()) != 0:
-            self._async_on_disconnect(status)
+            self._async_handle_callback_exception(status)
 
     def _on_socket_register_write(
         self, client: mqtt.Client, userdata: Any, sock: SocketType
@@ -652,14 +671,25 @@ class MQTT:
         result: int | None = None
         self._available_future = client_available
         self._should_reconnect = True
+        connect_partial = partial(
+            self._mqttc.connect,
+            host=self.conf[CONF_BROKER],
+            port=self.conf.get(CONF_PORT, DEFAULT_PORT),
+            keepalive=self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
+            # See:
+            # https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
+            # `clean_start` (bool) – (MQTT v5.0 only) `True`, `False` or
+            # `MQTT_CLEAN_START_FIRST_ONLY`. Sets the MQTT v5.0 clean_start flag
+            #  always, never or on the first successful connect only,
+            # respectively. MQTT session data (such as outstanding messages and
+            # subscriptions) is cleared on successful connect when the
+            # clean_start flag is set. For MQTT v3.1.1, the clean_session
+            # argument of Client should be used for similar result.
+            clean_start=True if self.is_mqttv5 else mqtt.MQTT_CLEAN_START_FIRST_ONLY,
+        )
         try:
             async with self._connection_lock, self._async_connect_in_executor():
-                result = await self.hass.async_add_executor_job(
-                    self._mqttc.connect,
-                    self.conf[CONF_BROKER],
-                    self.conf.get(CONF_PORT, DEFAULT_PORT),
-                    self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
-                )
+                result = await self.hass.async_add_executor_job(connect_partial)
         except (OSError, mqtt.WebsocketConnectionError) as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
             self._async_connection_result(False)
@@ -983,29 +1013,28 @@ class MQTT:
         self,
         _mqttc: mqtt.Client,
         _userdata: None,
-        _flags: dict[str, int],
-        result_code: int,
-        properties: mqtt.Properties | None = None,
+        _connect_flags: mqtt.ConnectFlags,
+        reason_code: mqtt.ReasonCode,
+        _properties: mqtt.Properties | None = None,
     ) -> None:
         """On connect callback.
 
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        # pylint: disable-next=import-outside-toplevel
-        import paho.mqtt.client as mqtt
-
-        if result_code != mqtt.CONNACK_ACCEPTED:
-            if result_code in (
-                mqtt.CONNACK_REFUSED_BAD_USERNAME_PASSWORD,
-                mqtt.CONNACK_REFUSED_NOT_AUTHORIZED,
-            ):
+        if reason_code.is_failure:
+            # 24: Continue authentication
+            # 25: Re-authenticate
+            # 134: Bad user name or password
+            # 135: Not authorized
+            # 140: Bad authentication method
+            if reason_code.value in (24, 25, 134, 135, 140):
                 self._should_reconnect = False
                 self.hass.async_create_task(self.async_disconnect())
                 self.config_entry.async_start_reauth(self.hass)
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",
-                mqtt.connack_string(result_code),
+                reason_code.getName(),  # type: ignore[no-untyped-call]
             )
             self._async_connection_result(False)
             return
@@ -1016,7 +1045,7 @@ class MQTT:
             "Connected to MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),
-            result_code,
+            reason_code,
         )
 
         birth: dict[str, Any]
@@ -1153,18 +1182,32 @@ class MQTT:
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)
 
     @callback
-    def _async_mqtt_on_callback(
+    def _async_mqtt_on_publish(
         self,
         _mqttc: mqtt.Client,
         _userdata: None,
         mid: int,
-        _granted_qos_reason: tuple[int, ...] | mqtt.ReasonCodes | None = None,
-        _properties_reason: mqtt.ReasonCodes | None = None,
+        _reason_code: mqtt.ReasonCode,
+        _properties: mqtt.Properties | None,
     ) -> None:
+        """Publish callback."""
+        self._async_mqtt_on_callback(mid)
+
+    @callback
+    def _async_mqtt_on_subscribe_unsubscribe(
+        self,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        mid: int,
+        _reason_code: list[mqtt.ReasonCode],
+        _properties: mqtt.Properties | None,
+    ) -> None:
+        """Subscribe / Unsubscribe callback."""
+        self._async_mqtt_on_callback(mid)
+
+    @callback
+    def _async_mqtt_on_callback(self, mid: int) -> None:
         """Publish / Subscribe / Unsubscribe callback."""
-        # The callback signature for on_unsubscribe is different from on_subscribe
-        # see https://github.com/eclipse/paho.mqtt.python/issues/687
-        # properties and reason codes are not used in Home Assistant
         future = self._async_get_mid_future(mid)
         if future.done() and (future.cancelled() or future.exception()):
             # Timed out or cancelled
@@ -1181,18 +1224,27 @@ class MQTT:
         return future
 
     @callback
+    def _async_handle_callback_exception(self, status: mqtt.MQTTErrorCode) -> None:
+        """Handle a callback exception."""
+        # We don't import on the top because some integrations
+        # should be able to optionally rely on MQTT.
+        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+
+        _LOGGER.warning(
+            "Error returned from MQTT server: %s",
+            mqtt.error_string(status),
+        )
+
+    @callback
     def _async_mqtt_on_disconnect(
         self,
         _mqttc: mqtt.Client,
         _userdata: None,
-        result_code: int,
+        _disconnect_flags: mqtt.DisconnectFlags,
+        reason_code: mqtt.ReasonCode,
         properties: mqtt.Properties | None = None,
     ) -> None:
         """Disconnected callback."""
-        self._async_on_disconnect(result_code)
-
-    @callback
-    def _async_on_disconnect(self, result_code: int) -> None:
         if not self.connected:
             # This function is re-entrant and may be called multiple times
             # when there is a broken pipe error.
@@ -1203,11 +1255,11 @@ class MQTT:
         self.connected = False
         async_dispatcher_send(self.hass, MQTT_CONNECTION_STATE, False)
         _LOGGER.log(
-            logging.INFO if result_code == 0 else logging.DEBUG,
+            logging.INFO if reason_code == 0 else logging.DEBUG,
             "Disconnected from MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),
-            result_code,
+            reason_code,
         )
 
     @callback

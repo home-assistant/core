@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BoschConfigEntry
 from .entity import SHCEntity
@@ -19,7 +19,7 @@ from .entity import SHCEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC binary sensor platform."""
     session = config_entry.runtime_data
