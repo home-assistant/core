@@ -114,4 +114,13 @@ async def create_server(
             )
         ]
 
+    @server.list_resources()  # type: ignore[no-untyped-call, misc]
+    async def list_resources() -> list[types.Resource]:
+        return [
+            types.Resource(
+                uri="homeassistant://entities/lights/light1",
+                name="Light 1",
+            )
+        ]
+
     return server

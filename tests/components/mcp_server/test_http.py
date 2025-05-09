@@ -424,3 +424,16 @@ async def test_get_unknwon_prompt(
     async with mcp_session(mcp_sse_url, hass_supervisor_access_token) as session:
         with pytest.raises(McpError):
             await session.get_prompt(name="Unknown")
+
+
+async def test_list_resources(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_sse_url: str,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test list resources endpoint."""
+
+    async with mcp_session(mcp_sse_url, hass_supervisor_access_token) as session:
+        result = await session.list_resources()
+        print(result)
