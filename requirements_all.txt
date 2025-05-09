@@ -69,9 +69,6 @@ PyMetno==0.13.0
 # homeassistant.components.keymitt_ble
 PyMicroBot==0.0.17
 
-# homeassistant.components.nina
-PyNINA==0.3.5
-
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
 PyNaCl==1.5.0
@@ -223,7 +220,7 @@ aiodhcpwatcher==1.1.1
 aiodiscover==2.6.1
 
 # homeassistant.components.dnsip
-aiodns==3.3.0
+aiodns==3.4.0
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -958,7 +955,7 @@ fnv-hash-fast==1.5.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==4.1.0
+forecast-solar==4.2.0
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -2164,6 +2161,9 @@ pynetgear==0.10.10
 # homeassistant.components.netio
 pynetio==0.1.9.1
 
+# homeassistant.components.nina
+pynina==0.3.6
+
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
 
@@ -2674,9 +2674,6 @@ rova==0.4.1
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
-
-# homeassistant.components.rtsp_to_webrtc
-rtsp-to-webrtc==0.5.1
 
 # homeassistant.components.russound_rnet
 russound==0.2.0

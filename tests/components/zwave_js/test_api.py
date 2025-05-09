@@ -505,6 +505,22 @@ async def test_node_alerts(
     assert result["comments"] == [{"level": "info", "text": "test"}]
     assert result["is_embedded"]
 
+    # Test with node in interview
+    with patch("zwave_js_server.model.node.Node.in_interview", return_value=True):
+        await ws_client.send_json_auto_id(
+            {
+                TYPE: "zwave_js/node_alerts",
+                DEVICE_ID: device.id,
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+        assert len(msg["result"]["comments"]) == 2
+        assert msg["result"]["comments"][1] == {
+            "level": "warning",
+            "text": "This device is currently being interviewed and may not be fully operational.",
+        }
+
     # Test with provisioned device
     valid_qr_info = {
         VERSION: 1,
