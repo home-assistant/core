@@ -194,9 +194,9 @@
       "program_phase": {
         "name": "Program phase",
         "state": {
-          "2nd_espresso": "2nd espresso coffee",
-          "2nd_grinding": "2nd grinding",
-          "2nd_pre_brewing": "2nd pre-brewing",
+          "z_2nd_espresso": "2nd espresso coffee",
+          "z_2nd_grinding": "2nd grinding",
+          "z_2nd_pre_brewing": "2nd pre-brewing",
           "anti_crease": "Anti-crease",
           "blocked_brushes": "Brushes blocked",
           "blocked_drive_wheels": "Drive wheels blocked",
@@ -288,8 +288,8 @@
       "program_id": {
         "name": "Program",
         "state": {
-          "1_tray": "1 tray",
-          "2_trays": "2 trays",
+          "one_tray": "1 tray",
+          "two_trays": "2 trays",
           "amaranth": "Amaranth",
           "apples_diced": "Apples (diced)",
           "apples_halved": "Apples (halved)",
@@ -427,7 +427,7 @@
           "crevettes": "Crevettes",
           "curtains": "Curtains",
           "dark_garments": "Dark garments",
-          "decrystallise_honey": "Decrystallise honey",
+          "decrystallize_honey": "Decrystallize honey",
           "defrost": "Defrost",
           "defrosting_with_microwave": "Defrosting with microwave",
           "defrosting_with_steam": "Defrosting with steam",
