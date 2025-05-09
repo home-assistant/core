@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -39,7 +40,7 @@
     'original_name': None,
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heat_pump_state',
     'unique_id': '0000-1111-2222-3333_heat_pump_state',
@@ -76,6 +77,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Central heating inlet temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -104,7 +106,7 @@
     'original_name': 'Central heating inlet temperature',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Central heating inlet temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ch_inlet_temperature',
     'unique_id': '0000-1111-2222-3333_ch_inlet_temperature',
@@ -132,6 +134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Central heating pump flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -160,7 +163,7 @@
     'original_name': 'Central heating pump flow',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Central heating pump flow',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'central_heating_flow_volume',
     'unique_id': '0000-1111-2222-3333_central_heating_flow_volume',
@@ -188,6 +191,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Compressor speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -213,7 +217,7 @@
     'original_name': 'Compressor speed',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Compressor speed',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'compressor_rpm',
     'unique_id': '0000-1111-2222-3333_compressor_rpm',
@@ -240,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Compressor usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -265,7 +270,7 @@
     'original_name': 'Compressor usage',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Compressor usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'compressor_percentage',
     'unique_id': '0000-1111-2222-3333_compressor_percentage',
@@ -292,6 +297,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model COP',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -320,7 +326,7 @@
     'original_name': 'COP',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model COP',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cop',
     'unique_id': '0000-1111-2222-3333_cop',
@@ -346,6 +352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Current room temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -374,7 +381,7 @@
     'original_name': 'Current room temperature',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Current room temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_room_temperature',
     'unique_id': '0000-1111-2222-3333_thermostat_room_temperature',
@@ -402,6 +409,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model DHW bottom temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -430,7 +438,7 @@
     'original_name': 'DHW bottom temperature',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model DHW bottom temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dhw_bottom_temperature',
     'unique_id': '0000-1111-2222-3333_dhw_bottom_temperature',
@@ -458,6 +466,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model DHW pump flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -486,7 +495,7 @@
     'original_name': 'DHW pump flow',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model DHW pump flow',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dhw_flow_volume',
     'unique_id': '0000-1111-2222-3333_dhw_flow_volume',
@@ -514,6 +523,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model DHW top temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -542,7 +552,7 @@
     'original_name': 'DHW top temperature',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model DHW top temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dhw_top_temperature',
     'unique_id': '0000-1111-2222-3333_dhw_top_temperature',
@@ -570,6 +580,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Electricity used',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -595,7 +606,7 @@
     'original_name': 'Electricity used',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Electricity used',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electricity_used',
     'unique_id': '0000-1111-2222-3333_electricity_used',
@@ -623,6 +634,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Input power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -651,7 +663,7 @@
     'original_name': 'Input power',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Input power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_input',
     'unique_id': '0000-1111-2222-3333_power_input',
@@ -679,6 +691,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -707,7 +720,7 @@
     'original_name': 'Output power',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Output power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_output',
     'unique_id': '0000-1111-2222-3333_power_output',
@@ -735,6 +748,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -763,7 +777,7 @@
     'original_name': 'Outside temperature',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Outside temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
     'unique_id': '0000-1111-2222-3333_outside_temperature',
@@ -791,6 +805,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Room temperature setpoint',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -819,7 +834,7 @@
     'original_name': 'Room temperature setpoint',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Room temperature setpoint',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_room_temperature_setpoint',
     'unique_id': '0000-1111-2222-3333_thermostat_room_temperature_setpoint',
@@ -847,6 +862,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Total energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -872,7 +888,7 @@
     'original_name': 'Total energy output',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Total energy output',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_output',
     'unique_id': '0000-1111-2222-3333_energy_output',
@@ -900,6 +916,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Water inlet temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -928,7 +945,7 @@
     'original_name': 'Water inlet temperature',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Water inlet temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_inlet_temperature',
     'unique_id': '0000-1111-2222-3333_water_inlet_temperature',
@@ -956,6 +973,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Water outlet temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -984,7 +1002,7 @@
     'original_name': 'Water outlet temperature',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Water outlet temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_outlet_temperature',
     'unique_id': '0000-1111-2222-3333_water_outlet_temperature',
@@ -1012,6 +1030,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Model Water target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1040,7 +1059,7 @@
     'original_name': 'Water target temperature',
     'platform': 'weheat',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Model Water target temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_water_setpoint',
     'unique_id': '0000-1111-2222-3333_thermostat_water_setpoint',

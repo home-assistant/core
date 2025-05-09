@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baby Bedroom Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -35,7 +36,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baby Bedroom Atmospheric pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure',
     'unique_id': '12:34:56:26:68:92-pressure',
@@ -66,6 +67,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baby Bedroom Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -91,7 +93,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baby Bedroom Carbon dioxide',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:26:68:92-co2',
@@ -122,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baby Bedroom Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -153,7 +156,7 @@
     'original_name': 'Health index',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baby Bedroom Health index',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'health_idx',
     'unique_id': '12:34:56:26:68:92-health_idx',
@@ -189,6 +192,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baby Bedroom Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -214,7 +218,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baby Bedroom Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:26:68:92-humidity',
@@ -245,6 +249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baby Bedroom Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -270,7 +275,7 @@
     'original_name': 'Noise',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baby Bedroom Noise',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'noise',
     'unique_id': '12:34:56:26:68:92-noise',
@@ -301,6 +306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baby Bedroom Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -324,7 +330,7 @@
     'original_name': 'Pressure trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baby Bedroom Pressure trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_trend',
     'unique_id': '12:34:56:26:68:92-pressure_trend',
@@ -352,6 +358,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baby Bedroom Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -375,7 +382,7 @@
     'original_name': 'Reachability',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baby Bedroom Reachability',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reachable',
     'unique_id': '12:34:56:26:68:92-reachable',
@@ -403,6 +410,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baby Bedroom Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -431,7 +439,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baby Bedroom Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '12:34:56:26:68:92-temperature',
@@ -462,6 +470,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baby Bedroom Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -485,7 +494,7 @@
     'original_name': 'Temperature trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baby Bedroom Temperature trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_trend',
     'unique_id': '12:34:56:26:68:92-temp_trend',
@@ -513,6 +522,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Baby Bedroom Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -536,7 +546,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Baby Bedroom Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': '12:34:56:26:68:92-wifi_status',
@@ -564,6 +574,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -595,7 +606,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Atmospheric pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure',
     'unique_id': '12:34:56:26:69:0c-pressure',
@@ -624,6 +635,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -649,7 +661,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Carbon dioxide',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:26:69:0c-co2',
@@ -678,6 +690,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -709,7 +722,7 @@
     'original_name': 'Health index',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Health index',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'health_idx',
     'unique_id': '12:34:56:26:69:0c-health_idx',
@@ -743,6 +756,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -768,7 +782,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:26:69:0c-humidity',
@@ -797,6 +811,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -822,7 +837,7 @@
     'original_name': 'Noise',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Noise',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'noise',
     'unique_id': '12:34:56:26:69:0c-noise',
@@ -851,6 +866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -874,7 +890,7 @@
     'original_name': 'Pressure trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Pressure trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_trend',
     'unique_id': '12:34:56:26:69:0c-pressure_trend',
@@ -900,6 +916,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -923,7 +940,7 @@
     'original_name': 'Reachability',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Reachability',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reachable',
     'unique_id': '12:34:56:26:69:0c-reachable',
@@ -951,6 +968,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -979,7 +997,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '12:34:56:26:69:0c-temperature',
@@ -1008,6 +1026,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1031,7 +1050,7 @@
     'original_name': 'Temperature trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Temperature trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_trend',
     'unique_id': '12:34:56:26:69:0c-temp_trend',
@@ -1057,6 +1076,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1080,7 +1100,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': '12:34:56:26:69:0c-wifi_status',
@@ -1108,6 +1128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bureau Modulate Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1133,7 +1154,7 @@
     'original_name': 'Battery',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bureau Modulate Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '222452125-12:34:56:20:f5:8c-battery',
@@ -1162,6 +1183,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cold water None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1185,7 +1207,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Cold water None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:16:0e#8-12:34:56:00:16:0e#8-reachable',
@@ -1211,6 +1233,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Consumption meter None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1234,7 +1257,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Consumption meter None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:00:a1:4c:da-12:34:56:00:00:a1:4c:da-reachable',
@@ -1260,6 +1283,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Consumption meter Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1285,7 +1309,7 @@
     'original_name': 'Power',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Consumption meter Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:00:a1:4c:da-12:34:56:00:00:a1:4c:da-power',
@@ -1314,6 +1338,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Corridor Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1339,7 +1364,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Corridor Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1002003001-1002003001-humidity',
@@ -1368,6 +1393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Écocompteur None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1391,7 +1417,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Écocompteur None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:16:0e-12:34:56:00:16:0e-reachable',
@@ -1417,6 +1443,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1440,7 +1467,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gas None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:16:0e#6-12:34:56:00:16:0e#6-reachable',
@@ -1466,6 +1493,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home avg Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1497,7 +1525,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home avg Atmospheric pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-avg-pressure',
@@ -1528,6 +1556,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home avg Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -1553,7 +1582,7 @@
     'original_name': 'Gust angle',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home avg Gust angle',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gust_angle',
     'unique_id': 'Home-avg-gustangle_value',
@@ -1584,6 +1613,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home avg Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1609,7 +1639,7 @@
     'original_name': 'Gust strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home avg Gust strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gust_strength',
     'unique_id': 'Home-avg-guststrength',
@@ -1640,6 +1670,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home avg Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1665,7 +1696,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home avg Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-avg-humidity',
@@ -1696,6 +1727,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home avg Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1721,7 +1753,7 @@
     'original_name': 'Precipitation',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home avg Precipitation',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-avg-rain',
@@ -1752,6 +1784,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home avg Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1780,7 +1813,7 @@
     'original_name': 'Precipitation last hour',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home avg Precipitation last hour',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_rain_1',
     'unique_id': 'Home-avg-sum_rain_1',
@@ -1811,6 +1844,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home avg Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1836,7 +1870,7 @@
     'original_name': 'Precipitation today',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home avg Precipitation today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_rain_24',
     'unique_id': 'Home-avg-sum_rain_24',
@@ -1867,6 +1901,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home avg Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1895,7 +1930,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home avg Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-avg-temperature',
@@ -1926,6 +1961,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home avg Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -1951,7 +1987,7 @@
     'original_name': 'Wind direction',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home avg Wind direction',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-avg-windangle_value',
@@ -1982,6 +2018,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home avg Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2007,7 +2044,7 @@
     'original_name': 'Wind speed',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home avg Wind speed',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-avg-windstrength',
@@ -2038,6 +2075,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home max Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2069,7 +2107,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home max Atmospheric pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-max-pressure',
@@ -2100,6 +2138,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home max Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2125,7 +2164,7 @@
     'original_name': 'Gust angle',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home max Gust angle',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gust_angle',
     'unique_id': 'Home-max-gustangle_value',
@@ -2156,6 +2195,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home max Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2181,7 +2221,7 @@
     'original_name': 'Gust strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home max Gust strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gust_strength',
     'unique_id': 'Home-max-guststrength',
@@ -2212,6 +2252,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home max Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2237,7 +2278,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home max Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-max-humidity',
@@ -2268,6 +2309,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home max Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2293,7 +2335,7 @@
     'original_name': 'Precipitation',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home max Precipitation',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-max-rain',
@@ -2324,6 +2366,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home max Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2352,7 +2395,7 @@
     'original_name': 'Precipitation last hour',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home max Precipitation last hour',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_rain_1',
     'unique_id': 'Home-max-sum_rain_1',
@@ -2383,6 +2426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home max Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2408,7 +2452,7 @@
     'original_name': 'Precipitation today',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home max Precipitation today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_rain_24',
     'unique_id': 'Home-max-sum_rain_24',
@@ -2439,6 +2483,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home max Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2467,7 +2512,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home max Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-max-temperature',
@@ -2498,6 +2543,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home max Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2523,7 +2569,7 @@
     'original_name': 'Wind direction',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home max Wind direction',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-max-windangle_value',
@@ -2554,6 +2600,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home max Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2579,7 +2626,7 @@
     'original_name': 'Wind speed',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home max Wind speed',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-max-windstrength',
@@ -2610,6 +2657,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home min Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2641,7 +2689,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home min Atmospheric pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-min-pressure',
@@ -2672,6 +2720,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home min Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2697,7 +2746,7 @@
     'original_name': 'Gust angle',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home min Gust angle',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gust_angle',
     'unique_id': 'Home-min-gustangle_value',
@@ -2728,6 +2777,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home min Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2753,7 +2803,7 @@
     'original_name': 'Gust strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home min Gust strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gust_strength',
     'unique_id': 'Home-min-guststrength',
@@ -2784,6 +2834,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home min Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2809,7 +2860,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home min Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-min-humidity',
@@ -2840,6 +2891,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home min Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2865,7 +2917,7 @@
     'original_name': 'Precipitation',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home min Precipitation',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-min-rain',
@@ -2896,6 +2948,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home min Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2924,7 +2977,7 @@
     'original_name': 'Precipitation last hour',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home min Precipitation last hour',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_rain_1',
     'unique_id': 'Home-min-sum_rain_1',
@@ -2955,6 +3008,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home min Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2980,7 +3034,7 @@
     'original_name': 'Precipitation today',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home min Precipitation today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_rain_24',
     'unique_id': 'Home-min-sum_rain_24',
@@ -3011,6 +3065,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home min Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3039,7 +3094,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home min Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-min-temperature',
@@ -3070,6 +3125,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home min Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -3095,7 +3151,7 @@
     'original_name': 'Wind direction',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home min Wind direction',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-min-windangle_value',
@@ -3126,6 +3182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Home min Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3151,7 +3208,7 @@
     'original_name': 'Wind speed',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Home min Wind speed',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Home-min-windstrength',
@@ -3182,6 +3239,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3205,7 +3263,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hot water None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:16:0e#7-12:34:56:00:16:0e#7-reachable',
@@ -3231,6 +3289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3262,7 +3321,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Atmospheric pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure',
     'unique_id': '12:34:56:25:cf:a8-pressure',
@@ -3293,6 +3352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3318,7 +3378,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Carbon dioxide',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:25:cf:a8-co2',
@@ -3349,6 +3409,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -3380,7 +3441,7 @@
     'original_name': 'Health index',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Health index',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'health_idx',
     'unique_id': '12:34:56:25:cf:a8-health_idx',
@@ -3416,6 +3477,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3441,7 +3503,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:25:cf:a8-humidity',
@@ -3472,6 +3534,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3497,7 +3560,7 @@
     'original_name': 'Noise',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Noise',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'noise',
     'unique_id': '12:34:56:25:cf:a8-noise',
@@ -3528,6 +3591,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3551,7 +3615,7 @@
     'original_name': 'Pressure trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Pressure trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_trend',
     'unique_id': '12:34:56:25:cf:a8-pressure_trend',
@@ -3579,6 +3643,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3602,7 +3667,7 @@
     'original_name': 'Reachability',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Reachability',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reachable',
     'unique_id': '12:34:56:25:cf:a8-reachable',
@@ -3630,6 +3695,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3658,7 +3724,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '12:34:56:25:cf:a8-temperature',
@@ -3689,6 +3755,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3712,7 +3779,7 @@
     'original_name': 'Temperature trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Temperature trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_trend',
     'unique_id': '12:34:56:25:cf:a8-temp_trend',
@@ -3740,6 +3807,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3763,7 +3831,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': '12:34:56:25:cf:a8-wifi_status',
@@ -3791,6 +3859,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Line 1 None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3814,7 +3883,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Line 1 None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:16:0e#0-12:34:56:00:16:0e#0-reachable',
@@ -3840,6 +3909,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Line 2 None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3863,7 +3933,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Line 2 None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:16:0e#1-12:34:56:00:16:0e#1-reachable',
@@ -3889,6 +3959,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Line 3 None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3912,7 +3983,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Line 3 None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:16:0e#2-12:34:56:00:16:0e#2-reachable',
@@ -3938,6 +4009,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Line 4 None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3961,7 +4033,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Line 4 None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:16:0e#3-12:34:56:00:16:0e#3-reachable',
@@ -3987,6 +4059,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Line 5 None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4010,7 +4083,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Line 5 None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:16:0e#4-12:34:56:00:16:0e#4-reachable',
@@ -4036,6 +4109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4067,7 +4141,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom Atmospheric pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure',
     'unique_id': '12:34:56:26:65:14-pressure',
@@ -4098,6 +4172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4123,7 +4198,7 @@
     'original_name': 'Battery',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2746182631-12:34:56:00:01:ae-battery',
@@ -4152,6 +4227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4177,7 +4253,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom Carbon dioxide',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:26:65:14-co2',
@@ -4208,6 +4284,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -4239,7 +4316,7 @@
     'original_name': 'Health index',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom Health index',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'health_idx',
     'unique_id': '12:34:56:26:65:14-health_idx',
@@ -4275,6 +4352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4300,7 +4378,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:26:65:14-humidity',
@@ -4331,6 +4409,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4356,7 +4435,7 @@
     'original_name': 'Noise',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom Noise',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'noise',
     'unique_id': '12:34:56:26:65:14-noise',
@@ -4387,6 +4466,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4410,7 +4490,7 @@
     'original_name': 'Pressure trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom Pressure trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_trend',
     'unique_id': '12:34:56:26:65:14-pressure_trend',
@@ -4438,6 +4518,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4461,7 +4542,7 @@
     'original_name': 'Reachability',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom Reachability',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reachable',
     'unique_id': '12:34:56:26:65:14-reachable',
@@ -4489,6 +4570,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4517,7 +4599,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '12:34:56:26:65:14-temperature',
@@ -4548,6 +4630,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4571,7 +4654,7 @@
     'original_name': 'Temperature trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom Temperature trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_trend',
     'unique_id': '12:34:56:26:65:14-temp_trend',
@@ -4599,6 +4682,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Livingroom Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4622,7 +4706,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Livingroom Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': '12:34:56:26:65:14-wifi_status',
@@ -4650,6 +4734,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Parents Bedroom Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4681,7 +4766,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Parents Bedroom Atmospheric pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure',
     'unique_id': '12:34:56:3e:c5:46-pressure',
@@ -4712,6 +4797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Parents Bedroom Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4737,7 +4823,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Parents Bedroom Carbon dioxide',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:3e:c5:46-co2',
@@ -4768,6 +4854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Parents Bedroom Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -4799,7 +4886,7 @@
     'original_name': 'Health index',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Parents Bedroom Health index',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'health_idx',
     'unique_id': '12:34:56:3e:c5:46-health_idx',
@@ -4835,6 +4922,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Parents Bedroom Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4860,7 +4948,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Parents Bedroom Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:3e:c5:46-humidity',
@@ -4891,6 +4979,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Parents Bedroom Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4916,7 +5005,7 @@
     'original_name': 'Noise',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Parents Bedroom Noise',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'noise',
     'unique_id': '12:34:56:3e:c5:46-noise',
@@ -4947,6 +5036,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Parents Bedroom Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4970,7 +5060,7 @@
     'original_name': 'Pressure trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Parents Bedroom Pressure trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_trend',
     'unique_id': '12:34:56:3e:c5:46-pressure_trend',
@@ -4998,6 +5088,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Parents Bedroom Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5021,7 +5112,7 @@
     'original_name': 'Reachability',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Parents Bedroom Reachability',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reachable',
     'unique_id': '12:34:56:3e:c5:46-reachable',
@@ -5049,6 +5140,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Parents Bedroom Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5077,7 +5169,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Parents Bedroom Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '12:34:56:3e:c5:46-temperature',
@@ -5108,6 +5200,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Parents Bedroom Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5131,7 +5224,7 @@
     'original_name': 'Temperature trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Parents Bedroom Temperature trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_trend',
     'unique_id': '12:34:56:3e:c5:46-temp_trend',
@@ -5159,6 +5252,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Parents Bedroom Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5182,7 +5276,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Parents Bedroom Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': '12:34:56:3e:c5:46-wifi_status',
@@ -5210,6 +5304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Prise None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5233,7 +5328,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Prise None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:80:00:12:ac:f2-12:34:56:80:00:12:ac:f2-reachable',
@@ -5259,6 +5354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Prise Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5284,7 +5380,7 @@
     'original_name': 'Power',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Prise Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:80:00:12:ac:f2-12:34:56:80:00:12:ac:f2-power',
@@ -5313,6 +5409,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total None',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5336,7 +5433,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Total None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12:34:56:00:16:0e#5-12:34:56:00:16:0e#5-reachable',
@@ -5362,6 +5459,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Valve1 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5387,7 +5485,7 @@
     'original_name': 'Battery',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Valve1 Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2833524037-12:34:56:03:a5:54-battery',
@@ -5416,6 +5514,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Valve2 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5441,7 +5540,7 @@
     'original_name': 'Battery',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Valve2 Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2940411577-12:34:56:03:a0:ac-battery',
@@ -5470,6 +5569,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5501,7 +5601,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Atmospheric pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure',
     'unique_id': '12:34:56:80:bb:26-pressure',
@@ -5532,6 +5632,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bathroom Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5557,7 +5658,7 @@
     'original_name': 'Battery',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bathroom Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '12:34:56:80:7e:18-battery_percent',
@@ -5586,6 +5687,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bathroom Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5611,7 +5713,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bathroom Carbon dioxide',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:80:7e:18-co2',
@@ -5640,6 +5742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bathroom Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5665,7 +5768,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bathroom Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:80:7e:18-humidity',
@@ -5694,6 +5797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bathroom Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5717,7 +5821,7 @@
     'original_name': 'Reachability',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bathroom Reachability',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reachable',
     'unique_id': '12:34:56:80:7e:18-reachable',
@@ -5743,6 +5847,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bathroom RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5766,7 +5871,7 @@
     'original_name': 'RF strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bathroom RF strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rf_strength',
     'unique_id': '12:34:56:80:7e:18-rf_status',
@@ -5792,6 +5897,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bathroom Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5820,7 +5926,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bathroom Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '12:34:56:80:7e:18-temperature',
@@ -5849,6 +5955,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bathroom Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5872,7 +5979,7 @@
     'original_name': 'Temperature trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bathroom Temperature trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_trend',
     'unique_id': '12:34:56:80:7e:18-temp_trend',
@@ -5898,6 +6005,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bedroom Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5923,7 +6031,7 @@
     'original_name': 'Battery',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bedroom Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '12:34:56:80:44:92-battery_percent',
@@ -5952,6 +6060,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bedroom Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5977,7 +6086,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bedroom Carbon dioxide',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:80:44:92-co2',
@@ -6006,6 +6115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bedroom Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6031,7 +6141,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bedroom Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:80:44:92-humidity',
@@ -6060,6 +6170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bedroom Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6083,7 +6194,7 @@
     'original_name': 'Reachability',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bedroom Reachability',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reachable',
     'unique_id': '12:34:56:80:44:92-reachable',
@@ -6109,6 +6220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bedroom RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6132,7 +6244,7 @@
     'original_name': 'RF strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bedroom RF strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rf_strength',
     'unique_id': '12:34:56:80:44:92-rf_status',
@@ -6158,6 +6270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bedroom Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6186,7 +6299,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bedroom Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '12:34:56:80:44:92-temperature',
@@ -6215,6 +6328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Bedroom Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6238,7 +6352,7 @@
     'original_name': 'Temperature trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Bedroom Temperature trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_trend',
     'unique_id': '12:34:56:80:44:92-temp_trend',
@@ -6264,6 +6378,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6289,7 +6404,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Carbon dioxide',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2',
     'unique_id': '12:34:56:80:bb:26-co2',
@@ -6320,6 +6435,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Garden Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6345,7 +6461,7 @@
     'original_name': 'Battery',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Garden Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '12:34:56:03:1b:e4-battery_percent',
@@ -6374,6 +6490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Garden Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -6399,7 +6516,7 @@
     'original_name': 'Gust angle',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Garden Gust angle',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gust_angle',
     'unique_id': '12:34:56:03:1b:e4-gustangle_value',
@@ -6428,6 +6545,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Garden Gust direction',
     'capabilities': dict({
       'options': list([
         'n',
@@ -6462,7 +6580,7 @@
     'original_name': 'Gust direction',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Garden Gust direction',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gust_direction',
     'unique_id': '12:34:56:03:1b:e4-gustangle',
@@ -6499,6 +6617,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Garden Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6524,7 +6643,7 @@
     'original_name': 'Gust strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Garden Gust strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gust_strength',
     'unique_id': '12:34:56:03:1b:e4-guststrength',
@@ -6553,6 +6672,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Garden Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6576,7 +6696,7 @@
     'original_name': 'Reachability',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Garden Reachability',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reachable',
     'unique_id': '12:34:56:03:1b:e4-reachable',
@@ -6602,6 +6722,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Garden RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6625,7 +6746,7 @@
     'original_name': 'RF strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Garden RF strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rf_strength',
     'unique_id': '12:34:56:03:1b:e4-rf_status',
@@ -6651,6 +6772,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Garden Wind angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -6676,7 +6798,7 @@
     'original_name': 'Wind angle',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Garden Wind angle',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_angle',
     'unique_id': '12:34:56:03:1b:e4-windangle_value',
@@ -6705,6 +6827,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Garden Wind direction',
     'capabilities': dict({
       'options': list([
         'n',
@@ -6739,7 +6862,7 @@
     'original_name': 'Wind direction',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Garden Wind direction',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_direction',
     'unique_id': '12:34:56:03:1b:e4-windangle',
@@ -6776,6 +6899,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Garden Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6801,7 +6925,7 @@
     'original_name': 'Wind speed',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Garden Wind speed',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_strength',
     'unique_id': '12:34:56:03:1b:e4-windstrength',
@@ -6830,6 +6954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6855,7 +6980,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:80:bb:26-humidity',
@@ -6886,6 +7011,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6911,7 +7037,7 @@
     'original_name': 'Noise',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Noise',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'noise',
     'unique_id': '12:34:56:80:bb:26-noise',
@@ -6942,6 +7068,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Outdoor Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6967,7 +7094,7 @@
     'original_name': 'Battery',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Outdoor Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '12:34:56:80:1c:42-battery_percent',
@@ -6996,6 +7123,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Outdoor Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7021,7 +7149,7 @@
     'original_name': 'Humidity',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Outdoor Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '12:34:56:80:1c:42-humidity',
@@ -7050,6 +7178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Outdoor Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7073,7 +7202,7 @@
     'original_name': 'Reachability',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Outdoor Reachability',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reachable',
     'unique_id': '12:34:56:80:1c:42-reachable',
@@ -7099,6 +7228,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Outdoor RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7122,7 +7252,7 @@
     'original_name': 'RF strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Outdoor RF strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rf_strength',
     'unique_id': '12:34:56:80:1c:42-rf_status',
@@ -7148,6 +7278,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Outdoor Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7176,7 +7307,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Outdoor Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '12:34:56:80:1c:42-temperature',
@@ -7205,6 +7336,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Outdoor Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7228,7 +7360,7 @@
     'original_name': 'Temperature trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Outdoor Temperature trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_trend',
     'unique_id': '12:34:56:80:1c:42-temp_trend',
@@ -7254,6 +7386,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7277,7 +7410,7 @@
     'original_name': 'Pressure trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Pressure trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_trend',
     'unique_id': '12:34:56:80:bb:26-pressure_trend',
@@ -7305,6 +7438,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Rain Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7330,7 +7464,7 @@
     'original_name': 'Battery',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Rain Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '12:34:56:80:c1:ea-battery_percent',
@@ -7359,6 +7493,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Rain Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7384,7 +7519,7 @@
     'original_name': 'Precipitation',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Rain Precipitation',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rain',
     'unique_id': '12:34:56:80:c1:ea-rain',
@@ -7413,6 +7548,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Rain Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -7441,7 +7577,7 @@
     'original_name': 'Precipitation last hour',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Rain Precipitation last hour',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_rain_1',
     'unique_id': '12:34:56:80:c1:ea-sum_rain_1',
@@ -7470,6 +7606,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Rain Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7495,7 +7632,7 @@
     'original_name': 'Precipitation today',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Rain Precipitation today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_rain_24',
     'unique_id': '12:34:56:80:c1:ea-sum_rain_24',
@@ -7524,6 +7661,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Rain Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7547,7 +7685,7 @@
     'original_name': 'Reachability',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Rain Reachability',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reachable',
     'unique_id': '12:34:56:80:c1:ea-reachable',
@@ -7573,6 +7711,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Rain RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7596,7 +7735,7 @@
     'original_name': 'RF strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Rain RF strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rf_strength',
     'unique_id': '12:34:56:80:c1:ea-rf_status',
@@ -7622,6 +7761,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7645,7 +7785,7 @@
     'original_name': 'Reachability',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Reachability',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reachable',
     'unique_id': '12:34:56:80:bb:26-reachable',
@@ -7673,6 +7813,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7701,7 +7842,7 @@
     'original_name': 'Temperature',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '12:34:56:80:bb:26-temperature',
@@ -7732,6 +7873,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7755,7 +7897,7 @@
     'original_name': 'Temperature trend',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Temperature trend',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_trend',
     'unique_id': '12:34:56:80:bb:26-temp_trend',
@@ -7783,6 +7925,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Villa Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7806,7 +7949,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Villa Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': '12:34:56:80:bb:26-wifi_status',

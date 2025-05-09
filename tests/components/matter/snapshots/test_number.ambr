@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Color Temperature Light On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -32,7 +33,7 @@
     'original_name': 'On level',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Color Temperature Light On level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
@@ -61,6 +62,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Dimmable Light Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -89,7 +91,7 @@
     'original_name': 'Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Dimmable Light Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
@@ -119,6 +121,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Dimmable Light On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -147,7 +150,7 @@
     'original_name': 'On level',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Dimmable Light On level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
@@ -176,6 +179,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Dimmable Light On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -204,7 +208,7 @@
     'original_name': 'On/Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Dimmable Light On/Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
@@ -234,6 +238,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Dimmable Light On transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -262,7 +267,7 @@
     'original_name': 'On transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Dimmable Light On transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
@@ -292,6 +297,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmable Plugin Unit On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -320,7 +326,7 @@
     'original_name': 'On level',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dimmable Plugin Unit On level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
     'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-on_level-8-17',
@@ -349,6 +355,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmable Plugin Unit On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -377,7 +384,7 @@
     'original_name': 'On/Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Dimmable Plugin Unit On/Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
     'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-on_off_transition_time-8-16',
@@ -407,6 +414,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Thermo Temperature offset',
     'capabilities': dict({
       'max': 50,
       'min': -50,
@@ -435,7 +443,7 @@
     'original_name': 'Temperature offset',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Eve Thermo Temperature offset',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-EveTemperatureOffset-513-16',
@@ -466,6 +474,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eve Weather Altitude above sea level',
     'capabilities': dict({
       'max': 9000,
       'min': 0,
@@ -494,7 +503,7 @@
     'original_name': 'Altitude above sea level',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Eve Weather Altitude above sea level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'altitude',
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-EveWeatherAltitude-319486977-319422483',
@@ -525,6 +534,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Extended Color Light On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -553,7 +563,7 @@
     'original_name': 'On level',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Extended Color Light On level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
@@ -582,6 +592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Mounted dimmable load control On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -610,7 +621,7 @@
     'original_name': 'On level',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Mounted dimmable load control On level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
     'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-1-on_level-8-17',
@@ -639,6 +650,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -667,7 +679,7 @@
     'original_name': 'Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Inovelli Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-off_transition_time-8-19',
@@ -697,6 +709,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli On level (1)',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -725,7 +738,7 @@
     'original_name': 'On level (1)',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Inovelli On level (1)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-on_level-8-17',
@@ -754,6 +767,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli On level (6)',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -782,7 +796,7 @@
     'original_name': 'On level (6)',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Inovelli On level (6)',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-6-on_level-8-17',
@@ -811,6 +825,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -839,7 +854,7 @@
     'original_name': 'On/Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Inovelli On/Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-on_off_transition_time-8-16',
@@ -869,6 +884,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inovelli On transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -897,7 +913,7 @@
     'original_name': 'On transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Inovelli On transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-on_transition_time-8-18',
@@ -927,6 +943,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOffPluginUnit Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -955,7 +972,7 @@
     'original_name': 'Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock OnOffPluginUnit Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
@@ -985,6 +1002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOffPluginUnit On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -1013,7 +1031,7 @@
     'original_name': 'On level',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock OnOffPluginUnit On level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
@@ -1042,6 +1060,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOffPluginUnit On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1070,7 +1089,7 @@
     'original_name': 'On/Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock OnOffPluginUnit On/Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
@@ -1100,6 +1119,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOffPluginUnit On transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1128,7 +1148,7 @@
     'original_name': 'On transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock OnOffPluginUnit On transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
@@ -1158,6 +1178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOff Light Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1186,7 +1207,7 @@
     'original_name': 'Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock OnOff Light Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
@@ -1216,6 +1237,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOff Light On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -1244,7 +1266,7 @@
     'original_name': 'On level',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock OnOff Light On level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
@@ -1273,6 +1295,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOff Light On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1301,7 +1324,7 @@
     'original_name': 'On/Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock OnOff Light On/Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
@@ -1331,6 +1354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock OnOff Light On transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1359,7 +1383,7 @@
     'original_name': 'On transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock OnOff Light On transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
@@ -1389,6 +1413,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Light Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1417,7 +1442,7 @@
     'original_name': 'Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Light Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
@@ -1447,6 +1472,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Light On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -1475,7 +1501,7 @@
     'original_name': 'On level',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Light On level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
@@ -1504,6 +1530,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Light On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1532,7 +1559,7 @@
     'original_name': 'On/Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Light On/Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
@@ -1562,6 +1589,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mock Light On transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1590,7 +1618,7 @@
     'original_name': 'On transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'Mock Light On transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
@@ -1620,6 +1648,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'D215S On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -1648,7 +1677,7 @@
     'original_name': 'On level',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'D215S On level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
     'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-on_level-8-17',
@@ -1677,6 +1706,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'D215S On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1705,7 +1735,7 @@
     'original_name': 'On/Off transition time',
     'platform': 'matter',
     'previous_unique_id': None,
-    'suggested_object_id': 'D215S On/Off transition time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
     'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-on_off_transition_time-8-16',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -153,6 +156,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -178,7 +182,7 @@
     'original_name': 'Battery',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Front Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '765432-battery',
@@ -207,6 +211,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front Door Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -232,7 +237,7 @@
     'original_name': 'Battery',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Front Door Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '987654-battery',
@@ -261,6 +266,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front Door Last activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -284,7 +290,7 @@
     'original_name': 'Last activity',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Front Door Last activity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_activity',
     'unique_id': '987654-last_activity',
@@ -311,6 +317,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -361,6 +368,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -411,6 +419,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -460,6 +469,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -509,6 +519,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -560,6 +571,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front Last activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -583,7 +595,7 @@
     'original_name': 'Last activity',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Front Last activity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_activity',
     'unique_id': '765432-last_activity',
@@ -610,6 +622,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -660,6 +673,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -710,6 +724,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -759,6 +774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -810,6 +826,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ingress Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -835,7 +852,7 @@
     'original_name': 'Battery',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Ingress Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '185036587-battery',
@@ -864,6 +881,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -913,6 +931,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ingress Last activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -936,7 +955,7 @@
     'original_name': 'Last activity',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Ingress Last activity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_activity',
     'unique_id': '185036587-last_activity',
@@ -963,6 +982,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1012,6 +1032,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1061,6 +1082,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1110,6 +1132,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1161,6 +1184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Internal Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1186,7 +1210,7 @@
     'original_name': 'Battery',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Internal Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '345678-battery',
@@ -1215,6 +1239,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Internal Last activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1238,7 +1263,7 @@
     'original_name': 'Last activity',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Internal Last activity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_activity',
     'unique_id': '345678-last_activity',
@@ -1265,6 +1290,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1315,6 +1341,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1365,6 +1392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1414,6 +1442,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

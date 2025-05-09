@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -35,7 +36,7 @@
     'original_name': 'Current',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '23-45-A4O-MOF_current_total',
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -94,7 +96,7 @@
     'original_name': 'Current phase 1',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Current phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase_1',
     'unique_id': '23-45-A4O-MOF_current_phase_1',
@@ -122,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -153,7 +156,7 @@
     'original_name': 'Current phase 2',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Current phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase_2',
     'unique_id': '23-45-A4O-MOF_current_phase_2',
@@ -181,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -212,7 +216,7 @@
     'original_name': 'Current phase 3',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Current phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase_3',
     'unique_id': '23-45-A4O-MOF_current_phase_3',
@@ -240,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Lifetime energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -271,7 +276,7 @@
     'original_name': 'Lifetime energy',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Lifetime energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': '23-45-A4O-MOF_energy_total',
@@ -299,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Limit source',
     'capabilities': dict({
       'options': list([
         'charging_cable',
@@ -342,7 +348,7 @@
     'original_name': 'Limit source',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Limit source',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_current_limit_source',
     'unique_id': '23-45-A4O-MOF_charge_current_limit_source',
@@ -387,6 +393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -412,7 +419,7 @@
     'original_name': 'Power',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '23-45-A4O-MOF_power_total',
@@ -440,6 +447,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -465,7 +473,7 @@
     'original_name': 'Power phase 1',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_phase_1',
     'unique_id': '23-45-A4O-MOF_power_phase_1',
@@ -493,6 +501,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -518,7 +527,7 @@
     'original_name': 'Power phase 2',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Power phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_phase_2',
     'unique_id': '23-45-A4O-MOF_power_phase_2',
@@ -546,6 +555,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -571,7 +581,7 @@
     'original_name': 'Power phase 3',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Power phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_phase_3',
     'unique_id': '23-45-A4O-MOF_power_phase_3',
@@ -599,6 +609,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Session energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -630,7 +641,7 @@
     'original_name': 'Session energy',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Session energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_session',
     'unique_id': '23-45-A4O-MOF_energy_session',
@@ -658,6 +669,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger State',
     'capabilities': dict({
       'options': list([
         'suspended',
@@ -691,7 +703,7 @@
     'original_name': 'State',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger State',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cp_state',
     'unique_id': '23-45-A4O-MOF_cp_state',
@@ -726,6 +738,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -749,7 +762,7 @@
     'original_name': 'Uptime',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Uptime',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': '23-45-A4O-MOF_uptime',
@@ -775,6 +788,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -800,7 +814,7 @@
     'original_name': 'Voltage phase 1',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Voltage phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase_1',
     'unique_id': '23-45-A4O-MOF_voltage_phase_1',
@@ -828,6 +842,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -853,7 +868,7 @@
     'original_name': 'Voltage phase 2',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Voltage phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase_2',
     'unique_id': '23-45-A4O-MOF_voltage_phase_2',
@@ -881,6 +896,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peblar EV Charger Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -906,7 +922,7 @@
     'original_name': 'Voltage phase 3',
     'platform': 'peblar',
     'previous_unique_id': None,
-    'suggested_object_id': 'Peblar EV Charger Voltage phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase_3',
     'unique_id': '23-45-A4O-MOF_voltage_phase_3',

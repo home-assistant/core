@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Backup reserve',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -32,7 +33,7 @@
     'original_name': 'Backup reserve',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Energy Site Backup reserve',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'backup_reserve_percent',
     'unique_id': '123456-backup_reserve_percent',
@@ -64,6 +65,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Site Off-grid reserve',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -92,7 +94,7 @@
     'original_name': 'Off-grid reserve',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Energy Site Off-grid reserve',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_grid_vehicle_charging_reserve_percent',
     'unique_id': '123456-off_grid_vehicle_charging_reserve_percent',
@@ -124,6 +126,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charge current',
     'capabilities': dict({
       'max': 16,
       'min': 0,
@@ -152,7 +155,7 @@
     'original_name': 'Charge current',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Charge current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_current_request',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_current_request',
@@ -183,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Charge limit',
     'capabilities': dict({
       'max': 100,
       'min': 50,
@@ -211,7 +215,7 @@
     'original_name': 'Charge limit',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Charge limit',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_limit_soc',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_limit_soc',

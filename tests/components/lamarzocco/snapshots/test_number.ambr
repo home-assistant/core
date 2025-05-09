@@ -23,6 +23,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GS012345 Coffee target temperature',
     'capabilities': dict({
       'max': 104,
       'min': 85,
@@ -51,7 +52,7 @@
     'original_name': 'Coffee target temperature',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
-    'suggested_object_id': 'GS012345 Coffee target temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'coffee_temp',
     'unique_id': 'GS012345_coffee_temp',
@@ -82,6 +83,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GS012345 Smart standby time',
     'capabilities': dict({
       'max': 240,
       'min': 0,
@@ -110,7 +112,7 @@
     'original_name': 'Smart standby time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
-    'suggested_object_id': 'GS012345 Smart standby time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smart_standby_time',
     'unique_id': 'GS012345_smart_standby_time',
@@ -141,6 +143,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'MR012345 Prebrew off time',
     'capabilities': dict({
       'max': 10,
       'min': 0,
@@ -169,7 +172,7 @@
     'original_name': 'Prebrew off time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
-    'suggested_object_id': 'MR012345 Prebrew off time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_time_off',
     'unique_id': 'MR012345_prebrew_off',
@@ -200,6 +203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'MR012345 Prebrew on time',
     'capabilities': dict({
       'max': 10,
       'min': 0,
@@ -228,7 +232,7 @@
     'original_name': 'Prebrew on time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
-    'suggested_object_id': 'MR012345 Prebrew on time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_time_on',
     'unique_id': 'MR012345_prebrew_on',
@@ -259,6 +263,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'MR012345 Preinfusion time',
     'capabilities': dict({
       'max': 10,
       'min': 0,
@@ -287,7 +292,7 @@
     'original_name': 'Preinfusion time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
-    'suggested_object_id': 'MR012345 Preinfusion time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'preinfusion_time',
     'unique_id': 'MR012345_preinfusion_off',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Boiler temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Boiler temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Boiler temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boiler_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-boiler_temperature',
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Burner hours',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -82,7 +84,7 @@
     'original_name': 'Burner hours',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Burner hours',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'burner_hours',
     'unique_id': 'gateway0_deviceSerialVitodens300W-burner_hours-0',
@@ -109,6 +111,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Burner modulation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -134,7 +137,7 @@
     'original_name': 'Burner modulation',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Burner modulation',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'burner_modulation',
     'unique_id': 'gateway0_deviceSerialVitodens300W-burner_modulation-0',
@@ -161,6 +164,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Burner starts',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -186,7 +190,7 @@
     'original_name': 'Burner starts',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Burner starts',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'burner_starts',
     'unique_id': 'gateway0_deviceSerialVitodens300W-burner_starts-0',
@@ -212,6 +216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW gas consumption this month',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -237,7 +242,7 @@
     'original_name': 'DHW gas consumption this month',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW gas consumption this month',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_gas_consumption_heating_this_month',
     'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_gas_consumption_heating_this_month',
@@ -263,6 +268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW gas consumption this week',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -288,7 +294,7 @@
     'original_name': 'DHW gas consumption this week',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW gas consumption this week',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_gas_consumption_heating_this_week',
     'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_gas_consumption_heating_this_week',
@@ -314,6 +320,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW gas consumption this year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -339,7 +346,7 @@
     'original_name': 'DHW gas consumption this year',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW gas consumption this year',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_gas_consumption_heating_this_year',
     'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_gas_consumption_heating_this_year',
@@ -365,6 +372,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW gas consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -390,7 +398,7 @@
     'original_name': 'DHW gas consumption today',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW gas consumption today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_gas_consumption_today',
     'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_gas_consumption_today',
@@ -416,6 +424,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW max temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -441,7 +450,7 @@
     'original_name': 'DHW max temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW max temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_max_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_max_temperature',
@@ -469,6 +478,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW min temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -494,7 +504,7 @@
     'original_name': 'DHW min temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW min temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_min_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_min_temperature',
@@ -522,6 +532,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Electricity consumption this week',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -547,7 +558,7 @@
     'original_name': 'Electricity consumption this week',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Electricity consumption this week',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_consumption_this_week',
     'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption this week',
@@ -575,6 +586,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Electricity consumption this year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -600,7 +612,7 @@
     'original_name': 'Electricity consumption this year',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Electricity consumption this year',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_consumption_this_year',
     'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption this year',
@@ -628,6 +640,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Electricity consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -653,7 +666,7 @@
     'original_name': 'Electricity consumption today',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Electricity consumption today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_consumption_today',
     'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption today',
@@ -681,6 +694,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -706,7 +720,7 @@
     'original_name': 'Energy',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power consumption this month',
     'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption this month',
@@ -734,6 +748,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating gas consumption this month',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -759,7 +774,7 @@
     'original_name': 'Heating gas consumption this month',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Heating gas consumption this month',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_consumption_heating_this_month',
     'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_month',
@@ -785,6 +800,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating gas consumption this week',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -810,7 +826,7 @@
     'original_name': 'Heating gas consumption this week',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Heating gas consumption this week',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_consumption_heating_this_week',
     'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_week',
@@ -836,6 +852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating gas consumption this year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -861,7 +878,7 @@
     'original_name': 'Heating gas consumption this year',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Heating gas consumption this year',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_consumption_heating_this_year',
     'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_year',
@@ -887,6 +904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating gas consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -912,7 +930,7 @@
     'original_name': 'Heating gas consumption today',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Heating gas consumption today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_consumption_heating_today',
     'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_today',
@@ -938,6 +956,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -963,7 +982,7 @@
     'original_name': 'Outside temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Outside temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-outside_temperature',
@@ -991,6 +1010,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Supply temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1016,7 +1036,7 @@
     'original_name': 'Supply temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Supply temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supply_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-supply_temperature-0',
@@ -1044,6 +1064,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Supply temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1069,7 +1090,7 @@
     'original_name': 'Supply temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Supply temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supply_temperature',
     'unique_id': 'gateway0_deviceSerialVitodens300W-supply_temperature-1',
@@ -1097,6 +1118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Buffer main temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1122,7 +1144,7 @@
     'original_name': 'Buffer main temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Buffer main temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'buffer_main_temperature',
     'unique_id': 'gateway0_deviceSerialVitocal250A-buffer main temperature',
@@ -1150,6 +1172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Compressor hours',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1175,7 +1198,7 @@
     'original_name': 'Compressor hours',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Compressor hours',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'compressor_hours',
     'unique_id': 'gateway0_deviceSerialVitocal250A-compressor_hours-0',
@@ -1202,6 +1225,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Compressor phase',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1225,7 +1249,7 @@
     'original_name': 'Compressor phase',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Compressor phase',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'compressor_phase',
     'unique_id': 'gateway0_deviceSerialVitocal250A-compressor_phase-0',
@@ -1250,6 +1274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Compressor starts',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1275,7 +1300,7 @@
     'original_name': 'Compressor starts',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Compressor starts',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'compressor_starts',
     'unique_id': 'gateway0_deviceSerialVitocal250A-compressor_starts-0',
@@ -1301,6 +1326,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW electricity consumption last seven days',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1326,7 +1352,7 @@
     'original_name': 'DHW electricity consumption last seven days',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW electricity consumption last seven days',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_summary_dhw_consumption_heating_lastsevendays',
     'unique_id': 'gateway0_deviceSerialVitocal250A-energy_summary_dhw_consumption_heating_lastsevendays',
@@ -1354,6 +1380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW electricity consumption this month',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1379,7 +1406,7 @@
     'original_name': 'DHW electricity consumption this month',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW electricity consumption this month',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_dhw_summary_consumption_heating_currentmonth',
     'unique_id': 'gateway0_deviceSerialVitocal250A-energy_dhw_summary_consumption_heating_currentmonth',
@@ -1407,6 +1434,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW electricity consumption this year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1432,7 +1460,7 @@
     'original_name': 'DHW electricity consumption this year',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW electricity consumption this year',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_dhw_summary_consumption_heating_currentyear',
     'unique_id': 'gateway0_deviceSerialVitocal250A-energy_dhw_summary_consumption_heating_currentyear',
@@ -1460,6 +1488,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW electricity consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1485,7 +1514,7 @@
     'original_name': 'DHW electricity consumption today',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW electricity consumption today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_dhw_summary_consumption_heating_currentday',
     'unique_id': 'gateway0_deviceSerialVitocal250A-energy_dhw_summary_consumption_heating_currentday',
@@ -1513,6 +1542,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW max temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1538,7 +1568,7 @@
     'original_name': 'DHW max temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW max temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_max_temperature',
     'unique_id': 'gateway0_deviceSerialVitocal250A-hotwater_max_temperature',
@@ -1566,6 +1596,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW min temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1591,7 +1622,7 @@
     'original_name': 'DHW min temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW min temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_min_temperature',
     'unique_id': 'gateway0_deviceSerialVitocal250A-hotwater_min_temperature',
@@ -1619,6 +1650,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 DHW storage temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1644,7 +1676,7 @@
     'original_name': 'DHW storage temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 DHW storage temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dhw_storage_temperature',
     'unique_id': 'gateway0_deviceSerialVitocal250A-dhw_storage_temperature',
@@ -1672,6 +1704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Electricity consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1697,7 +1730,7 @@
     'original_name': 'Electricity consumption today',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Electricity consumption today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_consumption_today',
     'unique_id': 'gateway0_deviceSerialVitocal250A-power consumption today',
@@ -1725,6 +1758,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating electricity consumption last seven days',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1750,7 +1784,7 @@
     'original_name': 'Heating electricity consumption last seven days',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Heating electricity consumption last seven days',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_summary_consumption_heating_lastsevendays',
     'unique_id': 'gateway0_deviceSerialVitocal250A-energy_summary_consumption_heating_lastsevendays',
@@ -1778,6 +1812,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating electricity consumption this month',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1803,7 +1838,7 @@
     'original_name': 'Heating electricity consumption this month',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Heating electricity consumption this month',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_summary_consumption_heating_currentmonth',
     'unique_id': 'gateway0_deviceSerialVitocal250A-energy_summary_consumption_heating_currentmonth',
@@ -1831,6 +1866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating electricity consumption this year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1856,7 +1892,7 @@
     'original_name': 'Heating electricity consumption this year',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Heating electricity consumption this year',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_summary_consumption_heating_currentyear',
     'unique_id': 'gateway0_deviceSerialVitocal250A-energy_summary_consumption_heating_currentyear',
@@ -1884,6 +1920,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating electricity consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1909,7 +1946,7 @@
     'original_name': 'Heating electricity consumption today',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Heating electricity consumption today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_summary_consumption_heating_currentday',
     'unique_id': 'gateway0_deviceSerialVitocal250A-energy_summary_consumption_heating_currentday',
@@ -1937,6 +1974,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating rod hours',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1962,7 +2000,7 @@
     'original_name': 'Heating rod hours',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Heating rod hours',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_rod_hours',
     'unique_id': 'gateway0_deviceSerialVitocal250A-heating_rod_hours',
@@ -1989,6 +2027,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Heating rod starts',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2014,7 +2053,7 @@
     'original_name': 'Heating rod starts',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Heating rod starts',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heating_rod_starts',
     'unique_id': 'gateway0_deviceSerialVitocal250A-heating_rod_starts',
@@ -2040,6 +2079,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2065,7 +2105,7 @@
     'original_name': 'Outside temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Outside temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
     'unique_id': 'gateway0_deviceSerialVitocal250A-outside_temperature',
@@ -2093,6 +2133,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Primary circuit supply temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2118,7 +2159,7 @@
     'original_name': 'Primary circuit supply temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Primary circuit supply temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'primary_circuit_supply_temperature',
     'unique_id': 'gateway0_deviceSerialVitocal250A-primary_circuit_supply_temperature',
@@ -2146,6 +2187,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Return temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2171,7 +2213,7 @@
     'original_name': 'Return temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Return temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'return_temperature',
     'unique_id': 'gateway0_deviceSerialVitocal250A-return_temperature',
@@ -2199,6 +2241,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Seasonal performance factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2224,7 +2267,7 @@
     'original_name': 'Seasonal performance factor',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Seasonal performance factor',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'spf_total',
     'unique_id': 'gateway0_deviceSerialVitocal250A-spf_total',
@@ -2250,6 +2293,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Seasonal performance factor - domestic hot water',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2275,7 +2319,7 @@
     'original_name': 'Seasonal performance factor - domestic hot water',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Seasonal performance factor - domestic hot water',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'spf_dhw',
     'unique_id': 'gateway0_deviceSerialVitocal250A-spf_dhw',
@@ -2301,6 +2345,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Seasonal performance factor - heating',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2326,7 +2371,7 @@
     'original_name': 'Seasonal performance factor - heating',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Seasonal performance factor - heating',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'spf_heating',
     'unique_id': 'gateway0_deviceSerialVitocal250A-spf_heating',
@@ -2352,6 +2397,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Secondary circuit supply temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2377,7 +2423,7 @@
     'original_name': 'Secondary circuit supply temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Secondary circuit supply temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'secondary_circuit_supply_temperature',
     'unique_id': 'gateway0_deviceSerialVitocal250A-secondary_circuit_supply_temperature',
@@ -2405,6 +2451,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Supply pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2430,7 +2477,7 @@
     'original_name': 'Supply pressure',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Supply pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supply_pressure',
     'unique_id': 'gateway0_deviceSerialVitocal250A-supply_pressure',
@@ -2457,6 +2504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Supply temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2482,7 +2530,7 @@
     'original_name': 'Supply temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Supply temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supply_temperature',
     'unique_id': 'gateway0_deviceSerialVitocal250A-supply_temperature-1',
@@ -2510,6 +2558,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Volumetric flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2535,7 +2584,7 @@
     'original_name': 'Volumetric flow',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Volumetric flow',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volumetric_flow',
     'unique_id': 'gateway0_deviceSerialVitocal250A-volumetric_flow',
@@ -2562,6 +2611,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Ventilation level',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -2593,7 +2643,7 @@
     'original_name': 'Ventilation level',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Ventilation level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ventilation_level',
     'unique_id': 'gateway0_deviceSerialViAir300F-ventilation_level',
@@ -2626,6 +2676,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Ventilation reason',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -2658,7 +2709,7 @@
     'original_name': 'Ventilation reason',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Ventilation reason',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ventilation_reason',
     'unique_id': 'gateway0_deviceSerialViAir300F-ventilation_reason',
@@ -2692,6 +2743,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2717,7 +2769,7 @@
     'original_name': 'Battery',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'gateway0_zigbee_d87a3bfffe5d844a-battery_level',
@@ -2745,6 +2797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2770,7 +2823,7 @@
     'original_name': 'Humidity',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'gateway0_zigbee_d87a3bfffe5d844a-room_humidity',
@@ -2798,6 +2851,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model0 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2823,7 +2877,7 @@
     'original_name': 'Temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model0 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'gateway0_zigbee_d87a3bfffe5d844a-room_temperature',
@@ -2851,6 +2905,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model1 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2876,7 +2931,7 @@
     'original_name': 'Humidity',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model1 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'gateway1_zigbee_5cc7c1fffea33a3b-room_humidity',
@@ -2904,6 +2959,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'model1 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2929,7 +2985,7 @@
     'original_name': 'Temperature',
     'platform': 'vicare',
     'previous_unique_id': None,
-    'suggested_object_id': 'model1 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'gateway1_zigbee_5cc7c1fffea33a3b-room_temperature',

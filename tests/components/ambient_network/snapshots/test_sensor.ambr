@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Absolute pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -35,7 +36,7 @@
     'original_name': 'Absolute pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Absolute pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'absolute_pressure',
     'unique_id': 'AA:AA:AA:AA:AA:AA_baromabsin',
@@ -65,6 +66,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Daily rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -96,7 +98,7 @@
     'original_name': 'Daily rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Daily rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_rain',
     'unique_id': 'AA:AA:AA:AA:AA:AA_dailyrainin',
@@ -126,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -154,7 +157,7 @@
     'original_name': 'Dew point',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Dew point',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dew_point',
     'unique_id': 'AA:AA:AA:AA:AA:AA_dewPoint',
@@ -184,6 +187,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -212,7 +216,7 @@
     'original_name': 'Feels like',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Feels like',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feels_like',
     'unique_id': 'AA:AA:AA:AA:AA:AA_feelsLike',
@@ -242,6 +246,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Hourly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -273,7 +278,7 @@
     'original_name': 'Hourly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Hourly rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hourly_rain',
     'unique_id': 'AA:AA:AA:AA:AA:AA_hourlyrainin',
@@ -303,6 +308,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -331,7 +337,7 @@
     'original_name': 'Humidity',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:AA_humidity',
@@ -361,6 +367,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Irradiance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -389,7 +396,7 @@
     'original_name': 'Irradiance',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Irradiance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:AA_solarradiation',
@@ -419,6 +426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Last rain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -442,7 +450,7 @@
     'original_name': 'Last rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Last rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_rain',
     'unique_id': 'AA:AA:AA:AA:AA:AA_lastRain',
@@ -470,6 +478,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Max daily gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -501,7 +510,7 @@
     'original_name': 'Max daily gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Max daily gust',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_daily_gust',
     'unique_id': 'AA:AA:AA:AA:AA:AA_maxdailygust',
@@ -531,6 +540,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Monthly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -562,7 +572,7 @@
     'original_name': 'Monthly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Monthly rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_rain',
     'unique_id': 'AA:AA:AA:AA:AA:AA_monthlyrainin',
@@ -592,6 +602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Relative pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -623,7 +634,7 @@
     'original_name': 'Relative pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Relative pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_pressure',
     'unique_id': 'AA:AA:AA:AA:AA:AA_baromrelin',
@@ -653,6 +664,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -681,7 +693,7 @@
     'original_name': 'Temperature',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:AA_tempf',
@@ -711,6 +723,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -739,7 +752,7 @@
     'original_name': 'UV index',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A UV index',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': 'AA:AA:AA:AA:AA:AA_uv',
@@ -768,6 +781,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Weekly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -799,7 +813,7 @@
     'original_name': 'Weekly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Weekly rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weekly_rain',
     'unique_id': 'AA:AA:AA:AA:AA:AA_weeklyrainin',
@@ -829,6 +843,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -857,7 +872,7 @@
     'original_name': 'Wind direction',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Wind direction',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_direction',
     'unique_id': 'AA:AA:AA:AA:AA:AA_winddir',
@@ -887,6 +902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Wind gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -918,7 +934,7 @@
     'original_name': 'Wind gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Wind gust',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust',
     'unique_id': 'AA:AA:AA:AA:AA:AA_windgustmph',
@@ -948,6 +964,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station A Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -979,7 +996,7 @@
     'original_name': 'Wind speed',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station A Wind speed',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:AA_windspeedmph',
@@ -1009,6 +1026,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Absolute pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1040,7 +1058,7 @@
     'original_name': 'Absolute pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Absolute pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'absolute_pressure',
     'unique_id': 'CC:CC:CC:CC:CC:CC_baromabsin',
@@ -1070,6 +1088,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Daily rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1101,7 +1120,7 @@
     'original_name': 'Daily rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Daily rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_rain',
     'unique_id': 'CC:CC:CC:CC:CC:CC_dailyrainin',
@@ -1131,6 +1150,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1159,7 +1179,7 @@
     'original_name': 'Dew point',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Dew point',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dew_point',
     'unique_id': 'CC:CC:CC:CC:CC:CC_dewPoint',
@@ -1189,6 +1209,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1217,7 +1238,7 @@
     'original_name': 'Feels like',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Feels like',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feels_like',
     'unique_id': 'CC:CC:CC:CC:CC:CC_feelsLike',
@@ -1247,6 +1268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Hourly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1278,7 +1300,7 @@
     'original_name': 'Hourly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Hourly rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hourly_rain',
     'unique_id': 'CC:CC:CC:CC:CC:CC_hourlyrainin',
@@ -1308,6 +1330,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1336,7 +1359,7 @@
     'original_name': 'Humidity',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CC:CC:CC:CC:CC:CC_humidity',
@@ -1366,6 +1389,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Irradiance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1394,7 +1418,7 @@
     'original_name': 'Irradiance',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Irradiance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CC:CC:CC:CC:CC:CC_solarradiation',
@@ -1424,6 +1448,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Last rain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1447,7 +1472,7 @@
     'original_name': 'Last rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Last rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_rain',
     'unique_id': 'CC:CC:CC:CC:CC:CC_lastRain',
@@ -1475,6 +1500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Max daily gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1506,7 +1532,7 @@
     'original_name': 'Max daily gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Max daily gust',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_daily_gust',
     'unique_id': 'CC:CC:CC:CC:CC:CC_maxdailygust',
@@ -1536,6 +1562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Monthly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1567,7 +1594,7 @@
     'original_name': 'Monthly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Monthly rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_rain',
     'unique_id': 'CC:CC:CC:CC:CC:CC_monthlyrainin',
@@ -1597,6 +1624,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Relative pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1628,7 +1656,7 @@
     'original_name': 'Relative pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Relative pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_pressure',
     'unique_id': 'CC:CC:CC:CC:CC:CC_baromrelin',
@@ -1658,6 +1686,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1686,7 +1715,7 @@
     'original_name': 'Temperature',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CC:CC:CC:CC:CC:CC_tempf',
@@ -1716,6 +1745,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1744,7 +1774,7 @@
     'original_name': 'UV index',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C UV index',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': 'CC:CC:CC:CC:CC:CC_uv',
@@ -1773,6 +1803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Weekly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1804,7 +1835,7 @@
     'original_name': 'Weekly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Weekly rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weekly_rain',
     'unique_id': 'CC:CC:CC:CC:CC:CC_weeklyrainin',
@@ -1834,6 +1865,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -1862,7 +1894,7 @@
     'original_name': 'Wind direction',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Wind direction',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_direction',
     'unique_id': 'CC:CC:CC:CC:CC:CC_winddir',
@@ -1892,6 +1924,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Wind gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1923,7 +1956,7 @@
     'original_name': 'Wind gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Wind gust',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust',
     'unique_id': 'CC:CC:CC:CC:CC:CC_windgustmph',
@@ -1953,6 +1986,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station C Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1984,7 +2018,7 @@
     'original_name': 'Wind speed',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station C Wind speed',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CC:CC:CC:CC:CC:CC_windspeedmph',
@@ -2014,6 +2048,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Absolute pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2045,7 +2080,7 @@
     'original_name': 'Absolute pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Absolute pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'absolute_pressure',
     'unique_id': 'DD:DD:DD:DD:DD:DD_baromabsin',
@@ -2074,6 +2109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Daily rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2105,7 +2141,7 @@
     'original_name': 'Daily rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Daily rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_rain',
     'unique_id': 'DD:DD:DD:DD:DD:DD_dailyrainin',
@@ -2134,6 +2170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2162,7 +2199,7 @@
     'original_name': 'Dew point',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Dew point',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dew_point',
     'unique_id': 'DD:DD:DD:DD:DD:DD_dewPoint',
@@ -2191,6 +2228,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2219,7 +2257,7 @@
     'original_name': 'Feels like',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Feels like',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feels_like',
     'unique_id': 'DD:DD:DD:DD:DD:DD_feelsLike',
@@ -2248,6 +2286,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Hourly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2279,7 +2318,7 @@
     'original_name': 'Hourly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Hourly rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hourly_rain',
     'unique_id': 'DD:DD:DD:DD:DD:DD_hourlyrainin',
@@ -2308,6 +2347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2336,7 +2376,7 @@
     'original_name': 'Humidity',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DD:DD:DD:DD:DD:DD_humidity',
@@ -2365,6 +2405,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Irradiance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2393,7 +2434,7 @@
     'original_name': 'Irradiance',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Irradiance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DD:DD:DD:DD:DD:DD_solarradiation',
@@ -2422,6 +2463,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Max daily gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2453,7 +2495,7 @@
     'original_name': 'Max daily gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Max daily gust',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_daily_gust',
     'unique_id': 'DD:DD:DD:DD:DD:DD_maxdailygust',
@@ -2482,6 +2524,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Monthly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2513,7 +2556,7 @@
     'original_name': 'Monthly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Monthly rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_rain',
     'unique_id': 'DD:DD:DD:DD:DD:DD_monthlyrainin',
@@ -2542,6 +2585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Relative pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2573,7 +2617,7 @@
     'original_name': 'Relative pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Relative pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_pressure',
     'unique_id': 'DD:DD:DD:DD:DD:DD_baromrelin',
@@ -2602,6 +2646,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2630,7 +2675,7 @@
     'original_name': 'Temperature',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DD:DD:DD:DD:DD:DD_tempf',
@@ -2659,6 +2704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2687,7 +2733,7 @@
     'original_name': 'UV index',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D UV index',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': 'DD:DD:DD:DD:DD:DD_uv',
@@ -2715,6 +2761,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Weekly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2746,7 +2793,7 @@
     'original_name': 'Weekly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Weekly rain',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weekly_rain',
     'unique_id': 'DD:DD:DD:DD:DD:DD_weeklyrainin',
@@ -2775,6 +2822,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2803,7 +2851,7 @@
     'original_name': 'Wind direction',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Wind direction',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_direction',
     'unique_id': 'DD:DD:DD:DD:DD:DD_winddir',
@@ -2832,6 +2880,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Wind gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2863,7 +2912,7 @@
     'original_name': 'Wind gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Wind gust',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust',
     'unique_id': 'DD:DD:DD:DD:DD:DD_windgustmph',
@@ -2892,6 +2941,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station D Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2923,7 +2973,7 @@
     'original_name': 'Wind speed',
     'platform': 'ambient_network',
     'previous_unique_id': None,
-    'suggested_object_id': 'Station D Wind speed',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DD:DD:DD:DD:DD:DD_windspeedmph',

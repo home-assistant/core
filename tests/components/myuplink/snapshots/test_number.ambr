@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Degree minutes',
     'capabilities': dict({
       'max': 3000.0,
       'min': -3000.0,
@@ -32,7 +33,7 @@
     'original_name': 'Degree minutes',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Degree minutes',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'degree_minutes',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40940',
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Degree minutes',
     'capabilities': dict({
       'max': 3000.0,
       'min': -3000.0,
@@ -90,7 +92,7 @@
     'original_name': 'Degree minutes',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Degree minutes',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'degree_minutes',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40940',
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Heating offset climate system 1',
     'capabilities': dict({
       'max': 10.0,
       'min': -10.0,
@@ -148,7 +151,7 @@
     'original_name': 'Heating offset climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Heating offset climate system 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-47011',
@@ -177,6 +180,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Heating offset climate system 1',
     'capabilities': dict({
       'max': 10.0,
       'min': -10.0,
@@ -205,7 +209,7 @@
     'original_name': 'Heating offset climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Heating offset climate system 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-47011',
@@ -234,6 +238,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Room sensor set point value heating climate system 1',
     'capabilities': dict({
       'max': 35.0,
       'min': 5.0,
@@ -262,7 +267,7 @@
     'original_name': 'Room sensor set point value heating climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Room sensor set point value heating climate system 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-47398',
@@ -291,6 +296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City Room sensor set point value heating climate system 1',
     'capabilities': dict({
       'max': 35.0,
       'min': 5.0,
@@ -319,7 +325,7 @@
     'original_name': 'Room sensor set point value heating climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City Room sensor set point value heating climate system 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-47398',
@@ -348,6 +354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City start diff additional heat',
     'capabilities': dict({
       'max': 2000.0,
       'min': 100.0,
@@ -376,7 +383,7 @@
     'original_name': 'start diff additional heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City start diff additional heat',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'degree_minutes',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-148072',
@@ -406,6 +413,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gotham City start diff additional heat',
     'capabilities': dict({
       'max': 2000.0,
       'min': 100.0,
@@ -434,7 +442,7 @@
     'original_name': 'start diff additional heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gotham City start diff additional heat',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'degree_minutes',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-148072',

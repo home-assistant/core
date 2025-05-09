@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front Door Ding',
     'capabilities': dict({
       'event_types': list([
         'ding',
@@ -31,7 +32,7 @@
     'original_name': 'Ding',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Front Door Ding',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ding',
     'unique_id': '987654-ding',
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front Door Motion',
     'capabilities': dict({
       'event_types': list([
         'motion',
@@ -89,7 +91,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Front Door Motion',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion',
     'unique_id': '987654-motion',
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front Motion',
     'capabilities': dict({
       'event_types': list([
         'motion',
@@ -147,7 +150,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Front Motion',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion',
     'unique_id': '765432-motion',
@@ -178,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ingress Ding',
     'capabilities': dict({
       'event_types': list([
         'ding',
@@ -205,7 +209,7 @@
     'original_name': 'Ding',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Ingress Ding',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ding',
     'unique_id': '185036587-ding',
@@ -236,6 +240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ingress Intercom unlock',
     'capabilities': dict({
       'event_types': list([
         'intercom_unlock',
@@ -263,7 +268,7 @@
     'original_name': 'Intercom unlock',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Ingress Intercom unlock',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'intercom_unlock',
     'unique_id': '185036587-intercom_unlock',
@@ -294,6 +299,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Internal Motion',
     'capabilities': dict({
       'event_types': list([
         'motion',
@@ -321,7 +327,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'Internal Motion',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion',
     'unique_id': '345678-motion',

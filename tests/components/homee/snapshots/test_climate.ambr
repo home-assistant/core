@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Thermostat 1',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -34,7 +35,7 @@
     'original_name': None,
     'platform': 'homee',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Thermostat 1',
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': 'homee',
     'unique_id': '00055511EECC-1-1',
@@ -69,6 +70,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Thermostat 2',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -99,7 +101,7 @@
     'original_name': None,
     'platform': 'homee',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Thermostat 2',
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': 'homee',
     'unique_id': '00055511EECC-2-1',
@@ -134,6 +136,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Thermostat 3',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -165,7 +168,7 @@
     'original_name': None,
     'platform': 'homee',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Thermostat 3',
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': 'homee',
     'unique_id': '00055511EECC-3-1',
@@ -201,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Thermostat 4',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -238,7 +242,7 @@
     'original_name': None,
     'platform': 'homee',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Thermostat 4',
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'homee',
     'unique_id': '00055511EECC-4-1',

@@ -41,6 +41,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Battery cycles',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -66,7 +67,7 @@
     'original_name': 'Battery cycles',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Battery cycles',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cycles',
     'unique_id': 'HWE-P1_5c2fafabcdef_cycles',
@@ -129,6 +130,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -154,7 +156,7 @@
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -219,6 +221,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -244,7 +247,7 @@
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -309,6 +312,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -334,7 +338,7 @@
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -399,6 +403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -424,7 +429,7 @@
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -489,6 +494,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -517,7 +523,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -582,6 +588,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device State of charge',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -610,7 +617,7 @@
     'original_name': 'State of charge',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device State of charge',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'state_of_charge_pct',
     'unique_id': 'HWE-P1_5c2fafabcdef_state_of_charge_pct',
@@ -675,6 +682,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -698,7 +706,7 @@
     'original_name': 'Uptime',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Uptime',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': 'HWE-P1_5c2fafabcdef_uptime',
@@ -761,6 +769,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -786,7 +795,7 @@
     'original_name': 'Voltage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
@@ -851,6 +860,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi RSSI',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -876,7 +886,7 @@
     'original_name': 'Wi-Fi RSSI',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi RSSI',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_rssi',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_rssi',
@@ -940,6 +950,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -963,7 +974,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -1025,6 +1036,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1050,7 +1062,7 @@
     'original_name': 'Apparent power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Apparent power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
@@ -1115,6 +1127,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1140,7 +1153,7 @@
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -1205,6 +1218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1230,7 +1244,7 @@
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -1295,6 +1309,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1320,7 +1335,7 @@
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -1385,6 +1400,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1410,7 +1426,7 @@
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -1475,6 +1491,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1503,7 +1520,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -1568,6 +1585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1593,7 +1611,7 @@
     'original_name': 'Power factor',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power factor',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
@@ -1658,6 +1676,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1683,7 +1702,7 @@
     'original_name': 'Reactive power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Reactive power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
@@ -1748,6 +1767,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1773,7 +1793,7 @@
     'original_name': 'Voltage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
@@ -1838,6 +1858,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1861,7 +1882,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -1923,6 +1944,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1948,7 +1970,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -2012,6 +2034,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2037,7 +2060,7 @@
     'original_name': 'Apparent power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Apparent power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
@@ -2102,6 +2125,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Apparent power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2127,7 +2151,7 @@
     'original_name': 'Apparent power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Apparent power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l1_va',
@@ -2192,6 +2216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Apparent power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2217,7 +2242,7 @@
     'original_name': 'Apparent power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Apparent power phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l2_va',
@@ -2282,6 +2307,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Apparent power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2307,7 +2333,7 @@
     'original_name': 'Apparent power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Apparent power phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l3_va',
@@ -2372,6 +2398,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2397,7 +2424,7 @@
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -2462,6 +2489,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2487,7 +2515,7 @@
     'original_name': 'Current phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
@@ -2552,6 +2580,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2577,7 +2606,7 @@
     'original_name': 'Current phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
@@ -2642,6 +2671,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2667,7 +2697,7 @@
     'original_name': 'Current phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
@@ -2732,6 +2762,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2757,7 +2788,7 @@
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -2822,6 +2853,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2847,7 +2879,7 @@
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -2912,6 +2944,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2937,7 +2970,7 @@
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -3002,6 +3035,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3030,7 +3064,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -3095,6 +3129,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power factor phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3120,7 +3155,7 @@
     'original_name': 'Power factor phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power factor phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l1',
@@ -3185,6 +3220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power factor phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3210,7 +3246,7 @@
     'original_name': 'Power factor phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power factor phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l2',
@@ -3275,6 +3311,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power factor phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3300,7 +3337,7 @@
     'original_name': 'Power factor phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power factor phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l3',
@@ -3365,6 +3402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3393,7 +3431,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -3458,6 +3496,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3486,7 +3525,7 @@
     'original_name': 'Power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
@@ -3551,6 +3590,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3579,7 +3619,7 @@
     'original_name': 'Power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
@@ -3644,6 +3684,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3669,7 +3710,7 @@
     'original_name': 'Reactive power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Reactive power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
@@ -3734,6 +3775,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Reactive power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3759,7 +3801,7 @@
     'original_name': 'Reactive power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Reactive power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l1_var',
@@ -3824,6 +3866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Reactive power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3849,7 +3892,7 @@
     'original_name': 'Reactive power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Reactive power phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l2_var',
@@ -3914,6 +3957,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Reactive power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3939,7 +3983,7 @@
     'original_name': 'Reactive power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Reactive power phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l3_var',
@@ -4004,6 +4048,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4029,7 +4074,7 @@
     'original_name': 'Voltage phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
@@ -4094,6 +4139,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4119,7 +4165,7 @@
     'original_name': 'Voltage phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
@@ -4184,6 +4230,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4209,7 +4256,7 @@
     'original_name': 'Voltage phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
@@ -4274,6 +4321,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4297,7 +4345,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -4359,6 +4407,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4384,7 +4433,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -4448,6 +4497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Average demand',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4471,7 +4521,7 @@
     'original_name': 'Average demand',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Average demand',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
@@ -4535,6 +4585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4560,7 +4611,7 @@
     'original_name': 'Current phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
@@ -4625,6 +4676,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4650,7 +4702,7 @@
     'original_name': 'Current phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
@@ -4715,6 +4767,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4740,7 +4793,7 @@
     'original_name': 'Current phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
@@ -4805,6 +4858,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device DSMR version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4828,7 +4882,7 @@
     'original_name': 'DSMR version',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device DSMR version',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dsmr_version',
     'unique_id': 'HWE-P1_5c2fafabcdef_smr_version',
@@ -4890,6 +4944,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4915,7 +4970,7 @@
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -4980,6 +5035,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5005,7 +5061,7 @@
     'original_name': 'Energy export tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
@@ -5070,6 +5126,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5095,7 +5152,7 @@
     'original_name': 'Energy export tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
@@ -5160,6 +5217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5185,7 +5243,7 @@
     'original_name': 'Energy export tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
@@ -5250,6 +5308,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5275,7 +5334,7 @@
     'original_name': 'Energy export tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 4',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
@@ -5340,6 +5399,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5365,7 +5425,7 @@
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -5430,6 +5490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5455,7 +5516,7 @@
     'original_name': 'Energy import tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
@@ -5520,6 +5581,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5545,7 +5607,7 @@
     'original_name': 'Energy import tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
@@ -5610,6 +5672,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5635,7 +5698,7 @@
     'original_name': 'Energy import tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
@@ -5700,6 +5763,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5725,7 +5789,7 @@
     'original_name': 'Energy import tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 4',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
@@ -5790,6 +5854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5815,7 +5880,7 @@
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -5880,6 +5945,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Long power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5903,7 +5969,7 @@
     'original_name': 'Long power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Long power failures detected',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
@@ -5965,6 +6031,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Peak demand current month',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5988,7 +6055,7 @@
     'original_name': 'Peak demand current month',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Peak demand current month',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_power_peak_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_monthly_power_peak_w',
@@ -6052,6 +6119,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6080,7 +6148,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -6145,6 +6213,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6168,7 +6237,7 @@
     'original_name': 'Power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power failures detected',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
@@ -6230,6 +6299,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6258,7 +6328,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -6323,6 +6393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6351,7 +6422,7 @@
     'original_name': 'Power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
@@ -6416,6 +6487,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6444,7 +6516,7 @@
     'original_name': 'Power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
@@ -6509,6 +6581,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Smart meter identifier',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6532,7 +6605,7 @@
     'original_name': 'Smart meter identifier',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Smart meter identifier',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'unique_meter_id',
     'unique_id': 'HWE-P1_5c2fafabcdef_unique_meter_id',
@@ -6594,6 +6667,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Smart meter model',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6617,7 +6691,7 @@
     'original_name': 'Smart meter model',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Smart meter model',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_model',
     'unique_id': 'HWE-P1_5c2fafabcdef_meter_model',
@@ -6679,6 +6753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Tariff',
     'capabilities': dict({
       'options': list([
         '1',
@@ -6709,7 +6784,7 @@
     'original_name': 'Tariff',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Tariff',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_tariff',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_tariff',
@@ -6778,6 +6853,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Total water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6803,7 +6879,7 @@
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Total water usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
@@ -6868,6 +6944,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6893,7 +6970,7 @@
     'original_name': 'Voltage phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
@@ -6958,6 +7035,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6983,7 +7061,7 @@
     'original_name': 'Voltage phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
@@ -7048,6 +7126,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7073,7 +7152,7 @@
     'original_name': 'Voltage phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
@@ -7138,6 +7217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage sags detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7161,7 +7241,7 @@
     'original_name': 'Voltage sags detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage sags detected phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
@@ -7223,6 +7303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage sags detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7246,7 +7327,7 @@
     'original_name': 'Voltage sags detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage sags detected phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
@@ -7308,6 +7389,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage sags detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7331,7 +7413,7 @@
     'original_name': 'Voltage sags detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage sags detected phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
@@ -7393,6 +7475,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage swells detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7416,7 +7499,7 @@
     'original_name': 'Voltage swells detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage swells detected phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
@@ -7478,6 +7561,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage swells detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7501,7 +7585,7 @@
     'original_name': 'Voltage swells detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage swells detected phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
@@ -7563,6 +7647,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage swells detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7586,7 +7671,7 @@
     'original_name': 'Voltage swells detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage swells detected phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
@@ -7648,6 +7733,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7673,7 +7759,7 @@
     'original_name': 'Water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Water usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
@@ -7737,6 +7823,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7760,7 +7847,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -7822,6 +7909,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7847,7 +7935,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -7907,6 +7995,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas meter Gas',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7932,7 +8021,7 @@
     'original_name': 'Gas',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gas meter Gas',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_gas_meter_G001',
@@ -7993,6 +8082,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heat meter Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8018,7 +8108,7 @@
     'original_name': 'Energy',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Heat meter Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_heat_meter_H001',
@@ -8079,6 +8169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inlet heat meter None',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8104,7 +8195,7 @@
     'original_name': None,
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Inlet heat meter None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_inlet_heat_meter_IH001',
@@ -8164,6 +8255,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Warm water meter Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8189,7 +8281,7 @@
     'original_name': 'Water',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Warm water meter Water',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_warm_water_meter_WW001',
@@ -8250,6 +8342,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water meter Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8275,7 +8368,7 @@
     'original_name': 'Water',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Water meter Water',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_water_meter_W001',
@@ -8340,6 +8433,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Average demand',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8363,7 +8457,7 @@
     'original_name': 'Average demand',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Average demand',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
@@ -8427,6 +8521,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8452,7 +8547,7 @@
     'original_name': 'Current phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
@@ -8517,6 +8612,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8542,7 +8638,7 @@
     'original_name': 'Current phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
@@ -8607,6 +8703,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8632,7 +8729,7 @@
     'original_name': 'Current phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
@@ -8697,6 +8794,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device DSMR version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8720,7 +8818,7 @@
     'original_name': 'DSMR version',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device DSMR version',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dsmr_version',
     'unique_id': 'HWE-P1_5c2fafabcdef_smr_version',
@@ -8782,6 +8880,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8807,7 +8906,7 @@
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -8872,6 +8971,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8897,7 +8997,7 @@
     'original_name': 'Energy export tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
@@ -8962,6 +9062,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8987,7 +9088,7 @@
     'original_name': 'Energy export tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
@@ -9052,6 +9153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9077,7 +9179,7 @@
     'original_name': 'Energy export tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
@@ -9142,6 +9244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9167,7 +9270,7 @@
     'original_name': 'Energy export tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 4',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
@@ -9232,6 +9335,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9257,7 +9361,7 @@
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -9322,6 +9426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9347,7 +9452,7 @@
     'original_name': 'Energy import tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
@@ -9412,6 +9517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9437,7 +9543,7 @@
     'original_name': 'Energy import tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
@@ -9502,6 +9608,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9527,7 +9634,7 @@
     'original_name': 'Energy import tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
@@ -9592,6 +9699,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9617,7 +9725,7 @@
     'original_name': 'Energy import tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 4',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
@@ -9682,6 +9790,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9707,7 +9816,7 @@
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -9772,6 +9881,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Long power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9795,7 +9905,7 @@
     'original_name': 'Long power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Long power failures detected',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
@@ -9857,6 +9967,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Peak demand current month',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9880,7 +9991,7 @@
     'original_name': 'Peak demand current month',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Peak demand current month',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_power_peak_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_monthly_power_peak_w',
@@ -9944,6 +10055,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9972,7 +10084,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -10037,6 +10149,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10060,7 +10173,7 @@
     'original_name': 'Power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power failures detected',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
@@ -10122,6 +10235,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10150,7 +10264,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -10215,6 +10329,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10243,7 +10358,7 @@
     'original_name': 'Power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
@@ -10308,6 +10423,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10336,7 +10452,7 @@
     'original_name': 'Power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
@@ -10401,6 +10517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Smart meter identifier',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10424,7 +10541,7 @@
     'original_name': 'Smart meter identifier',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Smart meter identifier',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'unique_meter_id',
     'unique_id': 'HWE-P1_5c2fafabcdef_unique_meter_id',
@@ -10486,6 +10603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Smart meter model',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10509,7 +10627,7 @@
     'original_name': 'Smart meter model',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Smart meter model',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_model',
     'unique_id': 'HWE-P1_5c2fafabcdef_meter_model',
@@ -10571,6 +10689,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Tariff',
     'capabilities': dict({
       'options': list([
         '1',
@@ -10601,7 +10720,7 @@
     'original_name': 'Tariff',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Tariff',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_tariff',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_tariff',
@@ -10670,6 +10789,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Total water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10695,7 +10815,7 @@
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Total water usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
@@ -10760,6 +10880,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10785,7 +10906,7 @@
     'original_name': 'Voltage phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
@@ -10850,6 +10971,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10875,7 +10997,7 @@
     'original_name': 'Voltage phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
@@ -10940,6 +11062,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10965,7 +11088,7 @@
     'original_name': 'Voltage phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
@@ -11030,6 +11153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage sags detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11053,7 +11177,7 @@
     'original_name': 'Voltage sags detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage sags detected phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
@@ -11115,6 +11239,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage sags detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11138,7 +11263,7 @@
     'original_name': 'Voltage sags detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage sags detected phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
@@ -11200,6 +11325,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage sags detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11223,7 +11349,7 @@
     'original_name': 'Voltage sags detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage sags detected phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
@@ -11285,6 +11411,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage swells detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11308,7 +11435,7 @@
     'original_name': 'Voltage swells detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage swells detected phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
@@ -11370,6 +11497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage swells detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11393,7 +11521,7 @@
     'original_name': 'Voltage swells detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage swells detected phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
@@ -11455,6 +11583,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage swells detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11478,7 +11607,7 @@
     'original_name': 'Voltage swells detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage swells detected phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
@@ -11540,6 +11669,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11565,7 +11695,7 @@
     'original_name': 'Water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Water usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
@@ -11629,6 +11759,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11652,7 +11783,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -11714,6 +11845,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11739,7 +11871,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -11799,6 +11931,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas meter Gas',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -11824,7 +11957,7 @@
     'original_name': 'Gas',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Gas meter Gas',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_gas_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
@@ -11885,6 +12018,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heat meter Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -11910,7 +12044,7 @@
     'original_name': 'Energy',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Heat meter Energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
@@ -11971,6 +12105,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inlet heat meter None',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -11996,7 +12131,7 @@
     'original_name': None,
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Inlet heat meter None',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_inlet_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
@@ -12056,6 +12191,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Warm water meter Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12081,7 +12217,7 @@
     'original_name': 'Water',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Warm water meter Water',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_warm_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
@@ -12142,6 +12278,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water meter Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12167,7 +12304,7 @@
     'original_name': 'Water',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Water meter Water',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
@@ -12232,6 +12369,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Average demand',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -12255,7 +12393,7 @@
     'original_name': 'Average demand',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Average demand',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
@@ -12319,6 +12457,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -12344,7 +12483,7 @@
     'original_name': 'Current phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
@@ -12409,6 +12548,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -12434,7 +12574,7 @@
     'original_name': 'Current phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
@@ -12499,6 +12639,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -12524,7 +12665,7 @@
     'original_name': 'Current phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
@@ -12589,6 +12730,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12614,7 +12756,7 @@
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -12679,6 +12821,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12704,7 +12847,7 @@
     'original_name': 'Energy export tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
@@ -12769,6 +12912,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12794,7 +12938,7 @@
     'original_name': 'Energy export tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
@@ -12859,6 +13003,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12884,7 +13029,7 @@
     'original_name': 'Energy export tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
@@ -12949,6 +13094,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12974,7 +13120,7 @@
     'original_name': 'Energy export tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export tariff 4',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
@@ -13039,6 +13185,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13064,7 +13211,7 @@
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -13129,6 +13276,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13154,7 +13302,7 @@
     'original_name': 'Energy import tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
@@ -13219,6 +13367,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13244,7 +13393,7 @@
     'original_name': 'Energy import tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
@@ -13309,6 +13458,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13334,7 +13484,7 @@
     'original_name': 'Energy import tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
@@ -13399,6 +13549,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13424,7 +13575,7 @@
     'original_name': 'Energy import tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import tariff 4',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
@@ -13489,6 +13640,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -13514,7 +13666,7 @@
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -13579,6 +13731,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Long power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13602,7 +13755,7 @@
     'original_name': 'Long power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Long power failures detected',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
@@ -13664,6 +13817,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -13692,7 +13846,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -13757,6 +13911,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13780,7 +13935,7 @@
     'original_name': 'Power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power failures detected',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
@@ -13842,6 +13997,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -13870,7 +14026,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -13935,6 +14091,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -13963,7 +14120,7 @@
     'original_name': 'Power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
@@ -14028,6 +14185,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14056,7 +14214,7 @@
     'original_name': 'Power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
@@ -14121,6 +14279,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Total water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14146,7 +14305,7 @@
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Total water usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
@@ -14211,6 +14370,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14236,7 +14396,7 @@
     'original_name': 'Voltage phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
@@ -14301,6 +14461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14326,7 +14487,7 @@
     'original_name': 'Voltage phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
@@ -14391,6 +14552,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14416,7 +14578,7 @@
     'original_name': 'Voltage phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
@@ -14481,6 +14643,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage sags detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14504,7 +14667,7 @@
     'original_name': 'Voltage sags detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage sags detected phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
@@ -14566,6 +14729,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage sags detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14589,7 +14753,7 @@
     'original_name': 'Voltage sags detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage sags detected phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
@@ -14651,6 +14815,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage sags detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14674,7 +14839,7 @@
     'original_name': 'Voltage sags detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage sags detected phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
@@ -14736,6 +14901,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage swells detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14759,7 +14925,7 @@
     'original_name': 'Voltage swells detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage swells detected phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
@@ -14821,6 +14987,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage swells detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14844,7 +15011,7 @@
     'original_name': 'Voltage swells detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage swells detected phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
@@ -14906,6 +15073,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage swells detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14929,7 +15097,7 @@
     'original_name': 'Voltage swells detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage swells detected phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
@@ -14991,6 +15159,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15016,7 +15185,7 @@
     'original_name': 'Water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Water usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
@@ -15080,6 +15249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15103,7 +15273,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -15165,6 +15335,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15190,7 +15361,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -15254,6 +15425,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -15279,7 +15451,7 @@
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -15344,6 +15516,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -15369,7 +15542,7 @@
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -15434,6 +15607,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15462,7 +15636,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -15527,6 +15701,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15555,7 +15730,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -15620,6 +15795,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15643,7 +15819,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -15705,6 +15881,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15730,7 +15907,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -15794,6 +15971,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15819,7 +15997,7 @@
     'original_name': 'Apparent power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Apparent power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
@@ -15884,6 +16062,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15909,7 +16088,7 @@
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -15974,6 +16153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -15999,7 +16179,7 @@
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -16064,6 +16244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16089,7 +16270,7 @@
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -16154,6 +16335,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16179,7 +16361,7 @@
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -16244,6 +16426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16272,7 +16455,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -16337,6 +16520,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16362,7 +16546,7 @@
     'original_name': 'Power factor',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power factor',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
@@ -16427,6 +16611,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16455,7 +16640,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -16520,6 +16705,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16545,7 +16731,7 @@
     'original_name': 'Reactive power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Reactive power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
@@ -16610,6 +16796,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16635,7 +16822,7 @@
     'original_name': 'Voltage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
@@ -16700,6 +16887,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -16723,7 +16911,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -16785,6 +16973,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16810,7 +16999,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -16874,6 +17063,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Total water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16899,7 +17089,7 @@
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Total water usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
@@ -16964,6 +17154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16989,7 +17180,7 @@
     'original_name': 'Water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Water usage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
@@ -17053,6 +17244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17076,7 +17268,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -17138,6 +17330,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17163,7 +17356,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -17227,6 +17420,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17252,7 +17446,7 @@
     'original_name': 'Apparent power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Apparent power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
@@ -17317,6 +17511,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17342,7 +17537,7 @@
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -17407,6 +17602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -17432,7 +17628,7 @@
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -17497,6 +17693,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -17522,7 +17719,7 @@
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -17587,6 +17784,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17612,7 +17810,7 @@
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -17677,6 +17875,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17705,7 +17904,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -17770,6 +17969,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17795,7 +17995,7 @@
     'original_name': 'Power factor',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power factor',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
@@ -17860,6 +18060,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17885,7 +18086,7 @@
     'original_name': 'Reactive power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Reactive power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
@@ -17950,6 +18151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17975,7 +18177,7 @@
     'original_name': 'Voltage',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
@@ -18040,6 +18242,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -18063,7 +18266,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -18125,6 +18328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18150,7 +18354,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -18214,6 +18418,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18239,7 +18444,7 @@
     'original_name': 'Apparent power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Apparent power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
@@ -18304,6 +18509,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Apparent power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18329,7 +18535,7 @@
     'original_name': 'Apparent power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Apparent power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l1_va',
@@ -18394,6 +18600,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Apparent power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18419,7 +18626,7 @@
     'original_name': 'Apparent power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Apparent power phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l2_va',
@@ -18484,6 +18691,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Apparent power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18509,7 +18717,7 @@
     'original_name': 'Apparent power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Apparent power phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l3_va',
@@ -18574,6 +18782,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18599,7 +18808,7 @@
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -18664,6 +18873,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18689,7 +18899,7 @@
     'original_name': 'Current phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
@@ -18754,6 +18964,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18779,7 +18990,7 @@
     'original_name': 'Current phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
@@ -18844,6 +19055,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18869,7 +19081,7 @@
     'original_name': 'Current phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Current phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
@@ -18934,6 +19146,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -18959,7 +19172,7 @@
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy export',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -19024,6 +19237,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -19049,7 +19263,7 @@
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Energy import',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -19114,6 +19328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19139,7 +19354,7 @@
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Frequency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -19204,6 +19419,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19232,7 +19448,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -19297,6 +19513,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power factor phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19322,7 +19539,7 @@
     'original_name': 'Power factor phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power factor phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l1',
@@ -19387,6 +19604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power factor phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19412,7 +19630,7 @@
     'original_name': 'Power factor phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power factor phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l2',
@@ -19477,6 +19695,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power factor phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19502,7 +19721,7 @@
     'original_name': 'Power factor phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power factor phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l3',
@@ -19567,6 +19786,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19595,7 +19815,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -19660,6 +19880,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19688,7 +19909,7 @@
     'original_name': 'Power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
@@ -19753,6 +19974,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19781,7 +20003,7 @@
     'original_name': 'Power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Power phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
@@ -19846,6 +20068,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19871,7 +20094,7 @@
     'original_name': 'Reactive power',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Reactive power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
@@ -19936,6 +20159,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Reactive power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19961,7 +20185,7 @@
     'original_name': 'Reactive power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Reactive power phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l1_var',
@@ -20026,6 +20250,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Reactive power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20051,7 +20276,7 @@
     'original_name': 'Reactive power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Reactive power phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l2_var',
@@ -20116,6 +20341,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Reactive power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20141,7 +20367,7 @@
     'original_name': 'Reactive power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Reactive power phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l3_var',
@@ -20206,6 +20432,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20231,7 +20458,7 @@
     'original_name': 'Voltage phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
@@ -20296,6 +20523,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20321,7 +20549,7 @@
     'original_name': 'Voltage phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 2',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
@@ -20386,6 +20614,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20411,7 +20640,7 @@
     'original_name': 'Voltage phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Voltage phase 3',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
@@ -20476,6 +20705,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -20499,7 +20729,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi SSID',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -20561,6 +20791,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20586,7 +20817,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
-    'suggested_object_id': 'Device Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',

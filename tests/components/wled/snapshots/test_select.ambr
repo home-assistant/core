@@ -22,6 +22,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'WLED RGB Light Live override',
     'capabilities': dict({
       'options': list([
         '0',
@@ -51,7 +52,7 @@
     'original_name': 'Live override',
     'platform': 'wled',
     'previous_unique_id': None,
-    'suggested_object_id': 'WLED RGB Light Live override',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'live_override',
     'unique_id': 'aabbccddeeff_live_override',
@@ -186,6 +187,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'WLED RGB Light Segment 1 color palette',
     'capabilities': dict({
       'options': list([
         '* Color 1',
@@ -283,7 +285,7 @@
     'original_name': 'Segment 1 color palette',
     'platform': 'wled',
     'previous_unique_id': None,
-    'suggested_object_id': 'WLED RGB Light Segment 1 color palette',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'segment_color_palette',
     'unique_id': 'aabbccddeeff_palette_1',
@@ -349,6 +351,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'WLED RGBW Light Playlist',
     'capabilities': dict({
       'options': list([
         'Playlist 1',
@@ -377,7 +380,7 @@
     'original_name': 'Playlist',
     'platform': 'wled',
     'previous_unique_id': None,
-    'suggested_object_id': 'WLED RGBW Light Playlist',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'playlist',
     'unique_id': 'aabbccddeeff_playlist',
@@ -443,6 +446,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'WLED RGBW Light Preset',
     'capabilities': dict({
       'options': list([
         'Preset 1',
@@ -471,7 +475,7 @@
     'original_name': 'Preset',
     'platform': 'wled',
     'previous_unique_id': None,
-    'suggested_object_id': 'WLED RGBW Light Preset',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'preset',
     'unique_id': 'aabbccddeeff_preset',

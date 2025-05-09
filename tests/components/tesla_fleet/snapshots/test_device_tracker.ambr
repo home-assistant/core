@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Location',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,7 +28,7 @@
     'original_name': 'Location',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Location',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'location',
     'unique_id': 'LRWXF7EK4KC700000-location',
@@ -56,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Route',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -79,7 +81,7 @@
     'original_name': 'Route',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
-    'suggested_object_id': 'Test Route',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'route',
     'unique_id': 'LRWXF7EK4KC700000-route',

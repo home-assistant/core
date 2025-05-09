@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Filter last reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,7 +28,7 @@
     'original_name': 'Filter last reset',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Filter last reset',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_last_reset',
     'unique_id': 'BBZZBBZZ-filter_last_reset',
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Pure AQI',
     'capabilities': dict({
       'options': list([
         'good',
@@ -82,7 +84,7 @@
     'original_name': 'Pure AQI',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Pure AQI',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pm25_pure',
     'unique_id': 'BBZZBBZZ-pm25',
@@ -113,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom Pure sensitivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -136,7 +139,7 @@
     'original_name': 'Pure sensitivity',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Bedroom Pure sensitivity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensitivity',
     'unique_id': 'BBZZBBZZ-pure_sensitivity',
@@ -161,6 +164,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway Climate React high temperature threshold',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -186,7 +190,7 @@
     'original_name': 'Climate React high temperature threshold',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hallway Climate React high temperature threshold',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_react_high',
     'unique_id': 'ABC999111-climate_react_high',
@@ -222,6 +226,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway Climate React low temperature threshold',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -247,7 +252,7 @@
     'original_name': 'Climate React low temperature threshold',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hallway Climate React low temperature threshold',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_react_low',
     'unique_id': 'ABC999111-climate_react_low',
@@ -283,6 +288,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway Climate React type',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -306,7 +312,7 @@
     'original_name': 'Climate React type',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hallway Climate React type',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smart_type',
     'unique_id': 'ABC999111-climate_react_type',
@@ -331,6 +337,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway Filter last reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -354,7 +361,7 @@
     'original_name': 'Filter last reset',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hallway Filter last reset',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_last_reset',
     'unique_id': 'ABC999111-filter_last_reset',
@@ -380,6 +387,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway Motion Sensor Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -405,7 +413,7 @@
     'original_name': 'Battery voltage',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hallway Motion Sensor Battery voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_voltage',
     'unique_id': 'AABBCC-battery_voltage',
@@ -433,6 +441,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway Motion Sensor Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -458,7 +467,7 @@
     'original_name': 'Humidity',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hallway Motion Sensor Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AABBCC-humidity',
@@ -486,6 +495,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway Motion Sensor RSSI',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -511,7 +521,7 @@
     'original_name': 'RSSI',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hallway Motion Sensor RSSI',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rssi',
     'unique_id': 'AABBCC-rssi',
@@ -539,6 +549,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway Motion Sensor Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -564,7 +575,7 @@
     'original_name': 'Temperature',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hallway Motion Sensor Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AABBCC-temperature',
@@ -592,6 +603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway Temperature feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -617,7 +629,7 @@
     'original_name': 'Temperature feels like',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hallway Temperature feels like',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feels_like',
     'unique_id': 'ABC999111-feels_like',
@@ -645,6 +657,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hallway Timer end time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -668,7 +681,7 @@
     'original_name': 'Timer end time',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Hallway Timer end time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'timer_time',
     'unique_id': 'ABC999111-timer_time',
@@ -696,6 +709,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Filter last reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -719,7 +733,7 @@
     'original_name': 'Filter last reset',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Filter last reset',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_last_reset',
     'unique_id': 'AAZZAAZZ-filter_last_reset',
@@ -745,6 +759,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Pure AQI',
     'capabilities': dict({
       'options': list([
         'good',
@@ -774,7 +789,7 @@
     'original_name': 'Pure AQI',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Pure AQI',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pm25_pure',
     'unique_id': 'AAZZAAZZ-pm25',
@@ -805,6 +820,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Pure sensitivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -828,7 +844,7 @@
     'original_name': 'Pure sensitivity',
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'suggested_object_id': 'Kitchen Pure sensitivity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensitivity',
     'unique_id': 'AAZZAAZZ-pure_sensitivity',

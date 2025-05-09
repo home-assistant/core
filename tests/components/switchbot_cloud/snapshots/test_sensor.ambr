@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'meter-1 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Battery',
     'platform': 'switchbot_cloud',
     'previous_unique_id': None,
-    'suggested_object_id': 'meter-1 Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'meter-id-1_battery',
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'meter-1 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -82,7 +84,7 @@
     'original_name': 'Humidity',
     'platform': 'switchbot_cloud',
     'previous_unique_id': None,
-    'suggested_object_id': 'meter-1 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'meter-id-1_humidity',
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'meter-1 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -135,7 +138,7 @@
     'original_name': 'Temperature',
     'platform': 'switchbot_cloud',
     'previous_unique_id': None,
-    'suggested_object_id': 'meter-1 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'meter-id-1_temperature',
@@ -163,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'meter-1 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -188,7 +192,7 @@
     'original_name': 'Battery',
     'platform': 'switchbot_cloud',
     'previous_unique_id': None,
-    'suggested_object_id': 'meter-1 Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'meter-id-1_battery',
@@ -216,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'meter-1 Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -241,7 +246,7 @@
     'original_name': 'Humidity',
     'platform': 'switchbot_cloud',
     'previous_unique_id': None,
-    'suggested_object_id': 'meter-1 Humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'meter-id-1_humidity',
@@ -269,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'meter-1 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -294,7 +300,7 @@
     'original_name': 'Temperature',
     'platform': 'switchbot_cloud',
     'previous_unique_id': None,
-    'suggested_object_id': 'meter-1 Temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'meter-id-1_temperature',

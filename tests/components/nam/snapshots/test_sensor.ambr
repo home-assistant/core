@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor BH1750 illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -32,7 +33,7 @@
     'original_name': 'BH1750 illuminance',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor BH1750 illuminance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bh1750_illuminance',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bh1750_illuminance',
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor BME280 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -88,7 +90,7 @@
     'original_name': 'BME280 humidity',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor BME280 humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bme280_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bme280_humidity',
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor BME280 pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -144,7 +147,7 @@
     'original_name': 'BME280 pressure',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor BME280 pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bme280_pressure',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bme280_pressure',
@@ -172,6 +175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor BME280 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -200,7 +204,7 @@
     'original_name': 'BME280 temperature',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor BME280 temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bme280_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bme280_temperature',
@@ -228,6 +232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor BMP180 pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -256,7 +261,7 @@
     'original_name': 'BMP180 pressure',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor BMP180 pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bmp180_pressure',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bmp180_pressure',
@@ -284,6 +289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor BMP180 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -312,7 +318,7 @@
     'original_name': 'BMP180 temperature',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor BMP180 temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bmp180_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bmp180_temperature',
@@ -340,6 +346,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor BMP280 pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -368,7 +375,7 @@
     'original_name': 'BMP280 pressure',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor BMP280 pressure',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bmp280_pressure',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bmp280_pressure',
@@ -396,6 +403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor BMP280 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -424,7 +432,7 @@
     'original_name': 'BMP280 temperature',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor BMP280 temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bmp280_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bmp280_temperature',
@@ -452,6 +460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor DHT22 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -480,7 +489,7 @@
     'original_name': 'DHT22 humidity',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor DHT22 humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dht22_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-dht22_humidity',
@@ -508,6 +517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor DHT22 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -536,7 +546,7 @@
     'original_name': 'DHT22 temperature',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor DHT22 temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dht22_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-dht22_temperature',
@@ -564,6 +574,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor DS18B20 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -592,7 +603,7 @@
     'original_name': 'DS18B20 temperature',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor DS18B20 temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ds18b20_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-ds18b20_temperature',
@@ -620,6 +631,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor HECA humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -648,7 +660,7 @@
     'original_name': 'HECA humidity',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor HECA humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heca_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-heca_humidity',
@@ -676,6 +688,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor HECA temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -704,7 +717,7 @@
     'original_name': 'HECA temperature',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor HECA temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heca_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-heca_temperature',
@@ -732,6 +745,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -755,7 +769,7 @@
     'original_name': 'Last restart',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor Last restart',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_restart',
     'unique_id': 'aa:bb:cc:dd:ee:ff-uptime',
@@ -781,6 +795,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor MH-Z14A carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -809,7 +824,7 @@
     'original_name': 'MH-Z14A carbon dioxide',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor MH-Z14A carbon dioxide',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mhz14a_carbon_dioxide',
     'unique_id': 'aa:bb:cc:dd:ee:ff-mhz14a_carbon_dioxide',
@@ -837,6 +852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor PMSx003 common air quality index',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -860,7 +876,7 @@
     'original_name': 'PMSx003 common air quality index',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor PMSx003 common air quality index',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pmsx003_caqi',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_caqi',
@@ -885,6 +901,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor PMSx003 common air quality index level',
     'capabilities': dict({
       'options': list([
         'very_low',
@@ -916,7 +933,7 @@
     'original_name': 'PMSx003 common air quality index level',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor PMSx003 common air quality index level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pmsx003_caqi_level',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_caqi_level',
@@ -949,6 +966,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor PMSx003 PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -977,7 +995,7 @@
     'original_name': 'PMSx003 PM1',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor PMSx003 PM1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pmsx003_pm1',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p0',
@@ -1005,6 +1023,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor PMSx003 PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1033,7 +1052,7 @@
     'original_name': 'PMSx003 PM10',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor PMSx003 PM10',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pmsx003_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p1',
@@ -1061,6 +1080,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor PMSx003 PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1089,7 +1109,7 @@
     'original_name': 'PMSx003 PM2.5',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor PMSx003 PM2.5',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pmsx003_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p2',
@@ -1117,6 +1137,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SDS011 common air quality index',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1140,7 +1161,7 @@
     'original_name': 'SDS011 common air quality index',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SDS011 common air quality index',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sds011_caqi',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_caqi',
@@ -1165,6 +1186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SDS011 common air quality index level',
     'capabilities': dict({
       'options': list([
         'very_low',
@@ -1196,7 +1218,7 @@
     'original_name': 'SDS011 common air quality index level',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SDS011 common air quality index level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sds011_caqi_level',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_caqi_level',
@@ -1229,6 +1251,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SDS011 PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1257,7 +1280,7 @@
     'original_name': 'SDS011 PM10',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SDS011 PM10',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sds011_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_p1',
@@ -1285,6 +1308,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SDS011 PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1313,7 +1337,7 @@
     'original_name': 'SDS011 PM2.5',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SDS011 PM2.5',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sds011_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_p2',
@@ -1341,6 +1365,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SHT3X humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1369,7 +1394,7 @@
     'original_name': 'SHT3X humidity',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SHT3X humidity',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sht3x_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sht3x_humidity',
@@ -1397,6 +1422,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SHT3X temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1425,7 +1451,7 @@
     'original_name': 'SHT3X temperature',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SHT3X temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sht3x_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sht3x_temperature',
@@ -1453,6 +1479,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1481,7 +1508,7 @@
     'original_name': 'Signal strength',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor Signal strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff-signal',
@@ -1509,6 +1536,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SPS30 common air quality index',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1532,7 +1560,7 @@
     'original_name': 'SPS30 common air quality index',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SPS30 common air quality index',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_caqi',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_caqi',
@@ -1557,6 +1585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SPS30 common air quality index level',
     'capabilities': dict({
       'options': list([
         'very_low',
@@ -1588,7 +1617,7 @@
     'original_name': 'SPS30 common air quality index level',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SPS30 common air quality index level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_caqi_level',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_caqi_level',
@@ -1621,6 +1650,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SPS30 PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1649,7 +1679,7 @@
     'original_name': 'SPS30 PM1',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SPS30 PM1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_pm1',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p0',
@@ -1677,6 +1707,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SPS30 PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1705,7 +1736,7 @@
     'original_name': 'SPS30 PM10',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SPS30 PM10',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p1',
@@ -1733,6 +1764,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SPS30 PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1761,7 +1793,7 @@
     'original_name': 'SPS30 PM2.5',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SPS30 PM2.5',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p2',
@@ -1789,6 +1821,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nettigo Air Monitor SPS30 PM4',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1817,7 +1850,7 @@
     'original_name': 'SPS30 PM4',
     'platform': 'nam',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nettigo Air Monitor SPS30 PM4',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_pm4',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p4',

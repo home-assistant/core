@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil DC input voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'DC input voltage',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil DC input voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.DC_VOLTAGE: 'voltage'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_voltage',
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Estimated power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -82,7 +84,7 @@
     'original_name': 'Estimated power',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Estimated power',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.ESTIMATED_POWER: 'estimated_power'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_estimated_power',
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Hall effect strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -135,7 +138,7 @@
     'original_name': 'Hall effect strength',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Hall effect strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.HALL_SENSOR: 'hall_sensor'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_hall_sensor',
@@ -161,6 +164,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Handle temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -186,7 +190,7 @@
     'original_name': 'Handle temperature',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Handle temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.HANDLETEMP: 'handle_temperature'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_handle_temperature',
@@ -214,6 +218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Last movement time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -239,7 +244,7 @@
     'original_name': 'Last movement time',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Last movement time',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.MOVEMENT_TIME: 'movement_time'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_movement_time',
@@ -267,6 +272,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Max tip temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -290,7 +296,7 @@
     'original_name': 'Max tip temperature',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Max tip temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.MAX_TIP_TEMP_ABILITY: 'max_tip_temp_ability'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_max_tip_temp_ability',
@@ -317,6 +323,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Operating mode',
     'capabilities': dict({
       'options': list([
         'idle',
@@ -358,7 +365,7 @@
     'original_name': 'Operating mode',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Operating mode',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.OPERATING_MODE: 'operating_mode'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_operating_mode',
@@ -401,6 +408,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Power level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -429,7 +437,7 @@
     'original_name': 'Power level',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Power level',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.PWMLEVEL: 'power_pwm_level'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_power_pwm_level',
@@ -457,6 +465,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Power source',
     'capabilities': dict({
       'options': list([
         'dc',
@@ -487,7 +496,7 @@
     'original_name': 'Power source',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Power source',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.POWER_SRC: 'power_source'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_power_source',
@@ -519,6 +528,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Raw tip voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -547,7 +557,7 @@
     'original_name': 'Raw tip voltage',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Raw tip voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.TIP_VOLTAGE: 'tip_voltage'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_tip_voltage',
@@ -575,6 +585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Tip resistance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -600,7 +611,7 @@
     'original_name': 'Tip resistance',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Tip resistance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.TIP_RESISTANCE: 'tip_resistance'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_tip_resistance',
@@ -627,6 +638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Tip temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -652,7 +664,7 @@
     'original_name': 'Tip temperature',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Tip temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.LIVE_TEMP: 'live_temperature'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_live_temperature',
@@ -680,6 +692,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pinecil Uptime',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -705,7 +718,7 @@
     'original_name': 'Uptime',
     'platform': 'iron_os',
     'previous_unique_id': None,
-    'suggested_object_id': 'Pinecil Uptime',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSensor.UPTIME: 'uptime'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_uptime',

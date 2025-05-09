@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AquaCell name Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,7 +28,7 @@
     'original_name': 'Battery',
     'platform': 'aquacell',
     'previous_unique_id': None,
-    'suggested_object_id': 'AquaCell name Battery',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DSN-battery',
@@ -54,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AquaCell name Salt left side percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -79,7 +81,7 @@
     'original_name': 'Salt left side percentage',
     'platform': 'aquacell',
     'previous_unique_id': None,
-    'suggested_object_id': 'AquaCell name Salt left side percentage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salt_left_side_percentage',
     'unique_id': 'DSN-salt_left_side_percentage',
@@ -106,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AquaCell name Salt left side time remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -129,7 +132,7 @@
     'original_name': 'Salt left side time remaining',
     'platform': 'aquacell',
     'previous_unique_id': None,
-    'suggested_object_id': 'AquaCell name Salt left side time remaining',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salt_left_side_time_remaining',
     'unique_id': 'DSN-salt_left_side_time_remaining',
@@ -156,6 +159,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AquaCell name Salt right side percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -181,7 +185,7 @@
     'original_name': 'Salt right side percentage',
     'platform': 'aquacell',
     'previous_unique_id': None,
-    'suggested_object_id': 'AquaCell name Salt right side percentage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salt_right_side_percentage',
     'unique_id': 'DSN-salt_right_side_percentage',
@@ -208,6 +212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AquaCell name Salt right side time remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -231,7 +236,7 @@
     'original_name': 'Salt right side time remaining',
     'platform': 'aquacell',
     'previous_unique_id': None,
-    'suggested_object_id': 'AquaCell name Salt right side time remaining',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salt_right_side_time_remaining',
     'unique_id': 'DSN-salt_right_side_time_remaining',
@@ -258,6 +263,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AquaCell name Wi-Fi strength',
     'capabilities': dict({
       'options': list([
         'high',
@@ -287,7 +293,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'aquacell',
     'previous_unique_id': None,
-    'suggested_object_id': 'AquaCell name Wi-Fi strength',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wi_fi_strength',
     'unique_id': 'DSN-wi_fi_strength',

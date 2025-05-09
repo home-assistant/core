@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Currency',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -27,7 +28,7 @@
     'original_name': 'Currency',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Currency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'currency',
     'unique_id': 'SE3-currency',
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Current price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -80,7 +82,7 @@
     'original_name': 'Current price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Current price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_price',
     'unique_id': 'SE3-current_price',
@@ -107,6 +109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Daily average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -135,7 +138,7 @@
     'original_name': 'Daily average',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Daily average',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_average',
     'unique_id': 'SE3-daily_average',
@@ -162,6 +165,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Exchange rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -187,7 +191,7 @@
     'original_name': 'Exchange rate',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Exchange rate',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'exchange_rate',
     'unique_id': 'SE3-exchange_rate',
@@ -213,6 +217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Highest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -239,7 +244,7 @@
     'original_name': 'Highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Highest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'highest_price',
     'unique_id': 'SE3-highest_price',
@@ -267,6 +272,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Last updated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -290,7 +296,7 @@
     'original_name': 'Last updated',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Last updated',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'updated_at',
     'unique_id': 'SE3-updated_at',
@@ -316,6 +322,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Lowest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -342,7 +349,7 @@
     'original_name': 'Lowest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Lowest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lowest_price',
     'unique_id': 'SE3-lowest_price',
@@ -370,6 +377,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Next price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -396,7 +404,7 @@
     'original_name': 'Next price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Next price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_price',
     'unique_id': 'SE3-next_price',
@@ -422,6 +430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Off-peak 1 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -450,7 +459,7 @@
     'original_name': 'Off-peak 1 average',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Off-peak 1 average',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_average',
     'unique_id': 'off_peak_1-SE3-block_average',
@@ -477,6 +486,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Off-peak 1 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -505,7 +515,7 @@
     'original_name': 'Off-peak 1 highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Off-peak 1 highest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_max',
     'unique_id': 'off_peak_1-SE3-block_max',
@@ -532,6 +542,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Off-peak 1 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -560,7 +571,7 @@
     'original_name': 'Off-peak 1 lowest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Off-peak 1 lowest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_min',
     'unique_id': 'off_peak_1-SE3-block_min',
@@ -587,6 +598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Off-peak 1 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -610,7 +622,7 @@
     'original_name': 'Off-peak 1 time from',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Off-peak 1 time from',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_start_time',
     'unique_id': 'off_peak_1-SE3-block_start_time',
@@ -636,6 +648,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Off-peak 1 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -659,7 +672,7 @@
     'original_name': 'Off-peak 1 time until',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Off-peak 1 time until',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_end_time',
     'unique_id': 'off_peak_1-SE3-block_end_time',
@@ -685,6 +698,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Off-peak 2 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -713,7 +727,7 @@
     'original_name': 'Off-peak 2 average',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Off-peak 2 average',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_average',
     'unique_id': 'off_peak_2-SE3-block_average',
@@ -740,6 +754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Off-peak 2 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -768,7 +783,7 @@
     'original_name': 'Off-peak 2 highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Off-peak 2 highest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_max',
     'unique_id': 'off_peak_2-SE3-block_max',
@@ -795,6 +810,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Off-peak 2 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -823,7 +839,7 @@
     'original_name': 'Off-peak 2 lowest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Off-peak 2 lowest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_min',
     'unique_id': 'off_peak_2-SE3-block_min',
@@ -850,6 +866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Off-peak 2 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -873,7 +890,7 @@
     'original_name': 'Off-peak 2 time from',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Off-peak 2 time from',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_start_time',
     'unique_id': 'off_peak_2-SE3-block_start_time',
@@ -899,6 +916,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Off-peak 2 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -922,7 +940,7 @@
     'original_name': 'Off-peak 2 time until',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Off-peak 2 time until',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_end_time',
     'unique_id': 'off_peak_2-SE3-block_end_time',
@@ -948,6 +966,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Peak average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -976,7 +995,7 @@
     'original_name': 'Peak average',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Peak average',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_average',
     'unique_id': 'peak-SE3-block_average',
@@ -1003,6 +1022,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Peak highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1031,7 +1051,7 @@
     'original_name': 'Peak highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Peak highest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_max',
     'unique_id': 'peak-SE3-block_max',
@@ -1058,6 +1078,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Peak lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1086,7 +1107,7 @@
     'original_name': 'Peak lowest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Peak lowest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_min',
     'unique_id': 'peak-SE3-block_min',
@@ -1113,6 +1134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Peak time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1136,7 +1158,7 @@
     'original_name': 'Peak time from',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Peak time from',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_start_time',
     'unique_id': 'peak-SE3-block_start_time',
@@ -1162,6 +1184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Peak time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1185,7 +1208,7 @@
     'original_name': 'Peak time until',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Peak time until',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_end_time',
     'unique_id': 'peak-SE3-block_end_time',
@@ -1211,6 +1234,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE3 Previous price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1237,7 +1261,7 @@
     'original_name': 'Previous price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE3 Previous price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_price',
     'unique_id': 'SE3-last_price',
@@ -1263,6 +1287,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Currency',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1286,7 +1311,7 @@
     'original_name': 'Currency',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Currency',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'currency',
     'unique_id': 'SE4-currency',
@@ -1311,6 +1336,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Current price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1339,7 +1365,7 @@
     'original_name': 'Current price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Current price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_price',
     'unique_id': 'SE4-current_price',
@@ -1366,6 +1392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Daily average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1394,7 +1421,7 @@
     'original_name': 'Daily average',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Daily average',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_average',
     'unique_id': 'SE4-daily_average',
@@ -1421,6 +1448,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Exchange rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1446,7 +1474,7 @@
     'original_name': 'Exchange rate',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Exchange rate',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'exchange_rate',
     'unique_id': 'SE4-exchange_rate',
@@ -1472,6 +1500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Highest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1498,7 +1527,7 @@
     'original_name': 'Highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Highest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'highest_price',
     'unique_id': 'SE4-highest_price',
@@ -1526,6 +1555,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Last updated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1549,7 +1579,7 @@
     'original_name': 'Last updated',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Last updated',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'updated_at',
     'unique_id': 'SE4-updated_at',
@@ -1575,6 +1605,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Lowest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1601,7 +1632,7 @@
     'original_name': 'Lowest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Lowest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lowest_price',
     'unique_id': 'SE4-lowest_price',
@@ -1629,6 +1660,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Next price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1655,7 +1687,7 @@
     'original_name': 'Next price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Next price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_price',
     'unique_id': 'SE4-next_price',
@@ -1681,6 +1713,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Off-peak 1 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1709,7 +1742,7 @@
     'original_name': 'Off-peak 1 average',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Off-peak 1 average',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_average',
     'unique_id': 'off_peak_1-SE4-block_average',
@@ -1736,6 +1769,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Off-peak 1 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1764,7 +1798,7 @@
     'original_name': 'Off-peak 1 highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Off-peak 1 highest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_max',
     'unique_id': 'off_peak_1-SE4-block_max',
@@ -1791,6 +1825,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Off-peak 1 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1819,7 +1854,7 @@
     'original_name': 'Off-peak 1 lowest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Off-peak 1 lowest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_min',
     'unique_id': 'off_peak_1-SE4-block_min',
@@ -1846,6 +1881,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Off-peak 1 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1869,7 +1905,7 @@
     'original_name': 'Off-peak 1 time from',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Off-peak 1 time from',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_start_time',
     'unique_id': 'off_peak_1-SE4-block_start_time',
@@ -1895,6 +1931,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Off-peak 1 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1918,7 +1955,7 @@
     'original_name': 'Off-peak 1 time until',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Off-peak 1 time until',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_end_time',
     'unique_id': 'off_peak_1-SE4-block_end_time',
@@ -1944,6 +1981,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Off-peak 2 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1972,7 +2010,7 @@
     'original_name': 'Off-peak 2 average',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Off-peak 2 average',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_average',
     'unique_id': 'off_peak_2-SE4-block_average',
@@ -1999,6 +2037,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Off-peak 2 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2027,7 +2066,7 @@
     'original_name': 'Off-peak 2 highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Off-peak 2 highest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_max',
     'unique_id': 'off_peak_2-SE4-block_max',
@@ -2054,6 +2093,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Off-peak 2 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2082,7 +2122,7 @@
     'original_name': 'Off-peak 2 lowest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Off-peak 2 lowest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_min',
     'unique_id': 'off_peak_2-SE4-block_min',
@@ -2109,6 +2149,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Off-peak 2 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2132,7 +2173,7 @@
     'original_name': 'Off-peak 2 time from',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Off-peak 2 time from',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_start_time',
     'unique_id': 'off_peak_2-SE4-block_start_time',
@@ -2158,6 +2199,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Off-peak 2 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2181,7 +2223,7 @@
     'original_name': 'Off-peak 2 time until',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Off-peak 2 time until',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_end_time',
     'unique_id': 'off_peak_2-SE4-block_end_time',
@@ -2207,6 +2249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Peak average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2235,7 +2278,7 @@
     'original_name': 'Peak average',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Peak average',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_average',
     'unique_id': 'peak-SE4-block_average',
@@ -2262,6 +2305,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Peak highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2290,7 +2334,7 @@
     'original_name': 'Peak highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Peak highest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_max',
     'unique_id': 'peak-SE4-block_max',
@@ -2317,6 +2361,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Peak lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2345,7 +2390,7 @@
     'original_name': 'Peak lowest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Peak lowest price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_min',
     'unique_id': 'peak-SE4-block_min',
@@ -2372,6 +2417,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Peak time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2395,7 +2441,7 @@
     'original_name': 'Peak time from',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Peak time from',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_start_time',
     'unique_id': 'peak-SE4-block_start_time',
@@ -2421,6 +2467,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Peak time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2444,7 +2491,7 @@
     'original_name': 'Peak time until',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Peak time until',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_end_time',
     'unique_id': 'peak-SE4-block_end_time',
@@ -2470,6 +2517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nord Pool SE4 Previous price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2496,7 +2544,7 @@
     'original_name': 'Previous price',
     'platform': 'nordpool',
     'previous_unique_id': None,
-    'suggested_object_id': 'Nord Pool SE4 Previous price',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_price',
     'unique_id': 'SE4-last_price',

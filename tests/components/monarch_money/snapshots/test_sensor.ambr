@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cashflow Expense year to date',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -29,7 +30,7 @@
     'original_name': 'Expense year to date',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Cashflow Expense year to date',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_expense',
     'unique_id': '222260252323873333_cashflow_sum_expense',
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cashflow Income year to date',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -82,7 +84,7 @@
     'original_name': 'Income year to date',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Cashflow Income year to date',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_income',
     'unique_id': '222260252323873333_cashflow_sum_income',
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cashflow Savings rate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -136,7 +139,7 @@
     'original_name': 'Savings rate',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Cashflow Savings rate',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'savings_rate',
     'unique_id': '222260252323873333_cashflow_savings_rate',
@@ -162,6 +165,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cashflow Savings year to date',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -187,7 +191,7 @@
     'original_name': 'Savings year to date',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Cashflow Savings year to date',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'savings',
     'unique_id': '222260252323873333_cashflow_savings',
@@ -215,6 +219,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Manual entry Wallet Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -240,7 +245,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Manual entry Wallet Balance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_186321412999033223_balance',
@@ -269,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Manual entry Wallet Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -292,7 +298,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Manual entry Wallet Data age',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_186321412999033223_age',
@@ -319,6 +325,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Bank Checking Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -344,7 +351,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Bank Checking Balance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_900000002_balance',
@@ -374,6 +381,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Bank Checking Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -397,7 +405,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Bank Checking Data age',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_900000002_age',
@@ -424,6 +432,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Brokerage Brokerage Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -449,7 +458,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Brokerage Brokerage Balance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_900000000_balance',
@@ -479,6 +488,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Brokerage Brokerage Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -502,7 +512,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Brokerage Brokerage Data age',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_900000000_age',
@@ -529,6 +539,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Credit Credit Card Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -554,7 +565,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Credit Credit Card Balance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_9000000007_balance',
@@ -584,6 +595,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Credit Credit Card Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -607,7 +619,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Credit Credit Card Data age',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_9000000007_age',
@@ -634,6 +646,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Employer Investments 401.k Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -659,7 +672,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Employer Investments 401.k Balance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_90000000022_balance',
@@ -689,6 +702,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Employer Investments 401.k Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -712,7 +726,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Employer Investments 401.k Data age',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_90000000022_age',
@@ -739,6 +753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Investments Roth IRA Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -764,7 +779,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Investments Roth IRA Balance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_900000000012_balance',
@@ -794,6 +809,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Investments Roth IRA Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -817,7 +833,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Investments Roth IRA Data age',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_900000000012_age',
@@ -844,6 +860,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Mortgage Mortgage Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -869,7 +886,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Mortgage Mortgage Balance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_90000000030_balance',
@@ -899,6 +916,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rando Mortgage Mortgage Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -922,7 +940,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Rando Mortgage Mortgage Data age',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_90000000030_age',
@@ -949,6 +967,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VinAudit 2050 Toyota RAV8 Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -972,7 +991,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'VinAudit 2050 Toyota RAV8 Data age',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_121212192626186051_age',
@@ -999,6 +1018,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VinAudit 2050 Toyota RAV8 Value',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1024,7 +1044,7 @@
     'original_name': 'Value',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'VinAudit 2050 Toyota RAV8 Value',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'value',
     'unique_id': '222260252323873333_121212192626186051_value',
@@ -1054,6 +1074,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zillow House Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1079,7 +1100,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Zillow House Balance',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_90000000020_balance',
@@ -1109,6 +1130,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zillow House Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1132,7 +1154,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
-    'suggested_object_id': 'Zillow House Data age',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_90000000020_age',
