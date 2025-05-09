@@ -34,12 +34,6 @@ from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.core import HomeAssistant, callback
-# If you have settings or constants for your function URL:
-from homeassistant import msh_utils
-
 if TYPE_CHECKING:
     from . import OnboardingData, OnboardingStorage, OnboardingStoreData
 
