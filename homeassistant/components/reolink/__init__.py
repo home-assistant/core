@@ -386,9 +386,7 @@ def migrate_entity_ids(
         if host_connnection in device.connections:
             new_connections = device.connections.copy()
             new_connections.remove(host_connnection)
-            device_reg.async_update_device(
-                device.id, new_connections=new_connections
-            )
+            device_reg.async_update_device(device.id, new_connections=new_connections)
 
         ch_device_ids[device.id] = ch
         if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(ch):
