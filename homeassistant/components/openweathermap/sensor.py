@@ -174,7 +174,7 @@ async def async_setup_entry(
         async_add_entities(
             OpenWeatherMapSensor(
                 name,
-                f"{config_entry.unique_id}-{description.key}",
+                f"{config_entry.unique_id}",
                 description,
                 weather_coordinator,
             )
@@ -200,11 +200,10 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         self._coordinator = coordinator
 
         self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = unique_id
-        split_unique_id = unique_id.split("-")
+        self._attr_unique_id = f"{unique_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
+            identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
         )
