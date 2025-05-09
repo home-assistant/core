@@ -32,6 +32,9 @@ from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 def _uptime_calculation(seconds_uptime: float, last_value: datetime | None) -> datetime:
     """Calculate uptime with deviation."""
@@ -193,7 +196,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="max_kb_s_sent",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -201,7 +203,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="max_kb_s_received",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
@@ -225,6 +226,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="link_kb_s_sent",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_link_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -232,12 +234,15 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="link_kb_s_received",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_link_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="link_noise_margin_sent",
         translation_key="link_noise_margin_sent",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_noise_margin_sent_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -245,6 +250,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_noise_margin_received",
         translation_key="link_noise_margin_received",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_noise_margin_received_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -252,6 +259,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_attenuation_sent",
         translation_key="link_attenuation_sent",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_attenuation_sent_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -259,6 +268,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_attenuation_received",
         translation_key="link_attenuation_received",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_attenuation_received_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),

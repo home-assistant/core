@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/ecovacs",
   "iot_class": "cloud_push",
   "loggers": ["sleekxmppfs", "sucks", "deebot_client"],
-  "requirements": ["py-sucks==0.9.10", "deebot-client==12.2.0"]
+  "requirements": ["py-sucks==0.9.10", "deebot-client==13.1.0"]
 }

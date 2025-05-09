@@ -95,19 +95,6 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle manual initiation of the config flow."""
         return await self.async_step_init(user_input)
 
-    # Deprecated import from configuration.yaml, can be removed in 2025.4.0
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import an OpenTherm Gateway device as a config entry.
-
-        This flow is triggered by `async_setup` for configured devices.
-        """
-        formatted_config = {
-            CONF_NAME: import_data.get(CONF_NAME, import_data[CONF_ID]),
-            CONF_DEVICE: import_data[CONF_DEVICE],
-            CONF_ID: import_data[CONF_ID],
-        }
-        return await self.async_step_init(info=formatted_config)
-
     def _show_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
         """Show the config flow form with possible errors."""
         return self.async_show_form(

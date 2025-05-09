@@ -773,6 +773,7 @@ async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
         await hass.async_add_executor_job(schema, value)
 
 
+@pytest.mark.usefixtures("hass")
 def test_template_complex() -> None:
     """Test template_complex validator."""
     schema = vol.Schema(cv.template_complex)
@@ -1414,6 +1415,7 @@ def test_key_value_schemas() -> None:
         schema({"mode": mode, "data": data})
 
 
+@pytest.mark.usefixtures("hass")
 def test_key_value_schemas_with_default() -> None:
     """Test key value schemas."""
     schema = vol.Schema(
@@ -1492,6 +1494,7 @@ def test_key_value_schemas_with_default() -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("hass")
 def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> None:
     """Test script validation is user friendly."""
     with pytest.raises(vol.Invalid, match=error):
@@ -1570,6 +1573,7 @@ def test_language() -> None:
         assert schema(value)
 
 
+@pytest.mark.usefixtures("hass")
 def test_positive_time_period_template() -> None:
     """Test positive time period template validation."""
     schema = vol.Schema(cv.positive_time_period_template)
@@ -1949,3 +1953,30 @@ async def test_is_entity_service_schema(
         vol.All(vol.Schema(cv.make_entity_service_schema({"some": str}))),
     ):
         assert cv.is_entity_service_schema(schema) is True
+
+
+def test_renamed(caplog: pytest.LogCaptureFixture, schema) -> None:
+    """Test renamed."""
+    renamed_schema = vol.All(cv.renamed("mors", "mars"), schema)
+
+    test_data = {"mars": True}
+    output = renamed_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert output == test_data
+
+    test_data = {"mors": True}
+    output = renamed_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert output == {"mars": True}
+
+    test_data = {"mars": True, "mors": True}
+    with pytest.raises(
+        vol.Invalid,
+        match="Cannot specify both 'mors' and 'mars'. Please use 'mars' only.",
+    ):
+        renamed_schema(test_data.copy())
+    assert len(caplog.records) == 0
+
+    # Check error handling if data is not a dict
+    with pytest.raises(vol.Invalid, match="expected a dictionary"):
+        renamed_schema([])

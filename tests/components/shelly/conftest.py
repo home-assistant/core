@@ -1,5 +1,7 @@
 """Test configuration for Shelly."""
 
+from collections.abc import Generator
+from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from aioshelly.ble.const import (
@@ -13,6 +15,7 @@ from aioshelly.ble.const import (
 )
 from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.const import MODEL_1, MODEL_25, MODEL_PLUS_2PM
+from aioshelly.exceptions import NotInitialized
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 import pytest
 
@@ -99,12 +102,15 @@ MOCK_BLOCKS = [
             "overpower": 0,
             "power": 53.4,
             "energy": 1234567.89,
+            "output": True,
+            "totalWorkTime": 3600,
         },
         channel="0",
         type="relay",
         overpower=0,
         power=53.4,
         energy=1234567.89,
+        totalWorkTime=3600,
         description="relay_0",
         set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     ),
@@ -131,11 +137,20 @@ MOCK_BLOCKS = [
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
-        sensor_ids={"motion": 0, "temp": 22.1, "gas": "mild", "motionActive": 1},
+        sensor_ids={
+            "motion": 0,
+            "temp": 22.1,
+            "gas": "mild",
+            "motionActive": 1,
+            "sensorOp": "normal",
+            "selfTest": "pending",
+        },
         channel="0",
         motion=0,
         temp=22.1,
         gas="mild",
+        sensorOp="normal",
+        selfTest="pending",
         targetTemp=4,
         description="sensor_0",
         type="sensor",
@@ -205,7 +220,7 @@ MOCK_CONFIG = {
     },
     "sys": {
         "ui_data": {},
-        "device": {"name": "Test name"},
+        "device": {"name": "Test name", "mac": MOCK_MAC},
     },
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
     "ws": {"enable": False, "server": None},
@@ -310,7 +325,11 @@ MOCK_STATUS_COAP = {
 
 
 MOCK_STATUS_RPC = {
-    "switch:0": {"output": True},
+    "switch:0": {
+        "id": 0,
+        "output": True,
+        "apower": 85.3,
+    },
     "input:0": {"id": 0, "state": None},
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
     "input:2": {
@@ -474,9 +493,13 @@ def _mock_rpc_device(version: str | None = None):
         initialized=True,
         connected=True,
         script_getcode=AsyncMock(
-            side_effect=lambda script_id: {"data": MOCK_SCRIPTS[script_id - 1]}
+            side_effect=lambda script_id, bytes_to_read: {
+                "data": MOCK_SCRIPTS[script_id - 1]
+            }
         ),
         xmod_info={},
+        zigbee_enabled=False,
+        ip_address="10.10.10.10",
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -495,6 +518,12 @@ def _mock_blu_rtv_device(version: str | None = None):
         firmware_version="some fw string",
         initialized=True,
         connected=True,
+        script_getcode=AsyncMock(
+            side_effect=lambda script_id, bytes_to_read: {
+                "data": MOCK_SCRIPTS[script_id - 1]
+            }
+        ),
+        xmod_info={},
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -568,3 +597,117 @@ async def mock_blu_trv():
         blu_trv_device_mock.return_value.mock_update = Mock(side_effect=update)
 
         yield blu_trv_device_mock.return_value
+
+
+def _mock_sleepy_not_initialized_rpc_device():
+    """Mock sleepy NotInitialized rpc (Gen2+, Websocket) device."""
+    device = Mock(spec=RpcDevice, initialized=False, connected=False)
+    type(device).requires_auth = PropertyMock(side_effect=NotInitialized)
+    type(device).status = PropertyMock(side_effect=NotInitialized)
+    type(device).event = PropertyMock(side_effect=NotInitialized)
+    type(device).config = PropertyMock(side_effect=NotInitialized)
+    type(device).shelly = PropertyMock(side_effect=NotInitialized)
+    type(device).gen = PropertyMock(side_effect=NotInitialized)
+    type(device).firmware_version = PropertyMock(side_effect=NotInitialized)
+    type(device).version = PropertyMock(side_effect=NotInitialized)
+    type(device).model = PropertyMock(side_effect=NotInitialized)
+    type(device).xmod_info = PropertyMock(side_effect=NotInitialized)
+    type(device).hostname = PropertyMock(side_effect=NotInitialized)
+    type(device).name = PropertyMock(side_effect=NotInitialized)
+    type(device).firmware_supported = PropertyMock(side_effect=NotInitialized)
+    return device
+
+
+def initialize_sleepy_rpc_device(device):
+    """Initialize a sleepy RPC (Gen2+, Websocket) device."""
+    status = deepcopy(MOCK_STATUS_RPC)
+    status["sys"]["wakeup_period"] = 1000
+
+    type(device).requires_auth = PropertyMock(return_value=False)
+    type(device).status = PropertyMock(return_value=status)
+    type(device).event = PropertyMock(return_value={})
+    type(device).config = PropertyMock(return_value=MOCK_CONFIG)
+    type(device).shelly = PropertyMock(return_value=MOCK_SHELLY_RPC)
+    type(device).gen = PropertyMock(return_value=2)
+    type(device).firmware_version = PropertyMock(
+        return_value="20240425-141520/1.3.0-ga3fdd3d"
+    )
+    type(device).version = PropertyMock(return_value="1.3.0")
+    type(device).model = PropertyMock(return_value="SPSW-201PE16EU")
+    type(device).xmod_info = PropertyMock(return_value={})
+    type(device).hostname = PropertyMock(return_value="hostname")
+    type(device).name = PropertyMock(return_value="Test Name")
+    type(device).firmware_supported = PropertyMock(return_value=True)
+
+    device.connected = True
+    device.initialized = True
+
+
+@pytest.fixture
+async def mock_sleepy_rpc_device():
+    """Mock sleepy RPC (Gen2+, Websocket) device.
+
+    Mock a RPC device that is not initialized and raises NotInitialized
+    when aioshelly properties are accessed.
+
+    Initialize the device when initialize() method is called.
+    """
+    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock:
+
+        def update():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.STATUS
+            )
+
+        def event():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.EVENT
+            )
+
+        def online():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.ONLINE
+            )
+
+        def disconnected():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.DISCONNECTED
+            )
+
+        def initialized():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.INITIALIZED
+            )
+
+        def _initialize():
+            initialize_sleepy_rpc_device(device)
+
+        device = _mock_sleepy_not_initialized_rpc_device()
+        device.initialize = AsyncMock(side_effect=_initialize)
+        rpc_device_mock.return_value = device
+
+        rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
+        rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
+        rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
+        rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
+        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
+
+        yield rpc_device_mock.return_value
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.shelly.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_setup() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.shelly.async_setup", return_value=True
+    ) as mock_setup:
+        yield mock_setup

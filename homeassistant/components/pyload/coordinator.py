@@ -31,6 +31,7 @@ class PyLoadData:
     download: bool
     reconnect: bool
     captcha: bool | None = None
+    proxy: bool | None = None
     free_space: int
 
 
@@ -78,10 +79,14 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
             return self.data
         except CannotConnect as e:
             raise UpdateFailed(
-                "Unable to connect and retrieve data from pyLoad API"
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
             ) from e
         except ParserError as e:
-            raise UpdateFailed("Unable to parse data from pyLoad API") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_parse_exception",
+            ) from e
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""

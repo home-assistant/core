@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import lawn_mower
 from homeassistant.components.lawn_mower import (
+    ENTITY_ID_FORMAT,
     LawnMowerActivity,
     LawnMowerEntity,
     LawnMowerEntityFeature,
@@ -50,7 +51,6 @@ CONF_START_MOWING_COMMAND_TOPIC = "start_mowing_command_topic"
 CONF_START_MOWING_COMMAND_TEMPLATE = "start_mowing_command_template"
 
 DEFAULT_NAME = "MQTT Lawn Mower"
-ENTITY_ID_FORMAT = lawn_mower.DOMAIN + ".{}"
 
 MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED: frozenset[str] = frozenset()
 
