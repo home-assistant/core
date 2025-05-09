@@ -105,6 +105,7 @@ async def integration_fixture(
         "onoff_light_alt_name",
         "onoff_light_no_name",
         "onoff_light_with_levelcontrol_present",
+        "pump",
         "pressure_sensor",
         "room_airconditioner",
         "silabs_dishwasher",
