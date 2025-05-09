@@ -84,6 +84,9 @@ def async_get_entity_suggested_object_id(
     if entity_entry.suggested_object_id:
         return entity_entry.suggested_object_id
 
+    if entity_entry.name:
+        return entity_entry.name
+
     entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
     entity_obj = entity_comp.get_entity(entity_id) if entity_comp else None
     if entity_obj:
@@ -92,7 +95,7 @@ def async_get_entity_suggested_object_id(
             device = dr.async_get(hass).async_get(device_id)
         return async_calculate_suggested_object_id(entity_obj, device)
 
-    return entity_entry.suggested_object_id
+    return entity_entry.calculated_object_id
 
 
 class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
