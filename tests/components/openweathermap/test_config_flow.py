@@ -1,6 +1,6 @@
 """Define tests for the OpenWeatherMap config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from pyopenweathermap import RequestError
 import pytest
@@ -37,15 +37,6 @@ CONFIG = {
 }
 
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
-
-
-@pytest.fixture(name="config_flow_owm_client_mock")
-def mock_config_flow_owm_client():
-    """Mock config_flow OWMClient."""
-    with patch(
-        "homeassistant.components.openweathermap.utils.create_owm_client",
-    ) as mock:
-        yield mock
 
 
 async def test_successful_config_flow(
