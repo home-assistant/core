@@ -79,7 +79,11 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
                 )
             )
             return
-        if not (service_info := async_last_service_info(self.hass, self.address)):
+        _LOGGER.debug("Checking for last service info of address %s", self.address)
+        if not (
+            service_info := async_last_service_info(self.hass, self.address, False)
+        ):
+            _LOGGER.debug("No last service info found for address %s", self.address)
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="no_advertisement",
