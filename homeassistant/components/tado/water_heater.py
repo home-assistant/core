@@ -12,8 +12,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from . import TadoConfigEntry
@@ -26,13 +25,12 @@ from .const import (
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TIMER,
-    SIGNAL_TADO_UPDATE_RECEIVED,
     TYPE_HOT_WATER,
 )
+from .coordinator import TadoDataUpdateCoordinator
 from .entity import TadoZoneEntity
 from .helper import decide_duration, decide_overlay_mode
 from .repairs import manage_water_heater_fallback_issue
-from .tado_connector import TadoConnector
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,12 +61,15 @@ WATER_HEATER_TIMER_SCHEMA: VolDictType = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TadoConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TadoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tado water heater platform."""
 
-    tado = entry.runtime_data
-    entities = await hass.async_add_executor_job(_generate_entities, tado)
+    data = entry.runtime_data
+    coordinator = data.coordinator
+    entities = await _generate_entities(coordinator)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -83,27 +84,29 @@ async def async_setup_entry(
     manage_water_heater_fallback_issue(
         hass=hass,
         water_heater_names=[e.zone_name for e in entities],
-        integration_overlay_fallback=tado.fallback,
+        integration_overlay_fallback=coordinator.fallback,
     )
 
 
-def _generate_entities(tado: TadoConnector) -> list:
+async def _generate_entities(coordinator: TadoDataUpdateCoordinator) -> list:
     """Create all water heater entities."""
     entities = []
 
-    for zone in tado.zones:
+    for zone in coordinator.zones:
         if zone["type"] == TYPE_HOT_WATER:
-            entity = create_water_heater_entity(
-                tado, zone["name"], zone["id"], str(zone["name"])
+            entity = await create_water_heater_entity(
+                coordinator, zone["name"], zone["id"], str(zone["name"])
             )
             entities.append(entity)
 
     return entities
 
 
-def create_water_heater_entity(tado: TadoConnector, name: str, zone_id: int, zone: str):
+async def create_water_heater_entity(
+    coordinator: TadoDataUpdateCoordinator, name: str, zone_id: int, zone: str
+):
     """Create a Tado water heater device."""
-    capabilities = tado.get_capabilities(zone_id)
+    capabilities = await coordinator.get_capabilities(zone_id)
 
     supports_temperature_control = capabilities["canSetTemperature"]
 
@@ -116,7 +119,7 @@ def create_water_heater_entity(tado: TadoConnector, name: str, zone_id: int, zon
         max_temp = None
 
     return TadoWaterHeater(
-        tado,
+        coordinator,
         name,
         zone_id,
         supports_temperature_control,
@@ -134,7 +137,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
 
     def __init__(
         self,
-        tado: TadoConnector,
+        coordinator: TadoDataUpdateCoordinator,
         zone_name: str,
         zone_id: int,
         supports_temperature_control: bool,
@@ -142,11 +145,10 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         max_temp,
     ) -> None:
         """Initialize of Tado water heater entity."""
-        self._tado = tado
-        super().__init__(zone_name, tado.home_id, zone_id)
+        super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
 
         self.zone_id = zone_id
-        self._attr_unique_id = f"{zone_id} {tado.home_id}"
+        self._attr_unique_id = f"{zone_id} {coordinator.home_id}"
 
         self._device_is_active = False
 
@@ -164,18 +166,13 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
         self._tado_zone_data: Any = None
 
-    async def async_added_to_hass(self) -> None:
-        """Register for sensor updates."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.home_id, "zone", self.zone_id
-                ),
-                self._async_update_callback,
-            )
-        )
         self._async_update_data()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_data()
+        super()._handle_coordinator_update()
 
     @property
     def current_operation(self) -> str | None:
@@ -202,7 +199,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         """Return the maximum temperature."""
         return self._max_temperature
 
-    def set_operation_mode(self, operation_mode: str) -> None:
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         mode = None
 
@@ -213,18 +210,20 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         elif operation_mode == MODE_HEAT:
             mode = CONST_MODE_HEAT
 
-        self._control_heater(hvac_mode=mode)
+        await self._control_heater(hvac_mode=mode)
+        await self.coordinator.async_request_refresh()
 
-    def set_timer(self, time_period: int, temperature: float | None = None):
+    async def set_timer(self, time_period: int, temperature: float | None = None):
         """Set the timer on the entity, and temperature if supported."""
         if not self._supports_temperature_control and temperature is not None:
             temperature = None
 
-        self._control_heater(
+        await self._control_heater(
             hvac_mode=CONST_MODE_HEAT, target_temp=temperature, duration=time_period
         )
+        await self.coordinator.async_request_refresh()
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if not self._supports_temperature_control or temperature is None:
@@ -235,10 +234,11 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             CONST_MODE_AUTO,
             CONST_MODE_SMART_SCHEDULE,
         ):
-            self._control_heater(target_temp=temperature)
+            await self._control_heater(target_temp=temperature)
             return
 
-        self._control_heater(target_temp=temperature, hvac_mode=CONST_MODE_HEAT)
+        await self._control_heater(target_temp=temperature, hvac_mode=CONST_MODE_HEAT)
+        await self.coordinator.async_request_refresh()
 
     @callback
     def _async_update_callback(self) -> None:
@@ -250,10 +250,10 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     def _async_update_data(self) -> None:
         """Load tado data."""
         _LOGGER.debug("Updating water_heater platform for zone %d", self.zone_id)
-        self._tado_zone_data = self._tado.data["zone"][self.zone_id]
+        self._tado_zone_data = self.coordinator.data["zone"][self.zone_id]
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
 
-    def _control_heater(
+    async def _control_heater(
         self,
         hvac_mode: str | None = None,
         target_temp: float | None = None,
@@ -276,23 +276,26 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
                 self.zone_name,
                 self.zone_id,
             )
-            self._tado.reset_zone_overlay(self.zone_id)
+            await self.coordinator.reset_zone_overlay(self.zone_id)
+            await self.coordinator.async_request_refresh()
             return
 
         if self._current_tado_hvac_mode == CONST_MODE_OFF:
             _LOGGER.debug(
                 "Switching to OFF for zone %s (%d)", self.zone_name, self.zone_id
             )
-            self._tado.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL, TYPE_HOT_WATER)
+            await self.coordinator.set_zone_off(
+                self.zone_id, CONST_OVERLAY_MANUAL, TYPE_HOT_WATER
+            )
             return
 
         overlay_mode = decide_overlay_mode(
-            tado=self._tado,
+            coordinator=self.coordinator,
             duration=duration,
             zone_id=self.zone_id,
         )
         duration = decide_duration(
-            tado=self._tado,
+            coordinator=self.coordinator,
             duration=duration,
             zone_id=self.zone_id,
             overlay_mode=overlay_mode,
@@ -304,7 +307,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             self.zone_id,
             self._target_temp,
         )
-        self._tado.set_zone_overlay(
+        await self.coordinator.set_zone_overlay(
             zone_id=self.zone_id,
             overlay_mode=overlay_mode,
             temperature=self._target_temp,

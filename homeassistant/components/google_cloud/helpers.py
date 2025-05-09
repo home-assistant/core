@@ -12,7 +12,7 @@ from google.oauth2.service_account import Credentials
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,

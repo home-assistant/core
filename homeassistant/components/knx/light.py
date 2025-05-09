@@ -22,11 +22,11 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from . import KNXModule
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, ColorTempModes
@@ -61,7 +61,7 @@ from .storage.entity_store_schema import LightColorMode
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up light(s) for KNX platform."""
     knx_module = hass.data[KNX_MODULE_KEY]

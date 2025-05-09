@@ -25,12 +25,12 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import unit_conversion
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, unit_conversion
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DOMAIN
@@ -52,6 +52,7 @@ VALID_ENERGY_UNITS_GAS = {
     UnitOfVolume.CENTUM_CUBIC_FEET,
     UnitOfVolume.CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS,
+    UnitOfVolume.LITERS,
     *VALID_ENERGY_UNITS,
 }
 VALID_VOLUME_UNITS_WATER: set[str] = {
@@ -121,6 +122,10 @@ SOURCE_ADAPTERS: Final = (
         "cost",
     ),
 )
+
+
+class EntityNotFoundError(HomeAssistantError):
+    """When a referenced entity was not found."""
 
 
 class SensorManager:
@@ -312,41 +317,23 @@ class EnergyCostSensor(SensorEntity):
         except ValueError:
             return
 
-        # Determine energy price
-        if self._config["entity_energy_price"] is not None:
-            energy_price_state = self.hass.states.get(
-                self._config["entity_energy_price"]
+        try:
+            energy_price, energy_price_unit = self._get_energy_price(
+                valid_units, default_price_unit
             )
-
-            if energy_price_state is None:
-                return
-
-            try:
-                energy_price = float(energy_price_state.state)
-            except ValueError:
-                if self._last_energy_sensor_state is None:
-                    # Initialize as it's the first time all required entities except
-                    # price are in place. This means that the cost will update the first
-                    # time the energy is updated after the price entity is in place.
-                    self._reset(energy_state)
-                return
-
-            energy_price_unit: str | None = energy_price_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT, ""
-            ).partition("/")[2]
-
-            # For backwards compatibility we don't validate the unit of the price
-            # If it is not valid, we assume it's our default price unit.
-            if energy_price_unit not in valid_units:
-                energy_price_unit = default_price_unit
-
-        else:
-            energy_price = cast(float, self._config["number_energy_price"])
-            energy_price_unit = default_price_unit
+        except EntityNotFoundError:
+            return
+        except ValueError:
+            energy_price = None
 
         if self._last_energy_sensor_state is None:
-            # Initialize as it's the first time all required entities are in place.
+            # Initialize as it's the first time all required entities are in place or
+            # only the price is missing. In the later case, cost will update the first
+            # time the energy is updated after the price entity is in place.
             self._reset(energy_state)
+            return
+
+        if energy_price is None:
             return
 
         energy_unit: str | None = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -384,26 +371,61 @@ class EnergyCostSensor(SensorEntity):
         old_energy_value = float(self._last_energy_sensor_state.state)
         cur_value = cast(float, self._attr_native_value)
 
-        if energy_price_unit is None:
-            converted_energy_price = energy_price
-        else:
-            converter: Callable[[float, str, str], float]
-            if energy_unit in VALID_ENERGY_UNITS:
-                converter = unit_conversion.EnergyConverter.convert
-            else:
-                converter = unit_conversion.VolumeConverter.convert
-
-            converted_energy_price = converter(
-                energy_price,
-                energy_unit,
-                energy_price_unit,
-            )
+        converted_energy_price = self._convert_energy_price(
+            energy_price, energy_price_unit, energy_unit
+        )
 
         self._attr_native_value = (
             cur_value + (energy - old_energy_value) * converted_energy_price
         )
 
         self._last_energy_sensor_state = energy_state
+
+    def _get_energy_price(
+        self, valid_units: set[str], default_unit: str | None
+    ) -> tuple[float, str | None]:
+        """Get the energy price.
+
+        Raises:
+            EntityNotFoundError: When the energy price entity is not found.
+            ValueError: When the entity state is not a valid float.
+
+        """
+
+        if self._config["entity_energy_price"] is None:
+            return cast(float, self._config["number_energy_price"]), default_unit
+
+        energy_price_state = self.hass.states.get(self._config["entity_energy_price"])
+        if energy_price_state is None:
+            raise EntityNotFoundError
+
+        energy_price = float(energy_price_state.state)
+
+        energy_price_unit: str | None = energy_price_state.attributes.get(
+            ATTR_UNIT_OF_MEASUREMENT, ""
+        ).partition("/")[2]
+
+        # For backwards compatibility we don't validate the unit of the price
+        # If it is not valid, we assume it's our default price unit.
+        if energy_price_unit not in valid_units:
+            energy_price_unit = default_unit
+
+        return energy_price, energy_price_unit
+
+    def _convert_energy_price(
+        self, energy_price: float, energy_price_unit: str | None, energy_unit: str
+    ) -> float:
+        """Convert the energy price to the correct unit."""
+        if energy_price_unit is None:
+            return energy_price
+
+        converter: Callable[[float, str, str], float]
+        if energy_unit in VALID_ENERGY_UNITS:
+            converter = unit_conversion.EnergyConverter.convert
+        else:
+            converter = unit_conversion.VolumeConverter.convert
+
+        return converter(energy_price, energy_unit, energy_price_unit)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

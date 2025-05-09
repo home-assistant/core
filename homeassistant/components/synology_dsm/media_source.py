@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from logging import getLogger
 import mimetypes
 
 from aiohttp import web
@@ -22,7 +23,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, SHARED_SUFFIX
-from .models import SynologyDSMData
+from .coordinator import SynologyDSMConfigEntry, SynologyDSMData
+
+LOGGER = getLogger(__name__)
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -41,14 +44,12 @@ class SynologyPhotosMediaSourceIdentifier:
         """Split identifier into parts."""
         parts = identifier.split("/")
 
-        self.unique_id = None
+        self.unique_id = parts[0]
         self.album_id = None
         self.cache_key = None
         self.file_name = None
         self.is_shared = False
         self.passphrase = ""
-
-        self.unique_id = parts[0]
 
         if len(parts) > 1:
             album_parts = parts[1].split("_")
@@ -82,7 +83,7 @@ class SynologyPhotosMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        if not self.hass.data.get(DOMAIN):
+        if not self.hass.config_entries.async_loaded_entries(DOMAIN):
             raise BrowseError("Diskstation not initialized")
         return BrowseMediaSource(
             domain=DOMAIN,
@@ -116,7 +117,13 @@ class SynologyPhotosMediaSource(MediaSource):
                 for entry in self.entries
             ]
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
-        diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier.unique_id]
+        entry: SynologyDSMConfigEntry | None = (
+            self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, identifier.unique_id
+            )
+        )
+        assert entry
+        diskstation = entry.runtime_data
         assert diskstation.api.photos is not None
 
         if identifier.album_id is None:
@@ -244,7 +251,7 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         self, request: web.Request, source_dir_id: str, location: str
     ) -> web.Response:
         """Start a GET request."""
-        if not self.hass.data.get(DOMAIN):
+        if not self.hass.config_entries.async_loaded_entries(DOMAIN):
             raise web.HTTPNotFound
         # location: {cache_key}/{filename}
         cache_key, file_name, passphrase = location.split("/")
@@ -257,7 +264,13 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         if not isinstance(mime_type, str):
             raise web.HTTPNotFound
 
-        diskstation: SynologyDSMData = self.hass.data[DOMAIN][source_dir_id]
+        entry: SynologyDSMConfigEntry | None = (
+            self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, source_dir_id
+            )
+        )
+        assert entry
+        diskstation = entry.runtime_data
         assert diskstation.api.photos is not None
         item = SynoPhotosItem(image_id, "", "", "", cache_key, "xl", shared, passphrase)
         try:

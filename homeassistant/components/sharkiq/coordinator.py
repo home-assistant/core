@@ -24,6 +24,8 @@ from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL
 class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
     """Define a wrapper class to update Shark IQ data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -36,10 +38,15 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
         self.shark_vacs: dict[str, SharkIqVacuum] = {
             sharkiq.serial_number: sharkiq for sharkiq in shark_vacs
         }
-        self._config_entry = config_entry
         self._online_dsns: set[str] = set()
 
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=UPDATE_INTERVAL,
+        )
 
     @property
     def online_dsns(self) -> set[str]:

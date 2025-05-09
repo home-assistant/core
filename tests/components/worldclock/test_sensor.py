@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.worldclock.const import CONF_TIME_FORMAT, DEFAULT_NAME
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 

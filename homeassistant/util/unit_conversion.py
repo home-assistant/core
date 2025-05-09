@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache
+from math import floor, log10
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
@@ -17,6 +18,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfEnergyDistance,
     UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
@@ -90,6 +92,7 @@ class BaseUnitConverter:
     VALID_UNITS: set[str | None]
 
     _UNIT_CONVERSION: dict[str | None, float]
+    _UNIT_INVERSES: set[str] = set()
 
     @classmethod
     def convert(cls, value: float, from_unit: str | None, to_unit: str | None) -> float:
@@ -105,6 +108,8 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        if cls._are_unit_inverses(from_unit, to_unit):
+            return lambda val: to_ratio / (val / from_ratio)
         return lambda val: (val / from_ratio) * to_ratio
 
     @classmethod
@@ -129,6 +134,8 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        if cls._are_unit_inverses(from_unit, to_unit):
+            return lambda val: None if val is None else to_ratio / (val / from_ratio)
         return lambda val: None if val is None else (val / from_ratio) * to_ratio
 
     @classmethod
@@ -137,6 +144,21 @@ class BaseUnitConverter:
         """Get unit ratio between units of measurement."""
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         return from_ratio / to_ratio
+
+    @classmethod
+    @lru_cache
+    def get_unit_floored_log_ratio(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> float:
+        """Get floored base10 log ratio between units of measurement."""
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        return floor(max(0, log10(from_ratio / to_ratio)))
+
+    @classmethod
+    @lru_cache
+    def _are_unit_inverses(cls, from_unit: str | None, to_unit: str | None) -> bool:
+        """Return true if one unit is an inverse but not the other."""
+        return (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
 
 
 class DataRateConverter(BaseUnitConverter):
@@ -282,6 +304,22 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.GIGA_CALORIE: _WH_TO_CAL / 1e6,
     }
     VALID_UNITS = set(UnitOfEnergy)
+
+
+class EnergyDistanceConverter(BaseUnitConverter):
+    """Utility to convert vehicle energy consumption values."""
+
+    UNIT_CLASS = "energy_distance"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 1,
+        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR: 100 * _KM_TO_M / _MILE_TO_M,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR: 100,
+    }
+    _UNIT_INVERSES: set[str] = {
+        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+    }
+    VALID_UNITS = set(UnitOfEnergyDistance)
 
 
 class InformationConverter(BaseUnitConverter):
@@ -667,10 +705,13 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     # Units in terms of m³/h
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 1,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND: 1 / _HRS_TO_SECS,
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _CUBIC_FOOT_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.LITERS_PER_HOUR: 1 / _L_TO_CUBIC_METER,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _L_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.LITERS_PER_SECOND: 1 / (_HRS_TO_SECS * _L_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
@@ -679,7 +720,10 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     VALID_UNITS = {
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+        UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     }

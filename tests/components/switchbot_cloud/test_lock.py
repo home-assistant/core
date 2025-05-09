@@ -17,6 +17,7 @@ async def test_lock(hass: HomeAssistant, mock_list_devices, mock_get_status) -> 
     """Test locking and unlocking."""
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="lock-id-1",
             deviceName="lock-1",
             deviceType="Smart Lock",
@@ -26,9 +27,7 @@ async def test_lock(hass: HomeAssistant, mock_list_devices, mock_get_status) -> 
 
     mock_get_status.return_value = {"lockState": "locked"}
 
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    entry = await configure_integration(hass)
 
     assert entry.state is ConfigEntryState.LOADED
 

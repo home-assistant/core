@@ -36,12 +36,17 @@
           "harassment_block_threshold": "Negative or harmful comments targeting identity and/or protected attributes",
           "hate_block_threshold": "Content that is rude, disrespectful, or profane",
           "sexual_block_threshold": "Contains references to sexual acts or other lewd content",
-          "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts"
+          "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts",
+          "enable_google_search_tool": "Enable Google Search tool"
         },
         "data_description": {
-          "prompt": "Instruct how the LLM should respond. This can be a template."
+          "prompt": "Instruct how the LLM should respond. This can be a template.",
+          "enable_google_search_tool": "Only works with \"No control\" in the \"Control Home Assistant\" setting. See docs for a workaround using it with \"Assist\"."
         }
       }
+    },
+    "error": {
+      "invalid_google_search_option": "Google Search cannot be enabled alongside any Assist capability, this can only be used when Assist is set to \"No control\"."
     }
   },
   "services": {
@@ -56,10 +61,21 @@
         },
         "image_filename": {
           "name": "Image filename",
-          "description": "Images",
+          "description": "Deprecated. Use filenames instead.",
+          "example": "/config/www/image.jpg"
+        },
+        "filenames": {
+          "name": "Attachment filenames",
+          "description": "Attachments to add to the prompt (images, PDFs, etc)",
           "example": "/config/www/image.jpg"
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_image_filename_parameter": {
+      "title": "Deprecated 'image_filename' parameter",
+      "description": "The 'image_filename' parameter in Google Generative AI actions is deprecated. Please edit scripts and automations to use 'filenames' instead."
     }
   }
 }

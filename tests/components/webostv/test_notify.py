@@ -1,8 +1,8 @@
-"""The tests for the WebOS TV notify platform."""
+"""The tests for the LG webOS TV notify platform."""
 
 from unittest.mock import call
 
-from aiowebostv import WebOsTvPairError
+from aiowebostv import WebOsTvCommandError
 import pytest
 
 from homeassistant.components.notify import (
@@ -13,6 +13,7 @@ from homeassistant.components.notify import (
 from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
@@ -74,84 +75,54 @@ async def test_notify(hass: HomeAssistant, client) -> None:
     )
 
 
-async def test_notify_not_connected(hass: HomeAssistant, client) -> None:
-    """Test sending a message when client is not connected."""
-    await setup_webostv(hass)
-    assert hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
-
-    client.is_connected.return_value = False
-    await hass.services.async_call(
-        NOTIFY_DOMAIN,
-        SERVICE_NAME,
-        {
-            ATTR_MESSAGE: MESSAGE,
-            ATTR_DATA: {
-                ATTR_ICON: ICON_PATH,
-            },
-        },
-        blocking=True,
-    )
-    assert client.mock_calls[0] == call.connect()
-    assert client.connect.call_count == 2
-    client.send_message.assert_called_with(MESSAGE, icon_path=ICON_PATH)
-
-
-async def test_icon_not_found(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client
-) -> None:
-    """Test notify icon not found error."""
-    await setup_webostv(hass)
-    assert hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
-
-    client.send_message.side_effect = FileNotFoundError
-    await hass.services.async_call(
-        NOTIFY_DOMAIN,
-        SERVICE_NAME,
-        {
-            ATTR_MESSAGE: MESSAGE,
-            ATTR_DATA: {
-                ATTR_ICON: ICON_PATH,
-            },
-        },
-        blocking=True,
-    )
-    assert client.mock_calls[0] == call.connect()
-    assert client.connect.call_count == 1
-    client.send_message.assert_called_with(MESSAGE, icon_path=ICON_PATH)
-    assert f"Icon {ICON_PATH} not found" in caplog.text
-
-
 @pytest.mark.parametrize(
-    ("side_effect", "error"),
+    ("is_on", "exception", "error_message"),
     [
-        (WebOsTvPairError, "Pairing with TV failed"),
-        (ConnectionResetError, "TV unreachable"),
+        (
+            True,
+            WebOsTvCommandError("Some error"),
+            f"Communication error while sending notification to device {TV_NAME}: Some error",
+        ),
+        (
+            True,
+            FileNotFoundError("Some other error"),
+            f"Icon {ICON_PATH} not found when sending notification for device {TV_NAME}",
+        ),
+        (
+            False,
+            None,
+            f"Error sending notification to device {TV_NAME}: Device is off and cannot be controlled",
+        ),
     ],
 )
-async def test_connection_errors(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client, side_effect, error
+async def test_errors(
+    hass: HomeAssistant,
+    client,
+    is_on: bool,
+    exception: Exception,
+    error_message: str,
 ) -> None:
-    """Test connection errors scenarios."""
+    """Test error scenarios."""
     await setup_webostv(hass)
+    client.tv_state.is_on = is_on
+
     assert hass.services.has_service("notify", SERVICE_NAME)
 
-    client.is_connected.return_value = False
-    client.connect.side_effect = side_effect
-    await hass.services.async_call(
-        NOTIFY_DOMAIN,
-        SERVICE_NAME,
-        {
-            ATTR_MESSAGE: MESSAGE,
-            ATTR_DATA: {
-                ATTR_ICON: ICON_PATH,
+    client.send_message.side_effect = exception
+    with pytest.raises(HomeAssistantError, match=error_message):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_NAME,
+            {
+                ATTR_MESSAGE: MESSAGE,
+                ATTR_DATA: {
+                    ATTR_ICON: ICON_PATH,
+                },
             },
-        },
-        blocking=True,
-    )
-    assert client.mock_calls[0] == call.connect()
-    assert client.connect.call_count == 2
-    client.send_message.assert_not_called()
-    assert error in caplog.text
+            blocking=True,
+        )
+
+    assert client.send_message.call_count == int(is_on)
 
 
 async def test_no_discovery_info(

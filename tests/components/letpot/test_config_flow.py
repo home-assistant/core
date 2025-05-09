@@ -2,7 +2,7 @@
 
 import dataclasses
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from letpot.exceptions import LetPotAuthenticationException, LetPotConnectionException
 import pytest
@@ -39,7 +39,9 @@ def _assert_result_success(result: Any) -> None:
     assert result["result"].unique_id == AUTHENTICATION.user_id
 
 
-async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_full_flow(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
     """Test full flow with success."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -47,18 +49,13 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.letpot.config_flow.LetPotClient.login",
-        return_value=AUTHENTICATION,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_EMAIL: "email@example.com",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "email@example.com",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     _assert_result_success(result)
     assert len(mock_setup_entry.mock_calls) == 1
@@ -74,6 +71,7 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 )
 async def test_flow_exceptions(
     hass: HomeAssistant,
+    mock_client: AsyncMock,
     mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
@@ -83,41 +81,37 @@ async def test_flow_exceptions(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.letpot.config_flow.LetPotClient.login",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_EMAIL: "email@example.com",
-                CONF_PASSWORD: "test-password",
-            },
-        )
+    mock_client.login.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "email@example.com",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     # Retry to show recovery.
-    with patch(
-        "homeassistant.components.letpot.config_flow.LetPotClient.login",
-        return_value=AUTHENTICATION,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_EMAIL: "email@example.com",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    mock_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "email@example.com",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     _assert_result_success(result)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_flow_duplicate(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test flow aborts when trying to add a previously added account."""
     mock_config_entry.add_to_hass(hass)
@@ -130,18 +124,13 @@ async def test_flow_duplicate(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.letpot.config_flow.LetPotClient.login",
-        return_value=AUTHENTICATION,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_EMAIL: "email@example.com",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "email@example.com",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -149,7 +138,10 @@ async def test_flow_duplicate(
 
 
 async def test_reauth_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow with success."""
     mock_config_entry.add_to_hass(hass)
@@ -163,15 +155,11 @@ async def test_reauth_flow(
         access_token="new_access_token",
         refresh_token="new_refresh_token",
     )
-    with patch(
-        "homeassistant.components.letpot.config_flow.LetPotClient.login",
-        return_value=updated_auth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
-        )
-        await hass.async_block_till_done()
+    mock_client.login.return_value = updated_auth
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password"},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -196,6 +184,8 @@ async def test_reauth_flow(
 )
 async def test_reauth_exceptions(
     hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,
@@ -207,14 +197,11 @@ async def test_reauth_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch(
-        "homeassistant.components.letpot.config_flow.LetPotClient.login",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
-        )
+    mock_client.login.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password"},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
@@ -225,15 +212,12 @@ async def test_reauth_exceptions(
         access_token="new_access_token",
         refresh_token="new_refresh_token",
     )
-    with patch(
-        "homeassistant.components.letpot.config_flow.LetPotClient.login",
-        return_value=updated_auth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
-        )
-        await hass.async_block_till_done()
+    mock_client.login.return_value = updated_auth
+    mock_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password"},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -249,7 +233,10 @@ async def test_reauth_exceptions(
 
 
 async def test_reauth_different_user_id_new(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow with different, new user ID updating the existing entry."""
     mock_config_entry.add_to_hass(hass)
@@ -262,15 +249,11 @@ async def test_reauth_different_user_id_new(
     assert result["step_id"] == "reauth_confirm"
 
     updated_auth = dataclasses.replace(AUTHENTICATION, user_id="new_user_id")
-    with patch(
-        "homeassistant.components.letpot.config_flow.LetPotClient.login",
-        return_value=updated_auth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
-        )
-        await hass.async_block_till_done()
+    mock_client.login.return_value = updated_auth
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password"},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -288,7 +271,10 @@ async def test_reauth_different_user_id_new(
 
 
 async def test_reauth_different_user_id_existing(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow with different, existing user ID aborting."""
     mock_config_entry.add_to_hass(hass)
@@ -302,15 +288,11 @@ async def test_reauth_different_user_id_existing(
     assert result["step_id"] == "reauth_confirm"
 
     updated_auth = dataclasses.replace(AUTHENTICATION, user_id="other_user_id")
-    with patch(
-        "homeassistant.components.letpot.config_flow.LetPotClient.login",
-        return_value=updated_auth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
-        )
-        await hass.async_block_till_done()
+    mock_client.login.return_value = updated_auth
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password"},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -60,11 +60,11 @@ class WirelessTagBaseSensor(Entity):
         return f"{value:.1f}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._tag.is_alive
 
-    def update(self):
+    def update(self) -> None:
         """Update state."""
         if not self.should_poll:
             return

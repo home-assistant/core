@@ -6,7 +6,7 @@ from pysabnzbd import SabnzbdApiException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.sabnzbd import DOMAIN
+from homeassistant.components.sabnzbd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant

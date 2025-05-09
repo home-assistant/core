@@ -15,6 +15,7 @@ from google_photos_library_api.api import GooglePhotosLibraryApi
 from google_photos_library_api.exceptions import GooglePhotosApiError
 from google_photos_library_api.model import Album, NewAlbum
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -23,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL: Final = datetime.timedelta(hours=24)
 ALBUM_PAGE_SIZE = 50
 
+type GooglePhotosConfigEntry = ConfigEntry[GooglePhotosUpdateCoordinator]
+
 
 class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
     """Coordinator for fetching Google Photos albums.
@@ -30,11 +33,19 @@ class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
     The `data` object is a dict from Album ID to Album title.
     """
 
-    def __init__(self, hass: HomeAssistant, client: GooglePhotosLibraryApi) -> None:
+    config_entry: GooglePhotosConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: GooglePhotosConfigEntry,
+        client: GooglePhotosLibraryApi,
+    ) -> None:
         """Initialize TaskUpdateCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Google Photos",
             update_interval=UPDATE_INTERVAL,
         )

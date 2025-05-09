@@ -22,6 +22,7 @@ from aiohasupervisor.models import (
 import pytest
 import voluptuous as vol
 
+from homeassistant import components, loader
 from homeassistant.components import repairs
 from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
@@ -528,13 +529,15 @@ def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> As
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
-    mounts_info_mock = AsyncMock(spec_set=["mounts"])
+    mounts_info_mock = AsyncMock(spec_set=["default_backup_mount", "mounts"])
+    mounts_info_mock.default_backup_mount = None
     mounts_info_mock.mounts = []
     supervisor_client = AsyncMock()
     supervisor_client.addons = AsyncMock()
     supervisor_client.discovery = AsyncMock()
     supervisor_client.homeassistant = AsyncMock()
     supervisor_client.host = AsyncMock()
+    supervisor_client.jobs = AsyncMock()
     supervisor_client.mounts.info.return_value = mounts_info_mock
     supervisor_client.os = AsyncMock()
     supervisor_client.resolution = AsyncMock()
@@ -572,6 +575,10 @@ def supervisor_client() -> Generator[AsyncMock]:
             "homeassistant.components.hassio.repairs.get_supervisor_client",
             return_value=supervisor_client,
         ),
+        patch(
+            "homeassistant.components.hassio.update_helper.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
     ):
         yield supervisor_client
 
@@ -599,6 +606,7 @@ def _validate_translation_placeholders(
 async def _validate_translation(
     hass: HomeAssistant,
     translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
     category: str,
     component: str,
     key: str,
@@ -608,7 +616,25 @@ async def _validate_translation(
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
+    if component in ignore_translations_for_mock_domains:
+        try:
+            integration = await loader.async_get_integration(hass, component)
+        except loader.IntegrationNotFound:
+            return
+        component_paths = components.__path__
+        if not any(
+            Path(f"{component_path}/{component}") == integration.file_path
+            for component_path in component_paths
+        ):
+            return
+        # If the integration exists, translation errors should be ignored via the
+        # ignore_missing_translations fixture instead of the
+        # ignore_translations_for_mock_domains fixture.
+        translation_errors[full_key] = f"The integration '{component}' exists"
+        return
+
     translations = await async_get_translations(hass, "en", category, [component])
+
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
             full_key, translation, description_placeholders, translation_errors
@@ -618,7 +644,20 @@ async def _validate_translation(
     if not translation_required:
         return
 
-    if full_key in translation_errors:
+    if translation_errors.get(full_key) in {"used", "unused"}:
+        # If the does not integration exist, translation errors should be ignored
+        # via the ignore_translations_for_mock_domains fixture instead of the
+        # ignore_missing_translations fixture.
+        try:
+            await loader.async_get_integration(hass, component)
+        except loader.IntegrationNotFound:
+            translation_errors[full_key] = (
+                f"Translation not found for {component}: `{category}.{key}`. "
+                f"The integration '{component}' does not exist."
+            )
+            return
+
+        # This translation key is in the ignore list, mark it as used
         translation_errors[full_key] = "used"
         return
 
@@ -629,11 +668,22 @@ async def _validate_translation(
 
 
 @pytest.fixture
-def ignore_translations() -> str | list[str]:
-    """Ignore specific translations.
+def ignore_missing_translations() -> str | list[str]:
+    """Ignore specific missing translations.
 
-    Override or parametrize this fixture with a fixture that returns,
-    a list of translation that should be ignored.
+    Override or parametrize this fixture with a fixture that returns
+    a list of missing translation that should be ignored.
+    """
+    return []
+
+
+@pytest.fixture
+def ignore_translations_for_mock_domains() -> str | list[str]:
+    """Don't validate translations for specific domains.
+
+    Override or parametrize this fixture with a fixture that returns
+    a list of domains for which translations should not be validated.
+    This should only be used when testing mocked integrations.
     """
     return []
 
@@ -666,6 +716,7 @@ async def _check_step_or_section_translations(
     translation_prefix: str,
     description_placeholders: dict[str, str],
     data_schema: vol.Schema | None,
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     # neither title nor description are required
     # - title defaults to integration name
@@ -674,6 +725,7 @@ async def _check_step_or_section_translations(
         await _validate_translation(
             hass,
             translation_errors,
+            ignore_translations_for_mock_domains,
             category,
             integration,
             f"{translation_prefix}.{header}",
@@ -695,6 +747,7 @@ async def _check_step_or_section_translations(
                 f"{translation_prefix}.sections.{data_key}",
                 description_placeholders,
                 data_value.schema,
+                ignore_translations_for_mock_domains,
             )
             continue
         iqs_config_flow = _get_integration_quality_scale_rule(
@@ -705,6 +758,7 @@ async def _check_step_or_section_translations(
             await _validate_translation(
                 hass,
                 translation_errors,
+                ignore_translations_for_mock_domains,
                 category,
                 integration,
                 f"{translation_prefix}.{header}.{data_key}",
@@ -718,6 +772,7 @@ async def _check_config_flow_result_translations(
     flow: FlowHandler,
     result: FlowResult[FlowContext, str],
     translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     if result["type"] is FlowResultType.CREATE_ENTRY:
         # No need to check translations for a completed flow
@@ -753,6 +808,7 @@ async def _check_config_flow_result_translations(
                 f"{key_prefix}step.{step_id}",
                 result["description_placeholders"],
                 result["data_schema"],
+                ignore_translations_for_mock_domains,
             )
 
         if errors := result.get("errors"):
@@ -760,6 +816,7 @@ async def _check_config_flow_result_translations(
                 await _validate_translation(
                     flow.hass,
                     translation_errors,
+                    ignore_translations_for_mock_domains,
                     category,
                     integration,
                     f"{key_prefix}error.{error}",
@@ -775,6 +832,7 @@ async def _check_config_flow_result_translations(
         await _validate_translation(
             flow.hass,
             translation_errors,
+            ignore_translations_for_mock_domains,
             category,
             integration,
             f"{key_prefix}abort.{result['reason']}",
@@ -786,6 +844,7 @@ async def _check_create_issue_translations(
     issue_registry: ir.IssueRegistry,
     issue: ir.IssueEntry,
     translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     if issue.translation_key is None:
         # `translation_key` is only None on dismissed issues
@@ -793,6 +852,7 @@ async def _check_create_issue_translations(
     await _validate_translation(
         issue_registry.hass,
         translation_errors,
+        ignore_translations_for_mock_domains,
         "issues",
         issue.domain,
         f"{issue.translation_key}.title",
@@ -803,6 +863,7 @@ async def _check_create_issue_translations(
         await _validate_translation(
             issue_registry.hass,
             translation_errors,
+            ignore_translations_for_mock_domains,
             "issues",
             issue.domain,
             f"{issue.translation_key}.description",
@@ -824,6 +885,7 @@ async def _check_exception_translation(
     exception: HomeAssistantError,
     translation_errors: dict[str, str],
     request: pytest.FixtureRequest,
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     if exception.translation_key is None:
         if (
@@ -837,6 +899,7 @@ async def _check_exception_translation(
     await _validate_translation(
         hass,
         translation_errors,
+        ignore_translations_for_mock_domains,
         "exceptions",
         exception.translation_domain,
         f"{exception.translation_key}.message",
@@ -846,7 +909,9 @@ async def _check_exception_translation(
 
 @pytest.fixture(autouse=True)
 async def check_translations(
-    ignore_translations: str | list[str], request: pytest.FixtureRequest
+    ignore_missing_translations: str | list[str],
+    ignore_translations_for_mock_domains: str | list[str],
+    request: pytest.FixtureRequest,
 ) -> AsyncGenerator[None]:
     """Check that translation requirements are met.
 
@@ -855,10 +920,16 @@ async def check_translations(
     - issue registry entries
     - action (service) exceptions
     """
-    if not isinstance(ignore_translations, list):
-        ignore_translations = [ignore_translations]
+    if not isinstance(ignore_missing_translations, list):
+        ignore_missing_translations = [ignore_missing_translations]
 
-    translation_errors = {k: "unused" for k in ignore_translations}
+    if not isinstance(ignore_translations_for_mock_domains, list):
+        ignored_domains = {ignore_translations_for_mock_domains}
+    else:
+        ignored_domains = set(ignore_translations_for_mock_domains)
+
+    # Set all ignored translation keys to "unused"
+    translation_errors = dict.fromkeys(ignore_missing_translations, "unused")
 
     translation_coros = set()
 
@@ -873,7 +944,7 @@ async def check_translations(
     ) -> FlowResult:
         result = await _original_flow_manager_async_handle_step(self, flow, *args)
         await _check_config_flow_result_translations(
-            self, flow, result, translation_errors
+            self, flow, result, translation_errors, ignored_domains
         )
         return result
 
@@ -884,7 +955,9 @@ async def check_translations(
             self, domain, issue_id, *args, **kwargs
         )
         translation_coros.add(
-            _check_create_issue_translations(self, result, translation_errors)
+            _check_create_issue_translations(
+                self, result, translation_errors, ignored_domains
+            )
         )
         return result
 
@@ -912,7 +985,11 @@ async def check_translations(
         except HomeAssistantError as err:
             translation_coros.add(
                 _check_exception_translation(
-                    self._hass, err, translation_errors, request
+                    self._hass,
+                    err,
+                    translation_errors,
+                    request,
+                    ignored_domains,
                 )
             )
             raise
@@ -939,10 +1016,11 @@ async def check_translations(
     # Run final checks
     unused_ignore = [k for k, v in translation_errors.items() if v == "unused"]
     if unused_ignore:
+        # Some ignored translations were not used
         pytest.fail(
             f"Unused ignore translations: {', '.join(unused_ignore)}. "
-            "Please remove them from the ignore_translations fixture."
+            "Please remove them from the ignore_missing_translations fixture."
         )
     for description in translation_errors.values():
-        if description not in {"used", "unused"}:
+        if description != "used":
             pytest.fail(description)

@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ohme/",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
-  "requirements": ["ohme==1.2.5"]
+  "quality_scale": "platinum",
+  "requirements": ["ohme==1.5.1"]
 }

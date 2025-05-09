@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Generic
 
 from deebot_client.capabilities import CapabilityEvent
-from deebot_client.events.water_info import WaterInfoEvent
+from deebot_client.events.water_info import MopAttachedEvent
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
 from .entity import EcovacsCapabilityEntityDescription, EcovacsDescriptionEntity, EventT
@@ -32,9 +32,9 @@ class EcovacsBinarySensorEntityDescription(
 
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsBinarySensorEntityDescription, ...] = (
-    EcovacsBinarySensorEntityDescription[WaterInfoEvent](
-        capability_fn=lambda caps: caps.water,
-        value_fn=lambda e: e.mop_attached,
+    EcovacsBinarySensorEntityDescription[MopAttachedEvent](
+        capability_fn=lambda caps: caps.water.mop_attached if caps.water else None,
+        value_fn=lambda e: e.value,
         key="water_mop_attached",
         translation_key="water_mop_attached",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -45,7 +45,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsBinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
     async_add_entities(

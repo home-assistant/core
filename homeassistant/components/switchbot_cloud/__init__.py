@@ -47,13 +47,14 @@ class SwitchbotCloudData:
 
 async def coordinator_for_device(
     hass: HomeAssistant,
+    entry: ConfigEntry,
     api: SwitchBotAPI,
     device: Device | Remote,
     coordinators_by_id: dict[str, SwitchBotCoordinator],
 ) -> SwitchBotCoordinator:
     """Instantiate coordinator and adds to list for gathering."""
     coordinator = coordinators_by_id.setdefault(
-        device.device_id, SwitchBotCoordinator(hass, api, device)
+        device.device_id, SwitchBotCoordinator(hass, entry, api, device)
     )
 
     if coordinator.data is None:
@@ -64,6 +65,7 @@ async def coordinator_for_device(
 
 async def make_switchbot_devices(
     hass: HomeAssistant,
+    entry: ConfigEntry,
     api: SwitchBotAPI,
     devices: list[Device | Remote],
     coordinators_by_id: dict[str, SwitchBotCoordinator],
@@ -72,7 +74,7 @@ async def make_switchbot_devices(
     devices_data = SwitchbotDevices()
     await gather(
         *[
-            make_device_data(hass, api, device, devices_data, coordinators_by_id)
+            make_device_data(hass, entry, api, device, devices_data, coordinators_by_id)
             for device in devices
         ]
     )
@@ -82,6 +84,7 @@ async def make_switchbot_devices(
 
 async def make_device_data(
     hass: HomeAssistant,
+    entry: ConfigEntry,
     api: SwitchBotAPI,
     device: Device | Remote,
     devices_data: SwitchbotDevices,
@@ -90,7 +93,7 @@ async def make_device_data(
     """Make device data."""
     if isinstance(device, Remote) and device.device_type.endswith("Air Conditioner"):
         coordinator = await coordinator_for_device(
-            hass, api, device, coordinators_by_id
+            hass, entry, api, device, coordinators_by_id
         )
         devices_data.climates.append((device, coordinator))
     if (
@@ -101,7 +104,7 @@ async def make_device_data(
         )
     ) or isinstance(device, Remote):
         coordinator = await coordinator_for_device(
-            hass, api, device, coordinators_by_id
+            hass, entry, api, device, coordinators_by_id
         )
         devices_data.switches.append((device, coordinator))
 
@@ -117,7 +120,7 @@ async def make_device_data(
         "Plug Mini (JP)",
     ]:
         coordinator = await coordinator_for_device(
-            hass, api, device, coordinators_by_id
+            hass, entry, api, device, coordinators_by_id
         )
         devices_data.sensors.append((device, coordinator))
 
@@ -128,20 +131,22 @@ async def make_device_data(
         "Robot Vacuum Cleaner S1 Plus",
     ]:
         coordinator = await coordinator_for_device(
-            hass, api, device, coordinators_by_id
+            hass, entry, api, device, coordinators_by_id
         )
         devices_data.vacuums.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type.startswith("Smart Lock"):
         coordinator = await coordinator_for_device(
-            hass, api, device, coordinators_by_id
+            hass, entry, api, device, coordinators_by_id
         )
         devices_data.locks.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in ["Bot"]:
         coordinator = await coordinator_for_device(
-            hass, api, device, coordinators_by_id
+            hass, entry, api, device, coordinators_by_id
         )
+        devices_data.sensors.append((device, coordinator))
         if coordinator.data is not None:
             if coordinator.data.get("deviceMode") == "pressMode":
                 devices_data.buttons.append((device, coordinator))
@@ -149,10 +154,10 @@ async def make_device_data(
                 devices_data.switches.append((device, coordinator))
 
 
-async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SwitchBot via API from a config entry."""
-    token = config.data[CONF_API_TOKEN]
-    secret = config.data[CONF_API_KEY]
+    token = entry.data[CONF_API_TOKEN]
+    secret = entry.data[CONF_API_KEY]
 
     api = SwitchBotAPI(token=token, secret=secret)
     try:
@@ -168,13 +173,13 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     coordinators_by_id: dict[str, SwitchBotCoordinator] = {}
 
     switchbot_devices = await make_switchbot_devices(
-        hass, api, devices, coordinators_by_id
+        hass, entry, api, devices, coordinators_by_id
     )
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config.entry_id] = SwitchbotCloudData(
+    hass.data[DOMAIN][entry.entry_id] = SwitchbotCloudData(
         api=api, devices=switchbot_devices
     )
-    await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

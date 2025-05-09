@@ -7,7 +7,6 @@ import dataclasses
 from datetime import timedelta
 import logging
 import os
-from types import MappingProxyType
 from typing import Any
 
 from pyownet import protocol
@@ -27,12 +26,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
     DEVICE_KEYS_0_3,
     DEVICE_KEYS_A_B,
+    DEVICE_KEYS_A_D,
     OPTION_ENTRY_DEVICE_OPTIONS,
     OPTION_ENTRY_SENSOR_PRECISION,
     PRECISION_MAPPING_FAMILY_28,
@@ -107,6 +107,33 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+    ),
+    "20": tuple(
+        [
+            OneWireSensorEntityDescription(
+                key=f"latestvolt.{device_key}",
+                device_class=SensorDeviceClass.VOLTAGE,
+                entity_registry_enabled_default=False,
+                native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+                read_mode=READ_MODE_FLOAT,
+                state_class=SensorStateClass.MEASUREMENT,
+                translation_key="latest_voltage_id",
+                translation_placeholders={"id": str(device_key)},
+            )
+            for device_key in DEVICE_KEYS_A_D
+        ]
+        + [
+            OneWireSensorEntityDescription(
+                key=f"volt.{device_key}",
+                device_class=SensorDeviceClass.VOLTAGE,
+                native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+                read_mode=READ_MODE_FLOAT,
+                state_class=SensorStateClass.MEASUREMENT,
+                translation_key="voltage_id",
+                translation_placeholders={"id": str(device_key)},
+            )
+            for device_key in DEVICE_KEYS_A_D
+        ]
     ),
     "22": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
     "26": (
@@ -360,7 +387,7 @@ def get_sensor_types(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OneWireConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
 
@@ -387,7 +414,7 @@ async def async_setup_entry(
 def get_entities(
     onewire_hub: OneWireHub,
     devices: list[OWDeviceDescription],
-    options: MappingProxyType[str, Any],
+    options: Mapping[str, Any],
 ) -> list[OneWireSensorEntity]:
     """Get a list of entities."""
     entities: list[OneWireSensorEntity] = []

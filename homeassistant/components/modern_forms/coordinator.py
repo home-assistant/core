@@ -8,6 +8,8 @@ import logging
 from aiomodernforms import ModernFormsDevice, ModernFormsError
 from aiomodernforms.models import Device as ModernFormsDeviceState
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -21,20 +23,22 @@ _LOGGER = logging.getLogger(__name__)
 class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceState]):
     """Class to manage fetching Modern Forms data from single endpoint."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
-        host: str,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize global Modern Forms data updater."""
         self.modern_forms = ModernFormsDevice(
-            host, session=async_get_clientsession(hass)
+            config_entry.data[CONF_HOST], session=async_get_clientsession(hass)
         )
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

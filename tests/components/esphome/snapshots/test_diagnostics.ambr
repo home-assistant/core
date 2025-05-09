@@ -20,10 +20,91 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'ESPHome Device',
       'unique_id': '11:22:33:44:55:aa',
       'version': 1,
     }),
-    'dashboard': 'mock-slug',
+    'dashboard': dict({
+      'addon': 'mock-slug',
+      'configured': True,
+      'last_exception': None,
+      'last_update_success': True,
+      'supports_update': None,
+    }),
+  })
+# ---
+# name: test_diagnostics_with_dashboard_data
+  dict({
+    'config': dict({
+      'data': dict({
+        'device_name': 'test',
+        'host': 'test.local',
+        'password': '',
+        'port': 6053,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'esphome',
+      'minor_version': 1,
+      'options': dict({
+        'allow_service_calls': False,
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': '11:22:33:44:55:aa',
+      'version': 1,
+    }),
+    'dashboard': dict({
+      'addon': 'mock-slug',
+      'configured': True,
+      'device': dict({
+        'configuration': 'test.yaml',
+        'current_version': '2023.1.0',
+        'deployed_version': None,
+        'loaded_integrations': None,
+        'target_platform': None,
+      }),
+      'has_matching_name': True,
+      'last_exception': None,
+      'last_update_success': True,
+      'supports_update': False,
+    }),
+    'storage_data': dict({
+      'api_version': dict({
+        'major': 99,
+        'minor': 99,
+      }),
+      'device_info': dict({
+        'bluetooth_mac_address': '',
+        'bluetooth_proxy_feature_flags': 0,
+        'compilation_time': '',
+        'esphome_version': '1.0.0',
+        'friendly_name': 'Test',
+        'has_deep_sleep': False,
+        'legacy_bluetooth_proxy_version': 0,
+        'legacy_voice_assistant_version': 0,
+        'mac_address': '**REDACTED**',
+        'manufacturer': '',
+        'model': '',
+        'name': 'test',
+        'project_name': '',
+        'project_version': '',
+        'suggested_area': '',
+        'uses_password': False,
+        'voice_assistant_feature_flags': 0,
+        'webserver_port': 0,
+      }),
+      'services': list([
+      ]),
+      'update': list([
+      ]),
+    }),
   })
 # ---

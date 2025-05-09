@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/lcn",
   "iot_class": "local_push",
   "loggers": ["pypck"],
-  "requirements": ["pypck==0.8.3", "lcn-frontend==0.2.3"]
+  "requirements": ["pypck==0.8.5", "lcn-frontend==0.2.4"]
 }

@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
 
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS
+from reolink_aio.baichuan import DEFAULT_BC_PORT
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
     LoginFirmwareError,
+    LoginPrivacyModeError,
     ReolinkError,
 )
 import voluptuous as vol
@@ -35,7 +38,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_USE_HTTPS, DOMAIN
+from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
 from .exceptions import (
     PasswordIncompatible,
     ReolinkException,
@@ -49,6 +52,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PROTOCOL = "rtsp"
 DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
+API_STARTUP_TIME = 5
 
 
 class ReolinkOptionsFlowHandler(OptionsFlow):
@@ -101,6 +105,8 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host: str | None = None
         self._username: str = "admin"
         self._password: str | None = None
+        self._user_input: dict[str, Any] | None = None
+        self._disable_privacy: bool = False
 
     @staticmethod
     @callback
@@ -198,6 +204,21 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host = discovery_info.ip
         return await self.async_step_user()
 
+    async def async_step_privacy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask permission to disable privacy mode."""
+        if user_input is not None:
+            self._disable_privacy = True
+            return await self.async_step_user(self._user_input)
+
+        assert self._user_input is not None
+        placeholders = {"host": self._user_input[CONF_HOST]}
+        return self.async_show_form(
+            step_id="privacy",
+            description_placeholders=placeholders,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -219,6 +240,10 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
             host = ReolinkHost(self.hass, user_input, DEFAULT_OPTIONS)
             try:
+                if self._disable_privacy:
+                    await host.api.baichuan.set_privacy_mode(enable=False)
+                    # give the camera some time to startup the HTTP API server
+                    await asyncio.sleep(API_STARTUP_TIME)
                 await host.async_init()
             except UserNotAdmin:
                 errors[CONF_USERNAME] = "not_admin"
@@ -227,6 +252,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             except PasswordIncompatible:
                 errors[CONF_PASSWORD] = "password_incompatible"
                 placeholders["special_chars"] = ALLOWED_SPECIAL_CHARS
+            except LoginPrivacyModeError:
+                self._user_input = user_input
+                return await self.async_step_privacy()
             except CredentialsInvalidError:
                 errors[CONF_PASSWORD] = "invalid_auth"
             except LoginFirmwareError:
@@ -260,6 +288,10 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 user_input[CONF_PORT] = host.api.port
                 user_input[CONF_USE_HTTPS] = host.api.use_https
+                user_input[CONF_BC_PORT] = host.api.baichuan.port
+                user_input[CONF_SUPPORTS_PRIVACY_MODE] = host.api.supported(
+                    None, "privacy_mode"
+                )
 
                 mac_address = format_mac(host.api.mac_address)
                 await self.async_set_unique_id(mac_address, raise_on_progress=False)
@@ -296,8 +328,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors:
             data_schema = data_schema.extend(
                 {
-                    vol.Optional(CONF_PORT): cv.positive_int,
+                    vol.Optional(CONF_PORT): cv.port,
                     vol.Required(CONF_USE_HTTPS, default=False): bool,
+                    vol.Required(CONF_BC_PORT, default=DEFAULT_BC_PORT): cv.port,
                 }
             )
 

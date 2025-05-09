@@ -6,8 +6,18 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components.filter.sensor import (
+from homeassistant.components.filter.const import (
+    CONF_FILTER_NAME,
+    CONF_FILTER_PRECISION,
+    CONF_FILTER_WINDOW_SIZE,
+    CONF_TIME_SMA_TYPE,
+    DEFAULT_NAME,
+    DEFAULT_PRECISION,
     DOMAIN,
+    FILTER_NAME_TIME_SMA,
+    TIME_SMA_LAST,
+)
+from homeassistant.components.filter.sensor import (
     LowPassFilter,
     OutlierFilter,
     RangeFilter,
@@ -24,6 +34,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_ENTITY_ID,
+    CONF_NAME,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -32,9 +44,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component, get_fixture_path
+from tests.common import MockConfigEntry, assert_setup_component, get_fixture_path
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -95,6 +107,41 @@ async def test_chain(
 
         state = hass.states.get("sensor.test")
         assert state.state == "18.05"
+
+
+async def test_from_config_entry(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """Test if filter works loaded from config entry."""
+
+    state = hass.states.get("sensor.filtered_sensor")
+    assert state.state == "22.0"
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: "sensor.test_monitored",
+            CONF_FILTER_NAME: FILTER_NAME_TIME_SMA,
+            CONF_TIME_SMA_TYPE: TIME_SMA_LAST,
+            CONF_FILTER_WINDOW_SIZE: {"hours": 40, "minutes": 5, "seconds": 5},
+            CONF_FILTER_PRECISION: DEFAULT_PRECISION,
+        }
+    ],
+)
+async def test_from_config_entry_duration(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """Test if filter works loaded from config entry with duration."""
+
+    state = hass.states.get("sensor.filtered_sensor")
+    assert state.state == "20.0"
 
 
 @pytest.mark.parametrize("missing", [True, False])

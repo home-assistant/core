@@ -15,7 +15,7 @@ from homeassistant.components.media_source import (
     async_resolve_media,
 )
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
+from homeassistant.components.reolink.const import CONF_BC_PORT, CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.stream import DOMAIN as MEDIA_STREAM_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -31,6 +31,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    TEST_BC_PORT,
     TEST_HOST2,
     TEST_HOST_MODEL,
     TEST_MAC2,
@@ -235,12 +236,12 @@ async def test_browsing(
     reolink_connect.model = TEST_HOST_MODEL
 
 
-async def test_browsing_unsupported_encoding(
+async def test_browsing_h265_encoding(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test browsing a Reolink camera with unsupported stream encoding."""
+    """Test browsing a Reolink camera with h265 stream encoding."""
     entry_id = config_entry.entry_id
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
@@ -249,7 +250,6 @@ async def test_browsing_unsupported_encoding(
 
     browse_root_id = f"CAM|{entry_id}|{TEST_CHANNEL}"
 
-    # browse resolution select/camera recording days when main encoding unsupported
     mock_status = MagicMock()
     mock_status.year = TEST_YEAR
     mock_status.month = TEST_MONTH
@@ -260,6 +260,18 @@ async def test_browsing_unsupported_encoding(
     reolink_connect.supported.return_value = False
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
+
+    browse_resolution_id = f"RESs|{entry_id}|{TEST_CHANNEL}"
+    browse_res_sub_id = f"RES|{entry_id}|{TEST_CHANNEL}|sub"
+    browse_res_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|main"
+
+    assert browse.domain == DOMAIN
+    assert browse.title == f"{TEST_NVR_NAME}"
+    assert browse.identifier == browse_resolution_id
+    assert browse.children[0].identifier == browse_res_sub_id
+    assert browse.children[1].identifier == browse_res_main_id
+
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_sub_id}")
 
     browse_days_id = f"DAYS|{entry_id}|{TEST_CHANNEL}|sub"
     browse_day_0_id = (
@@ -337,6 +349,7 @@ async def test_browsing_not_loaded(
             CONF_PASSWORD: TEST_PASSWORD2,
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_BC_PORT: TEST_BC_PORT,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,

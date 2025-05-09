@@ -24,13 +24,13 @@ from homeassistant.components.device_tracker import (
     ScannerEntityDescription,
 )
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
-from .const import DOMAIN as UNIFI_DOMAIN
+from .const import DOMAIN
 from .entity import (
     HandlerT,
     UnifiEntity,
@@ -204,14 +204,12 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) 
     def update_unique_id(obj_id: str) -> None:
         """Rework unique ID."""
         new_unique_id = f"{hub.site}-{obj_id}"
-        if ent_reg.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, UNIFI_DOMAIN, new_unique_id
-        ):
+        if ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, new_unique_id):
             return
 
         unique_id = f"{obj_id}-{hub.site}"
         if entity_id := ent_reg.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, UNIFI_DOMAIN, unique_id
+            DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
         ):
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
@@ -222,7 +220,7 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
     async_update_unique_id(hass, config_entry)

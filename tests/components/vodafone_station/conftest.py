@@ -5,10 +5,10 @@ from datetime import UTC, datetime
 from aiovodafone import VodafoneStationDevice
 import pytest
 
-from homeassistant.components.vodafone_station import DOMAIN
+from homeassistant.components.vodafone_station.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from .const import DEVICE_1_MAC
+from .const import DEVICE_1_HOST, DEVICE_1_MAC, DEVICE_2_MAC
 
 from tests.common import (
     AsyncMock,
@@ -48,10 +48,19 @@ def mock_vodafone_station_router() -> Generator[AsyncMock]:
                 connected=True,
                 connection_type="wifi",
                 ip_address="192.168.1.10",
-                name="WifiDevice0",
+                name=DEVICE_1_HOST,
                 mac=DEVICE_1_MAC,
                 type="laptop",
                 wifi="2.4G",
+            ),
+            DEVICE_2_MAC: VodafoneStationDevice(
+                connected=False,
+                connection_type="lan",
+                ip_address="192.168.1.11",
+                name="LanDevice1",
+                mac=DEVICE_2_MAC,
+                type="desktop",
+                wifi="",
             ),
         }
         router.get_sensor_data.return_value = load_json_object_fixture(

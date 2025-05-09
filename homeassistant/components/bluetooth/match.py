@@ -411,7 +411,7 @@ def ble_device_matches(
     ) and service_data_uuid not in service_info.service_data:
         return False
 
-    if manufacturer_id := matcher.get(MANUFACTURER_ID):
+    if (manufacturer_id := matcher.get(MANUFACTURER_ID)) is not None:
         if manufacturer_id not in service_info.manufacturer_data:
             return False
 

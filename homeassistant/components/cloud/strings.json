@@ -17,6 +17,11 @@
       "subscription_expiration": "Subscription expiration"
     }
   },
+  "exceptions": {
+    "backup_size_too_large": {
+      "message": "The backup size of {size}GB is too large to be uploaded to Home Assistant Cloud."
+    }
+  },
   "issues": {
     "deprecated_gender": {
       "title": "The {deprecated_option} text-to-speech option is deprecated",
@@ -56,6 +61,10 @@
           "operation_took_too_long": "The operation took too long. Please try again later."
         }
       }
+    },
+    "no_subscription": {
+      "title": "No subscription detected",
+      "description": "You do not have a Home Assistant Cloud subscription. Subscribe at {account_url}."
     },
     "warn_bad_custom_domain_configuration": {
       "title": "Detected wrong custom domain configuration",

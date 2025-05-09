@@ -12,7 +12,7 @@
   "documentation": "https://www.home-assistant.io/integrations/cloud",
   "integration_type": "system",
   "iot_class": "cloud_push",
-  "loggers": ["hass_nabucasa"],
-  "requirements": ["hass-nabucasa==0.88.1"],
+  "loggers": ["acme", "hass_nabucasa", "snitun"],
+  "requirements": ["hass-nabucasa==0.100.0"],
   "single_config_entry": true
 }

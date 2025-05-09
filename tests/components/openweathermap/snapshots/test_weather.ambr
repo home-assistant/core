@@ -1,0 +1,210 @@
+# serializer version: 1
+# name: test_get_minute_forecast[v3.0][mock_service_response]
+  dict({
+    'weather.openweathermap': dict({
+      'forecast': list([
+        dict({
+          'datetime': 1728672360,
+          'precipitation': 0,
+        }),
+        dict({
+          'datetime': 1728672420,
+          'precipitation': 1.23,
+        }),
+        dict({
+          'datetime': 1728672480,
+          'precipitation': 4.5,
+        }),
+        dict({
+          'datetime': 1728672540,
+          'precipitation': 0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_weather_states[current][weather.openweathermap-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'weather',
+    'entity_category': None,
+    'entity_id': 'weather.openweathermap',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'openweathermap',
+    'platform': 'openweathermap',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12.34-56.78',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_weather_states[current][weather.openweathermap-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'apparent_temperature': 2.1,
+      'attribution': 'Data provided by OpenWeatherMap',
+      'cloud_coverage': 75,
+      'dew_point': 4.0,
+      'friendly_name': 'openweathermap',
+      'humidity': 82,
+      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'pressure': 1000.0,
+      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+      'temperature': 6.8,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+      'wind_bearing': 199,
+      'wind_speed': 35.39,
+      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.openweathermap',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_weather_states[forecast][weather.openweathermap-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'weather',
+    'entity_category': None,
+    'entity_id': 'weather.openweathermap',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'openweathermap',
+    'platform': 'openweathermap',
+    'previous_unique_id': None,
+    'supported_features': <WeatherEntityFeature: 2>,
+    'translation_key': None,
+    'unique_id': '12.34-56.78',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_weather_states[forecast][weather.openweathermap-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'apparent_temperature': 2.1,
+      'attribution': 'Data provided by OpenWeatherMap',
+      'cloud_coverage': 75,
+      'dew_point': 4.0,
+      'friendly_name': 'openweathermap',
+      'humidity': 82,
+      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'pressure': 1000.0,
+      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+      'supported_features': <WeatherEntityFeature: 2>,
+      'temperature': 6.8,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+      'wind_bearing': 199,
+      'wind_speed': 35.39,
+      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.openweathermap',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_weather_states[v3.0][weather.openweathermap-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'weather',
+    'entity_category': None,
+    'entity_id': 'weather.openweathermap',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'openweathermap',
+    'platform': 'openweathermap',
+    'previous_unique_id': None,
+    'supported_features': <WeatherEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '12.34-56.78',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_weather_states[v3.0][weather.openweathermap-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'apparent_temperature': 2.1,
+      'attribution': 'Data provided by OpenWeatherMap',
+      'cloud_coverage': 75,
+      'dew_point': 4.0,
+      'friendly_name': 'openweathermap',
+      'humidity': 82,
+      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'pressure': 1000.0,
+      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+      'supported_features': <WeatherEntityFeature: 3>,
+      'temperature': 6.8,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+      'wind_bearing': 199,
+      'wind_speed': 35.39,
+      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.openweathermap',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---

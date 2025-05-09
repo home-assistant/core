@@ -3,7 +3,7 @@
 import datetime
 from unittest.mock import AsyncMock, patch
 
-from aioautomower.exceptions import ApiException
+from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -64,12 +64,11 @@ async def test_button_states_and_commands(
         target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mocked_method = getattr(mock_automower_client.commands, "error_confirm")
-    mocked_method.assert_called_once_with(TEST_MOWER_ID)
+    mock_automower_client.commands.error_confirm.assert_called_once_with(TEST_MOWER_ID)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "2023-06-05T00:16:00+00:00"
-    getattr(mock_automower_client.commands, "error_confirm").side_effect = ApiException(
+    getattr(mock_automower_client.commands, "error_confirm").side_effect = ApiError(
         "Test error"
     )
     with pytest.raises(
@@ -106,12 +105,11 @@ async def test_sync_clock(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mocked_method = mock_automower_client.commands.set_datetime
-    mocked_method.assert_called_once_with(TEST_MOWER_ID)
+    mock_automower_client.commands.set_datetime.assert_called_once_with(TEST_MOWER_ID)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "2024-02-29T11:00:00+00:00"
-    mock_automower_client.commands.set_datetime.side_effect = ApiException("Test error")
+    mock_automower_client.commands.set_datetime.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",

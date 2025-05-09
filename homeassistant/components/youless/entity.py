@@ -20,6 +20,6 @@ class YouLessEntity(CoordinatorEntity[YouLessCoordinator]):
             identifiers={(DOMAIN, device_group)},
             manufacturer="YouLess",
             model=self.device.model,
-            name=device_name,
+            translation_key=device_name,
             sw_version=self.device.firmware_version,
         )

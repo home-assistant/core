@@ -3,7 +3,7 @@
 from collections.abc import Callable
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_NAME, CONF_RESOURCE
+from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_NAME
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
@@ -15,7 +15,7 @@ from .helpers import (
     InputType,
     generate_unique_id,
     get_device_connection,
-    get_device_model,
+    get_resource,
 )
 
 
@@ -36,34 +36,24 @@ class LcnEntity(Entity):
         self.address: AddressType = config[CONF_ADDRESS]
         self._unregister_for_inputs: Callable | None = None
         self._name: str = config[CONF_NAME]
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (
+                    DOMAIN,
+                    generate_unique_id(self.config_entry.entry_id, self.address),
+                )
+            },
+        )
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         return generate_unique_id(
-            self.config_entry.entry_id, self.address, self.config[CONF_RESOURCE]
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device specific attributes."""
-        address = f"{'g' if self.address[2] else 'm'}{self.address[0]:03d}{self.address[1]:03d}"
-        model = (
-            "LCN resource"
-            f" ({get_device_model(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])})"
-        )
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            name=f"{address}.{self.config[CONF_RESOURCE]}",
-            model=model,
-            manufacturer="Issendorff",
-            via_device=(
-                DOMAIN,
-                generate_unique_id(
-                    self.config_entry.entry_id, self.config[CONF_ADDRESS]
-                ),
-            ),
+            self.config_entry.entry_id,
+            self.address,
+            get_resource(
+                self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA]
+            ).lower(),
         )
 
     async def async_added_to_hass(self) -> None:

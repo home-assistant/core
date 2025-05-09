@@ -45,7 +45,7 @@
         }
       },
       "encrypted_choose_method": {
-        "description": "An encrypted SwitchBot device can be set up in Home Assistant in two different ways.\n\nYou can enter the key id and encryption key yourself, or Home Assistant can import them from your SwitchBot account.",
+        "description": "An encrypted SwitchBot device can be set up in Home Assistant in two different ways.\n\nYou can enter the key ID and encryption key yourself, or Home Assistant can import them from your SwitchBot account.",
         "menu_options": {
           "encrypted_auth": "SwitchBot account (recommended)",
           "encrypted_key": "Enter encryption key manually"
@@ -53,7 +53,7 @@
       }
     },
     "error": {
-      "encryption_key_invalid": "Key ID or Encryption key is invalid",
+      "encryption_key_invalid": "Key ID or encryption key is invalid",
       "auth_failed": "Authentication failed: {error_detail}"
     },
     "abort": {
@@ -61,7 +61,7 @@
       "no_devices_found": "No supported SwitchBot devices found in range; If the device is in range, ensure the scanner has active scanning enabled, as SwitchBot devices cannot be discovered with passive scans. Active scans can be disabled once the device is configured. If you need clarification on whether the device is in-range, download the diagnostics for the integration that provides your Bluetooth adapter or proxy and check if the MAC address of the SwitchBot device is present.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "api_error": "Error while communicating with SwitchBot API: {error_detail}",
-      "switchbot_unsupported_type": "Unsupported Switchbot Type."
+      "switchbot_unsupported_type": "Unsupported SwitchBot type."
     }
   },
   "options": {
@@ -70,6 +70,10 @@
         "data": {
           "retry_count": "Retry count",
           "lock_force_nightlatch": "Force Nightlatch operation mode"
+        },
+        "data_description": {
+          "retry_count": "How many times to retry sending commands to your SwitchBot devices",
+          "lock_force_nightlatch": "Force Nightlatch operation mode even if Nightlatch is not detected"
         }
       }
     }
@@ -156,6 +160,31 @@
           }
         }
       }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "normal": "Normal",
+              "natural": "Natural",
+              "sleep": "Sleep",
+              "baby": "Baby"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "operation_error": {
+      "message": "An error occurred while performing the action: {error}"
     }
   }
 }

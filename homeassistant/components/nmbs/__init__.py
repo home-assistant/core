@@ -7,7 +7,8 @@ from pyrail import iRail
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -22,13 +23,13 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NMBS component."""
 
-    api_client = iRail()
+    api_client = iRail(session=async_get_clientsession(hass))
 
     hass.data.setdefault(DOMAIN, {})
-    station_response = await hass.async_add_executor_job(api_client.get_stations)
-    if station_response == -1:
+    station_response = await api_client.get_stations()
+    if station_response is None:
         return False
-    hass.data[DOMAIN] = station_response["station"]
+    hass.data[DOMAIN] = station_response.stations
 
     return True
 

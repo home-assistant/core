@@ -6,13 +6,15 @@ from collections.abc import Mapping
 from typing import Any
 
 from pysmlight import Api2
+from pysmlight.const import Devices
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
@@ -34,11 +36,9 @@ STEP_AUTH_DATA_SCHEMA = vol.Schema(
 class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMLIGHT Zigbee."""
 
-    host: str
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self.client: Api2
+    _host: str
+    _device_name: str
+    client: Api2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -47,11 +47,18 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self.host = user_input[CONF_HOST]
-            self.client = Api2(self.host, session=async_get_clientsession(self.hass))
+            self._host = user_input[CONF_HOST]
+            self.client = Api2(self._host, session=async_get_clientsession(self.hass))
 
             try:
                 if not await self._async_check_auth_required(user_input):
+                    info = await self.client.get_info()
+                    self._host = str(info.device_ip)
+                    self._device_name = str(info.hostname)
+
+                    if info.model not in Devices:
+                        return self.async_abort(reason="unsupported_device")
+
                     return await self._async_complete_entry(user_input)
             except SmlightConnectionError:
                 errors["base"] = "cannot_connect"
@@ -71,6 +78,13 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 if not await self._async_check_auth_required(user_input):
+                    info = await self.client.get_info()
+                    self._host = str(info.device_ip)
+                    self._device_name = str(info.hostname)
+
+                    if info.model not in Devices:
+                        return self.async_abort(reason="unsupported_device")
+
                     return await self._async_complete_entry(user_input)
             except SmlightConnectionError:
                 return self.async_abort(reason="cannot_connect")
@@ -85,15 +99,14 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Lan coordinator."""
-        local_name = discovery_info.hostname[:-1]
-        node_name = local_name.removesuffix(".local")
+        mac: str | None = discovery_info.properties.get("mac")
+        self._device_name = discovery_info.hostname.removesuffix(".local.")
+        self._host = discovery_info.host
 
-        self.host = local_name
-        self.context["title_placeholders"] = {CONF_NAME: node_name}
-        self.client = Api2(self.host, session=async_get_clientsession(self.hass))
+        self.context["title_placeholders"] = {CONF_NAME: self._device_name}
+        self.client = Api2(self._host, session=async_get_clientsession(self.hass))
 
-        mac = discovery_info.properties.get("mac")
-        # fallback for legacy firmware
+        # fallback for legacy firmware older than v2.3.x
         if mac is None:
             try:
                 info = await self.client.get_info()
@@ -103,7 +116,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             mac = info.MAC
 
         await self.async_set_unique_id(format_mac(mac))
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         return await self.async_step_confirm_discovery()
 
@@ -114,10 +127,14 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input[CONF_HOST] = self.host
             try:
                 if not await self._async_check_auth_required(user_input):
-                    return await self._async_complete_entry(user_input)
+                    info = await self.client.get_info()
+
+                    if info.model not in Devices:
+                        return self.async_abort(reason="unsupported_device")
+
+                return await self._async_complete_entry(user_input)
 
             except SmlightConnectionError:
                 return self.async_abort(reason="cannot_connect")
@@ -129,7 +146,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm_discovery",
-            description_placeholders={"host": self.host},
+            description_placeholders={"host": self._device_name},
             errors=errors,
         )
 
@@ -138,8 +155,8 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth when API Authentication failed."""
 
-        self.host = entry_data[CONF_HOST]
-        self.client = Api2(self.host, session=async_get_clientsession(self.hass))
+        self._host = entry_data[CONF_HOST]
+        self.client = Api2(self._host, session=async_get_clientsession(self.hass))
 
         return await self.async_step_reauth_confirm()
 
@@ -169,6 +186,16 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery."""
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        # This should never happen since we only listen to DHCP requests
+        # for configured devices.
+        return self.async_abort(reason="already_configured")
+
     async def _async_check_auth_required(self, user_input: dict[str, Any]) -> bool:
         """Check if auth required and attempt to authenticate."""
         if await self.client.check_auth_needed():
@@ -183,12 +210,14 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
         info = await self.client.get_info()
-        await self.async_set_unique_id(format_mac(info.MAC))
-        self._abort_if_unique_id_configured()
 
-        if user_input.get(CONF_HOST) is None:
-            user_input[CONF_HOST] = self.host
+        await self.async_set_unique_id(
+            format_mac(info.MAC), raise_on_progress=self.source != SOURCE_USER
+        )
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+
+        user_input[CONF_HOST] = self._host
 
         assert info.model is not None
-        title = self.context.get("title_placeholders", {}).get(CONF_NAME) or info.model
+        title = self._device_name or info.model
         return self.async_create_entry(title=title, data=user_input)

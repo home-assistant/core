@@ -83,7 +83,7 @@ async def test_fetching_data(
         hass.states.get("sensor.zurich_bern_departure_2").state
         == "2024-01-06T17:05:00+00:00"
     )
-    assert hass.states.get("sensor.zurich_bern_duration").state == "10"
+    assert hass.states.get("sensor.zurich_bern_trip_duration").state == "0.003"
     assert hass.states.get("sensor.zurich_bern_platform").state == "0"
     assert hass.states.get("sensor.zurich_bern_transfers").state == "0"
     assert hass.states.get("sensor.zurich_bern_delay").state == "0"

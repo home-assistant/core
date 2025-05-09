@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_MODE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.start import async_at_started
@@ -18,10 +17,10 @@ from .const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
-    DOMAIN,
     TRAVEL_MODE_PUBLIC,
 )
 from .coordinator import (
+    HereConfigEntry,
     HERERoutingDataUpdateCoordinator,
     HERETransitDataUpdateCoordinator,
 )
@@ -30,7 +29,7 @@ from .model import HERETravelTimeConfig
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: HereConfigEntry) -> bool:
     """Set up HERE Travel Time from a config entry."""
     api_key = config_entry.data[CONF_API_KEY]
 
@@ -56,8 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     else:
         cls = HERERoutingDataUpdateCoordinator
 
-    data_coordinator = cls(hass, api_key, here_travel_time_config)
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = data_coordinator
+    data_coordinator = cls(hass, config_entry, api_key, here_travel_time_config)
+    config_entry.runtime_data = data_coordinator
 
     async def _async_update_at_start(_: HomeAssistant) -> None:
         await data_coordinator.async_refresh()
@@ -68,12 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: HereConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

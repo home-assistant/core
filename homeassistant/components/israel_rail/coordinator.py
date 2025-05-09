@@ -13,7 +13,7 @@ from israelrailapi.train_station import station_name_to_id
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_SCAN_INTERVAL, DEPARTURES_COUNT, DOMAIN
 
@@ -38,14 +38,18 @@ def departure_time(train_route: TrainRoute) -> datetime | None:
     return start_datetime.astimezone() if start_datetime else None
 
 
+type IsraelRailConfigEntry = ConfigEntry[IsraelRailDataUpdateCoordinator]
+
+
 class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]]):
     """A IsraelRail Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: IsraelRailConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: IsraelRailConfigEntry,
         train_schedule: TrainSchedule,
         start: str,
         destination: str,
@@ -54,6 +58,7 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
