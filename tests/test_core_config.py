@@ -5,7 +5,6 @@ from collections import OrderedDict
 import copy
 import os
 from pathlib import Path
-import re
 from tempfile import TemporaryDirectory
 from typing import Any
 from unittest.mock import Mock, PropertyMock, patch
@@ -1070,18 +1069,6 @@ async def test_top_level_components(hass: HomeAssistant) -> None:
 async def test_debug_mode_defaults_to_off(hass: HomeAssistant) -> None:
     """Test debug mode defaults to off."""
     assert not hass.config.debug
-
-
-async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
-    """Test set_time_zone is deprecated."""
-    with pytest.raises(
-        RuntimeError,
-        match=re.escape(
-            "Detected code that sets the time zone using set_time_zone instead of "
-            "async_set_time_zone. Please report this issue"
-        ),
-    ):
-        await hass.config.set_time_zone("America/New_York")
 
 
 async def test_core_config_schema_imperial_unit(

@@ -220,6 +220,19 @@
           "217": "%key::component::miele::sensor::plate::state::117%"
         }
       },
+      "drying_step": {
+        "name": "Drying step",
+        "state": {
+          "extra_dry": "Extra dry",
+          "hand_iron_1": "Hand iron 1",
+          "hand_iron_2": "Hand iron 2",
+          "machine_iron": "Machine iron",
+          "normal_plus": "Normal plus",
+          "normal": "Normal",
+          "slightly_dry": "Slightly dry",
+          "smoothing": "Smoothing"
+        }
+      },
       "program_phase": {
         "name": "Program phase",
         "state": {

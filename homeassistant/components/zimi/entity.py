@@ -25,19 +25,19 @@ class ZimiEntity(Entity):
         """Initialize an HA Entity which is a ZimiDevice."""
 
         self._device = device
-        self._attr_unique_id = self._device.identifier
+        self._attr_unique_id = device.identifier
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.manufacture_info.identifier)},
-            manufacturer=self._device.manufacture_info.manufacturer,
-            model=self._device.manufacture_info.model,
-            name=self._device.manufacture_info.name,
+            identifiers={(DOMAIN, device.manufacture_info.identifier)},
+            manufacturer=device.manufacture_info.manufacturer,
+            model=device.manufacture_info.model,
+            name=device.manufacture_info.name,
             hw_version=device.manufacture_info.hwVersion,
             sw_version=device.manufacture_info.firmwareVersion,
             suggested_area=device.room,
             via_device=(DOMAIN, api.mac),
         )
-        self._attr_name = self._device.name.strip()
-        self._attr_suggested_area = self._device.room
+        self._attr_name = device.name.strip()
+        self._attr_suggested_area = device.room
 
     @property
     def available(self) -> bool:
