@@ -73,6 +73,12 @@
           "on": "mdi:snowflake-melt"
         }
       },
+      "lights_hazards_active": {
+        "state": {
+          "off": "mdi:car-light-dimmed",
+          "on": "mdi:hazard-lights"
+        }
+      },
       "lights_high_beams": {
         "state": {
           "off": "mdi:car-light-dimmed",

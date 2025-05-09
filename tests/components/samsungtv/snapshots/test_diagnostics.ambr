@@ -14,7 +14,6 @@
     'entry': dict({
       'data': dict({
         'host': 'fake_host',
-        'ip_address': 'test',
         'mac': 'aa:bb:cc:dd:ee:ff',
         'method': 'websocket',
         'model': '82GXARRS',
@@ -47,7 +46,6 @@
     'entry': dict({
       'data': dict({
         'host': 'fake_host',
-        'ip_address': 'test',
         'mac': 'aa:bb:cc:dd:ee:ff',
         'method': 'encrypted',
         'name': 'fake',
@@ -107,7 +105,6 @@
     'entry': dict({
       'data': dict({
         'host': 'fake_host',
-        'ip_address': 'test',
         'mac': 'aa:bb:cc:dd:ee:ff',
         'method': 'encrypted',
         'model': 'UE48JU6400',
