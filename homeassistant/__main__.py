@@ -9,6 +9,9 @@ import faulthandler
 import os
 import sys
 import threading
+import requests
+import socket
+import aiohttp
 
 from . import msh_utils
 from .backup_restore import restore_backup
@@ -167,6 +170,51 @@ def check_threads() -> None:
         sys.stderr.write("Failed to count non-daemonic threads.\n")
 
 
+async def on_startup_update_internal_url() -> None:
+    """Function called every time Home Assistant starts."""
+    try:
+        # Get the IP address of the VM
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+        
+        # Read serverId from configuration
+        server_id = await msh_utils.retrieve_value_from_config_file(msh_utils.SERVER_ID)  # Await the coroutine
+        print(f"Server ID: {server_id}")
+        if not server_id:
+            print("Server ID not found in configuration")
+            return
+
+        # Get the internal URL from the request
+        scheme = "http"  # Default scheme
+        host = f"{ip_address}:8123"  # Default Home Assistant port
+        internal_url = f"{scheme}://{host}"
+
+        # Prepare the payload
+        payload = {
+            "serverId": server_id,
+            "newInternalUrl": internal_url
+        }
+        print(f"Payload: {payload}")
+
+        # Make the POST request to update internal URL using aiohttp
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "https://us-central1-fourth-return-421315.cloudfunctions.net/updateInternalUrl",
+                json=payload,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                response_text = await response.text()
+                if response.status == 200:
+                    print(f"Successfully updated internal URL: {internal_url}")
+                    print(f"Response: {response_text}")
+                else:
+                    print(f"Failed to update internal URL. Status code: {response.status}")
+                    print(f"Response: {response_text}")
+
+    except Exception as exception:
+        print(f"Error in on_startup: {exception}")
+
+
 def main() -> int:
     """Start Home Assistant."""
     validate_python()
@@ -200,18 +248,6 @@ def main() -> int:
         # MSH custom functionality
         msh_utils.cf_path.set(config_dir + "/configuration.yaml")
 
-        def run_ring_dashboard_create() -> None:
-            asyncio.run(msh_utils.ring_dashboard_create())
-
-        threading.Thread(target=run_ring_dashboard_create, daemon=True).start()
-
-        def reverse_proxy_client() -> None:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(msh_utils.reverse_proxy_client())
-
-        threading.Thread(target=reverse_proxy_client, daemon=True).start()
-
         runtime_conf = runner.RuntimeConfig(
             config_dir=config_dir,
             verbose=args.verbose,
@@ -225,6 +261,23 @@ def main() -> int:
             open_ui=args.open_ui,
             safe_mode=safe_mode,
         )
+
+        def run_on_startup_update_internal_url() -> None:
+            asyncio.run(on_startup_update_internal_url())
+
+        threading.Thread(target=run_on_startup_update_internal_url, daemon=True).start()
+
+        def run_ring_dashboard_create() -> None:
+            asyncio.run(msh_utils.ring_dashboard_create())
+
+        threading.Thread(target=run_ring_dashboard_create, daemon=True).start()
+
+        def reverse_proxy_client() -> None:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(msh_utils.reverse_proxy_client())
+
+        threading.Thread(target=reverse_proxy_client, daemon=True).start()
 
         fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
         with open(fault_file_name, mode="a", encoding="utf8") as fault_file:
