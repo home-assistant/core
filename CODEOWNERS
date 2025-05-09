@@ -46,8 +46,8 @@ build.json @home-assistant/supervisor
 /tests/components/accuweather/ @bieniu
 /homeassistant/components/acmeda/ @atmurray
 /tests/components/acmeda/ @atmurray
-/homeassistant/components/adax/ @danielhiversen
-/tests/components/adax/ @danielhiversen
+/homeassistant/components/adax/ @danielhiversen @lazytarget
+/tests/components/adax/ @danielhiversen @lazytarget
 /homeassistant/components/adguard/ @frenck
 /tests/components/adguard/ @frenck
 /homeassistant/components/ads/ @mrpasztoradam
