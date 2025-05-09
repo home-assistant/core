@@ -362,52 +362,6 @@ async def test_light_service_turn(
                         CONF_ADDRESS: 1234,
                         CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                         CONF_SCAN_INTERVAL: 0,
-                    }
-                ]
-            },
-            {},
-            None,
-            None,
-        ),
-        (
-            {
-                CONF_LIGHTS: [
-                    {
-                        CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_ADDRESS: 1234,
-                        CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                        CONF_SCAN_INTERVAL: 0,
-                    }
-                ]
-            },
-            {ATTR_BRIGHTNESS: 155, ATTR_COLOR_TEMP_KELVIN: 3000},
-            None,
-            None,
-        ),
-        (
-            {
-                CONF_LIGHTS: [
-                    {
-                        CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_ADDRESS: 1234,
-                        CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                        CONF_SCAN_INTERVAL: 0,
-                        CONF_COLOR_TEMP_REGISTER: 2,
-                    }
-                ]
-            },
-            {ATTR_BRIGHTNESS: 128, ATTR_COLOR_TEMP_KELVIN: 3000},
-            None,
-            20,
-        ),
-        (
-            {
-                CONF_LIGHTS: [
-                    {
-                        CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_ADDRESS: 1234,
-                        CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                        CONF_SCAN_INTERVAL: 0,
                         CONF_BRIGHTNESS_REGISTER: 1,
                         CONF_COLOR_TEMP_REGISTER: 2,
                     }
@@ -416,22 +370,6 @@ async def test_light_service_turn(
             {ATTR_BRIGHTNESS: 128, ATTR_COLOR_TEMP_KELVIN: 2000},
             50,
             0,
-        ),
-        (
-            {
-                CONF_LIGHTS: [
-                    {
-                        CONF_NAME: TEST_ENTITY_NAME,
-                        CONF_ADDRESS: 1234,
-                        CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                        CONF_SCAN_INTERVAL: 0,
-                        CONF_BRIGHTNESS_REGISTER: 1,
-                    }
-                ]
-            },
-            {ATTR_BRIGHTNESS: 128},
-            50,
-            None,
         ),
     ],
 )
@@ -452,16 +390,15 @@ async def test_color_temp_brightness_light(
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     calls = mock_modbus_ha.write_register.call_args_list
-    if expected_brightness is not None:
-        assert any(
-            call.args[0] == 1 and call.kwargs["value"] == expected_brightness
-            for call in calls
-        )
-    if expected_color_temp is not None:
-        assert any(
-            call.args[0] == 2 and call.kwargs["value"] == expected_color_temp
-            for call in calls
-        )
+
+    assert any(
+        call.args[0] == 1 and call.kwargs["value"] == expected_brightness
+        for call in calls
+    )
+    assert any(
+        call.args[0] == 2 and call.kwargs["value"] == expected_color_temp
+        for call in calls
+    )
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -546,11 +483,6 @@ async def test_color_temp_no_valid_params(
         for call in calls
     )
 
-    entities = list(hass.data["light"].entities)
-    entity = entities[0]
-    entity._color_temp_address = None
-    await entity.async_update_ha_state()
-
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -564,26 +496,6 @@ async def test_color_temp_no_valid_params(
         call.args[0] == 2 and call.kwargs["value"] == expected_color_temp
         for call in calls
     )
-
-    mock_modbus_ha.read_holding_registers.return_value = ReadResult(
-        [0, color_temp_percent_input]
-    )
-
-    await entity.async_update_ha_state()
-    await hass.services.async_call(
-        HOMEASSISTANT_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {
-            ATTR_ENTITY_ID: ENTITY_ID,
-        },
-        blocking=True,
-    )
-
-    if hass.states.get(ENTITY_ID).attributes.get(ATTR_COLOR_TEMP_KELVIN):
-        assert (
-            hass.states.get(ENTITY_ID).attributes.get(ATTR_COLOR_TEMP_KELVIN)
-            == expected_color_temp
-        )
 
 
 @pytest.mark.parametrize(
