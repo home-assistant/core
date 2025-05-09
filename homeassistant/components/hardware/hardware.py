@@ -12,9 +12,11 @@ from .const import DATA_HARDWARE, DOMAIN
 from .models import HardwareProtocol
 
 
-async def async_process_hardware_platforms(hass: HomeAssistant) -> None:
+async def async_process_hardware_platforms(
+    hass: HomeAssistant,
+) -> None:
     """Start processing hardware platforms."""
-    hass.data[DATA_HARDWARE]["hardware_platform"] = {}
+    hass.data[DATA_HARDWARE].hardware_platform = {}
 
     await async_process_integration_platforms(
         hass, DOMAIN, _register_hardware_platform, wait_for_platforms=True
@@ -30,4 +32,4 @@ def _register_hardware_platform(
         return
     if not hasattr(platform, "async_info"):
         raise HomeAssistantError(f"Invalid hardware platform {platform}")
-    hass.data[DATA_HARDWARE]["hardware_platform"][integration_domain] = platform
+    hass.data[DATA_HARDWARE].hardware_platform[integration_domain] = platform
