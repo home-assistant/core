@@ -23,7 +23,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -379,6 +379,14 @@ def migrate_entity_ids(
 
         if ch is None or is_chime:
             continue  # Do not consider the NVR itself or chimes
+
+        # Check for wrongfully added MAC of the NVR/Hub to the camera
+        # Can be removed in HA 2025.12
+        host_connnection = (CONNECTION_NETWORK_MAC, host.api.mac_address)
+        if host_connnection in device.connections:
+            new_connections = device.connections.copy()
+            new_connections.remove(host_connnection)
+            device_reg.async_update_device(device.id, new_connections=new_connections)
 
         ch_device_ids[device.id] = ch
         if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(ch):
