@@ -209,7 +209,7 @@ KELVIN_MIN_VALUE_COLOR: Final = 3000
 BLOCK_WRONG_SLEEP_PERIOD = 21600
 BLOCK_EXPECTED_SLEEP_PERIOD = 43200
 
-UPTIME_DEVIATION: Final = 5
+UPTIME_DEVIATION: Final = 60
 
 # Time to wait before reloading entry upon device config change
 ENTRY_RELOAD_COOLDOWN = 60
@@ -227,12 +227,16 @@ class BLEScannerMode(StrEnum):
     PASSIVE = "passive"
 
 
+BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
+
 MAX_PUSH_UPDATE_FAILURES = 5
 PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
 
 NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
 
 FIRMWARE_UNSUPPORTED_ISSUE_ID = "firmware_unsupported_{unique}"
+
+BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID = "ble_scanner_firmware_unsupported_{unique}"
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
 
@@ -277,3 +281,7 @@ ROLE_TO_DEVICE_CLASS_MAP = {
     "current_humidity": SensorDeviceClass.HUMIDITY,
     "current_temperature": SensorDeviceClass.TEMPERATURE,
 }
+
+# We want to check only the first 5 KB of the script if it contains emitEvent()
+# so that the integration startup remains fast.
+MAX_SCRIPT_SIZE = 5120

@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
-    CONF_NAME,
+    CONF_PIN,
     CONF_PORT,
     CONF_TOKEN,
 )
@@ -62,7 +62,7 @@ from .const import (
     UPNP_SVC_RENDERING_CONTROL,
 )
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 def _strip_uuid(udn: str) -> str:
@@ -138,7 +138,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_MANUFACTURER: self._manufacturer or DEFAULT_MANUFACTURER,
             CONF_METHOD: self._bridge.method,
             CONF_MODEL: self._model,
-            CONF_NAME: self._name,
             CONF_PORT: self._bridge.port,
             CONF_SSDP_RENDERING_CONTROL_LOCATION: self._ssdp_rendering_control_location,
             CONF_SSDP_MAIN_TV_AGENT_LOCATION: self._ssdp_main_tv_agent_location,
@@ -260,8 +259,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except socket.gaierror as err:
             raise AbortFlow(RESULT_UNKNOWN_HOST) from err
-        self._name = user_input.get(CONF_NAME, self._host) or ""
-        self._title = self._name
+        self._title = self._host
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -314,7 +312,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if (
-                (pin := user_input.get("pin"))
+                (pin := user_input.get(CONF_PIN))
                 and (token := await self._authenticator.try_pin(pin))
                 and (session_id := await self._authenticator.get_session_id_and_close())
             ):
@@ -333,7 +331,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="encrypted_pairing",
             errors=errors,
             description_placeholders={"device": self._title},
-            data_schema=vol.Schema({vol.Required("pin"): str}),
+            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
         )
 
     @callback
@@ -533,10 +531,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        if entry_data.get(CONF_MODEL) and entry_data.get(CONF_NAME):
-            self._title = f"{entry_data[CONF_NAME]} ({entry_data[CONF_MODEL]})"
-        else:
-            self._title = entry_data.get(CONF_NAME) or entry_data[CONF_HOST]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -569,11 +563,11 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             # On websocket we will get RESULT_CANNOT_CONNECT when auth is missing
             errors = {"base": RESULT_AUTH_MISSING}
 
-        self.context["title_placeholders"] = {"device": self._title}
+        self.context["title_placeholders"] = {"device": reauth_entry.title}
         return self.async_show_form(
             step_id="reauth_confirm",
             errors=errors,
-            description_placeholders={"device": self._title},
+            description_placeholders={"device": reauth_entry.title},
         )
 
     async def _async_start_encrypted_pairing(self, host: str) -> None:
@@ -596,7 +590,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if (
-                (pin := user_input.get("pin"))
+                (pin := user_input.get(CONF_PIN))
                 and (token := await self._authenticator.try_pin(pin))
                 and (session_id := await self._authenticator.get_session_id_and_close())
             ):
@@ -610,10 +604,10 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors = {"base": RESULT_INVALID_PIN}
 
-        self.context["title_placeholders"] = {"device": self._title}
+        self.context["title_placeholders"] = {"device": reauth_entry.title}
         return self.async_show_form(
             step_id="reauth_confirm_encrypted",
             errors=errors,
-            description_placeholders={"device": self._title},
-            data_schema=vol.Schema({vol.Required("pin"): str}),
+            description_placeholders={"device": reauth_entry.title},
+            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
         )

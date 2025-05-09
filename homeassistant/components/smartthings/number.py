@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -32,6 +33,8 @@ class SmartThingsWasherRinseCyclesNumberEntity(SmartThingsEntity, NumberEntity):
 
     _attr_translation_key = "washer_rinse_cycles"
     _attr_native_step = 1.0
+    _attr_mode = NumberMode.BOX
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize the instance."""

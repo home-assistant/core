@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dnsip",
   "iot_class": "cloud_polling",
-  "requirements": ["aiodns==3.2.0"]
+  "requirements": ["aiodns==3.4.0"]
 }

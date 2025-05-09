@@ -28,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, entity
 from homeassistant.helpers.entity import EntityDescription
 
-from .const import AssistSatelliteEntityFeature
+from .const import PREANNOUNCE_URL, AssistSatelliteEntityFeature
 from .errors import AssistSatelliteError, SatelliteBusyError
 
 _LOGGER = logging.getLogger(__name__)
@@ -180,7 +180,8 @@ class AssistSatelliteEntity(entity.Entity):
         self,
         message: str | None = None,
         media_id: str | None = None,
-        preannounce_media_id: str | None = None,
+        preannounce: bool = True,
+        preannounce_media_id: str = PREANNOUNCE_URL,
     ) -> None:
         """Play and show an announcement on the satellite.
 
@@ -190,7 +191,8 @@ class AssistSatelliteEntity(entity.Entity):
         If media_id is provided, it is played directly. It is possible
         to omit the message and the satellite will not show any text.
 
-        If preannounce_media_id is provided, it is played before the announcement.
+        If preannounce is True, a sound is played before the announcement.
+        If preannounce_media_id is provided, it overrides the default sound.
 
         Calls async_announce with message and media id.
         """
@@ -200,7 +202,9 @@ class AssistSatelliteEntity(entity.Entity):
             message = ""
 
         announcement = await self._resolve_announcement_media_id(
-            message, media_id, preannounce_media_id
+            message,
+            media_id,
+            preannounce_media_id=preannounce_media_id if preannounce else None,
         )
 
         if self._is_announcing:
@@ -228,7 +232,8 @@ class AssistSatelliteEntity(entity.Entity):
         start_message: str | None = None,
         start_media_id: str | None = None,
         extra_system_prompt: str | None = None,
-        preannounce_media_id: str | None = None,
+        preannounce: bool = True,
+        preannounce_media_id: str = PREANNOUNCE_URL,
     ) -> None:
         """Start a conversation from the satellite.
 
@@ -238,7 +243,8 @@ class AssistSatelliteEntity(entity.Entity):
         If start_media_id is provided, it is played directly. It is possible
         to omit the message and the satellite will not show any text.
 
-        If preannounce_media_id is provided, it is played before the announcement.
+        If preannounce is True, a sound is played before the start message or media.
+        If preannounce_media_id is provided, it overrides the default sound.
 
         Calls async_start_conversation.
         """
@@ -255,7 +261,9 @@ class AssistSatelliteEntity(entity.Entity):
             start_message = ""
 
         announcement = await self._resolve_announcement_media_id(
-            start_message, start_media_id, preannounce_media_id
+            start_message,
+            start_media_id,
+            preannounce_media_id=preannounce_media_id if preannounce else None,
         )
 
         if self._is_announcing:
