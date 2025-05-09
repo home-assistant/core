@@ -62,7 +62,7 @@ def setup_services(hass: HomeAssistant) -> None:
             ServiceResponse,
             {
                 "forecast": cast(
-                    list[Forecast] | None, await client.async_get_forecast()
+                    list[Forecast], await client.async_get_forecast() or []
                 ),
             },
         )

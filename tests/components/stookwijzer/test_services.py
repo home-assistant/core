@@ -32,6 +32,14 @@ async def test_service_get_forecast(
         return_response=True,
     )
 
+
+@pytest.mark.usefixtures("init_integration")
+async def test_service_entry_not_loaded(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Stookwijzer entities."""
     mock_config_entry2 = MockConfigEntry(domain=DOMAIN)
     mock_config_entry2.add_to_hass(hass)
 
@@ -44,6 +52,16 @@ async def test_service_get_forecast(
             return_response=True,
         )
 
+
+@pytest.mark.usefixtures("init_integration")
+async def test_service_integration_not_found(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Stookwijzer entities."""
+    mock_config_entry2 = MockConfigEntry(domain=DOMAIN)
+    mock_config_entry2.add_to_hass(hass)
     with pytest.raises(
         ServiceValidationError, match='Integration "stookwijzer" not found in registry'
     ):
