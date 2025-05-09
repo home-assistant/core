@@ -14,7 +14,7 @@
       },
       "control_bus_mode": {
         "default": "mdi:audio-video-off",
-        "state":{
+        "state": {
           "amplifier": "mdi:speaker",
           "receiver": "mdi:audio-video"
         }

@@ -9,11 +9,9 @@ from aiostreammagic import (
     RepeatMode as CambridgeRepeatMode,
     ShuffleMode,
     StreamMagicClient,
-    TransportControl
+    TransportControl,
 )
-from aiostreammagic.models import (
-    ControlBusMode
-)
+from aiostreammagic.models import ControlBusMode
 
 from homeassistant.components.media_player import (
     BrowseMedia,

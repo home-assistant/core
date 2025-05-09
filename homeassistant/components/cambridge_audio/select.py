@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
 from aiostreammagic import StreamMagicClient
-from aiostreammagic.models import DisplayBrightness, ControlBusMode
+from aiostreammagic.models import ControlBusMode, DisplayBrightness
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -80,7 +80,7 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
         key="control_bus_mode",
         translation_key="control_bus_mode",
         options=[
-            ControlBusMode.AMPLIFIER .value,
+            ControlBusMode.AMPLIFIER.value,
             ControlBusMode.RECEIVER.value,
             ControlBusMode.OFF.value,
         ],

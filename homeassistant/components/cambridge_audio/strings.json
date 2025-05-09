@@ -52,7 +52,7 @@
         "state": {
           "amplifier": "Amplifier",
           "receiver": "Receiver",
-          "off":"[%key:common::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       }
     },
