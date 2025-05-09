@@ -41,7 +41,6 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
         self._attr_unique_id = config_entry.unique_id or config_entry.entry_id
         self._attr_device_info = DeviceInfo(
             manufacturer=config_entry.data.get(CONF_MANUFACTURER),
-            model=config_entry.data.get(CONF_MODEL),
             model_id=config_entry.data.get(CONF_MODEL),
         )
         if self.unique_id:
