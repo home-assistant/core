@@ -93,11 +93,6 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
         """Gets the data for this particular device."""
         return self.coordinator.data[self._device_id]
 
-    @property
-    def available(self) -> bool:
-        """Whether the entity is available or not."""
-        return super().available and self._attr_current_temperature is not None
-
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
