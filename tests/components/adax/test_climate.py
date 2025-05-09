@@ -89,6 +89,7 @@ async def test_climate_local(
 
 async def test_climate_set_temperature_to_zero(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_cloud_config_entry: MockConfigEntry,
     mock_adax_cloud: AsyncMock,
 ) -> None:
@@ -118,7 +119,9 @@ async def test_climate_set_temperature_to_zero(
     CLOUD_DEVICE_DATA[0]["heatingEnabled"] = False
     CLOUD_DEVICE_DATA[0]["targetTemperature"] = 0
 
-    await async_update_entity(hass, entity_id)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # Assert state after temp change
     state = hass.states.get(entity_id)
