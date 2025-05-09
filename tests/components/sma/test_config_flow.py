@@ -281,7 +281,6 @@ async def test_reauth_flow_exceptions(
 
     with (
         patch("pysma.SMA.new_session", side_effect=exception),
-        _patch_async_setup_entry() as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
