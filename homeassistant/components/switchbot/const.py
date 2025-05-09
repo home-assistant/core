@@ -38,7 +38,7 @@ class SupportedModels(StrEnum):
     ROLLER_SHADE = "roller_shade"
     HUBMINI_MATTER = "hubmini_matter"
     CIRCULATOR_FAN = "circulator_fan"
-    AIR_PURIFIER = "Air_Purifier"
+    AIR_PURIFIER = "air_purifier"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
