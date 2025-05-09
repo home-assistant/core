@@ -191,6 +191,19 @@
       "energy_consumption": {
         "name": "Energy consumption"
       },
+      "drying_step": {
+        "name": "Drying step",
+        "state": {
+          "extra_dry": "Extra dry",
+          "hand_iron_1": "Hand iron 1",
+          "hand_iron_2": "Hand iron 2",
+          "machine_iron": "Machine iron",
+          "normal_plus": "Normal plus",
+          "normal": "Normal",
+          "slightly_dry": "Slightly dry",
+          "smoothing": "Smoothing"
+        }
+      },
       "program_phase": {
         "name": "Program phase",
         "state": {
@@ -313,6 +326,8 @@
           "automatic_plus": "Automatic plus",
           "baking_tray": "Baking tray",
           "barista_assistant": "BaristaAssistant",
+          "baser_one_large": "Baiser one large",
+          "baser_severall_small": "Baiser several small",
           "basket_program": "Basket program",
           "basmati_rice_rapid_steam_cooking": "Basmati rice (rapid steam cooking)",
           "basmati_rice_steam_cooking": "Basmati rice (steam cooking)",
@@ -468,7 +483,7 @@
           "gentle_minimum_iron": "Gentle minimum iron",
           "gentle_smoothing": "Gentle smoothing",
           "german_turnip_cut_into_batons": "German turnip (cut into batons)",
-          "german_turnip_sliced": "German turnip (sliced)",
+          "german_turnip_diced": "German turnip (diced)",
           "gilt_head_bream_fillet": "Gilt-head bream (fillet)",
           "gilt_head_bream_whole": "Gilt-head bream (whole)",
           "glasses_warm": "Glasses warm",
@@ -489,7 +504,6 @@
           "greenage_plums": "Greenage plums",
           "halibut_fillet_2_cm": "Halibut (fillet, 2 cm)",
           "halibut_fillet_3_cm": "Halibut (fillet, 3 cm)",
-          "heat_crockery": "Heat crockery",
           "heating_damp_flannels": "Heating damp flannels",
           "hens_eggs_size_l_hard": "Hen’s eggs (size „L“, hard)",
           "hens_eggs_size_l_medium": "Hen’s eggs (size „L“, medium)",
@@ -529,9 +543,11 @@
           "latte_macchiato": "Latte macchiato",
           "leek_pieces": "Leek (pieces)",
           "leek_rings": "Leek (rings)",
+          "lemon_meringue_pie": "Lemon meringue pie",
           "long_coffee": "Long coffee",
           "long_grain_rice_general_rapid_steam_cooking": "Long grain rice (general, rapid steam cooking)",
           "long_grain_rice_general_steam_cooking": "Long grain rice (general, steam cooking)",
+          "low_temperature_cooking": "Low temperature cooking",
           "maintenance": "Maintenance program",
           "make_yoghurt": "Make yoghurt",
           "mangel_cut": "Mangel (cut)",
@@ -670,6 +686,7 @@
           "prove_dough": "Prove dough",
           "pumpkin_diced": "Pumpkin (diced)",
           "pumpkin_soup": "Pumpkin soup",
+          "pyrolytic": "Pyrolytic",
           "quick_mw": "Quick MW",
           "quick_power_wash": "QuickPowerWash",
           "quinces_diced": "Quinces (diced)",
@@ -722,6 +739,7 @@
           "sea_devil_fillet_3_cm": "Sea devil (fillet, 3 cm)",
           "sea_devil_fillet_4_cm": "Sea devil (fillet, 4 cm)",
           "separate_rinse_starch": "Separate rinse/starch",
+          "shabbat_program": "Shabbat program",
           "sheyang_rapid_steam_cooking": "Sheyang (rapid steam cooking)",
           "sheyang_steam_cooking": "Sheyang (steam cooking)",
           "shirts": "Shirts",
@@ -752,6 +770,7 @@
           "steam_care": "Steam care",
           "steam_cooking": "Steam cooking",
           "steam_smoothing": "Steam smoothing",
+          "sterilize_crockery": "Sterilize crockery",
           "stuffed_cabbage": "Stuffed cabbage",
           "sweat_onions": "Sweat onions",
           "swede_cut_into_batons": "Swede (cut into batons)",
@@ -790,6 +809,7 @@
           "veal_sausages": "Veal sausages",
           "venus_clams": "Venus clams",
           "very_hot_water": "Very hot water",
+          "viennese_apple_strudel": "Viennese apple strudel",
           "viennese_silverside": "Viennese silverside",
           "warm_air": "Warm air",
           "wheat_cracked": "Wheat (cracked)",
@@ -814,6 +834,7 @@
           "yellow_beans_cut": "Yellow beans (cut)",
           "yellow_beans_whole": "Yellow beans (whole)",
           "yellow_split_peas": "Yellow split peas",
+          "yom_tov": "Yom tov",
           "zander_fillet": "Zander (fillet)"
         }
       },

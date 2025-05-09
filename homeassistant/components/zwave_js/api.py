@@ -88,6 +88,7 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    RESTORE_NVM_DRIVER_READY_TIMEOUT,
     USER_AGENT,
 )
 from .helpers import (
@@ -673,10 +674,18 @@ async def websocket_node_alerts(
             connection.send_error(msg[ID], ERR_NOT_LOADED, str(err))
         return
 
+    comments = node.device_config.metadata.comments
+    if node.in_interview:
+        comments.append(
+            {
+                "level": "warning",
+                "text": "This device is currently being interviewed and may not be fully operational.",
+            }
+        )
     connection.send_result(
         msg[ID],
         {
-            "comments": node.device_config.metadata.comments,
+            "comments": comments,
             "is_embedded": node.device_config.is_embedded,
         },
     )
@@ -3063,14 +3072,28 @@ async def websocket_restore_nvm(
             )
         )
 
+    @callback
+    def set_driver_ready(event: dict) -> None:
+        "Set the driver ready event."
+        wait_driver_ready.set()
+
+    wait_driver_ready = asyncio.Event()
+
     # Set up subscription for progress events
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         controller.on("nvm convert progress", forward_progress),
         controller.on("nvm restore progress", forward_progress),
+        driver.once("driver ready", set_driver_ready),
     ]
 
     await controller.async_restore_nvm_base64(msg["data"])
+
+    with suppress(TimeoutError):
+        async with asyncio.timeout(RESTORE_NVM_DRIVER_READY_TIMEOUT):
+            await wait_driver_ready.wait()
+    await hass.config_entries.async_reload(entry.entry_id)
+
     connection.send_message(
         websocket_api.event_message(
             msg[ID],
