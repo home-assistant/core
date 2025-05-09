@@ -60,6 +60,7 @@ class NessAlarmPanel(AlarmControlPanelEntity):
         """Initialize the alarm panel."""
         self._client = client
         self._attr_name = name
+        self._attr_unique_id = f"{name}-alarm"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
