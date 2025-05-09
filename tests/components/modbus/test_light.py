@@ -349,8 +349,7 @@ async def test_light_service_turn(
 @pytest.mark.parametrize(
     (
         "do_config",
-        "brightness_input",
-        "color_temp_input",
+        "service_data",
         "expected_brightness",
         "expected_color_temp",
     ),
@@ -366,8 +365,7 @@ async def test_light_service_turn(
                     }
                 ]
             },
-            None,
-            None,
+            {},
             None,
             None,
         ),
@@ -382,8 +380,7 @@ async def test_light_service_turn(
                     }
                 ]
             },
-            155,
-            3000,
+            {ATTR_BRIGHTNESS: 155, ATTR_COLOR_TEMP_KELVIN: 3000},
             None,
             None,
         ),
@@ -399,8 +396,7 @@ async def test_light_service_turn(
                     }
                 ]
             },
-            128,
-            3000,
+            {ATTR_BRIGHTNESS: 128, ATTR_COLOR_TEMP_KELVIN: 3000},
             None,
             20,
         ),
@@ -417,8 +413,7 @@ async def test_light_service_turn(
                     }
                 ]
             },
-            128,
-            2000,
+            {ATTR_BRIGHTNESS: 128, ATTR_COLOR_TEMP_KELVIN: 2000},
             50,
             0,
         ),
@@ -434,8 +429,7 @@ async def test_light_service_turn(
                     }
                 ]
             },
-            128,
-            None,
+            {ATTR_BRIGHTNESS: 128},
             50,
             None,
         ),
@@ -444,26 +438,16 @@ async def test_light_service_turn(
 async def test_color_temp_brightness_light(
     hass: HomeAssistant,
     mock_modbus_ha,
-    brightness_input,
-    color_temp_input,
+    service_data,
     expected_brightness,
     expected_color_temp,
 ) -> None:
     """Test Modbus Light color temperature and brightness."""
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
-
-    service_data = {ATTR_ENTITY_ID: ENTITY_ID}
-
-    if brightness_input is not None:
-        service_data[ATTR_BRIGHTNESS] = brightness_input
-
-    if color_temp_input is not None:
-        service_data[ATTR_COLOR_TEMP_KELVIN] = color_temp_input
-
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        service_data=service_data,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
@@ -491,7 +475,7 @@ async def test_color_temp_brightness_light(
 @pytest.mark.parametrize(
     (
         "do_config",
-        "color_temp_input",
+        "service_data",
         "color_temp_percent_input",
         "expected_color_temp",
     ),
@@ -509,7 +493,7 @@ async def test_color_temp_brightness_light(
                     }
                 ]
             },
-            2000,
+            {ATTR_COLOR_TEMP_KELVIN: 2000},
             0,
             2000,
         ),
@@ -527,7 +511,7 @@ async def test_color_temp_brightness_light(
                     }
                 ]
             },
-            7000,
+            {ATTR_COLOR_TEMP_KELVIN: 7000},
             100,
             7000,
         ),
@@ -536,17 +520,12 @@ async def test_color_temp_brightness_light(
 async def test_color_temp_no_valid_params(
     hass: HomeAssistant,
     mock_modbus_ha,
-    color_temp_input,
+    service_data,
     color_temp_percent_input,
     expected_color_temp,
 ) -> None:
     """Test Modbus Light color temperature with no valid parameters."""
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
-    service_data = {
-        ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_COLOR_TEMP_KELVIN: color_temp_input,
-    }
-
     entities = list(hass.data["light"].entities)
     entity = entities[0]
     entity._attr_min_color_temp_kelvin = None
@@ -556,7 +535,7 @@ async def test_color_temp_no_valid_params(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        service_data=service_data,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -575,7 +554,7 @@ async def test_color_temp_no_valid_params(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        service_data=service_data,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
