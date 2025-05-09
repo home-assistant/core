@@ -1,0 +1,208 @@
+# serializer version: 1
+# name: test_sensors[sensor.backup_backup_manager_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'idle',
+        'create_backup',
+        'blocked',
+        'receive_backup',
+        'restore_backup',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.backup_backup_manager_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Backup Manager state',
+    'platform': 'backup',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'backup_manager_state',
+    'unique_id': 'backup_manager_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.backup_backup_manager_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Backup Backup Manager state',
+      'options': list([
+        'idle',
+        'create_backup',
+        'blocked',
+        'receive_backup',
+        'restore_backup',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.backup_backup_manager_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_sensors[sensor.backup_last_attempted_automatic_backup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.backup_last_attempted_automatic_backup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last attempted automatic backup',
+    'platform': 'backup',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_attempted_automatic_backup',
+    'unique_id': 'last_attempted_automatic_backup',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.backup_last_attempted_automatic_backup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Backup Last attempted automatic backup',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.backup_last_attempted_automatic_backup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.backup_last_successful_automatic_backup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.backup_last_successful_automatic_backup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last successful automatic backup',
+    'platform': 'backup',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_successful_automatic_backup',
+    'unique_id': 'last_successful_automatic_backup',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.backup_last_successful_automatic_backup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Backup Last successful automatic backup',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.backup_last_successful_automatic_backup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.backup_next_scheduled_automatic_backup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.backup_next_scheduled_automatic_backup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next scheduled automatic backup',
+    'platform': 'backup',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_scheduled_automatic_backup',
+    'unique_id': 'next_scheduled_automatic_backup',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.backup_next_scheduled_automatic_backup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Backup Next scheduled automatic backup',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.backup_next_scheduled_automatic_backup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

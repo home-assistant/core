@@ -52,6 +52,7 @@ def client_fixture() -> Generator[MagicMock]:
         client.filter_cycle_1_start = time(8, 0)
         client.filter_cycle_1_end = time(9, 0)
         client.filter_cycle_2_running = False
+        client.filter_cycle_2_enabled = True
         client.filter_cycle_2_start = time(19, 0)
         client.filter_cycle_2_end = time(21, 30)
         client.temperature_unit = 1
@@ -65,6 +66,9 @@ def client_fixture() -> Generator[MagicMock]:
         client.heat_state = 2
         client.lights = []
         client.pumps = []
+        client.temperature_range.client = client
         client.temperature_range.state = LowHighRange.LOW
+
+        client.fault = None
 
         yield client

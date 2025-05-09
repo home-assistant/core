@@ -8,7 +8,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["devolo_plc_api"],
-  "requirements": ["devolo-plc-api==1.4.1"],
+  "requirements": ["devolo-plc-api==1.5.1"],
   "zeroconf": [
     {
       "type": "_dvl-deviceapi._tcp.local.",

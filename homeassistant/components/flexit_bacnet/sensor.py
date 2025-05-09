@@ -161,6 +161,10 @@ async def async_setup_entry(
     )
 
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
+
 class FlexitSensor(FlexitEntity, SensorEntity):
     """Representation of a Flexit (bacnet) Sensor."""
 

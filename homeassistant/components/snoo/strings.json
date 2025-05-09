@@ -1,0 +1,105 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Your Snoo username or email",
+          "password": "Your Snoo password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "exceptions": {
+    "select_failed": {
+      "message": "Error while updating {name} to {option}"
+    },
+    "switch_on_failed": {
+      "message": "Turning {name} on failed"
+    },
+    "switch_off_failed": {
+      "message": "Turning {name} off failed"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "left_clip": {
+        "name": "Left safety clip"
+      },
+      "right_clip": {
+        "name": "Right safety clip"
+      }
+    },
+    "event": {
+      "event": {
+        "name": "Snoo event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "timer": "Timer",
+              "cry": "Cry",
+              "command": "Command sent",
+              "safety_clip": "Safety clip changed",
+              "long_activity_press": "Long activity press",
+              "activity": "Activity press",
+              "power": "Power button pressed",
+              "status_requested": "Status requested",
+              "sticky_white_noise_updated": "Sleepytime sounds updated",
+              "config_change": "Config changed"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "state": {
+        "name": "State",
+        "state": {
+          "baseline": "Baseline",
+          "level1": "Level 1",
+          "level2": "Level 2",
+          "level3": "Level 3",
+          "level4": "Level 4",
+          "stop": "[%key:common::state::stopped%]",
+          "pretimeout": "Pre-timeout",
+          "timeout": "Timeout"
+        }
+      },
+      "time_left": {
+        "name": "Time left"
+      }
+    },
+    "select": {
+      "intensity": {
+        "name": "Intensity",
+        "state": {
+          "baseline": "[%key:component::snoo::entity::sensor::state::state::baseline%]",
+          "level1": "[%key:component::snoo::entity::sensor::state::state::level1%]",
+          "level2": "[%key:component::snoo::entity::sensor::state::state::level2%]",
+          "level3": "[%key:component::snoo::entity::sensor::state::state::level3%]",
+          "level4": "[%key:component::snoo::entity::sensor::state::state::level4%]",
+          "stop": "[%key:common::state::stopped%]"
+        }
+      }
+    },
+    "switch": {
+      "sticky_white_noise": {
+        "name": "Sleepytime sounds"
+      },
+      "hold": {
+        "name": "Level lock"
+      }
+    }
+  }
+}

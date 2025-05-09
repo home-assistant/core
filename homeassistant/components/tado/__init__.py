@@ -10,12 +10,17 @@ from PyTado.interface import Tado
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_FALLBACK,
+    CONF_REFRESH_TOKEN,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
@@ -31,6 +36,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WATER_HEATER,
 ]
 
@@ -55,23 +61,34 @@ type TadoConfigEntry = ConfigEntry[TadoData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
     """Set up Tado from a config entry."""
+    if CONF_REFRESH_TOKEN not in entry.data:
+        raise ConfigEntryAuthFailed
 
     _async_import_options_from_data_if_missing(hass, entry)
 
     _LOGGER.debug("Setting up Tado connection")
+    _LOGGER.debug(
+        "Creating tado instance with refresh token: %s",
+        entry.data[CONF_REFRESH_TOKEN],
+    )
+
+    def create_tado_instance() -> tuple[Tado, str]:
+        """Create a Tado instance, this time with a previously obtained refresh token."""
+        tado = Tado(saved_refresh_token=entry.data[CONF_REFRESH_TOKEN])
+        return tado, tado.device_activation_status()
+
     try:
-        tado = await hass.async_add_executor_job(
-            Tado,
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-        )
+        tado, device_status = await hass.async_add_executor_job(create_tado_instance)
     except PyTado.exceptions.TadoWrongCredentialsException as err:
         raise ConfigEntryError(f"Invalid Tado credentials. Error: {err}") from err
     except PyTado.exceptions.TadoException as err:
         raise ConfigEntryNotReady(f"Error during Tado setup: {err}") from err
-    _LOGGER.debug(
-        "Tado connection established for username: %s", entry.data[CONF_USERNAME]
-    )
+    if device_status != "COMPLETED":
+        raise ConfigEntryAuthFailed(
+            f"Device login flow status is {device_status}. Starting re-authentication."
+        )
+
+    _LOGGER.debug("Tado connection established")
 
     coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
     await coordinator.async_config_entry_first_refresh()
@@ -81,8 +98,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     entry.runtime_data = TadoData(coordinator, mobile_coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    if entry.version < 2:
+        _LOGGER.debug("Migrating Tado entry to version 2. Current data: %s", entry.data)
+        data = dict(entry.data)
+        data.pop(CONF_USERNAME, None)
+        data.pop(CONF_PASSWORD, None)
+        hass.config_entries.async_update_entry(entry=entry, data=data, version=2)
+        _LOGGER.debug("Migration to version 2 successful")
     return True
 
 
@@ -103,11 +132,6 @@ def _async_import_options_from_data_if_missing(
         else:
             options[CONF_FALLBACK] = CONST_OVERLAY_MANUAL
         hass.config_entries.async_update_entry(entry, options=options)
-
-
-async def update_listener(hass: HomeAssistant, entry: TadoConfigEntry):
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:

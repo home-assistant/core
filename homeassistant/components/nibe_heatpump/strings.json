@@ -10,13 +10,13 @@
       },
       "modbus": {
         "data": {
-          "model": "Model of Heat Pump",
+          "model": "Model of heat pump",
           "modbus_url": "Modbus URL",
-          "modbus_unit": "Modbus Unit Identifier"
+          "modbus_unit": "Modbus unit identifier"
         },
         "data_description": {
-          "modbus_url": "Modbus URL that describes the connection to your Heat Pump or MODBUS40 unit. It should be on the form:\n - `tcp://[HOST]:[PORT]` for Modbus TCP connection\n - `serial://[LOCAL DEVICE]` for a local Modbus RTU connection\n - `rfc2217://[HOST]:[PORT]` for a remote telnet based Modbus RTU connection.",
-          "modbus_unit": "Unit identification for your Heat Pump. Can usually be left at 0."
+          "modbus_url": "Modbus URL that describes the connection to your heat pump or MODBUS40 unit. It should be in the form:\n - `tcp://[HOST]:[PORT]` for Modbus TCP connection\n - `serial://[LOCAL DEVICE]` for a local Modbus RTU connection\n - `rfc2217://[HOST]:[PORT]` for a remote Telnet-based Modbus RTU connection.",
+          "modbus_unit": "Unit identification for your heat pump. Can usually be left at 0."
         }
       },
       "nibegw": {

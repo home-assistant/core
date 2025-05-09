@@ -44,7 +44,7 @@
       "fields": {
         "can_be_enqueued": {
           "name": "Can be enqueued",
-          "description": "If True, session waits for an open session to end, if False session is dropped if one is running."
+          "description": "Whether the session should wait for an open session to end. Otherwise it is dropped if another session is already running."
         },
         "custom_data": {
           "name": "[%key:component::snips::services::say::fields::custom_data::name%]",

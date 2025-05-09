@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import FlexitConfigEntry, FlexitCoordinator
 from .entity import FlexitEntity
 
@@ -205,6 +206,9 @@ async def async_setup_entry(
     )
 
 
+PARALLEL_UPDATES = 1
+
+
 class FlexitNumber(FlexitEntity, NumberEntity):
     """Representation of a Flexit Number."""
 
@@ -246,6 +250,12 @@ class FlexitNumber(FlexitEntity, NumberEntity):
         try:
             await set_native_value_fn(int(value))
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise HomeAssistantError from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_value_error",
+                translation_placeholders={
+                    "value": str(value),
+                },
+            ) from exc
         finally:
             await self.coordinator.async_refresh()

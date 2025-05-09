@@ -1438,7 +1438,7 @@ class AlexaModeController(AlexaCapability):
         # Fan preset_mode
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
             mode = self.entity.attributes.get(fan.ATTR_PRESET_MODE, None)
-            if mode in self.entity.attributes.get(fan.ATTR_PRESET_MODES, None):
+            if mode in self.entity.attributes.get(fan.ATTR_PRESET_MODES, ()):
                 return f"{fan.ATTR_PRESET_MODE}.{mode}"
 
         # Humidifier mode

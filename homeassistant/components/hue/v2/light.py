@@ -18,6 +18,7 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
+    EFFECT_OFF,
     FLASH_SHORT,
     ColorMode,
     LightEntity,
@@ -28,6 +29,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge
@@ -39,10 +41,12 @@ from .helpers import (
     normalize_hue_transition,
 )
 
-EFFECT_NONE = "None"
 FALLBACK_MIN_KELVIN = 6500
 FALLBACK_MAX_KELVIN = 2000
 FALLBACK_KELVIN = 5800  # halfway
+
+# HA 2025.4 replaced the deprecated effect "None" with HA default "off"
+DEPRECATED_EFFECT_NONE = "None"
 
 
 async def async_setup_entry(
@@ -75,7 +79,7 @@ class HueLight(HueBaseEntity, LightEntity):
 
     _fixed_color_mode: ColorMode | None = None
     entity_description = LightEntityDescription(
-        key="hue_light", has_entity_name=True, name=None
+        key="hue_light", translation_key="hue_light", has_entity_name=True, name=None
     )
 
     def __init__(
@@ -107,7 +111,9 @@ class HueLight(HueBaseEntity, LightEntity):
         self._attr_effect_list = []
         if effects := resource.effects:
             self._attr_effect_list = [
-                x.value for x in effects.status_values if x != EffectStatus.NO_EFFECT
+                x.value
+                for x in effects.status_values
+                if x not in (EffectStatus.NO_EFFECT, EffectStatus.UNKNOWN)
             ]
         if timed_effects := resource.timed_effects:
             self._attr_effect_list += [
@@ -116,7 +122,7 @@ class HueLight(HueBaseEntity, LightEntity):
                 if x != TimedEffectStatus.NO_EFFECT
             ]
         if len(self._attr_effect_list) > 0:
-            self._attr_effect_list.insert(0, EFFECT_NONE)
+            self._attr_effect_list.insert(0, EFFECT_OFF)
             self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
@@ -209,7 +215,7 @@ class HueLight(HueBaseEntity, LightEntity):
         if timed_effects := self.resource.timed_effects:
             if timed_effects.status != TimedEffectStatus.NO_EFFECT:
                 return timed_effects.status.value
-        return EFFECT_NONE
+        return EFFECT_OFF
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -231,12 +237,29 @@ class HueLight(HueBaseEntity, LightEntity):
         self._color_temp_active = color_temp is not None
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
-        if effect_str in (EFFECT_NONE, EFFECT_NONE.lower()):
-            # ignore effect if set to "None" and we have no effect active
-            # the special effect "None" is only used to stop an active effect
+        if effect_str == DEPRECATED_EFFECT_NONE:
+            # deprecated effect "None" is now "off"
+            effect_str = EFFECT_OFF
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_effect_none",
+                breaks_in_ha_version="2025.10.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_effect_none",
+            )
+            self.logger.warning(
+                "Detected deprecated effect 'None' in %s, use 'off' instead. "
+                "This will stop working in HA 2025.10",
+                self.entity_id,
+            )
+        if effect_str == EFFECT_OFF:
+            # ignore effect if set to "off" and we have no effect active
+            # the special effect "off" is only used to stop an active effect
             # but sending it while no effect is active can actually result in issues
             # https://github.com/home-assistant/core/issues/122165
-            effect = None if self.effect == EFFECT_NONE else EffectStatus.NO_EFFECT
+            effect = None if self.effect == EFFECT_OFF else EffectStatus.NO_EFFECT
         elif effect_str is not None:
             # work out if we got a regular effect or timed effect
             effect = EffectStatus(effect_str)

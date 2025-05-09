@@ -38,12 +38,10 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: str | dict[str, EheimDigitalDevice],
+        device_address: dict[str, EheimDigitalDevice],
     ) -> None:
         """Set up the light entities for one or multiple devices."""
         entities: list[EheimDigitalClassicLEDControlLight] = []
-        if isinstance(device_address, str):
-            device_address = {device_address: coordinator.hub.devices[device_address]}
         for device in device_address.values():
             if isinstance(device, EheimDigitalClassicLEDControl):
                 for channel in range(2):

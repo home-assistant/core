@@ -151,6 +151,7 @@
 # ---
 # name: test_template_error
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -171,6 +172,7 @@
 # ---
 # name: test_unknown_llm_api
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({

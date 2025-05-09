@@ -1,0 +1,786 @@
+{
+  "components": {
+    "main": {
+      "samsungce.dishwasherWashingCourse": {
+        "customCourseCandidates": {
+          "value": null
+        },
+        "washingCourse": {
+          "value": "normal",
+          "timestamp": "2025-02-08T20:21:26.497Z"
+        },
+        "supportedCourses": {
+          "value": [
+            "auto",
+            "normal",
+            "heavy",
+            "delicate",
+            "express",
+            "rinseOnly",
+            "selfClean"
+          ],
+          "timestamp": "2025-02-08T18:00:37.194Z"
+        }
+      },
+      "dishwasherOperatingState": {
+        "completionTime": {
+          "value": "2025-02-08T22:49:26Z",
+          "timestamp": "2025-02-08T20:21:26.452Z"
+        },
+        "machineState": {
+          "value": "stop",
+          "timestamp": "2025-02-08T20:21:26.452Z"
+        },
+        "progress": {
+          "value": null
+        },
+        "supportedMachineStates": {
+          "value": ["stop", "run", "pause"],
+          "timestamp": "2024-09-10T10:21:02.853Z"
+        },
+        "dishwasherJobState": {
+          "value": "unknown",
+          "timestamp": "2025-02-08T20:21:26.452Z"
+        }
+      },
+      "samsungce.dishwasherWashingOptions": {
+        "dryPlus": {
+          "value": null
+        },
+        "stormWash": {
+          "value": null
+        },
+        "hotAirDry": {
+          "value": null
+        },
+        "selectedZone": {
+          "value": {
+            "value": "all",
+            "settable": ["none", "upper", "lower", "all"]
+          },
+          "timestamp": "2022-11-09T00:20:42.461Z"
+        },
+        "speedBooster": {
+          "value": {
+            "value": false,
+            "settable": [false, true]
+          },
+          "timestamp": "2023-11-24T14:46:55.375Z"
+        },
+        "highTempWash": {
+          "value": {
+            "value": false,
+            "settable": [false, true]
+          },
+          "timestamp": "2025-02-08T07:39:54.739Z"
+        },
+        "sanitizingWash": {
+          "value": null
+        },
+        "heatedDry": {
+          "value": null
+        },
+        "zoneBooster": {
+          "value": {
+            "value": "none",
+            "settable": ["none", "left", "right", "all"]
+          },
+          "timestamp": "2022-11-20T07:10:27.445Z"
+        },
+        "addRinse": {
+          "value": null
+        },
+        "supportedList": {
+          "value": [
+            "selectedZone",
+            "zoneBooster",
+            "speedBooster",
+            "sanitize",
+            "highTempWash"
+          ],
+          "timestamp": "2021-06-27T01:19:38.000Z"
+        },
+        "rinsePlus": {
+          "value": null
+        },
+        "sanitize": {
+          "value": {
+            "value": false,
+            "settable": [false, true]
+          },
+          "timestamp": "2025-01-18T23:49:09.964Z"
+        },
+        "steamSoak": {
+          "value": null
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": null
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": null
+        },
+        "description": {
+          "value": null
+        },
+        "releaseYear": {
+          "value": null
+        },
+        "binaryId": {
+          "value": "DA_DW_A51_20_COMMON",
+          "timestamp": "2025-02-08T19:29:30.987Z"
+        }
+      },
+      "custom.dishwasherOperatingProgress": {
+        "dishwasherOperatingProgress": {
+          "value": "none",
+          "timestamp": "2025-02-08T20:21:26.452Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-02-08T20:21:26.386Z"
+        }
+      },
+      "samsungce.quickControl": {
+        "version": {
+          "value": null
+        }
+      },
+      "samsungce.waterConsumptionReport": {
+        "waterConsumption": {
+          "value": null
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "DA_DW_A51_20_COMMON_30230714",
+          "timestamp": "2023-11-02T15:58:55.699Z"
+        },
+        "mnhw": {
+          "value": "ARTIK051",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        },
+        "di": {
+          "value": "f36dc7ce-cac0-0667-dc14-a3704eb5e676",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2024-07-04T13:53:32.032Z"
+        },
+        "n": {
+          "value": "[dishwasher] Samsung",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        },
+        "mnmo": {
+          "value": "DA_DW_A51_20_COMMON|30007242|40010201001311000101000000000000",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        },
+        "vid": {
+          "value": "DA-WM-DW-000001",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 2.0",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        },
+        "mnos": {
+          "value": "TizenRT 1.0 + IPv6",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        },
+        "pi": {
+          "value": "f36dc7ce-cac0-0667-dc14-a3704eb5e676",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2021-06-27T01:19:37.615Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": [
+            "samsungce.waterConsumptionReport",
+            "sec.wifiConfiguration",
+            "samsungce.quickControl",
+            "samsungce.deviceInfoPrivate",
+            "demandResponseLoadControl",
+            "sec.diagnosticsInformation",
+            "custom.waterFilter"
+          ],
+          "timestamp": "2025-02-08T19:29:32.447Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 24040105,
+          "timestamp": "2024-07-02T02:56:22.508Z"
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": null
+        },
+        "endpoint": {
+          "value": null
+        },
+        "minVersion": {
+          "value": null
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": null
+        },
+        "protocolType": {
+          "value": null
+        },
+        "tsId": {
+          "value": null
+        },
+        "mnId": {
+          "value": null
+        },
+        "dumpType": {
+          "value": null
+        }
+      },
+      "samsungce.dishwasherOperation": {
+        "supportedOperatingState": {
+          "value": ["ready", "running", "paused"],
+          "timestamp": "2024-09-10T10:21:02.853Z"
+        },
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2025-02-08T20:21:26.452Z"
+        },
+        "reservable": {
+          "value": false,
+          "timestamp": "2025-02-08T18:00:37.194Z"
+        },
+        "progressPercentage": {
+          "value": 1,
+          "timestamp": "2025-02-08T20:21:26.452Z"
+        },
+        "remainingTimeStr": {
+          "value": "02:28",
+          "timestamp": "2025-02-08T20:21:26.452Z"
+        },
+        "operationTime": {
+          "value": null
+        },
+        "remainingTime": {
+          "value": 148.0,
+          "unit": "min",
+          "timestamp": "2025-02-08T20:21:26.452Z"
+        },
+        "timeLeftToStart": {
+          "value": 0.0,
+          "unit": "min",
+          "timestamp": "2025-02-08T18:00:37.482Z"
+        }
+      },
+      "samsungce.dishwasherJobState": {
+        "scheduledJobs": {
+          "value": [
+            {
+              "jobName": "washing",
+              "timeInSec": 3600
+            },
+            {
+              "jobName": "rinsing",
+              "timeInSec": 1020
+            },
+            {
+              "jobName": "drying",
+              "timeInSec": 1200
+            }
+          ],
+          "timestamp": "2025-02-08T20:21:26.928Z"
+        },
+        "dishwasherJobState": {
+          "value": "none",
+          "timestamp": "2025-02-08T20:21:26.452Z"
+        }
+      },
+      "samsungce.kidsLock": {
+        "lockState": {
+          "value": "unlocked",
+          "timestamp": "2025-02-08T18:00:37.450Z"
+        }
+      },
+      "demandResponseLoadControl": {
+        "drlcStatus": {
+          "value": null
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "energy": 101600,
+            "deltaEnergy": 0,
+            "power": 0,
+            "powerEnergy": 0.0,
+            "persistedEnergy": 0,
+            "energySaved": 0,
+            "persistedSavedEnergy": 0,
+            "start": "2025-02-08T20:21:21Z",
+            "end": "2025-02-08T20:21:26Z"
+          },
+          "timestamp": "2025-02-08T20:21:26.596Z"
+        }
+      },
+      "refresh": {},
+      "samsungce.dishwasherWashingCourseDetails": {
+        "predefinedCourses": {
+          "value": [
+            {
+              "courseName": "auto",
+              "energyUsage": 3,
+              "waterUsage": 3,
+              "temperature": {
+                "min": 50,
+                "max": 60,
+                "unit": "C"
+              },
+              "expectedTime": {
+                "time": 136,
+                "unit": "min"
+              },
+              "options": {
+                "highTempWash": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "sanitize": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "speedBooster": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "zoneBooster": {
+                  "default": "none",
+                  "settable": ["none", "left"]
+                },
+                "selectedZone": {
+                  "default": "all",
+                  "settable": ["none", "lower", "all"]
+                }
+              }
+            },
+            {
+              "courseName": "normal",
+              "energyUsage": 3,
+              "waterUsage": 4,
+              "temperature": {
+                "min": 45,
+                "max": 62,
+                "unit": "C"
+              },
+              "expectedTime": {
+                "time": 148,
+                "unit": "min"
+              },
+              "options": {
+                "highTempWash": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "sanitize": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "speedBooster": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "zoneBooster": {
+                  "default": "none",
+                  "settable": ["none", "left"]
+                },
+                "selectedZone": {
+                  "default": "all",
+                  "settable": ["none", "lower", "all"]
+                }
+              }
+            },
+            {
+              "courseName": "heavy",
+              "energyUsage": 4,
+              "waterUsage": 5,
+              "temperature": {
+                "min": 65,
+                "max": 65,
+                "unit": "C"
+              },
+              "expectedTime": {
+                "time": 155,
+                "unit": "min"
+              },
+              "options": {
+                "highTempWash": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "sanitize": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "speedBooster": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "zoneBooster": {
+                  "default": "none",
+                  "settable": ["none", "left"]
+                },
+                "selectedZone": {
+                  "default": "all",
+                  "settable": ["none", "lower", "all"]
+                }
+              }
+            },
+            {
+              "courseName": "delicate",
+              "energyUsage": 2,
+              "waterUsage": 3,
+              "temperature": {
+                "min": 50,
+                "max": 50,
+                "unit": "C"
+              },
+              "expectedTime": {
+                "time": 112,
+                "unit": "min"
+              },
+              "options": {
+                "highTempWash": {
+                  "default": false,
+                  "settable": []
+                },
+                "sanitize": {
+                  "default": false,
+                  "settable": []
+                },
+                "speedBooster": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "zoneBooster": {
+                  "default": "none",
+                  "settable": []
+                },
+                "selectedZone": {
+                  "default": "all",
+                  "settable": ["none", "lower", "all"]
+                }
+              }
+            },
+            {
+              "courseName": "express",
+              "energyUsage": 2,
+              "waterUsage": 2,
+              "temperature": {
+                "min": 52,
+                "max": 52,
+                "unit": "C"
+              },
+              "expectedTime": {
+                "time": 60,
+                "unit": "min"
+              },
+              "options": {
+                "highTempWash": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "sanitize": {
+                  "default": false,
+                  "settable": [false, true]
+                },
+                "speedBooster": {
+                  "default": false,
+                  "settable": []
+                },
+                "zoneBooster": {
+                  "default": "none",
+                  "settable": ["none", "left"]
+                },
+                "selectedZone": {
+                  "default": "all",
+                  "settable": ["none", "lower", "all"]
+                }
+              }
+            },
+            {
+              "courseName": "rinseOnly",
+              "energyUsage": 1,
+              "waterUsage": 1,
+              "temperature": {
+                "min": 40,
+                "max": 40,
+                "unit": "C"
+              },
+              "expectedTime": {
+                "time": 14,
+                "unit": "min"
+              },
+              "options": {
+                "highTempWash": {
+                  "default": false,
+                  "settable": []
+                },
+                "sanitize": {
+                  "default": false,
+                  "settable": []
+                },
+                "speedBooster": {
+                  "default": false,
+                  "settable": []
+                },
+                "zoneBooster": {
+                  "default": "none",
+                  "settable": []
+                },
+                "selectedZone": {
+                  "default": "all",
+                  "settable": ["none", "lower", "all"]
+                }
+              }
+            },
+            {
+              "courseName": "selfClean",
+              "energyUsage": 5,
+              "waterUsage": 4,
+              "temperature": {
+                "min": 70,
+                "max": 70,
+                "unit": "C"
+              },
+              "expectedTime": {
+                "time": 139,
+                "unit": "min"
+              },
+              "options": {
+                "highTempWash": {
+                  "default": false,
+                  "settable": []
+                },
+                "sanitize": {
+                  "default": false,
+                  "settable": []
+                },
+                "speedBooster": {
+                  "default": false,
+                  "settable": []
+                },
+                "zoneBooster": {
+                  "default": "none",
+                  "settable": []
+                },
+                "selectedZone": {
+                  "default": "all",
+                  "settable": ["none", "all"]
+                }
+              }
+            }
+          ],
+          "timestamp": "2025-02-08T18:00:37.194Z"
+        },
+        "waterUsageMax": {
+          "value": 5,
+          "timestamp": "2025-02-08T18:00:37.194Z"
+        },
+        "energyUsageMax": {
+          "value": 5,
+          "timestamp": "2025-02-08T18:00:37.194Z"
+        }
+      },
+      "execute": {
+        "data": {
+          "value": {
+            "payload": {
+              "rt": ["oic.r.operational.state"],
+              "if": ["oic.if.baseline", "oic.if.a"],
+              "currentMachineState": "idle",
+              "machineStates": ["pause", "active", "idle"],
+              "jobStates": [
+                "None",
+                "Predrain",
+                "Prewash",
+                "Wash",
+                "Rinse",
+                "Drying",
+                "Finish"
+              ],
+              "currentJobState": "None",
+              "remainingTime": "02:16:00",
+              "progressPercentage": "1"
+            }
+          },
+          "data": {
+            "href": "/operational/state/0"
+          },
+          "timestamp": "2023-07-19T04:23:15.606Z"
+        }
+      },
+      "sec.wifiConfiguration": {
+        "autoReconnection": {
+          "value": null
+        },
+        "minVersion": {
+          "value": null
+        },
+        "supportedWiFiFreq": {
+          "value": null
+        },
+        "supportedAuthType": {
+          "value": null
+        },
+        "protocolType": {
+          "value": null
+        }
+      },
+      "custom.dishwasherOperatingPercentage": {
+        "dishwasherOperatingPercentage": {
+          "value": 1,
+          "timestamp": "2025-02-08T20:21:26.452Z"
+        }
+      },
+      "remoteControlStatus": {
+        "remoteControlEnabled": {
+          "value": "false",
+          "timestamp": "2025-02-08T18:00:37.555Z"
+        }
+      },
+      "custom.supportedOptions": {
+        "course": {
+          "value": null
+        },
+        "referenceTable": {
+          "value": null
+        },
+        "supportedCourses": {
+          "value": ["82", "83", "84", "85", "86", "87", "88"],
+          "timestamp": "2025-02-08T18:00:37.194Z"
+        }
+      },
+      "custom.dishwasherDelayStartTime": {
+        "dishwasherDelayStartTime": {
+          "value": "00:00:00",
+          "timestamp": "2025-02-08T18:00:37.482Z"
+        }
+      },
+      "custom.energyType": {
+        "energyType": {
+          "value": "2.0",
+          "timestamp": "2023-08-25T03:23:06.667Z"
+        },
+        "energySavingSupport": {
+          "value": true,
+          "timestamp": "2024-10-01T00:08:09.813Z"
+        },
+        "drMaxDuration": {
+          "value": null
+        },
+        "energySavingLevel": {
+          "value": null
+        },
+        "energySavingInfo": {
+          "value": null
+        },
+        "supportedEnergySavingLevels": {
+          "value": null
+        },
+        "energySavingOperation": {
+          "value": null
+        },
+        "notificationTemplateID": {
+          "value": null
+        },
+        "energySavingOperationSupport": {
+          "value": null
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": null
+        },
+        "otnDUID": {
+          "value": "MTCNQWBWIV6TS",
+          "timestamp": "2025-02-08T18:00:37.538Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2022-07-20T03:37:30.706Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2025-02-08T18:00:37.538Z"
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "custom.waterFilter": {
+        "waterFilterUsageStep": {
+          "value": null
+        },
+        "waterFilterResetType": {
+          "value": null
+        },
+        "waterFilterCapacity": {
+          "value": null
+        },
+        "waterFilterLastResetDate": {
+          "value": null
+        },
+        "waterFilterUsage": {
+          "value": null
+        },
+        "waterFilterStatus": {
+          "value": null
+        }
+      }
+    }
+  }
+}

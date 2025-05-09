@@ -57,7 +57,7 @@ async def test_number_services(
 
     entity_id = "number.test_charge_current"
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.set_charging_amps",
+        "tesla_fleet_api.tesla.VehicleFleet.set_charging_amps",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -72,7 +72,7 @@ async def test_number_services(
 
     entity_id = "number.test_charge_limit"
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.set_charge_limit",
+        "tesla_fleet_api.tesla.VehicleFleet.set_charge_limit",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -87,7 +87,7 @@ async def test_number_services(
 
     entity_id = "number.energy_site_backup_reserve"
     with patch(
-        "homeassistant.components.tesla_fleet.EnergySpecific.backup",
+        "tesla_fleet_api.tesla.EnergySite.backup",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -105,7 +105,7 @@ async def test_number_services(
 
     entity_id = "number.energy_site_off_grid_reserve"
     with patch(
-        "homeassistant.components.tesla_fleet.EnergySpecific.off_grid_vehicle_charging_reserve",
+        "tesla_fleet_api.tesla.EnergySite.off_grid_vehicle_charging_reserve",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(

@@ -39,7 +39,7 @@ async def test_state(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         freezer.move_to(dt_util.utcnow() + timedelta(seconds=3600))
-        hass.states.async_set(entity_id, 1, {}, force_update=True)
+        hass.states.async_set(entity_id, 1, {})
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.derivative")
@@ -49,6 +49,49 @@ async def test_state(hass: HomeAssistant) -> None:
     assert round(float(state.state), config["sensor"]["round"]) == 0.0
 
     assert state.attributes.get("unit_of_measurement") == "kW"
+
+
+async def test_no_change(hass: HomeAssistant) -> None:
+    """Test derivative sensor state updated when source sensor doesn't change."""
+    config = {
+        "sensor": {
+            "platform": "derivative",
+            "name": "derivative",
+            "source": "sensor.energy",
+            "unit": "kW",
+            "round": 2,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    base = dt_util.utcnow()
+    with freeze_time(base) as freezer:
+        hass.states.async_set(entity_id, 0, {})
+        await hass.async_block_till_done()
+
+        freezer.move_to(dt_util.utcnow() + timedelta(seconds=3600))
+        hass.states.async_set(entity_id, 1, {})
+        await hass.async_block_till_done()
+
+        freezer.move_to(dt_util.utcnow() + timedelta(seconds=3600))
+        hass.states.async_set(entity_id, 1, {})
+        await hass.async_block_till_done()
+
+        freezer.move_to(dt_util.utcnow() + timedelta(seconds=3600))
+        hass.states.async_set(entity_id, 1, {})
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.derivative")
+    assert state is not None
+
+    # Testing a energy sensor at 1 kWh for 1hour = 0kW
+    assert round(float(state.state), config["sensor"]["round"]) == 0.0
+
+    assert state.attributes.get("unit_of_measurement") == "kW"
+
+    assert state.last_changed == base + timedelta(seconds=2 * 3600)
 
 
 async def _setup_sensor(
@@ -86,7 +129,7 @@ async def setup_tests(
     with freeze_time(base) as freezer:
         for time, value in zip(times, values, strict=False):
             freezer.move_to(base + timedelta(seconds=time))
-            hass.states.async_set(entity_id, value, {}, force_update=True)
+            hass.states.async_set(entity_id, value, {})
             await hass.async_block_till_done()
 
     state = hass.states.get("sensor.power")
@@ -159,6 +202,53 @@ async def test_dataSet6(hass: HomeAssistant) -> None:
     await setup_tests(hass, {}, times=[0, 60], values=[0, 1 / 60], expected_state=1)
 
 
+async def test_data_moving_average_with_zeroes(hass: HomeAssistant) -> None:
+    """Test that zeroes are properly handled within the time window."""
+    # We simulate the following situation:
+    # The temperature rises 1 °C per minute for 10 minutes long. Then, it
+    # stays constant for another 10 minutes. There is a data point every
+    # minute and we use a time window of 10 minutes.
+    # Therefore, we can expect the derivative to peak at 1 after 10 minutes
+    # and then fall down to 0 in steps of 10%.
+
+    temperature_values = []
+    for temperature in range(10):
+        temperature_values += [temperature]
+    temperature_values += [10] * 11
+    time_window = 600
+    times = list(range(0, 1200 + 60, 60))
+
+    config, entity_id = await _setup_sensor(
+        hass,
+        {
+            "time_window": {"seconds": time_window},
+            "unit_time": UnitOfTime.MINUTES,
+            "round": 1,
+        },
+    )
+
+    base = dt_util.utcnow()
+    with freeze_time(base) as freezer:
+        last_derivative = 0
+        for time, value in zip(times, temperature_values, strict=True):
+            now = base + timedelta(seconds=time)
+            freezer.move_to(now)
+            hass.states.async_set(entity_id, value, {})
+            await hass.async_block_till_done()
+
+            state = hass.states.get("sensor.power")
+            derivative = round(float(state.state), config["sensor"]["round"])
+
+            if time_window == time:
+                assert derivative == 1.0
+            elif time_window < time < time_window * 2:
+                assert (0.1 - 1e-6) < abs(derivative - last_derivative) < (0.1 + 1e-6)
+            elif time == time_window * 2:
+                assert derivative == 0
+
+            last_derivative = derivative
+
+
 async def test_data_moving_average_for_discrete_sensor(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     # We simulate the following situation:
@@ -188,7 +278,7 @@ async def test_data_moving_average_for_discrete_sensor(hass: HomeAssistant) -> N
         for time, value in zip(times, temperature_values, strict=False):
             now = base + timedelta(seconds=time)
             freezer.move_to(now)
-            hass.states.async_set(entity_id, value, {}, force_update=True)
+            hass.states.async_set(entity_id, value, {})
             await hass.async_block_till_done()
 
             if time_window < time < times[-1] - time_window:
@@ -232,7 +322,7 @@ async def test_data_moving_average_for_irregular_times(hass: HomeAssistant) -> N
         for time, value in zip(times, temperature_values, strict=False):
             now = base + timedelta(seconds=time)
             freezer.move_to(now)
-            hass.states.async_set(entity_id, value, {}, force_update=True)
+            hass.states.async_set(entity_id, value, {})
             await hass.async_block_till_done()
 
             if time_window < time and time > times[3]:
@@ -270,7 +360,7 @@ async def test_double_signal_after_delay(hass: HomeAssistant) -> None:
         for time, value in zip(times, temperature_values, strict=False):
             now = base + timedelta(seconds=time)
             freezer.move_to(now)
-            hass.states.async_set(entity_id, value, {}, force_update=True)
+            hass.states.async_set(entity_id, value, {})
             await hass.async_block_till_done()
             state = hass.states.get("sensor.power")
             derivative = round(float(state.state), config["sensor"]["round"])
@@ -302,24 +392,22 @@ async def test_prefix(hass: HomeAssistant) -> None:
             entity_id,
             1000,
             {"unit_of_measurement": UnitOfPower.WATT},
-            force_update=True,
         )
         await hass.async_block_till_done()
 
         freezer.move_to(dt_util.utcnow() + timedelta(seconds=3600))
         hass.states.async_set(
             entity_id,
-            1000,
+            2000,
             {"unit_of_measurement": UnitOfPower.WATT},
-            force_update=True,
         )
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.derivative")
     assert state is not None
 
-    # Testing a power sensor at 1000 Watts for 1hour = 0kW/h
-    assert round(float(state.state), config["sensor"]["round"]) == 0.0
+    # Testing a power sensor increasing by 1000 Watts per hour = 1kW/h
+    assert round(float(state.state), config["sensor"]["round"]) == 1.0
     assert state.attributes.get("unit_of_measurement") == f"kW/{UnitOfTime.HOURS}"
 
 
@@ -345,7 +433,7 @@ async def test_suffix(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         freezer.move_to(dt_util.utcnow() + timedelta(seconds=3600))
-        hass.states.async_set(entity_id, 1000, {}, force_update=True)
+        hass.states.async_set(entity_id, 1000, {})
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.derivative")
@@ -375,7 +463,6 @@ async def test_total_increasing_reset(hass: HomeAssistant) -> None:
                 entity_id,
                 value,
                 {ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING},
-                force_update=True,
             )
             await hass.async_block_till_done()
 

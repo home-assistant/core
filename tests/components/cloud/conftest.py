@@ -145,7 +145,12 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
 
         # Methods that we mock with a custom side effect.
 
-        async def mock_login(email: str, password: str) -> None:
+        async def mock_login(
+            email: str,
+            password: str,
+            *,
+            check_connection: bool = False,
+        ) -> None:
             """Mock login.
 
             When called, it should call the on_start callback.
@@ -213,9 +218,9 @@ def mock_user_data() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_cloud_fixture(hass: HomeAssistant) -> CloudPreferences:
+async def mock_cloud_fixture(hass: HomeAssistant) -> CloudPreferences:
     """Fixture for cloud component."""
-    hass.loop.run_until_complete(mock_cloud(hass))
+    await mock_cloud(hass)
     return mock_cloud_prefs(hass, {})
 
 

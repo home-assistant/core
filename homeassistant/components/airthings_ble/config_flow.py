@@ -102,7 +102,8 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             device = await self._get_device_data(discovery_info)
         except AirthingsDeviceUpdateError:
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # noqa: BLE001
+        except Exception:
+            _LOGGER.exception("Unknown error occurred")
             return self.async_abort(reason="unknown")
 
         name = get_name(device)
@@ -160,7 +161,8 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await self._get_device_data(discovery_info)
             except AirthingsDeviceUpdateError:
                 return self.async_abort(reason="cannot_connect")
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unknown error occurred")
                 return self.async_abort(reason="unknown")
             name = get_name(device)
             self._discovered_devices[address] = Discovery(name, discovery_info, device)

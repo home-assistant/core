@@ -123,6 +123,22 @@ async def test_zeroconf_form(
     assert len(mock_manager.mock_calls) == 2
 
 
+async def test_zeroconf_form_not_ipv4(
+    hass: HomeAssistant, zeroconf_payload: ZeroconfServiceInfo
+) -> None:
+    """Test we pass Zeroconf discoveries to the manager."""
+    mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()
+    zeroconf_payload.ip_address = ip_address("2001:db8:3333:4444:5555:6666:7777:8888")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf_payload,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_ipv4_address"
+    assert mock_manager.call_count == 0
+
+
 async def test_ssdp_discovery(hass: HomeAssistant, soco) -> None:
     """Test that SSDP discoveries create a config flow."""
 

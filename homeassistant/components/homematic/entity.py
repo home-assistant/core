@@ -62,7 +62,7 @@ class HMDevice(Entity):
         if self._state:
             self._state = self._state.upper()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Load data init callbacks."""
         self._subscribe_homematic_events()
 
@@ -77,7 +77,7 @@ class HMDevice(Entity):
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if device is available."""
         return self._available
 

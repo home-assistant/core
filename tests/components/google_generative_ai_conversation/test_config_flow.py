@@ -1,10 +1,9 @@
 """Test the Google Generative AI Conversation config flow."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
-from google.api_core.exceptions import ClientError, DeadlineExceeded
-from google.rpc.error_details_pb2 import ErrorInfo  # pylint: disable=no-name-in-module
 import pytest
+from requests.exceptions import Timeout
 
 from homeassistant import config_entries
 from homeassistant.components.google_generative_ai_conversation.config_flow import (
@@ -22,51 +21,57 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
 )
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import CLIENT_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
+
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_models():
-    """Mock the model list API."""
+def get_models_pager():
+    """Return a generator that yields the models."""
     model_20_flash = Mock(
         display_name="Gemini 2.0 Flash",
-        supported_generation_methods=["generateContent"],
+        supported_actions=["generateContent"],
     )
     model_20_flash.name = "models/gemini-2.0-flash"
 
     model_15_flash = Mock(
         display_name="Gemini 1.5 Flash",
-        supported_generation_methods=["generateContent"],
+        supported_actions=["generateContent"],
     )
     model_15_flash.name = "models/gemini-1.5-flash-latest"
 
     model_15_pro = Mock(
         display_name="Gemini 1.5 Pro",
-        supported_generation_methods=["generateContent"],
+        supported_actions=["generateContent"],
     )
     model_15_pro.name = "models/gemini-1.5-pro-latest"
 
     model_10_pro = Mock(
         display_name="Gemini 1.0 Pro",
-        supported_generation_methods=["generateContent"],
+        supported_actions=["generateContent"],
     )
     model_10_pro.name = "models/gemini-pro"
-    with patch(
-        "homeassistant.components.google_generative_ai_conversation.config_flow.genai.list_models",
-        return_value=iter([model_20_flash, model_15_flash, model_15_pro, model_10_pro]),
-    ):
-        yield
+
+    async def models_pager():
+        yield model_20_flash
+        yield model_15_flash
+        yield model_15_pro
+        yield model_10_pro
+
+    return models_pager()
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -86,7 +91,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "google.ai.generativelanguage_v1beta.ModelServiceAsyncClient.list_models",
+            "google.genai.models.AsyncModels.list",
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
@@ -109,13 +114,17 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+def will_options_be_rendered_again(current_options, new_options) -> bool:
+    """Determine if options will be rendered again."""
+    return current_options.get(CONF_RECOMMENDED) != new_options.get(CONF_RECOMMENDED)
+
+
 @pytest.mark.parametrize(
-    ("current_options", "new_options", "expected_options"),
+    ("current_options", "new_options", "expected_options", "errors"),
     [
         (
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "none",
                 CONF_PROMPT: "bla",
             },
             {
@@ -135,7 +144,9 @@ async def test_form(hass: HomeAssistant) -> None:
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
             },
+            None,
         ),
         (
             {
@@ -146,17 +157,128 @@ async def test_form(hass: HomeAssistant) -> None:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
             },
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
+                CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
             },
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
+                CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
             },
+            None,
+        ),
+        (
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+            },
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
+            None,
+        ),
+        (
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
+            {CONF_USE_GOOGLE_SEARCH_TOOL: "invalid_google_search_option"},
+        ),
+        (
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: "assist",
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: ["assist"],
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: ["assist"],
+            },
+            None,
         ),
     ],
 )
@@ -164,48 +286,68 @@ async def test_form(hass: HomeAssistant) -> None:
 async def test_options_switching(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_models,
     current_options,
     new_options,
     expected_options,
+    errors,
 ) -> None:
     """Test the options form."""
-    hass.config_entries.async_update_entry(mock_config_entry, options=current_options)
-    options_flow = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
-    )
-    if current_options.get(CONF_RECOMMENDED) != new_options.get(CONF_RECOMMENDED):
-        options_flow = await hass.config_entries.options.async_configure(
-            options_flow["flow_id"],
-            {
-                **current_options,
-                CONF_RECOMMENDED: new_options[CONF_RECOMMENDED],
-            },
+    with patch("google.genai.models.AsyncModels.get"):
+        hass.config_entries.async_update_entry(
+            mock_config_entry, options=current_options
         )
-    options = await hass.config_entries.options.async_configure(
-        options_flow["flow_id"],
-        new_options,
-    )
+        await hass.async_block_till_done()
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        options_flow = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+    if will_options_be_rendered_again(current_options, new_options):
+        retry_options = {
+            **current_options,
+            CONF_RECOMMENDED: new_options[CONF_RECOMMENDED],
+        }
+        with patch(
+            "google.genai.models.AsyncModels.list",
+            return_value=get_models_pager(),
+        ):
+            options_flow = await hass.config_entries.options.async_configure(
+                options_flow["flow_id"],
+                retry_options,
+            )
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        options = await hass.config_entries.options.async_configure(
+            options_flow["flow_id"],
+            new_options,
+        )
     await hass.async_block_till_done()
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == expected_options
+    if errors is None:
+        assert options["type"] is FlowResultType.CREATE_ENTRY
+        assert options["data"] == expected_options
+
+    else:
+        assert options["type"] is FlowResultType.FORM
+    assert options.get("errors", None) == errors
 
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
         (
-            ClientError("some error"),
+            CLIENT_ERROR_500,
             "cannot_connect",
         ),
         (
-            DeadlineExceeded("deadline exceeded"),
+            Timeout("deadline exceeded"),
             "cannot_connect",
         ),
         (
-            ClientError(
-                "invalid api key", error_info=ErrorInfo(reason="API_KEY_INVALID")
-            ),
+            CLIENT_ERROR_API_KEY_INVALID,
             "invalid_auth",
         ),
         (Exception, "unknown"),
@@ -217,12 +359,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_client = AsyncMock()
-    mock_client.list_models.side_effect = side_effect
-    with patch(
-        "google.ai.generativelanguage_v1beta.ModelServiceAsyncClient",
-        return_value=mock_client,
-    ):
+    with patch("google.genai.models.AsyncModels.list", side_effect=side_effect):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -259,7 +396,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "google.ai.generativelanguage_v1beta.ModelServiceAsyncClient.list_models",
+            "google.genai.models.AsyncModels.list",
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",

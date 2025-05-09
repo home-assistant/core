@@ -64,7 +64,6 @@ set_program_and_options:
             - selected_program
     program:
       example: dishcare_dishwasher_program_auto2
-      required: true
       selector:
         select:
           mode: dropdown
@@ -328,14 +327,28 @@ set_program_and_options:
           selector:
             boolean:
         consumer_products_coffee_maker_option_coffee_milk_ratio:
-          example: 50
+          example: consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent
           required: false
           selector:
-            number:
-              unit_of_measurement: "%"
-              step: 10
-              min: 10
-              max: 90
+            select:
+              mode: dropdown
+              translation_key: coffee_milk_ratio
+              options:
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_10_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_20_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_25_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_30_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_40_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_55_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_60_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_65_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_67_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_70_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_75_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_80_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_85_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_90_percent
         consumer_products_coffee_maker_option_hot_water_temperature:
           example: consumer_products_coffee_maker_enum_type_hot_water_temperature_50_c
           required: false
@@ -373,10 +386,14 @@ set_program_and_options:
       collapsed: true
       fields:
         b_s_h_common_option_start_in_relative:
-          example: "30:00"
+          example: 3600
           required: false
           selector:
-            time:
+            number:
+              min: 0
+              step: 1
+              mode: box
+              unit_of_measurement: s
         dishcare_dishwasher_option_intensiv_zone:
           example: false
           required: false
@@ -450,11 +467,11 @@ set_program_and_options:
               translation_key: venting_level
               options:
                 - cooking_hood_enum_type_stage_fan_off
-                - cooking_hood_enum_type_stage_fan_stage01
-                - cooking_hood_enum_type_stage_fan_stage02
-                - cooking_hood_enum_type_stage_fan_stage03
-                - cooking_hood_enum_type_stage_fan_stage04
-                - cooking_hood_enum_type_stage_fan_stage05
+                - cooking_hood_enum_type_stage_fan_stage_01
+                - cooking_hood_enum_type_stage_fan_stage_02
+                - cooking_hood_enum_type_stage_fan_stage_03
+                - cooking_hood_enum_type_stage_fan_stage_04
+                - cooking_hood_enum_type_stage_fan_stage_05
         cooking_hood_option_intensive_level:
           example: cooking_hood_enum_type_intensive_stage_intensive_stage1
           required: false
@@ -479,10 +496,14 @@ set_program_and_options:
               mode: box
               unit_of_measurement: °C/°F
         b_s_h_common_option_duration:
-          example: "30:00"
+          example: 900
           required: false
           selector:
-            time:
+            number:
+              min: 0
+              step: 1
+              mode: box
+              unit_of_measurement: s
         cooking_oven_option_fast_pre_heat:
           example: false
           required: false
@@ -506,7 +527,7 @@ set_program_and_options:
       collapsed: true
       fields:
         laundry_care_washer_option_temperature:
-          example: laundry_care_washer_enum_type_temperature_g_c40
+          example: laundry_care_washer_enum_type_temperature_g_c_40
           required: false
           selector:
             select:
@@ -514,14 +535,14 @@ set_program_and_options:
               translation_key: washer_temperature
               options:
                 - laundry_care_washer_enum_type_temperature_cold
-                - laundry_care_washer_enum_type_temperature_g_c20
-                - laundry_care_washer_enum_type_temperature_g_c30
-                - laundry_care_washer_enum_type_temperature_g_c40
-                - laundry_care_washer_enum_type_temperature_g_c50
-                - laundry_care_washer_enum_type_temperature_g_c60
-                - laundry_care_washer_enum_type_temperature_g_c70
-                - laundry_care_washer_enum_type_temperature_g_c80
-                - laundry_care_washer_enum_type_temperature_g_c90
+                - laundry_care_washer_enum_type_temperature_g_c_20
+                - laundry_care_washer_enum_type_temperature_g_c_30
+                - laundry_care_washer_enum_type_temperature_g_c_40
+                - laundry_care_washer_enum_type_temperature_g_c_50
+                - laundry_care_washer_enum_type_temperature_g_c_60
+                - laundry_care_washer_enum_type_temperature_g_c_70
+                - laundry_care_washer_enum_type_temperature_g_c_80
+                - laundry_care_washer_enum_type_temperature_g_c_90
                 - laundry_care_washer_enum_type_temperature_ul_cold
                 - laundry_care_washer_enum_type_temperature_ul_warm
                 - laundry_care_washer_enum_type_temperature_ul_hot
@@ -535,22 +556,28 @@ set_program_and_options:
               translation_key: spin_speed
               options:
                 - laundry_care_washer_enum_type_spin_speed_off
-                - laundry_care_washer_enum_type_spin_speed_r_p_m400
-                - laundry_care_washer_enum_type_spin_speed_r_p_m600
-                - laundry_care_washer_enum_type_spin_speed_r_p_m800
-                - laundry_care_washer_enum_type_spin_speed_r_p_m1000
-                - laundry_care_washer_enum_type_spin_speed_r_p_m1200
-                - laundry_care_washer_enum_type_spin_speed_r_p_m1400
-                - laundry_care_washer_enum_type_spin_speed_r_p_m1600
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_400
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_600
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_700
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_800
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_900
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_1000
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_1200
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_1400
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_1600
                 - laundry_care_washer_enum_type_spin_speed_ul_off
                 - laundry_care_washer_enum_type_spin_speed_ul_low
                 - laundry_care_washer_enum_type_spin_speed_ul_medium
                 - laundry_care_washer_enum_type_spin_speed_ul_high
         b_s_h_common_option_finish_in_relative:
-          example: "30:00"
+          example: 3600
           required: false
           selector:
-            time:
+            number:
+              min: 0
+              step: 1
+              mode: box
+              unit_of_measurement: s
         laundry_care_washer_option_i_dos1_active:
           example: false
           required: false

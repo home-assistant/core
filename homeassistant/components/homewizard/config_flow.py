@@ -23,8 +23,10 @@ import voluptuous as vol
 from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import instance_id
 from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -88,7 +90,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Tell device we want a token, user must now press the button within 30 seconds
         # The first attempt will always fail, but this opens the window to press the button
-        token = await async_request_token(self.ip_address)
+        token = await async_request_token(self.hass, self.ip_address)
         errors: dict[str, str] | None = None
 
         if token is None:
@@ -250,7 +252,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] | None = None
 
-        token = await async_request_token(self.ip_address)
+        token = await async_request_token(self.hass, self.ip_address)
 
         if user_input is not None:
             if token is None:
@@ -353,7 +355,7 @@ async def async_try_connect(ip_address: str, token: str | None = None) -> Device
         await energy_api.close()
 
 
-async def async_request_token(ip_address: str) -> str | None:
+async def async_request_token(hass: HomeAssistant, ip_address: str) -> str | None:
     """Try to request a token from the device.
 
     This method is used to request a token from the device,
@@ -362,8 +364,12 @@ async def async_request_token(ip_address: str) -> str | None:
 
     api = HomeWizardEnergyV2(ip_address)
 
+    # Get a part of the unique id to make the token unique
+    # This is to prevent token conflicts when multiple HA instances are used
+    uuid = await instance_id.async_get(hass)
+
     try:
-        return await api.get_token("home-assistant")
+        return await api.get_token(f"home-assistant#{uuid[:6]}")
     except DisabledError:
         return None
     finally:
