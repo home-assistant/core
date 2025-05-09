@@ -332,6 +332,9 @@ def decrypt_backup(
         except (DecryptError, SecureTarError, tarfile.TarError) as err:
             LOGGER.warning("Error decrypting backup: %s", err)
             error = err
+        except Exception as err:  # noqa: BLE001
+            LOGGER.exception("Unexpected error when decrypting backup: %s", err)
+            error = err
         else:
             # Pad the output stream to the requested minimum size
             padding = max(minimum_size - output_stream.tell(), 0)
@@ -416,6 +419,9 @@ def encrypt_backup(
                 _encrypt_backup(backup, input_tar, output_tar, password, nonces)
         except (EncryptError, SecureTarError, tarfile.TarError) as err:
             LOGGER.warning("Error encrypting backup: %s", err)
+            error = err
+        except Exception as err:  # noqa: BLE001
+            LOGGER.exception("Unexpected error when decrypting backup: %s", err)
             error = err
         else:
             # Pad the output stream to the requested minimum size
