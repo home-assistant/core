@@ -74,9 +74,7 @@ rules:
   entity-translations:
     status: exempt
     comment: using only device name
-  exception-translations:
-    status: todo
-    comment: ConfigEntryReady & ConfigEntryAuthFailed not translated in init
+  exception-translations: done
   icon-translations:
     status: done
     comment: no custom icons, only default icons
