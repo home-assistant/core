@@ -127,7 +127,9 @@ class ModbusLight(BaseSwitch, LightEntity):
     async def async_set_color_temp(self, color_temp_kelvin: int) -> None:
         """Send Modbus command to set color temperature."""
         if self._color_temp_address:
-            conv_color_temp_kelvin = self._convert_color_temp_to_modbus(color_temp_kelvin)
+            conv_color_temp_kelvin = self._convert_color_temp_to_modbus(
+                color_temp_kelvin
+            )
 
             if conv_color_temp_kelvin is not None:
                 await self._hub.async_pb_call(
