@@ -30,9 +30,13 @@ VS_HUMIDIFIER_MODE_HUMIDITY = "humidity"
 VS_HUMIDIFIER_MODE_MANUAL = "manual"
 VS_HUMIDIFIER_MODE_SLEEP = "sleep"
 
-NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
-NIGHT_LIGHT_LEVEL_DIM = "dim"
-NIGHT_LIGHT_LEVEL_OFF = "off"
+FAN_NIGHT_LIGHT_LEVEL_DIM = "dim"
+FAN_NIGHT_LIGHT_LEVEL_OFF = "off"
+FAN_NIGHT_LIGHT_LEVEL_ON = "on"
+
+HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
+HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM = "dim"
+HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF = "off"
 
 VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
 """Humidifier device types"""
@@ -93,6 +97,7 @@ SKU_TO_BASE_DEVICE = {
     "LAP-V102S-AASR": "Vital100S",  # Alt ID Model Vital100S
     "LAP-V102S-WEU": "Vital100S",  # Alt ID Model Vital100S
     "LAP-V102S-WUK": "Vital100S",  # Alt ID Model Vital100S
+    "LAP-V102S-AUSR": "Vital100S",  # Alt ID Model Vital100S
     "EverestAir": "EverestAir",
     "LAP-EL551S-AUS": "EverestAir",  # Alt ID Model EverestAir
     "LAP-EL551S-AEUR": "EverestAir",  # Alt ID Model EverestAir

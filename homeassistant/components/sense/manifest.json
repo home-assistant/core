@@ -20,5 +20,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sense",
   "iot_class": "cloud_polling",
   "loggers": ["sense_energy"],
-  "requirements": ["sense-energy==0.13.6"]
+  "requirements": ["sense-energy==0.13.7"]
 }

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import asdict
 from typing import Any
 
 from aiohttp import web
 from hassil.recognize import MISSING_ENTITY, RecognizeResult
 from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
+from home_assistant_intents import get_language_scores
 import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
@@ -38,6 +40,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_list_agents)
     websocket_api.async_register_command(hass, websocket_list_sentences)
     websocket_api.async_register_command(hass, websocket_hass_agent_debug)
+    websocket_api.async_register_command(hass, websocket_hass_agent_language_scores)
 
 
 @websocket_api.websocket_command(
@@ -334,6 +337,36 @@ def _get_unmatched_slots(
             unmatched_slots[entity.name] = entity.value
 
     return unmatched_slots
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/agent/homeassistant/language_scores",
+        vol.Optional("language"): str,
+        vol.Optional("country"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_hass_agent_language_scores(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get support scores per language."""
+    language = msg.get("language", hass.config.language)
+    country = msg.get("country", hass.config.country)
+
+    scores = await hass.async_add_executor_job(get_language_scores)
+    matching_langs = language_util.matches(language, scores.keys(), country=country)
+    preferred_lang = matching_langs[0] if matching_langs else language
+    result = {
+        "languages": {
+            lang_key: asdict(lang_scores) for lang_key, lang_scores in scores.items()
+        },
+        "preferred_language": preferred_lang,
+    }
+
+    connection.send_result(msg["id"], result)
 
 
 class ConversationProcessView(http.HomeAssistantView):

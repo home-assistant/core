@@ -83,7 +83,7 @@ class BackupAgent(abc.ABC):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup.
 
         Raises BackupNotFound if the backup does not exist.
