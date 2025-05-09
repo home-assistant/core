@@ -374,7 +374,39 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             translation_key="temperature_zone_2",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda value: value.state_temperatures[1].temperature / 100.0,  # type: ignore [operator]
+            value_fn=lambda value: cast(int, value.state_temperatures[1].temperature)
+            / 100.0,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.DISH_WARMER,
+            MieleAppliance.STEAM_OVEN,
+            MieleAppliance.MICROWAVE,
+            MieleAppliance.FRIDGE,
+            MieleAppliance.FREEZER,
+            MieleAppliance.FRIDGE_FREEZER,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.WINE_CABINET,
+            MieleAppliance.WINE_CONDITIONING_UNIT,
+            MieleAppliance.WINE_STORAGE_CONDITIONING_UNIT,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.WINE_CABINET_FREEZER,
+            MieleAppliance.STEAM_OVEN_MK2,
+        ),
+        description=MieleSensorDescription(
+            key="state_temperature_3",
+            zone=3,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            translation_key="temperature_zone_3",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda value: cast(int, value.state_temperatures[2].temperature)
+            / 100.0,
         ),
     ),
     MieleSensorDefinition(
@@ -390,12 +422,10 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=(
-                lambda value: cast(
-                    int, value.state_core_target_temperature[0].temperature
-                )
-                / 100.0
-            ),
+            value_fn=lambda value: cast(
+                int, value.state_core_target_temperature[0].temperature
+            )
+            / 100.0,
         ),
     ),
     MieleSensorDefinition(
@@ -411,10 +441,10 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=(
-                lambda value: cast(int, value.state_core_temperature[0].temperature)
-                / 100.0
-            ),
+            value_fn=lambda value: cast(
+                int, value.state_core_temperature[0].temperature
+            )
+            / 100.0,
         ),
     ),
     MieleSensorDefinition(
@@ -471,11 +501,17 @@ async def async_setup_entry(
                     if (
                         definition.description.device_class
                         == SensorDeviceClass.TEMPERATURE
-                        and definition.description.value_fn(device)
-                        == DISABLED_TEMPERATURE / 100
                     ):
-                        # Don't create entity if API signals that datapoint is disabled
-                        continue
+                        entity_class = MieleTemperatureSensor
+                        if (
+                            definition.description.value_fn(device)
+                            == DISABLED_TEMPERATURE / 100
+                            and definition.description.zone is not None
+                            and definition.description.zone > 1
+                        ):
+                            # Don't create entity if API signals that datapoint is disabled
+                            # for zones 2 and 3 (ovens have only 1 zone + core)
+                            continue
                     entities.append(
                         entity_class(coordinator, device_id, definition.description)
                     )
@@ -601,3 +637,15 @@ class MieleProgramIdSensor(MieleSensor):
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
         return sorted(set(STATE_PROGRAM_ID.get(self.device.device_type, {}).values()))
+
+
+class MieleTemperatureSensor(MieleSensor):
+    """Representation of a temperature sensor."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        ret_val = self.entity_description.value_fn(self.device)
+        if ret_val == DISABLED_TEMPERATURE / 100:
+            return None
+        return ret_val
