@@ -81,6 +81,7 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
                 translation_key="no_advertisement",
                 translation_placeholders={"address": self.address},
             )
+        _LOGGER.debug("Got last service info %s", service_info)
         await self._data.async_start(service_info, service_info.device)
         self._entry.async_on_unload(self._data.async_stop)
 

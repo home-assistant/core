@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,12 +16,15 @@ INKBIRDConfigEntry = ConfigEntry[INKBIRDActiveBluetoothProcessorCoordinator]
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: INKBIRDConfigEntry) -> bool:
     """Set up INKBIRD BLE device from a config entry."""
     assert entry.unique_id is not None
     device_type: str | None = entry.data.get(CONF_DEVICE_TYPE)
     device_data: dict[str, Any] | None = entry.data.get(CONF_DEVICE_DATA)
+    _LOGGER.debug("Setting up INKBIRD device %s", entry.unique_id)
     coordinator = INKBIRDActiveBluetoothProcessorCoordinator(
         hass, entry, device_type, device_data
     )
