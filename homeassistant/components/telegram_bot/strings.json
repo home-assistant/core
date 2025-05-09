@@ -653,8 +653,8 @@
           "description": "Emoji reaction to use."
         },
         "is_big": {
-          "name": "Is big",
-          "description": "Whether the reaction animation should be big, defaults to False."
+          "name": "Large animation",
+          "description": "Whether the reaction animation should be large."
         }
       }
     },
