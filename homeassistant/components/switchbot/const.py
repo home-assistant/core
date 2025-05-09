@@ -43,7 +43,7 @@ class SupportedModels(StrEnum):
     K10_VACUUM = "k10_vacuum"
     K10_PRO_VACUUM = "k10_pro_vacuum"
     K10_PRO_COMBO_VACUUM = "k10_pro_combo_vacumm"
-    AIR_PURIFIER = "Air_Purifier"
+    AIR_PURIFIER = "air_purifier"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
