@@ -83,7 +83,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="lux",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
-        translation_key="lux",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "virusRisk": SensorEntityDescription(
